@@ -63,21 +63,17 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
+            options.AddArgument("start-maximized");
 
             var cds = ChromeDriverService.CreateDefaultService(chromeDriverPath);
+            cds.EnableVerboseLogging = true;
             cds.Port = Utils.FreeTcpPort();
             cds.HostName = "127.0.0.1";
             cds.Start();
             Driver = new ChromeDriver(cds, options,
                 // A bit less than test timeout
                 TimeSpan.FromSeconds(50));
-
-            if (runInBrowser)
-            {
-                // ensure maximized window size
-                // otherwise TESTS WILL FAIL because of different hierarchy in navigation menu
-                Driver.Manage().Window.Maximize();
-            }
+            Driver.Manage().Window.Maximize();
 
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
@@ -159,11 +155,8 @@ namespace BTCPayServer.Tests
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-
-            // Open advanced settings via JS, because if we click the link it triggers the toggle animation.
-            // This leads to Selenium trying to click the button while it is moving resulting in an error.
-            Driver.ExecuteJavaScript("document.getElementById('AdvancedSettings').classList.add('show')");
-
+            
+            Driver.ToggleCollapse("AdvancedSettings");
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
 
@@ -370,7 +363,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("bip21parse")).Click();
             Driver.SwitchTo().Alert().SendKeys(bip21);
             Driver.SwitchTo().Alert().Accept();
-            Driver.FindElement(By.Id("SendMenu")).Click();
+            Driver.FindElement(By.Id("SendDropdownToggle")).Click();
             Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
             Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
         }

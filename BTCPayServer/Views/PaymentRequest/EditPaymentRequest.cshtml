@@ -5,6 +5,16 @@
 @{
     ViewData.SetActivePageAndTitle(PaymentRequestsNavPages.Create, (string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit") + " Payment Request");
 }
+
+@section PageHeadContent {
+    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css" asp-append-version="true"></bundle>
+}
+
+@section PageFootContent {
+    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js" asp-append-version="true"></bundle>
+}
 <section>
     <div class="container">
         <partial name="_StatusMessage" />
@@ -17,17 +27,17 @@
                     <input type="hidden" name="Id" value="@Model.Id" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label" data-required></label>
+                        <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Amount" class="control-label" data-required></label>
+                        <label asp-for="Amount" class="form-label" data-required></label>
                         <input type="number" step="any" asp-for="Amount" class="form-control" required />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <label asp-for="Currency" class="form-label" data-required></label>
                         <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
@@ -37,10 +47,10 @@
                         <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="StoreId" class="control-label"></label>
+                        <label asp-for="StoreId" class="form-label"></label>
                         @if (string.IsNullOrEmpty(Model.Id))
                         {
-                            <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
+                            <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                         }
                         else
                         {
@@ -50,31 +60,29 @@
                         <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Email" class="control-label"></label>
+                        <label asp-for="Email" class="form-label"></label>
                         <input type="email" asp-for="Email" class="form-control" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ExpiryDate" class="control-label"></label>
+                        <label asp-for="ExpiryDate" class="form-label"></label>
                         <div class="input-group ">
                             <input asp-for="ExpiryDate"
                                    value="@( Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class=" fa fa-times"></span>
-                                </button>
-                            </div>
+                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />x
+                            <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
                         <span asp-validation-for="ExpiryDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Description" class="control-label"></label>
+                        <label asp-for="Description" class="form-label"></label>
                         <textarea asp-for="Description" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <label asp-for="CustomCSSLink" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
@@ -82,7 +90,7 @@
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <label asp-for="EmbeddedCSS" class="form-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>
@@ -99,22 +107,17 @@
                             <a class="btn btn-secondary" asp-route-id="@Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
                             @if (!Model.Archived)
                             {
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
+                                <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
                             }
                             else
                             {
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
+                                <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
                             }
                         }
-                        <a asp-action="GetPaymentRequests" class="text-muted ml-3">Back to list</a>
+                        <a asp-action="GetPaymentRequests" class="text-muted ms-3">Back to list</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </section>
-@section Scripts {
-    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js" asp-append-version="true"></bundle>
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css" asp-append-version="true"></bundle>
-}

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,10 +30,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
-using NBitcoin;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Controllers.GreenField;
-using System.Globalization;
 
 namespace BTCPayServer.Hosting
 {

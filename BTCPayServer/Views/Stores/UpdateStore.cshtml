@@ -25,10 +25,10 @@
                     <li class="list-group-item bg-tile @(scheme.Collapsed ? "collapsed": "")">
                         <div class="d-flex align-items-center">
                             <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
-                                <strong class="mr-3">@scheme.Crypto</strong>
+                                <strong class="me-3">@scheme.Crypto</strong>
                                 @if (isSetUp)
                                 {
-                                    <span title="@scheme.Value" data-toggle="tooltip" class="d-flex mr-3">
+                                    <span title="@scheme.Value" data-bs-toggle="tooltip" class="d-flex me-3">
                                         <span class="text-truncate text-secondary" style="max-width:8ch">@scheme.Value</span>
                                         @if (scheme.Value.Length > 20)
                                         {
@@ -37,7 +37,7 @@
                                     </span>
                                     @if (scheme.WalletSupported)
                                     {
-                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId" class="text-secondary mr-3">Manage Wallet</a>
+                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId" class="text-secondary me-3">Manage Wallet</a>
                                     }
                                 }
                             </span>
@@ -50,7 +50,7 @@
                                           asp-route-storeId="@Model.Id"
                                           class="d-flex align-items-center"
                                           style="min-width:7.65rem">
-                                        <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.Crypto}WalletEnabled")">@(scheme.Enabled ? "Disable" : "Enable")</button>
+                                        <button type="submit" class="btcpay-toggle me-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.Crypto}WalletEnabled")">@(scheme.Enabled ? "Disable" : "Enable")</button>
                                         @if (scheme.Enabled)
                                         {
                                             <span class="text-primary">
@@ -64,14 +64,14 @@
                                             </span>
                                         }
                                     </form>
-                                    <span class="text-light ml-3 mr-2">|</span>
+                                    <span class="text-light ms-3 me-2">|</span>
                                     <a asp-action="ModifyWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-link px-1 py-1 fw-semibold">
                                         Modify
                                     </a>
                                 }
                                 else
                                 {
-                                    <a asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-primary btn-sm ml-4 px-3 py-1 fw-semibold">
+                                    <a asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold">
                                         Setup
                                     </a>
                                 }
@@ -108,10 +108,10 @@
                     <li class="list-group-item bg-tile">
                         <div class="d-flex align-items-center">
                             <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
-                                <strong class="mr-3">@scheme.CryptoCode</strong>
+                                <strong class="me-3">@scheme.CryptoCode</strong>
                                 @if (isSetUp)
                                 {
-                                    <span class="smMaxWidth text-truncate text-secondary mr-3">@scheme.Address</span>
+                                    <span class="smMaxWidth text-truncate text-secondary me-3">@scheme.Address</span>
                                     <a class="text-secondary"
                                        asp-controller="PublicLightningNodeInfo"
                                        asp-action="ShowLightningNodeInfo"
@@ -131,7 +131,7 @@
                                           asp-route-storeId="@Model.Id"
                                           class="d-flex align-items-center"
                                           style="min-width:7.65rem">
-                                        <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.CryptoCode}LightningEnabled")">@(scheme.Enabled ? "Disable" : "Enable")e</button>
+                                        <button type="submit" class="btcpay-toggle me-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.CryptoCode}LightningEnabled")">@(scheme.Enabled ? "Disable" : "Enable")e</button>
                                         @if (scheme.Enabled)
                                         {
                                             <span class="text-primary">
@@ -145,10 +145,9 @@
                                             </span>
                                         }
                                     </form>
-
-                                    <span class="text-light ml-3 mr-2">|</span>
+                                    <span class="text-light ms-3 me-2">|</span>
                                 }
-                                <a asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
+                                <a asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ms-4 px-3") py-1 fw-semibold">
                                     @(isSetUp ? "Modify" : "Setup")
                                 </a>
                             </span>
@@ -200,7 +199,7 @@
                 <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
-                <select asp-for="NetworkFeeMode" class="form-control">
+                <select asp-for="NetworkFeeMode" class="form-select">
                     <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
                     <option value="Always">... on every payment</option>
                     <option value="Never">Never add network fee</option>
@@ -215,9 +214,7 @@
                 </div>
                 <div class="input-group">
                     <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;" />
-                    <div class="input-group-append">
-                        <span class="input-group-text">minutes</span>
-                    </div>
+                    <span class="input-group-text">minutes</span>
                 </div>
                 <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
             </div>
@@ -230,9 +227,7 @@
                 </div>
                 <div class="input-group">
                     <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;" />
-                    <div class="input-group-append">
-                        <span class="input-group-text">minutes</span>
-                    </div>
+                    <span class="input-group-text">minutes</span>
                 </div>
                 <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
             </div>
@@ -245,9 +240,7 @@
                 </div>
                 <div class="input-group">
                     <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;" />
-                    <div class="input-group-append">
-                        <span class="input-group-text">percent</span>
-                    </div>
+                    <span class="input-group-text">percent</span>
                 </div>
                 <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
             </div>
@@ -263,7 +256,7 @@
                         document.getElementById('unconfirmed-warning').hidden = select.value !== '0';
                     }
                 </script>
-                <select asp-for="SpeedPolicy" class="form-control w-auto" onchange="handleSpeedPolicyChange(this)">
+                <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="handleSpeedPolicyChange(this)">
                     <option value="0">Is unconfirmed</option>
                     <option value="1">Has at least 1 confirmation</option>
                     <option value="3">Has at least 2 confirmations</option>
@@ -293,7 +286,7 @@
                 <thead>
                 <tr>
                     <th>Service</th>
-                    <th class="text-right w-100px">Actions</th>
+                    <th class="text-end w-100px">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -301,7 +294,7 @@
                     <td>
                         Email
                     </td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <a asp-action="Emails" asp-route-storeId="@Context.GetRouteValue("storeId")">
                             Setup
                         </a>
@@ -314,7 +307,7 @@
         @if (Model.CanDelete)
         {
             <h4 class="mt-5 mb-3">Other actions</h4>
-            <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-toggle="collapse" data-target="#danger-zone">
+            <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#danger-zone">
                 See more actions
             </button>
             <div id="danger-zone" class="collapse">
@@ -324,6 +317,6 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

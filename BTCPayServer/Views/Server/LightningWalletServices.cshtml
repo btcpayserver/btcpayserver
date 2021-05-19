@@ -8,7 +8,9 @@
 @if (Model.ShowQR)
 {
     <div class="alert alert-warning alert-dismissible" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
         <div>
             <span><b>CONFIDENTIAL:</b> This QR Code is confidential, close this window as soon as you don't need it anymore.<br /></span>
             <span>A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
@@ -56,15 +58,14 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 
     @if (Model.ShowQR)
     {
-        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
-        <script type="text/javascript">
-        new QRCode(document.getElementById("qrCode"),
-            {
+        <script src="~/js/qrcode.js" asp-append-version="true"></script>
+        <script>
+            new QRCode(document.getElementById("qrCode"), {
                 text: @Safe.Json(Model.ServiceLink),
                 width: 200,
                 height: 200,

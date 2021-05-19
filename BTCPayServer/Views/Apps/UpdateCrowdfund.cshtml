@@ -4,6 +4,17 @@
 @{
     ViewData.SetActivePageAndTitle(AppsNavPages.Update, "Update Crowdfund", Model.StoreName);
 }
+
+@section PageHeadContent {
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css" asp-append-version="true"></bundle>
+}
+
+@section PageFootContent {
+    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js" asp-append-version="true"></bundle>
+}
+
 <section>
     <div class="container">
         <partial name="_StatusMessage" />
@@ -16,49 +27,47 @@
                     <input type="hidden" asp-for="StoreId" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label" data-required></label>
+                        <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Tagline" class="control-label"></label>
+                        <label asp-for="Tagline" class="form-label"></label>
                         <input asp-for="Tagline" class="form-control" />
                         <span asp-validation-for="Tagline" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Description" class="control-label" data-required></label>
+                        <label asp-for="Description" class="form-label" data-required></label>
                         <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="TargetCurrency" class="control-label" data-required></label>
+                        <label asp-for="TargetCurrency" class="form-label" data-required></label>
                         <input asp-for="TargetCurrency" class="form-control" required />
                         <span asp-validation-for="TargetCurrency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="TargetAmount" class="control-label"></label>
+                        <label asp-for="TargetAmount" class="form-label"></label>
                         <input asp-for="TargetAmount" class="form-control" />
                         <span asp-validation-for="TargetAmount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="StartDate" class="control-label"></label>
+                        <label asp-for="StartDate" class="form-label"></label>
                         <div class="input-group">
                             <input type="datetime-local" asp-for="StartDate"
                                    value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
                                    class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class=" fa fa-times"></span>
-                                </button>
-                            </div>
+                            <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ResetEvery" class="control-label"></label>
+                        <label asp-for="ResetEvery" class="form-label"></label>
                         <div class="input-group">
                             <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
-                            <select class="custom-select" asp-for="ResetEvery">
+                            <select class="form-select" asp-for="ResetEvery">
                                 @foreach (var opt in Model.ResetEveryValues)
                                 {
                                     <option value="@opt">@opt</option>
@@ -67,17 +76,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="EndDate" class="control-label"></label>
+                        <label asp-for="EndDate" class="form-label"></label>
                         <div class="input-group">
                             <input type="datetime-local" asp-for="EndDate"
                                    value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
                                    class="form-control flatdtpicker"
                                    placeholder="No end date has been set for this crowdfund" />
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class=" fa fa-times"></span>
-                                </button>
-                            </div>
+                            <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
@@ -85,12 +92,12 @@
                     <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
 
                     <div class="form-group">
-                        <label asp-for="PerksTemplate" class="control-label"></label>
+                        <label asp-for="PerksTemplate" class="form-label"></label>
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="PerksTemplate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <label asp-for="CustomCSSLink" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
@@ -98,17 +105,17 @@
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="MainImageUrl" class="control-label"></label>
+                        <label asp-for="MainImageUrl" class="form-label"></label>
                         <input asp-for="MainImageUrl" class="form-control" />
                         <span asp-validation-for="MainImageUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <label asp-for="EmbeddedCSS" class="form-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
@@ -169,7 +176,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="DisqusShortname" class="control-label"></label>
+                        <label asp-for="DisqusShortname" class="form-label"></label>
                         <input asp-for="DisqusShortname" class="form-control" />
                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                     </div>
@@ -198,8 +205,3 @@
         </div>
     </div>
 </section>
-@section Scripts {
-    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js" asp-append-version="true"></bundle>
-    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css" asp-append-version="true"></bundle>
-}

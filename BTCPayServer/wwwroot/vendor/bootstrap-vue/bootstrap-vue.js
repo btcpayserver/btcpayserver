@@ -804,8 +804,8 @@
 
       var componentData = {
         staticClass: 'badge',
-        class: [!props.variant ? 'badge-secondary' : 'badge-' + props.variant, {
-          'badge-pill': Boolean(props.pill),
+        class: [!props.variant ? 'bg-secondary' : 'bg-' + props.variant, {
+          'rounded-pill': Boolean(props.pill),
           active: props.active,
           disabled: props.disabled
         }],
@@ -2653,9 +2653,9 @@
         src = makeBlankImgSrc(width, height, props.blankColor || 'transparent');
       }
       if (props.left) {
-        align = 'float-left';
+        align = 'float-start';
       } else if (props.right) {
-        align = 'float-right';
+        align = 'float-end';
       } else if (props.center) {
         align = 'mx-auto';
         block = true;
@@ -9138,13 +9138,13 @@
 
       if (!props.noBody) {
         if ($slots.aside && !props.rightAlign) {
-          childNodes.push(h(MediaAside, { staticClass: 'mr-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
+          childNodes.push(h(MediaAside, { staticClass: 'me-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
         }
 
         childNodes.push(h(MediaBody, $slots.default));
 
         if ($slots.aside && props.rightAlign) {
-          childNodes.push(h(MediaAside, { staticClass: 'ml-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
+          childNodes.push(h(MediaAside, { staticClass: 'ms-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
         }
       }
 

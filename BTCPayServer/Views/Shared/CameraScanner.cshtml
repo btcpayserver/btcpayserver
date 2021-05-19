@@ -1,15 +1,15 @@
 <template id="camera-qr-scanner-wrap">
-	<div v-if="modalId" :id="modalId" class="modal fade" data-backdrop="static">
+	<div v-if="modalId" :id="modalId" class="modal fade" data-bs-backdrop="static">
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h5 class="modal-title">
-						{{title}}
+                    <h5 class="modal-title">
+                        {{title}}
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
-					</h5>
-					<button type="button" class="close" aria-label="Close" v-on:click="close">
-						<span aria-hidden="true">&times;</span>
-					</button>
+                    </h5>
+                    <button type="button" class="btn-close" aria-label="Close" v-on:click="close">
+                        <vc:icon symbol="close"/>
+                    </button>
 				</div>
 				<div class="modal-body">
 					<slot/>
@@ -36,12 +36,12 @@
 			<div v-if="errorMessage" class="alert alert-danger" role="alert">
 				{{errorMessage}}
 			</div>
-			<div class="text-break text-monospace">
+			<div class="text-break font-monospace">
 				{{qrData}}
 			</div>
 			<div class="mt-4">
-				<button type="button" class="btn btn-primary mr-1" v-if="qrData" v-on:click="submitData">Submit</button>
-				<button type="button" class="btn btn-secondary mr-1" v-on:click="retry">Retry</button>
+				<button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
+				<button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
 				<button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
 			</div>
 		</div>
@@ -79,9 +79,9 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		},
 		mounted() {
 			if (this.isModal) {
-				const $modal = $("#" + this.modalId);
-				$modal.on("shown.bs.modal", () => { this.isLoaded = true; });
-				$modal.on("hide.bs.modal", () => { this.isLoaded = false; });
+				const modal = document.getElementById(this.modalId);
+				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; });
+				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; });
 			} else {
 				this.isLoaded = true;
 			}
@@ -107,7 +107,8 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 			},
 			close() {
 				if (this.modalId) {
-					$("#" + this.modalId).modal('hide');
+					const modal = bootstrap.Modal.getInstance(document.getElementById(this.modalId));
+					modal.hide();
 				}
 				this.reset();
 			},

@@ -13,8 +13,8 @@
                 @if (Model.GlobalError != null)
                 {
                     <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <vc:icon symbol="close" />
                         </button>
                         <span>@Model.GlobalError</span><br/>
                     </div>
@@ -124,7 +124,7 @@
         {
             <div class="row">
                 <div class="col-lg-3"></div>
-                <div class="col-lg-6 text-right">
+                <div class="col-lg-6 text-end">
                     <p class="text-muted">Transaction fee rate: <b>@Model.FeeRate</b></p>
                 </div>
                 <div class="col-lg-3"></div>

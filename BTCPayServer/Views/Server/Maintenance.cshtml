@@ -11,14 +11,16 @@
             <h4 class="mb-3">Change domain name</h4>
             <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/ChangeDomain" target="_blank">this guide</a>.</p>
 
-            <div class="form-group">
-                <div class="form-inline">
+            <div class="row g-1">
+                <div class="col">
                     <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
-                    <button name="command" type="submit" class="btn btn-primary mt-2 mt-sm-0 ml-sm-2" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
+                    <span asp-validation-for="DNSDomain" class="text-danger"></span>
+                </div>
+                <div class="col">
+                    <button name="command" type="submit" class="btn btn-primary mt-2 mt-sm-0 ms-sm-2" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
                         <span class="fa fa-check"></span> Confirm
                     </button>
                 </div>
-                <span asp-validation-for="DNSDomain" class="text-danger"></span>
             </div>
 
             <h4 class="mt-5 mb-3">Update</h4>
@@ -48,6 +50,6 @@
     </div>
 </form>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

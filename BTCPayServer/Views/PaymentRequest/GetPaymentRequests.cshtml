@@ -12,7 +12,7 @@
             <h2 class="mb-0">
                 @ViewData["Title"]
                 <small>
-                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
                 </small>
@@ -24,25 +24,22 @@
         </div>
 
         <div class="row">
-            <div class="col-12 col-lg-6 mb-3 ml-auto">
+            <div class="col-12 col-lg-6 mb-3 ms-auto">
                 <form asp-action="GetPaymentRequests" method="get">
                     <input type="hidden" asp-for="Count"/>
                     <input type="hidden" asp-for="TimezoneOffset" />
                     <div class="input-group">
                         <input asp-for="SearchTerm" class="form-control" style="width:300px;"/>
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-secondary" title="Search invoice">
-                                <span class="fa fa-search"></span> Search
-                            </button>
-                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="sr-only">Toggle Dropdown</span>
-                            </button>
-
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" asp-action="GetPaymentRequests" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true">Include Archived Payment Reqs</a>
-                                <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
-                            </div>
+                        <button type="submit" class="btn btn-secondary" title="Search invoice">
+                            <span class="fa fa-search"></span> Search
+                        </button>
+                        <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" asp-action="GetPaymentRequests" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true">Include Archived Payment Reqs</a>
+                            <div role="separator" class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
                         </div>
                     </div>
                     <span asp-validation-for="SearchTerm" class="text-danger"></span>
@@ -59,9 +56,9 @@
                             <tr>
                                 <th>Title</th>
                                 <th>Expiry</th>
-                                <th class="text-right">Price</th>
-                                <th class="text-right">Status</th>
-                                <th class="text-right">Actions</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Status</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,9 +67,9 @@
                                 <tr>
                                     <td>@item.Title</td>
                                     <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
-                                    <td class="text-right">@item.Amount @item.Currency</td>
-                                    <td class="text-right">@item.Status</td>
-                                    <td class="text-right">
+                                    <td class="text-end">@item.Amount @item.Currency</td>
+                                    <td class="text-end">@item.Status</td>
+                                    <td class="text-end">
                                         <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
                                         <span> - </span>
                                         <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>

@@ -15,7 +15,7 @@
         <th>Label</th>
         <th class="w-125px">Key</th>
         <th>Permissions</th>
-        <th class="text-right">Actions</th>
+        <th class="text-end">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -56,7 +56,7 @@
                     </ul>
                 }
             </td>
-            <td class="text-right">
+            <td class="text-end">
                 <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
                 <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
@@ -79,16 +79,18 @@
     Generate new key
 </a>
 
+@section PageHeadContent {
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent {
 <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
 <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
 <script src="~/vendor/bc-ur/web-bundle.js" asp-append-version="true"></script>
 <script src="~/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js" asp-append-version="true"></script>
 <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
-<link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-
-<partial name="ShowQR"/>
 <script>
-    $(document).ready(function(){   
+    document.addEventListener("DOMContentLoaded", function () {
         $("[data-reveal-btn]").on("click", function (){
             var $revealButton = $(this);
             $revealButton.attr("hidden", "true");
@@ -118,3 +120,7 @@
         });
     });
 </script>
+}
+
+<partial name="ShowQR"/>
+

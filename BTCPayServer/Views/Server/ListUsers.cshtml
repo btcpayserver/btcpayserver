@@ -35,11 +35,9 @@
 >
     <div class="input-group">
         <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-        <div class="input-group-append">
-            <button type="submit" class="btn btn-secondary" title="Search by email">
-                <span class="fa fa-search"></span> Search
-            </button>
-        </div>
+        <button type="submit" class="btn btn-secondary" title="Search by email">
+            <span class="fa fa-search"></span> Search
+        </button>
     </div>
     <span asp-validation-for="SearchTerm" class="text-danger"></span>
 </form>
@@ -60,7 +58,7 @@
         </th>
         <th>Created</th>
         <th>Verified</th>
-        <th class="text-right">Actions</th>
+        <th class="text-end">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -79,7 +77,7 @@
                     <span class="text-danger fa fa-times"></span>
                 }
             </td>
-            <td class="text-right">
+            <td class="text-end">
                 <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
             </td>
         </tr>

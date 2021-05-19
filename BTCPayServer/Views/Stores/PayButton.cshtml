@@ -4,6 +4,53 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().StoreName);
 }
 
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+}
+
+@section PageFootContent {
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs/vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
+    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
+    <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
+    <script>
+        var srvModel = @Safe.Json(Model);
+
+        var payButtonCtrl = new Vue({
+            el: '#payButtonCtrl',
+            data: {
+                srvModel: srvModel,
+                originalButtonImageUrl: srvModel.payButtonImageUrl,
+                buttonInlineTextMode: false
+            },
+            computed: {
+                imageUrlRequired: function(){
+                    return !this.buttonInlineTextMode;
+                }
+            },
+            methods: {
+                inputChanges: function (event, buttonSize) {
+                    inputChanges(event, buttonSize);
+                }
+                
+            },
+            watch: {
+                buttonInlineTextMode: function (checked) {
+                  if(!checked){
+                      this.srvModel.payButtonText = "";
+                      this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
+                  }else {
+                      this.srvModel.payButtonText = "Pay with";
+                      this.srvModel.payButtonImageUrl = this.srvModel.urlRoot + "img/logo.svg";
+                  }
+                  this.inputChanges();
+                }
+              }
+        });
+    </script>
+}
+
 <div id="payButtonCtrl">
     <div class="row">
         <div class="col-lg-7">
@@ -221,7 +268,7 @@
         <div class="col-lg-7">
             <div class="form-group">
                 <label>Use App as endpoint</label>
-                <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-control">
+                <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-select">
                     <option value="">Use default pay button endpoint</option>
                     <option  v-for="app in srvModel.apps" v-bind:value="app.id" >{{app.appName}} ({{app.appType}})</option>
                 </select>
@@ -258,53 +305,6 @@
         </div>
     </div>
 </div>
-
-@section HeadScripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
-    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vuejs/vue.js" asp-append-version="true"></script>
-    <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
-    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
-    <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
-}
-
-@section Scripts {
-    <script type="text/javascript">
-        var srvModel = @Safe.Json(Model);
-
-        var payButtonCtrl = new Vue({
-            el: '#payButtonCtrl',
-            data: {
-                srvModel: srvModel,
-                originalButtonImageUrl: srvModel.payButtonImageUrl,
-                buttonInlineTextMode: false
-            },
-            computed: {
-                imageUrlRequired: function(){
-                    return !this.buttonInlineTextMode;
-                }
-            },
-            methods: {
-                inputChanges: function (event, buttonSize) {
-                    inputChanges(event, buttonSize);
-                }
-                
-            },
-            watch: {
-                buttonInlineTextMode: function (checked) {
-                  if(!checked){
-                      this.srvModel.payButtonText = "";
-                      this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
-                  }else {
-                      this.srvModel.payButtonText = "Pay with";
-                      this.srvModel.payButtonImageUrl = this.srvModel.urlRoot + "img/logo.svg";
-                  }
-                  this.inputChanges();
-                }
-              }
-        });
-    </script>
-}
 
 <script id="template-paybutton-styles" type="text/template">
     <style type="text/css">

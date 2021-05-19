@@ -117,8 +117,8 @@
     <h4 class="mb-3">Customization Settings</h4>
 
     <div class="form-group">
-        <label asp-for="RootAppId"></label>
-        <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control w-auto"></select>
+        <label asp-for="RootAppId" class="form-label"></label>
+        <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select w-auto"></select>
         @if (!Model.DomainToAppMapping.Any())
         {
             <button type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
@@ -131,24 +131,24 @@
             <div class="list-group-item">
                 <h5 class="mb-1">
                     Domain to app mapping
-                    <button type="submit" name="command" value="add-domain" class="ml-1 btn btn-secondary btn-sm ">Add domain mapping </button>
+                    <button type="submit" name="command" value="add-domain" class="ms-1 btn btn-secondary btn-sm ">Add domain mapping </button>
                 </h5>
             </div>
             @for (var index = 0; index < Model.DomainToAppMapping.Count; index++)
             {
-                <div class="list-group-item p-0 pl-lg-2">
+                <div class="list-group-item p-0 ps-lg-2">
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
                             <div class="form-group">
-                                <label asp-for="DomainToAppMapping[index].Domain" class="control-label"></label>
+                                <label asp-for="DomainToAppMapping[index].Domain" class="form-label"></label>
                                 <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>
                                 <span asp-validation-for="DomainToAppMapping[index].Domain" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="DomainToAppMapping[index].AppId"></label>
+                                <label asp-for="DomainToAppMapping[index].AppId" class="form-label"></label>
                                 <select asp-for="DomainToAppMapping[index].AppId"
                                         asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
-                                        class="form-control">
+                                        class="form-select">
                                 </select>
 
                                 <span asp-validation-for="DomainToAppMapping[index].AppId" class="text-danger"></span>
@@ -156,7 +156,7 @@
                         </div>
                         <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
                             <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
-                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ms-2">
                                 Remove Destination
                             </button>
                             <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
@@ -170,7 +170,7 @@
         </div>
     }
 
-    <button class="btn btn-link px-0" type="button" id="ExplorerLinksButton" data-toggle="collapse" data-target="#explorer-links" aria-expanded="false" aria-controls="explorer-links">
+    <button class="btn btn-link px-0" type="button" id="ExplorerLinksButton" data-bs-toggle="collapse" data-bs-target="#explorer-links" aria-expanded="false" aria-controls="explorer-links">
         Override the block explorers used
     </button>
 
@@ -192,13 +192,11 @@
                         Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
                     }
                     <li class="list-group-item">
-                        <label > @network.DisplayName (@network.CryptoCode)</label>
+                        <label class="form-label"> @network.DisplayName (@network.CryptoCode)</label>
                         <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
                         <div class="input-group">
                             <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
-                            <div class="input-group-btn only-for-js">
-                                <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh " title="Revert to default"></button>
-                            </div>
+                            <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh only-for-js" title="Revert to default"></button>
                         </div>
                     </li>
                 }
@@ -209,17 +207,15 @@
     <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
 
-@section Scripts {
+@section PageHeadContent {
     <style>
-            .remove-domain-btn{
-                font-size: 1.5rem;
-                border-radius: 0;
-            }
-             .remove-domain-btn:hover{
-                       background-color: #CCCCCC;
-             }
+        .remove-domain-btn { font-size: 1.5rem; border-radius: 0; }
+        .remove-domain-btn:hover { background-color: #CCCCCC; }
     </style>
-    <script >
+}
+
+@section PageFootContent {
+    <script>
         for (let element of document.getElementsByClassName("revert-default")) {
             element.addEventListener("click", function (){
               element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")

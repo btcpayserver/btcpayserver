@@ -5,6 +5,21 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
 }
 
+@section PageHeadContent
+{
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent
+{
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
+        window.onload = function (){        
+            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
+        }
+    </script>
+}
+
 <div class="row no-gutters">
     <div class="col-lg-8 mx-auto my-auto">
         <form method="post" asp-action="WalletReceive" class="card text-center">
@@ -22,17 +37,13 @@
                             <div class="form-group">
                                 <div class="input-group">
                                     <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text fa fa-copy"> </span>
-                                    </div>
+                                    <span class="input-group-text fa fa-copy"> </span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div class="input-group">
                                     <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text fa fa-copy"> </span>
-                                    </div>
+                                    <span class="input-group-text fa fa-copy"> </span>
                                 </div>
                             </div>
 
@@ -47,9 +58,9 @@
                         </div>
                     </noscript>
                     <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
-                        <div class="qr-container mb-4">
-                            <img src="@Model.CryptoImage" class="qr-icon"/>
-                            <div class="tab-content" id="myTabContent">
+                        <div class="mb-4">
+                            <div class="qr-container tab-content mb-3" id="myTabContent">
+                                <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
                                 <div class="tab-pane show active" id="link-tab" role="tabpanel">
                                     <vc:qr-code data="@Model.PaymentLink"/>
                                 </div>
@@ -57,25 +68,21 @@
                                     <vc:qr-code data="@Model.Address"/>
                                 </div>
                             </div>
-                            <div class="nav justify-content-center">
-                                <a class="nav-link active" data-toggle="tab" href="#link-tab">Link</a>
-                                <a  class="nav-link" data-toggle="tab" href="#address-tab">Address</a>
+                            <div class="nav nav-pills justify-content-center">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#link-tab">Link</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#address-tab">Address</a>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group" data-clipboard="@Model.Address">
                                 <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.Address" id="address"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
-                                </div>
+                                <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group" data-clipboard="@Model.PaymentLink">
                                 <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
-                                </div>
+                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
                             </div>
                         </div>
                         <div class="row mt-4">
@@ -92,14 +99,3 @@
         </form>
     </div>
 </div>
-
-@section HeadScripts
-{
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
-    <script src="~/js/copy-to-clipboard.js"></script>
-    <script>
-        window.onload = function (){        
-            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
-        }
-        </script>
-}

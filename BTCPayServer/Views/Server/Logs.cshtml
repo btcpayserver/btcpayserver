@@ -15,7 +15,7 @@
 </ul>
 
 <nav aria-label="..." class="w-100">
-    <ul class="pagination float-left">
+    <ul class="pagination float-start">
         <li class="page-item @(Model.LogFileOffset == 0 ? "disabled" : null)">
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&laquo;</a>
         </li>
@@ -40,6 +40,6 @@
 }
 
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

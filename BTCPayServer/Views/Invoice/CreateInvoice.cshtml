@@ -2,14 +2,19 @@
 @{
     ViewData.SetActivePageAndTitle(InvoiceNavPages.Create, "Create an invoice");
 }
-<script>
-    $(function() {
-        $("#create-invoice-form").on("submit",
-            function() {
-                $(this).find("input[type='submit']").prop('disabled', true);
-            });
-    })
-</script>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("#create-invoice-form").on("submit",
+                function() {
+                    $(this).find("input[type='submit']").prop('disabled', true);
+                });
+        })
+    </script>
+}
+
 <section>
     <div class="container">
         <partial name="_StatusMessage" />
@@ -21,53 +26,53 @@
                 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Amount" class="control-label" data-required></label>
+                        <label asp-for="Amount" class="form-label" data-required></label>
                         <input asp-for="Amount" class="form-control" required />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <label asp-for="Currency" class="form-label" data-required></label>
                         <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="OrderId" class="control-label"></label>
+                        <label asp-for="OrderId" class="form-label"></label>
                         <input asp-for="OrderId" class="form-control" />
                         <span asp-validation-for="OrderId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ItemDesc" class="control-label"></label>
+                        <label asp-for="ItemDesc" class="form-label"></label>
                         <input asp-for="ItemDesc" class="form-control" />
                         <span asp-validation-for="ItemDesc" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="PosData" class="control-label"></label>
+                        <label asp-for="PosData" class="form-label"></label>
                         <input asp-for="PosData" class="form-control" />
                         <span asp-validation-for="PosData" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="BuyerEmail" class="control-label"></label>
+                        <label asp-for="BuyerEmail" class="form-label"></label>
                         <input asp-for="BuyerEmail" class="form-control" />
                         <span asp-validation-for="BuyerEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="StoreId" class="control-label"></label>
-                        <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
+                        <label asp-for="StoreId" class="form-label"></label>
+                        <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                         <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="SupportedTransactionCurrencies" class="control-label"></label>
-                        <select asp-for="SupportedTransactionCurrencies" asp-items="Model.AvailablePaymentMethods" class="form-control" multiple="multiple"></select>
+                        <label asp-for="SupportedTransactionCurrencies" class="form-label"></label>
+                        <select asp-for="SupportedTransactionCurrencies" asp-items="Model.AvailablePaymentMethods" class="form-select" multiple="multiple"></select>
                         <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-                        <a asp-action="ListInvoices" class="text-muted ml-3">Back to list</a>
+                        <a asp-action="ListInvoices" class="text-muted ms-3">Back to list</a>
                     </div>
                 </form>
             </div>

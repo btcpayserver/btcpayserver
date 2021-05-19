@@ -18,12 +18,12 @@
                         {
                             case RefundSteps.SelectPaymentMethod:
                                 <div class="form-group">
-                                    <label asp-for="SelectedPaymentMethod"></label>
-                                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-control"></select>
+                                    <label asp-for="SelectedPaymentMethod" class="form-label"></label>
+                                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-select"></select>
                                     <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Next</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Next</button>
                                 </div>
                                 break;
                             case RefundSteps.SelectRate:
@@ -61,7 +61,7 @@
                                     <small class="form-text text-muted">The specified amount with the specified currency, at the rate when the refund will be sent. </small>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Create refund</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Create refund</button>
                                 </div>
                                 break;
                             case RefundSteps.SelectCustomAmount:
@@ -73,18 +73,16 @@
                                 <input type="hidden" asp-for="SelectedRefundOption"/>
 
                                 <div class="form-group">
-                                    <label asp-for="CustomAmount"></label>
+                                    <label asp-for="CustomAmount" class="form-label"></label>
                                     <div class="input-group">
                                         <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
-                                        <div class="input-group-append">
-                                            <input asp-for="CustomCurrency" type="text"class="form-control"/>
-                                        </div>
+                                        <input asp-for="CustomCurrency" type="text" class="form-control"/>
                                     </div>
                                     <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
                                     <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Next</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Next</button>
                                 </div>
                                 break;
                         }

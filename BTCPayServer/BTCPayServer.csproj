@@ -47,7 +47,7 @@
     <PackageReference Include="BIP78.Sender" Version="0.2.0" />
     <PackageReference Include="BTCPayServer.Hwi" Version="1.1.3" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.7" />
-    <PackageReference Include="BuildBundlerMinifier" Version="3.2.435" />
+    <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
@@ -90,7 +90,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\main\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
 	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />
@@ -126,15 +125,10 @@
 	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.min.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
-	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.js" />
-	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.min.js" />
-	  <None Include="wwwroot\vendor\popper\popper.js" />
-	  <None Include="wwwroot\vendor\popper\popper.min.js" />
-	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.js" />
-	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.min.js" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="wwwroot\vendor\bootstrap" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />

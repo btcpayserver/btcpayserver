@@ -2,10 +2,10 @@
 @model (string CryptoCode, bool NBXSeedAvailable)
 
 <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="SendDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Sign with...
     </button>
-    <div class="dropdown-menu" aria-labelledby="SendMenu">
+    <div class="dropdown-menu" aria-labelledby="SendDropdownToggle">
         @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
         {
             <button name="command" type="submit" class="dropdown-item" value="vault">... a hardware wallet</button>

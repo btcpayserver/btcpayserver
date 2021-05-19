@@ -18,16 +18,23 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
 
-        <div class="form-inline">
-            <form method="post">
-                <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
-                <select asp-for="Role" class="form-control">
-                    <option value="@StoreRoles.Owner">Owner</option>
-                    <option value="@StoreRoles.Guest">Guest</option>
-                </select>
-                <button type="submit" role="button" class="form-control btn btn-primary"><span class="fa fa-plus"></span> Add user</button>
-            </form>
-        </div>
+        <form method="post">
+            <div class="row g-1">
+                <div class="col-sm">
+                    <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
+                </div>
+                <div class="col-sm">
+                    <select asp-for="Role" class="form-select">
+                        <option value="@StoreRoles.Owner">Owner</option>
+                        <option value="@StoreRoles.Guest">Guest</option>
+                    </select>
+                </div>
+                <div class="col-sm">
+                    <button type="submit" role="button" class="btn btn-primary"><span class="fa fa-plus"></span> Add user</button>
+                </div>
+            </div>
+        </form>
+
         <div class="form-group">
             <table class="table table-sm table-responsive-md">
                 <thead>

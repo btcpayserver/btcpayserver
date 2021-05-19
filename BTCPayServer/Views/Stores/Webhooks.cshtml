@@ -21,7 +21,7 @@
                 <thead>
                 <tr>
                     <th>Url</th>
-                    <th class="text-right">Actions</th>
+                    <th class="text-end">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,7 +29,7 @@
                 {
                     <tr>
                         <td class="text-truncate d-block" style="max-width:300px;">@wh.Url</td>
-                        <td class="text-right">
+                        <td class="text-end">
                             <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
                         </td>
                     </tr>
@@ -46,6 +46,6 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

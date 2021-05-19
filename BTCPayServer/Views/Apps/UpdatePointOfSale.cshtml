@@ -16,19 +16,19 @@
                     <input type="hidden" asp-for="StoreId" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label" data-required></label>
+                        <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <label asp-for="Currency" class="form-label" data-required></label>
                         <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <div class="form-group">
-                            <label asp-for="DefaultView" class="control-label" data-required></label>
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control" required></select>
+                            <label asp-for="DefaultView" class="form-label" data-required></label>
+                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                             <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
                         <div class="form-check">
@@ -48,27 +48,27 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ButtonText" class="control-label" data-required></label>
+                        <label asp-for="ButtonText" class="form-label" data-required></label>
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomButtonText" class="control-label" data-required></label>
+                        <label asp-for="CustomButtonText" class="form-label" data-required></label>
                         <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomTipText" class="control-label" data-required></label>
+                        <label asp-for="CustomTipText" class="form-label" data-required></label>
                         <input asp-for="CustomTipText" class="form-control" required />
                         <span asp-validation-for="CustomTipText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomTipPercentages" class="control-label"></label>
+                        <label asp-for="CustomTipPercentages" class="form-label"></label>
                         <input asp-for="CustomTipPercentages" class="form-control" />
                         <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <label asp-for="CustomCSSLink" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
@@ -79,32 +79,32 @@
                     <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
 
                     <div class="form-group">
-                        <label asp-for="Template" class="control-label"></label>
+                        <label asp-for="Template" class="form-label"></label>
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="RedirectUrl" class="control-label"></label>
+                        <label asp-for="RedirectUrl" class="form-label"></label>
                         <input asp-for="RedirectUrl" class="form-control" />
                         <span asp-validation-for="RedirectUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="RedirectAutomatically" class="control-label" data-required></label>
-                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control" required></select>
+                        <label asp-for="RedirectAutomatically" class="form-label"></label>
+                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Description" class="control-label"></label>
+                        <label asp-for="Description" class="form-label"></label>
                         <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <label asp-for="EmbeddedCSS" class="form-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>
@@ -127,16 +127,14 @@
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordian-dev-info">
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-embed-payment-button-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-payment-button" aria-expanded="true" aria-controls="accordian-dev-info-embed-payment-button">
-                                            Embed Payment Button linking to POS item
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-embed-payment-button" class="collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-embed-payment-button-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordian-dev-info-embed-payment-button">
+                                        Embed Payment Button linking to POS item
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
                                         @if (Model.Example1 != null)
                                         {
@@ -151,17 +149,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-embed-pos-iframe-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
-                                            Embed POS with Iframe
-
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-embed-pos-iframe" class="collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-embed-pos-iframe-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
+                                        Embed POS with Iframe
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         You can embed the POS using an iframe
                                         @{
                                             var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
@@ -170,16 +165,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-notification-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
-                                            Notification Url Callbacks
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-notification" class="collapse" aria-labelledby="accordian-dev-info-notification-header" data-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-notification-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
+                                        Notification Url Callbacks
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-notification-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                         <pre><code class="json">@Model.ExampleCallback</code></pre>
                                         <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
@@ -196,13 +189,18 @@
                         </div>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 </section>
-@section Scripts {
+
+@section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css" asp-append-version="true"></bundle>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <script>hljs.initHighlightingOnLoad();</script>
     <script id="template-product-item" type="text/template">
@@ -211,7 +209,7 @@
                 {image}
                 <div class="card-body">
                     <h6 class="card-title">{title}</h6>
-                    <a href="#" class="js-product-edit btn btn-primary" data-toggle="modal" data-target="#product-modal">Edit</a>
+                    <a href="#" class="js-product-edit btn btn-primary" data-bs-toggle="modal" data-bs-target="#product-modal">Edit</a>
                     <a href="#" class="js-product-remove btn btn-danger"><i class="fa fa-trash"></i></a>
                 </div>
             </div>
@@ -237,7 +235,7 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>
-                    <select class="js-product-custom form-control">
+                    <select class="js-product-custom form-select">
                         {custom}
                     </select>
                 </div>
@@ -264,5 +262,4 @@
     </script>
 
     <bundle name="wwwroot/bundles/pos-admin-bundle.min.js" asp-append-version="true"></bundle>
-    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css" asp-append-version="true"></bundle>
 }

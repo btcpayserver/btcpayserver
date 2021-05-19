@@ -7,7 +7,9 @@
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible mb-5" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
         Warning: No wallet has been linked to your BTCPay Store.<br/>
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link">this link</a> for more information on how to connect your store and wallet.
     </div>
@@ -35,7 +37,7 @@
                 <thead>
                 <tr>
                     <th>Label</th>
-                    <th class="text-right">Actions</th>
+                    <th class="text-end">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -43,7 +45,7 @@
                 {
                     <tr>
                         <td>@token.Label</td>
-                        <td class="text-right">
+                        <td class="text-end">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">Revoke</a>
                         </td>
                     </tr>
@@ -64,23 +66,17 @@
 
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
             <div class="form-group">
-                <label asp-for="ApiKey"></label>
+                <label asp-for="ApiKey" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="ApiKey" readonly class="form-control"/>
                     @if (string.IsNullOrEmpty(Model.ApiKey))
                     {
-                        <div class="input-group-append">
-                            <button class="btn btn-success" type="submit">Generate</button>
-                        </div>
+                        <button class="btn btn-success" type="submit">Generate</button>
                     }
                     else
                     {
-                        <div class="input-group-append">
-                            <button class="btn btn-danger" type="submit" name="command" value="revoke">Revoke</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button class="btn btn-success" type="submit">Re-generate</button>
-                        </div>
+                        <button class="btn btn-danger" type="submit" name="command" value="revoke">Revoke</button>
+                        <button class="btn btn-success" type="submit">Re-generate</button>
                     }
                 </div>
             </div>

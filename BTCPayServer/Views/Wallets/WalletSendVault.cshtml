@@ -7,7 +7,9 @@
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <vc:icon symbol="close" />
+    </button>
     <span id="alertMessage"></span>
 </div>
 <div class="row">
@@ -24,11 +26,12 @@
 </div>
 
 <partial name="VaultElements" />
-@section Scripts
+
+@section PageFootContent
 {
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script type="text/javascript">
+    <script>
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;
@@ -51,7 +54,7 @@
             $("#SigningContext_PSBT").val(vaultUI.psbt);
             $("#broadcastForm").submit();
         }
-        $(function () {
+        document.addEventListener("DOMContentLoaded", function () {
             askSign();
         });
     </script>

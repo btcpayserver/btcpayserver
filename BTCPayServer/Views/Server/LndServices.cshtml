@@ -15,22 +15,22 @@
         <div>
             @if (Model.Uri == null) // if GRPC
             {
-                <a href="https://www.pebble.indiesquare.me/" target="_blank" class="d-inline-block mr-3 text-center">
+                <a href="https://www.pebble.indiesquare.me/" target="_blank" class="d-inline-block me-3 text-center">
                     <img src="~/img/pebblewallet.jpg" width="100" height="100" asp-append-version="true" alt="Pebble" />
                     <div class="mt-2">Pebble</div>
                 </a>
-                <a href="https://zaphq.io/" target="_blank" class="d-inline-block mr-3 text-center">
+                <a href="https://zaphq.io/" target="_blank" class="d-inline-block me-3 text-center">
                     <img src="~/img/zapwallet.jpg" width="100" height="100" asp-append-version="true" alt="Zap" />
                     <div class="mt-2">Zap</div>
                 </a>
             }
             else
             {
-                <a href="https://lightningjoule.com/" target="_blank" class="d-inline-block mr-3 mb-3 text-center">
+                <a href="https://lightningjoule.com/" target="_blank" class="d-inline-block me-3 mb-3 text-center">
                     <img src="~/img/joule.png" width="100" height="100" asp-append-version="true" alt="Joule" />
                     <div class="mt-2">Joule</div>
                 </a>
-                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block mr-3 mb-3 text-center">
+                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center">
                     <img src="~/img/zeus.jpg" width="100" height="100" asp-append-version="true" alt="Zeus" />
                     <div class="mt-2">Zeus</div>
                 </a>
@@ -57,7 +57,7 @@
                 <div id="qrCode"></div>
                 <div id="qrCodeData" data-url="@Model.QRCode"></div>
             </div>
-            <p>See QR Code information by clicking <a href="#detailsQR" data-toggle="collapse">here</a>.</p>
+            <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a>.</p>
             <div id="detailsQR" class="collapse">
                 <div class="form-group">
                     <label>QR Code data</label>
@@ -70,7 +70,7 @@
         }
 
         <h4 class="mt-5 mb-3">More details</h4>
-        <p>Alternatively, you can see the settings by clicking <a href="#details" data-toggle="collapse">here</a>.</p>
+        <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a>.</p>
 
         <div id="details" class="collapse">
             @if (Model.Uri == null)
@@ -137,13 +137,13 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 
     @if(Model.QRCode != null)
     {
-        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
-        <script type="text/javascript">
+        <script src="~/js/qrcode.js" asp-append-version="true"></script>
+        <script>
             new QRCode(document.getElementById("qrCode"), {
                 text: @Safe.Json(Model.QRCode),
                 width: 200,

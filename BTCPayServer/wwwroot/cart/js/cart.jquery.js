@@ -93,7 +93,7 @@ $(document).ready(function(){
             // Add loading animation to the pay button
             button.prepend([
                 '<div class="spinner-grow spinner-grow-sm align-baseline" role="status">',
-                '    <span class="sr-only">Loading...</span>',
+                '    <span class="visually-hidden">Loading...</span>',
                 '</div>'
             ].join(''));
         }

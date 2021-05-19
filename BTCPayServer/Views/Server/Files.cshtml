@@ -76,7 +76,7 @@ else
                 <li class="list-group-item">
                     <div class="row px-0 mx-0">
                         <span class="col-sm-12 col-md-2">Url: </span>
-                        <a class="col-sm-12 col-md-10 text-right" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
+                        <a class="col-sm-12 col-md-10 text-end" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
                             @Url.Action("GetFile", "Storage", new
                             {
                                 fileId = Model.SelectedFileId
@@ -87,7 +87,7 @@ else
                 <li class="list-group-item ">
                     <div class="row px-0 mx-0">
                         <span class="col-sm-12 col-md-2">Direct Url: </span>
-                        <a class="col-sm-12 col-md-10 text-right" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
+                        <a class="col-sm-12 col-md-10 text-end" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
                     </div>
                 </li>
             </ul>
@@ -99,30 +99,7 @@ else
 {
     <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
         <h4 class="mt-5 mb-3">Upload File</h4>
-
-        <div class="custom-file mb-3">
-            <input type="file" class="custom-file-input" name="file" id="file" required>
-            <label class="custom-file-label" for="customFile">Choose file</label>
-        </div>
-
+        <input type="file" class="form-control mb-3" name="file" id="file" required>
         <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
     </form>
-
-    @section Scripts {
-        <script>
-            $(document).ready(function () {
-
-                $('.custom-file-input').on('change',
-                    function () {
-                        var label = $(this).next('label');
-                        if (document.getElementById("file").files.length > 0) {
-                            var fileName = document.getElementById("file").files[0].name;
-                            label.addClass("selected").html(fileName);
-                        } else {
-                            label.removeClass("selected").html("Choose file");
-                        }
-                    });
-            });
-        </script>
-    }
 }

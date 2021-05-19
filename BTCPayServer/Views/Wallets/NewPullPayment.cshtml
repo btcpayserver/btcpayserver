@@ -56,24 +56,24 @@
               asp-route-walletId="@Context.GetRouteValue("walletId")"
               asp-action="NewPullPayment">
             <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
+                <label asp-for="Name" class="form-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-row">
                 <div class="form-group col-8">
-                    <label asp-for="Amount" class="control-label"></label>
+                    <label asp-for="Amount" class="form-label"></label>
                     <input asp-for="Amount" class="form-control" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group col-4">
-                    <label asp-for="Currency" class="control-label"></label>
+                    <label asp-for="Currency" class="form-label"></label>
                     <input asp-for="Currency" class="form-control" />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
-                <label asp-for="CustomCSSLink" class="control-label"></label>
+                <label asp-for="CustomCSSLink" class="form-label"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
@@ -81,13 +81,13 @@
                 <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="EmbeddedCSS" class="control-label"></label>
+                <label asp-for="EmbeddedCSS" class="form-label"></label>
                 <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                 <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-                <a asp-action="PullPayments" asp-route-walletId="@Context.GetRouteValue("walletId")" class="text-muted ml-3">Back to list</a>
+                <a asp-action="PullPayments" asp-route-walletId="@Context.GetRouteValue("walletId")" class="text-muted ms-3">Back to list</a>
             </div>
         </form>
     </div>

@@ -43,14 +43,14 @@
         <a asp-action="Disable2faWarning" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
             <div>
                 <h5 >Disable 2FA</h5>
-                <p class="mb-0 mr-3">Disable two-factor authentication. Re-enabling will not require you to reconfigure your Authenticator app. </p>
+                <p class="mb-0 me-3">Disable two-factor authentication. Re-enabling will not require you to reconfigure your Authenticator app. </p>
             </div>
             <i class="fa fa-chevron-right"></i>
         </a>
         <a asp-action="GenerateRecoveryCodes" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
             <div>
                 <h5 >Reset recovery codes</h5>
-                <p class="mb-0 mr-3">Regenerate your two-factor recovery codes.</p>
+                <p class="mb-0 me-3">Regenerate your two-factor recovery codes.</p>
             </div>
             <i class="fa fa-chevron-right"></i>
         </a>
@@ -58,14 +58,14 @@
         <a asp-action="EnableAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
             <div>
                 <h5 >Configure Authenticator app</h5>
-                <p class="mb-0 mr-3">Display the key or QR code to configure an authenticator app with your current setup.</p>
+                <p class="mb-0 me-3">Display the key or QR code to configure an authenticator app with your current setup.</p>
             </div>
             <i class="fa fa-chevron-right"></i>
         </a>
         <a asp-action="ResetAuthenticatorWarning" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
             <div>
                 <h5 >Reset Authenticator app</h5>
-                <p class="mb-0 mr-3">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised.</p>
+                <p class="mb-0 me-3">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised.</p>
             </div>
             <i class="fa fa-chevron-right"></i>
         </a>
@@ -75,13 +75,13 @@
         <a asp-action="EnableAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
             <div>
                 <h5 >Enable 2FA</h5>
-                <p class="mb-0 mr-3">Enable two-factor authentication using TOTP with apps such as Google Authenticator.</p>
+                <p class="mb-0 me-3">Enable two-factor authentication using TOTP with apps such as Google Authenticator.</p>
             </div>
             <i class="fa fa-chevron-right"></i>
         </a>
     }
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

@@ -9,7 +9,9 @@
         <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
         <div class="alert alert-warning alert-dismissible my-4" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <vc:icon symbol="close" />
+            </button>
             <p>Before you proceed, please understand the following:</p>
             <ol>
                 <li>Make sure this BTCPay Server instance <b>belongs to you</b>.</li>
@@ -22,12 +24,12 @@
         <form method="post" asp-action="SignWithSeed" asp-route-walletId="@Context.GetRouteValue("walletId")">
             <partial name="SigningContext" for="SigningContext"/>
             <div class="form-group">
-                <label asp-for="SeedOrKey"></label>
+                <label asp-for="SeedOrKey" class="form-label"></label>
                 <input asp-for="SeedOrKey" class="form-control" autocomplete="off" autocorrect="off" autocapitalize="off"/>
                 <span asp-validation-for="SeedOrKey" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Passphrase"></label>
+                <label asp-for="Passphrase" class="form-label"></label>
                 <input asp-for="Passphrase" class="form-control"/>
                 <span asp-validation-for="Passphrase" class="text-danger"></span>
             </div>

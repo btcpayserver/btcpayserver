@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 
@@ -27,46 +28,12 @@ namespace BTCPayServer.Tests
 
         public static void AssertNoError(this IWebDriver driver)
         {
-            try
-            {
-                Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
-                if (driver.PageSource.Contains("alert-danger"))
-                {
-                    foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
-                        Assert.False(dangerAlert.Displayed, "No alert should be displayed");
-                }
-            }
-            catch
-            {
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine();
-                foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
-                {
-                    try
-                    {
-                        var logs = driver.Manage().Logs.GetLog(logKind);
-                        builder.AppendLine($"Selenium [{logKind}]:");
-                        foreach (var entry in logs)
-                        {
-                            builder.AppendLine($"[{entry.Level}]: {entry.Message}");
-                        }
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-
-                    builder.AppendLine("---------");
-                }
-                Logs.Tester.LogInformation(builder.ToString());
-                builder = new StringBuilder();
-                builder.AppendLine("Selenium [Sources]:");
-                builder.AppendLine(driver.PageSource);
-                builder.AppendLine("---------");
-                Logs.Tester.LogInformation(builder.ToString());
-                throw;
-            }
+            Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
+            if (!driver.PageSource.Contains("alert-danger")) return;
+            foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
+                Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
         }
+        
         public static T AssertViewModel<T>(this IActionResult result)
         {
             Assert.NotNull(result);
@@ -111,6 +78,13 @@ namespace BTCPayServer.Tests
         {
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+        }
+        
+        // Open collapse via JS, because if we click the link it triggers the toggle animation.
+        // This leads to Selenium trying to click the button while it is moving resulting in an error.
+        public static void ToggleCollapse(this IWebDriver driver, string collapseId)
+        {
+            driver.ExecuteJavaScript($"document.getElementById('{collapseId}').classList.add('show')");
         }
 
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)

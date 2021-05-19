@@ -14,13 +14,11 @@
 <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
 <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" asp-append-version="true" />
 <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
-@if (!String.IsNullOrWhiteSpace(themeManager.CustomThemeUri))
+@if (!string.IsNullOrWhiteSpace(themeManager.CustomThemeUri))
 {
 <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CustomThemeUri)" rel="stylesheet" asp-append-version="true" />
 }
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
-@* JS *@
-<bundle name="wwwroot/bundles/main-bundle.min.js" asp-append-version="true" />
 @* Non-JS *@
 <noscript>
     <style>

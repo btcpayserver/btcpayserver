@@ -431,9 +431,9 @@ namespace BTCPayServer.Controllers
                 ? ""
                 : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             var description =
-                $"<p class=\"text-danger font-weight-bold\">Please note that this is a {walletType} wallet!</p>" +
-                $"<p class=\"text-danger font-weight-bold\">Do not replace the wallet if you have not backed it up{additionalText}.</p>" +
-                "<p class=\"text-left mb-0\">Replacing the wallet will erase the current wallet data from the server. " +
+                $"<p class=\"text-danger fw-bold\">Please note that this is a {walletType} wallet!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not replace the wallet if you have not backed it up{additionalText}.</p>" +
+                "<p class=\"text-start mb-0\">Replacing the wallet will erase the current wallet data from the server. " +
                 "The current wallet will be replaced once you finish the setup of the new wallet. If you cancel the setup, the current wallet will stay active  .</p>";
 
             return View("Confirm", new ConfirmModel
@@ -479,9 +479,9 @@ namespace BTCPayServer.Controllers
                 ? ""
                 : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             var description =
-                $"<p class=\"text-danger font-weight-bold\">Please note that this is a {walletType} wallet!</p>" +
-                $"<p class=\"text-danger font-weight-bold\">Do not remove the wallet if you have not backed it up{additionalText}.</p>" +
-                "<p class=\"text-left mb-0\">Removing the wallet will erase the wallet data from the server. " +
+                $"<p class=\"text-danger fw-bold\">Please note that this is a {walletType} wallet!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not remove the wallet if you have not backed it up{additionalText}.</p>" +
+                "<p class=\"text-start mb-0\">Removing the wallet will erase the wallet data from the server. " +
                 $"The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.</p>";
 
             return View("Confirm", new ConfirmModel

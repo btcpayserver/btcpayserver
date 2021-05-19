@@ -18,7 +18,7 @@
             <div class="row button-row">
                 <div class="col-lg-6">
                     <span class="dropdown" style="display:none;" id="MassAction">
-                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Actions
                         </button>
                         <div class="dropdown-menu">
@@ -47,7 +47,7 @@
                                 </a>
                             </th>
                             <th>Message</th>
-                            <th class="text-right">Actions</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -65,7 +65,7 @@
                                 <td onclick="toggleRowCheckbox(this)">
                                     @item.Body
                                 </td>
-                                <td class="text-right font-weight-normal">
+                                <td class="text-end fw-normal">
                                     @if (!String.IsNullOrEmpty(item.ActionLink))
                                     {
                                         <a href="@item.ActionLink" class="btn btn-link p-0">Details</a>
@@ -132,7 +132,7 @@ tr.seen td {
         updateSelectors();
     }
 
-    $(function () {
+    document.addEventListener("DOMContentLoaded", function () {
         $(".selector").change(updateSelectors);
         updateSelectors();
     });

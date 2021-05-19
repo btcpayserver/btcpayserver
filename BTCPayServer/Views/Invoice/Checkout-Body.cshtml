@@ -168,7 +168,7 @@
                 <span class="submission-error-label" v-show="emailAddressInputInvalid">{{$t("Please enter a valid email address")}}</span>
             </div>
             <div class="input-wrapper">
-                <input class="bp-input email-input "
+                <input class="bp-input email-input"
                        v-bind:class="{ 'ng-pristine ng-submitted ng-touched': !emailAddressInputDirty,  'ng-invalid form-input-invalid': emailAddressInputInvalid }" id="emailAddressFormInput"
                        v-bind:placeholder="$t('Your email')" type="email" v-model="emailAddressInput"
                        v-on:change="onEmailChange">

@@ -24,7 +24,7 @@
         <li class="mb-5">
             <p class="mb-2">Scan the QR Code or enter the following key into your two factor authenticator app:</p>
             <p class="mb-4">
-                <code class="mr-3">@Model.SharedKey</code>
+                <code class="me-3">@Model.SharedKey</code>
                 <span class="text-secondary">(spaces and casing do not matter)</span>
             </p>
             <div id="qrCode"></div>
@@ -42,7 +42,7 @@
                         <input asp-for="AuthenticatorUri" type="hidden" />
                         <input asp-for="SharedKey" type="hidden" />
                         <div class="form-group">
-                            <label asp-for="Code" class="control-label">Verification Code</label>
+                            <label asp-for="Code" class="form-label">Verification Code</label>
                             <input asp-for="Code" class="form-control" autocomplete="off" />
                             <span asp-validation-for="Code" class="text-danger"></span>
                         </div>
@@ -55,18 +55,17 @@
     </ol>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-    <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
-    <script type="text/javascript">
-        new QRCode(document.getElementById("qrCode"),
-            {
-                text: @Safe.Json(Model.AuthenticatorUri),
-                width: 200,
-                height: 200,
-                useSVG: true,
-                correctLevel : QRCode.CorrectLevel.M
-            });
+    <script src="~/js/qrcode.js" asp-append-version="true"></script>
+    <script>
+        new QRCode(document.getElementById("qrCode"), {
+            text: @Safe.Json(Model.AuthenticatorUri),
+            width: 200,
+            height: 200,
+            useSVG: true,
+            correctLevel : QRCode.CorrectLevel.M
+        });
         $("#qrCode > img").css({ "margin": "auto" });
     </script>
 }

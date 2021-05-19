@@ -8,40 +8,34 @@
 <script id="template-cart-item" type="text/template">
     <tr data-id="{id}">
         {image}
-        <td class="align-middle pr-0 pl-2"><b>{title}</b></td>
+        <td class="align-middle pe-0 ps-2"><b>{title}</b></td>
         <td class="align-middle px-0">
             <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
         </td>
         <td class="align-middle px-0">
             <div class="input-group align-items-center">
-                <div class="input-group-prepend">
-                    <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
-                </div>
+                <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                 <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
-                <div class="input-group-append">
-                    <a class="js-cart-item-plus btn btn-link px-2" href="#">
-                        <i class="fa fa-plus-circle fa-fw text-success"></i>
-                    </a>
-                </div>
+                <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
+                    <i class="fa fa-plus-circle fa-fw text-success"></i>
+                </a>
             </div>
         </td>
-        <td class="align-middle text-right">{price}</td>
+        <td class="align-middle text-end">{price}</td>
     </tr>
 </script>
 
 <script id="template-cart-item-image" type="text/template">
-    <td class="align-middle pr-0" width="1%"><img src="{image}" width="50" alt=""></td>
+    <td class="align-middle pe-0" width="1%"><img src="{image}" width="50" alt=""></td>
 </script>
 
 <script id="template-cart-custom-amount" type="text/template">
     <tr>
         <td colspan="5">
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                </div>
+                <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
                 <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
-                <div class="input-group-append">
+                <div class="input-group-text">
                     <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </div>
@@ -54,13 +48,9 @@
         <tr>
             <th colspan="5" class="border-0 pb-0">
                 <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
                     <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
-                    <div class="input-group-append">
-                        <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </th>
         </tr>
@@ -70,13 +60,9 @@
         <tr>
             <th colspan="5" class="border-top-0">
                 <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
                     <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
-                    <div class="input-group-append">
-                        <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </th>
         </tr>
@@ -92,13 +78,9 @@
         <tr>
             <th colspan="5" class="border-0">
                 <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                     <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
-                    <div class="input-group-append">
-                        <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
                 <div class="row mb-1">
                     @if (customTipPercentages != null && customTipPercentages.Length > 0)
@@ -107,7 +89,7 @@
                         {
                             var percentage = customTipPercentages[i];
                             <div class="col">
-                                <a class="js-cart-tip-btn btn btn-lg btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                                <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
                             </div>
                         }
                     }
@@ -120,7 +102,7 @@
 <script id="template-cart-total" type="text/template">
     <tr>
         <th colspan="1" class="pb-4 h4">Total</th>
-        <th colspan="4" class="pb-4 h4 text-right">
+        <th colspan="4" class="pb-4 h4 text-end">
             <span class="js-cart-total">{total}</span>
         </th>
     </tr>
@@ -131,7 +113,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white border-0">
                 <h5 class="modal-title">Confirmation</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">
                         <i class="fa fa-times fa-fw"></i>
                     </span>
@@ -169,7 +151,7 @@
                         }
                         <tr>
                             <td class="h3 table-light">Total</td>
-                            <td class="h3 table-light text-right">
+                            <td class="h3 table-light text-end">
                                 <span class="js-cart-summary-total text-nowrap"></span>
                             </td>
                         </tr>
@@ -204,10 +186,10 @@
             <div class="row">
                 <partial name="_StatusMessage" />
 
-                <div class="col-sm-4 col-lg-2 order-sm-last text-right mb-2">
+                <div class="col-sm-4 col-lg-2 order-sm-last text-end mb-2">
                     <a class="js-cart btn btn-lg btn-outline-primary" href="#">
                         <i class="fa fa-shopping-basket"></i>&nbsp;
-                        <span class="badge badge-light badge-pill">
+                        <span class="badge bg-light rounded-pill">
                             <span id="js-cart-items">0</span>
                         </span>
                     </a>
@@ -230,14 +212,13 @@
         </div>
         <div id="js-pos-list" class="text-center mx-auto px-4">
             <div class="row card-deck my-3">
-
                 @for (var index = 0; index < Model.Items.Length; index++)
                 {
                     var item = Model.Items[index];
                     var image = item.Image;
                     var description = item.Description;
 
-                    <div class="js-add-cart card my-2 card-wrapper" data-index="@index">
+                    <div class="js-add-cart card px-0 m-2 card-wrapper" data-index="@index">
                         @if (!String.IsNullOrWhiteSpace(image))
                         {
                             @:<img class="card-img-top" src="@image" alt="Card image cap" asp-append-version="true">
@@ -280,7 +261,7 @@
     <nav id="sidebar" class="bg-dark text-white">
         <div class="bg-primary p-3 clearfix">
             <h3 class="text-white m-0 pull-left">Cart</h3>
-            <a class="js-cart btn btn-sm bg-white text-black pull-right ml-5" href="#">
+            <a class="js-cart btn btn-sm bg-white text-black pull-right ms-5" href="#">
                 <i class="fa fa-times fa-lg"></i>
             </a>
             <a class="js-cart-destroy btn btn-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
@@ -293,7 +274,7 @@
                     <th class="text-center" width="20%">
                         <div style="width: 84px">Quantity</div>
                     </th>
-                    <th class="text-right" width="25%">
+                    <th class="text-end" width="25%">
                         <div style="min-width: 50px">Price</div>
                     </th>
                 </tr>
@@ -305,7 +286,7 @@
             <thead></thead>
         </table>
 
-        <button id="js-cart-confirm" data-toggle="modal" data-target="#cartModal" class="btn btn-primary btn-lg btn-block mb-3 p-3" disabled="disabled" type="submit">
+        <button id="js-cart-confirm" data-bs-toggle="modal" data-bs-target="#cartModal" class="btn btn-primary btn-lg w-100 mb-3 p-3" disabled="disabled" type="submit">
             <b>Confirm</b>
         </button>
 

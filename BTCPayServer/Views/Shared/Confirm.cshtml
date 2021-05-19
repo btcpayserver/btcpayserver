@@ -8,7 +8,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <partial name="Header" />
+    <partial name="LayoutHead" />
 </head>
 <body class="bg-light">
     <div class="modal-dialog modal-dialog-centered min-vh-100">
@@ -28,7 +28,7 @@
                 }
             </div>
 
-            @if (!String.IsNullOrEmpty(Model.Action))
+            @if (!string.IsNullOrEmpty(Model.Action))
             {
                 <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl">
                     <button type="submit" class="btn @Model.ButtonClass xmx-2" id="continue" style="min-width:25%;">@Model.Action</button>
@@ -37,5 +37,6 @@
             }
         </div>
     </div>
+    <partial name="LayoutFoot" />
 </body>
 </html>

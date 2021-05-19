@@ -27,7 +27,7 @@
         <div id="vault-xpub" class="mt-4" style="display:none;">
             <div class="form-group">
                 <label for="addressType">Address type</label>
-                <select id="addressType" name="addressType" class="form-control w-auto">
+                <select id="addressType" name="addressType" class="form-select w-auto">
                     <option value="segwit">Segwit (Recommended, cheapest fee)</option>
                     <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
                     <option value="legacy">Legacy (Not recommended)</option>
@@ -35,7 +35,7 @@
             </div>
             <div class="form-group">
                 <label for="accountNumber">Account</label>
-                <select id="accountNumber" name="accountNumber" class="form-control w-auto">
+                <select id="accountNumber" name="accountNumber" class="form-select w-auto">
                     @for (int i = 0; i < 20; i++)
                     {
                         <option value="@i">@i</option>
@@ -63,7 +63,7 @@
 
             <div class="form-group">
                 <label asp-for="DerivationScheme"></label>
-                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="3" readonly></textarea>
+                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="3" readonly></textarea>
             </div>
             <div class="form-group">
                 <label asp-for="RootFingerprint"></label>
@@ -78,14 +78,14 @@
     </div>
 </form>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <partial name="VaultElements" />
 
     <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
 
-    <script type="text/javascript">
+    <script>
         window.addEventListener("load", async () => {
             const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
             const wsProto = location.protocol.replace(/^http/, "ws");

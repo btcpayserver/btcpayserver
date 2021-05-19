@@ -29,7 +29,7 @@
 
     <div class="form-group">
         <label asp-for="DerivationScheme">Extended public key</label>
-        <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="2"></textarea>
+        <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="2"></textarea>
         <span asp-validation-for="DerivationScheme" class="text-danger"></span>
     </div>
 
@@ -49,70 +49,70 @@
     <tbody>
     <tr>
         <td rowspan="4">P2WPKH</td>
-        <td class="text-monospace">xpub…</td>
+        <td class="font-monospace">xpub…</td>
     </tr>
     <tr>
-        <td class="text-monospace">zpub…</td>
+        <td class="font-monospace">zpub…</td>
     </tr>
     <tr>
-        <td class="text-monospace">wpkh(xpub…/0/*)</td>
+        <td class="font-monospace">wpkh(xpub…/0/*)</td>
     </tr>
     <tr>
-        <td class="text-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
+        <td class="font-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
     </tr>
     <tr>
         <td rowspan="4">P2SH-P2WPKH</td>
-        <td class="text-monospace">xpub…-[p2sh]</td>
+        <td class="font-monospace">xpub…-[p2sh]</td>
     </tr>
     <tr>
-        <td class="text-monospace">ypub…</td>
+        <td class="font-monospace">ypub…</td>
     </tr>
     <tr>
-        <td class="text-monospace">sh(wpkh(xpub…/0/*)</td>
+        <td class="font-monospace">sh(wpkh(xpub…/0/*)</td>
     </tr>
     <tr>
-        <td class="text-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
+        <td class="font-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
     </tr>
     <tr>
         <td rowspan="3">P2PKH</td>
-        <td class="text-monospace">xpub…-[legacy]</td>
+        <td class="font-monospace">xpub…-[legacy]</td>
     </tr>
     <tr>
-        <td class="text-monospace">pkh([…/44'/0'/0']xpub…/0/*)</td>
+        <td class="font-monospace">pkh([…/44'/0'/0']xpub…/0/*)</td>
     </tr>
     <tr>
-        <td class="text-monospace">pkh(xpub…/0/*)</td>
+        <td class="font-monospace">pkh(xpub…/0/*)</td>
     </tr>
     <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2WSH</td>
-        <td class="text-monospace">2-of-xpub1…-xpub2…</td>
+        <td class="font-monospace">2-of-xpub1…-xpub2…</td>
     </tr>
     <tr class="additional">
-        <td class="text-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
+        <td class="font-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
     </tr>
     <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH-P2WSH</td>
-        <td class="text-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
+        <td class="font-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
     </tr>
     <tr class="additional">
-        <td class="text-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
+        <td class="font-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
     </tr>
     <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH</td>
-        <td class="text-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
+        <td class="font-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
     </tr>
     <tr class="additional">
-        <td class="text-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
+        <td class="font-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
     </tr>
     </tbody>
 </table>
 
 <a id="ToggleAdditional" href="#additional">Show multi-sig examples</a>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 
-    <script type="text/javascript">
+    <script>
         document.getElementById('ToggleAdditional').addEventListener("click", function(e) {
           e.preventDefault();
           document.getElementById('AddressTypes').classList.toggle('expanded');

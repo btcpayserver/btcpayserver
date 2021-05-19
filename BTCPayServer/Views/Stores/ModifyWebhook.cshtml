@@ -4,7 +4,10 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
-
+<style>
+    #event-selector { display: none; }
+    #Everything[data-value='false'] + #event-selector { display: block; }
+</style>
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
@@ -17,12 +20,10 @@
             <div class="form-group">
                 <label asp-for="Secret"></label>
                 <div class="input-group">
-                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-toggle="password">
-                    <div class="input-group-append">
-                        <span class="input-group-text">
-                            <i class="fa fa-eye"></i>
-                        </span>
-                    </div>
+                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-bs-toggle="password">
+                    <span class="input-group-text">
+                        <i class="fa fa-eye"></i>
+                    </span>
                 </div>
                 <p class="text-muted small form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</p>
             </div>
@@ -40,13 +41,11 @@
                 </div>
             </div>
             <h4 class="mb-3">Events</h4>
-            <div class="form-group">
-                <label asp-for="Everything">Which events would you like to trigger this webhook?</label>
-                <select id="all-events" class="form-control" asp-for="Everything">
-                    <option value="true">Send me everything</option>
-                    <option value="false">Send specific events</option>
-                </select>
-            </div>
+            <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
+            <select asp-for="Everything" class="form-select mb-3" onchange="this.dataset.value=this.value">
+                <option value="true">Send me everything</option>
+                <option value="false">Send specific events</option>
+            </select>
             <div id="event-selector" class="collapse">
                 <ul class="list-group">
                     @foreach (var evt in new[]
@@ -60,14 +59,10 @@
                     })
                     {
                         <li class="list-group-item ">
-                            <div class="d-flex align-items-center">
-                                <span class="d-flex align-items-center flex-fill mr-3">
-                                    <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
-                                </span>
-                                <span class="d-flex align-items-center">
-                                    <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
-                                </span>
-                            </div>
+                            <label for="@evt.Item2" class="d-flex align-items-center">
+                                <span class="flex-fill me-3">@evt.Item1</span>
+                                <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
+                            </label>
                         </li>
                     }
                 </ul>
@@ -94,7 +89,7 @@
                               asp-route-deliveryId="@delivery.Id"
                               method="post">
                             <div class="d-flex align-items-center">
-                                <span class="d-flex align-items-center flex-fill mr-3">
+                                <span class="d-flex align-items-center flex-fill me-3">
                                     @if (delivery.Success)
                                     {
                                         <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
@@ -103,7 +98,7 @@
                                     {
                                         <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
                                     }
-                                    <span class="ml-3">
+                                    <span class="ms-3">
                                         <a asp-action="WebhookDelivery"
                                            asp-route-storeId="@this.Context.GetRouteValue("storeId")"
                                            asp-route-webhookId="@this.Context.GetRouteValue("webhookId")"
@@ -120,7 +115,7 @@
 
                                     <button id="#redeliver-@delivery.Id"
                                             type="submit"
-                                            class="btn btn-info py-1 ml-3 redeliver">
+                                            class="btn btn-info py-1 ms-3 redeliver">
                                         Redeliver
                                     </button>
                                 </span>
@@ -133,23 +128,6 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-
-    <script type="text/javascript">
-        function toggleEventSelector() {
-            if ($("#all-events").val() === "true") {
-                $("#event-selector").hide();
-            }
-            else {
-                $("#event-selector").show();
-            }
-        }
-        $(function () {
-            toggleEventSelector();
-            $("#all-events").change(function () {
-                toggleEventSelector();
-            });
-        });
-    </script>
 }

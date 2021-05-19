@@ -37,7 +37,7 @@
                     <div asp-validation-summary="All" class="text-danger"></div>
                     <div class="list-group-item ">
                         <div class="form-group">
-                            <label asp-for="Label"></label>
+                            <label asp-for="Label" class="form-label"></label>
                             <input asp-for="Label" class="form-control"/>
                             <span asp-validation-for="Label" class="text-danger"></span>
                         </div>
@@ -108,18 +108,18 @@
                                 }
                                 @for (var index = 0; index < Model.PermissionValues[i].SpecificStores.Count; index++)
                                 {
-                                    <div class="list-group-item transaction-output-form p-0 pl-lg-2">
+                                    <div class="list-group-item transaction-output-form p-0 ps-lg-2">
                                         <div class="row">
-                                            <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                                            <div class="col-sm-12 col-md-12 col-lg-10 py-2">
                                                 <div class="form-group my-0">
                                                     @if (Model.PermissionValues[i].SpecificStores[index] == null)
                                                     {
-                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.PermissionValues[i].SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
+                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.PermissionValues[i].SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
                                                     }
                                                     else
                                                     {
                                                         var store = Model.Stores.SingleOrDefault(data => data.Id == Model.PermissionValues[i].SpecificStores[index]);
-                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
+                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
                                                     }
 
                                                     <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>
@@ -127,7 +127,7 @@
                                             </div>
                                             <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
                                                 <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
-                                                        class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                                        class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ms-2">
                                                     Remove
                                                 </button>
                                                 <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
@@ -140,7 +140,7 @@
                                 @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)
                                 {
                                     <div class="list-group-item">
-                                        <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="ml-1 btn btn-secondary">Add another store </button>
+                                        <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="ms-1 btn btn-secondary">Add another store </button>
                                     </div>
                                 }
                             }

@@ -72,10 +72,10 @@
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="d-flex flex-row align-items-start flex-wrap card card-body p-2">
-                    <span class="mr-2">Filter by label:</span>
+                    <span class="me-2">Filter by label:</span>
                     @foreach (var label in Model.Labels)
                     {
-                        <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
+                        <a asp-route-labelFilter="@label.Text" class="badge me-2 my-1 position-relative text-white d-block"
                            style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
                     }
                 </div>
@@ -93,10 +93,10 @@
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>
-                    <th class="text-left">Label</th>
+                    <th class="text-start">Label</th>
                     <th>Transaction Id</th>
-                    <th class="text-right">Amount</th>
-                    <th class="text-right"></th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -108,14 +108,14 @@
                                 @transaction.Timestamp.ToBrowserDate()
                             </span>
                         </td>
-                        <td class="text-left">
+                        <td class="text-start">
                             @foreach (var label in transaction.Labels)
                             {
                                 <div class="badge-container">
                                     <div
                                         class="badge transactionLabel position-relative text-white d-block"
                                         style="background-color: @label.Color; padding-right: 16px; z-index: 1;"
-                                        data-toggle="tooltip"
+                                        data-bs-toggle="tooltip"
                                         title="@label.Tooltip">
                                         <a asp-route-labelFilter="@label.Text" class="text-white">@label.Text</a>
 
@@ -138,7 +138,7 @@
                                     {
                                         <a href="@label.Link" target="_blank" class="badge transaction-details-icon" style="background-color: @label.Color; filter: brightness(1.1);">
                                             <span class="fa fa-info-circle" title="Transaction details" style="color: @label.Color; filter: brightness(0.5);">
-                                                <span class="sr-only">Transaction details</span>
+                                                <span class="visually-hidden">Transaction details</span>
                                             </span>
                                         </a>
                                     }
@@ -152,24 +152,22 @@
                         </td>
                         @if (transaction.Positive)
                         {
-                            <td style="text-align:right; color:green;" class="text-right">@transaction.Balance</td>
+                            <td class="text-end text-success">@transaction.Balance</td>
                         }
                         else
                         {
-                            <td style="text-align:right; color:red;" class="text-right">@transaction.Balance</td>
+                            <td class="text-end text-danger">@transaction.Balance</td>
                         }
-                        <td class="text-right">
-                            <div class="dropleft d-inline-block">
-                                <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                        <td class="text-end">
+                            <div class="dropstart d-inline-block">
+                                <span class="fa fa-tags cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
                                           asp-route-walletId="@Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id"/>
                                         <div class="input-group p-2">
                                             <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm"/>
-                                            <div class="input-group-append">
-                                                <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
-                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
                                         </div>
                                         @if (Model.Labels.Count > 0)
                                         {
@@ -189,14 +187,14 @@
                                     </form>
                                 </div>
                             </div>
-                            <div class="dropleft d-inline-block">
+                            <div class="dropstart d-inline-block">
                                 @if (string.IsNullOrEmpty(transaction.Comment))
                                 {
-                                    <span class="fa fa-comment cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                    <span class="fa fa-comment cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-commenting cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                    <span class="fa fa-commenting cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"

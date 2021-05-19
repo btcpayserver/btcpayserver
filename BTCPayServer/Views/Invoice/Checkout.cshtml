@@ -17,10 +17,11 @@
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.css" asp-append-version="true" />
 
-    <script type="text/javascript">
+    <script>
         var initialSrvModel = @Safe.Json(Model);
     </script>
 
+    <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" asp-append-version="true" />
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
@@ -112,7 +113,7 @@
             </div>
         </div>
     </invoice>
-    <script type="text/javascript">
+    <script>
     var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
     var storeDefaultLang = @Safe.Json(langService.FindBestMatch(Model.DefaultLang)?.Code ?? Model.DefaultLang);
     var fallbackLanguage = "en";

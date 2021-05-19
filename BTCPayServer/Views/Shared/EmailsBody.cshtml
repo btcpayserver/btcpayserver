@@ -1,21 +1,19 @@
 @model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
-<partial name="_StatusMessage" />
-
 <div class="row">
     <div class="col-lg-6">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 class="mb-0">@ViewData["Title"]</h2>
-            <div class="dropdown quick-fill" style="display: none">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <div class="dropdown only-for-js" id="quick-fill">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
                     Quick fill settings for...
                 </button>
-                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item" href="" data-Server="smtp.gmail.com" data-Port="587" data-EnableSSL="true">Gmail.com</a>
-                    <a class="dropdown-item" href="" data-Server="mail.yahoo.com" data-Port="587" data-EnableSSL="true">Yahoo.com</a>
-                    <a class="dropdown-item" href="" data-Server="smtp.mailgun.org" data-Port="587" data-EnableSSL="true">Mailgun</a>
-                    <a class="dropdown-item" href="" data-Server="smtp.office365.com" data-Port="587" data-EnableSSL="true">Office365</a>
-                    <a class="dropdown-item" href="" data-Server="smtp.sendgrid.net" data-Port="587" data-EnableSSL="true">SendGrid</a>
+                <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
+                    <a class="dropdown-item" href="" data-server="smtp.gmail.com" data-port="587" data-enablessl="true">Gmail.com</a>
+                    <a class="dropdown-item" href="" data-server="mail.yahoo.com" data-port="587" data-enablessl="true">Yahoo.com</a>
+                    <a class="dropdown-item" href="" data-server="smtp.mailgun.org" data-port="587" data-enablessl="true">Mailgun</a>
+                    <a class="dropdown-item" href="" data-server="smtp.office365.com" data-port="587" data-enablessl="true">Office365</a>
+                    <a class="dropdown-item" href="" data-server="smtp.sendgrid.net" data-port="587" data-enablessl="true">SendGrid</a>
                 </div>
             </div>
         </div>
@@ -30,17 +28,17 @@
                 <div asp-validation-summary="All" class="text-danger"></div>
             }
             <div class="form-group">
-                <label asp-for="Settings.Server"></label>
-                <input asp-for="Settings.Server" class="form-control"/>
+                <label asp-for="Settings.Server" class="form-label"></label>
+                <input asp-for="Settings.Server" data-fill="server" class="form-control"/>
                 <span asp-validation-for="Settings.Server" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.Port"></label>
-                <input asp-for="Settings.Port" class="form-control"/>
+                <label asp-for="Settings.Port" class="form-label"></label>
+                <input asp-for="Settings.Port" data-fill="port" class="form-control"/>
                 <span asp-validation-for="Settings.Port" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.FromDisplay"></label>
+                <label asp-for="Settings.FromDisplay" class="form-label"></label>
                 <input asp-for="Settings.FromDisplay" class="form-control"/>
                 <small class="form-text text-muted">
                     Some email providers (like Gmail) don't allow you to set your display name, so this setting may not have any effect.
@@ -48,12 +46,12 @@
                 <span asp-validation-for="Settings.FromDisplay" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.From"></label>
+                <label asp-for="Settings.From" class="form-label"></label>
                 <input asp-for="Settings.From" class="form-control"/>
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.Login"></label>
+                <label asp-for="Settings.Login" class="form-label"></label>
                 <input asp-for="Settings.Login" class="form-control"/>
                 <small class="form-text text-muted">
                     For many email providers (like Gmail) your login is your email address.
@@ -64,24 +62,22 @@
                 @if (!Model.PasswordSet)
                 {
 
-                    <label asp-for="Settings.Password"></label>
+                    <label asp-for="Settings.Password" class="form-label"></label>
                     <input asp-for="Settings.Password" type="password" class="form-control"/>
                     <span asp-validation-for="Settings.Password" class="text-danger"></span>
                 }
                 else
                 {
-                    <label asp-for="Settings.Password"></label>
+                    <label asp-for="Settings.Password" class="form-label"></label>
                     <div class="input-group">
                         <input value="Configured" type="text" readonly class="form-control"/>
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
-                        </div>
+                        <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
                     </div>
                 }
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-input"/>
+                    <input asp-for="Settings.EnableSSL" type="checkbox" data-fill="enablessl"  class="form-check-input"/>
                     <label asp-for="Settings.EnableSSL" class="form-check-label"></label>
                 </div>
             </div>
@@ -101,7 +97,7 @@
                     <br />
                     After a successful test, you can click "Save".
                 </p>
-                <label asp-for="TestEmail"></label>
+                <label asp-for="TestEmail" class="form-label"></label>
                 <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
@@ -111,32 +107,23 @@
 </form>
 
 <script>
-    $(document).ready(function () {
-        $('.dropdown.quick-fill').show();
-        $('.dropdown.quick-fill a').click(function (e) {
+    document.addEventListener("DOMContentLoaded", function () {
+        delegate('click', '#quick-fill .dropdown-menu a', function (e) {
             e.preventDefault();
-
-            var aNode = $(this);
-            var data = aNode.data();
-
-            for (var key in data) {
-                var value = data[key];
-                var inputNodes = $('input[name*="Settings.' + key + '" i]');
-
-                if (inputNodes.length) {
-                    inputNodes.each(function (i, input) {
-                        input = $(input);
-                        var type = input.attr('type');
-                        if (type === 'checkbox') {
-                            input.prop('checked', value);
-
-                        } else {
-                            input.val(value);
-                        }
-                    });
-
+            
+            const data = e.target.dataset;
+            Object.keys(data).forEach(function (key) {
+                const value = data[key];
+                const input = document.querySelector('input[data-fill="' + key + '"]');
+                if (input) {
+                    const type = input.getAttribute('type');
+                    if (type === 'checkbox') {
+                        input.checked = value;
+                    } else {
+                        input.value = value;
+                    }
                 }
-            }
+            });
         });
     });
 </script>

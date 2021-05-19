@@ -11,13 +11,13 @@
         <form class="form-group" method="post" asp-action="WalletPSBTCombine" enctype="multipart/form-data">
             <input type="hidden" asp-for="OtherPSBT"/>
             <div class="form-group">
-                <label asp-for="PSBT"></label>
+                <label asp-for="PSBT" class="form-label"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="UploadedPSBTFile"></label>
-                <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
+                <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                <input type="file" class="form-control" asp-for="UploadedPSBTFile">
             </div>
             <button type="submit" class="btn btn-primary">Combine</button>
         </form>

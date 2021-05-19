@@ -34,12 +34,12 @@
                     <h3 class="card-title p-2">Upload Wallet</h3>
                     <div class="form-group p-2">
                         <label asp-for="WalletFile"></label>
-                        <input class="form-control-file" asp-for="WalletFile" required>
+                        <input class="form-control" asp-for="WalletFile" required>
                         <span asp-validation-for="WalletFile" class="text-danger"></span>
                     </div>
                     <div class="form-group p-2">
                         <label asp-for="WalletKeysFile"></label>
-                        <input class="form-control-file" asp-for="WalletKeysFile" required>
+                        <input class="form-control" asp-for="WalletKeysFile" required>
                         <span asp-validation-for="WalletKeysFile" class="text-danger"></span>
                     </div>
                     <div class="form-group p-2">
@@ -81,11 +81,8 @@
                 <div class="form-group">
                     <div class="input-group my-3">
                         <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
-                        <div class="input-group-append">
-                            <button name="command" value="add-account" class="btn btn-secondary" type="submit">Add account</button>
-                        </div>
+                        <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit">Add account</button>
                     </div>
-
                 </div>
             }
 
@@ -109,6 +106,6 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 }

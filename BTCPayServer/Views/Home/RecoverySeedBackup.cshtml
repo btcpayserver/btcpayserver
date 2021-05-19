@@ -4,19 +4,21 @@
     ViewData["Title"] = "Your recovery phrase";
 }
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+@section PageHeadContent {
+    <style>
+        @@media (min-width: 476px) { ol#RecoveryPhrase {max-height:16em;} }
+        @@media (min-width: 768px) { ol#RecoveryPhrase {max-height:12em;} }
+        @@media (min-width: 1200px) { ol#RecoveryPhrase {max-height:8em;} }
+        form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
+        form#RecoveryConfirmation button:not([disabled]) { display: none; }
+        form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }
+        form#RecoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
+    </style>
 }
 
-<style>
-    @@media (min-width: 476px) { ol#RecoveryPhrase {max-height:16em;} }
-    @@media (min-width: 768px) { ol#RecoveryPhrase {max-height:12em;} }
-    @@media (min-width: 1200px) { ol#RecoveryPhrase {max-height:8em;} }
-    form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
-    form#RecoveryConfirmation button:not([disabled]) { display: none; }
-    form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }
-    form#RecoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
-</style>
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
 
 <div class="row justify-content-md-center">
     <div class="col-lg-10 text-center">
@@ -33,10 +35,10 @@
                 <span class="d-sm-block"><strong>Write them down on a piece of paper in the exact order.</strong></span>
             </p>
         </div>
-        <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="my-5 d-flex flex-column flex-wrap justify-content-center align-items-center text-left p-0">
+        <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="my-5 d-flex flex-column flex-wrap justify-content-center align-items-center text-start p-0">
             @foreach (var word in Model.Words)
             {
-                <li class="ml-4 px-3 py-2 text-secondary" style="flex: 0 1;min-width:10em;">
+                <li class="ms-4 px-3 py-2 text-secondary" style="flex: 0 1;min-width:10em;">
                     <span class="text-dark h5">@word</span>
                 </li>
             }
@@ -73,7 +75,7 @@
         {
             <form id="RecoveryConfirmation" action="@Model.ReturnUrl" class="d-flex align-items-start justify-content-center" style="margin-top:4rem;padding-bottom: 80px">
                 <label class="form-check-label lead order-2" for="confirm">I have written down my recovery phrase and stored it in a secure location</label>
-                <input type="checkbox" class="mt-2 mr-3 order-1" id="confirm">
+                <input type="checkbox" class="mt-2 me-3 order-1" id="confirm">
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit">Done</button>
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
             </form>

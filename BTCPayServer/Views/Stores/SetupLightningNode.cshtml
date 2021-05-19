@@ -14,7 +14,7 @@
     <h1>@ViewData["Title"]</h1>
     <div class="d-flex mt-4 mb-5">
         <vc:icon symbol="warning" />
-        <p class="text-secondary text-left mb-0">
+        <p class="text-secondary text-start mb-0">
             Please understand that the Lightning Network is still under active development and considered experimental.
             Before you proceed, take time to familiarize yourself with the risks.
             <a href="https://docs.btcpayserver.org/LightningNetwork/" target="_blank">More information</a>
@@ -22,37 +22,38 @@
     </div>
 </header>
 
-<style>
+@section PageHeadContent {
+    <style>
     header .icon-warning {
         flex: 0 0 24px;
         height: 24px;
         align-self: center;
         margin-right: 2rem;
-        color: var(--btcpay-color-warning);
+        color: var(--btcpay-warning);
     }
     #save { min-width: 7rem; }
     #InternalSetup, #CustomSetup, #LightningNodeType-Internal, #LightningNodeType-Custom { display: none; }
     #LightningNodeType-Internal:checked + * + * + * + #InternalSetup,
     #LightningNodeType-Custom:checked + * + *+ #CustomSetup { display: block; }
     #LightningNodeType-Internal:checked + label, #LightningNodeType-Custom:checked + label {
-        color: var(--btcpay-color-white);
-        background: var(--btcpay-color-primary);
+        color: var(--btcpay-white);
+        background: var(--btcpay-primary);
     }
     label[for="LightningNodeType-Internal"], label[for="LightningNodeType-Custom"] {
         display: inline-block;
         padding: .75rem 2rem;
-        color: var(--btcpay-color-primary);
+        color: var(--btcpay-primary);
         font-weight:  var(--btcpay-font-weight-semibold);
         border-radius: 1.5rem;
         cursor: pointer;
     }
     #LightningNodeType-Internal[disabled]:checked + label[for="LightningNodeType-Internal"] {
-        background: var(--btcpay-color-secondary);
-        color: var(--btcpay-color-white);
+        background: var(--btcpay-secondary);
+        color: var(--btcpay-white);
         opacity: .5;
     }
     #LightningNodeType-Internal[disabled] + label[for="LightningNodeType-Internal"] {
-        color: var(--btcpay-color-secondary);
+        color: var(--btcpay-secondary);
         opacity: .5;
     }
     #CustomSetup ul {
@@ -64,7 +65,7 @@
     }
     #CustomSetup ul li > code, #CustomSetup ul pre {
         display: block;
-        color: var(--btcpay-code-color);
+        color: var(--btcpay-code-text);
         background: var(--btcpay-code-bg);
         margin: .25rem 0;
         padding: .75rem 1rem;
@@ -76,7 +77,7 @@
     #CustomSetup > ul > li + li {
         border-top:  1px solid var(--btcpay-border-color-medium);
     }
-    a[data-toggle="collapse"] {
+    a[data-bs-toggle="collapse"] {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -84,23 +85,24 @@
         padding: 1rem 0;
         text-decoration: none
     }
-    a[data-toggle="collapse"] .icon {
+    a[data-bs-toggle="collapse"] .icon {
         transform: rotate(90deg);
         transition: transform 200ms;
         width: 24px;
         height: 24px;
     }
-    a[data-toggle="collapse"][aria-expanded="true"] .icon {
+    a[data-bs-toggle="collapse"][aria-expanded="true"] .icon {
         transform: rotate(270deg);
     }
 </style>
+}
 
 <form method="post" class="mt-n2 text-center">
     <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" disabled="@(!Model.CanUseInternalNode)">
     <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
     <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom">
     <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
-    <div id="InternalSetup" class="text-left">
+    <div id="InternalSetup" class="text-start">
         @if (Model.CanUseInternalNode)
         {
             <p class="my-4">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
@@ -110,17 +112,17 @@
             <p class="my-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
         }
     </div>
-    <div id="CustomSetup" class="text-left">
+    <div id="CustomSetup" class="text-start">
         <label asp-for="ConnectionString" class="mt-4">Connection configuration for your custom Lightning node:</label>
         <div class="d-sm-flex">
-            <input asp-for="ConnectionString" class="form-control mb-2 mr-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
+            <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
             <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
         </div>
         <span asp-validation-for="ConnectionString" class="text-danger"></span>
         <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
         <ul>
             <li>
-                <a data-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">
+                <a data-bs-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">
                     <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -136,7 +138,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">
+                <a data-bs-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">
                     <span><strong>Lightning Charge</strong> via HTTPS</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -149,7 +151,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">
+                <a data-bs-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">
                     <span><strong>Eclair</strong> via HTTPS</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -162,7 +164,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
+                <a data-bs-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
                     <span><strong>LND</strong> via the REST proxy</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -191,11 +193,11 @@
             </li>
         </ul>
     </div>
-    <div class="text-left mt-4">
-        <button id="save" name="command" type="submit" value="save" class="btn btn-primary mr-2">Save</button>
+    <div class="text-start mt-4">
+        <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

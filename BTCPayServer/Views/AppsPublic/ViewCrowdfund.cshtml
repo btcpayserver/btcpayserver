@@ -21,7 +21,7 @@
     }
     @if (!Context.Request.Query.ContainsKey("simple"))
     {
-        <script type="text/javascript">
+        <script>
             var srvModel = @Safe.Json(Model);
         </script>
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>

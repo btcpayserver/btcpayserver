@@ -1,12 +1,4 @@
 ﻿/* General and site-wide Bootstrap modifications */
-html {
-    position: relative;
-    min-height: 100%;
-    font-size: var(--btcpay-font-size-base);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
 .logo {
     height: 34px;
 }
@@ -44,39 +36,6 @@ html {
     }
 }
 
-a {
-    transition-duration: 0.2s;
-    transition-property: background, color;
-}
-
-ol {
-   padding-left: 1.125em;
-}
-
-ul {
-    padding-left: 1em;
-}
-
-ul li {
-    padding-top: .2em;
-    padding-bottom: .2em;
-}
-
-.bg-tile {
-    background-color: var(--btcpay-bg-tile);
-}
-
-.alert-link,
-.alert-link:focus,
-.alert-link:hover,
-.alert code {
-    color: inherit;
-}
-
-.navbar .onion {
-    margin-right: auto;
-}
-
 .navbar-brand,
 .navbar-brand:hover,
 .navbar-brand:focus {
@@ -91,7 +50,7 @@ ul li {
 
 .dropdown-toggle-split,
 .dropdown-toggle-split:hover {
-    border-left: 1px solid var(--btcpay-color-white);
+    border-left: 1px solid var(--btcpay-white);
 }
 
 .breadcrumb {
@@ -104,37 +63,27 @@ ul li {
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
-    color: var(--btcpay-color-neutral-600);
+    color: var(--btcpay-neutral-600);
     content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDcgMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuMzg3MzkgNC4zMTYyOFY1LjYyMUwzLjczNDM5IDQuOTY5MjZMNC4zODczOSA0LjMxNzUxVjQuMzE2MjhaTTAuMDAxMjMxMzkgMS4zMDM0OUwxLjMwNTk5IDBMNi4zMTU1NyA1TDEuMzA1OTkgMTBMMCA4LjY5NjUxTDMuNzAxMTMgNUwwIDEuMzAzNDlIMC4wMDEyMzEzOVoiIGZpbGw9IiM4RDhEOEYiLz48L3N2Zz4K");
 }
 
 /* Admin Sidebar Navigation */
-a.nav-link {
-    color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));
-    background: var(--btcpay-bg-nav-link, transparent);
-}
-
-a.nav-link:focus,
-a.nav-link:hover {
-    color: var(--btcpay-nav-color-link-accent, var(--btcpay-color-neutral-700));
-    background: var(--btcpay-bg-nav-link-hover, transparent);
-}
-
 .col-md-3 .nav-pills {
     margin-left: -1rem;
 }
 
-section .nav .nav-link {
+#sideNav .nav-link {
     margin: .3rem 0;
     border-left: 2px solid transparent;
     padding: .2rem 1rem;
 }
 
-section .nav .nav-link.active,
-section .nav .show > .nav-link {
-    color: var(--btcpay-nav-color-link-active, var(--btcpay-color-neutral-900));
+#sideNav .nav-link.active,
+#sideNav .show > .nav-link {
+    color: var(--btcpay-nav-link-active);
     font-weight: 700;
-    border-left-color: var(--btcpay-color-primary);
+    border-left-color: var(--btcpay-nav-border-active);
+    background: var(--btcpay-nav-bg-active);
 }
 
 /* Homepage */
@@ -168,7 +117,7 @@ section .nav .show > .nav-link {
     font-size: 12px;
     overflow: hidden;
     padding: .5em 0;
-    color: var(--btcpay-footer-color, var(--btcpay-color-neutral-100));
+    color: var(--btcpay-footer-text, var(--btcpay-neutral-100));
     background: var(--btcpay-footer-bg, var(--btcpay-bg-dark));
 }
 
@@ -181,10 +130,6 @@ section .nav .show > .nav-link {
     padding: 10px;
     background: white;
     display: inline-block;
-}
-
-pre {
-    color: var(--btcpay-preformatted-text-color);
 }
 
 .feedback-icon-loading {
@@ -217,19 +162,8 @@ pre {
 [v-cloak-loading] > * { display:none }
 [v-cloak-loading]::before { content: "loading…" }
 
-.cursor-pointer{
-    cursor: pointer;
-}
-
 .list-group-item a:not(.btn) {
   color: inherit;
-}
-
-.alert hr {
-    display: block;
-    width: unset;
-    height: 1px;
-    background: none;
 }
 
 .account-form {
@@ -254,30 +188,6 @@ pre {
     }
 }
 
-.btn-outline-onion {
-    background-image: none;
-    background-color: transparent;
-    border: 0;
-}
-
-.btn-outline-onion:hover {
-    color: #fff;
-    background-color: #7D4698;
-}
-
-.btn-outline-onion:focus,
-.btn-outline-onion.focus {
-    color: #fff;
-    background-color: #7D4698;
-    box-shadow: 0 0 0 0.2rem #e6d5ee;
-}
-
-.btn-outline-onion:hover img,
-.btn-outline-onion:focus img,
-.btn-outline-onion.focus img {
-    filter: contrast(0) brightness(200%);
-}
-
 [class*="field-validation"]:not(:empty) {
     display: inline-block;
     margin-top: .5rem;
@@ -288,54 +198,6 @@ pre {
 .w-150px { width: 150px; }
 .w-175px { width: 175px; }
 .w-200px { width: 200px; }
-
-.fw-semibold {
-    font-weight: 600 !important;
-}
-
-.text-monospace {
-    font-size: .95rem;
-}
-
-input.w-auto,
-select.w-auto,
-textarea.w-auto {
-    max-width: 100%;
-}
-
-/* Chrome, Safari, Edge, Opera */
-input[type=number].hide-number-spin::-webkit-outer-spin-button,
-input[type=number].hide-number-spin::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Firefox */
-input[type=number].hide-number-spin {
-    -moz-appearance: textfield;
-}
-
-/* Bootstrap Responsive Helper */
-html[data-devenv]:before {
-    display: inline-block;
-    position: fixed;
-    z-index: 1000;
-    right: 0;
-    bottom: 0;
-    background: var(--btcpay-color-secondary-backdrop);
-    color: var(--btcpay-color-secondary-text);
-    opacity: .7;
-    padding: 4px 5px 3px 7px;
-    font-size: 10px;
-    border-top-left-radius: 4px;
-}
-
-@media (max-width: 575px) { html[data-devenv]:before { content: 'XS'; } }
-@media (min-width: 576px) and (max-width: 767px) { html[data-devenv]:before { content: 'SM'; } }
-@media (min-width: 768px) and (max-width: 991px) { html[data-devenv]:before { content: 'MD'; } }
-@media (min-width: 992px) and (max-width: 1199px) { html[data-devenv]:before { content: 'LG'; } }
-@media (min-width: 1200px) { html[data-devenv]:before { content: 'XL'; } }
-@media print { html[data-devenv]:before { content: none; } }
 
 /* Print */
 @media print {
@@ -364,90 +226,8 @@ html[data-devenv]:before {
 
 .note-editor .table.table-sm th,
 .note-editor .table.table-sm td {
-    border: 1px dotted var(--btcpay-color-neutral-400);
+    border: 1px dotted var(--btcpay-neutral-400);
 }
-
-/* Custom */
-.btcpay-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: .25em solid transparent;
-    border-radius: 50%;
-    width: 19px;
-    height: 19px;
-}
-.btcpay-status:before {
-    content: '';
-    border-radius: 50%;
-    width: 9px;
-    height: 9px;
-}
-.btcpay-status--enabled {
-    background-color: rgba(0, 182, 52, .3);
-}
-.btcpay-status--enabled:before {
-    background-color: #00B634;
-}
-.btcpay-status--disabled {
-    background-color: rgba(251, 56, 61, .3);
-}
-.btcpay-status--disabled:before {
-    background-color: #FB383D;
-}
-
-.btcpay-toggle {
-    --border-size: 2px;
-    --toggle-width: 40px;
-    --toggle-height: 24px;
-    --switch-size: calc(var(--toggle-height) - 2 * var(--border-size));
-
-    position: relative;
-    display: inline-block;
-    width: var(--toggle-width);
-    height: var(--toggle-height);
-    border: 0;
-    border-radius: calc(var(--toggle-height) / 2);
-    background: var(--btcpay-color-neutral-500);
-    font-size: 0;
-}
-
-input.btcpay-toggle {
-    appearance: none;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-}
-
-input.btcpay-toggle:checked,
-.btcpay-toggle.btcpay-toggle--active {
-    background: var(--btcpay-color-primary);
-}
-
-.btcpay-toggle::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    top: var(--border-size);
-    left: var(--border-size);
-    width: var(--switch-size);
-    height: var(--switch-size);
-    background-color: var(--btcpay-color-white);
-}
-
-.btcpay-toggle,
-.btcpay-toggle::after {
-    transition: all 0.2s;
-}
-input.btcpay-toggle:checked::after,
-.btcpay-toggle.btcpay-toggle--active::after {
-    left: calc(var(--toggle-width) - var(--switch-size) - var(--border-size));
-}
-
-label + input.btcpay-toggle {
-    position: relative;
-    top: .45rem;
-}
-
 
 svg.icon {
     display: inline-block;
@@ -456,7 +236,7 @@ svg.icon {
 }
 
 svg.icon-note {
-  color: var(--btcpay-color-neutral-500);
+  color: var(--btcpay-neutral-500);
 }
 
 /* Custom notification dropdown styling */
@@ -477,9 +257,4 @@ svg.icon-note {
 
 .notification:hover {
     background-color: var(--btcpay-body-bg);
-}
-
-[data-required]::after {
-    content: "*";
-    color: var(--btcpay-color-danger);
 }

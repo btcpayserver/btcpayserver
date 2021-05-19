@@ -2,7 +2,6 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",
@@ -10,17 +9,21 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/bootstrap-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery/jquery.min.js",
+            "wwwroot/vendor/bootstrap/bootstrap.bundle.min.js"
+        ],
+        "minify": {
+            "enabled": false
+        }
+    },
+    {
         "outputFileName": "wwwroot/bundles/main-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/popper/popper.js",
-            "wwwroot/vendor/jquery-easing/jquery.easing.js",
-            "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
-            "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
-            "wwwroot/main/bootstrap4-creativestart/creative.js",
+            "wwwroot/main/utils.js",
             "wwwroot/main/site.js"
         ]
     },
@@ -46,7 +49,6 @@
         "outputFileName": "wwwroot/bundles/checkout-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/clipboard.js/clipboard.js",
-            "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/i18next/i18next.js",
@@ -60,8 +62,6 @@
     {
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]

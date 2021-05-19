@@ -16,8 +16,8 @@
             @if (Model.PaymentMethods.Any())
             {
                 <div class="form-group">
-                    <label asp-for="DefaultPaymentMethod"></label>
-                    <select asp-for="DefaultPaymentMethod" asp-items="Model.PaymentMethods" class="form-control w-auto"></select>
+                    <label asp-for="DefaultPaymentMethod" class="form-label"></label>
+                    <select asp-for="DefaultPaymentMethod" asp-items="Model.PaymentMethods" class="form-select w-auto"></select>
                 </div>
                 <table class="table table-bordered table">
                     <tr>
@@ -30,18 +30,18 @@
                     {
                         var criteria = Model.PaymentMethodCriteria[index];
                         <tr>
-                            <td class="border-right-0 border-left-0 pt-3">
+                            <td class="border-start-0 border-end-0 pt-3">
                                 <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
                                 @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                             </td>
-                            <td class="border-right-0  border-left-0 ">
+                            <td class="border-start-0 border-end-0">
                                 <select asp-for="PaymentMethodCriteria[index].Type"
-                                        class="form-control"
+                                        class="form-select"
                                         asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(PaymentMethodCriteriaViewModel.ToString(s), s.ToString()))">
                                 </select>
 
                             </td>
-                            <td class="border-right-0  border-left-0">
+                            <td class="border-start-0 border-end-0">
                                 <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
                             </td>
                         </tr>
@@ -93,23 +93,23 @@
                 </div>
             </div>
             <div class="form-group">
-                <label asp-for="RecommendedFeeBlockTarget"></label>
+                <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
                 <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch"/>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
 
             <h4 class="mt-5 mb-3">Appearance</h4>
             <div class="form-group">
-                <label asp-for="DefaultLang"></label>
-                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control w-auto"></select>
+                <label asp-for="DefaultLang" class="form-label"></label>
+                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
             </div>
             <div class="form-group">
-                <label asp-for="HtmlTitle"></label>
+                <label asp-for="HtmlTitle" class="form-label"></label>
                 <input asp-for="HtmlTitle" class="form-control"/>
                 <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CustomLogo"></label>
+                <label asp-for="CustomLogo" class="form-label"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
@@ -117,7 +117,7 @@
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CustomCSS"></label>
+                <label asp-for="CustomCSS" class="form-label"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
@@ -129,24 +129,24 @@
                     | <a href="#" onclick="return setTheme(2);">Dark</a>
                     @* | <a href="#" onclick="return setTheme(0);">Default</a>*@
                 </p>
-                <script type="text/javascript">
-                    function setTheme(themeChoice) {
-                        if (themeChoice === 1) { // reserving 0 for potential clear down the road
-                            $('#CustomCSS').val('/checkout/css/themes/legacy.css');
-                        } else if (themeChoice == 2) {
-                            $('#CustomCSS').val('/checkout/css/themes/dark.css');
-                        } else {
-                            $('#CustomCSS').val('');
-                        }
-                        return false;
-                    }
-                </script>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
+    <script type="text/javascript">
+        function setTheme(themeChoice) {
+            if (themeChoice === 1) { // reserving 0 for potential clear down the road
+                $('#CustomCSS').val('/checkout/css/themes/legacy.css');
+            } else if (themeChoice == 2) {
+                $('#CustomCSS').val('/checkout/css/themes/dark.css');
+            } else {
+                $('#CustomCSS').val('');
+            }
+            return false;
+        }
+    </script>
 }

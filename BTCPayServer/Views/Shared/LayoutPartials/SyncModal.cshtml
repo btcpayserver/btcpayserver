@@ -5,7 +5,7 @@
     <!-- Modal -->
     <div id="syncModal" class="modal-dialog">
         <div class="modal-content">
-            <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-toggle="collapse" data-target="#syncModalContent">
+            <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-bs-toggle="collapse" data-bs-target="#syncModalContent">
                 <h4 class="modal-title">Your nodes are synching...</h4>
                 <span class="fa fa-chevron-down"></span>
             </a>
@@ -26,49 +26,54 @@
             </div>
         </div>
     </div>
-    <script>
-        var syncModalContent = $('#syncModalContent');
-        var syncModal = $('#syncModal');
-        if (localStorage.getItem("sync-collapsed")){
-            syncModalContent.removeClass("show");
-        }
-        syncModalContent.on('hidden.bs.collapse', function () {
-            localStorage.setItem("sync-collapsed", "true");
-        }).on('shown.bs.collapse', function () {
-            localStorage.removeItem("sync-collapsed");
-        });
-        function handleFooterBottom() {
-            if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
-                syncModal.stop().animate({"bottom":"40px"}, 200);
-            } else {      
-                syncModal.stop().animate({"bottom":"10px"}, 200);
+    
+    @section PageHeadContent {
+        <style type="text/css">
+            #syncModal {
+                position: fixed;
+                bottom: 40px;
+                right: 10px;
+                margin: 0;
+                z-index: 1000;
+                width: 500px;
+                max-width: 100%;
             }
-        }
-        $(document).on("scroll", handleFooterBottom);
-        handleFooterBottom();
-    </script>
-    <style type="text/css">
-        
-        #syncModal {
-            position: fixed;
-            bottom: 40px;
-            right: 10px;
-            margin: 0;
-            z-index: 1000;
-            width: 500px;
-            max-width: 100%;
-        }
-        #syncModal .modal-body {
-            max-height: 400px; 
-            overflow-y: scroll;
-        }
-        #syncModal .fa-chevron-down {
-            font-size: 1em;
-            text-decoration: none;
-            transition: transform .35s;
-        }
-        #syncModal .collapsed .fa-chevron-down {
-            transform: rotate(-90deg);
-        }
-    </style>
+            #syncModal .modal-body {
+                max-height: 400px; 
+                overflow-y: scroll;
+            }
+            #syncModal .fa-chevron-down {
+                font-size: 1em;
+                text-decoration: none;
+                transition: transform .35s;
+            }
+            #syncModal .collapsed .fa-chevron-down {
+                transform: rotate(-90deg);
+            }
+        </style>
+    }
+    
+    @section PageFootContent {
+        <script>
+            var syncModalContent = $('#syncModalContent');
+            var syncModal = $('#syncModal');
+            if (localStorage.getItem("sync-collapsed")){
+                syncModalContent.removeClass("show");
+            }
+            syncModalContent.on('hidden.bs.collapse', function () {
+                localStorage.setItem("sync-collapsed", "true");
+            }).on('shown.bs.collapse', function () {
+                localStorage.removeItem("sync-collapsed");
+            });
+            function handleFooterBottom() {
+                if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
+                    syncModal.stop().animate({"bottom":"40px"}, 200);
+                } else {      
+                    syncModal.stop().animate({"bottom":"10px"}, 200);
+                }
+            }
+            $(document).on("scroll", handleFooterBottom);
+            handleFooterBottom();
+        </script>
+    }
 }

@@ -7,15 +7,17 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, "Manage payouts", Context.GetStoreData().StoreName);
 }
 
-<script type="text/javascript">
-    function selectAll(e, elementClass)
-    {
-        const items = document.getElementsByClassName("selection-item-"+elementClass);
-        for (let i = 0; i < items.length; i++) {
-            items[i].checked = e.checked;
+@section PageFootContent {
+    <script>
+        function selectAll(e, elementClass)
+        {
+            const items = document.getElementsByClassName("selection-item-"+elementClass);
+            for (let i = 0; i < items.length; i++) {
+                items[i].checked = e.checked;
+            }
         }
-    }
-</script>
+    </script>
+}
 
 <form method="post">
 <h4 class="mb-3">@ViewData["Title"]</h4>
@@ -26,12 +28,12 @@
         </p>
     }
     <div class="row">
-        <ul class="nav col-md-10 col-sm-12">
+        <ul class="nav nav-pills">
             @for (var index = 0; index < Model.PayoutStateSets.Count; index++)
             {
                 var state = Model.PayoutStateSets[index];
                 <li class="nav-item py-0">
-                    <a class="nav-link btn btn-secondary btn-sm mr-1 @(index == 0 ? "active" : "")" data-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
+                    <a class="nav-link me-1 @(index == 0 ? "active" : "")" data-bs-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
                 </li>
             }
         </ul>
@@ -59,85 +61,82 @@
                     <input type="hidden" asp-for="PayoutStateSets[index].State"/>
                     <input type="hidden" asp-for="PaymentMethodId"/>
 
-                    <div class="row mt-2 ml-2">
-                        @if (state.Payouts.Any() && stateActions.Any())
-                        {
-                            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" id="@state.State-actions">
+                    @if (state.Payouts.Any() && stateActions.Any())
+                    {
+                        <div class="dropdown mt-2">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@state.State-actions">
                                 Actions
                             </button>
-                            <div class="dropdown-menu">
+                            <div class="dropdown-menu" aria-labelledby="@state.State-actions">
                                 @foreach (var action in stateActions)
                                 {
                                     <button type="submit" id="@state.State-@action.Action" name="Command" class="dropdown-item" role="button" value="@state.State-@action.Action">@action.Text</button>
                                 }
                             </div>
-                        }
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-
-                            @if (state.Payouts.Any())
-                            {
-                                <table class="table table-sm table-responsive-lg">
-                                    <thead class="thead-inverse">
-                                    <tr>
-                                        <th>
-                                            <input id="@state.State-selectAllCheckbox" type="checkbox" onclick="selectAll(this, '@state.State.ToString()'); return true;"/>
-                                        </th>
-                                        <th style="min-width: 90px;" class="col-md-auto">
-                                            Date
-                                        </th>
-                                        <th class="text-left">Source</th>
-                                        <th class="text-left">Destination</th>
-                                        <th class="text-right">Amount</th>
+                        </div>
+                    }
+                    <div>
+                        @if (state.Payouts.Any())
+                        {
+                            <table class="table table-sm table-responsive-lg">
+                                <thead class="thead-inverse">
+                                <tr>
+                                    <th>
+                                        <input id="@state.State-selectAllCheckbox" type="checkbox" onclick="selectAll(this, '@state.State.ToString()'); return true;"/>
+                                    </th>
+                                    <th style="min-width: 90px;" class="col-md-auto">
+                                        Date
+                                    </th>
+                                    <th class="text-start">Source</th>
+                                    <th class="text-start">Destination</th>
+                                    <th class="text-end">Amount</th>
+                                    @if (state.State != PayoutState.AwaitingApproval)
+                                    {
+                                        <th class="text-end">Transaction</th>
+                                    }
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @for (int i = 0; i < state.Payouts.Count; i++)
+                                {
+                                    var pp = state.Payouts[i];
+                                    <tr class="payout">
+                                        <td>
+                                            <span>
+                                                <input type="checkbox" class="selection-item-@state.State.ToString()" asp-for="PayoutStateSets[index].Payouts[i].Selected"/>
+                                                <input type="hidden" asp-for="PayoutStateSets[index].Payouts[i].PayoutId"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span>@pp.Date.ToBrowserDate()</span>
+                                        </td>
+                                        <td class="mw-100">
+                                            <span>@pp.PullPaymentName</span>
+                                        </td>
+                                        <td>
+                                            <span>@pp.Destination</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span>@pp.Amount</span>
+                                        </td>
                                         @if (state.State != PayoutState.AwaitingApproval)
                                         {
-                                            <th class="text-right">Transaction</th>
+                                            <td class="text-end">
+                                                @if (!(pp.TransactionLink is null))
+                                                {
+                                                    <a class="transaction-link" href="@pp.TransactionLink">Link</a>
+                                                }
+                                            </td>
                                         }
                                     </tr>
-                                    </thead>
-                                    <tbody>
-                                    @for (int i = 0; i < state.Payouts.Count; i++)
-                                    {
-                                        var pp = state.Payouts[i];
-                                        <tr class="payout">
-                                            <td>
-                                                <span>
-                                                    <input type="checkbox" class="selection-item-@state.State.ToString()" asp-for="PayoutStateSets[index].Payouts[i].Selected"/>
-                                                    <input type="hidden" asp-for="PayoutStateSets[index].Payouts[i].PayoutId"/>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span>@pp.Date.ToBrowserDate()</span>
-                                            </td>
-                                            <td class="mw-100">
-                                                <span>@pp.PullPaymentName</span>
-                                            </td>
-                                            <td>
-                                                <span>@pp.Destination</span>
-                                            </td>
-                                            <td class="text-right">
-                                                <span>@pp.Amount</span>
-                                            </td>
-                                            @if (state.State != PayoutState.AwaitingApproval)
-                                            {
-                                                <td class="text-right">
-                                                    @if (!(pp.TransactionLink is null))
-                                                    {
-                                                        <a class="transaction-link" href="@pp.TransactionLink">Link</a>
-                                                    }
-                                                </td>
-                                            }
-                                        </tr>
-                                    }
-                                    </tbody>
-                                </table>
-                            }
-                            else
-                            {
-                                <p class="mb-0 p-4" id="@state.State-no-payouts">No payouts.</p>
-                            }
-                        </div>
+                                }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="mb-0 p-4" id="@state.State-no-payouts">No payouts.</p>
+                        }
                     </div>
                 </div>
             }

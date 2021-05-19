@@ -55,14 +55,12 @@
                     <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="w-100">
                         <div class="row align-items-center" style="width:calc(100% + 30px)">
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
-                                <input class="form-control form-control-lg text-monospace w-100" asp-for="Destination" placeholder="Enter destination address to claim funds …" required style="font-size:.9rem;height:42px;">
+                                <input class="form-control form-control-lg font-monospace w-100" asp-for="Destination" placeholder="Enter destination address to claim funds …" required style="font-size:.9rem;height:42px;">
                             </div>
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
-                                    <input type="number" class="form-control form-control-lg text-right hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
-                                    </div>
+                                    <input type="number" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
+                                    <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 col-lg-3">
@@ -83,7 +81,7 @@
                 }
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             @if (!Model.Title.IsNullOrWhiteSpace())
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
@@ -97,7 +95,7 @@
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
                                 <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" id="copyLink">
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
                             </div>
@@ -116,23 +114,23 @@
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
-                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
+                                <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
+                                    <dt class="h4 fw-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
-                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
+                                <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
+                                    <dt class="h4 fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Already claimed</dd>
                                 </div>
-                                <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-right">
-                                    <dt class="h4 text-sm-right font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
-                                    <dd class="text-muted text-sm-right order-1 order-sm-2 mb-1">Claim limit</dd>
+                                <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
+                                    <dt class="h4 text-sm-end fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
+                                    <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
                                 </div>
                             </dl>
                         </div>
@@ -140,7 +138,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Awaiting Claims</h2>
                             <div class="table-responsive">
                                 @if (Model.Payouts.Any())
@@ -148,9 +146,9 @@
                                     <table class="table my-0">
                                         <thead>
                                         <tr class="table-borderless">
-                                            <th class="font-weight-normal text-secondary" scope="col">Destination</th>
-                                            <th class="font-weight-normal text-secondary text-right text-nowrap">Amount requested</th>
-                                            <th class="font-weight-normal text-secondary text-right">Status</th>
+                                            <th class="fw-normal text-secondary" scope="col">Destination</th>
+                                            <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
+                                            <th class="fw-normal text-secondary text-end">Status</th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -160,8 +158,8 @@
                                                 <td class="text-break">
                                                     @invoice.Destination
                                                 </td>
-                                                <td class="text-right">@invoice.AmountFormatted</td>
-                                                <td class="text-right text-nowrap">
+                                                <td class="text-end">@invoice.AmountFormatted</td>
+                                                <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
                                                         <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>

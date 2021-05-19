@@ -9,12 +9,12 @@
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="NotificationsDropdownToggle" role="button" data-bs-toggle="dropdown">
             <span class="d-inline-block d-lg-none">Notifications</span>
             <i class="fa fa-bell d-lg-inline-block d-none"></i>
-            <span class="notification-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
+            <span class="notification-badge badge rounded-pill bg-danger">@Model.UnseenCount</span>
         </a>
-        <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
+        <div class="dropdown-menu dropdown-menu-end text-center notification-dropdown" aria-labelledby="NotificationsDropdownToggle">
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>
                 <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
@@ -24,15 +24,15 @@
             @foreach (var notif in Model.Last5)
             {
                 <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
-                    <div class="mr-3">
+                    <div class="me-3">
                         <vc:icon symbol="note" />
                     </div>
 
                     <div class="notification-item__content">
-                        <div class="text-left text-wrap">
+                        <div class="text-start text-wrap">
                             @notif.Body
                         </div>
-                        <div class="text-left d-flex">
+                        <div class="text-start d-flex">
                             <small class="text-muted" data-timeago-unixms="@notif.Created.ToUnixTimeMilliseconds()">@notif.Created.ToTimeAgo()</small>
                         </div>
                     </div>

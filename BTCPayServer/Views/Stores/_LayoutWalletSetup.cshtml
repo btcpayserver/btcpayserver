@@ -2,19 +2,17 @@
     Layout = "_LayoutSimple";
 }
 
-@section HeadScripts {
-    @await RenderSectionAsync("HeadScripts", false)
-}
-@section HeaderContent {
-    @await RenderSectionAsync("HeaderContent", false)
+@section PageHeadContent {
+    @await RenderSectionAsync("PageHeadContent", false)
     <link href="~/main/wallet-setup.css" rel="stylesheet" asp-append-version="true" />
 }
-@section Scripts {
-    @await RenderSectionAsync("Scripts", false)
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
 }
 
 <nav id="wizard-navbar">
-    @RenderSection("Navbar", false)
+    @await RenderSectionAsync("Navbar", false)
 
     <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
         <vc:icon symbol="close" />

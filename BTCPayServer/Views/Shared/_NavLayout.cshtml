@@ -9,6 +9,14 @@
     }
 }
 
+@section PageHeadContent {
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
 <section>
     <div class="container">
         @if (ViewBag.ShowBreadcrumb)
@@ -37,7 +45,7 @@
         <div class="row">
             @if (ViewBag.ShowMenu)
             {
-                <div class="col-md-3 ml-n3 ml-md-0">
+                <div class="col-md-3 ms-n3 ms-md-0">
                     <partial name="@ViewData["NavPartialName"].ToString()" />
                 </div>
             }
@@ -48,10 +56,3 @@
         </div>
     </div>
 </section>
-
-@section HeadScripts {
-    @await RenderSectionAsync("HeadScripts", false)
-}
-@section Scripts {
-    @await RenderSectionAsync("Scripts", false)
-}

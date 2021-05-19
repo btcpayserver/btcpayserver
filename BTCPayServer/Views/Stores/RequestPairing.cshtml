@@ -12,11 +12,11 @@
         <table class="table table-sm removetopborder">
             <tr>
                 <th>Label</th>
-                <td class="text-right">@Model.Label</td>
+                <td class="text-end">@Model.Label</td>
             </tr>
             <tr>
                 <th>SIN</th>
-                <td class="text-right">@Model.SIN</td>
+                <td class="text-end">@Model.SIN</td>
             </tr>
         </table>
     </div>
@@ -26,7 +26,7 @@
         <form asp-action="Pair" method="post">
             <div class="form-group">
                 <label asp-for="StoreId"></label>
-                <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
+                <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-select"></select>
                 <span asp-validation-for="StoreId" class="text-danger"></span>
             </div>
             <input type="hidden" name="pairingCode" value="@Model.Id" />

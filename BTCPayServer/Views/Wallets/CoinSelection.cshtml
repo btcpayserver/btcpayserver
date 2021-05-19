@@ -4,20 +4,18 @@
     <ul class="list-group mb-4">
         <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
             <h3>Coin selection</h3>
-            <span class="text-muted text-right" >
+            <span class="text-muted text-end">
                 <span>{{selectedItems.length}} selected</span>
-                <span v-show="selectedItems.length > 0" >&nbsp({{selectedAmount}} @Model.CryptoCode) </span><br/>
+                <span v-show="selectedItems.length > 0">&nbsp;({{selectedAmount}} @Model.CryptoCode) </span><br/>
                 <span>{{items.length}} total UTXOs (@Model.CurrentBalance @Model.CryptoCode)</span>
             </span>
         </li>
         <li class="list-group-item">
             <div class="input-group">
                 <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
-                <div class="input-group-append" v-show="filter">
-                    <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''">
-                        <span class=" fa fa-times"></span>
-                    </button>
-                </div>
+                <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''" v-show="filter">
+                    <span class="fa fa-times"></span>
+                </button>
             </div>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
@@ -26,7 +24,7 @@
             v-bind:class="{ 'list-group-item-secondary': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
             <div class="d-flex justify-content-between align-items-center w-100">
-                <input class="mr-2"
+                <input class="me-2"
                     type="checkbox"
                     v-bind:id="item.outpoint"
                     v-bind:value="item.outpoint"
@@ -43,33 +41,33 @@
                 </label>
                 <div>
                     
-                    <span v-bind:class="{' badge-success' : item.confirmations > 0, ' badge-warning' : item.confirmations <= 0}" data-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
-                        {{item.confirmations}}<span class=" ml-1 fa fa-cube"></span>
+                    <span v-bind:class="{' bg-success' : item.confirmations > 0, ' bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
+                        {{item.confirmations}}<span class="ms-1 fa fa-cube"></span>
                     </span>
                     
-                    <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge badge-info badge-pill" style="font-style: italic">i</span>
+                    <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="font-style: italic">i</span>
                     <span
                         v-if="item.labels"
-                        class="badge badge-primary badge-pill ml-2"
+                        class="badge bg-primary rounded-pill ms-2"
                         v-for="label of item.labels"
                         v-bind:style="{ 'background-color': label.color}"
                         key="label.text">
 
-                        <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                        <span v-if="!label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.text}}
                         </span>
 
-                        <a :href="label.link" target="_blank" v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                        <a :href="label.link" target="_blank" v-if="label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.text}}
                             <i class="fa fa-info-circle"></i>
                         </a>
                     </span>
                 </div>
-                <span class="text-muted ml-2">{{item.amount}}</span>
+                <span class="text-muted ms-2">{{item.amount}}</span>
             </div>
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between">
-            <ul class="pagination float-left">
+            <ul class="pagination float-start">
                 <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
                     <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
                 </li>
@@ -98,9 +96,9 @@
 </div>
 
 <script>
-$(function() {
+document.addEventListener("DOMContentLoaded", function () {
     Vue.directive('tooltip', function(el, binding) {
-        $(el).tooltip({
+        new bootstrap.Tooltip(el, {
             title: binding.value,
             placement: binding.arg || "auto",
             trigger: 'hover'

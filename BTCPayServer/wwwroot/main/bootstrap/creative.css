@@ -4,15 +4,6 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-creative/blob/master/LICENSE)
  */
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--btcpay-font-family-head);
-}
-
 section {
   padding: 100px 0;
 }
@@ -24,18 +15,17 @@ p {
 hr {
   width: 50px;
   height: 3px;
-  background: var(--btcpay-color-primary);
+  background: var(--btcpay-primary);
   display: inline-block;
 }
 
 hr.light {
-  background: var(--btcpay-color-white);
+  background: var(--btcpay-white);
 }
 
 #mainNav {
-  color: var(--btcpay-header-color, var(--btcpay-color-neutral-100));
-  background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
-  font-family: var(--btcpay-font-family-head);
+  color: var(--btcpay-header-text);
+  background: var(--btcpay-header-bg);
   transition-property: background, color;
   transition-duration: 0.2s;
 }
@@ -46,25 +36,25 @@ hr.light {
   }
 
   #mainNav.navbar-shrink {
-    background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
+    background: var(--btcpay-header-bg);
   }
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link {
   font-size: 14px;
   font-weight: bold;
-  color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
+  color: var(--btcpay-header-link);
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
 #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-  color: var(--btcpay-header-color-link-accent, var(--btcpay-color-white));
+  color: var(--btcpay-header-link-accent);
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active,
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active:focus,
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
-  color: var(--btcpay-header-color-link-active, var(--btcpay-color-white));
+  color: var(--btcpay-header-link-active);
 }
 
 header.masthead {

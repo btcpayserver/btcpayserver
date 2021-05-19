@@ -24,7 +24,7 @@
         <div class="col-md-6 mb-3 d-flex align-items-end">
             @if (Model.IsEmailConfirmed)
             {
-                <span class="badge badge-success p-2 my-1">
+                <span class="badge bg-success p-2 my-1">
                     <span class="fa fa-check"></span>
                     confirmed
                 </span>
@@ -38,6 +38,6 @@
     <button type="submit" id="save" class="btn btn-primary">Save</button>
 </form>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

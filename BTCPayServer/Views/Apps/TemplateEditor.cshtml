@@ -15,7 +15,7 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
-        <label class="control-label mb-3">@Model.title </label>
+        <label class="form-label mb-3">@Model.title </label>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
@@ -27,7 +27,7 @@
         
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
@@ -44,11 +44,11 @@
                     </button>
                 </div>
             </div>
-            <div class="card-footer text-left">
+            <div class="card-footer text-start">
                 <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary ms-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
                     Toggle raw editor
                 </button>
             </div>
@@ -58,8 +58,8 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                            <vc:icon symbol="close" />
                         </button>
                     </div>
                     <div class="modal-body" v-if="editingItem">
@@ -83,7 +83,7 @@
                                 </div>
                                 <div class="col-sm-3">
                                     <label>Custom price</label>
-                                    <select class="form-control" v-model="editingItem.custom">
+                                    <select class="form-select" v-model="editingItem.custom">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
@@ -122,7 +122,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
                         <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save Changes</button>
                     </div>
                 </div>
@@ -132,7 +132,7 @@
 </div>
 
 <script>
-$(function() {
+document.addEventListener("DOMContentLoaded", function () {
     new Vue({
         el: '#template-editor-app',
         data: {

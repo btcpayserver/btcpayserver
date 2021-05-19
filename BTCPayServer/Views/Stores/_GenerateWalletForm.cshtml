@@ -24,15 +24,15 @@
     @if (isImport)
     {
         <div class="form-group">
-            <label asp-for="ExistingMnemonic">Wallet Recovery Seed</label>
-            <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            <label asp-for="ExistingMnemonic" class="form-label">Wallet Recovery Seed</label>
+            <textarea asp-for="ExistingMnemonic" class="form-control font-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }
 
     <div class="form-group">
-        <label asp-for="ScriptPubKeyType">Address type</label>
-        <select class="form-control w-auto" asp-for="ScriptPubKeyType">
+        <label asp-for="ScriptPubKeyType" class="form-label">Address type</label>
+        <select class="form-select w-auto" asp-for="ScriptPubKeyType">
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
@@ -44,7 +44,7 @@
     {
         <div class="form-group mt-5">
             <label asp-for="SavePrivateKeys">Is hot wallet</label>
-            <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle ml-2" />
+            <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle ms-2" />
             <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
             <p class="text-muted pt-2">
                 If checked, each private key associated with an address generated will be stored as metadata
@@ -58,7 +58,7 @@
     }
 
     <div class="mb-4">
-        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-toggle="collapse" data-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
+        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
             Advanced settings
         </button>
         <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
@@ -67,7 +67,7 @@
                 {
                     <div class="form-group mb-5">
                         <label asp-for="AccountNumber">Account</label>
-                        <select asp-for="AccountNumber" class="form-control w-auto">
+                        <select asp-for="AccountNumber" class="form-select w-auto">
                             @for (var i = 0; i < 20; i++)
                             {
                                 <option value="@i">@i</option>
@@ -91,7 +91,7 @@
                 {
                     <div class="form-group mt-5">
                         <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
-                        <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle ml-2" />
+                        <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle ms-2" />
                         <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                         <p class="text-muted pt-2">
                             Each address generated will be imported into the node wallet and you can view your balance through the node.
@@ -109,7 +109,7 @@
     <button type="submit" class="btn btn-primary" id="Continue">Continue</button>
 </form>
 
-<script type="text/javascript">
+<script>
     document.getElementById("generate-wallet-form").addEventListener("submit", event => {
         const $form = event.currentTarget;
 

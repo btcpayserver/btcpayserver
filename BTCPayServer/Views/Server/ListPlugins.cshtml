@@ -96,9 +96,7 @@
 {
     <div class="alert alert-danger mb-5">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
-       <button class="btn btn-danger" data-toggle="collapse" data-target="#disabled-plugins">
-                    View disabled plugins
-                </button>
+       <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">View disabled plugins</button>
     </div>
 }
 @if (Model.Commands.Any())
@@ -126,17 +124,17 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
+                        <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
                         <div class="d-flex flex-wrap align-items-center mb-3">
-                            <h5 class="card-subtitle text-muted d-flex align-items-center mr-3">
+                            <h5 class="card-subtitle text-muted d-flex align-items-center me-3">
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
-                                    <div class="badge badge-secondary ml-2">System plugin</div>
+                                    <div class="badge bg-secondary ms-2">System plugin</div>
                                 }
                                 else if (updateAvailable)
                                 {
-                                    <div class="badge badge-info ml-2">
+                                    <div class="badge bg-info ms-2">
                                         @matchedAvailable.Version available
                                     </div>
                                 }
@@ -144,8 +142,8 @@
                             @if (updateAvailable)
                             {
                                 <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-toggle="tab" href="#@tabId-current" class="nav-link px-0 small text-info show active">Show current version</a>
-                                    <a data-toggle="tab" href="#@tabId-update" class="nav-link px-0 small text-info">Show update information</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link px-0 small text-info show active">Show current version</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link px-0 small text-info">Show update information</a>
                                 </span>
                             }
                         </div>
@@ -163,7 +161,7 @@
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
-                                                    <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                                 }
                                             </li>
                                         }
@@ -185,7 +183,7 @@
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
-                                                        <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                                     }
                                                 </li>
                                             }
@@ -211,13 +209,13 @@
                             {
                                 @if (updateAvailable && DependenciesMet(matchedAvailable.Dependencies))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="mr-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="me-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
                                 @if (DependentOn(plugin.Identifier))
                                 {
-                                    <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
                                 }
                                 else
                                 {
@@ -244,12 +242,12 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                        <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
                             @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
+                                <div class="badge bg-light ms-2 text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
@@ -263,7 +261,7 @@
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
-                                            <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                         }
                                     </li>
                                 }
@@ -300,7 +298,7 @@
 }
 
 <div class="mb-4">
-    <button class="btn btn-link text-secondary mb-2" type="button" data-toggle="collapse" data-target="#manual-upload">
+    <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
         Upload plugin
     </button>
     <div class="row collapse" id="manual-upload">
@@ -309,16 +307,11 @@
                 <div class="card-body">
                     <h4 class="card-title">Add plugin manually</h4>
                     <div class="alert alert-warning my-3">
-                        <h6 class="mr-1">This is an extremely dangerous operation!</h6>
+                        <h6 class="me-1">This is an extremely dangerous operation!</h6>
                         Only upload plugins from trusted sources.
                     </div>
                     <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
-                        <div class="form-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input form-control-file" required name="files" accept=".btcpay" id="files">
-                                <label class="custom-file-label" for="files">Choose file</label>
-                            </div>
-                        </div>
+                        <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
                         <button class="btn btn-primary" type="submit">Upload</button>
                     </form>
                 </div>
@@ -330,7 +323,7 @@
 @if (Model.Commands.Any())
 {
     <div class="mb-4">
-        <button class="btn btn-link text-secondary mb-2" type="button" data-toggle="collapse" data-target="#pending-actions">
+        <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
             Pending actions
         </button>
         <div class="row collapse" id="pending-actions">
@@ -343,7 +336,7 @@
                             {
                                 <li class="list-group-item px-0">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 mr-3">@extComm.Key</span>
+                                        <span class="my-2 me-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
                                             <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
                                         </form>
@@ -360,7 +353,7 @@
 @if (Model.Disabled.Any())
 {
     <div class="mb-4">
-        <button class="btn btn-link text-secondary mb-2" type="button" data-toggle="collapse" data-target="#disabled-plugins">
+        <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">
             Disabled plugins
         </button>
         <div class="row collapse" id="disabled-plugins">
@@ -373,7 +366,7 @@
                             {
                                 <li class="list-group-item px-0">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 mr-3">@d</span>
+                                        <span class="my-2 me-3">@d</span>
                                         <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
                                             <button type="submit" class="btn btn-outline-secondary">Uninstall</button>
                                         </form>
@@ -386,21 +379,4 @@
             </div>
         </div>
     </div>
-}
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $(".custom-file-input").on("change", function () {
-                var label = $(this).next("label");
-                var el = $(this).get(0);
-                if (el.files.length > 0) {
-                    var fileName = el.files[0].name;
-                    label.addClass("selected").html(fileName);
-                } else {
-                    label.removeClass("selected").html("Choose file");
-                }
-            });
-        });
-    </script>
 }

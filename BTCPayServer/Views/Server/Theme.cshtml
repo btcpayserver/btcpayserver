@@ -16,7 +16,7 @@
             }
             <div class="form-group">
                 <label asp-for="ThemeCssUri"></label>
-                <select asp-for="ThemeCssUri" class="form-control">
+                <select asp-for="ThemeCssUri" class="form-select">
                     <option value="/main/themes/default.css">Default (Light)</option>
                     <option value="/main/themes/default-dark.css">Default (Dark)</option>
                     <option value="/main/themes/classic.css">Classic</option>
@@ -61,6 +61,6 @@
     </div>
 </div>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

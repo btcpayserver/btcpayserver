@@ -58,7 +58,7 @@
                     <th>Deposit address</th>
                     <th>Amount</th>
                     <th>Transaction Id</th>
-                    <th class="text-right">Confirmations</th>
+                    <th class="text-end">Confirmations</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -67,16 +67,16 @@
                     <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
                         <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
-                        <td style="max-width:300px;" data-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
+                        <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
                         <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
-                        <td style="max-width:300px;" data-toggle="tooltip" class="text-truncate"  title="@payment.TransactionId">
+                        <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate"  title="@payment.TransactionId">
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">
                                     @payment.TransactionId
                                 </a>
                             </div>
                         </td>
-                        <td class="text-right">@payment.Confirmations</td>
+                        <td class="text-end">@payment.Confirmations</td>
                     </tr>
                 }
                 </tbody>

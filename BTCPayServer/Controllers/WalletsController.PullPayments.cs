@@ -295,6 +295,44 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction(nameof(WalletSend), new {walletId, bip21});
                 }
 
+                case "mark-paid":
+                {
+                    await using var ctx = this._dbContextFactory.CreateContext();
+                    ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                    var payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
+                    for (int i = 0; i < payouts.Count; i++)
+                    {
+                        var payout = payouts[i];
+                        if (payout.State != PayoutState.AwaitingPayment)
+                            continue;
+                        
+                        var result = await _pullPaymentService.MarkPaid(new PayoutPaidRequest()
+                        {
+                            PayoutId = payout.Id
+                        });
+                        if (result != PayoutPaidRequest.PayoutPaidResult.Ok)
+                        {
+                            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                            {
+                                Message = PayoutPaidRequest.GetErrorMessage(result),
+                                Severity = StatusMessageModel.StatusSeverity.Error
+                            });
+                            return RedirectToAction(nameof(Payouts), new
+                            {
+                                walletId = walletId.ToString(),
+                                pullPaymentId = vm.PullPaymentId
+                            });
+                        }
+                    }
+
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = "Payouts marked as paid", Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                    return RedirectToAction(nameof(Payouts),
+                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+                }
+
                 case "cancel":
                     await _pullPaymentService.Cancel(
                         new HostedServices.PullPaymentHostedService.CancelRequest(payoutIds));
@@ -376,7 +414,7 @@ namespace BTCPayServer.Controllers
                     var handler = _payoutHandlers
                         .FirstOrDefault(handler => handler.CanHandle(item.Payout.GetPaymentMethodId()));
                     var proofBlob = handler?.ParseProof(item.Payout);
-                    m.TransactionLink = proofBlob?.Link;
+                    m.ProofLink = proofBlob?.Link;
                     state.Payouts.Add(m);
 
                 }

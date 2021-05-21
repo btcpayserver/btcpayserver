@@ -189,6 +189,20 @@ namespace BTCPayServer.Controllers.GreenField
                     .Select(p => ToModel(p, cd)).ToList());
         }
 
+        [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/payouts/{payoutId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPayout(string pullPaymentId, string payoutId)
+        {
+            if (payoutId is null)
+                return NotFound();
+            await using var ctx = _dbContextFactory.CreateContext();
+            var payout = await ctx.Payouts.Include(data => data.PullPaymentData).FirstOrDefaultAsync(p => p.Id == payoutId);
+            if(payout is null )
+                return NotFound();
+            var cd = _currencyNameTable.GetCurrencyData(payout.PullPaymentData.GetBlob().Currency, false);
+            return base.Ok(ToModel(payout, cd));
+        }
+
         private Client.Models.PayoutData ToModel(Data.PayoutData p, CurrencyData cd)
         {
             var blob = p.GetBlob(_serializerSettings);
@@ -349,6 +363,35 @@ namespace BTCPayServer.Controllers.GreenField
                 case PullPaymentHostedService.PayoutApproval.Result.OldRevision:
                     return this.CreateAPIError("old-revision", errorMessage);
                 case PullPaymentHostedService.PayoutApproval.Result.NotFound:
+                    return NotFound();
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid")]
+        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
+        {
+            await using var ctx = _dbContextFactory.CreateContext();
+            ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            var result = await _pullPaymentService.MarkPaid(new PayoutPaidRequest()
+            {
+                //TODO: Allow API to specify the manual proof object
+                Proof = null,
+                PayoutId = payoutId
+            });
+            var errorMessage = PayoutPaidRequest.GetErrorMessage(result);
+            switch (result)
+            {
+                case PayoutPaidRequest.PayoutPaidResult.Ok:
+                    return await GetPayout(null, payoutId);
+                case PayoutPaidRequest.PayoutPaidResult.InvalidState:
+                    return this.CreateAPIError("invalid-state", errorMessage);
+                case PayoutPaidRequest.PayoutPaidResult.NotFound:
                     return NotFound();
                 default:
                     throw new NotSupportedException();

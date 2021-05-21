@@ -37,7 +37,7 @@
                             <th width="30px" class="only-for-js">
                                 @if (Model.Total > 0) 
                                 {
-                                    <input name="selectedItems" type="checkbox" onClick="selectAll(this);" />
+                                    <input name="selectedItems" type="checkbox" class="form-check-input" onClick="selectAll(this);" />
                                 }
                             </th>
                             <th width="190px">
@@ -55,7 +55,7 @@
                         {
                             <tr data-guid="@item.Id" class="notification-row @(item.Seen ? "seen" : "")">
                                 <td class="only-for-js">
-                                    <input name="selectedItems" type="checkbox" class="selector" value="@item.Id"/>
+                                    <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@item.Id"/>
                                 </td>
                                 <td onclick="toggleRowCheckbox(this)">
                                     <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">

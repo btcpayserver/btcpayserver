@@ -73,9 +73,9 @@
         </div>
         @if (Model.RequireConfirm)
         {
-            <form id="RecoveryConfirmation" action="@Model.ReturnUrl" class="d-flex align-items-start justify-content-center" style="margin-top:4rem;padding-bottom: 80px">
+            <form id="RecoveryConfirmation" action="@Model.ReturnUrl" class="position-relative d-flex align-items-start justify-content-center" style="margin-top:4rem;padding-bottom: 80px">
                 <label class="form-check-label lead order-2" for="confirm">I have written down my recovery phrase and stored it in a secure location</label>
-                <input type="checkbox" class="mt-2 me-3 order-1" id="confirm">
+                <input type="checkbox" class="mt-2 me-3 order-1 form-check-input" id="confirm">
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit">Done</button>
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
             </form>

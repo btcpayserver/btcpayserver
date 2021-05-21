@@ -62,8 +62,8 @@
                 <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
                 <div id="detailsQR" class="collapse">
                     <div class="form-group">
-                        <label>QR Code data</label>
-                        <input asp-for="ServiceLink" readonly class="form-control" />
+                        <label asp-for="ServiceLink" class="form-label">QR Code data</label>
+                        <input asp-for="ServiceLink" class="form-control" readonly />
                     </div>
                 </div>
             }

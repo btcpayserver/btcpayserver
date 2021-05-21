@@ -66,7 +66,7 @@
                 @if (isImport) // hide account option when creating a wallet
                 {
                     <div class="form-group mb-5">
-                        <label asp-for="AccountNumber">Account</label>
+                        <label asp-for="AccountNumber" class="form-label">Account</label>
                         <select asp-for="AccountNumber" class="form-select w-auto">
                             @for (var i = 0; i < 20; i++)
                             {
@@ -77,12 +77,12 @@
                     </div>
                 }
                 <div class="form-group">
-                    <label asp-for="Passphrase">Optional passphrase (BIP39)</label>
+                    <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
                     <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label for="passphrase_conf">Confirm passphrase</label>
+                    <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
                     <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>

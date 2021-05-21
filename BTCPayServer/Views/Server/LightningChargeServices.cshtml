@@ -32,22 +32,22 @@
         @if (Model.Uri != null)
         {
             <div class="form-group">
-                <label asp-for="Uri"></label>
-                <input asp-for="Uri" readonly class="form-control" />
+                <label asp-for="Uri" class="form-label"></label>
+                <input asp-for="Uri" class="form-control" readonly />
             </div>
         }
         @if (Model.APIToken != null)
         {
             <div class="form-group">
-                <label asp-for="APIToken"></label>
-                <input asp-for="APIToken" readonly class="form-control" />
+                <label asp-for="APIToken" class="form-label"></label>
+                <input asp-for="APIToken" class="form-control" readonly />
             </div>
         }
         @if (Model.AuthenticatedUri != null)
         {
             <div class="form-group">
-                <label asp-for="AuthenticatedUri"></label>
-                <input asp-for="AuthenticatedUri" readonly class="form-control" />
+                <label asp-for="AuthenticatedUri" class="form-label"></label>
+                <input asp-for="AuthenticatedUri" class="form-control" readonly />
             </div>
         }
     </div>

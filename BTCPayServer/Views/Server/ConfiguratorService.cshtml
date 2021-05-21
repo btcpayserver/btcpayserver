@@ -19,10 +19,10 @@
             </p>
         </div>
        
-            <a href="@Model.ServiceLink" target="_blank" class="form-group">
-                <label>Service</label>
-                <input asp-for="ServiceLink" readonly class="form-control" />
-            </a>
+        <a href="@Model.ServiceLink" target="_blank" class="form-group">
+            <label asp-for="ServiceLink" class="form-label">Service</label>
+            <input asp-for="ServiceLink" class="form-control" readonly />
+        </a>
     </div>
 </div>
 

@@ -19,21 +19,21 @@
 
         <div class="form-group">
             <div class="form-group">
-                <label asp-for="CommandLine"></label>
-                <input asp-for="CommandLine" readonly class="form-control" />
+                <label asp-for="CommandLine" class="form-label"></label>
+                <input asp-for="CommandLine" class="form-control" readonly />
             </div>
             @if (!string.IsNullOrEmpty(Model.Password))
             {
                 <div class="form-group">
-                    <label asp-for="Password"></label>
-                    <input asp-for="Password" readonly class="form-control" />
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" readonly />
                 </div>
             }
             @if (!string.IsNullOrEmpty(Model.KeyFilePassword))
             {
                 <div class="form-group">
-                    <label asp-for="KeyFilePassword"></label>
-                    <input asp-for="KeyFilePassword" readonly class="form-control" />
+                    <label asp-for="KeyFilePassword" class="form-label"></label>
+                    <input asp-for="KeyFilePassword" class="form-control" readonly />
                 </div>
             }
         </div>

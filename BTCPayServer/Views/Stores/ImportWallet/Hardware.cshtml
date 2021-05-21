@@ -62,15 +62,15 @@
             <h4 class="mb-3">Public Key Information</h4>
 
             <div class="form-group">
-                <label asp-for="DerivationScheme"></label>
+                <label asp-for="DerivationScheme" class="form-label"></label>
                 <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="3" readonly></textarea>
             </div>
             <div class="form-group">
-                <label asp-for="RootFingerprint"></label>
+                <label asp-for="RootFingerprint" class="form-label"></label>
                 <input asp-for="RootFingerprint" class="form-control" readonly />
             </div>
             <div class="form-group">
-                <label asp-for="KeyPath"></label>
+                <label asp-for="KeyPath" class="form-label"></label>
                 <input asp-for="KeyPath" class="form-control" readonly />
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>

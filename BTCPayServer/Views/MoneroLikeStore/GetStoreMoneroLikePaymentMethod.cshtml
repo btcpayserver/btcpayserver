@@ -33,17 +33,17 @@
                 <div class="card my-2">
                     <h3 class="card-title p-2">Upload Wallet</h3>
                     <div class="form-group p-2">
-                        <label asp-for="WalletFile"></label>
+                        <label asp-for="WalletFile" class="form-label"></label>
                         <input class="form-control" asp-for="WalletFile" required>
                         <span asp-validation-for="WalletFile" class="text-danger"></span>
                     </div>
                     <div class="form-group p-2">
-                        <label asp-for="WalletKeysFile"></label>
+                        <label asp-for="WalletKeysFile" class="form-label"></label>
                         <input class="form-control" asp-for="WalletKeysFile" required>
                         <span asp-validation-for="WalletKeysFile" class="text-danger"></span>
                     </div>
                     <div class="form-group p-2">
-                        <label asp-for="WalletPassword"></label>
+                        <label asp-for="WalletPassword" class="form-label"></label>
                         <input class="form-control" asp-for="WalletPassword">
                         <span asp-validation-for="WalletPassword" class="text-danger"></span>
                     </div>

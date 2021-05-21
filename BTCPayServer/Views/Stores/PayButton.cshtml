@@ -137,17 +137,17 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Button Type</label>
-                <div>
-                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked/>
-                    <label for="btn-fixed">Fixed amount</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked/>
+                    <label for="btn-fixed" class="form-check-label">Fixed amount</label>
                 </div>
-                <div>
-                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
-                    <label for="btn-custom">Custom amount</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
+                    <label for="btn-custom" class="form-check-label">Custom amount</label>
                 </div>
-                <div>
-                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
-                    <label for="btn-slider">Slider</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
+                    <label for="btn-slider" class="form-check-label">Slider</label>
                 </div>
             </div>
             <div class="row" v-if="srvModel.buttonType == 1 ||srvModel.buttonType == 2">
@@ -173,7 +173,7 @@
                     <small class="text-danger">{{ errors.first('step') }}</small>
                 </div>
             </div>
-            <div class="form-group" v-if="srvModel.buttonType == 1">
+            <template v-if="srvModel.buttonType == 1">
                 <div class="form-check">
                     <input name="simpleInput"
                            id="simpleInput"
@@ -196,7 +196,7 @@
                     <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
                     <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
-            </div>
+            </template>
         </div>
         <div class="col-lg-5">
             <h5 class="mb-3">Preview</h5>
@@ -251,7 +251,7 @@
     <div class="row" v-if="!srvModel.appIdEndpoint">
         <div class="col-lg-7">
             <div class="form-group">
-                <label>Checkout Additional Query String</label>
+                <label class="form-label">Checkout Additional Query String</label>
                 <input name="checkoutQueryString" type="text" class="form-control" placeholder="(optional)"
                        v-model="srvModel.checkoutQueryString" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('checkoutQueryString') }">
@@ -268,7 +268,7 @@
     <div class="row">
         <div class="col-lg-7">
             <div class="form-group">
-                <label>Use App as endpoint</label>
+                <label class="form-label">Use App as endpoint</label>
                 <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-select">
                     <option value="">Use default pay button endpoint</option>
                     <option  v-for="app in srvModel.apps" v-bind:value="app.id" >{{app.appName}} ({{app.appType}})</option>

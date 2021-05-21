@@ -4,10 +4,14 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
-<style>
-    #event-selector { display: none; }
-    #Everything[data-value='false'] + #event-selector { display: block; }
-</style>
+
+@section PageHeadContent {
+    <style>
+        #event-selector { display: none; }
+        #Everything[data-value='false'] + #event-selector { display: block; }
+    </style>
+}
+
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
@@ -27,18 +31,14 @@
                 </div>
                 <p class="text-muted small form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</p>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="AutomaticRedelivery" type="checkbox" class="form-check-input" />
-                    <label asp-for="AutomaticRedelivery" class="form-check-label">Automatic redelivery</label>
-                    <p class="text-muted small form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minutes and up to 6 times after 10 minutes</p>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="AutomaticRedelivery" type="checkbox" class="form-check-input" />
+                <label asp-for="AutomaticRedelivery" class="form-check-label">Automatic redelivery</label>
+                <p class="text-muted small form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minutes and up to 6 times after 10 minutes</p>
             </div>
-            <div class="form-group mb-5">
-                <div class="form-check">
-                    <input asp-for="Active" type="checkbox" class="form-check-input" />
-                    <label asp-for="Active" class="form-check-label">Is enabled</label>
-                </div>
+            <div class="form-group form-check mb-5">
+                <input asp-for="Active" type="checkbox" class="form-check-input" />
+                <label asp-for="Active" class="form-check-label">Is enabled</label>
             </div>
             <h4 class="mb-3">Events</h4>
             <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
@@ -69,11 +69,11 @@
             </div>
             @if (Model.IsNew)
             {
-                <button name="add" type="submit" class="btn btn-primary mt-3 mb-5" value="New" id="New">Add webhook</button>
+                <button name="add" type="submit" class="btn btn-primary mb-5" value="New" id="New">Add webhook</button>
             }
             else
             {
-                <button name="update" type="submit" class="btn btn-primary mt-3 mb-5" value="Save" id="Save">Update webhook</button>
+                <button name="update" type="submit" class="btn btn-primary mb-5" value="Save" id="Save">Update webhook</button>
             }
         </form>
         @if (!Model.IsNew && Model.Deliveries.Count > 0)

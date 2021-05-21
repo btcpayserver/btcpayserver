@@ -66,7 +66,7 @@
     #CustomSetup ul li > code, #CustomSetup ul pre {
         display: block;
         color: var(--btcpay-code-text);
-        background: var(--btcpay-code-bg);
+        background: var(--btcpay-bg-tile);
         margin: .25rem 0;
         padding: .75rem 1rem;
         border-radius: .25rem;
@@ -113,7 +113,7 @@
         }
     </div>
     <div id="CustomSetup" class="text-start">
-        <label asp-for="ConnectionString" class="mt-4">Connection configuration for your custom Lightning node:</label>
+        <label asp-for="ConnectionString" class="form-label mt-4">Connection configuration for your custom Lightning node:</label>
         <div class="d-sm-flex">
             <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
             <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>

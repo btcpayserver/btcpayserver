@@ -1,4 +1,4 @@
-﻿@model RegisterViewModel
+@model RegisterViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
     ViewData["Title"] = "Register";
@@ -12,10 +12,8 @@
 <div class="row justify-content-center mb-2">
     <div class="col text-center">
         <a asp-controller="Home" asp-action="Index">
-            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+            <img src="~/img/btcpay-logo.svg" alt="NESTpay logo" class="mb-4" height="70" asp-append-version="true"/>
         </a>
-
-        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
 
         <p class="lead">
             <span class="d-sm-block">A self-hosted, open-source cryptocurrency payment processor.</span>
@@ -71,10 +69,3 @@
         </div>
     </div>
 </div>
-
-<div class="row justify-content-center mt-5">
-    <div class="col">
-        <partial name="_BTCPaySupporters"/>
-    </div>
-</div>
-

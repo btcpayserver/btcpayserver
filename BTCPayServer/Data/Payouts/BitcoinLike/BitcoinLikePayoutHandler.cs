@@ -83,7 +83,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         if (res == null) return null;
         res.LinkTemplate = network.BlockExplorerLink;
         return res;
-
     }
 
     public void StartBackgroundCheck(Action<Type[]> subscribe)

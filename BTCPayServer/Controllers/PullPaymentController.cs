@@ -42,6 +42,7 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
         }
+        
         [Route("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {

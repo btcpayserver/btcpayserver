@@ -4639,7 +4639,7 @@ fieldset:disabled .btn {
   display: block;
   padding: 0.5rem 1rem;
   color: var(--btcpay-body-text);
-  background-color: var(--btcpay-body-bg-light);
+  background-color: var(--btcpay-body-bg);
   border: 1px solid var(--btcpay-body-border-medium);
 }
 
@@ -4656,7 +4656,7 @@ fieldset:disabled .btn {
 .list-group-item.disabled, .list-group-item:disabled {
   color: var(--btcpay-secondary);
   pointer-events: none;
-  background-color: var(--btcpay-body-bg-light);
+  background-color: var(--btcpay-body-bg);
 }
 
 .list-group-item.active {

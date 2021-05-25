@@ -127,18 +127,16 @@
 
     @if (Model.DomainToAppMapping.Any())
     {
-        <div class="list-group mb-2">
-            <div class="list-group-item">
-                <h5 class="mb-1">
-                    Domain to app mapping
-                    <button type="submit" name="command" value="add-domain" class="ms-1 btn btn-secondary btn-sm ">Add domain mapping </button>
-                </h5>
-            </div>
+        <h5 class="mt-5 mb-0">
+            Domain to app mapping
+            <button type="submit" name="command" value="add-domain" class="btn btn-secondary btn-sm ms-2">Add domain mapping</button>
+        </h5>
+        <div class="list-group list-group-flush mb-2">
             @for (var index = 0; index < Model.DomainToAppMapping.Count; index++)
             {
-                <div class="list-group-item p-0 ps-lg-2">
+                <div class="list-group-item px-0 pt-3">
                     <div class="row">
-                        <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                        <div class="col-12 col-lg-8">
                             <div class="form-group">
                                 <label asp-for="DomainToAppMapping[index].Domain" class="form-label"></label>
                                 <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>
@@ -148,25 +146,24 @@
                                 <label asp-for="DomainToAppMapping[index].AppId" class="form-label"></label>
                                 <select asp-for="DomainToAppMapping[index].AppId"
                                         asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
-                                        class="form-select">
+                                        class="form-select w-auto">
                                 </select>
-
                                 <span asp-validation-for="DomainToAppMapping[index].AppId" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                        <div class="col-12 col-lg-2 pull-right">
                             <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
-                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ms-2">
+                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2">
                                 Remove Destination
                             </button>
                             <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
-                                    class="d-none d-lg-block remove-domain-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right">
+                                    class="d-none d-lg-block btn btn-outline-danger text-decoration-none h-100 align-middle border-0 fs-4">
+                                <span class="fa fa-times"></span>
                             </button>
                         </div>
                     </div>
                 </div>
             }
-
         </div>
     }
 
@@ -175,44 +172,37 @@
     </button>
 
     <div class="mb-3">
-        <div class="card collapse show collapse-on-js" id="explorer-links">
-            <ul class="list-group list-group-flush">
-                @inject BTCPayNetworkProvider BTCPayNetworkProvider
-                @{
-                    var networks = BTCPayNetworkProvider.GetAll().ToArray();
-                }
+        <div class="collapse show collapse-on-js" id="explorer-links">
+            @inject BTCPayNetworkProvider BTCPayNetworkProvider
+            @{
+                var networks = BTCPayNetworkProvider.GetAll().ToArray();
+            }
 
-                @for (int i = 0; i < networks.Count(); i++)
+            @for (var i = 0; i < networks.Count(); i++)
+            {
+                var network = networks.ElementAt(i);
+                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
+                var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
+                if (Model.BlockExplorerLinks.Count < i + 1)
                 {
-                    var network = networks.ElementAt(i);
-                    var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
-                    var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
-                    if (Model.BlockExplorerLinks.Count < i + 1)
-                    {
-                        Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
-                    }
-                    <li class="list-group-item">
-                        <label class="form-label"> @network.DisplayName (@network.CryptoCode)</label>
-                        <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
-                        <div class="input-group">
-                            <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
-                            <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh only-for-js" title="Revert to default"></button>
-                        </div>
-                    </li>
+                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
                 }
-            </ul>
+                <div class="form-group m-0 py-4">
+                    <label class="form-label">@network.DisplayName (@network.CryptoCode)</label>
+                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
+                    <div class="input-group">
+                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
+                        <button type="button" class="btn btn-secondary only-for-js" title="Revert to default">
+                            <span class="fa fa-refresh"></span>
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
     <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
-
-@section PageHeadContent {
-    <style>
-        .remove-domain-btn { font-size: 1.5rem; border-radius: 0; }
-        .remove-domain-btn:hover { background-color: #CCCCCC; }
-    </style>
-}
 
 @section PageFootContent {
     <script>

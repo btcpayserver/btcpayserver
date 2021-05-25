@@ -9599,6 +9599,12 @@ label + input.btcpay-toggle {
   top: .45rem;
 }
 
+.btcpay-toggle:disabled {
+  pointer-events: none;
+  filter: none;
+  opacity: 0.5;
+}
+
 /* Bootstrap Responsive Helper */
 html[data-devenv]:before {
   display: inline-block;

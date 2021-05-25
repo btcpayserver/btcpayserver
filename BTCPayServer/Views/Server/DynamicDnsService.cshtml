@@ -54,9 +54,9 @@
                 </div>
                 @if (Model.Modify)
                 {
-                    <div class="form-check">
-                        <input asp-for="Settings.Enabled" class="form-check-input" type="checkbox"/>
-                        <label asp-for="Settings.Enabled" class="form-check-label"></label>
+                    <div class="form-group">
+                        <label asp-for="Settings.Enabled" class="form-label"></label>
+                        <input asp-for="Settings.Enabled" disabled type="checkbox" class="btcpay-toggle ms-2" />
                     </div>
                 }
                 <button name="command" class="btn btn-primary" type="submit" value="Save">Save</button>

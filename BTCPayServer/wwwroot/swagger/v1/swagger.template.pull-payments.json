@@ -490,28 +490,6 @@
                         "Basic": []
                     }
                 ]
-            },
-            "delete": {
-                "summary": "Cancel Payout",
-                "description": "Cancel the payout",
-                "operationId": "PullPayments_CancelPayout",
-                "responses": {
-                    "200": {
-                        "description": "The payout has been cancelled"
-                    },
-                    "404": {
-                        "description": "The payout is not found"
-                    }
-                },
-                "tags": [ "Pull payments (Management)" ],
-                "security": [
-                    {
-                        "API Key": [
-                            "btcpay.store.canmanagepullpayments"
-                        ],
-                        "Basic": []
-                    }
-                ]
             }
         }
     },

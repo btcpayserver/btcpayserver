@@ -5,7 +5,7 @@
 }
 
 <div class="row">
-    <p class="col-lg-8">
+    <div class="col-lg-8">
         <h4 class="mb-3">@ViewData["PageTitle"]</h4>
         @if (!ViewContext.ModelState.IsValid)
         {
@@ -25,6 +25,7 @@
                             <h2 class="accordion-header" id="direct-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#direct-content" aria-expanded="false" aria-controls="direct-content">
                                     Direct integration
+                                    <vc:icon symbol="caret-down"/>
                                 </button>
                             </h2>
                             <div id="direct-content" class="accordion-collapse collapse" aria-labelledby="direct-header" data-bs-parent="#accordion-info">
@@ -40,6 +41,7 @@
                             <h2 class="accordion-header" id="coingecko-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#coingecko-content" aria-expanded="false" aria-controls="coingecko-content">
                                     Coingecko integration
+                                    <vc:icon symbol="caret-down"/>
                                 </button>
                             </h2>
                             <div id="coingecko-content" class="accordion-collapse collapse" aria-labelledby="coingecko-header" data-bs-parent="#accordion-info">

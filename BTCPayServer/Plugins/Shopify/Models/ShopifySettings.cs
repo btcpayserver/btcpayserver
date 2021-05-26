@@ -25,7 +25,7 @@ namespace BTCPayServer.Plugins.Shopify.Models
         {
             get
             {
-                return ShopName?.Contains(".", StringComparison.OrdinalIgnoreCase) is true ? $"https://{ShopName}.myshopify.com" : ShopName;
+                return ShopName?.Contains(".", StringComparison.OrdinalIgnoreCase) is true ? ShopName : $"https://{ShopName}.myshopify.com" ;
             }
         }
     }

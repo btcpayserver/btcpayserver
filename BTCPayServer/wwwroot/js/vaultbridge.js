@@ -1,4 +1,4 @@
-﻿var vault = (function () {
+var vault = (function () {
     /** @param {WebSocket} websocket
     */
     function VaultBridge(websocket) {
@@ -97,7 +97,7 @@
             notRunning: "NotRunning",
             denied: "Denied",
             socketNotSupported: "SocketNotSupported",
-            socketError: "SocketError",
+            socketError: "SocketError"
         },
         askVaultPermission: askVaultPermission,
         connectToBackendSocket: connectToBackendSocket,

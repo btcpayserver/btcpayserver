@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             cryptoCode = cryptoCode ?? walletId.CryptoCode;
+            bool versionChecked = false;
             using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10)))
             {
                 var cancellationToken = cts.Token;
@@ -272,6 +273,16 @@ namespace BTCPayServer.Controllers
                                 goto askdevice;
                             case "ask-device":
 askdevice:
+                                if (!versionChecked)
+                                {
+                                    var version = await hwi.GetVersionAsync(cancellationToken);
+                                    if (version.Major < 2)
+                                    {
+                                        await websocketHelper.Send("{ \"error\": \"vault-outdated\"}", cancellationToken);
+                                        continue;
+                                    }
+                                    versionChecked = true;
+                                }
                                 password = null;
                                 deviceEntry = null;
                                 device = null;

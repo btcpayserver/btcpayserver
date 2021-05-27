@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/info")]
-        public async Task<ActionResult> ServerInfo()
+        public ActionResult ServerInfo()
         {
             var supportedPaymentMethods = _paymentMethodHandlerDictionary
                 .SelectMany(handler => handler.GetSupportedPaymentMethods().Select(id => id.ToString()))

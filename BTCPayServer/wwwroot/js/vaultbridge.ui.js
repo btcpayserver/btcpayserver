@@ -32,7 +32,7 @@ var vaultui = (function () {
         noWebsockets: new VaultFeedback("failed", "Web sockets are not supported by the browser.", "vault-feedback1", "no-websocket"),
         errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "vault-feedback1", "error-websocket"),
         bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "vault-feedback1", "bridge-connected"),
-        vaultNeedUpdate: new VaultFeedback("failed", "BTCPayServer Vault is running, but you need to update. Download the latest version on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback2", "vault-outdated"),
+        vaultNeedUpdate: new VaultFeedback("failed", "Your BTCPay Server Vault version is obsolete. Please <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">download</a> the latest version.", "vault-feedback2", "vault-outdated"),
         noDevice: new VaultFeedback("failed", "No device connected.", "vault-feedback2", "no-device"),
         needInitialized: new VaultFeedback("failed", "The device has not been initialized.", "vault-feedback2", "need-initialized"),
         fetchingDevice: new VaultFeedback("?", "Fetching device...", "vault-feedback2", "fetching-device"),

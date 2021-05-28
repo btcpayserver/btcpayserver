@@ -15,7 +15,7 @@
                 <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
             </div>
         }
-        <div class="row card-deck my-3 mx-auto">
+        <div class="card-deck my-3 mx-auto">
             @for (int x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
@@ -26,13 +26,13 @@
                         : item.BuyButtonText)
                     .Replace("{0}",item.Price.Formatted)
                     .Replace("{Price}",item.Price.Formatted);
-                <div class="card px-0 m-2" data-id="@x">
+                <div class="card px-0" data-id="@x">
                     @if (!String.IsNullOrWhiteSpace(item.Image))
                     {
                         <img class="card-img-top" src="@item.Image" alt="Card image cap" asp-append-version="true">
                     }
                     @{CardBody(item.Title, item.Description);}
-                    <div class="card-footer bg-transparent border-0">
+                    <div class="card-footer bg-transparent border-0 pb-3">
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
                             @if (item.Custom)
@@ -74,9 +74,9 @@
             }
             @if (Model.ShowCustomAmount)
             {
-                <div class="card px-0 m-2">
+                <div class="card px-0">
                     @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
-                    <div class="card-footer bg-transparent border-0">
+                    <div class="card-footer bg-transparent border-0 pb-3">
                         <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                             @{PayFormInputContent(Model.CustomButtonText);}
                         </form>

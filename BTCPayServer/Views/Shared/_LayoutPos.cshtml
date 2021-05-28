@@ -49,12 +49,12 @@
         .card-deck {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: .5rem;
+            grid-gap: 1.5rem;
         }
 
-        .card-deck .card:only-of-type {
+        .card:only-of-type {
             max-width: 320px;
-            margin: auto;
+            margin: auto !important;
         }
 
         .js-cart-item-minus .fa,
@@ -67,27 +67,12 @@
             justify-content: center;
             align-items: center;
         }
-
-        .js-cart-item-count {
-            -moz-appearance:textfield;
-            margin: 0;
-            text-align: right;
-        }
-
-        .js-cart-item-count::-webkit-inner-spin-button,
-        .js-cart-item-count::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
-
 </head>
-
 <body class="h-100">
     @RenderBody()
 </body>

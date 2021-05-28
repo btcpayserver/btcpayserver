@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -13,9 +14,11 @@ namespace BTCPayServer.Services
     public class LanguageService
     {
         private readonly Language[] _languages;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public LanguageService(IWebHostEnvironment environment)
+        public LanguageService(IWebHostEnvironment environment,IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
             var path = environment.WebRootPath;
             path = Path.Combine(path, "locales");
             var files = Directory.GetFiles(path, "*.json");
@@ -38,6 +41,19 @@ namespace BTCPayServer.Services
 
         public Language FindBestMatch(string defaultLang)
         {
+            var _request = _httpContextAccessor.HttpContext.Request;
+            if (_request.Headers["Accept-Language"].Count() > 0)
+            {
+                var acceptLanguage = _request.Headers["Accept-Language"][0];
+                var locales = acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                if (locales.Length > 0)
+                {
+                    var firstLocale = locales[0];
+                    var parts = firstLocale.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    defaultLang = parts[0];
+                }
+            }
+            
             if (defaultLang is null)
                 return null;
             defaultLang = defaultLang.Trim();

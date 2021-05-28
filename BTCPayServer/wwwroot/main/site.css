@@ -67,6 +67,13 @@
     content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDcgMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuMzg3MzkgNC4zMTYyOFY1LjYyMUwzLjczNDM5IDQuOTY5MjZMNC4zODczOSA0LjMxNzUxVjQuMzE2MjhaTTAuMDAxMjMxMzkgMS4zMDM0OUwxLjMwNTk5IDBMNi4zMTU1NyA1TDEuMzA1OTkgMTBMMCA4LjY5NjUxTDMuNzAxMTMgNUwwIDEuMzAzNDlIMC4wMDEyMzEzOVoiIGZpbGw9IiM4RDhEOEYiLz48L3N2Zz4K");
 }
 
+/* Info icons in main headline */
+h2 small .fa-question-circle-o {
+    position: relative;
+    top: -.2rem;
+    font-size: 1.2rem;
+}
+
 /* Admin Sidebar Navigation */
 .col-md-3 .nav-pills {
     margin-left: -1rem;

@@ -16,7 +16,7 @@ namespace BTCPayServer.Services
         private readonly Language[] _languages;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public LanguageService(IWebHostEnvironment environment,IHttpContextAccessor httpContextAccessor)
+        public LanguageService(IWebHostEnvironment environment, IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
             var path = environment.WebRootPath;

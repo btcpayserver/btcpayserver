@@ -42,7 +42,7 @@ namespace BTCPayServer.Services
         public Language FindBestMatch(string defaultLang)
         {
             var _request = _httpContextAccessor.HttpContext.Request;
-            if (_request.Headers["Accept-Language"].Count() > 0)
+            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language", out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
             {
                 var locales = acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries);
                 if (locales.Length > 0)

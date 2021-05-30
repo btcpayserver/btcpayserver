@@ -229,27 +229,6 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>Square Crypto</span>
         </a>
       </td>
-      <td align="center" valign="middle">
-        <a href="https://www.btse.com" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/btse.svg" alt="BTSE" height=100>
-          <br/>
-          <span>BTSE</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://www.okcoin.com/" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>
-          <br/>
-          <span>OKCoin</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://www.dglab.com/en/" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/dglab.svg" alt="DG Lab" height=100>
-          <br/>
-          <span>DG Lab</span>
-        </a>
-      </td>
     </tr>
     <tr>
        <td align="center" valign="middle">

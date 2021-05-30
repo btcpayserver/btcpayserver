@@ -44,7 +44,6 @@ namespace BTCPayServer.Services
             var _request = _httpContextAccessor.HttpContext.Request;
             if (_request.Headers["Accept-Language"].Count() > 0)
             {
-                var acceptLanguage = _request.Headers["Accept-Language"][0];
                 var locales = acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries);
                 if (locales.Length > 0)
                 {

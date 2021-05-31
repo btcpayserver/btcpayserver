@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using BTCPayServer.Client.Models;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Services
 
             _languages = result.ToArray();
         }
+
         public Language[] GetLanguages()
         {
             return _languages;
@@ -41,39 +43,59 @@ namespace BTCPayServer.Services
 
         public Language FindBestMatch(string defaultLang)
         {
+            var supportedLangs = GetLanguages();
             if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language", out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
             {
-                var locales = acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                if (locales.Length > 0)
+                IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
+                var locales = acceptLanguage.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < locales.Length; i++)
                 {
-                    var firstLocale = locales[0];
-                    var parts = firstLocale.Split(';', StringSplitOptions.RemoveEmptyEntries);
-                    defaultLang = parts[0];
+                    var oneLocale = locales[0];
+                    var parts = oneLocale.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    var locale = parts[0];
+                    var qualityScore = 1.0f;
+                    if (parts.Length == 2)
+                    {
+                        qualityScore = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                    }
+
+                    if (!locale.Equals("*", StringComparison.OrdinalIgnoreCase))
+                    {
+                        acceptedLocales[locale] = qualityScore;
+                    }
+                }
+                
+                var sortedAcceptedLocales = from entry in acceptedLocales orderby entry.Value ascending select entry;
+                foreach (var pair in sortedAcceptedLocales)
+                {
+                    var locale = pair.Key;
+                    foreach (var oneLang in supportedLangs)
+                    {
+                        
+                        var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                        var lang = split[0];
+                        var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
+
+                        var langStart = lang + "-";
+                        var langMatches = supportedLangs
+                            .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
+                                        l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase));
+
+                        var countryMatches = langMatches;
+                        var countryEnd = "-" + country;
+                        countryMatches = countryMatches.Where(l => l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase));
+                        var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
+
+                        if (bestMatch != null)
+                        {
+                            return bestMatch;
+                        }
+                    }
                 }
             }
             
-            if (defaultLang is null)
-                return null;
-            defaultLang = defaultLang.Trim();
-            if (defaultLang.Length < 2)
-                return null;
-            var split = defaultLang.Split('-', StringSplitOptions.RemoveEmptyEntries);
-            if (split.Length != 1 && split.Length != 2)
-                return null;
-            var lang = split[0];
-            var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
-
-            var langStart = lang + "-";
-            var langMatches = GetLanguages()
-                .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
-                            l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase));
-
-            var countryMatches = langMatches;
-            var countryEnd = "-" + country;
-            countryMatches =
-                countryMatches
-                .Where(l => l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase));
-            return countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
+            var defaultLanguage = supportedLangs.Where(l => l.Code.StartsWith(defaultLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return defaultLanguage;
         }
     }
 }

@@ -92,6 +92,7 @@ h2 small .fa-question-circle-o {
     font-weight: 700;
     border-left-color: var(--btcpay-nav-border-active);
     background: var(--btcpay-nav-bg-active);
+
 }
 
 /* Homepage */

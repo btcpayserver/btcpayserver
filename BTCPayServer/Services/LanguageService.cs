@@ -41,13 +41,11 @@ namespace BTCPayServer.Services
             return _languages;
         }
 
-        public Language FindBestMatch(string defaultLang)
+        public Language FindLanguageInAcceptLanguageHeader(string acceptLanguageHeader)
         {
             var supportedLangs = GetLanguages();
-            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language", out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
-            {
-                IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
-                var locales = acceptLanguage.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
+            IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
+                var locales = acceptLanguageHeader.Split(',', StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < locales.Length; i++)
                 {
                     var oneLocale = locales[0];
@@ -92,8 +90,19 @@ namespace BTCPayServer.Services
                         }
                     }
                 }
+
+                return null;
+        }
+
+        public Language FindBestMatch(string defaultLang)
+        {
+            
+            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language", out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
+            {
+                return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString());
             }
             
+            var supportedLangs = GetLanguages();
             var defaultLanguage = supportedLangs.Where(l => l.Code.StartsWith(defaultLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             return defaultLanguage;
         }

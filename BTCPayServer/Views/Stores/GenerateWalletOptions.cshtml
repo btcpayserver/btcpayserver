@@ -16,7 +16,7 @@
 <div class="list-group mt-5">
     @if (Model.CanUseHotWallet)
     {
-        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="GenerateHotwalletLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="GenerateHotwalletLink" class="list-group-item list-group-item-action">
             <div class="image">
                 <vc:icon symbol="hot-wallet"/>
             </div>
@@ -33,7 +33,7 @@
     }
     else
     {
-        <div class="list-group-item list-group-item-wallet-setup text-muted">
+        <div class="list-group-item text-muted">
             <div class="image">
                 <vc:icon symbol="hot-wallet"/>
             </div>
@@ -46,7 +46,7 @@
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+    <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action">
         <div class="image">
             <vc:icon symbol="watchonly-wallet"/>
         </div>

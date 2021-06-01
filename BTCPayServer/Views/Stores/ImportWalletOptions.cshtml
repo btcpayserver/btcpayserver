@@ -21,7 +21,7 @@
 {
     <div class="mt-5">
         <div class="list-group">
-            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="ImportHardwareLink" class="list-group-item list-group-item-action list-group-item-wallet-setup only-for-js">
+            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="ImportHardwareLink" class="list-group-item list-group-item-action only-for-js">
                 <div class="image">
                     <vc:icon symbol="hardware-wallet"/>
                 </div>
@@ -35,7 +35,7 @@
                 <vc:icon symbol="caret-right" />
             </a>
             <noscript>
-                <div class="list-group-item list-group-item-wallet-setup disabled">
+                <div class="list-group-item disabled">
                     <div class="image">
                         <vc:icon symbol="hardware-wallet"/>
                     </div>
@@ -53,7 +53,7 @@
 }
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" id="ImportFileLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" id="ImportFileLink" class="list-group-item list-group-item-action">
         <div class="image">
             <vc:icon symbol="wallet-file"/>
         </div>
@@ -69,7 +69,7 @@
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="ImportXpubLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="ImportXpubLink" class="list-group-item list-group-item-action">
         <div class="image">
             <vc:icon symbol="xpub"/>
         </div>
@@ -82,7 +82,7 @@
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="ImportScanLink" class="list-group-item list-group-item-action list-group-item-wallet-setup only-for-js">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="ImportScanLink" class="list-group-item list-group-item-action only-for-js">
         <div class="image">
             <vc:icon symbol="scan-qr"/>
         </div>
@@ -93,7 +93,7 @@
         <vc:icon symbol="caret-right" />
     </a>
     <noscript>
-        <div class="list-group-item list-group-item-action list-group-item-wallet-setup disabled hide-when-js">
+        <div class="list-group-item list-group-item-action disabled hide-when-js">
             <div class="image">
                 <vc:icon symbol="scan-qr"/>
             </div>
@@ -106,7 +106,7 @@
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="ImportSeedLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="ImportSeedLink" class="list-group-item list-group-item-action">
         <div class="image">
             <vc:icon symbol="seed"/>
         </div>

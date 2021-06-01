@@ -12,6 +12,18 @@ using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Services
 {
+    public class Language
+    {
+        public Language(string code, string displayName)
+        {
+            DisplayName = displayName;
+            Code = code;
+        }
+
+        [JsonProperty("code")] public string Code { get; set; }
+        [JsonProperty("currentLanguage")] public string DisplayName { get; set; }
+    }
+
     public class LanguageService
     {
         private readonly Language[] _languages;
@@ -45,16 +57,28 @@ namespace BTCPayServer.Services
         {
             var supportedLangs = GetLanguages();
             IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
-                var locales = acceptLanguageHeader.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < locales.Length; i++)
+            var locales = acceptLanguageHeader.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < locales.Length; i++)
+            {
+                try
                 {
-                    var oneLocale = locales[0];
+                    var oneLocale = locales[i];
                     var parts = oneLocale.Split(';', StringSplitOptions.RemoveEmptyEntries);
                     var locale = parts[0];
                     var qualityScore = 1.0f;
                     if (parts.Length == 2)
                     {
-                        qualityScore = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                        var qualityScorePart = parts[1];
+                        if (qualityScorePart.StartsWith("q=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            qualityScorePart = qualityScorePart.Substring(2);
+                            qualityScore = float.Parse(qualityScorePart, CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            // Invalid format, continue with next
+                            continue;
+                        }
                     }
 
                     if (!locale.Equals("*", StringComparison.OrdinalIgnoreCase))
@@ -62,48 +86,54 @@ namespace BTCPayServer.Services
                         acceptedLocales[locale] = qualityScore;
                     }
                 }
-                
-                var sortedAcceptedLocales = from entry in acceptedLocales orderby entry.Value ascending select entry;
-                foreach (var pair in sortedAcceptedLocales)
+                catch (System.FormatException e)
                 {
-                    var locale = pair.Key;
-                    foreach (var oneLang in supportedLangs)
+                    // Can't use this piece, moving on...
+                }
+            }
+
+            var sortedAcceptedLocales = from entry in acceptedLocales orderby entry.Value descending select entry;
+            foreach (var pair in sortedAcceptedLocales)
+            {
+                var locale = pair.Key;
+                foreach (var oneLang in supportedLangs)
+                {
+                    var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                    var lang = split[0];
+                    var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
+
+                    var langStart = lang + "-";
+                    var langMatches = supportedLangs
+                        .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
+                                    l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase));
+
+                    var countryMatches = langMatches;
+                    var countryEnd = "-" + country;
+                    countryMatches = countryMatches.Where(l =>
+                        l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase));
+                    var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
+
+                    if (bestMatch != null)
                     {
-                        
-                        var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
-                        var lang = split[0];
-                        var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
-
-                        var langStart = lang + "-";
-                        var langMatches = supportedLangs
-                            .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
-                                        l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase));
-
-                        var countryMatches = langMatches;
-                        var countryEnd = "-" + country;
-                        countryMatches = countryMatches.Where(l => l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase));
-                        var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
-
-                        if (bestMatch != null)
-                        {
-                            return bestMatch;
-                        }
+                        return bestMatch;
                     }
                 }
+            }
 
-                return null;
+            return null;
         }
 
         public Language FindBestMatch(string defaultLang)
         {
-            
-            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language", out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
+            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language",
+                out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
             {
                 return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString());
             }
-            
+
             var supportedLangs = GetLanguages();
-            var defaultLanguage = supportedLangs.Where(l => l.Code.StartsWith(defaultLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            var defaultLanguage = supportedLangs
+                .Where(l => l.Code.StartsWith(defaultLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             return defaultLanguage;
         }
     }

@@ -34,7 +34,7 @@ else
                     <th>Name</th>
                     <th>Timestamp</th>
                     <th>User</th>
-                    <th></th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -44,7 +44,7 @@ else
                         <td>@file.FileName</td>
                         <td>@file.Timestamp.ToBrowserDate()</td>
                         <td>@file.ApplicationUser.UserName</td>
-                        <td>
+                        <td class="text-end">
                             <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
                             - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
                             - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>

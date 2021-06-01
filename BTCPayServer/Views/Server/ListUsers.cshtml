@@ -23,18 +23,7 @@
     var sortByAsc = "Sort by ascending...";
 }
 
-<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-    <form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)">
-        <div class="input-group mb-2">
-            <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-            <button type="submit" class="btn btn-secondary" title="Search by email">
-                <span class="fa fa-search"></span> Search
-            </button>
-        </div>
-        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-    </form>
-    <a asp-action="CreateUser" class="btn btn-primary mb-2" role="button" id="CreateUser">Add User</a>
-</div>
+<div class="d-flex align-items-center justify-content-between mb-4">
     <form asp-action="ListUsers"
           asp-route-sortOrder="@(userEmailSortOrder)">
         <div class="input-group">

@@ -45,14 +45,12 @@ namespace BTCPayServer.Controllers.GreenField
             _cssThemeManager = cssThemeManager;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork")]
-        public ActionResult<IEnumerable<LightningNetworkPaymentMethodData>> GetLightningPaymentMethods(
-            [FromQuery] bool enabledOnly = false)
+        public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store, BTCPayNetworkProvider networkProvider, bool enabledOnly = false)
         {
-            var blob = Store.GetStoreBlob();
+            var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
-            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+
+            return store.GetSupportedPaymentMethods(networkProvider)
                 .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
                 .OfType<LightningSupportedPaymentMethod>()
                 .Select(paymentMethod =>
@@ -63,8 +61,15 @@ namespace BTCPayServer.Controllers.GreenField
                     )
                 )
                 .Where((result) => !enabledOnly || result.Enabled)
-                .ToList()
-            );
+                .ToList();
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork")]
+        public ActionResult<IEnumerable<LightningNetworkPaymentMethodData>> GetLightningPaymentMethods(
+            [FromQuery] bool enabledOnly = false)
+        {
+            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

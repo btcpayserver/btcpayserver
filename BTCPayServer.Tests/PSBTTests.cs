@@ -86,9 +86,9 @@ namespace BTCPayServer.Tests
                 var signedPSBT = unsignedPSBT.Clone();
                 signedPSBT.SignAll(user.DerivationScheme, user.GenerateWalletResponseV.AccountHDKey, user.GenerateWalletResponseV.AccountKeyPath);
                 vmPSBT.PSBT = signedPSBT.ToBase64();
-                var psbtReady = await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
+                var psbtReady = await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                 {
-                    SigningContext = new SigningContextModel()
+                    SigningContext = new SigningContextModel
                     {
                         PSBT = AssertRedirectedPSBT(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
                     }
@@ -96,9 +96,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(2 + 1, psbtReady.Destinations.Count); // The fee is a destination
                 Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
                 Assert.Contains(psbtReady.Destinations, d => d.Positive);
-                var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, psbtReady, command: "broadcast"));
-                Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
-
+                
                 vmPSBT.PSBT = unsignedPSBT.ToBase64();
                 var combineVM = await walletController.WalletPSBT(walletId, vmPSBT, "combine").AssertViewModelAsync<WalletPSBTCombineViewModel>();
                 Assert.Equal(vmPSBT.PSBT, combineVM.OtherPSBT);
@@ -119,14 +117,14 @@ namespace BTCPayServer.Tests
                 Assert.True(signedPSBT2.TryFinalize(out _));
                 Assert.Equal(signedPSBT, signedPSBT2);
 
-                var ready = (await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
+                var ready = (await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                 {
                     SigningContext = new SigningContextModel(signedPSBT)
                 })).AssertViewModel<WalletPSBTReadyViewModel>();
                 Assert.Equal(signedPSBT.ToBase64(), ready.SigningContext.PSBT);
                 psbt = AssertRedirectedPSBT(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"), nameof(walletController.WalletPSBT));
                 Assert.Equal(signedPSBT.ToBase64(), psbt);
-                redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
+                var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
                 Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
 
                 //test base64 psbt file

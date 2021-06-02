@@ -621,8 +621,8 @@ namespace BTCPayServer.Tests
 
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, bob, 0.3m);
-                s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                s.Driver.FindElement(By.Id("spendWithNBxplorer")).Click();
+                s.Driver.FindElement(By.Id("SignTransaction")).Click();
+                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 var happyElement = s.FindAlertMessage();
                 var happyText = happyElement.Text;
@@ -768,7 +768,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
                 s.Driver.FindElement(By.Id("WalletSend")).Click();
-                s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
+                s.Driver.FindElement(By.Id("SignTransaction")).Click();
 
                 //you cannot use the Sign with NBX option without saving private keys when generating the wallet.
                 Assert.DoesNotContain("nbx-seed", s.Driver.PageSource);
@@ -855,8 +855,8 @@ namespace BTCPayServer.Tests
                     s.Driver.FindElement(By.Id("WalletSend")).Click();
                     var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                     SetTransactionOutput(s, 0, bob, 1);
-                    s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                    s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
+                    s.Driver.FindElement(By.Id("SignTransaction")).Click();
+                    s.Driver.FindElement(By.Id("SignWithSeed")).Click();
 
                     // Input the seed
                     s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(signingSource + Keys.Enter);
@@ -876,8 +876,8 @@ namespace BTCPayServer.Tests
 
                 var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, jack, 0.01m);
-                s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                s.Driver.FindElement(By.Id("SignTransaction")).Click();
+                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
 
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
                 Assert.Contains("0.01000000", s.Driver.PageSource);
@@ -990,8 +990,8 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
 
-                s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                s.Driver.FindElement(By.Id("SignTransaction")).Click();
+                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 s.FindAlertMessage();
 

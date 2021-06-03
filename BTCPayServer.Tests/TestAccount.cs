@@ -137,17 +137,9 @@ namespace BTCPayServer.Tests
         {
             var storeController = GetController<StoresController>();
             var response = await storeController.UpdateStore();
-            StoreViewModel store = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
+            StoreViewModel store = (StoreViewModel)((ViewResult)response).Model;
             modify(store);
             storeController.UpdateStore(store).GetAwaiter().GetResult();
-        }
-        public Task ModifyStoreAsync(Action<StoreViewModel> modify)
-        {
-            var storeController = GetController<StoresController>();
-            var response = storeController.UpdateStore();
-            StoreViewModel store = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
-            modify(store);
-            return storeController.UpdateStore(store);
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
@@ -198,7 +190,7 @@ namespace BTCPayServer.Tests
 
         public Task EnablePayJoin()
         {
-            return ModifyStoreAsync(s => s.PayJoinEnabled = true);
+            return ModifyStore(s => s.PayJoinEnabled = true);
         }
 
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }

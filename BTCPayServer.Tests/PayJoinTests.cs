@@ -238,19 +238,15 @@ namespace BTCPayServer.Tests
                     var receiverSeed = s.GenerateWallet("BTC", "", true, true, format);
                     var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
-                    //payjoin is not enabled by default.
+                    //payjoin is enabled by default.
                     var invoiceId = s.CreateInvoice(receiver.storeName);
                     s.GoToInvoiceCheckout(invoiceId);
                     var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");
-                    Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}=", bip21);
+                    Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                     s.GoToHome();
                     s.GoToStore(receiver.storeId);
-                    //payjoin is not enabled by default.
-                    Assert.False(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
-                    s.Driver.SetCheckbox(By.Id("PayJoinEnabled"), true);
-                    s.Driver.FindElement(By.Id("Save")).Click();
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                     var sender = s.CreateNewStore();

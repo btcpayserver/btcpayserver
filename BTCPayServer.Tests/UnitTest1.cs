@@ -750,7 +750,8 @@ namespace BTCPayServer.Tests
 
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
-                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(stores.UpdateStore()).Model);
+                var response = await stores.UpdateStore();
+                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(response).Model);
                 Assert.Equal(0.0, vm.PaymentTolerance);
                 vm.PaymentTolerance = 50.0;
                 Assert.IsType<RedirectToActionResult>(stores.UpdateStore(vm).Result);
@@ -942,7 +943,7 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
             await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyStoreAsync(model => model.SpeedPolicy = SpeedPolicy.HighSpeed);
+            await user.ModifyStore(model => model.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
             await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
@@ -990,7 +991,8 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
-                Assert.IsType<ViewResult>(storeController.UpdateStore());
+                var storeResponse = await storeController.UpdateStore();
+                Assert.IsType<ViewResult>(storeResponse);
                 Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
                 var testResult = storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
@@ -1013,9 +1015,10 @@ namespace BTCPayServer.Tests
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
+                storeResponse = await storeController.UpdateStore();
                 var storeVm =
                     Assert.IsType<StoreViewModel>(Assert
-                        .IsType<ViewResult>(storeController.UpdateStore()).Model);
+                        .IsType<ViewResult>(storeResponse).Model);
                 Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }
         }
@@ -1952,7 +1955,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(404, (int)response.StatusCode);
 
-                user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
+                await user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
 
                 Logs.Tester.LogInformation("Bad store with anyone can create invoice = 403");
                 response = await tester.PayTester.HttpClient.SendAsync(

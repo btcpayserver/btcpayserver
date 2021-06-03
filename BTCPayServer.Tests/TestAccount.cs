@@ -125,25 +125,27 @@ namespace BTCPayServer.Tests
             CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public void SetNetworkFeeMode(NetworkFeeMode mode)
+        public async Task SetNetworkFeeMode(NetworkFeeMode mode)
         {
-            ModifyStore((store) =>
+            await ModifyStore(store =>
             {
                 store.NetworkFeeMode = mode;
             });
         }
 
-        public void ModifyStore(Action<StoreViewModel> modify)
+        public async Task ModifyStore(Action<StoreViewModel> modify)
         {
             var storeController = GetController<StoresController>();
-            StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
+            var response = await storeController.UpdateStore();
+            StoreViewModel store = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
             modify(store);
             storeController.UpdateStore(store).GetAwaiter().GetResult();
         }
         public Task ModifyStoreAsync(Action<StoreViewModel> modify)
         {
             var storeController = GetController<StoresController>();
-            StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
+            var response = storeController.UpdateStore();
+            StoreViewModel store = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
             modify(store);
             return storeController.UpdateStore(store);
         }

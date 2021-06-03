@@ -217,10 +217,12 @@ namespace BTCPayServer.Controllers
             }
             else
             {
+                var canUsePayJoin = hotWallet && isHotWallet && network.SupportPayJoin;
                 vm.SetupRequest = new WalletSetupRequest
                 {
                     SavePrivateKeys = isHotWallet,
-                    PayJoinEnabled = isHotWallet
+                    CanUsePayJoin = canUsePayJoin,
+                    PayJoinEnabled = canUsePayJoin
                 };
             }
 

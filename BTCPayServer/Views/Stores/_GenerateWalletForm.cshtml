@@ -56,7 +56,7 @@
     {
         <input asp-for="SavePrivateKeys" type="hidden" value="@isHotWallet" />
 
-        @if (isHotWallet)
+        @if (Model.CanUsePayJoin)
         {
             <div class="form-group mt-4">
                 <label asp-for="PayJoinEnabled">Enable PayJoin</label>

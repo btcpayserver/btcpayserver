@@ -125,7 +125,7 @@ namespace BTCPayServer.HostedServices
         public async Task<DeliveryResult> TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
         {
             var delivery = NewDelivery(webhookId);
-            var webhook = (await StoreRepository.GetWebhooks(storeId)).Where(w => w.Id == webhookId).FirstOrDefault();
+            var webhook = (await StoreRepository.GetWebhooks(storeId)).FirstOrDefault(w => w.Id == webhookId);
             var deliveryRequest = new WebhookDeliveryRequest(
                 webhookId, 
                 GetTestWebHook(storeId, webhookId, webhookEventType, delivery), 

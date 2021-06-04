@@ -11,23 +11,13 @@
             <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
             <div class="form-group">
-                <label for="Type">Event type</label>
-                <select name="Type" id="Type" class="form-control w-auto">
-                    @foreach (var evt in new[]
-                    {
-                        WebhookEventType.InvoiceCreated,
-                        WebhookEventType.InvoiceReceivedPayment,
-                        WebhookEventType.InvoiceProcessing,
-                        WebhookEventType.InvoiceExpired,
-                        WebhookEventType.InvoiceSettled,
-                        WebhookEventType.InvoiceInvalid
-                    })
-                    {
-                        <option value="@evt">
-                            @evt
-                        </option>
-                    }
-                </select>
+                <label for="Type" class="form-label">Event type</label>
+                <select 
+                    asp-items="Html.GetEnumSelectList<WebhookEventType>()" 
+                    name="Type" 
+                    id="Type"
+                    class="form-select w-auto"
+                ></select>
             </div>
 
             <button type="submit" class="btn btn-primary">Send test webhook</button>

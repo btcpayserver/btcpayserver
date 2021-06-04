@@ -96,27 +96,25 @@ namespace BTCPayServer.Services
             foreach (var pair in sortedAcceptedLocales)
             {
                 var locale = pair.Key;
-                foreach (var oneLang in supportedLangs)
+                var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                var lang = split[0];
+                var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
+
+                var langStart = lang + "-";
+                var langMatches = supportedLangs
+                    .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
+                                l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var countryMatches = langMatches;
+                var countryEnd = "-" + country;
+                countryMatches = countryMatches.Where(l =>
+                    l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase)).ToList();
+                var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
+
+                if (bestMatch != null)
                 {
-                    var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
-                    var lang = split[0];
-                    var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
-
-                    var langStart = lang + "-";
-                    var langMatches = supportedLangs
-                        .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
-                                    l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase));
-
-                    var countryMatches = langMatches;
-                    var countryEnd = "-" + country;
-                    countryMatches = countryMatches.Where(l =>
-                        l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase));
-                    var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
-
-                    if (bestMatch != null)
-                    {
-                        return bestMatch;
-                    }
+                    return bestMatch;
                 }
             }
 
@@ -130,11 +128,7 @@ namespace BTCPayServer.Services
             {
                 return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString());
             }
-
-            var supportedLangs = GetLanguages();
-            var defaultLanguage = supportedLangs
-                .Where(l => l.Code.StartsWith(defaultLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            return defaultLanguage;
+            return FindLanguageInAcceptLanguageHeader(defaultLang);
         }
     }
 }

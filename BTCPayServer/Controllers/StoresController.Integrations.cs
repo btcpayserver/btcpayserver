@@ -1,3 +1,4 @@
+#nullable enable
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -14,7 +15,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/integrations")]
         public IActionResult Integrations()
         {            
-            return View("Integrations",new IntegrationsViewModel());
+            return View("Integrations", new IntegrationsViewModel());
         }
 
         [HttpGet("{storeId}/webhooks")]
@@ -107,6 +108,30 @@ namespace BTCPayServer.Controllers
             await _Repo.UpdateWebhook(CurrentStore.Id, webhookId, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been updated";
             return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
+        }
+
+        [HttpGet("{storeId}/webhooks/{webhookId}/test")]
+        public async Task<IActionResult> TestWebhook(string webhookId)
+        {
+            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            if (webhook is null)
+                return NotFound();
+
+            return View(nameof(TestWebhook));
+        }
+
+        [HttpPost("{storeId}/webhooks/{webhookId}/test")]
+        public async Task<IActionResult> TestWebhook(string webhookId, TestWebhookViewModel viewModel)
+        {
+            var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type);
+
+            if (result.Success) {
+                TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully! Delivery ID is {result.DeliveryId}";
+            } else {
+                TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
+            }
+
+            return View(nameof(TestWebhook));
         }
 
         [HttpPost("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]

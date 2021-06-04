@@ -30,7 +30,9 @@
                     <tr>
                         <td class="text-truncate d-block" style="max-width:300px;">@wh.Url</td>
                         <td class="text-end">
-                            <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
+                            <a asp-action="TestWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
+                            <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - 
+                            <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
                         </td>
                     </tr>
                 }

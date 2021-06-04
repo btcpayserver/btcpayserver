@@ -79,14 +79,9 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
-                IsAdmin = IsAdmin(roles)
+                IsAdmin = _userService.IsRoleAdmin(roles)
             };
             return View(userVM);
-        }
-
-        private static bool IsAdmin(IList<string> roles)
-        {
-            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
         }
 
         [Route("server/users/{userId}")]
@@ -99,7 +94,7 @@ namespace BTCPayServer.Controllers
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = IsAdmin(roles);
+            var wasAdmin = _userService.IsRoleAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
@@ -206,7 +201,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var roles = await _UserManager.GetRolesAsync(user);
-            if (IsAdmin(roles))
+            if (_userService.IsRoleAdmin(roles))
             {
                 var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
                 if (admins.Count == 1)
@@ -236,15 +231,8 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            var files = await _StoredFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
-            {
-                UserIds = new[] { userId },
-            });
+            await _userService.DeleteUserAndAssociatedData(user);
 
-            await Task.WhenAll(files.Select(file => _FileService.RemoveFile(file.Id, userId)));
-
-            await _UserManager.DeleteAsync(user);
-            await _StoreRepository.CleanUnreachableStores();
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }

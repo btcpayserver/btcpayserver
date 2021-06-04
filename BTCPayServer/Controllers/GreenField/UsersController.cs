@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
@@ -9,10 +10,11 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
+using BTCPayServer.Storage.Services;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +37,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _themeManager;
+        private readonly UserService _userService;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager, 
@@ -44,7 +47,8 @@ namespace BTCPayServer.Controllers.GreenField
             RateLimitService throttleService,
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
-            CssThemeManager themeManager)
+            CssThemeManager themeManager,
+            UserService userService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -55,6 +59,7 @@ namespace BTCPayServer.Controllers.GreenField
             _options = options;
             _authorizationService = authorizationService;
             _themeManager = themeManager;
+            _userService = userService;
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -65,17 +70,24 @@ namespace BTCPayServer.Controllers.GreenField
             return await FromModel(user);
         }
 
+        [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/users/me")]
+        public async Task<IActionResult> DeleteCurrentUser()
+        {
+            return await DeleteUser(_userManager.GetUserId(User));
+        }
+
         [AllowAnonymous]
         [HttpPost("~/api/v1/users")]
         public async Task<IActionResult> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
         {
-            if (request?.Email is null)
+            if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!string.IsNullOrEmpty(request?.Email) && !Validation.EmailValidator.IsEmail(request.Email))
+            if (!string.IsNullOrEmpty(request.Email) && !Validation.EmailValidator.IsEmail(request.Email))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
-            if (request?.Password is null)
+            if (request.Password is null)
                 ModelState.AddModelError(nameof(request.Password), "Password is missing");
 
             if (!ModelState.IsValid)
@@ -154,8 +166,10 @@ namespace BTCPayServer.Controllers.GreenField
                 if (!anyAdmin)
                 {
                     var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>();
-                    settings.FirstRun = false;
-                    await _settingsRepository.UpdateSetting(settings);
+                    if (settings != null) {
+                        settings.FirstRun = false;
+                        await _settingsRepository.UpdateSetting(settings);
+                    }
 
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
                 }
@@ -163,6 +177,36 @@ namespace BTCPayServer.Controllers.GreenField
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
             var model = await FromModel(user);
             return CreatedAtAction(string.Empty, model);
+        }
+
+        [HttpDelete("~/api/v1/users/{userId}")]
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return UserNotFound();
+            }
+
+            // We can safely delete the user if it's not an admin user
+            if (!(await _userService.IsAdminUser(user)))
+            {
+                await _userService.DeleteUserAndAssociatedData(user);
+
+                return Ok();
+            }
+
+            // User shouldn't be deleted if it's the only admin
+            if (await IsUserTheOnlyOneAdmin(user))
+            {
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+            }
+
+            // Ok, this user is an admin but there are other admins as well so safe to delete
+            await _userService.DeleteUserAndAssociatedData(user);
+
+            return Ok();
         }
 
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
@@ -177,6 +221,26 @@ namespace BTCPayServer.Controllers.GreenField
                 Roles = roles,
                 Created = data.Created
             };
+        }
+
+        private async Task<bool> IsUserTheOnlyOneAdmin()
+        {
+            return await IsUserTheOnlyOneAdmin(await _userManager.GetUserAsync(User));
+        }
+
+        private async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
+        {
+            var isUserAdmin = await _userService.IsAdminUser(user);
+            if (!isUserAdmin) {
+                return false;
+            }
+
+            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1;
+        }
+
+        private IActionResult UserNotFound()
+        {
+            return this.CreateAPIError(404, "user-not-found", "The user was not found");
         }
     }
 }

@@ -1,3 +1,4 @@
+#nullable enable
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,17 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/users", null, request, HttpMethod.Post), token);
             return await HandleResponse<ApplicationUserData>(response);
+        }
+
+        public virtual async Task DeleteUser(string userId, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{userId}", null, HttpMethod.Delete), token);
+            await HandleResponse(response);
+        }
+
+        public virtual async Task DeleteCurrentUser(CancellationToken token = default)
+        {
+            await DeleteUser("me", token);
         }
     }
 }

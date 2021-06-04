@@ -28,6 +28,27 @@
                         "Basic": []
                     }
                 ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Deletes user profile",
+                "description": "Deletes user profile and associated user data for user making the request",
+                "operationId": "Users_DeleteCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "User and associated data deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.candeleteuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/users": {
@@ -106,6 +127,41 @@
                         "Basic": []
                     }
                 ]
+            }
+        },
+        "/api/v1/users/{userId}": {
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete user",
+                "description": "Delete a user.\n\nMust be an admin to perform this operation.\n\nAttempting to delete the only admin user will not succeed.\n\nAll data associated with the user will be deleted as well if the operation succeeds.",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ID of the user to be deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User has been successfully deleted"
+                    },
+                    "401": {
+                        "description": "Missing authorization for deleting the user"
+                    },
+                    "403": {
+                        "description": "Authorized but forbidden to delete the user. Can happen if you attempt to delete the only admin user."
+                    },
+                    "404": {
+                        "description": "User with provided ID was not found"
+                    }
+                },
+                "security": []
             }
         }
     },

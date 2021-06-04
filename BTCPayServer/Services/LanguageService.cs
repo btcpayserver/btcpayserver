@@ -126,7 +126,7 @@ namespace BTCPayServer.Services
             if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language",
                 out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
             {
-                return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString());
+                return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString()) ?? FindLanguageInAcceptLanguageHeader(defaultLang);
             }
             return FindLanguageInAcceptLanguageHeader(defaultLang);
         }

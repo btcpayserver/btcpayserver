@@ -21,11 +21,15 @@ namespace BTCPayServer.Client
             return await HandleResponse<ApplicationUserData>(response);
         }
 
-        public virtual async Task<HttpResponseMessage> DeleteUser(string userId, CancellationToken token = default)
+        public virtual async Task DeleteUser(string userId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{userId}", null, HttpMethod.Delete), token);
             await HandleResponse(response);
-            return response;
+        }
+
+        public virtual async Task DeleteCurrentUser(CancellationToken token = default)
+        {
+            await DeleteUser("me", token);
         }
     }
 }

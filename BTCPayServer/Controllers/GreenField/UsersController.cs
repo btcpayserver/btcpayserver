@@ -37,9 +37,6 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _themeManager;
-        private readonly FileService _fileService;
-        private readonly StoredFileRepository _storedFileRepository;
-        private readonly StoreRepository _storeRepository;
         private readonly UserService _userService;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
@@ -51,9 +48,6 @@ namespace BTCPayServer.Controllers.GreenField
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
             CssThemeManager themeManager,
-            FileService fileService,
-            StoredFileRepository storedFileRepository,
-            StoreRepository storeRepository,
             UserService userService)
         {
             _userManager = userManager;
@@ -65,9 +59,6 @@ namespace BTCPayServer.Controllers.GreenField
             _options = options;
             _authorizationService = authorizationService;
             _themeManager = themeManager;
-            _fileService = fileService;
-            _storedFileRepository = storedFileRepository;
-            _storeRepository = storeRepository;
             _userService = userService;
         }
 
@@ -83,15 +74,7 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpDelete("~/api/v1/users/me")]
         public async Task<IActionResult> DeleteCurrentUser()
         {
-            // Don't want to allow the user to delete themselves if they are the only admin
-            if (await IsUserTheOnlyOneAdmin()) {
-                return Forbid(AuthenticationSchemes.GreenfieldBasic);
-            }
-
-            var user = await _userManager.GetUserAsync(User);
-            await _userService.DeleteUserAndAssociatedData(user);
-
-            return Ok();
+            return await DeleteUser(_userManager.GetUserId(User));
         }
 
         [AllowAnonymous]

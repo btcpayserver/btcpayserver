@@ -167,7 +167,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 
             }));
-            leases.Add(_Aggregator.Subscribe<Events.InvoicePaymentMethodActivated>(async inv =>
+            leases.Add(_Aggregator.Subscribe<Events.InvoicePaymentMethodActivated>(inv =>
             {
                 if (inv.PaymentMethodId.PaymentType == LightningPaymentType.Instance)
                 {

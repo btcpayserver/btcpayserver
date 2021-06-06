@@ -5,8 +5,7 @@
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<div class="row mb-5">
-    <div class="col-lg-9 col-xl-8">
+    <div class="mb-5">
         <h4 class="mb-3">Crypto services exposed by your server</h4>
         <table class="table table-sm mt-2">
             <thead>
@@ -37,107 +36,11 @@
             </tbody>
         </table>
     </div>
-</div>
 
 @if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
 {
-    <div class="row mb-5">
-        <div class="col-lg-9 col-xl-8">
-            <h4 class="mb-3">Other external services</h4>
-
-            <table class="table table-sm mt-2">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th style="text-align: right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var s in Model.ExternalServices.Where(service => string.IsNullOrEmpty(service.CryptoCode)))
-                {
-                    <tr>
-                        <td>@s.DisplayName</td>
-                        <td style="text-align: right">
-                            <a asp-action="Service" asp-route-serviceName="@s.ServiceName">See information</a>
-                        </td>
-                    </tr>
-                }
-                @foreach (var s in Model.OtherExternalServices)
-                {
-                    <tr>
-                        <td>@s.Name</td>
-                        <td style="text-align: right">
-                            <a href="@s.Link" target="_blank">See information</a>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
-
-@if (Model.TorHttpServices.Count != 0)
-{
-    <div class="row mb-5">
-        <div class="col-lg-9 col-xl-8">
-            <h4 class="mb-3">HTTP-based TOR hidden services</h4>
-
-            <table class="table table-sm mt-2">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th style="text-align: right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var s in Model.TorHttpServices)
-                {
-                    <tr>
-                        <td>@s.Name</td>
-                        <td style="text-align: right">
-                            <a href="@s.Link" target="_blank">See information</a>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
-
-@if (Model.TorOtherServices.Count != 0)
-{
-    <div class="row mb-5">
-        <div class="col-lg-9 col-xl-8">
-            <h4 class="mb-3">Other TOR hidden services</h4>
-
-            <table class="table table-sm mt-2">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>URL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var s in Model.TorOtherServices)
-                {
-                    <tr>
-                        <td>@s.Name</td>
-                        <td style="word-wrap: anywhere;">
-                            <code>@s.Link</code>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
-<div class="row mb-5">
-    <div class="col-lg-9 col-xl-8">
-        <h4 class="mb-3">External storage services</h4>
-        <p class="text-secondary mb-0">Integrated storage providers to store file uploads from BTCPay Server.</p>
+    <div class="mb-5">
+        <h4 class="mb-3">Other external services</h4>
 
         <table class="table table-sm mt-2">
             <thead>
@@ -147,18 +50,105 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var s in Model.ExternalStorageServices)
+            @foreach (var s in Model.ExternalServices.Where(service => string.IsNullOrEmpty(service.CryptoCode)))
+            {
+                <tr>
+                    <td>@s.DisplayName</td>
+                    <td style="text-align: right">
+                        <a asp-action="Service" asp-route-serviceName="@s.ServiceName">See information</a>
+                    </td>
+                </tr>
+            }
+            @foreach (var s in Model.OtherExternalServices)
             {
                 <tr>
                     <td>@s.Name</td>
                     <td style="text-align: right">
-                        <a href="@s.Link">Edit</a>
+                        <a href="@s.Link" target="_blank">See information</a>
                     </td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
+}
+
+@if (Model.TorHttpServices.Count != 0)
+{
+    <div class="mb-5">
+        <h4 class="mb-3">HTTP-based TOR hidden services</h4>
+
+        <table class="table table-sm mt-2">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th style="text-align: right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.TorHttpServices)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td style="text-align: right">
+                        <a href="@s.Link" target="_blank">See information</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TorOtherServices.Count != 0)
+{
+    <div class="mb-5">
+        <h4 class="mb-3">Other TOR hidden services</h4>
+
+        <table class="table table-sm mt-2">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.TorOtherServices)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td style="word-wrap: anywhere;">
+                        <code>@s.Link</code>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+<div class="mb-5">
+    <h4 class="mb-3">External storage services</h4>
+    <p class="text-secondary mb-0">Integrated storage providers to store file uploads from BTCPay Server.</p>
+
+    <table class="table table-sm mt-2">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th style="text-align: right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.ExternalStorageServices)
+        {
+            <tr>
+                <td>@s.Name</td>
+                <td style="text-align: right">
+                    <a href="@s.Link">Edit</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </div>
 
 @section PageFootContent {

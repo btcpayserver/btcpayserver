@@ -76,6 +76,7 @@
     margin: .3rem 0;
     border-left: 2px solid transparent;
     padding: .2rem 1rem;
+    font-weight: var(--btcpay-font-weight-semibold);
 }
 
 #sideNav .nav-link.active,
@@ -91,7 +92,7 @@
     margin-bottom: 1rem;
 }
 
-.social-row {
+.social-row {   
     margin: 2rem 0;
 }
 

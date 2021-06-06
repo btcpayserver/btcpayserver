@@ -5,6 +5,7 @@ namespace BTCPayServer.Models.ServerViewModels
     public class LndServicesViewModel
     {
         public string Host { get; set; }
+        [Display(Name = "Use SSL")]
         public bool SSL { get; set; }
         public string Macaroon { get; set; }
         public string AdminMacaroon { get; set; }

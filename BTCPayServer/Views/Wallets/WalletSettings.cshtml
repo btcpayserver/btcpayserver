@@ -43,7 +43,7 @@
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
                 </div>
-                <div class="form-row">
+                <div class="row">
                     <div class="form-group col-auto">
                         <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
                         <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;"/>
@@ -57,7 +57,7 @@
                 </div>
                 @if (Model.IsMultiSig)
                 {
-                    <div class="form-check form-check-inline">
+                    <div class="form-check">
                         <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
                         <label asp-for="SelectedSigningKey" class="form-check-label"></label>
                     </div>

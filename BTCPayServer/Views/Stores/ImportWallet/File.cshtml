@@ -18,7 +18,7 @@
 
 <form method="post" enctype="multipart/form-data" class="my-5">
     <div class="form-group">
-        <label asp-for="WalletFile"></label>
+        <label asp-for="WalletFile" class="form-label"></label>
         <input asp-for="WalletFile" type="file" class="form-control" required>
         <span asp-validation-for="WalletFile" class="text-danger"></span>
     </div>

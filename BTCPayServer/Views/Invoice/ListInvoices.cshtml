@@ -32,7 +32,7 @@
             text-align: center;
             white-space: nowrap;
             vertical-align: baseline;
-            border-radius: 0.25rem;
+            border-radius: 4px;
         }
 
         .badge .dropdown-toggle {
@@ -329,7 +329,7 @@
                     <thead>
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
-                            <input id="selectAllCheckbox" type="checkbox" onclick="selectAll(this);"/>
+                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" onclick="selectAll(this);"/>
                         </th>
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
@@ -349,7 +349,7 @@
                     {
                         <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
                             <td class="only-for-js">
-                                <input name="selectedItems" type="checkbox" class="selector" value="@invoice.InvoiceId"/>
+                                <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId"/>
                             </td>
                             <td>
                                 <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">

@@ -3053,7 +3053,7 @@
           children = _ref.children;
 
       return h(props.tag, mergeData(data, {
-        staticClass: 'form-row'
+        staticClass: 'row'
       }), children);
     }
   };

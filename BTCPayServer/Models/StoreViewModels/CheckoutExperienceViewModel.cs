@@ -30,18 +30,17 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
-
-
+        
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
-        [Display(Name = "Display lightning payment amounts in Satoshis")]
+        [Display(Name = "Display Lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
 
-        [Display(Name = "Add hop hints for private channels to the lightning invoice")]
+        [Display(Name = "Add hop hints for private channels to the Lightning invoice")]
         public bool LightningPrivateRouteHints { get; set; }
 
-        [Display(Name = "Include lightning invoice fallback to on-chain BIP21 payment url")]
+        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Only enable the payment method after user explicitly chooses it")]

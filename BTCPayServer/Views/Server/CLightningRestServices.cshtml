@@ -51,7 +51,7 @@
                 <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
                 <div id="detailsQR" class="collapse">
                     <div class="form-group">
-                        <label>QR Code data</label>
+                        <label class="form-label">QR Code data</label>
                         <input asp-for="QRCode" readonly class="form-control" />
                     </div>
                     <div class="form-group">
@@ -68,60 +68,60 @@
                 @if (Model.Uri == null)
                 {
                     <div class="form-group">
-                        <label asp-for="Host"></label>
+                        <label asp-for="Host" class="form-label"></label>
                         <input asp-for="Host" readonly class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="SSL"></label>
-                        <input asp-for="SSL" disabled type="checkbox" class="form-check-inline" />
+                        <label asp-for="SSL" class="form-label"></label>
+                        <input asp-for="SSL" disabled type="checkbox" class="btcpay-toggle ms-2" />
                     </div>
                 }
                 else
                 {
                     <div class="form-group">
-                        <label asp-for="Uri"></label>
+                        <label asp-for="Uri" class="form-label"></label>
                         <input asp-for="Uri" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.Macaroon != null)
                 {
                     <div class="form-group">
-                        <label asp-for="Macaroon"></label>
+                        <label asp-for="Macaroon" class="form-label"></label>
                         <input asp-for="Macaroon" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.AdminMacaroon != null)
                 {
                     <div class="form-group">
-                        <label asp-for="AdminMacaroon"></label>
+                        <label asp-for="AdminMacaroon" class="form-label"></label>
                         <input asp-for="AdminMacaroon" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.InvoiceMacaroon != null)
                 {
                     <div class="form-group">
-                        <label asp-for="InvoiceMacaroon"></label>
+                        <label asp-for="InvoiceMacaroon" class="form-label"></label>
                         <input asp-for="InvoiceMacaroon" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.ReadonlyMacaroon != null)
                 {
                     <div class="form-group">
-                        <label asp-for="ReadonlyMacaroon"></label>
+                        <label asp-for="ReadonlyMacaroon" class="form-label"></label>
                         <input asp-for="ReadonlyMacaroon" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.GRPCSSLCipherSuites != null)
                 {
                     <div class="form-group">
-                        <label asp-for="GRPCSSLCipherSuites"></label>
+                        <label asp-for="GRPCSSLCipherSuites" class="form-label"></label>
                         <input asp-for="GRPCSSLCipherSuites" readonly class="form-control" />
                     </div>
                 }
                 @if (Model.CertificateThumbprint != null)
                 {
                     <div class="form-group">
-                        <label asp-for="CertificateThumbprint"></label>
+                        <label asp-for="CertificateThumbprint" class="form-label"></label>
                         <input asp-for="CertificateThumbprint" readonly class="form-control" />
                     </div>
                 }

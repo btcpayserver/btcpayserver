@@ -28,7 +28,7 @@
     <input asp-for="AccountKey" type="hidden" />
 
     <div class="form-group">
-        <label asp-for="DerivationScheme">Extended public key</label>
+        <label asp-for="DerivationScheme" class="form-label">Extended public key</label>
         <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="2"></textarea>
         <span asp-validation-for="DerivationScheme" class="text-danger"></span>
     </div>

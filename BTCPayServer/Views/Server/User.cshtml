@@ -8,9 +8,9 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            <div class="form-group">
-                <label asp-for="IsAdmin">Is admin</label>
-                <input asp-for="IsAdmin" type="checkbox" class="btcpay-toggle ms-2"/>
+            <div class="form-group form-check mb-4">
+                <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />
+                <label asp-for="IsAdmin" class="form-check-label">Is admin</label>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>

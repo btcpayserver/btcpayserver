@@ -15,7 +15,7 @@
         <td class="align-middle px-0">
             <div class="input-group align-items-center">
                 <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
-                <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
+                <input class="js-cart-item-count form-control form-control-sm pull-left hide-number-spin text-end" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
                 <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
                     <i class="fa fa-plus-circle fa-fw text-success"></i>
                 </a>
@@ -211,14 +211,14 @@
             }
         </div>
         <div id="js-pos-list" class="text-center mx-auto px-4">
-            <div class="row card-deck my-3">
+            <div class="card-deck my-3">
                 @for (var index = 0; index < Model.Items.Length; index++)
                 {
                     var item = Model.Items[index];
                     var image = item.Image;
                     var description = item.Description;
 
-                    <div class="js-add-cart card px-0 m-2 card-wrapper" data-index="@index">
+                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
                         @if (!String.IsNullOrWhiteSpace(image))
                         {
                             @:<img class="card-img-top" src="@image" alt="Card image cap" asp-append-version="true">
@@ -230,7 +230,7 @@
                                 <p class="card-text">@Safe.Raw(description)</p>
                             }
                         </div>
-                        <div class="card-footer pt-0 bg-transparent border-0">
+                        <div class="card-footer bg-transparent border-0 pt-0 pb-3">
 
                             <span class="text-muted small">@((item.BuyButtonText ?? Model.ButtonText).Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted))</span>
                              @if (item.Inventory.HasValue)

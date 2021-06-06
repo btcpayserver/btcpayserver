@@ -76,10 +76,8 @@
                 }
             </div>
             <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="Settings.EnableSSL" type="checkbox" data-fill="enablessl"  class="form-check-input"/>
-                    <label asp-for="Settings.EnableSSL" class="form-check-label"></label>
-                </div>
+                <label asp-for="Settings.EnableSSL" class="form-label"></label>
+                <input asp-for="Settings.EnableSSL" type="checkbox" data-fill="enablessl" class="btcpay-toggle ms-2" />
             </div>
             <input asp-for="PasswordSet" type="hidden"/>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>

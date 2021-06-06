@@ -24,7 +24,7 @@
             v-bind:class="{ 'list-group-item-secondary': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
             <div class="d-flex justify-content-between align-items-center w-100">
-                <input class="me-2"
+                <input class="me-2 form-check-input flex-shrink-0"
                     type="checkbox"
                     v-bind:id="item.outpoint"
                     v-bind:value="item.outpoint"

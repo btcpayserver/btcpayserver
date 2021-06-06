@@ -126,14 +126,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <div class="accordion" id="accordian-dev-info">
+                        <div class="accordion" id="accordion-dev-info">
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordian-dev-info-embed-payment-button-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordian-dev-info-embed-payment-button">
+                                <h2 class="accordion-header" id="accordion-dev-info-embed-payment-button-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordion-dev-info-embed-payment-button">
                                         Embed Payment Button linking to POS item
+                                        <vc:icon symbol="caret-down"/>
                                     </button>
                                 </h2>
-                                <div id="accordian-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-bs-parent="#accordian-dev-info">
+                                <div id="accordion-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-payment-button-header" data-bs-parent="#accordion-dev-info">
                                     <div class="accordion-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
                                         @if (Model.Example1 != null)
@@ -150,12 +151,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordian-dev-info-embed-pos-iframe-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
+                                <h2 class="accordion-header" id="accordion-dev-info-embed-pos-iframe-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordion-dev-info-embed-pos-iframe">
                                         Embed POS with Iframe
+                                        <vc:icon symbol="caret-down"/>
                                     </button>
                                 </h2>
-                                <div id="accordian-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-bs-parent="#accordian-dev-info">
+                                <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header" data-bs-parent="#accordion-dev-info">
                                     <div class="accordion-body">
                                         You can embed the POS using an iframe
                                         @{
@@ -166,12 +168,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordian-dev-info-notification-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
+                                <h2 class="accordion-header" id="accordion-dev-info-notification-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
                                         Notification Url Callbacks
+                                        <vc:icon symbol="caret-down"/>
                                     </button>
                                 </h2>
-                                <div id="accordian-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-notification-header" data-bs-parent="#accordian-dev-info">
+                                <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header" data-bs-parent="#accordion-dev-info">
                                     <div class="accordion-body">
                                         <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                         <pre><code class="json">@Model.ExampleCallback</code></pre>
@@ -219,13 +222,13 @@
         <div class="mb-3">
             <input class="js-product-id" type="hidden" name="id" value="{id}">
             <input class="js-product-index" type="hidden" name="index" value="{index}">
-            <div class="form-row">
+            <div class="form-group row">
                 <div class="col-sm-6">
-                    <label data-required>Title</label>
+                    <label class="form-label" data-required>Title</label>
                     <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus required />
                 </div>
                 <div class="col-sm-3">
-                    <label data-required>Price</label>
+                    <label class="form-label" data-required>Price</label>
                     <input class="js-product-price form-control mb-2"
                            inputmode="numeric"
                            pattern="\d*"
@@ -234,29 +237,23 @@
                            required />
                 </div>
                 <div class="col-sm-3">
-                    <label>Custom price</label>
+                    <label class="form-label">Custom price</label>
                     <select class="js-product-custom form-select">
                         {custom}
                     </select>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Image</label>
-                    <input type="text" class="js-product-image form-control mb-2" value="{image}" />
-                </div>
+            <div class="form-group">
+                <label class="form-label">Image</label>
+                <input type="text" class="js-product-image form-control mb-2" value="{image}" />
             </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Description</label>
-                    <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
             </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Inventory (leave blank to not use inventory feature)</label>
-                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
-                </div>
+            <div class="form-group">
+                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
+                <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
             </div>
         </div>
     </script>

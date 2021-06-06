@@ -11,7 +11,7 @@
         <h4 class="mb-4">@ViewData["PageTitle"]</h4>
         <form method="post">
             <div class="form-group">
-                <label asp-for="Label"></label>
+                <label asp-for="Label" class="form-label"></label>
                 @if (ViewBag.HidePublicKey)
                 {
                     <small class="text-muted">optional</small>
@@ -22,7 +22,7 @@
             @if (!ViewBag.HidePublicKey)
             {
                 <div class="form-group">
-                    <label asp-for="PublicKey"></label>
+                    <label asp-for="PublicKey" class="form-label"></label>
                     <small class="text-muted">Keep empty for server-initiated pairing</small>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>

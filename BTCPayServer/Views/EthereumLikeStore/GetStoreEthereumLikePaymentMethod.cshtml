@@ -19,45 +19,45 @@
 
             <input type="hidden" asp-for="OriginalIndex"/>
             <div class="form-group">
-                <label asp-for="Seed"></label>
+                <label asp-for="Seed" class="form-label"></label>
                 <input asp-for="Seed" type="text" class="form-control"/>
                 <span asp-validation-for="Seed" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Passphrase"></label>
+                <label asp-for="Passphrase" class="form-label"></label>
                 <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
                 <span asp-validation-for="Passphrase" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="KeyPath"></label>
+                <label asp-for="KeyPath" class="form-label"></label>
                 <input asp-for="KeyPath" class="form-control"/>
                 <span class="text-muted">Please see <a href="https://medium.com/myetherwallet/hd-wallets-and-derivation-paths-explained-865a643c7bf2" target="_blank">this article.</a></span>
                 <span asp-validation-for="KeyPath" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="StoreSeed"></label>
-                <input asp-for="StoreSeed" type="checkbox" class="form-check"/>
+            <div class="form-group form-check">
+                <input asp-for="StoreSeed" type="checkbox" class="form-check-input"/>
+                <label asp-for="StoreSeed" class="form-check-label"></label>
                 <span class="text-muted">Store the seed/password on server if provided. If not checked, will generate the xpub and erase the seed/pass from server</span>
                 <span asp-validation-for="StoreSeed" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="XPub"></label>
+                <label asp-for="XPub" class="form-label"></label>
                 <input asp-for="XPub" class="form-control"/>
                 <span class="text-muted">The public master key derived from a seed/pass/keypath. This allows you to generate addresses without private keys on the server.</span>
                 <span asp-validation-for="XPub" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Index"></label>
+                <label asp-for="Index" class="form-label"></label>
                 <input asp-for="Index" type="number" min="0" class="form-control"/>
                 <span class="text-muted">The index to generate the next address from. If you are using a wallet that you have used before, be sure to set this to the last index +1</span>
                 <span asp-validation-for="Index" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="AddressCheck"></label>
+                <label asp-for="AddressCheck" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="AddressCheck" type="text" class="form-control"/>
                     <div class="input-group-text">
@@ -67,9 +67,9 @@
                 <span class="text-muted">Check wallet by providing an address it can generate within the first 1000 indexes</span>
                 <span asp-validation-for="AddressCheck" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Enabled"></label>
-                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+            <div class="form-group form-check">
+                <input asp-for="Enabled" type="checkbox" class="form-check-input"/>
+                <label asp-for="Enabled" class="form-check-label"></label>
                 <span asp-validation-for="Enabled" class="text-danger"></span>
             </div>
             <div class="form-group">

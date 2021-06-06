@@ -4,23 +4,27 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
-<style>
-    #event-selector { display: none; }
-    #Everything[data-value='false'] + #event-selector { display: block; }
-</style>
+
+@section PageHeadContent {
+    <style>
+        #event-selector { display: none; }
+        #Everything[data-value='false'] + #event-selector { display: block; }
+    </style>
+}
+
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
             <h4 class="mb-3">@ViewData["PageTitle"]</h4>
             <div class="form-group">
-                <label asp-for="PayloadUrl">Payload URL</label>
+                <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />
                 <span asp-validation-for="PayloadUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Secret"></label>
+                <label asp-for="Secret" class="form-label"></label>
                 <div class="input-group">
-                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-bs-toggle="password">
+                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-toggle="password">
                     <span class="input-group-text">
                         <i class="fa fa-eye"></i>
                     </span>
@@ -28,52 +32,47 @@
                 <p class="text-muted small form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</p>
             </div>
             <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="AutomaticRedelivery" type="checkbox" class="form-check-input" />
-                    <label asp-for="AutomaticRedelivery" class="form-check-label">Automatic redelivery</label>
-                    <p class="text-muted small form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minutes and up to 6 times after 10 minutes</p>
-                </div>
+                <label asp-for="AutomaticRedelivery" class="form-label">Automatic redelivery</label>
+                <input asp-for="AutomaticRedelivery" type="checkbox" class="btcpay-toggle ms-2" />                
+                <p class="text-muted small form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</p>
             </div>
-            <div class="form-group mb-5">
-                <div class="form-check">
-                    <input asp-for="Active" type="checkbox" class="form-check-input" />
-                    <label asp-for="Active" class="form-check-label">Is enabled</label>
-                </div>
+            <div class="form-group">
+                <label asp-for="Active" class="form-label">Is enabled</label>
+                <input asp-for="Active" type="checkbox" class="btcpay-toggle ms-2" />
             </div>
+            
             <h4 class="mb-3">Events</h4>
             <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
-            <select asp-for="Everything" class="form-select mb-3" onchange="this.dataset.value=this.value">
+            <select asp-for="Everything" class="form-select w-auto mb-3" onchange="this.dataset.value=this.value">
                 <option value="true">Send me everything</option>
                 <option value="false">Send specific events</option>
             </select>
             <div id="event-selector" class="collapse">
-                <ul class="list-group">
+                <div class="pb-3">
                     @foreach (var evt in new[]
-{
-                    ("A new invoice has been created", WebhookEventType.InvoiceCreated),
-                    ("A new payment has been received", WebhookEventType.InvoiceReceivedPayment),
-                    ("An invoice is processing", WebhookEventType.InvoiceProcessing),
-                    ("An invoice has expired", WebhookEventType.InvoiceExpired),
-                    ("An invoice has been settled", WebhookEventType.InvoiceSettled),
-                    ("An invoice became invalid", WebhookEventType.InvoiceInvalid)
+                    {
+                        ("A new invoice has been created", WebhookEventType.InvoiceCreated),
+                        ("A new payment has been received", WebhookEventType.InvoiceReceivedPayment),
+                        ("An invoice is processing", WebhookEventType.InvoiceProcessing),
+                        ("An invoice has expired", WebhookEventType.InvoiceExpired),
+                        ("An invoice has been settled", WebhookEventType.InvoiceSettled),
+                        ("An invoice became invalid", WebhookEventType.InvoiceInvalid)
                     })
                     {
-                        <li class="list-group-item ">
-                            <label for="@evt.Item2" class="d-flex align-items-center">
-                                <span class="flex-fill me-3">@evt.Item1</span>
-                                <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
-                            </label>
-                        </li>
+                        <div class="form-check my-1">
+                            <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input"/>
+                            <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
+                        </div>
                     }
-                </ul>
+                </div>
             </div>
             @if (Model.IsNew)
             {
-                <button name="add" type="submit" class="btn btn-primary mt-3 mb-5" value="New" id="New">Add webhook</button>
+                <button name="add" type="submit" class="btn btn-primary mb-5" value="New" id="New">Add webhook</button>
             }
             else
             {
-                <button name="update" type="submit" class="btn btn-primary mt-3 mb-5" value="Save" id="Save">Update webhook</button>
+                <button name="update" type="submit" class="btn btn-primary mb-5" value="Save" id="Save">Update webhook</button>
             }
         </form>
         @if (!Model.IsNew && Model.Deliveries.Count > 0)

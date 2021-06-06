@@ -44,7 +44,7 @@
                     </button>
                 </div>
             </div>
-            <div class="card-footer text-start">
+            <div class="card-footer text-start p-3">
                 <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
@@ -65,13 +65,13 @@
                     <div class="modal-body" v-if="editingItem">
                         <div class="mb-3">
                             <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
-                            <div class="form-row">
+                            <div class="form-group row">
                                 <div class="col-sm-6">
-                                    <label data-required>Title</label>
+                                    <label class="form-label" data-required>Title</label>
                                     <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
                                 </div>
                                 <div class="col-sm-3">
-                                    <label data-required>Price</label>
+                                    <label class="form-label" data-required>Price</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"
@@ -82,42 +82,31 @@
                                            v-model="editingItem.price" ref="txtPrice"/>
                                 </div>
                                 <div class="col-sm-3">
-                                    <label>Custom price</label>
+                                    <label class="form-label">Custom price</label>
                                     <select class="form-select" v-model="editingItem.custom">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Image</label>
-                                    <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Image</label>
+                                <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Description</label>
-                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Inventory (leave blank to not use inventory feature)</label>
-                                    <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
-                                </div>
-                                
+                            <div class="form-group">
+                                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
+                                <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Id (leave blank to generate from title)</label>
-                                    <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Id (leave blank to generate from title)</label>
+                                <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Buy Button Text</label>
-                                    <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Buy Button Text</label>
+                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
                             </div>
                         </div>
                     </div>

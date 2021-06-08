@@ -69,13 +69,16 @@ namespace BTCPayServer.Payments.Bitcoin
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
                 if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
-                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11
+                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
+                        .ToUpperInvariant();
             }
 
             if (model.Activated)
             {
                 model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
-                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+                model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback
+                    .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
             }
             else
             {
@@ -87,7 +90,6 @@ namespace BTCPayServer.Payments.Bitcoin
             // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
             //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
             //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
-            //    + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
 
             // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
             if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix,  StringComparison.OrdinalIgnoreCase))

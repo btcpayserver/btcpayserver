@@ -35,19 +35,6 @@
     </form>
     <a asp-action="CreateUser" class="btn btn-primary mb-2" role="button" id="CreateUser">Add User</a>
 </div>
-    <form asp-action="ListUsers"
-          asp-route-sortOrder="@(userEmailSortOrder)">
-        <div class="input-group">
-            <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-            <button type="submit" class="btn btn-secondary" title="Search by email">
-                <span class="fa fa-search"></span> Search
-            </button>
-        </div>
-        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-    </form>
-    <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">Add User</a>
-</div>
-
 
 <table class="table table-sm">
     <thead>

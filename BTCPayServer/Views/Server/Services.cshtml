@@ -5,37 +5,37 @@
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-    <div class="mb-5">
-        <h4 class="mb-3">Crypto services exposed by your server</h4>
-        <table class="table table-sm mt-2">
-            <thead>
-                <tr>
-                    <th>Crypto</th>
-                    <th>Access Type</th>
-                    <th style="text-align: right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var s in Model.ExternalServices.Where(service => !string.IsNullOrEmpty(service.CryptoCode)))
-            {
-                <tr>
-                    <td>@s.CryptoCode</td>
-                    <td>
-                        <span>@s.DisplayName</span>
-                        @if (s.ConnectionString.IsOnion() == true ||
-                            (s.ConnectionString.IsOnion() == false && this.Context.Request.IsOnion()))
-                        {
-                        <span><img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" asp-append-version="true" /></span>
-                        }
-                    </td>
-                    <td style="text-align: right">
-                        <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
+<div class="mb-5">
+    <h4 class="mb-3">Crypto services exposed by your server</h4>
+    <table class="table table-sm mt-2">
+        <thead>
+            <tr>
+                <th>Crypto</th>
+                <th>Access Type</th>
+                <th style="text-align: right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.ExternalServices.Where(service => !string.IsNullOrEmpty(service.CryptoCode)))
+        {
+            <tr>
+                <td>@s.CryptoCode</td>
+                <td>
+                    <span>@s.DisplayName</span>
+                    @if (s.ConnectionString.IsOnion() == true ||
+                        (s.ConnectionString.IsOnion() == false && Context.Request.IsOnion()))
+                    {
+                        <img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" asp-append-version="true" alt="Tor Hidden Service" />
+                    }
+                </td>
+                <td style="text-align: right">
+                    <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
 
 @if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
 {
@@ -76,7 +76,7 @@
 @if (Model.TorHttpServices.Count != 0)
 {
     <div class="mb-5">
-        <h4 class="mb-3">HTTP-based TOR hidden services</h4>
+        <h4 class="mb-3">HTTP-based Tor hidden services</h4>
 
         <table class="table table-sm mt-2">
             <thead>
@@ -103,7 +103,7 @@
 @if (Model.TorOtherServices.Count != 0)
 {
     <div class="mb-5">
-        <h4 class="mb-3">Other TOR hidden services</h4>
+        <h4 class="mb-3">Other Tor hidden services</h4>
 
         <table class="table table-sm mt-2">
             <thead>

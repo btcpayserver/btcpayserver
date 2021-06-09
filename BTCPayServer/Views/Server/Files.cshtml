@@ -72,23 +72,18 @@ else
                 <li class="list-group-item">
                     @file.FileName
                 </li>
-
                 <li class="list-group-item">
-                    <div class="row px-0 mx-0">
-                        <span class="col-sm-12 col-md-2">Url: </span>
-                        <a class="col-sm-12 col-md-10 text-end" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
-                            @Url.Action("GetFile", "Storage", new
-                            {
-                                fileId = Model.SelectedFileId
-                            }, Context.Request.Scheme, Context.Request.Host.ToString())
-                        </a>
-                    </div>
+                    <strong>URL:</strong>
+                    <a asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
+                        @Url.Action("GetFile", "Storage", new
+                        {
+                            fileId = Model.SelectedFileId
+                        }, Context.Request.Scheme, Context.Request.Host.ToString())
+                    </a>
                 </li>
-                <li class="list-group-item ">
-                    <div class="row px-0 mx-0">
-                        <span class="col-sm-12 col-md-2">Direct Url: </span>
-                        <a class="col-sm-12 col-md-10 text-end" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
-                    </div>
+                <li class="list-group-item">
+                    <strong>Direct URL:</strong>
+                    <a href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
                 </li>
             </ul>
         </div>

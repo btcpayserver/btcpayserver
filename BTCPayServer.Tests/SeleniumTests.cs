@@ -622,7 +622,6 @@ namespace BTCPayServer.Tests
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, bob, 0.3m);
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 var happyElement = s.FindAlertMessage();
                 var happyText = happyElement.Text;
@@ -877,7 +876,6 @@ namespace BTCPayServer.Tests
                 var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, jack, 0.01m);
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
 
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
                 Assert.Contains("0.01000000", s.Driver.PageSource);
@@ -991,7 +989,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
 
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                s.Driver.FindElement(By.Id("SignWithNBxplorer")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 s.FindAlertMessage();
 

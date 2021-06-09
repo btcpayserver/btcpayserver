@@ -83,20 +83,4 @@
             <vc:icon symbol="caret-right"/>
         </button>
     </div>
-
-    @if (Model.SigningContext.NBXSeedAvailable)
-    {
-        <div class="list-group mt-4">
-            <button type="submit" name="command" value="nbx-seed" class="list-group-item list-group-item-action" id="SignWithNBxplorer">
-                <div class="image">
-                    <vc:icon symbol="hot-wallet"/>
-                </div>
-                <div class="content">
-                    <h4>Hot Wallet</h4>
-                    <p class="mb-0 text-secondary">Use the hot wallet for signing</p>
-                </div>
-                <vc:icon symbol="caret-right"/>
-            </button>
-        </div>
-    }
 </form>

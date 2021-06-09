@@ -502,7 +502,7 @@ namespace BTCPayServer.Controllers
                                 new SignWithSeedViewModel { SeedOrKey = extKey, SigningContext = signingContext });
                         }
                     }
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "NBX seed functionality is not available"

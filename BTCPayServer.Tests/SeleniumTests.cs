@@ -838,36 +838,24 @@ namespace BTCPayServer.Tests
 
                 // We setup the fingerprint and the account key path
                 s.Driver.FindElement(By.Id("WalletSettings")).Click();
-                //                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
-                //                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
 
                 // Check the tx sent earlier arrived
                 s.Driver.FindElement(By.Id("WalletTransactions")).Click();
 
                 var walletTransactionLink = s.Driver.Url;
                 Assert.Contains(tx.ToString(), s.Driver.PageSource);
+                
+                // Send to bob
+                s.Driver.FindElement(By.Id("WalletSend")).Click();
+                var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+                SetTransactionOutput(s, 0, bob, 1);
+                s.Driver.FindElement(By.Id("SignTransaction")).Click();
 
-
-                void SignWith(Mnemonic signingSource)
-                {
-                    // Send to bob
-                    s.Driver.FindElement(By.Id("WalletSend")).Click();
-                    var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
-                    SetTransactionOutput(s, 0, bob, 1);
-                    s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                    s.Driver.FindElement(By.Id("SignWithSeed")).Click();
-
-                    // Input the seed
-                    s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(signingSource + Keys.Enter);
-
-                    // Broadcast
-                    Assert.Contains(bob.ToString(), s.Driver.PageSource);
-                    Assert.Contains("1.00000000", s.Driver.PageSource);
-                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
-                    Assert.Equal(walletTransactionLink, s.Driver.Url);
-                }
-
-                SignWith(mnemonic);
+                // Broadcast
+                Assert.Contains(bob.ToString(), s.Driver.PageSource);
+                Assert.Contains("1.00000000", s.Driver.PageSource);
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+                Assert.Equal(walletTransactionLink, s.Driver.Url);
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();

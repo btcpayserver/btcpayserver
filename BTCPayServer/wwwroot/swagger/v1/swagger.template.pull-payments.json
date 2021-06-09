@@ -448,14 +448,7 @@
                 "description": "Mark a payout as paid",
                 "responses": {
                     "200": {
-                        "description": "The payout has been marked paid, transitioning to `Completed` state.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PayoutData"
-                                }
-                            }
-                        }
+                        "description": "The payout has been marked paid, transitioning to `Completed` state."                        
                     },
                     "422": {
                         "description": "Unable to validate the request",

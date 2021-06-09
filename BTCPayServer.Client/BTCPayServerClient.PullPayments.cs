@@ -58,14 +58,14 @@ namespace BTCPayServer.Client
             return await HandleResponse<PayoutData>(response);
         }
 
-        public async Task<PayoutData> MarkPayoutPaid(string storeId, string payoutId,
+        public async Task MarkPayoutPaid(string storeId, string payoutId,
             CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest(
                     $"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}/mark-paid",
                     method: HttpMethod.Post), cancellationToken);
-            return await HandleResponse<PayoutData>(response);
+            await HandleResponse(response);
         }
     }
 }

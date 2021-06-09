@@ -180,10 +180,7 @@ namespace BTCPayServer.Controllers.GreenField
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
             if (pp is null)
                 return PullPaymentNotFound();
-            using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId)
-                        .Where(p => p.State != PayoutState.Cancelled || includeCancelled)
-                       .ToListAsync();
+            var payouts = pp.Payouts .Where(p => p.State != PayoutState.Cancelled || includeCancelled).ToList();
             var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
             return base.Ok(payouts
                     .Select(p => ToModel(p, cd)).ToList());
@@ -196,8 +193,10 @@ namespace BTCPayServer.Controllers.GreenField
             if (payoutId is null)
                 return PayoutNotFound();
             await using var ctx = _dbContextFactory.CreateContext();
-            var payout = await ctx.Payouts.Include(data => data.PullPaymentData)
-                .FirstOrDefaultAsync(p => p.Id == payoutId && (string.IsNullOrEmpty(pullPaymentId) || p.PullPaymentDataId.Equals(pullPaymentId) ));
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+            if (pp is null)
+                return PullPaymentNotFound();
+            var payout = pp.Payouts.FirstOrDefault(p => p.Id == payoutId);
             if(payout is null )
                 return PayoutNotFound();
             var cd = _currencyNameTable.GetCurrencyData(payout.PullPaymentData.GetBlob().Currency, false);
@@ -374,8 +373,6 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
-            await using var ctx = _dbContextFactory.CreateContext();
-            ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -389,7 +386,7 @@ namespace BTCPayServer.Controllers.GreenField
             switch (result)
             {
                 case PayoutPaidRequest.PayoutPaidResult.Ok:
-                    return await GetPayout(null, payoutId);
+                    return Ok();
                 case PayoutPaidRequest.PayoutPaidResult.InvalidState:
                     return this.CreateAPIError("invalid-state", errorMessage);
                 case PayoutPaidRequest.PayoutPaidResult.NotFound:

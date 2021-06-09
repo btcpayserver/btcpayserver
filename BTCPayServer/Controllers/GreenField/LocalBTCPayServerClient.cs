@@ -806,9 +806,9 @@ namespace BTCPayServer.Controllers.GreenField
                 await _greenFieldInvoiceController.UnarchiveInvoice(storeId, invoiceId));
         }
 
-        public override async Task<ServerInfoData> GetServerInfo(CancellationToken token = default)
+        public override Task<ServerInfoData> GetServerInfo(CancellationToken token = default)
         {
-            return GetFromActionResult<ServerInfoData>(await _greenFieldServerInfoController.ServerInfo());
+            return Task.FromResult(GetFromActionResult<ServerInfoData>(_greenFieldServerInfoController.ServerInfo()));
         }
 
         public override async Task ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod,
@@ -823,6 +823,16 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return GetFromActionResult<OnChainWalletFeeRateData>(
                 await _storeOnChainWalletsController.GetOnChainFeeRate(storeId, cryptoCode, blockTarget));
+        }
+
+        public override async Task DeleteCurrentUser(CancellationToken token = default)
+        {
+            HandleActionResult(await _usersController.DeleteCurrentUser());
+        }
+
+        public override async Task DeleteUser(string userId, CancellationToken token = default)
+        {
+            HandleActionResult(await _usersController.DeleteUser(userId));
         }
     }
 }

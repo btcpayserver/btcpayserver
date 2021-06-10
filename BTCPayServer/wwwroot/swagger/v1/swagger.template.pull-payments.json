@@ -423,6 +423,67 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": { "type": "string" }
+                },
+                {
+                    "name": "payoutId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the payout",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "post": {
+
+                "summary": "Mark Payout as Paid",
+                "operationId": "PullPayments_MarkPayoutPaid",
+                "description": "Mark a payout as paid",
+                "responses": {
+                    "200": {
+                        "description": "The payout has been marked paid, transitioning to `Completed` state."                        
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `invalid-state`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {

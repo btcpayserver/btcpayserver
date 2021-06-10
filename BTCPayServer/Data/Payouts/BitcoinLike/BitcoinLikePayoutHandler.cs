@@ -18,6 +18,7 @@ using NBitcoin.Payment;
 using NBitcoin.RPC;
 using NBXplorer.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 using PayoutData = BTCPayServer.Data.PayoutData;
 
@@ -70,8 +71,16 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         if (payout?.Proof is null)
             return null;
         var paymentMethodId = payout.GetPaymentMethodId();
-        var res =  JsonConvert.DeserializeObject<PayoutTransactionOnChainBlob>(Encoding.UTF8.GetString(payout.Proof), _jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode));
+        var raw =  JObject.Parse(Encoding.UTF8.GetString(payout.Proof));
+        if (raw.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType) &&
+            proofType.Value<string>() == ManualPayoutProof.Type)
+        {
+            return raw.ToObject<ManualPayoutProof>();
+        }
+        var res = raw.ToObject<PayoutTransactionOnChainBlob>(
+            JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode)));
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+        if (res == null) return null;
         res.LinkTemplate = network.BlockExplorerLink;
         return res;
     }

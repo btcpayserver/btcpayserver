@@ -164,10 +164,10 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> GetPullPayment(string pullPaymentId)
         {
             if (pullPaymentId is null)
-                return NotFound();
+                return PullPaymentNotFound();
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
             if (pp is null)
-                return NotFound();
+                return PullPaymentNotFound();
             return Ok(CreatePullPaymentData(pp));
         }
 
@@ -176,17 +176,31 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> GetPayouts(string pullPaymentId, bool includeCancelled = false)
         {
             if (pullPaymentId is null)
-                return NotFound();
+                return PullPaymentNotFound();
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
             if (pp is null)
-                return NotFound();
-            using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId)
-                        .Where(p => p.State != PayoutState.Cancelled || includeCancelled)
-                       .ToListAsync();
+                return PullPaymentNotFound();
+            var payouts = pp.Payouts .Where(p => p.State != PayoutState.Cancelled || includeCancelled).ToList();
             var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
             return base.Ok(payouts
                     .Select(p => ToModel(p, cd)).ToList());
+        }
+
+        [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/payouts/{payoutId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPayout(string pullPaymentId, string payoutId)
+        {
+            if (payoutId is null)
+                return PayoutNotFound();
+            await using var ctx = _dbContextFactory.CreateContext();
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+            if (pp is null)
+                return PullPaymentNotFound();
+            var payout = pp.Payouts.FirstOrDefault(p => p.Id == payoutId);
+            if(payout is null )
+                return PayoutNotFound();
+            var cd = _currencyNameTable.GetCurrencyData(payout.PullPaymentData.GetBlob().Currency, false);
+            return base.Ok(ToModel(payout, cd));
         }
 
         private Client.Models.PayoutData ToModel(Data.PayoutData p, CurrencyData cd)
@@ -226,10 +240,10 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             }
 
-            using var ctx = _dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
-                return NotFound();
+                return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
             IClaimDestination destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
             if (destination is null)
@@ -282,7 +296,7 @@ namespace BTCPayServer.Controllers.GreenField
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null || pp.StoreId != storeId)
-                return NotFound();
+                return PullPaymentNotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
             return Ok();
         }
@@ -294,7 +308,7 @@ namespace BTCPayServer.Controllers.GreenField
             using var ctx = _dbContextFactory.CreateContext();
             var payout = await ctx.Payouts.GetPayout(payoutId, storeId);
             if (payout is null)
-                return NotFound();
+                return PayoutNotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }));
             return Ok();
         }
@@ -314,7 +328,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             var payout = await ctx.Payouts.GetPayout(payoutId, storeId, true, true);
             if (payout is null)
-                return NotFound();
+                return PayoutNotFound();
             RateResult rateResult = null;
             try
             {
@@ -349,10 +363,46 @@ namespace BTCPayServer.Controllers.GreenField
                 case PullPaymentHostedService.PayoutApproval.Result.OldRevision:
                     return this.CreateAPIError("old-revision", errorMessage);
                 case PullPaymentHostedService.PayoutApproval.Result.NotFound:
-                    return NotFound();
+                    return PayoutNotFound();
                 default:
                     throw new NotSupportedException();
             }
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid")]
+        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            var result = await _pullPaymentService.MarkPaid(new PayoutPaidRequest()
+            {
+                //TODO: Allow API to specify the manual proof object
+                Proof = null,
+                PayoutId = payoutId
+            });
+            var errorMessage = PayoutPaidRequest.GetErrorMessage(result);
+            switch (result)
+            {
+                case PayoutPaidRequest.PayoutPaidResult.Ok:
+                    return Ok();
+                case PayoutPaidRequest.PayoutPaidResult.InvalidState:
+                    return this.CreateAPIError("invalid-state", errorMessage);
+                case PayoutPaidRequest.PayoutPaidResult.NotFound:
+                    return PayoutNotFound();
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+        
+        private IActionResult PayoutNotFound()
+        {
+            return this.CreateAPIError(404, "payout-not-found", "The payout was not found");
+        }
+        private IActionResult PullPaymentNotFound()
+        {
+            return this.CreateAPIError(404, "pullpayment-not-found", "The pull payment was not found");
         }
     }
 }

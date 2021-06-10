@@ -529,6 +529,11 @@ namespace BTCPayServer.Tests
                 // The payout should round the value of the payment down to the network of the payment method
                 Assert.Equal(12.30322814m, payout.PaymentMethodAmount);
                 Assert.Equal(12.303228134m, payout.Amount);
+
+                await client.MarkPayoutPaid(storeId, payout.Id);
+                payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
+                Assert.Equal(PayoutState.Completed, payout.State);
+                await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
             }
         }
 

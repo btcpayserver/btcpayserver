@@ -57,5 +57,15 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}", bodyPayload: request, method: HttpMethod.Post), cancellationToken);
             return await HandleResponse<PayoutData>(response);
         }
+
+        public async Task MarkPayoutPaid(string storeId, string payoutId,
+            CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest(
+                    $"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}/mark-paid",
+                    method: HttpMethod.Post), cancellationToken);
+            await HandleResponse(response);
+        }
     }
 }

@@ -4,7 +4,7 @@
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, "Manage payouts", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts", Context.GetStoreData().StoreName);
 }
 
 @section PageFootContent {
@@ -55,6 +55,7 @@
                     case PayoutState.AwaitingPayment:
                         stateActions.Add(("pay", "Send selected payouts"));
                         stateActions.Add(("cancel", "Cancel selected payouts"));
+                        stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
                         break;
                 }
                 <div class="tab-pane @(index == 0 ? "active" : "") " id="@state.State" role="tabpanel">
@@ -122,9 +123,9 @@
                                         @if (state.State != PayoutState.AwaitingApproval)
                                         {
                                             <td class="text-end">
-                                                @if (!(pp.TransactionLink is null))
+                                                @if (!(pp.ProofLink is null))
                                                 {
-                                                    <a class="transaction-link" href="@pp.TransactionLink">Link</a>
+                                                    <a class="transaction-link" href="@pp.ProofLink">Link</a>
                                                 }
                                             </td>
                                         }

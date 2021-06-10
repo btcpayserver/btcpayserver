@@ -23,7 +23,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public string PullPaymentName { get; set; }
             public string Destination { get; set; }
             public string Amount { get; set; }
-            public string TransactionLink { get; set; }
+            public string ProofLink { get; set; }
         }
 
         public class PayoutStateSet

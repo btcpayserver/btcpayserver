@@ -123,8 +123,8 @@ namespace BTCPayServer.HostedServices
 
         public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId)
         {
-            using var ctx = _dbContextFactory.CreateContext();
-            return await ctx.PullPayments.FindAsync(pullPaymentId);
+            await using var ctx = _dbContextFactory.CreateContext();
+            return await ctx.PullPayments.Include(data => data.Payouts).FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
 
         class PayoutRequest
@@ -206,6 +206,10 @@ namespace BTCPayServer.HostedServices
                 {
                     await HandleCancel(cancel);
                 } 
+                if (o is InternalPayoutPaidRequest paid)
+                {
+                    await HandleMarkPaid(paid);
+                } 
                 foreach (IPayoutHandler payoutHandler in _payoutHandlers)
                 {
                    await payoutHandler.BackgroundCheck(o);
@@ -285,6 +289,35 @@ namespace BTCPayServer.HostedServices
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
                 req.Completion.SetResult(PayoutApproval.Result.Ok);
+            }
+            catch (Exception ex)
+            {
+                req.Completion.TrySetException(ex);
+            }
+        }
+        private async Task HandleMarkPaid(InternalPayoutPaidRequest req)
+        {
+            try
+            {
+                await using var ctx = _dbContextFactory.CreateContext();
+                var payout = await ctx.Payouts.Include(p => p.PullPaymentData).Where(p => p.Id == req.Request.PayoutId).FirstOrDefaultAsync();
+                if (payout is null)
+                {
+                    req.Completion.SetResult(PayoutPaidRequest.PayoutPaidResult.NotFound);
+                    return;
+                }
+                if (payout.State != PayoutState.AwaitingPayment)
+                {
+                    req.Completion.SetResult(PayoutPaidRequest.PayoutPaidResult.InvalidState);
+                    return;
+                }
+                if (req.Request.Proof != null)
+                {
+                    payout.SetProofBlob(req.Request.Proof);
+                }
+                payout.State = PayoutState.Completed;
+                await ctx.SaveChangesAsync();
+                req.Completion.SetResult(PayoutPaidRequest.PayoutPaidResult.Ok);
             }
             catch (Exception ex)
             {
@@ -444,6 +477,60 @@ namespace BTCPayServer.HostedServices
             _subscriptions.Dispose();
             return base.StopAsync(cancellationToken);
         }
+
+        public Task<PayoutPaidRequest.PayoutPaidResult> MarkPaid(PayoutPaidRequest request)
+        {
+            CancellationToken.ThrowIfCancellationRequested();
+            var cts = new TaskCompletionSource<PayoutPaidRequest.PayoutPaidResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!_Channel.Writer.TryWrite(new InternalPayoutPaidRequest(cts, request)))
+                throw new ObjectDisposedException(nameof(PullPaymentHostedService));
+            return cts.Task;
+        }
+
+
+        class InternalPayoutPaidRequest
+        {
+            public InternalPayoutPaidRequest(TaskCompletionSource<PayoutPaidRequest.PayoutPaidResult> completionSource, PayoutPaidRequest request)
+            {
+                if (request == null)
+                    throw new ArgumentNullException(nameof(request));
+                if (completionSource == null)
+                    throw new ArgumentNullException(nameof(completionSource));
+                Completion = completionSource;
+                Request = request;
+            }
+            public TaskCompletionSource<PayoutPaidRequest.PayoutPaidResult> Completion { get; set; }
+            public PayoutPaidRequest Request { get; }
+        }
+        
+    }
+
+    public class PayoutPaidRequest
+    {
+        public enum PayoutPaidResult
+        {
+            Ok,
+            NotFound,
+            InvalidState
+        }
+        public string PayoutId { get; set; }
+        public ManualPayoutProof Proof { get; set; }
+        
+        public static string GetErrorMessage(PayoutPaidResult result)
+        {
+            switch (result)
+            {
+                case PayoutPaidResult.NotFound:
+                    return "The payout is not found";
+                case PayoutPaidResult.Ok:
+                    return "Ok";
+                case PayoutPaidResult.InvalidState:
+                    return "The payout is not in a state that can be marked as paid";
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+        
     }
 
     public class ClaimRequest

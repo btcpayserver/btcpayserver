@@ -121,10 +121,14 @@ namespace BTCPayServer.HostedServices
             return o.Id;
         }
 
-        public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId)
+        public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId, bool includePayouts)
         {
             await using var ctx = _dbContextFactory.CreateContext();
-            return await ctx.PullPayments.Include(data => data.Payouts).FirstOrDefaultAsync(data => data.Id == pullPaymentId);
+            IQueryable<Data.PullPaymentData> query = ctx.PullPayments;
+            if (includePayouts)
+                query = query.Include(data => data.Payouts);
+
+            return await query.FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
 
         class PayoutRequest
@@ -205,14 +209,14 @@ namespace BTCPayServer.HostedServices
                 if (o is CancelRequest cancel)
                 {
                     await HandleCancel(cancel);
-                } 
+                }
                 if (o is InternalPayoutPaidRequest paid)
                 {
                     await HandleMarkPaid(paid);
-                } 
+                }
                 foreach (IPayoutHandler payoutHandler in _payoutHandlers)
                 {
-                   await payoutHandler.BackgroundCheck(o);
+                    await payoutHandler.BackgroundCheck(o);
                 }
             }
         }
@@ -502,7 +506,7 @@ namespace BTCPayServer.HostedServices
             public TaskCompletionSource<PayoutPaidRequest.PayoutPaidResult> Completion { get; set; }
             public PayoutPaidRequest Request { get; }
         }
-        
+
     }
 
     public class PayoutPaidRequest
@@ -515,7 +519,7 @@ namespace BTCPayServer.HostedServices
         }
         public string PayoutId { get; set; }
         public ManualPayoutProof Proof { get; set; }
-        
+
         public static string GetErrorMessage(PayoutPaidResult result)
         {
             switch (result)
@@ -530,7 +534,7 @@ namespace BTCPayServer.HostedServices
                     throw new NotSupportedException();
             }
         }
-        
+
     }
 
     public class ClaimRequest

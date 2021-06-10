@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers.GreenField
                 StoreId = storeId,
                 PaymentMethodIds = paymentMethods
             });
-            var pp = await _pullPaymentService.GetPullPayment(ppId);
+            var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }
 
@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (pullPaymentId is null)
                 return PullPaymentNotFound();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return PullPaymentNotFound();
             return Ok(CreatePullPaymentData(pp));
@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (pullPaymentId is null)
                 return PullPaymentNotFound();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
             if (pp is null)
                 return PullPaymentNotFound();
             var payouts = pp.Payouts .Where(p => p.State != PayoutState.Cancelled || includeCancelled).ToList();
@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (payoutId is null)
                 return PayoutNotFound();
             await using var ctx = _dbContextFactory.CreateContext();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
             if (pp is null)
                 return PullPaymentNotFound();
             var payout = pp.Payouts.FirstOrDefault(p => p.Id == payoutId);

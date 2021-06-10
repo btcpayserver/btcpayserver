@@ -169,7 +169,7 @@ namespace BTCPayServer.Controllers.GreenField
             GreenFieldServerInfoController greenFieldServerInfoController,
             StoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
-            IHttpContextAccessor httpContextAccessor) : base(new Uri("http://dummy.com"), "", "")
+            IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.com"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
             _storeOnChainWalletsController = storeOnChainWalletsController;
@@ -474,10 +474,10 @@ namespace BTCPayServer.Controllers.GreenField
             return result.Value ?? GetFromActionResult<T>(result.Result);
         }
 
-        public override async Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
+        public override Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
             CancellationToken token = default)
         {
-            return GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId));
+            return Task.FromResult(GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId)));
         }
 
         public override async Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
@@ -718,19 +718,19 @@ namespace BTCPayServer.Controllers.GreenField
             return GetFromActionResult<StoreData>(await _storesController.UpdateStore(storeId, request));
         }
 
-        public override async Task<IEnumerable<LightningNetworkPaymentMethodData>>
+        public override Task<IEnumerable<LightningNetworkPaymentMethodData>>
             GetStoreLightningNetworkPaymentMethods(string storeId, bool enabledOnly = false,
                 CancellationToken token = default)
         {
-            return GetFromActionResult(
-                _storeLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(storeId, enabledOnly));
+            return Task.FromResult(GetFromActionResult(
+                _storeLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(storeId, enabledOnly)));
         }
 
-        public override async Task<LightningNetworkPaymentMethodData> GetStoreLightningNetworkPaymentMethod(
+        public override Task<LightningNetworkPaymentMethodData> GetStoreLightningNetworkPaymentMethod(
             string storeId, string cryptoCode, CancellationToken token = default)
         {
-            return GetFromActionResult(
-                _storeLightningNetworkPaymentMethodsController.GetLightningNetworkPaymentMethod(storeId, cryptoCode));
+            return Task.FromResult(GetFromActionResult(
+                _storeLightningNetworkPaymentMethodsController.GetLightningNetworkPaymentMethod(storeId, cryptoCode)));
         }
 
         public override async Task RemoveStoreLightningNetworkPaymentMethod(string storeId, string cryptoCode,

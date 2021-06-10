@@ -1117,14 +1117,14 @@ namespace BTCPayServer.Tests
 
                 //list Existing OrderId
                 var invoicesExistingOrderId =
-                     await viewOnly.GetInvoices(user.StoreId, orderId: newInvoice.Metadata["orderId"].ToString());
+                     await viewOnly.GetInvoices(user.StoreId, orderId: new []{newInvoice.Metadata["orderId"].ToString()});
                  Assert.NotNull(invoicesExistingOrderId);
                  Assert.Single(invoicesFiltered);
                  Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
                  //list NonExisting OrderId
                  var invoicesNonExistingOrderId =
-                     await viewOnly.GetInvoices(user.StoreId, orderId: "NonExistingOrderId");
+                     await viewOnly.GetInvoices(user.StoreId, orderId: new []{"NonExistingOrderId"});
                  Assert.NotNull(invoicesNonExistingOrderId);
                  Assert.Empty(invoicesNonExistingOrderId);
 

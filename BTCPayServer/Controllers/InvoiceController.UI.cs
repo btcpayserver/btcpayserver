@@ -20,8 +20,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Plugins.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;

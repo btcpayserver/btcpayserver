@@ -1,10 +1,8 @@
-﻿@using Microsoft.AspNetCore.Mvc.Rendering
-@using BTCPayServer.Views.Stores
-@model UpdateCoinSwitchSettingsViewModel
+﻿@model BTCPayServer.Models.StoreViewModels.UpdateCoinSwitchSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../Stores/_Nav";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Update Store CoinSwitch Settings", Context.GetStoreData().StoreName);
+    // ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Update Store CoinSwitch Settings", Model.StoreName);
 }
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>

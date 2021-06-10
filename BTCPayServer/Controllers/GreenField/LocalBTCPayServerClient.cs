@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using YamlDotNet.Core.Tokens;
+using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 using Language = BTCPayServer.Client.Models.Language;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
@@ -882,6 +882,29 @@ namespace BTCPayServer.Controllers.GreenField
         public override Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId, bool? enabled = null, CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult(_storePaymentMethodsController.GetStorePaymentMethods(storeId, enabled)));
+        public override async Task<Dictionary<string, JToken>> GetStoreAdditionalData(string storeId, CancellationToken token = default)
+        {
+            return GetFromActionResult<Dictionary<string, JToken>>(await _storesController.GetStoreAdditionalData(storeId));
+        }
+
+        public override async Task<JToken> GetStoreAdditionalDataKey(string storeId, string dataKey, CancellationToken token = default)
+        {
+            return GetFromActionResult<JToken>(await _storesController.GetStoreAdditionalDataKey(storeId,dataKey));
+        }
+
+        public override async Task UpdateStoreAdditionalDataKey(string storeId, string dataKey, JToken data, CancellationToken token = default)
+        {
+            HandleActionResult(await _storesController.UpdateStoreAdditionalDataKey(storeId,dataKey, data));
+        }
+
+        public override async Task RemoveStoreAdditionalDataKey(string storeId, string dataKey, CancellationToken token = default)
+        {
+            HandleActionResult(await _storesController.RemoveStoreAdditionalDataKey(storeId,dataKey));
+        }
+
+        public override async Task<InvoiceData> AdminGetInvoice(string invoiceId, CancellationToken token = default)
+        {
+            return GetFromActionResult<InvoiceData>(await _greenFieldInvoiceController.AdminGetInvoice(invoiceId));
         }
     }
 }

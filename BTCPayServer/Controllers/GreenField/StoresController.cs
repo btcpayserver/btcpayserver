@@ -13,7 +13,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using StoreData = BTCPayServer.Data.StoreData;
+using NBitcoin;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -108,6 +109,73 @@ namespace BTCPayServer.Controllers.GreenField
             ToModel(request, store, defaultPaymnetMethodId);
             await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
+        }
+
+        
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}")]
+        public async Task<IActionResult> GetStoreAdditionalData(string storeId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(store.GetStoreBlob().AdditionalData);
+        }
+
+        public const string DataKeyPrefix = "#EXTRA#";
+        
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/data/{dataKey}")]
+        public async Task<IActionResult> GetStoreAdditionalDataKey(string storeId, string dataKey)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            if (store.GetStoreBlob().AdditionalData.TryGetValue($"{DataKeyPrefix}{dataKey}", out var data))
+            {
+                return Ok(data);
+                
+            }
+            return NotFound();
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/stores/{storeId}/data/{dataKey}")]
+        public async Task<IActionResult> RemoveStoreAdditionalDataKey(string storeId, string dataKey)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            if (store.GetStoreBlob().AdditionalData.Remove($"{DataKeyPrefix}{dataKey}", out var data))
+            {
+                return Ok();
+                
+            }
+            return NotFound();
+        }
+        
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPut("~/api/v1/stores/{storeId}/data/{dataKey}")]
+        public async Task<IActionResult> UpdateStoreAdditionalDataKey(string storeId, string dataKey, JToken data)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            store.GetStoreBlob().AdditionalData.AddOrReplace($"{DataKeyPrefix}{dataKey}", data);
+            return Ok();
         }
 
         private Client.Models.StoreData FromModel(Data.StoreData data)

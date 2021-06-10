@@ -1,11 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
-using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.CoinSwitch
 {
@@ -14,27 +14,37 @@ namespace BTCPayServer.Plugins.CoinSwitch
     [Route("plugins/{storeId}/coinswitch")]
     public class CoinSwitchController : Controller
     {
-        private readonly StoreRepository _storeRepository;
+        private readonly BTCPayServerClient _btcPayServerClient;
 
-        public CoinSwitchController(StoreRepository storeRepository)
+        public CoinSwitchController(BTCPayServerClient btcPayServerClient)
         {
-            _storeRepository = storeRepository;
+            _btcPayServerClient = btcPayServerClient;
         }
 
         [HttpGet("")]
-        public IActionResult UpdateCoinSwitchSettings(string storeId)
+        public async Task<IActionResult> UpdateCoinSwitchSettings(string storeId)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
+            var store = await _btcPayServerClient.GetStore(storeId);
+
             UpdateCoinSwitchSettingsViewModel vm = new UpdateCoinSwitchSettingsViewModel();
-            SetExistingValues(store, vm);
+            vm.StoreName = store.Name;
+            CoinSwitchSettings coinswitch = null;
+            try
+            {
+                coinswitch = (await _btcPayServerClient.GetStoreAdditionalDataKey(storeId, CoinSwitchPlugin.StoreBlobKey))
+                    .ToObject<CoinSwitchSettings>();
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
+
+            SetExistingValues(coinswitch, vm);
             return View(vm);
         }
 
-        private void SetExistingValues(StoreData store, UpdateCoinSwitchSettingsViewModel vm)
+        private void SetExistingValues(CoinSwitchSettings existing, UpdateCoinSwitchSettingsViewModel vm)
         {
-            var existing = store.GetStoreBlob().GetCoinSwitchSettings();
             if (existing == null)
                 return;
             vm.MerchantId = existing.MerchantId;
@@ -47,9 +57,7 @@ namespace BTCPayServer.Plugins.CoinSwitch
         public async Task<IActionResult> UpdateCoinSwitchSettings(string storeId, UpdateCoinSwitchSettingsViewModel vm,
             string command)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
+            var store = await _btcPayServerClient.GetStore(storeId);
             if (vm.Enabled)
             {
                 if (!ModelState.IsValid)
@@ -69,11 +77,9 @@ namespace BTCPayServer.Plugins.CoinSwitch
             switch (command)
             {
                 case "save":
-                    var storeBlob = store.GetStoreBlob();
-                    storeBlob.SetCoinSwitchSettings(coinSwitchSettings);
-                    store.SetStoreBlob(storeBlob);
-                    await _storeRepository.UpdateStore(store);
-                    TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
+                    await _btcPayServerClient.UpdateStoreAdditionalDataKey(storeId, CoinSwitchPlugin.StoreBlobKey,
+                        JObject.FromObject(coinSwitchSettings));
+                    TempData["SuccessMessage"] = "CoinSwitch settings modified";
                     return RedirectToAction(nameof(UpdateCoinSwitchSettings), new {storeId});
 
                 default:

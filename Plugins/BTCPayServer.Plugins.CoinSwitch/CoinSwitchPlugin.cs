@@ -7,6 +7,7 @@ namespace BTCPayServer.Plugins.CoinSwitch
 {
     public class CoinSwitchPlugin : BaseBTCPayServerPlugin
     {
+        public const string StoreBlobKey = "coinSwitchSettings";
         public override string Identifier => "BTCPayServer.Plugins.CoinSwitch";
         public override string Name => "CoinSwitch";
 

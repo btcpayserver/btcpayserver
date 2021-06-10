@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
@@ -133,6 +135,12 @@ namespace BTCPayServer.Hosting
                     await MigrateHotwalletProperty();
                     settings.MigrateHotwalletProperty = true;
                     await _Settings.UpdateSetting(settings);
+                }               
+                if (!settings.MigrateStoreAdditionalDataKeys)
+                {
+                    await MigrateStoreAdditionalDataKeys();
+                    settings.MigrateStoreAdditionalDataKeys = true;
+                    await _Settings.UpdateSetting(settings);
                 }
             }
             catch (Exception ex)
@@ -155,7 +163,19 @@ namespace BTCPayServer.Hosting
             }
             await ctx.SaveChangesAsync();
         }
+ 		private async Task MigrateStoreAdditionalDataKeys()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+            {
+                var blob = store.GetStoreBlob();
+                blob.AdditionalData = blob.AdditionalData.ToDictionary(keyValuePair => GreenFieldStoresController.DataKeyPrefix + keyValuePair.Key, keyValuePair => keyValuePair.Value);
+                store.SetStoreBlob(blob);
+            }
 
+
+            await ctx.SaveChangesAsync();
+        }
         private async Task MigrateU2FToFIDO2()
         {
             await using var ctx = _DBContextFactory.CreateContext();

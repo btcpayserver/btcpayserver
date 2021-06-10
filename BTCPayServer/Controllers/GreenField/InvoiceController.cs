@@ -107,6 +107,22 @@ namespace BTCPayServer.Controllers.GreenField
 
             return Ok(ToModel(invoice));
         }
+        
+        [Authorize(Policy = Policies.CanModifyServerSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/invoices/{invoiceId}")]
+        public async Task<IActionResult> AdminGetInvoice( string invoiceId)
+        {
+            
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return InvoiceNotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            return Ok(ToModel(invoice));
+        }
 
         [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

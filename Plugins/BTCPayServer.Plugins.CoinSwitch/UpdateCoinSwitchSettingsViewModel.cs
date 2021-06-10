@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Required]
         [Range(0, 100)]
         [Display(Name =
-            "Percentage to multiply amount requested at Coinswitch to avoid underpaid situations due to Coinswitch not guaranteeing rates. ")]
+            "Percentage to multiply amount requested at Coinswitch to avoid underpaid situations due to Coinswitch not guaranteeing rates.")]
         public decimal AmountMarkupPercentage { get; set; } = new decimal(2);
 
         public List<SelectListItem> Modes { get; } = new List<SelectListItem>
@@ -23,5 +23,7 @@ namespace BTCPayServer.Models.StoreViewModels
             new SelectListItem { Value = "popup", Text = "Open in a popup" },
             new SelectListItem { Value = "inline", Text = "Embed inside Checkout UI " },
         };
+
+        public string StoreName { get; set; }
     }
 }

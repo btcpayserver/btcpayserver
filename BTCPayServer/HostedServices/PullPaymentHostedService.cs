@@ -123,8 +123,8 @@ namespace BTCPayServer.HostedServices
 
         public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId)
         {
-            using var ctx = _dbContextFactory.CreateContext();
-            return await ctx.PullPayments.FindAsync(pullPaymentId);
+            await using var ctx = _dbContextFactory.CreateContext();
+            return await ctx.PullPayments.Include(data => data.Payouts).FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
 
         class PayoutRequest

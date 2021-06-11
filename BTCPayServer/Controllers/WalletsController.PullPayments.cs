@@ -24,8 +24,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class WalletsController
     {
-        [HttpGet]
-        [Route("{walletId}/pull-payments/new")]
+        [HttpGet("{walletId}/pull-payments/new")]
         public IActionResult NewPullPayment([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
@@ -40,9 +39,8 @@ namespace BTCPayServer.Controllers
                 EmbeddedCSS = "",
             });
         }
-
-        [HttpPost]
-        [Route("{walletId}/pull-payments/new")]
+        
+        [HttpPost("{walletId}/pull-payments/new")]
         public async Task<IActionResult> NewPullPayment([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, NewPullPaymentModel model)
         {
@@ -86,9 +84,8 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction(nameof(PullPayments), new { walletId = walletId.ToString() });
         }
-
-        [HttpGet]
-        [Route("{walletId}/pull-payments")]
+        
+        [HttpGet("{walletId}/pull-payments")]
         public async Task<IActionResult> PullPayments(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
@@ -149,8 +146,7 @@ namespace BTCPayServer.Controllers
             return time;
         }
 
-        [HttpGet]
-        [Route("{walletId}/pull-payments/{pullPaymentId}/archive")]
+        [HttpGet("{walletId}/pull-payments/{pullPaymentId}/archive")]
         public IActionResult ArchivePullPayment(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
@@ -164,8 +160,8 @@ namespace BTCPayServer.Controllers
                 Action = "Archive"
             });
         }
-        [HttpPost]
-        [Route("{walletId}/pull-payments/{pullPaymentId}/archive")]
+        
+        [HttpPost("{walletId}/pull-payments/{pullPaymentId}/archive")]
         public async Task<IActionResult> ArchivePullPaymentPost(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
@@ -180,8 +176,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { walletId = walletId.ToString() });
         }
 
-        [HttpPost]
-        [Route("{walletId}/payouts")]
+        [HttpPost("{walletId}/payouts")]
         public async Task<IActionResult> PayoutsPost(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, PayoutsModel vm, CancellationToken cancellationToken)
@@ -312,7 +307,7 @@ namespace BTCPayServer.Controllers
                         });
                         if (result != PayoutPaidRequest.PayoutPaidResult.Ok)
                         {
-                            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                            TempData.SetStatusMessageModel(new StatusMessageModel()
                             {
                                 Message = PayoutPaidRequest.GetErrorMessage(result),
                                 Severity = StatusMessageModel.StatusSeverity.Error
@@ -377,7 +372,7 @@ namespace BTCPayServer.Controllers
                 Count = count
             });
             vm.Payouts = new List<PayoutsModel.PayoutModel>();
-            await using var ctx = this._dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
             var storeId = walletId.StoreId;
             var payoutRequest = ctx.Payouts.Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived);
             if (vm.PullPaymentId != null)
@@ -390,9 +385,9 @@ namespace BTCPayServer.Controllers
                 var pmiStr = vm.PaymentMethodId.ToString();
                 payoutRequest = payoutRequest.Where(p => p.PaymentMethodId == pmiStr);
             }
-
-
-            vm.PayoutStateCount = payoutRequest.GroupBy(data => data.State).Select(e => new {e.Key, Count = e.Count()})
+            
+            vm.PayoutStateCount = payoutRequest.GroupBy(data => data.State)
+                .Select(e => new {e.Key, Count = e.Count()})
                 .ToDictionary(arg => arg.Key, arg => arg.Count);
             foreach (PayoutState value in Enum.GetValues(typeof(PayoutState)))
             {

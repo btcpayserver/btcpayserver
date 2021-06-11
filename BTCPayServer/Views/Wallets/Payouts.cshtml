@@ -4,7 +4,7 @@
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : "for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
 
     var stateActions = new List<(string Action, string Text)>();
     switch (Model.PayoutState)
@@ -35,24 +35,25 @@
 }
 
 <form method="post">
-
     <input type="hidden" asp-for="PaymentMethodId"/>
     <input type="hidden" asp-for="PayoutState"/>
-    <h4 class="mb-3">@ViewData["Title"]</h4>
+    <h4 class="mb-4">@ViewData["Title"]</h4>
 
     <div class="row">
-        <ul class="nav nav-pills col-auto">
-            @foreach (var state in Model.PayoutStateCount)
-            {
-                <li class="nav-item py-0">
-                    <a asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
-                </li>
-            }
-        </ul>
+        <div class="col-auto">
+            <ul class="nav nav-pills">
+                @foreach (var state in Model.PayoutStateCount)
+                {
+                    <li class="nav-item py-0">
+                        <a asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                    </li>
+                }
+            </ul>
+        </div>
         @if (Model.Payouts.Any() && stateActions.Any())
         {
-            <div class="dropdown col-auto">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
+            <div class="dropdown col-auto mt-4 ms-xl-auto mt-xl-0">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
                     Actions
                 </button>
                 <div class="dropdown-menu" aria-labelledby="@Model.PayoutState-actions">
@@ -127,7 +128,7 @@
             }
             else
             {
-                <p class="mb-0 p-4" id="@Model.PayoutState-no-payouts"> There are no payouts for this criteria.</p>
+                <p class="mb-0 py-4" id="@Model.PayoutState-no-payouts">There are no payouts for this criteria.</p>
             }
         </div>
         <vc:pager view-model="Model"/>

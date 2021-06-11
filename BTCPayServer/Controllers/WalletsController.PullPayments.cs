@@ -362,18 +362,19 @@ namespace BTCPayServer.Controllers
             return payouts;
         }
 
-        [HttpGet]
-        [Route("{walletId}/payouts")]
+        [HttpGet("{walletId}/payouts")]
         public async Task<IActionResult> Payouts(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string pullPaymentId, PayoutState payoutState )
+            WalletId walletId, string pullPaymentId, PayoutState payoutState,
+            int skip = 0, int count = 50)
         {
-            
-            var vm = this.ParseListQuery(new PayoutsModel()
+            var vm = this.ParseListQuery(new PayoutsModel
             {
                 PaymentMethodId = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike),
                 PullPaymentId = pullPaymentId, 
-                PayoutState =  payoutState
+                PayoutState =  payoutState,
+                Skip = skip,
+                Count = count
             });
             vm.Payouts = new List<PayoutsModel.PayoutModel>();
             await using var ctx = this._dbContextFactory.CreateContext();

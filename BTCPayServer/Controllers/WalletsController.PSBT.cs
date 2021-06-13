@@ -120,11 +120,11 @@ namespace BTCPayServer.Controllers
 
             vm.PSBTHex = psbt.ToHex();
             vm.SigningContext.NBXSeedAvailable = vm.NBXSeedAvailable;
-            var routeData = new Dictionary<string, string>
+            var routeBack = new Dictionary<string, string>
             {
                 {"action", nameof(WalletPSBT)}, {"walletId", walletId.ToString()}
             };
-            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext, routeData, routeData);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext, routeBack);
             if (res != null)
             {
                 return res;
@@ -478,13 +478,13 @@ namespace BTCPayServer.Controllers
         }
 
         private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
-            SigningContextModel signingContext, Dictionary<string, string> routeBack, Dictionary<string, string> routeForm)
+            SigningContextModel signingContext, Dictionary<string, string> routeBack)
         {
             signingContext.PSBT = psbt.ToBase64();
             switch (command)
             {
                 case "sign":
-                    return View("WalletSigningOptions", new WalletSigningOptionsModel(signingContext, routeBack, routeForm));
+                    return View("WalletSigningOptions", new WalletSigningOptionsModel(signingContext, routeBack));
                 case "vault":
                     return ViewVault(walletId, signingContext);
                 case "seed":

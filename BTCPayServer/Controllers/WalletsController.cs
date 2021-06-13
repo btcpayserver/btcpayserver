@@ -712,16 +712,12 @@ namespace BTCPayServer.Controllers
                 NBXSeedAvailable = vm.NBXSeedAvailable
             };
                 
-            var routeDataBack = new Dictionary<string, string>
+            var routeBack = new Dictionary<string, string>
             {
                 {"action", nameof(WalletSend)}, {"walletId", walletId.ToString()}
             };
-            var routeDataForm = new Dictionary<string, string>
-            {
-                {"action", nameof(WalletPSBT)}, {"walletId", walletId.ToString()}
-            };
 
-            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeDataBack, routeDataForm);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeBack);
             if (res != null)
             {
                 return res;

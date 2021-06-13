@@ -6,16 +6,13 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         public WalletSigningOptionsModel(
             SigningContextModel signingContext, 
-            IDictionary<string, string> routeDataBack, 
-            IDictionary<string, string> routeDataForm)
+            IDictionary<string, string> routeDataBack)
         {
             SigningContext = signingContext;
             RouteDataBack = routeDataBack;
-            RouteDataForm = routeDataForm;
         }
 
         public SigningContextModel SigningContext { get; }
         public IDictionary<string, string> RouteDataBack { get; }
-        public IDictionary<string, string> RouteDataForm { get; }
     }
 }

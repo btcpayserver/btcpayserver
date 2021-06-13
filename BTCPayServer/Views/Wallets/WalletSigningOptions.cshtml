@@ -21,7 +21,7 @@
     <p class="lead text-secondary mt-3">You can sign the transaction using one of the following methods.</p>
 </header>
 
-<form method="post" asp-all-route-data="Model.RouteDataForm">
+<form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId">
     <partial name="SigningContext" for="SigningContext" />
 
     @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).VaultSupported)

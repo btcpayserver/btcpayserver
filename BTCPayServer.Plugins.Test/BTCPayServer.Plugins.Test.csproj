@@ -16,4 +16,10 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.4">
       </PackageReference>
     </ItemGroup>
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Shared\CoinSwitch\CheckoutContentExtension.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Shared\CoinSwitch\CheckoutEnd.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Shared\CoinSwitch\CheckoutTabExtension.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Shared\CoinSwitch\StoreIntegrationCoinSwitchOption.cshtml" />
+    </ItemGroup>
 </Project>

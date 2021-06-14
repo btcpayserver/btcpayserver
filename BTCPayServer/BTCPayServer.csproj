@@ -128,6 +128,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Plugins\CoinSwitch" />
 	  <Folder Include="wwwroot\vendor\bootstrap" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
@@ -141,6 +142,7 @@
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
+	  <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.CoinSwitch\BTCPayServer.Plugins.CoinSwitch.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

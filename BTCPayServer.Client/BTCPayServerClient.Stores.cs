@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client
 {
@@ -47,5 +49,33 @@ namespace BTCPayServer.Client
             return await HandleResponse<StoreData>(response);
         }
 
+        public virtual async Task UpdateStoreAdditionalDataKey(string storeId, string dataKey, JToken data,
+            CancellationToken token = default)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/data/{dataKey}", bodyPayload: data, method: HttpMethod.Put), token);
+            await HandleResponse(response);
+        }
+        
+        public virtual async Task<JToken> GetStoreAdditionalDataKey(string storeId, string dataKey,  CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/data/{dataKey}", method: HttpMethod.Get), token);
+            return await HandleResponse<JToken>(response);
+        }
+        
+        public virtual async Task<Dictionary<string, JToken>> GetStoreAdditionalData(string storeId,  CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/data", method: HttpMethod.Get), token);
+            return await HandleResponse<Dictionary<string,JToken>>(response);
+        }
+        public virtual async Task RemoveStoreAdditionalDataKey(string storeId, string dataKey,
+            CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/data/{dataKey}", method: HttpMethod.Delete), token);
+            await HandleResponse(response);
+        }
     }
 }

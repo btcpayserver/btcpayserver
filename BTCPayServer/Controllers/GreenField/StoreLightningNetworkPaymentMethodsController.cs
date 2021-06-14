@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,22 +46,31 @@ namespace BTCPayServer.Controllers.GreenField
             _cssThemeManager = cssThemeManager;
         }
 
+        public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store, BTCPayNetworkProvider networkProvider, bool enabledOnly = false)
+        {
+            var blob = store.GetStoreBlob();
+            var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
+
+            return store.GetSupportedPaymentMethods(networkProvider)
+                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
+                .OfType<LightningSupportedPaymentMethod>()
+                .Select(paymentMethod =>
+                    new LightningNetworkPaymentMethodData(
+                        paymentMethod.PaymentId.CryptoCode,
+                        paymentMethod.GetExternalLightningUrl()?.ToString() ?? paymentMethod.GetDisplayableConnectionString(), 
+                        !excludedPaymentMethods.Match(paymentMethod.PaymentId)
+                    )
+                )
+                .Where((result) => !enabledOnly || result.Enabled)
+                .ToList();
+        }
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork")]
         public ActionResult<IEnumerable<LightningNetworkPaymentMethodData>> GetLightningPaymentMethods(
             [FromQuery] bool enabledOnly = false)
         {
-            var blob = Store.GetStoreBlob();
-            var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
-            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
-                .OfType<LightningSupportedPaymentMethod>()
-                .Select(paymentMethod =>
-                    new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                        paymentMethod.GetExternalLightningUrl().ToString(), !excludedPaymentMethods.Match(paymentMethod.PaymentId)))
-                .Where((result) => !enabledOnly || result.Enabled)
-                .ToList()
-            );
+            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

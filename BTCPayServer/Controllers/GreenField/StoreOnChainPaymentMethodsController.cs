@@ -36,22 +36,27 @@ namespace BTCPayServer.Controllers.GreenField
             _walletProvider = walletProvider;
         }
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
-        public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
-            [FromQuery] bool enabledOnly = false)
+        public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store, BTCPayNetworkProvider networkProvider, bool enabledOnly = false)
         {
-            var blob = Store.GetStoreBlob();
+            var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
-            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+
+            return store.GetSupportedPaymentMethods(networkProvider)
                 .Where((method) => method.PaymentId.PaymentType == PaymentTypes.BTCLike)
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
                         strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId)))
                 .Where((result) => !enabledOnly || result.Enabled)
-                .ToList()
-            );
+                .ToList();
+        }
+
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
+        public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
+            [FromQuery] bool enabledOnly = false)
+        {
+            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

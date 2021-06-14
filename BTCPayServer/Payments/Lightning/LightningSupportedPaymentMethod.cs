@@ -8,7 +8,7 @@ namespace BTCPayServer.Payments.Lightning
     public class LightningSupportedPaymentMethod : ISupportedPaymentMethod
     {
         public const string InternalNode = "Internal Node";
-        public string? CryptoCode { get; set; }
+        public string CryptoCode { get; set; } = string.Empty;
 
         [JsonIgnore]
         public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);

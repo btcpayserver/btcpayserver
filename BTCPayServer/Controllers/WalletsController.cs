@@ -708,8 +708,7 @@ namespace BTCPayServer.Controllers
             {
                 PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
-                ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
-                NBXSeedAvailable = vm.NBXSeedAvailable
+                ChangeAddress = psbtResponse.ChangeAddress?.ToString()
             };
                 
             var routeBack = new Dictionary<string, string>

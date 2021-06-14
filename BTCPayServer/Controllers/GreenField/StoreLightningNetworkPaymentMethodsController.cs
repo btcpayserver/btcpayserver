@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,6 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,8 +56,12 @@ namespace BTCPayServer.Controllers.GreenField
                 .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
                 .OfType<LightningSupportedPaymentMethod>()
                 .Select(paymentMethod =>
-                    new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                        paymentMethod.GetExternalLightningUrl().ToString(), !excludedPaymentMethods.Match(paymentMethod.PaymentId)))
+                    new LightningNetworkPaymentMethodData(
+                        paymentMethod.PaymentId.CryptoCode,
+                        paymentMethod.GetExternalLightningUrl()?.ToString() ?? paymentMethod.GetDisplayableConnectionString(), 
+                        !excludedPaymentMethods.Match(paymentMethod.PaymentId)
+                    )
+                )
                 .Where((result) => !enabledOnly || result.Enabled)
                 .ToList()
             );

@@ -423,8 +423,7 @@ namespace BTCPayServer.Controllers
             return (await _authorizationService.CanUseHotWallet(policies, User)).HotWallet;
         }
 
-        [HttpGet]
-        [Route("{walletId}/send")]
+        [HttpGet("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string defaultDestination = null, string defaultAmount = null, string[] bip21 = null)
@@ -533,8 +532,7 @@ namespace BTCPayServer.Controllers
                     !string.IsNullOrEmpty(seed) ? seed : null;
         }
 
-        [HttpPost]
-        [Route("{walletId}/send")]
+        [HttpPost("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default, string bip21 = "")
@@ -544,7 +542,7 @@ namespace BTCPayServer.Controllers
             var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
@@ -683,16 +681,14 @@ namespace BTCPayServer.Controllers
                             "The fee rate should be above 0", this);
                 }
             }
-
             if (!ModelState.IsValid)
                 return View(vm);
- 
+            
             DerivationSchemeSettings derivationScheme = GetDerivationSchemeSettings(walletId);
-
-            CreatePSBTResponse psbt = null;
+            CreatePSBTResponse psbtResponse;
             try
             {
-                psbt = await CreatePSBT(network, derivationScheme, vm, cancellation);
+                psbtResponse = await CreatePSBT(network, derivationScheme, vm, cancellation);
             }
             catch (NBXplorerException ex)
             {
@@ -704,16 +700,24 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(string.Empty, "You need to update your version of NBXplorer");
                 return View(vm);
             }
-            derivationScheme.RebaseKeyPaths(psbt.PSBT);
 
-            var signingContext = new SigningContextModel()
+            var psbt = psbtResponse.PSBT;
+            derivationScheme.RebaseKeyPaths(psbt);
+            
+            var signingContext = new SigningContextModel
             {
                 PayJoinBIP21 = vm.PayJoinBIP21,
-                EnforceLowR = psbt.Suggestions?.ShouldEnforceLowR,
-                ChangeAddress = psbt.ChangeAddress?.ToString()
+                EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
+                ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
+                NBXSeedAvailable = vm.NBXSeedAvailable
+            };
+                
+            var routeBack = new Dictionary<string, string>
+            {
+                {"action", nameof(WalletSend)}, {"walletId", walletId.ToString()}
             };
 
-            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, signingContext);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeBack);
             if (res != null)
             {
                 return res;
@@ -724,15 +728,14 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(new WalletPSBTViewModel()
+                    return RedirectToWalletPSBT(new WalletPSBTViewModel
                     {
-                        PSBT = psbt.PSBT.ToBase64(),
+                        PSBT = psbt.ToBase64(),
                         FileName = name
                     });
                 default:
                     return View(vm);
             }
-
         }
 
         private void LoadFromBIP21(WalletSendModel vm, string bip21, BTCPayNetwork network)

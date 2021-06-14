@@ -70,8 +70,7 @@ namespace BTCPayServer.Controllers
             return psbt;
         }
 
-        [HttpGet]
-        [Route("{walletId}/psbt")]
+        [HttpGet("{walletId}/psbt")]
         public async Task<IActionResult> WalletPSBT([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm)
         {
@@ -94,8 +93,8 @@ namespace BTCPayServer.Controllers
 
             return View(nameof(WalletPSBT), vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
         }
-        [HttpPost]
-        [Route("{walletId}/psbt")]
+
+        [HttpPost("{walletId}/psbt")]
         public async Task<IActionResult> WalletPSBT(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
@@ -120,7 +119,12 @@ namespace BTCPayServer.Controllers
             }
 
             vm.PSBTHex = psbt.ToHex();
-            var res = await TryHandleSigningCommands(walletId, psbt, command, new SigningContextModel(psbt));
+            vm.SigningContext.NBXSeedAvailable = vm.NBXSeedAvailable;
+            var routeBack = new Dictionary<string, string>
+            {
+                {"action", nameof(WalletPSBT)}, {"walletId", walletId.ToString()}
+            };
+            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext, routeBack);
             if (res != null)
             {
                 return res;
@@ -145,7 +149,7 @@ namespace BTCPayServer.Controllers
                         return View(vm);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
-                    return RedirectToWalletPSBT(new WalletPSBTViewModel()
+                    return RedirectToWalletPSBT(new WalletPSBTViewModel
                     {
                         PSBT = psbt.ToBase64(),
                         FileName = vm.FileName
@@ -153,14 +157,14 @@ namespace BTCPayServer.Controllers
 
                 case "broadcast":
                     {
-                        return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+                        return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
                         {
                             SigningContext = new SigningContextModel(psbt)
                         });
                     }
                 case "combine":
                     ModelState.Remove(nameof(vm.PSBT));
-                    return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel() { OtherPSBT = psbt.ToBase64() });
+                    return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel { OtherPSBT = psbt.ToBase64() });
                 case "save-psbt":
                     return FilePSBT(psbt, vm.FileName);
                 default:
@@ -176,8 +180,7 @@ namespace BTCPayServer.Controllers
             return await _payjoinClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, cancellationToken);
         }
 
-        [HttpGet]
-        [Route("{walletId}/psbt/ready")]
+        [HttpGet("{walletId}/psbt/ready")]
         public async Task<IActionResult> WalletPSBTReady(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
@@ -299,8 +302,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("{walletId}/psbt/ready")]
+        [HttpPost("{walletId}/psbt/ready")]
         public async Task<IActionResult> WalletPSBTReady(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTReadyViewModel vm, string command = null, CancellationToken cancellationToken = default)
@@ -450,8 +452,7 @@ namespace BTCPayServer.Controllers
             return File(psbt.ToBytes(), "application/octet-stream", fileName);
         }
 
-        [HttpPost]
-        [Route("{walletId}/psbt/combine")]
+        [HttpPost("{walletId}/psbt/combine")]
         public async Task<IActionResult> WalletPSBTCombine([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTCombineViewModel vm)
         {
@@ -477,11 +478,13 @@ namespace BTCPayServer.Controllers
         }
 
         private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
-            SigningContextModel signingContext)
+            SigningContextModel signingContext, Dictionary<string, string> routeBack)
         {
             signingContext.PSBT = psbt.ToBase64();
             switch (command)
             {
+                case "sign":
+                    return View("WalletSigningOptions", new WalletSigningOptionsModel(signingContext, routeBack));
                 case "vault":
                     return ViewVault(walletId, signingContext);
                 case "seed":
@@ -496,10 +499,10 @@ namespace BTCPayServer.Controllers
                                 .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                                     WellknownMetadataKeys.MasterHDKey);
                             return SignWithSeed(walletId,
-                                new SignWithSeedViewModel() { SeedOrKey = extKey, SigningContext = signingContext });
+                                new SignWithSeedViewModel { SeedOrKey = extKey, SigningContext = signingContext });
                         }
                     }
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "NBX seed functionality is not available"

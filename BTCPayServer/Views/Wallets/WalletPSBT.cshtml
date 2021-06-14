@@ -46,13 +46,13 @@
         @if (!string.IsNullOrEmpty(Model.Decoded))
         {
             <div class="form-group">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="CryptoCode"/>
                     <input type="hidden" asp-for="NBXSeedAvailable"/>
                     <input type="hidden" asp-for="PSBT"/>
                     <input type="hidden" asp-for="FileName"/>
                     <div class="d-flex">
-                        <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
+                        <button type="submit" id="SignTransaction" name="command" value="@(Model.SigningContext.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary">Sign transaction</button>
                         <div class="ms-2 dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...
@@ -81,10 +81,10 @@
                 <label asp-for="UploadedPSBTFile" class="form-label"></label>
                 <input asp-for="UploadedPSBTFile" type="file" class="form-control">
             </div>
-            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
+            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
+            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
                 <i class="fa fa-camera"></i>
             </button>
-            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
         </form>
     </div>
 </div>

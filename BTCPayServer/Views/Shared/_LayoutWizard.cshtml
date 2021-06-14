@@ -1,0 +1,26 @@
+﻿@{
+    Layout = "_LayoutSimple";
+}
+
+@section PageHeadContent {
+    <link href="~/main/wizard.css" rel="stylesheet" asp-append-version="true" />
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
+<nav id="wizard-navbar">
+    @await RenderSectionAsync("Navbar", false)
+</nav>
+
+<div class="row justify-content-md-center mt-5 pt-sm-3 pt-md-0">
+    <main class="col-md-10 col-lg-8 col-xl-7">
+        <partial name="_StatusMessage" />
+        @RenderBody()
+    </main>
+</div>
+
+
+

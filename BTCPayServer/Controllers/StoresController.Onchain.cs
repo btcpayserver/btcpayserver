@@ -375,7 +375,6 @@ namespace BTCPayServer.Controllers
             }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
-            var isHotWallet = await IsHotWallet(vm.CryptoCode, derivation);
 
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
@@ -386,13 +385,13 @@ namespace BTCPayServer.Controllers
             vm.DerivationScheme = derivation.AccountDerivation.ToString();
             vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
             vm.Config = ProtectString(derivation.ToJson());
-            vm.IsHotWallet = isHotWallet;
+            vm.IsHotWallet = derivation.IsHotWallet;
 
             return View(vm);
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
-        public async Task<IActionResult> ReplaceWallet(string storeId, string cryptoCode)
+        public ActionResult ReplaceWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
@@ -401,9 +400,8 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            var isHotWallet = await IsHotWallet(cryptoCode, derivation);
-            var walletType = isHotWallet ? "hot" : "watch-only";
-            var additionalText = isHotWallet
+            var walletType = derivation.IsHotWallet ? "hot" : "watch-only";
+            var additionalText = derivation.IsHotWallet
                 ? ""
                 : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             var description =
@@ -440,7 +438,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
-        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode)
+        public ActionResult DeleteWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
@@ -449,9 +447,8 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            var isHotWallet = await IsHotWallet(cryptoCode, derivation);
-            var walletType = isHotWallet ? "hot" : "watch-only";
-            var additionalText = isHotWallet
+            var walletType = derivation.IsHotWallet ? "hot" : "watch-only";
+            var additionalText = derivation.IsHotWallet
                 ? ""
                 : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             var description =
@@ -586,12 +583,6 @@ namespace BTCPayServer.Controllers
             {
                 return await stream.ReadToEndAsync();
             }
-        }
-
-        private async Task<bool> IsHotWallet(string cryptoCode, DerivationSchemeSettings derivation)
-        {
-            return derivation.IsHotWallet && await _ExplorerProvider.GetExplorerClient(cryptoCode)
-                .GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) != null;
         }
     }
 }

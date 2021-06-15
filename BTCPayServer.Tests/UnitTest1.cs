@@ -1131,8 +1131,8 @@ namespace BTCPayServer.Tests
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
-                    acc.ModifyStore(s => s.SpeedPolicy = SpeedPolicy.LowSpeed);
-                    var invoice = acc.BitPay.CreateInvoice(new Invoice()
+                    await acc.ModifyStore(s => s.SpeedPolicy = SpeedPolicy.LowSpeed);
+                    var invoice = acc.BitPay.CreateInvoice(new Invoice
                     {
                         Price = 5.0m,
                         Currency = "USD",

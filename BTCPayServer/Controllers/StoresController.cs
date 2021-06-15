@@ -587,9 +587,7 @@ namespace BTCPayServer.Controllers
             vm.CanUsePayJoin = canUseHotWallet && store
                 .GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<DerivationSchemeSettings>()
-                .Any(settings => settings.Network.SupportPayJoin &&
-                                 !string.IsNullOrEmpty(_ExplorerProvider.GetExplorerClient(settings.Network)
-                                     .GetMetadata<string>(settings.AccountDerivation, WellknownMetadataKeys.Mnemonic)));
+                .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet);
             
             return View(vm);
         }
@@ -638,11 +636,7 @@ namespace BTCPayServer.Controllers
                 {
                     var problematicPayjoinEnabledMethods = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
                         .OfType<DerivationSchemeSettings>()
-                        .Where(settings =>
-                            settings.Network.SupportPayJoin &&
-                            string.IsNullOrEmpty(_ExplorerProvider.GetExplorerClient(settings.Network)
-                                .GetMetadata<string>(settings.AccountDerivation,
-                                    WellknownMetadataKeys.Mnemonic)))
+                        .Where(settings => settings.Network.SupportPayJoin && !settings.IsHotWallet)
                         .Select(settings => settings.PaymentId.CryptoCode)
                         .ToArray();
 

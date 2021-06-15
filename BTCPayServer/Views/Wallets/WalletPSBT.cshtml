@@ -52,7 +52,7 @@
                     <input type="hidden" asp-for="PSBT"/>
                     <input type="hidden" asp-for="FileName"/>
                     <div class="d-flex">
-                        <button type="submit" id="SignTransaction" name="command" value="@(Model.SigningContext.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary">Sign transaction</button>
+                        <button type="submit" id="SignTransaction" name="command" value="@(Model.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary">Sign transaction</button>
                         <div class="ms-2 dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...

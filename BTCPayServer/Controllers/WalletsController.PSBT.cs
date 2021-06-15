@@ -119,7 +119,6 @@ namespace BTCPayServer.Controllers
             }
 
             vm.PSBTHex = psbt.ToHex();
-            vm.SigningContext.NBXSeedAvailable = vm.NBXSeedAvailable;
             var routeBack = new Dictionary<string, string>
             {
                 {"action", nameof(WalletPSBT)}, {"walletId", walletId.ToString()}

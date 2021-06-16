@@ -20,6 +20,16 @@
     white-space: nowrap;
 }
 
+td.url{
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    td.actions {
+        white-space: nowrap;
+    }
+}
+
 @media (min-width: 768px) {
     .wraptextAuto {
         max-width: 600px;

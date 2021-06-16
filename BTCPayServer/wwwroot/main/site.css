@@ -21,7 +21,7 @@
 }
 
 @media (min-width: 768px) {
-    .text-sm-nowrap {
+    .text-md-nowrap {
         white-space: nowrap;
     }
 }

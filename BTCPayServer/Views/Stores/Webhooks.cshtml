@@ -26,7 +26,7 @@
         @foreach (var wh in Model.Webhooks)
         {
             <tr>
-                <td class="d-block url">@wh.Url</td>
+                <td class="d-block text-break">@wh.Url</td>
                 <td class="text-end actions">
                     <a asp-action="TestWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
                     <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - 

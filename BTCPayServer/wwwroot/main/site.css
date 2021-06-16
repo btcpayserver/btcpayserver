@@ -21,7 +21,7 @@
 }
 
 @media (min-width: 768px) {
-    td.actions {
+    .sm\:text-nowrap {
         white-space: nowrap;
     }
 }

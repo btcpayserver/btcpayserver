@@ -189,8 +189,8 @@ namespace BTCPayServer.Tests
             };
 
             await store.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
-            Assert.NotNull(store.GenerateWalletResponseV);
-            GenerateWalletResponseV = store.GenerateWalletResponseV;
+            Assert.NotNull(store.GenerateWalletResponse);
+            GenerateWalletResponseV = store.GenerateWalletResponse;
             return new WalletId(StoreId, cryptoCode);
         }
 

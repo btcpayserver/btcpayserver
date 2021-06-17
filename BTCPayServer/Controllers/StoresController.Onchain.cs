@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -135,7 +136,7 @@ namespace BTCPayServer.Controllers
             }
             else if (!string.IsNullOrEmpty(vm.Config))
             {
-                if (!DerivationSchemeSettings.TryParseFromJson(vm.Config, network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromJson(UnprotectString(vm.Config), network, out strategy))
                 {
                     ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
                     return View(vm.ViewName, vm);
@@ -148,7 +149,7 @@ namespace BTCPayServer.Controllers
                 return View(vm.ViewName, vm);
             }
 
-            vm.Config = strategy.ToJson();
+            vm.Config = ProtectString(strategy.ToJson());
             ModelState.Remove(nameof(vm.Config));
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
@@ -178,6 +179,15 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UpdateStore), new { storeId = vm.StoreId });
             }
             return ConfirmAddresses(vm, strategy);
+        }
+
+        private string ProtectString(string str)
+        {
+            return Convert.ToBase64String(DataProtector.Protect(Encoding.UTF8.GetBytes(str)));
+        }
+        private string UnprotectString(string str)
+        {
+            return Encoding.UTF8.GetString(DataProtector.Unprotect(Convert.FromBase64String(str)));
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
@@ -212,7 +222,7 @@ namespace BTCPayServer.Controllers
 
             return View(vm.ViewName, vm);
         }
-        internal GenerateWalletResponse GenerateWalletResponseV;
+        internal GenerateWalletResponse GenerateWalletResponse;
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, GenerateWalletRequest request)
         {
@@ -290,7 +300,7 @@ namespace BTCPayServer.Controllers
             derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();
 
             // Set wallet properties from generate response
-            vm.Config = derivationSchemeSettings.ToJson();
+            vm.Config = ProtectString(derivationSchemeSettings.ToJson());
 
 
             var result = await UpdateWallet(vm);
@@ -315,7 +325,7 @@ namespace BTCPayServer.Controllers
                 };
                 if (this._BTCPayEnv.IsDeveloping)
                 {
-                    GenerateWalletResponseV = response;
+                    GenerateWalletResponse = response;
                 }
                 return this.RedirectToRecoverySeedBackup(seedVm);
             }
@@ -370,7 +380,7 @@ namespace BTCPayServer.Controllers
             vm.RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString();
             vm.DerivationScheme = derivation.AccountDerivation.ToString();
             vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
-            vm.Config = derivation.ToJson();
+            vm.Config = ProtectString(derivation.ToJson());
             vm.IsHotWallet = isHotWallet;
 
             return View(vm);

@@ -1088,7 +1088,9 @@ namespace BTCPayServer.Controllers
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
                 SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString(),
-                NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                NBXSeedAvailable = derivationSchemeSettings.IsHotWallet && 
+                                   await CanUseHotWallet() &&
+                                   !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                     .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                         WellknownMetadataKeys.MasterHDKey))
             };

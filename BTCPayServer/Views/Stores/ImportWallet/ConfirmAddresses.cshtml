@@ -50,7 +50,6 @@
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="DerivationScheme" type="hidden"/>
-    <input asp-for="Enabled" type="hidden"/>
 
     <div class="form-group">
         <table class="table table-sm table-responsive-md">
@@ -81,21 +80,6 @@
             }
             </tbody>
         </table>
-    </div>
-
-    <div class="text-center mb-4">
-        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#wrong-addresses" aria-expanded="false" aria-controls="wrong-addresses">
-            Wrong addresses?
-        </button>
-        <div id="wrong-addresses" class="collapse @(ViewContext.ModelState.IsValid ? "" : "show")">
-            <div class="pb-1">
-                <div class="form-group">
-                    <label asp-for="HintAddress" class="form-label">Help us to find the correct settings by telling us the first address of your wallet.</label>
-                    <input asp-for="HintAddress" class="form-control"/>
-                    <span asp-validation-for="HintAddress" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="text-center">

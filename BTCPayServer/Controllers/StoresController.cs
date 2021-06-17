@@ -27,6 +27,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -69,7 +70,8 @@ namespace BTCPayServer.Controllers
             AppService appService,
             IWebHostEnvironment webHostEnvironment,
             WebhookNotificationManager webhookNotificationManager,
-            IOptions<LightningNetworkOptions> lightningNetworkOptions)
+            IOptions<LightningNetworkOptions> lightningNetworkOptions,
+            IDataProtectionProvider dataProtector)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -85,6 +87,7 @@ namespace BTCPayServer.Controllers
             _appService = appService;
             _webHostEnvironment = webHostEnvironment;
             _lightningNetworkOptions = lightningNetworkOptions;
+            DataProtector = dataProtector.CreateProtector("ConfigProtector");
             WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
@@ -689,10 +692,9 @@ namespace BTCPayServer.Controllers
 
         }
 
-        private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
+        private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
         {
             var parser = new DerivationSchemeParser(network);
-            parser.HintScriptPubKey = hint;
             try
             {
                 var derivationSchemeSettings = new DerivationSchemeSettings();
@@ -827,6 +829,7 @@ namespace BTCPayServer.Controllers
 
         public string GeneratedPairingCode { get; set; }
         public WebhookNotificationManager WebhookNotificationManager { get; }
+        public IDataProtector DataProtector { get; }
 
         [HttpGet]
         [Route("{storeId}/Tokens/Create")]

@@ -179,30 +179,18 @@ namespace BTCPayServer.Tests
             if (StoreId is null)
                 await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
-            GenerateWalletResponseV = await parent.ExplorerClient.GenerateWalletAsync(new GenerateWalletRequest()
+            var store = parent.PayTester.GetController<StoresController>(UserId, StoreId, true);
+
+            var generateRequest = new GenerateWalletRequest()
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
                 ImportKeysToRPC = importsKeysToBitcoinCore
-            });
-            await store.UpdateWallet(
-                new WalletSetupViewModel
-                {
-                    StoreId = StoreId,
-                    Method = importKeysToNBX ? WalletSetupMethod.HotWallet : WalletSetupMethod.WatchOnly,
-                    Enabled = true,
-                    CryptoCode = cryptoCode,
-                    Network = SupportedNetwork,
-                    RootFingerprint = GenerateWalletResponseV.AccountKeyPath.MasterFingerprint.ToString(),
-                    RootKeyPath = SupportedNetwork.GetRootKeyPath(),
-                    Source = "NBXplorer",
-                    AccountKey = GenerateWalletResponseV.AccountHDKey.Neuter().ToWif(),
-                    DerivationSchemeFormat = "BTCPay",
-                    KeyPath = GenerateWalletResponseV.AccountKeyPath.KeyPath.ToString(),
-                    DerivationScheme = DerivationScheme.ToString(),
-                    Confirmation = true
-                });
+            };
+
+            await store.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
+            Assert.NotNull(store.GenerateWalletResponse);
+            GenerateWalletResponseV = store.GenerateWalletResponse;
             return new WalletId(StoreId, cryptoCode);
         }
 

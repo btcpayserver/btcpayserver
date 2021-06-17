@@ -276,8 +276,8 @@ namespace BTCPayServer
         [JsonIgnore]
         public BTCPayNetwork Network { get; set; }
         public string Source { get; set; }
-        [JsonIgnore]
-        public bool IsHotWallet => Source == "NBXplorer";
+
+        public bool IsHotWallet { get; set; }
 
         [Obsolete("Use GetSigningAccountKeySettings().AccountKeyPath instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]

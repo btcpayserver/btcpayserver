@@ -21,6 +21,12 @@
 }
 
 @media (min-width: 768px) {
+    .text-md-nowrap {
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 768px) {
     .wraptextAuto {
         max-width: 600px;
     }

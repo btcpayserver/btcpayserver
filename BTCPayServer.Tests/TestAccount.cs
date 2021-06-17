@@ -191,7 +191,6 @@ namespace BTCPayServer.Tests
                 {
                     StoreId = StoreId,
                     Method = importKeysToNBX ? WalletSetupMethod.HotWallet : WalletSetupMethod.WatchOnly,
-                    Enabled = true,
                     CryptoCode = cryptoCode,
                     Network = SupportedNetwork,
                     RootFingerprint = GenerateWalletResponseV.AccountKeyPath.MasterFingerprint.ToString(),

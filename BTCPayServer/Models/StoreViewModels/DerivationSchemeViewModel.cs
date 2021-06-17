@@ -21,7 +21,6 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Root fingerprint")]
         public string RootFingerprint { get; set; }
         public bool Confirmation { get; set; }
-        public bool Enabled { get; set; } = true;
 
         public KeyPath RootKeyPath { get; set; }
 

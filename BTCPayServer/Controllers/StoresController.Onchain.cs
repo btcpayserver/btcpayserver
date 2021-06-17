@@ -157,7 +157,6 @@ namespace BTCPayServer.Controllers
             var configChanged = oldConfig != vm.Config;
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var storeBlob = store.GetStoreBlob();
-            var willBeExcluded = !vm.Enabled;
 
             var showAddress = // Show addresses if:
                 // - The user is clicking on continue after changing the config
@@ -171,7 +170,7 @@ namespace BTCPayServer.Controllers
                     if (strategy != null)
                         await wallet.TrackAsync(strategy.AccountDerivation);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
-                    storeBlob.SetExcluded(paymentMethodId, willBeExcluded);
+                    storeBlob.SetExcluded(paymentMethodId, false);
                     storeBlob.Hints.Wallet = false;
                     store.SetStoreBlob(storeBlob);
                 }
@@ -215,7 +214,6 @@ namespace BTCPayServer.Controllers
                 vm.Config = derivation.ToJson();
             }
 
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.RootKeyPath = network.GetRootKeyPath();
@@ -259,7 +257,6 @@ namespace BTCPayServer.Controllers
                 Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
                 Network = network,
                 RootKeyPath = network.GetRootKeyPath(),
-                Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike)),
                 Source = "NBXplorer",
                 DerivationSchemeFormat = "BTCPay",
                 CanUseHotWallet = true,
@@ -371,7 +368,6 @@ namespace BTCPayServer.Controllers
             vm.DerivationScheme = derivation.AccountDerivation.ToString();
             vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
             vm.Config = derivation.ToJson();
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
             vm.IsHotWallet = isHotWallet;
 
             return View(vm);

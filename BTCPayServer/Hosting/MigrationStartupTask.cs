@@ -128,12 +128,32 @@ namespace BTCPayServer.Hosting
                     settings.MigrateU2FToFIDO2 = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateHotwalletProperty)
+                {
+                    await MigrateHotwalletProperty();
+                    settings.MigrateHotwalletProperty = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateHotwalletProperty()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+            {
+                foreach (var paymentMethod in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<DerivationSchemeSettings>())
+                {
+                    paymentMethod.IsHotWallet = paymentMethod.Source == "NBXplorer";
+                    paymentMethod.Source = "NBXplorerGenerated";
+                }
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateU2FToFIDO2()

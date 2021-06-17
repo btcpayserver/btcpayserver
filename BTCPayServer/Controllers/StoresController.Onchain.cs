@@ -14,6 +14,7 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -257,7 +258,8 @@ namespace BTCPayServer.Controllers
                 Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
                 Network = network,
                 RootKeyPath = network.GetRootKeyPath(),
-                Source = "NBXplorer",
+                Source = isImport ? "SeedImported" : "NBXplorerGenerated",
+                IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
                 DerivationSchemeFormat = "BTCPay",
                 CanUseHotWallet = true,
                 CanUseRPCImport = rpcImport

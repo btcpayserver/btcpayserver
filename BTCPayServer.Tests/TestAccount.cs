@@ -175,7 +175,7 @@ namespace BTCPayServer.Tests
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId, true);
 
-            var generateRequest = new GenerateWalletRequest()
+            var generateRequest = new WalletSetupRequest
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,

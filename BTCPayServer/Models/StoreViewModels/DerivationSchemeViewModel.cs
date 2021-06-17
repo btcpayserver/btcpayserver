@@ -20,8 +20,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string KeyPath { get; set; }
         [Display(Name = "Root fingerprint")]
         public string RootFingerprint { get; set; }
-        [Display(Name = "Hint address")]
-        public string HintAddress { get; set; }
         public bool Confirmation { get; set; }
         public bool Enabled { get; set; } = true;
 

@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, network);
                     if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
                     {
                         var accountKey = string.IsNullOrEmpty(vm.AccountKey)
@@ -160,8 +160,6 @@ namespace BTCPayServer.Controllers
             var willBeExcluded = !vm.Enabled;
 
             var showAddress = // Show addresses if:
-                // - If the user is testing the hint address in confirmation screen
-                (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                 // - The user is clicking on continue after changing the config
                 (!vm.Confirmation && configChanged);
 
@@ -191,42 +189,6 @@ namespace BTCPayServer.Controllers
                 // This is success case when derivation scheme is added to the store
                 return RedirectToAction(nameof(UpdateStore), new {storeId = vm.StoreId});
             }
-
-            if (!string.IsNullOrEmpty(vm.HintAddress))
-            {
-                BitcoinAddress address;
-                try
-                {
-                    address = BitcoinAddress.Create(vm.HintAddress, network.NBitcoinNetwork);
-                }
-                catch
-                {
-                    ModelState.AddModelError(nameof(vm.HintAddress), "Invalid hint address");
-                    return ConfirmAddresses(vm, strategy);
-                }
-
-                try
-                {
-                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
-                    if (newStrategy.AccountDerivation != strategy.AccountDerivation)
-                    {
-                        strategy.AccountDerivation = newStrategy.AccountDerivation;
-                        strategy.AccountOriginal = null;
-                    }
-                }
-                catch
-                {
-                    ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address. Are you sure the wallet and address provided are correct and from the same source?");
-                    return ConfirmAddresses(vm, strategy);
-                }
-
-                vm.HintAddress = "";
-                TempData[WellKnownTempData.SuccessMessage] =
-                    "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
-                ModelState.Remove(nameof(vm.HintAddress));
-                ModelState.Remove(nameof(vm.DerivationScheme));
-            }
-
             return ConfirmAddresses(vm, strategy);
         }
 

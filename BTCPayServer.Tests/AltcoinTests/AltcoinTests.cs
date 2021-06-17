@@ -954,28 +954,6 @@ normal:
 
             result = testnetParser.Parse(tpub);
             Assert.Equal(tpub, result.ToString());
-            testnetParser.HintScriptPubKey = BitcoinAddress
-                .Create("tb1q4s33amqm8l7a07zdxcunqnn3gcsjcfz3xc573l", testnetParser.Network).ScriptPubKey;
-            result = testnetParser.Parse(tpub);
-            Assert.Equal(tpub, result.ToString());
-
-            testnetParser.HintScriptPubKey = BitcoinAddress
-                .Create("2N2humNio3YTApSfY6VztQ9hQwDnhDvaqFQ", testnetParser.Network).ScriptPubKey;
-            result = testnetParser.Parse(tpub);
-            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
-
-            testnetParser.HintScriptPubKey = BitcoinAddress
-                .Create("mwD8bHS65cdgUf6rZUUSoVhi3wNQFu1Nfi", testnetParser.Network).ScriptPubKey;
-            result = testnetParser.Parse(tpub);
-            Assert.Equal($"{tpub}-[legacy]", result.ToString());
-
-            testnetParser.HintScriptPubKey = BitcoinAddress
-                .Create("2N2humNio3YTApSfY6VztQ9hQwDnhDvaqFQ", testnetParser.Network).ScriptPubKey;
-            result = testnetParser.Parse($"{tpub}-[legacy]");
-            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
-
-            result = testnetParser.Parse(tpub);
-            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
 
             var regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var parsed =

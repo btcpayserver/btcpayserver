@@ -186,7 +186,7 @@ namespace BTCPayServer.Controllers
                 await _Repo.UpdateStore(store);
                 _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(vm.StoreId, vm.CryptoCode)});
 
-                TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} have been updated.";
+                TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
                 return RedirectToAction(nameof(UpdateStore), new {storeId = vm.StoreId});
@@ -377,7 +377,7 @@ namespace BTCPayServer.Controllers
                 return checkResult;
             }
 
-            TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} have been updated.";
+            TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }

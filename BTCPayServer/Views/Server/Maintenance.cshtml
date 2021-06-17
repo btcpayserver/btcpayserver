@@ -24,15 +24,15 @@
             </div>
 
             <h4 class="mt-5 mb-3">Update</h4>
-            <p class="text-secondary">Update to the latest version of BTCPay server.</p>
+            <p class="text-secondary">Update to the latest version of BTCPay Server.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
                 </div>
             </div>
-            
+
             <h4 class="mt-5 mb-3">Restart</h4>
-            <p class="text-secondary">Restart BTCPay server and related services.</p>
+            <p class="text-secondary">Restart BTCPay Server and related services.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>
@@ -40,7 +40,7 @@
             </div>
 
             <h4 class="mt-5 mb-3">Clean</h4>
-            <p class="text-secondary">Delete unused docker images present on your system.</p>
+            <p class="text-secondary">Delete unused Docker images present on your system.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")">Clean</button>

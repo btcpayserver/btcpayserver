@@ -20,8 +20,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string KeyPath { get; set; }
         [Display(Name = "Root fingerprint")]
         public string RootFingerprint { get; set; }
-        [Display(Name = "Hint address")]
-        public string HintAddress { get; set; }
         public bool Confirmation { get; set; }
         public bool Enabled { get; set; } = true;
 
@@ -31,7 +29,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public IFormFile WalletFile { get; set; }
         [Display(Name = "Wallet file content")]
         public string WalletFileContent { get; set; }
-        public string Config { get; set; }
         public string Source { get; set; }
         [Display(Name = "Derivation scheme format")]
         public string DerivationSchemeFormat { get; set; }

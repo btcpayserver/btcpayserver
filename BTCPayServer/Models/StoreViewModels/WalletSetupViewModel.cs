@@ -22,8 +22,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string StoreId { get; set; }
         public bool IsHotWallet { get; set; }
 
-        public string ViewName =>
-            Method switch
+        public static string GetViewName(WalletSetupMethod? method) =>
+            method switch
             {
                 WalletSetupMethod.ImportOptions => "ImportWalletOptions",
                 WalletSetupMethod.Hardware => "ImportWallet/Hardware",
@@ -36,5 +36,7 @@ namespace BTCPayServer.Models.StoreViewModels
                 WalletSetupMethod.WatchOnly => "GenerateWallet",
                 _ => "SetupWallet"
             };
+        public string ViewName => GetViewName(Method);
+            
     }
 }

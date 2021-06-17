@@ -713,7 +713,10 @@ namespace BTCPayServer.Controllers
                 // ignored
             }
             
-            return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
+            return new DerivationSchemeSettings(parser.Parse(derivationScheme), network)
+            {
+                Source = "ManualDerivationScheme"
+            };
         }
 
         [HttpGet]

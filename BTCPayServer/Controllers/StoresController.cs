@@ -466,7 +466,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             
-
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -558,12 +557,9 @@ namespace BTCPayServer.Controllers
                 }
             }
         }
-
-
-
-        [HttpGet]
-        [Route("{storeId}")]
-        public IActionResult UpdateStore()
+        
+        [HttpGet("{storeId}")]
+        public async Task<IActionResult> UpdateStore()
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -586,12 +582,17 @@ namespace BTCPayServer.Controllers
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             vm.HintWallet = storeBlob.Hints.Wallet;
             vm.HintLightning = storeBlob.Hints.Lightning;
+            
+            (bool canUseHotWallet, _) = await CanUseHotWallet();
+            vm.CanUsePayJoin = canUseHotWallet && store
+                .GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<DerivationSchemeSettings>()
+                .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet);
+            
             return View(vm);
         }
-
-
-        [HttpPost]
-        [Route("{storeId}")]
+        
+        [HttpPost("{storeId}")]
         public async Task<IActionResult> UpdateStore(StoreViewModel model, string command = null)
         {
             bool needUpdate = false;
@@ -635,11 +636,7 @@ namespace BTCPayServer.Controllers
                 {
                     var problematicPayjoinEnabledMethods = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
                         .OfType<DerivationSchemeSettings>()
-                        .Where(settings =>
-                            settings.Network.SupportPayJoin &&
-                            string.IsNullOrEmpty(_ExplorerProvider.GetExplorerClient(settings.Network)
-                                .GetMetadata<string>(settings.AccountDerivation,
-                                    WellknownMetadataKeys.Mnemonic)))
+                        .Where(settings => settings.Network.SupportPayJoin && !settings.IsHotWallet)
                         .Select(settings => settings.PaymentId.CryptoCode)
                         .ToArray();
 

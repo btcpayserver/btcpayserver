@@ -77,7 +77,7 @@ namespace BTCPayServer.Tests
 
                 // Get enabled state from overview action
                 StoreViewModel storeModel;
-                response = controller.UpdateStore();
+                response = await controller.UpdateStore();
                 storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
                 var lnNode = storeModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
                 Assert.NotNull(lnNode);
@@ -85,11 +85,11 @@ namespace BTCPayServer.Tests
 
                 WalletSetupViewModel setupVm;
                 var storeId = user.StoreId;
-                response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new GenerateWalletRequest());
+                response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new WalletSetupRequest());
                 Assert.IsType<ViewResult>(response);
 
                 // Get enabled state from overview action
-                response = controller.UpdateStore();
+                response = await controller.UpdateStore();
                 storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
                 var derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);
@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
                 // Disable wallet
                 response = controller.SetWalletEnabled(storeId, cryptoCode, false).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.UpdateStore();
+                response = await controller.UpdateStore();
                 storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
                 derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);

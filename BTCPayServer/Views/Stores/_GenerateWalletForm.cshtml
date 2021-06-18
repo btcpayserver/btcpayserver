@@ -1,5 +1,5 @@
 @using NBitcoin
-@model NBXplorer.Models.GenerateWalletRequest
+@model WalletSetupRequest
 
 @{
     var method = ViewData["Method"];
@@ -55,6 +55,22 @@
     else
     {
         <input asp-for="SavePrivateKeys" type="hidden" value="@isHotWallet" />
+
+        @if (Model.CanUsePayJoin)
+        {
+            <div class="form-group mt-4">
+                <label asp-for="PayJoinEnabled">Enable PayJoin</label>
+                <input type="checkbox" asp-for="PayJoinEnabled" class="btcpay-toggle ml-2" />
+                <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                <p class="text-muted pt-2">
+                    PayJoin enhances the privacy for you and your customers.
+                    Enabling it gives your customers the option to use PayJoin during checkout.
+                    <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </p>
+            </div>
+        }
     }
 
     <div class="mb-4">

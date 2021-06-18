@@ -571,13 +571,16 @@
                         "description": "Which event should be received by this endpoint",
                         "properties": {
                             "everything": {
-                                "type": "string",
+                                "type": "boolean",
                                 "description": "If true, the endpoint will receive all events related to the store.",
                                 "nullable": false,
                                 "default": true
                             },
                             "specificEvents": {
-                                "type": "string",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
                                 "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`.",
                                 "nullable": false
                             }

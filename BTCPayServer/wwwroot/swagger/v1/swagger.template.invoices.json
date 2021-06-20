@@ -176,7 +176,7 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to view the specified invoie"
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
                     },
                     "404": {
                         "description": "The key is not found for this invoice"
@@ -377,7 +377,7 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to view the specified invoie"
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
                     },
                     "404": {
                         "description": "The key is not found for this invoice"

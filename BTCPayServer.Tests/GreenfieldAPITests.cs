@@ -1019,7 +1019,7 @@ namespace BTCPayServer.Tests
                         RedirectAutomatically = true
                     }});
                 Assert.True(newInvoice.Checkout.RedirectAutomatically);
-                
+                Assert.Equal(user.StoreId, newInvoice.StoreId);
                 //list 
                 var invoices = await viewOnly.GetInvoices(user.StoreId);
 

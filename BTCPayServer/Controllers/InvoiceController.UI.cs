@@ -831,6 +831,13 @@ namespace BTCPayServer.Controllers
                     FullNotifications = true,
                     BuyerEmail = model.BuyerEmail,
                     BuyerName =  model.BuyerName,
+                    BuyerPhone =  model.BuyerPhone,
+                    BuyerAddress1 = model.BuyerAddress1,
+                    BuyerAddress2 = model.BuyerAddress2,
+                    BuyerZip = model.BuyerZip,
+                    BuyerCity = model.BuyerCity,
+                    BuyerState = model.BuyerState,
+                    BuyerCountry = model.BuyerCountry,
                     SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
                     {
                         Enabled = true

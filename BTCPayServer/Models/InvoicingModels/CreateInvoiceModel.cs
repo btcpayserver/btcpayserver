@@ -63,6 +63,48 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
+        
+        [DisplayName("Buyer Phone")]
+        public string BuyerPhone
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer Address 1")]
+        public string BuyerAddress1
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer Address 2")]
+        public string BuyerAddress2
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer City")]
+        public string BuyerCity
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer State")]
+        public string BuyerState
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer Country")]
+        public string BuyerCountry
+        {
+            get; set;
+        }
+        
+        [DisplayName("Buyer Zip")]
+        public string BuyerZip
+        {
+            get; set;
+        }
 
         [Uri]
         [DisplayName("Notification Url")]

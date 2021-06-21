@@ -25,45 +25,61 @@
             <div class="col-lg-12">
                 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="Amount" class="form-label" data-required></label>
-                        <input asp-for="Amount" class="form-control" required />
-                        <span asp-validation-for="Amount" class="text-danger"></span>
+                    
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label asp-for="StoreId" class="form-label"></label>
+                            <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
+                            <span asp-validation-for="StoreId" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label asp-for="OrderId" class="form-label"></label>
+                            <input asp-for="OrderId" class="form-control" />
+                            <span asp-validation-for="OrderId" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Currency" class="form-label" data-required></label>
-                        <input asp-for="Currency" class="form-control" required />
-                        <span asp-validation-for="Currency" class="text-danger"></span>
+                    
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label asp-for="Amount" class="form-label" data-required></label>
+                            <input asp-for="Amount" class="form-control" required />
+                            <span asp-validation-for="Amount" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label asp-for="Currency" class="form-label" data-required></label>
+                            <input asp-for="Currency" class="form-control" required />
+                            <span asp-validation-for="Currency" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="OrderId" class="form-label"></label>
-                        <input asp-for="OrderId" class="form-control" />
-                        <span asp-validation-for="OrderId" class="text-danger"></span>
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label asp-for="ItemDesc" class="form-label"></label>
+                            <input asp-for="ItemDesc" class="form-control" />
+                            <span asp-validation-for="ItemDesc" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label asp-for="PosData" class="form-label"></label>
+                            <input asp-for="PosData" class="form-control" />
+                            <span asp-validation-for="PosData" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="ItemDesc" class="form-label"></label>
-                        <input asp-for="ItemDesc" class="form-control" />
-                        <span asp-validation-for="ItemDesc" class="text-danger"></span>
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label asp-for="BuyerEmail" class="form-label"></label>
+                            <input asp-for="BuyerEmail" class="form-control" />
+                            <span asp-validation-for="BuyerEmail" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label asp-for="BuyerName" class="form-label"></label>
+                            <input asp-for="BuyerName" class="form-control" />
+                            <span asp-validation-for="BuyerName" class="text-danger"></span>
+                        </div>
+                        
                     </div>
-                    <div class="form-group">
-                        <label asp-for="PosData" class="form-label"></label>
-                        <input asp-for="PosData" class="form-control" />
-                        <span asp-validation-for="PosData" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="BuyerEmail" class="form-label"></label>
-                        <input asp-for="BuyerEmail" class="form-control" />
-                        <span asp-validation-for="BuyerEmail" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
+                    <div class="form-group col-sm-6">
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="StoreId" class="form-label"></label>
-                        <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
-                        <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="SupportedTransactionCurrencies" class="form-label"></label>

@@ -57,6 +57,12 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
+        
+        [DisplayName("Buyer Name")]
+        public string BuyerName
+        {
+            get; set;
+        }
 
         [Uri]
         [DisplayName("Notification Url")]

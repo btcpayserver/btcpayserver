@@ -830,6 +830,7 @@ namespace BTCPayServer.Controllers
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,
                     BuyerEmail = model.BuyerEmail,
+                    BuyerName =  model.BuyerName,
                     SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
                     {
                         Enabled = true

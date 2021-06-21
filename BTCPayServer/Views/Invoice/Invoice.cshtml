@@ -19,6 +19,15 @@
             <h2 class="col-xs-12 col-lg-9 mb-4 mb-lg-0">@ViewData["Title"]</h2>
             <div class="col-xs-12 col-lg-3 mb-2 mb-lg-0 text-lg-end">
                 <div class="d-inline-flex">
+                    
+                    @if (Model.ShowCheckout)
+                    {
+                        <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap ms-2" asp-route-invoiceId="@Model.Id">
+                            <i class="fa fa-qrcode"></i>
+                            Checkout
+                        </a>
+                    }
+                    
                     @if (Model.CanRefund)
                     {
                         <a id="refundlink" class="btn btn-success text-nowrap" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>

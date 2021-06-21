@@ -912,113 +912,113 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanUsePullPaymentsViaUI()
         {
-            using (var s = SeleniumTester.Create())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser(true);
-                s.CreateNewStore();
-                s.GenerateWallet("BTC", "", true, true);
+            using var s = SeleniumTester.Create();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GenerateWallet("BTC", "", true, true);
 
-                await s.Server.ExplorerNode.GenerateAsync(1);
-                await s.FundStoreWallet(denomination: 50.0m);
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
-                s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-                s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
-                s.Driver.FindElement(By.Id("Amount")).Clear();
-                s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");;
-                s.Driver.FindElement(By.Id("Create")).Click();
-                s.Driver.FindElement(By.LinkText("View")).Click();
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            await s.FundStoreWallet(denomination: 50.0m);
+            s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");;
+            s.Driver.FindElement(By.Id("Create")).Click();
+            s.Driver.FindElement(By.LinkText("View")).Click();
 
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+            s.GoToWallet(navPages: WalletsNavPages.PullPayments);
 
-                s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-                s.Driver.FindElement(By.Id("Name")).SendKeys("PP2");
-                s.Driver.FindElement(By.Id("Amount")).Clear();
-                s.Driver.FindElement(By.Id("Amount")).SendKeys("100.0");
-                s.Driver.FindElement(By.Id("Create")).Click();
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP2");
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("100.0");
+            s.Driver.FindElement(By.Id("Create")).Click();
 
-                // This should select the first View, ie, the last one PP2
-                s.Driver.FindElement(By.LinkText("View")).Click();
-                var address = await s.Server.ExplorerNode.GetNewAddressAsync();
-                s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
-                s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
-                s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("15" + Keys.Enter);
-                s.FindAlertMessage();
+            // This should select the first View, ie, the last one PP2
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            var address = await s.Server.ExplorerNode.GetNewAddressAsync();
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
+            s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
+            s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("15" + Keys.Enter);
+            s.FindAlertMessage();
 
-                // We should not be able to use an address already used
-                s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
-                s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
-                s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
-                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+            // We should not be able to use an address already used
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
+            s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
+            s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
-                address = await s.Server.ExplorerNode.GetNewAddressAsync();
-                s.Driver.FindElement(By.Id("Destination")).Clear();
-                s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
-                s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
-                s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
-                s.FindAlertMessage();
-                Assert.Contains("Awaiting Approval", s.Driver.PageSource);
+            address = await s.Server.ExplorerNode.GetNewAddressAsync();
+            s.Driver.FindElement(By.Id("Destination")).Clear();
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
+            s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
+            s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
+            s.FindAlertMessage();
+            Assert.Contains("Awaiting Approval", s.Driver.PageSource);
 
-                var viewPullPaymentUrl = s.Driver.Url;
-                // This one should have nothing
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
-                var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
-                Assert.Equal(2, payouts.Count);
-                payouts[1].Click();
-                Assert.Empty(s.Driver.FindElements(By.ClassName("payout")));
-                // PP2 should have payouts
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
-                payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
-                payouts[0].Click();
+            var viewPullPaymentUrl = s.Driver.Url;
+            // This one should have nothing
+            s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+            var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
+            Assert.Equal(2, payouts.Count);
+            payouts[1].Click();
+            Assert.Empty(s.Driver.FindElements(By.ClassName("payout")));
+            // PP2 should have payouts
+            s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+            payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
+            payouts[0].Click();
                 
-                Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
+            Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
 
-                s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
-                s.FindAlertMessage();
+            s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+            s.FindAlertMessage();
 
-                TestUtils.Eventually(() =>
-                {
-                    s.Driver.Navigate().Refresh();
-                    Assert.Contains("badge transactionLabel", s.Driver.PageSource);
-                });
-                Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.Contains("badge transactionLabel", s.Driver.PageSource);
+            });
+            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
-                s.GoToWallet(navPages: WalletsNavPages.Payouts);
-                ReadOnlyCollection<IWebElement> txs;
-                TestUtils.Eventually(() =>
-                {
-                    s.Driver.Navigate().Refresh();
+            s.GoToWallet(navPages: WalletsNavPages.Payouts);
+            var x = s.Driver.PageSource;
+            s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
+            ReadOnlyCollection<IWebElement> txs;
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
                     
-                    txs = s.Driver.FindElements(By.ClassName("transaction-link"));
-                    Assert.Equal(2, txs.Count);
-                });
-
-                s.Driver.Navigate().GoToUrl(viewPullPaymentUrl);
                 txs = s.Driver.FindElements(By.ClassName("transaction-link"));
                 Assert.Equal(2, txs.Count);
-                Assert.Contains("In Progress", s.Driver.PageSource);
+            });
 
-                await s.Server.ExplorerNode.GenerateAsync(1);
+            s.Driver.Navigate().GoToUrl(viewPullPaymentUrl);
+            txs = s.Driver.FindElements(By.ClassName("transaction-link"));
+            Assert.Equal(2, txs.Count);
+            Assert.Contains(PayoutState.InProgress.GetStateString(), s.Driver.PageSource);
 
-                TestUtils.Eventually(() =>
-                {
-                    s.Driver.Navigate().Refresh();
-                    Assert.Contains("Completed", s.Driver.PageSource);
-                });
-                await s.Server.ExplorerNode.GenerateAsync(10);
-                var pullPaymentId = viewPullPaymentUrl.Split('/').Last();
+            await s.Server.ExplorerNode.GenerateAsync(1);
 
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
-                    var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
-                    Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
-                });
-            }
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.Contains(PayoutState.Completed.GetStateString(), s.Driver.PageSource);
+            });
+            await s.Server.ExplorerNode.GenerateAsync(10);
+            var pullPaymentId = viewPullPaymentUrl.Split('/').Last();
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+                var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
+                Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
+            });
         }
 
         private static void CanBrowseContent(SeleniumTester s)

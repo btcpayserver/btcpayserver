@@ -45,7 +45,7 @@
                 @foreach (var state in Model.PayoutStateCount)
                 {
                     <li class="nav-item py-0">
-                        <a asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                        <a id="@state.Key-view" asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
                     </li>
                 }
             </ul>

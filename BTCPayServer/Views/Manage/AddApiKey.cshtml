@@ -49,18 +49,26 @@
                     {
                         <div class="list-group-item form-group py-3">
                             <div class="form-check">
-                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4" />
-                                <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">@Model.PermissionValues[i].Title</label>
-                                <button type="submit" class="btn btn-link p-0 mb-1" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Select specific stores</button>
-                                <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
-                                <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4"/>
+                                <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">
+                                    @Model.PermissionValues[i].Title
+                                    <small class="text-muted">@Model.PermissionValues[i].Permission</small>
+                                </label>
+                                <div>
+                                    <button type="submit" class="btn btn-link p-0 mb-1" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Select specific stores</button>
+                                    <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                                    <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                                </div>
                             </div>
                         </div>
                     }
                     else
                     {
-                        <div class="list-group-item py-3" style="padding-left:2.5rem;">
-                            <h5 class="mb-1">@Model.PermissionValues[i].Title</h5>
+                        <div class="list-group-item form-group py-3" style="padding-left:2.5rem;">
+                            <h5 class="mb-1">
+                                @Model.PermissionValues[i].Title
+                                <small class="text-muted">@Model.PermissionValues[i].Permission</small>
+                            </h5>
                             <span class="form-text text-muted my-2">@Model.PermissionValues[i].Description</span>
                             <button type="submit" class="btn btn-link p-0 mb-1" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
 
@@ -102,9 +110,14 @@
                     <div class="list-group-item form-group py-3">
                         <div class="form-check">
                             <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4" />
-                            <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">@Model.PermissionValues[i].Title</label>
-                            <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
-                            <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                            <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">
+                                @Model.PermissionValues[i].Title
+                                <small class="text-muted">@Model.PermissionValues[i].Permission</small>
+                            </label>
+                            <div>
+                                <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                                <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                            </div>
                         </div>
                     </div>
                 }

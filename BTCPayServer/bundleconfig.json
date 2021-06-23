@@ -90,6 +90,7 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
@@ -107,6 +108,7 @@
     {
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
@@ -145,6 +147,7 @@
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/payment-request-admin/**/*.js"
         ]

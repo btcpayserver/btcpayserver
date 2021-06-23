@@ -135,7 +135,7 @@ namespace BTCPayServer.Tests
             if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {
                 Driver.FindElement(By.Id("ChangeWalletLink")).Click();
-                Driver.FindElement(By.Id("continue")).Click();
+                Driver.FindElement(By.Id("ConfirmContinue")).Click();
             }
 
             if (isImport)

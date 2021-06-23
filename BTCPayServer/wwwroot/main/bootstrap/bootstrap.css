@@ -251,8 +251,8 @@ a > code {
 kbd {
   padding: 0.2rem 0.4rem;
   font-size: 0.875em;
-  color: var(--btcpay-white);
-  background-color: var(--btcpay-dark);
+  color: var(--btcpay-code-text);
+  background-color: var(--btcpay-code-bg);
   border-radius: 0.2rem;
 }
 
@@ -4427,7 +4427,7 @@ fieldset:disabled .btn {
 .page-item.disabled .page-link {
   color: var(--btcpay-body-text-muted);
   pointer-events: none;
-  background-color: var(--btcpay-body-bg);
+  background-color: var(--btcpay-body-bg-light);
   border-color: var(--btcpay-body-border-light);
 }
 
@@ -4998,7 +4998,7 @@ fieldset:disabled .btn {
   width: 1em;
   height: 1em;
   padding: 0.25em 0.25em;
-  color: var(--btcpay-black);
+  color: var(--btcpay-body-text);
   background: transparent none center/1em auto no-repeat;
   border: 0;
   border-radius: 4px;
@@ -5006,7 +5006,7 @@ fieldset:disabled .btn {
 }
 
 .btn-close:hover {
-  color: var(--btcpay-black);
+  color: var(--btcpay-body-text);
   text-decoration: none;
   opacity: 0.75;
 }

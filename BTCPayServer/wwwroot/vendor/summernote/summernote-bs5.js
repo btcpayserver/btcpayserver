@@ -1,14 +1,14 @@
 /*!
- * 
+ *
  * Super simple wysiwyg editor v0.8.18
  * https://summernote.org
- * 
- * 
+ *
+ *
  * Copyright 2013- Alan Hong. and other contributors
  * summernote may be freely distributed under the MIT license.
- * 
+ *
  * Date: 2020-05-20T18:09Z
- * 
+ *
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -7422,9 +7422,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: this.ui.dropdownButtonContents('', this.options),
           tooltip: this.lang.color.more,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), this.ui.dropdown({
           items: (backColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.background + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="backColor" data-value="transparent">', this.lang.color.transparent, '</button>', '</div>', '<div class="note-holder" data-event="backColor"><!-- back colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="backColorPicker">', this.lang.color.cpSelect, '</button>', '<input type="color" id="backColorPicker" class="note-btn note-color-select-btn" value="' + this.options.colorButton.backColor + '" data-event="backColorPalette">', '</div>', '<div class="note-holder-custom" id="backColorPalette" data-event="backColor"></div>', '</div>'].join('') : '') + (foreColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.foreground + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="removeFormat" data-value="foreColor">', this.lang.color.resetToDefault, '</button>', '</div>', '<div class="note-holder" data-event="foreColor"><!-- fore colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="foreColorPicker">', this.lang.color.cpSelect, '</button>', '<input type="color" id="foreColorPicker" class="note-btn note-color-select-btn" value="' + this.options.colorButton.foreColor + '" data-event="foreColorPalette">', '</div>', // Fix missing Div, Commented to find easily if it's wrong
           '<div class="note-holder-custom" id="foreColorPalette" data-event="foreColor"></div>', '</div>'].join('') : ''),
@@ -7503,9 +7501,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.magic), _this2.options),
           tooltip: _this2.lang.style.style,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdown({
           className: 'dropdown-style',
           items: _this2.options.styleTags,
@@ -7621,9 +7617,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontname"></span>', _this2.options),
           tooltip: _this2.lang.font.name,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontname',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7640,9 +7634,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontsize"></span>', _this2.options),
           tooltip: _this2.lang.font.size,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontsize',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7656,9 +7648,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontsizeunit"></span>', _this2.options),
           tooltip: _this2.lang.font.sizeunit,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontsizeunit',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7731,9 +7721,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.alignLeft), _this2.options),
           tooltip: _this2.lang.paragraph.paragraph,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdown([_this2.ui.buttonGroup({
           className: 'note-align',
           children: [justifyLeft, justifyCenter, justifyRight, justifyFull]
@@ -7747,9 +7735,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.textHeight), _this2.options),
           tooltip: _this2.lang.font.height,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdownCheck({
           items: _this2.options.lineHeights,
           checkClassName: _this2.options.icons.menuCheck,
@@ -7763,9 +7749,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.table), _this2.options),
           tooltip: _this2.lang.table.table,
-          data: {
-            toggle: 'dropdown'
-          }
+          data: { 'bs-toggle': 'dropdown' }
         }), _this2.ui.dropdown({
           title: _this2.lang.table.table,
           className: 'note-table',
@@ -10076,7 +10060,7 @@ var dialog = renderer["a" /* default */].create('<div class="modal note-modal" a
   $node.attr({
     'aria-label': options.title
   });
-  $node.html(['<div class="modal-dialog">', '<div class="modal-content">', options.title ? '<div class="modal-header">' + '<h4 class="modal-title">' + options.title + '</h4>' + '<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true">&times;</button>' + '</div>' : '', '<div class="modal-body">' + options.body + '</div>', options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '', '</div>', '</div>'].join(''));
+    $node.html(['<div class="modal-dialog">', '<div class="modal-content">', options.title ? '<div class="modal-header">' + '<h4 class="modal-title">' + options.title + '</h4>' + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" aria-hidden="true"><svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close" /></svg></button>' + '</div>' : '', '<div class="modal-body">' + options.body + '</div>', options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '', '</div>', '</div>'].join(''));
 });
 var popover = renderer["a" /* default */].create(['<div class="note-popover popover in">', '<div class="arrow"></div>', '<div class="popover-content note-children-container"></div>', '</div>'].join(''), function ($node, options) {
   var direction = typeof options.direction !== 'undefined' ? options.direction : 'bottom';
@@ -10127,7 +10111,7 @@ var ui_ui = function ui(editorOptions) {
           for (var col = 0, colSize = colors.length; col < colSize; col++) {
             var color = colors[col];
             var colorName = colorsName[col];
-            buttons.push(['<button type="button" class="note-color-btn"', 'style="background-color:', color, '" ', 'data-event="', eventName, '" ', 'data-value="', color, '" ', 'title="', colorName, '" ', 'aria-label="', colorName, '" ', 'data-toggle="button" tabindex="-1"></button>'].join(''));
+            buttons.push(['<button type="button" class="note-color-btn"', 'style="background-color:', color, '" ', 'data-event="', eventName, '" ', 'data-value="', color, '" ', 'title="', colorName, '" ', 'aria-label="', colorName, '" ', 'data-bs-toggle="button" tabindex="-1"></button>'].join(''));
           }
 
           contents.push('<div class="note-color-row">' + buttons.join('') + '</div>');

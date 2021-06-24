@@ -7,6 +7,7 @@ namespace BTCPayServer.Client.Models
     public class InvoiceData : CreateInvoiceRequest
     {
         public string Id { get; set; }
+        public string StoreId { get; set; }
         public string CheckoutLink { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public InvoiceStatus Status { get; set; }

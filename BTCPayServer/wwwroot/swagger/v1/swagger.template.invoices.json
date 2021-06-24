@@ -749,6 +749,10 @@
                                 "type": "string",
                                 "description": "The identifier of the invoice"
                             },
+                            "storeId": {
+                                "type": "string",
+                                "description": "The store identifier that the invoice belongs to"
+                            },
                             "checkoutLink": {
                                 "type": "string",
                                 "description": "The link to the checkout page, where you can redirect the customer"

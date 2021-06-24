@@ -90,10 +90,11 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/crowdfund-admin/main.js"
         ]
     },
@@ -101,16 +102,17 @@
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css"
         ]
     },
     {
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/pos-admin/main.js"
         ]
     },
@@ -118,7 +120,7 @@
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css"
         ]
     },
     {
@@ -145,14 +147,15 @@
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/js/summernote-options.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/payment-request-admin/**/*.js"
         ]
     },
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css"
         ]
     },
     {

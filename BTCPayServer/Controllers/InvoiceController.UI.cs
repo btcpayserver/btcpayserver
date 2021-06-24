@@ -129,6 +129,7 @@ namespace BTCPayServer.Controllers
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
                 CanRefund = CanRefund(invoice.GetInvoiceState()),
+                ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList()

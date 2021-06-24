@@ -19,23 +19,32 @@
             <h2 class="col-xs-12 col-lg-9 mb-4 mb-lg-0">@ViewData["Title"]</h2>
             <div class="col-xs-12 col-lg-3 mb-2 mb-lg-0 text-lg-end">
                 <div class="d-inline-flex">
+                    
+                    @if (Model.ShowCheckout)
+                    {
+                        <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap ms-2" asp-route-invoiceId="@Model.Id">
+                            <i class="fa fa-qrcode"></i>
+                            Checkout
+                        </a>
+                    }
+                    
                     @if (Model.CanRefund)
                     {
-                        <a id="refundlink" class="btn btn-success text-nowrap" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>
+                        <a id="refundlink" class="btn btn-success text-nowrap ms-2" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")"><span class="fa fa-undo"></span> Issue refund</a>
                     }
                     else
                     {
-                        <button href="#" class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled>Issue refund <span class="fa fa-undo"></span></button>
+                        <button href="#" class="btn btn-secondary text-nowrap ms-2" data-bs-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled><span class="fa fa-undo"></span> Issue refund</button>
                     }
                     <form class="p-0 ms-2" asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
                         <button type="submit" class="btn @(Model.Archived ? "btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
                             @if (Model.Archived)
                             {
-                                <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this invoice">Archived <i class="ms-1 fa fa-close"></i></span>
+                                <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this invoice"><i class="ms-1 fa fa-close"></i> Archived</span>
                             }
                             else
                             {
-                                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive <i class="ms-1 fa fa-archive"></i></span>
+                                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default"><i class="ms-1 fa fa-archive"></i> Archive</span>
                             }
                         </button>
                     </form>

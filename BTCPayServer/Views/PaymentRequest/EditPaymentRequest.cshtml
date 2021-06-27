@@ -41,7 +41,11 @@
                         <label asp-for="Email" class="form-label"></label>
                         <input type="email" asp-for="Email" class="form-control" />
                         <span asp-validation-for="Email" class="text-danger"></span>
+                        <p id="PaymentRequestEmailHelpBlock" class="form-text text-muted">
+                            Recieve updates for this payment request.
+                        </p>
                     </div>
+                    <h4 class="mt-5 mb-4">Request Details</h4>
                     <div class="form-group">
                         <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
@@ -83,6 +87,7 @@
                         <textarea asp-for="Description" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Custom Styling</h4>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">

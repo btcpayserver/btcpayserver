@@ -10,11 +10,12 @@
 
         <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-        <div class="row">
-            <div class="col-lg-12">
-                <form method="post">
-                    <input type="hidden" asp-for="StoreId" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form method="post">
+            <input type="hidden" asp-for="StoreId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-lg-6">
                     <div class="form-group">
                         <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
@@ -67,17 +68,12 @@
                         <input asp-for="CustomTipPercentages" class="form-control" />
                         <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                    </div>
+                </div>
+                <div class="col-lg-12">
 
                     <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
-
+                </div>
+                <div class="col-lg-9">
                     <div class="form-group">
                         <label asp-for="Template" class="form-label"></label>
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
@@ -104,26 +100,17 @@
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="CustomCSSLink" class="form-label"></label>
+                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
+                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        </a>
+                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="EmbeddedCSS" class="form-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
-                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
-                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
-                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordion-dev-info">
@@ -131,7 +118,7 @@
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-payment-button-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordion-dev-info-embed-payment-button">
                                         Embed Payment Button linking to POS item
-                                        <vc:icon symbol="caret-down"/>
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
                                 <div id="accordion-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-payment-button-header" data-bs-parent="#accordion-dev-info">
@@ -154,7 +141,7 @@
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-pos-iframe-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordion-dev-info-embed-pos-iframe">
                                         Embed POS with Iframe
-                                        <vc:icon symbol="caret-down"/>
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
                                 <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header" data-bs-parent="#accordion-dev-info">
@@ -171,7 +158,7 @@
                                 <h2 class="accordion-header" id="accordion-dev-info-notification-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
                                         Notification Url Callbacks
-                                        <vc:icon symbol="caret-down"/>
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
                                 <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header" data-bs-parent="#accordion-dev-info">
@@ -191,9 +178,26 @@
                             </div>
                         </div>
                     </div>
-                </form>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
+                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
+                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </section>
 

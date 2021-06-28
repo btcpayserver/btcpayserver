@@ -15,15 +15,16 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
+        <h4 class="mt-5 mb-4">@Model.title </h4>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
             {
-                <br/>
+                <br />
                 <span class="text-danger">@error.ErrorMessage</span>
             }
         }
-        
+
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
                 <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
@@ -37,7 +38,7 @@
                     </div>
                 </div>
                 <div v-if="!items || items.length === 0" class="col-12 text-center">
-                    No items.<br/>
+                    No items.<br />
                     <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
                         Add your first item
                     </button>
@@ -78,7 +79,7 @@
                                            min="0"
                                            type="number"
                                            required
-                                           v-model="editingItem.price" ref="txtPrice"/>
+                                           v-model="editingItem.price" ref="txtPrice" />
                                 </div>
                                 <div class="col-sm-3">
                                     <label class="form-label">Custom price</label>
@@ -89,7 +90,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Image</label>
-                                <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
+                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage" />
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description</label>
@@ -101,11 +102,11 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Id (leave blank to generate from title)</label>
-                                <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
+                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Buy Button Text</label>
-                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
+                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
                             </div>
                         </div>
                     </div>

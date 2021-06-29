@@ -16,6 +16,14 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
+    <script>
+        delegate('click', `form button[value*=':']`, function (e) {
+            const { form, value } = e.target
+            const [action] = form.getAttribute('action').split('#')
+            const anchor = value.replace(/:.*/, '')
+            form.setAttribute('action', `${action}#${anchor}`)
+        })
+    </script>
 }
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
@@ -57,13 +65,16 @@
                                 <div>
                                     <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
                                     <div class="text-muted">@Model.PermissionValues[i].Description</div>
-                                    <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Select specific stores</button>
+                                    @if (Model.Stores.Any())
+                                    {
+                                        <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Select specific stores</button>
+                                    }
                                 </div>
                             </div>
                         }
                         else
                         {
-                            <h5 class="mb-1">
+                            <h5 class="mb-1" id="@Model.PermissionValues[i].Permission">
                                 <span class="me-lg-1">@Model.PermissionValues[i].Title</span>
                                 <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@Model.PermissionValues[i].Permission</small>
                             </h5>

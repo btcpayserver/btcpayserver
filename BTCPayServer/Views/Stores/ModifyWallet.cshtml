@@ -4,12 +4,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Modify {Model.CryptoCode} Wallet");
 }
 
-@section Navbar {
-    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
-        <vc:icon symbol="back" />
-    </a>
-}
-
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
     <p class="lead text-secondary mt-3">Change your current wallet settings</p>

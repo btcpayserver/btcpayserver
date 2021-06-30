@@ -38,6 +38,12 @@ namespace BTCPayServer.Services.Invoices
             set => SetMetadata("orderId", value);
         }
         [JsonIgnore]
+        public string PaymentRequestId 
+        {
+            get => GetMetadata<string>("paymentRequestId");
+            set => SetMetadata("paymentRequestId", value);
+        }
+        [JsonIgnore]
         public string BuyerName{
             get => GetMetadata<string>("buyerName");
             set => SetMetadata("buyerName", value);

@@ -251,6 +251,12 @@ h2 small .fa-question-circle-o {
   color: inherit;
 }
 
+.list-group-item .icon-caret-right {
+    flex: 0 0 24px;
+    height: 24px;
+    align-self: center;
+}
+
 .account-form {
     max-width: 36em;
 }

@@ -53,15 +53,12 @@ namespace BTCPayServer.Tests
                 Assert.True(appList.Apps[0].IsOwner);
                 Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
                 Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);
-                Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
-                redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+                redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
                 Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
                 appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
                 Assert.Empty(appList.Apps);
             }
         }
-
-
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]

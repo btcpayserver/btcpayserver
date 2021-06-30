@@ -35,14 +35,8 @@ namespace BTCPayServer.Fido2
             });
         }
 
-        [HttpGet("{id}/delete")]
-        public IActionResult Remove(string id)
-        { 
-            return View("Confirm", new ConfirmModel("Are you sure you want to remove FIDO2 credential?", "Your account will no longer have this credential as an option for MFA.", "Remove"));
-        }
-
         [HttpPost("{id}/delete")]
-        public async Task<IActionResult> RemoveP(string id)
+        public async Task<IActionResult> Remove(string id)
         {
            
             await _fido2Service.Remove(id, _userManager.GetUserId(User));

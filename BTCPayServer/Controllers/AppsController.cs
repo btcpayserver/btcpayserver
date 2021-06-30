@@ -92,9 +92,8 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("{appId}/delete")]
-        public async Task<IActionResult> DeleteAppPost(string appId)
+        [HttpPost("{appId}/delete")]
+        public async Task<IActionResult> DeleteApp(string appId)
         {
             var appData = await GetOwnedApp(appId);
             if (appData == null)
@@ -104,8 +103,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListApps));
         }
 
-        [HttpGet]
-        [Route("create")]
+        [HttpGet("create")]
         public async Task<IActionResult> CreateApp()
         {
             var stores = await _AppService.GetOwnedStores(GetUserId());
@@ -124,8 +122,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("create")]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateApp(CreateAppViewModel vm)
         {
             var stores = await _AppService.GetOwnedStores(GetUserId());
@@ -177,26 +174,10 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{appId}/delete")]
-        public async Task<IActionResult> DeleteApp(string appId)
-        {
-            var appData = await GetOwnedApp(appId);
-            if (appData == null)
-                return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = $"Delete app {appData.Name} ({appData.AppType})",
-                Description = "This app will be removed from this store",
-                Action = "Delete"
-            });
-        }
-
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
             return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
-
 
         private string GetUserId()
         {

@@ -150,6 +150,7 @@ namespace BTCPayServer.HostedServices
                         continue;
                     Data.WebhookDeliveryData delivery = NewDelivery(webhook.Id);
                     webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
+                    webhookEvent.PaymentRequestId = invoiceEvent.Invoice.Metadata.PaymentRequestId;
                     webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
                     webhookEvent.DeliveryId = delivery.Id;
                     webhookEvent.WebhookId = webhook.Id;

@@ -19,12 +19,11 @@
             </div>
         }
 
-
         <div class="row justify-content-center">
             @if (Model.LoginWith2FaViewModel != null)
             {
                 <div class="col-sm-12 col-md-6">
-                    <partial name="Loginwith2fa" model="@Model.LoginWith2FaViewModel"/>
+                    <partial name="LoginWith2fa" model="@Model.LoginWith2FaViewModel"/>
                 </div>
             }
             @if (Model.LoginWithFido2ViewModel != null)

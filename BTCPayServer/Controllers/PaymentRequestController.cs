@@ -8,12 +8,9 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
@@ -23,7 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
-using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
+using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -266,25 +263,29 @@ namespace BTCPayServer.Controllers
             try
             {
                 var redirectUrl = _linkGenerator.PaymentRequestLink(id, Request.Scheme, Request.Host, Request.PathBase);
-                var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
-                {
-                    OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
-                    Currency = blob.Currency,
-                    Price = amount.Value,
-                    FullNotifications = true,
-                    BuyerEmail = result.Email,
-                    RedirectURL = redirectUrl,
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                        new List<string>() { PaymentRequestRepository.GetInternalTag(id) },
-                        cancellationToken: cancellationToken))
-                    .Data.Id;
+
+
+                var invoiceRequest = new CreateInvoiceRequest();
+                invoiceRequest.Metadata = new JObject();
+                invoiceRequest.Metadata["orderId"] = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}";
+                invoiceRequest.Metadata["paymentRequestId"] = id;
+                invoiceRequest.Metadata["buyerEmail"] = result.Email;
+                invoiceRequest.Currency = blob.Currency;
+                invoiceRequest.Amount = amount.Value;
+                invoiceRequest.Checkout.RedirectURL = redirectUrl;
+                
+                // TODO what is this? This field was used in BitpayCreateInvoiceRequest but does not exist in CreateInvoiceRequest
+                // invoiceRequest.FullNotifications = true;
+
+                var additionalTags = new List<string>() {PaymentRequestRepository.GetInternalTag(id)};
+                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest,store, "/",additionalTags, cancellationToken);
 
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "Invoice", new { Id = newInvoiceId });
+                    return RedirectToAction("Checkout", "Invoice", new { Id = newInvoice.Id });
                 }
 
-                return Ok(newInvoiceId);
+                return Ok(newInvoice.Id);
             }
             catch (BitpayHttpException e)
             {

@@ -9,8 +9,9 @@
 
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
             <h2>@ViewData["Title"]</h2>
-            <a asp-action="NotificationSettings">
-                <span class="btn btn-secondary" title="Notification Settings">Settings</span>
+            <a id="NotificationSettings" asp-action="NotificationSettings" class="btn btn-secondary">
+                <span class="fa fa-cog"></span>
+                Settings                
             </a>
         </div>
         @if (Model.Total > 0)

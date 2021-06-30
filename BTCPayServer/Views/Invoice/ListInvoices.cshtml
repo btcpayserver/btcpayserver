@@ -274,8 +274,8 @@
             </div>
         </div>
 
-        <div class="@(Model.Total > 0 ? "mb-lg-5" : "") row collapse" id="help">
-            <div class="col">
+        <div class="row collapse" id="help">
+            <div class="col @(Model.Total > 0 ? "pt-3 pb-lg-5" : "")">
                 <p>
                     You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.
                     Be sure to split your search parameters with comma, for example:<br />

@@ -55,7 +55,6 @@ namespace BTCPayServer.Services
 
         public Language FindLanguageInAcceptLanguageHeader(string acceptLanguageHeader)
         {
-            var supportedLangs = GetLanguages();
             IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
             var locales = acceptLanguageHeader.Split(',', StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < locales.Length; i++)
@@ -95,33 +94,48 @@ namespace BTCPayServer.Services
             var sortedAcceptedLocales = from entry in acceptedLocales orderby entry.Value descending select entry;
             foreach (var pair in sortedAcceptedLocales)
             {
-                var locale = pair.Key;
-                var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
-                var lang = split[0];
-                var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
-
-                var langStart = lang + "-";
-                var langMatches = supportedLangs
-                    .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
-                                l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                var countryMatches = langMatches;
-                var countryEnd = "-" + country;
-                countryMatches = countryMatches.Where(l =>
-                    l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase)).ToList();
-                var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
-
-                if (bestMatch != null)
+                var lang = FindLanguage(pair.Key);
+                if (lang != null)
                 {
-                    return bestMatch;
+                    return lang;
                 }
             }
 
             return null;
         }
 
-        public Language FindBestMatch(string defaultLang)
+        /**
+         * Look for a supported language that matches the given locale (can be in different notations like "nl" or "nl-NL").
+         * Example: "nl" is not supported, but we do have "nl-NL"
+         */
+        public Language FindLanguage(string locale)
+        {
+            var supportedLangs = GetLanguages();
+            var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
+            var lang = split[0];
+            var country = split.Length == 2 ? split[1] : split[0].ToUpperInvariant();
+
+            var langStart = lang + "-";
+            var langMatches = supportedLangs
+                .Where(l => l.Code.Equals(lang, StringComparison.OrdinalIgnoreCase) ||
+                            l.Code.StartsWith(langStart, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var countryMatches = langMatches;
+            var countryEnd = "-" + country;
+            countryMatches = countryMatches.Where(l =>
+                l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase)).ToList();
+            var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
+
+            if (bestMatch != null)
+            {
+                return bestMatch;
+            }
+
+            return null;
+        }
+
+        public Language AutoDetectLanguageUsingHeader(string defaultLang)
         {
             if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language",
                 out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))

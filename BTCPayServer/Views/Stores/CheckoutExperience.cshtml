@@ -83,6 +83,13 @@
 
             <h4 class="mt-5 mb-3">Appearance</h4>
             <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input"/>
+                    <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
+                    <p class="form-text text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
+                </div>
+            </div>
+            <div class="form-group">
                 <label asp-for="DefaultLang" class="form-label"></label>
                 <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
             </div>

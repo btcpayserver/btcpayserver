@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (request.Checkout.DefaultLanguage != null)
             {
-                var lang = LanguageService.FindBestMatch(request.Checkout.DefaultLanguage);
+                var lang = LanguageService.FindLanguage(request.Checkout.DefaultLanguage);
                 if (lang == null)
                 {
                     request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,

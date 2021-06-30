@@ -531,6 +531,21 @@ namespace BTCPayServer.Controllers
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
+
+            if ("auto".Equals(lang, StringComparison.InvariantCulture) || (lang == null && storeBlob.AutoDetectLanguage))
+            {
+                // Auto-detect the langauge
+                lang = _languageService.AutoDetectLanguageUsingHeader(null).Code;
+            }
+            else if(lang != null)
+            {
+                lang = _languageService.FindLanguage(lang)?.Code;
+            }
+            else
+            {
+                lang = storeBlob.DefaultLang;
+            }
+            
             var model = new PaymentModel()
             {
                 Activated = paymentMethodDetails.Activated,

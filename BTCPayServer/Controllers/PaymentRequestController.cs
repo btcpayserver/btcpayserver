@@ -264,18 +264,22 @@ namespace BTCPayServer.Controllers
             {
                 var redirectUrl = _linkGenerator.PaymentRequestLink(id, Request.Scheme, Request.Host, Request.PathBase);
 
+                var invoiceMetadata =
+                    new InvoiceMetadata
+                    {
+                        OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
+                        PaymentRequestId = id,
+                        BuyerEmail = result.Email
+                    };
 
-                var invoiceRequest = new CreateInvoiceRequest();
-                invoiceRequest.Metadata = new JObject();
-                invoiceRequest.Metadata["orderId"] = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}";
-                invoiceRequest.Metadata["paymentRequestId"] = id;
-                invoiceRequest.Metadata["buyerEmail"] = result.Email;
-                invoiceRequest.Currency = blob.Currency;
-                invoiceRequest.Amount = amount.Value;
-                invoiceRequest.Checkout.RedirectURL = redirectUrl;
-                
-                // TODO what is this? This field was used in BitpayCreateInvoiceRequest but does not exist in CreateInvoiceRequest
-                // invoiceRequest.FullNotifications = true;
+                var invoiceRequest =
+                    new CreateInvoiceRequest
+                    {
+                        Metadata = invoiceMetadata.ToJObject(),
+                        Currency = blob.Currency,
+                        Amount = amount.Value,
+                        Checkout = {RedirectURL = redirectUrl}
+                    };
 
                 var additionalTags = new List<string>() {PaymentRequestRepository.GetInternalTag(id)};
                 var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest,store, "/",additionalTags, cancellationToken);

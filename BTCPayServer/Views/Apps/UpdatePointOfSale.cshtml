@@ -35,37 +35,38 @@
                     </div>
                 </div>
                 <div class="col-lg-6">
+                    <h4 class="mt-5 mb-4">Appearance</h4>
                     <div class="form-group">
-                        <div class="form-group">
-                            <label asp-for="DefaultView" class="form-label" data-required></label>
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
-                            <span asp-validation-for="DefaultView" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />
-                            <label asp-for="ShowCustomAmount" class="form-check-label"></label>
-                            <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
-                            <label asp-for="ShowDiscount" class="form-check-label"></label>
-                            <span asp-validation-for="ShowDiscount" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="EnableTips" type="checkbox" class="form-check-input" />
-                            <label asp-for="EnableTips" class="form-check-label"></label>
-                            <span asp-validation-for="EnableTips" class="text-danger"></span>
-                        </div>
+                        <label asp-for="DefaultView" class="form-label" data-required></label>
+                        <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
+                        <span asp-validation-for="DefaultView" class="text-danger"></span>
                     </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
+                        <label asp-for="ShowDiscount" class="form-check-label"></label>
+                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+                    </div>
+
                     <div class="form-group">
                         <label asp-for="ButtonText" class="form-label" data-required></label>
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />
+                        <label asp-for="ShowCustomAmount" class="form-check-label"></label>
+                        <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
+                    </div>
                     <div class="form-group">
                         <label asp-for="CustomButtonText" class="form-label" data-required></label>
                         <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="EnableTips" type="checkbox" class="form-check-input" />
+                        <label asp-for="EnableTips" class="form-check-label"></label>
+                        <span asp-validation-for="EnableTips" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomTipText" class="form-label" data-required></label>
@@ -185,17 +186,17 @@
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group">
+                        <div class="btn-group ms-2">
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
                                target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
                         </div>
-                        <div class="btn-group">
+                        <div class="btn-group ms-2">
                             <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
                             <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
                                target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                         </div>
-                        <div class="btn-group">
+                        <div class="btn-group ms-2">
                             <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
                             <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                         </div>

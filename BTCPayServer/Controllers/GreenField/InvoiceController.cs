@@ -54,7 +54,9 @@ namespace BTCPayServer.Controllers.GreenField
             DateTimeOffset? startDate = null,
             [FromQuery] 
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
-            DateTimeOffset? endDate = null, [FromQuery] bool includeArchived = false)
+            DateTimeOffset? endDate = null,
+            string textSearch = null,
+            [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -79,7 +81,8 @@ namespace BTCPayServer.Controllers.GreenField
                     StartDate = startDate,
                     EndDate = endDate,
                     OrderId = orderId,
-                    Status = status
+                    Status = status,
+                    TextSearch = textSearch
                 });
 
             return Ok(invoices.Select(ToModel));

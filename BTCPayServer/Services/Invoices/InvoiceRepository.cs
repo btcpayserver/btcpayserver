@@ -148,9 +148,9 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, string[] additionalSearchTerms = null)
         {
-            var textSearch = new List<string>();
+            var textSearch = new HashSet<string>();
             invoice = Clone(invoice);
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -210,6 +210,11 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(invoice.Metadata.OrderId);
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
+
+                if (additionalSearchTerms != null)
+                {
+                    textSearch.AddRange(additionalSearchTerms);
+                }
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
 
                 await context.SaveChangesAsync().ConfigureAwait(false);

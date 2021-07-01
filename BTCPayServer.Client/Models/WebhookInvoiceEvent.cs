@@ -20,7 +20,6 @@ namespace BTCPayServer.Client.Models
         public string StoreId { get; set; }
         [JsonProperty(Order = 2)]
         public string InvoiceId { get; set; }
-        public string PaymentRequestId { get; set; }
     }
 
     public class WebhookInvoiceSettledEvent : WebhookInvoiceEvent

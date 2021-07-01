@@ -640,11 +640,6 @@
                                 "type": "string",
                                 "description": "The invoice id of the invoice's event",
                                 "nullable": false
-                            },
-                            "paymentRequestId": {
-                                "type": "string",
-                                "description": "The payment request id if the invoice is for a payment request",
-                                "nullable": true
                             }
                         }
                     }

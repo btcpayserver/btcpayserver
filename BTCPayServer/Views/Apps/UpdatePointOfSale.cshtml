@@ -34,6 +34,9 @@
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="col-lg-12">
+                    <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
+                </div>
                 <div class="col-lg-6">
                     <h4 class="mt-5 mb-4">Appearance</h4>
                     <div class="form-group">
@@ -80,16 +83,13 @@
                         <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-lg-12">
-                    <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
-                </div>
                 <div class="col-lg-9">
                     <div class="form-group">
                         <label asp-for="Template" class="form-label"></label>
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
-                    <h4 class="mt-5 mb-4">Custom Actions</h4>
+                    <h4 class="mt-5 mb-4">Point of Sale Behavior</h4>
                     <div class="form-group">
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />

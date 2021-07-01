@@ -57,30 +57,34 @@
                     </div>
                     <h4 class="mt-5 mb-4">Custom Payments</h4>
                     <div class="form-check mb-3">
-                        <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />
+                        <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings" />
                         <label asp-for="ShowCustomAmount" class="form-check-label"></label>
                         <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="CustomButtonText" class="form-label" data-required></label>
-                        <input asp-for="CustomButtonText" class="form-control" required />
-                        <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                    <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="CustomButtonText" class="form-label" data-required></label>
+                            <input asp-for="CustomButtonText" class="form-control" required />
+                            <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                        </div>
                     </div>
                     <h4 class="mt-5 mb-4">Tips</h4>
                     <div class="form-check mb-3">
-                        <input asp-for="EnableTips" type="checkbox" class="form-check-input" />
+                        <input asp-for="EnableTips" type="checkbox" class="form-check-input" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                         <label asp-for="EnableTips" class="form-check-label"></label>
                         <span asp-validation-for="EnableTips" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="CustomTipText" class="form-label" data-required></label>
-                        <input asp-for="CustomTipText" class="form-control" required />
-                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="CustomTipPercentages" class="form-label"></label>
-                        <input asp-for="CustomTipPercentages" class="form-control" />
-                        <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                    <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
+                        <div class="form-group">
+                            <label asp-for="CustomTipText" class="form-label" data-required></label>
+                            <input asp-for="CustomTipText" class="form-control" required />
+                            <span asp-validation-for="CustomTipText" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="CustomTipPercentages" class="form-label"></label>
+                            <input asp-for="CustomTipPercentages" class="form-control" />
+                            <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-9">

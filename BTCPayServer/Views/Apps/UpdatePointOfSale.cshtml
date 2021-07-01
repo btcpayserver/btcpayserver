@@ -41,18 +41,18 @@
                         <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                         <span asp-validation-for="DefaultView" class="text-danger"></span>
                     </div>
-
-                    <div class="form-check mb-3">
-                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
-                        <label asp-for="ShowDiscount" class="form-check-label"></label>
-                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
-                    </div>
-
                     <div class="form-group">
                         <label asp-for="ButtonText" class="form-label" data-required></label>
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Discounts</h4>
+                    <div class="form-check mb-3">
+                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
+                        <label asp-for="ShowDiscount" class="form-check-label"></label>
+                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+                    </div>
+                    <h4 class="mt-5 mb-4">Custom Payments</h4>
                     <div class="form-check mb-3">
                         <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />
                         <label asp-for="ShowCustomAmount" class="form-check-label"></label>
@@ -63,6 +63,7 @@
                         <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Tips</h4>
                     <div class="form-check mb-3">
                         <input asp-for="EnableTips" type="checkbox" class="form-check-input" />
                         <label asp-for="EnableTips" class="form-check-label"></label>
@@ -88,6 +89,7 @@
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Custom Actions</h4>
                     <div class="form-group">
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />

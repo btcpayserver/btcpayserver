@@ -50,9 +50,9 @@
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
                     <h4 class="mt-5 mb-4">Discounts</h4>
-                    <div class="form-group mb-3 d-flex align-items-center">
-                        <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-2" />
-                        <label asp-for="ShowDiscount" class="form-label mb-0"></label>
+                    <div class="form-check mb-3">
+                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
+                        <label asp-for="ShowDiscount" class="form-check-label"></label>
                         <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                     </div>
                     <h4 class="mt-5 mb-4">Custom Payments</h4>

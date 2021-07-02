@@ -50,13 +50,13 @@
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
                     <h4 class="mt-5 mb-4">Discounts</h4>
-                    <div class="form-check mb-3">
+                    <div class="form-check mb-4">
                         <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
                         <label asp-for="ShowDiscount" class="form-check-label"></label>
                         <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                     </div>
                     <h4 class="mt-5 mb-4">Custom Payments</h4>
-                    <div class="form-group mb-3 d-flex align-items-center">
+                    <div class="form-group mb-4 d-flex align-items-center">
                         <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
                         <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
                         <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
@@ -69,7 +69,7 @@
                         </div>
                     </div>
                     <h4 class="mt-5 mb-4">Tips</h4>
-                    <div class="form-group mb-3 d-flex align-items-center">
+                    <div class="form-group mb-4 d-flex align-items-center">
                         <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                         <label asp-for="EnableTips" class="form-label mb-0"></label>
                         <span asp-validation-for="EnableTips" class="text-danger"></span>

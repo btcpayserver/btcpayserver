@@ -9595,7 +9595,7 @@ input[type=number].hide-number-spin {
 }
 
 [data-required]::after {
-  content: "*";
+  content: " *";
   color: var(--btcpay-danger);
 }
 

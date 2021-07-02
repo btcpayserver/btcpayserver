@@ -32,10 +32,10 @@ namespace BTCPayServer.Models.AppViewModels
         public string ExampleCallback { get; internal set; }
         public string InvoiceUrl { get; internal set; }
 
-        [Display(Name = "Callback Notification Url")]
+        [Display(Name = "Callback Notification URL")]
         [Uri]
         public string NotificationUrl { get; set; }
-        [Display(Name = "Redirect Url")]
+        [Display(Name = "Redirect URL")]
         [Uri]
         public string RedirectUrl { get; set; }
 
@@ -56,7 +56,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string CustomTipPercentages { get; set; }
 
         [MaxLength(500)]
-        [Display(Name = "Custom bootstrap CSS file")]
+        [Display(Name = "Custom CSS URL")]
         public string CustomCSSLink { get; set; }
 
         public string Id { get; set; }
@@ -87,6 +87,7 @@ namespace BTCPayServer.Models.AppViewModels
                 }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
+        [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
     }

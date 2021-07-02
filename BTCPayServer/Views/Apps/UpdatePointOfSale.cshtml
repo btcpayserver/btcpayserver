@@ -93,36 +93,6 @@
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
-                    <h4 class="mt-5 mb-4">Point of Sale Behavior</h4>
-                    <div class="form-group">
-                        <label asp-for="NotificationUrl" class="form-label"></label>
-                        <input asp-for="NotificationUrl" class="form-control" />
-                        <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RedirectUrl" class="form-label"></label>
-                        <input asp-for="RedirectUrl" class="form-control" />
-                        <span asp-validation-for="RedirectUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RedirectAutomatically" class="form-label"></label>
-                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select"></select>
-                        <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
-                    </div>
-                    <h4 class="mt-5 mb-4">Custom Appearance</h4>
-                    <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="form-label"></label>
-                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                    </div>
                     <h4 class="mt-5 mb-4">Additional Options</h4>
                     <div class="form-group">
                         <div class="accordion" id="accordion-dev-info">
@@ -167,14 +137,41 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-redirect-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-redirect" aria-expanded="false" aria-controls="accordion-dev-info-redirect">
+                                        Redirects
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-redirect" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header" data-bs-parent="#accordion-dev-info">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="RedirectUrl" class="form-label"></label>
+                                            <input asp-for="RedirectUrl" class="form-control" />
+                                            <span asp-validation-for="RedirectUrl" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="RedirectAutomatically" class="form-label"></label>
+                                            <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select"></select>
+                                            <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
                                 <h2 class="accordion-header" id="accordion-dev-info-notification-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
-                                        Notification Url Callbacks
+                                        Notification URL Callbacks
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
                                 <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header" data-bs-parent="#accordion-dev-info">
                                     <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="NotificationUrl" class="form-label"></label>
+                                            <input asp-for="NotificationUrl" class="form-control" />
+                                            <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                                        </div>
                                         <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                         <pre><code class="json">@Model.ExampleCallback</code></pre>
                                         <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
@@ -185,6 +182,31 @@
                                                 <li>You can then ship your order</li>
                                             </ul>
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-appearance-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-appearance" aria-expanded="false" aria-controls="accordion-dev-info-appearance">
+                                        Custom CSS
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header" data-bs-parent="#accordion-dev-info">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="CustomCSSLink" class="form-label"></label>
+                                            <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
+                                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                            </a>
+                                            <input asp-for="CustomCSSLink" class="form-control" />
+                                            <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                            <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                            <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

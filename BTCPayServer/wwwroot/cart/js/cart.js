@@ -425,7 +425,11 @@ Cart.prototype.listItems = function() {
         // Prepare the list of items in the cart
         for (var key in this.content) {
             var item = this.content[key],
-                image = this.escape(item.image);
+                image = item.image && this.escape(item.image);
+            
+            if (image && image.startsWith("~")) {
+                image = image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps')));
+            }
 
             tableTemplate = this.template($('#template-cart-item'), {
                 'id': this.escape(item.id),
@@ -475,7 +479,7 @@ Cart.prototype.listItems = function() {
                         id: id,
                         title: item.title,
                         price: item.price,
-                        image: typeof item.image != 'underfined' ? item.image : null
+                        image: item.image
                     });
                 }
             } else if (!qtyIncreased) { // Quantity decreased

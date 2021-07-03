@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.AppViewModels
@@ -49,9 +50,11 @@ namespace BTCPayServer.Models.AppViewModels
         public string CustomTipText { get; set; }
         public int[] CustomTipPercentages { get; set; }
 
+        [Display(Name = "Custom CSS URL")]
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
         public string Description { get; set; }
+        [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
     }
 }

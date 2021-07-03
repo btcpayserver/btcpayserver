@@ -24,7 +24,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Featured Image")]
         public string MainImageUrl { get; set; }
 
-        [Display(Name = "Callback Notification Url")]
+        [Display(Name = "Callback Notification URL")]
         [Uri]
         public string NotificationUrl { get; set; }
 
@@ -74,7 +74,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string PerksTemplate { get; set; }
 
         [MaxLength(500)]
-        [Display(Name = "Custom bootstrap CSS file")]
+        [Display(Name = "Custom CSS URL")]
         public string CustomCSSLink { get; set; }
 
         [Display(Name = "Custom CSS Code")]

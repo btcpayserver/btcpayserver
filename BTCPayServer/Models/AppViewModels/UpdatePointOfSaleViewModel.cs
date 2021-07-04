@@ -41,11 +41,11 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [MaxLength(30)]
-        [Display(Name = "Text to display on each buttons for items with a specific price")]
+        [Display(Name = "Text to display on each button for items with a specific price")]
         public string ButtonText { get; set; }
         [Required]
         [MaxLength(30)]
-        [Display(Name = "Text to display on buttons next to the input allowing the user to enter a custom amount")]
+        [Display(Name = "Text to display on buttons allowing the user to enter a custom amount")]
         public string CustomButtonText { get; set; }
         [Required]
         [MaxLength(30)]

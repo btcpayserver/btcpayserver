@@ -105,7 +105,7 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-payment-button-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordion-dev-info-embed-payment-button">
-                                        Embed Payment Button linking to POS item
+                                        Embed a payment button linking to POS item
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
@@ -128,13 +128,13 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-pos-iframe-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordion-dev-info-embed-pos-iframe">
-                                        Embed POS with Iframe
+                                        Embed Point of Sale via Iframe
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
                                 <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header">
                                     <div class="accordion-body">
-                                        You can embed the POS using an iframe
+                                        You can embed this POS via an iframe.
                                         @{
                                             var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
                                         }

@@ -54,6 +54,9 @@
                         <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
                         <label asp-for="ShowDiscount" class="form-check-label"></label>
                         <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+                        <div class="mt-2">
+                            <span class="text-secondary">Not recommended for customer self-checkout.</span>
+                        </div>
                     </div>
                     <h4 class="mt-5 mb-4">Custom Payments</h4>
                     <div class="form-group mb-4 d-flex align-items-center">

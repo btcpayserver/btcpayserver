@@ -19,7 +19,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string Currency { get; set; }
         public string Template { get; set; }
 
-        [Display(Name = "Default view")]
+        [Display(Name = "Post of Sale Style")]
         public PosViewType DefaultView { get; set; }
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }

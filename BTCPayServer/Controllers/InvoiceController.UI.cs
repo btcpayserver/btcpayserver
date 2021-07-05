@@ -557,6 +557,13 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
                 TxCount = accounting.TxRequired,
+                TxCountForFee = storeBlob.NetworkFeeMode switch
+                {
+                    NetworkFeeMode.Always => accounting.TxRequired,
+                    NetworkFeeMode.MultiplePaymentsOnly => accounting.TxRequired - 1,
+                    NetworkFeeMode.Never => 0,
+                    _ => throw new NotImplementedException()
+                },
                 BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,

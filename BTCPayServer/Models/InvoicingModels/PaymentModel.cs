@@ -49,6 +49,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceBitcoinUrl { get; set; }
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }
+        public int TxCountForFee { get; set; }
         public string BtcPaid { get; set; }
         public string StoreEmail { get; set; }
 

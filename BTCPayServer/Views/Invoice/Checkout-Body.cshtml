@@ -1,4 +1,4 @@
-﻿@model PaymentModel
+@model PaymentModel
 
 <div class="top-header">
     <div class="header">
@@ -133,7 +133,7 @@
                         {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
                     <span v-else>
-                        {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                        {{$t("txCount", {count: srvModel.txCountForFee})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
                 </div>
             </div>

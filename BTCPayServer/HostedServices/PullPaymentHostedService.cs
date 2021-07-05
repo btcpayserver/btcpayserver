@@ -12,6 +12,7 @@ using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -152,7 +153,8 @@ namespace BTCPayServer.HostedServices
             BTCPayNetworkProvider networkProvider,
             NotificationSender notificationSender,
             RateFetcher rateFetcher,
-            IEnumerable<IPayoutHandler> payoutHandlers)
+            IEnumerable<IPayoutHandler> payoutHandlers,
+            ILogger<PullPaymentHostedService> logger)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -162,6 +164,7 @@ namespace BTCPayServer.HostedServices
             _notificationSender = notificationSender;
             _rateFetcher = rateFetcher;
             _payoutHandlers = payoutHandlers;
+            _logger = logger;
         }
 
         Channel<object> _Channel;
@@ -173,6 +176,7 @@ namespace BTCPayServer.HostedServices
         private readonly NotificationSender _notificationSender;
         private readonly RateFetcher _rateFetcher;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
@@ -216,7 +220,14 @@ namespace BTCPayServer.HostedServices
                 }
                 foreach (IPayoutHandler payoutHandler in _payoutHandlers)
                 {
-                    await payoutHandler.BackgroundCheck(o);
+                    try
+                    {
+                        await payoutHandler.BackgroundCheck(o);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "PayoutHandler failed during BackgroundCheck");
+                    }
                 }
             }
         }

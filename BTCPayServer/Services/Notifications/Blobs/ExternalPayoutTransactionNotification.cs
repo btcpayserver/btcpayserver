@@ -1,4 +1,5 @@
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Routing;
@@ -37,7 +38,11 @@ namespace BTCPayServer.Services.Notifications.Blobs
                     "A payment that was made to an approved payout by an external wallet is waiting for your confirmation.";
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(WalletsController.Payouts),
                     "Wallets",
-                    new {walletId = new WalletId(notification.StoreId, notification.PaymentMethod)}, _options.RootPath);
+                    new
+                    {
+                        walletId = new WalletId(notification.StoreId, notification.PaymentMethod),
+                        payoutState = PayoutState.AwaitingPayment
+                    }, _options.RootPath);
             }
         }
 

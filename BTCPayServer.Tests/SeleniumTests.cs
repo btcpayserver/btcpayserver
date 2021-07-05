@@ -1019,6 +1019,57 @@ namespace BTCPayServer.Tests
                 var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
                 Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
             });
+            s.GoToHome();
+            //offline/external payout test
+            s.Driver.FindElement(By.Id("NotificationsDropdownToggle")).Click();
+            s.Driver.FindElement(By.CssSelector("#notificationsForm button")).Click();
+            
+            
+            var newStore = s.CreateNewStore();
+            s.GenerateWallet("BTC", "", true, true);
+            var newWalletId = new WalletId(newStore.storeId, "BTC");
+            s.GoToWallet(newWalletId, WalletsNavPages.PullPayments);
+            
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("External Test");
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("0.001");
+            s.Driver.FindElement(By.Id("Currency")).Clear();
+            s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
+            s.Driver.FindElement(By.Id("Create")).Click();
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            
+            address = await s.Server.ExplorerNode.GetNewAddressAsync();
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString());
+            s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys(Keys.Enter);
+            s.FindAlertMessage();
+
+            Assert.Contains("Awaiting Approval", s.Driver.PageSource);
+            s.GoToWallet(newWalletId, WalletsNavPages.Payouts);
+            s.Driver.FindElement(By.Id("AwaitingApproval-view")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve")).Click();
+            s.FindAlertMessage();
+            var tx =await s.Server.ExplorerNode.SendToAddressAsync(address, Money.FromUnit(0.001m, MoneyUnit.BTC));
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.FindElement(By.Id("NotificationsDropdownToggle")).Click();
+                Assert.Equal("2",
+                    s.Driver.FindElement(By.CssSelector("#NotificationsDropdownToggle .notification-badge")).Text);
+                s.Driver.FindElement(By.LinkText("View all")).Click();
+                s.Driver.FindElement(By.LinkText("Details")).Click();
+            });
+            
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
+            
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-confirm-payment")).Click();
+            s.FindAlertMessage();
+            
+            s.Driver.FindElement(By.Id("InProgress-view")).Click();
+            Assert.Contains(tx.ToString(), s.Driver.PageSource);
         }
 
         private static void CanBrowseContent(SeleniumTester s)

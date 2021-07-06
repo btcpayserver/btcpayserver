@@ -224,8 +224,8 @@ namespace BTCPayServer.Tests
             {
                 var html = await File.ReadAllTextAsync(file);
 
-                checkHtmlNodesForReferrer(file, html, "a", "href");
-                checkHtmlNodesForReferrer(file, html, "form", "action");
+                CheckHtmlNodesForReferrer(file, html, "a", "href");
+                CheckHtmlNodesForReferrer(file, html, "form", "action");
             }
         }
 
@@ -237,7 +237,7 @@ namespace BTCPayServer.Tests
             foreach (var match in matches)
             {
                 var node = match.Groups[0].Value;
-                var attributeValue = getAttributeValue(node, attribute);
+                var attributeValue = GetAttributeValue(node, attribute);
 
                 if (attributeValue != null)
                 {
@@ -249,7 +249,7 @@ namespace BTCPayServer.Tests
                              attributeValue.StartsWith("@"))
                     {
                         // This can be an external link. Treating it as such.
-                        var rel = getAttributeValue(node, "rel");
+                        var rel = GetAttributeValue(node, "rel");
 
                         // Building the file path + line number helps us to navigate to the wrong HTML quickly!
                         var lineNumber = html.Substring(0, html.IndexOf(node, StringComparison.InvariantCulture)).Split("\n").Length;

@@ -691,11 +691,11 @@
                 "description": "",
                 "x-enumNames": [
                     "Invalid",
-                    "Complete"
+                    "Settled"
                 ],
                 "enum": [
                     "Invalid",
-                    "Complete"
+                    "Settled"
                 ]
             },
             "InvoiceStatus": {

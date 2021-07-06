@@ -90,7 +90,7 @@ namespace BTCPayServer.Client
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-            if (request.Status!= InvoiceStatus.Settled && request.Status!= InvoiceStatus.Invalid)
+            if (request.Status != InvoiceStatus.Settled && request.Status != InvoiceStatus.Invalid)
                 throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", bodyPayload: request,

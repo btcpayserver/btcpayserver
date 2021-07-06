@@ -541,10 +541,7 @@ namespace BTCPayServer.Controllers
             {
                 lang = _languageService.FindLanguage(lang)?.Code;
             }
-            else
-            {
-                lang = storeBlob.DefaultLang;
-            }
+            lang ??= storeBlob.DefaultLang;
             
             var model = new PaymentModel()
             {

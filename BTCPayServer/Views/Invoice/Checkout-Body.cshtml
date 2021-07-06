@@ -124,7 +124,7 @@
                     {{srvModel.orderAmountFiat}}
                 </div>
             </div>
-            <div class="line-items__item" v-show="srvModel.networkFee > 0">
+            <div class="line-items__item" v-show="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
                 <div class="line-items__item__label">
                     <span>{{$t("Network Cost")}}</span>
                 </div>
@@ -132,8 +132,8 @@
                     <span v-if="srvModel.isMultiCurrency">
                         {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
-                    <span v-else>
-                        {{$t("txCount", {count: srvModel.txCountForFee})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                    <span v-else-if="srvModel.txCountForFee > 0">
+                        {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
                 </div>
             </div>

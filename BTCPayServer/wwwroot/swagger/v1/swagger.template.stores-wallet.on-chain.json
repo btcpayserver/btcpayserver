@@ -412,7 +412,7 @@
                         }
                     }
                 ],
-                "description": "Get a store on-chain wallet transaction",
+                "description": "Get store on-chain wallet transaction",
                 "operationId": "StoreOnChainWallets_GetOnChainWalletTransaction",
                 "responses": {
                     "200": {

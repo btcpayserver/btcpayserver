@@ -74,7 +74,14 @@
                             else
                             {
                                 <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
-                                    @Model.TypedMetadata.OrderId
+                                    @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                                    {
+                                        <span>View Order</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.TypedMetadata.OrderId
+                                    }
                                 </a>
                             }
                         </td>

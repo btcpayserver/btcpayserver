@@ -94,7 +94,7 @@
                     "name": "lang",
                     "in": "query",
                     "required": false,
-                    "description": "The preferred language of the checkout page. You can see the list of language codes with [this operation](#operation/langCodes).",
+                    "description": "The preferred language of the checkout page. You can use \"auto\" to use the language of the customer's browser or see the list of language codes with [this operation](#operation/langCodes).",
                     "schema": {
                         "type": "string"
                     }

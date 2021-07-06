@@ -283,8 +283,7 @@ namespace BTCPayServer.Controllers
                         var blob = payout.GetBlob(_jsonSerializerSettings);
                         if (payout.GetPaymentMethodId() != paymentMethodId)
                             continue;
-                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)));
-                        
+                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)).ToString());
                     }
 
                     return RedirectToAction(nameof(WalletSend), new {walletId, bip21});

@@ -155,11 +155,6 @@ namespace BTCPayServer.Controllers.GreenField
                 return StoreNotFound();
             }
 
-            if (request.Amount < 0.0m)
-            {
-                ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
-            }
-
             if (string.IsNullOrEmpty(request.Currency))
             {
                 ModelState.AddModelError(nameof(request.Currency), "Currency is required");

@@ -935,7 +935,8 @@
                     "amount": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The amount of the invoice"
+                        "nullable": true,
+                        "description": "The amount of the invoice. If null or unspecified, the invoice will be a top-up invoice. (ie. The invoice will consider any payment as a full payment)"
                     },
                     "currency": {
                         "type": "string",

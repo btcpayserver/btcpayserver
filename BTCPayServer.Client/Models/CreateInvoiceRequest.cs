@@ -10,7 +10,7 @@ namespace BTCPayServer.Client.Models
     public class CreateInvoiceRequest
     {
         [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();

@@ -51,7 +51,7 @@ namespace BTCPayServer.Models
         [JsonProperty(PropertyName = "currency", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Currency { get; set; }
         [JsonProperty(PropertyName = "price", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
         [JsonProperty(PropertyName = "notificationEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string NotificationEmail { get; set; }
         [JsonConverter(typeof(DateTimeJsonConverter))]

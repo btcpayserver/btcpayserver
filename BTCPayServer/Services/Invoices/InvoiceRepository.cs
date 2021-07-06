@@ -420,6 +420,19 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
+        internal async Task UpdateInvoicePrice(string invoiceId, InvoiceEntity invoice)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData == null)
+                    return;
+                var blob = invoiceData.GetBlob(_Networks);
+                blob.Price = invoice.Price;
+                invoiceData.Blob = ToBytes(blob, null);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
 
         public async Task MassArchive(string[] invoiceIds)
         {

@@ -312,7 +312,7 @@ namespace BTCPayServer.Tests
                 Assert.True(valid);
             }
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task EnsureSwaggerPermissionsDocumented()
@@ -342,7 +342,7 @@ namespace BTCPayServer.Tests
                     .Replace("#STOREPERMISSIONS#",
                         string.Join("\n", storePolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")));
                 Logs.Tester.LogInformation(description);
-                                
+
                 var sresp = Assert
                     .IsType<JsonResult>(await tester.PayTester.GetController<HomeController>(acc.UserId, acc.StoreId)
                         .Swagger()).Value.ToJson();
@@ -741,7 +741,7 @@ namespace BTCPayServer.Tests
             AssertPayoutLabel(info);
         }
 
-        
+
 
         [Fact]
         [Trait("Fast", "Fast")]
@@ -959,12 +959,12 @@ namespace BTCPayServer.Tests
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
             Assert.True(tor.Services.Count(t => t.ServiceType == TorServiceType.Other) > 1);
-            
+
             tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
                 new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
                 {
                     TorrcFile = null,
-                    TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
+                    TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 }));
             await Task.WhenAll(tor.StartAsync(CancellationToken.None));
 
@@ -972,19 +972,19 @@ namespace BTCPayServer.Tests
             Assert.Null(btcpayS.Network);
             Assert.Equal("host.onion", btcpayS.OnionHost);
             Assert.Equal(80, btcpayS.VirtualPort);
-            
+
             var p2p = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
             Assert.NotNull(p2p.Network);
             Assert.Equal("BTC", p2p.Network.CryptoCode);
             Assert.Equal("host2.onion", p2p.OnionHost);
             Assert.Equal(81, p2p.VirtualPort);
-            
+
             var rpc = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
             Assert.NotNull(p2p.Network);
             Assert.Equal("BTC", rpc.Network.CryptoCode);
             Assert.Equal("host3.onion", rpc.OnionHost);
             Assert.Equal(82, rpc.VirtualPort);
-            
+
             var unknown = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.Other));
             Assert.Null(unknown.Network);
             Assert.Equal("host4.onion", unknown.OnionHost);
@@ -992,7 +992,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("UNKNOWN", unknown.Name);
 
             Assert.Equal(4, tor.Services.Length);
-            
+
         }
 
 
@@ -1016,7 +1016,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.ExplorerNode.SendToAddressAsync(
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));
-            }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance );
+            }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance);
             await tester.ExplorerNode.GenerateAsync(1);
             await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
@@ -2093,6 +2093,79 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanCreateTopupInvoices()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var rng = new Random();
+                var seed = rng.Next();
+                rng = new Random(seed);
+                Logs.Tester.LogInformation("Seed: " + seed);
+                foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
+                {
+                    await user.SetNetworkFeeMode(networkFeeMode);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(1.0m), 5000.0m, networkFeeMode);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(1.23456789m), 5000.0m * 1.23456789m, networkFeeMode);
+                    // Check if there is no strange roundup issues
+                    var v = (decimal)(rng.NextDouble() + 1.0);
+                    v = Money.Coins(v).ToDecimal(MoneyUnit.BTC);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(v), 5000.0m * v, networkFeeMode);
+                }
+            }
+        }
+
+        private static async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
+        {
+            var cashCow = tester.ExplorerNode;
+            // First we try payment with a merchant having only BTC
+            var invoice = user.BitPay.CreateInvoice(
+                new Invoice()
+                {
+                    // If price is 0, then this is a topup invoice
+                    Price = 0.0m,
+                    Currency = "USD"
+                }, Facade.Merchant);
+            Assert.Equal(Money.Coins(0.0m), invoice.BtcPrice);
+            Assert.Equal(0.0m, invoice.Price);
+
+            var due = invoice.BtcPrice;
+            var paid = btcSent;
+            var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+
+
+            var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
+            var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
+                            .GetPaymentMethods()[btc]
+                            .GetPaymentMethodDetails()
+                            .AssertType<BitcoinLikeOnChainPaymentMethod>()
+                            .GetNextNetworkFee();
+            if (networkFeeMode != NetworkFeeMode.Always)
+            {
+                networkFee = 0.0m;
+            }
+
+            cashCow.SendToAddress(invoiceAddress, paid);
+
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                invoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+                due = Money.Parse(invoice.CryptoInfo[0].CryptoPaid);
+                Assert.Equal(paid, due);
+                Assert.Equal(expectedPriceWithoutNetworkFee - networkFee * invoice.Rate, invoice.Price);
+                Assert.Equal(Money.Zero, invoice.BtcDue);
+                Assert.Equal("paid", invoice.Status);
+                Assert.Equal("False", invoice.ExceptionStatus.ToString());
+            });
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanModifyRates()
         {
             using (var tester = ServerTester.Create())
@@ -2795,6 +2868,11 @@ namespace BTCPayServer.Tests
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice() { Price = -0.1m, Currency = "BTC", FullNotifications = true }, Facade.Merchant);
                 Assert.Equal(0.0m, invoice.Price);
+
+                // Should not round down to 50.51, taxIncluded should be also clipped to this value because taxIncluded can't be higher than the price.
+                var invoice5 = user.BitPay.CreateInvoice(
+                    new Invoice() { Price = 50.513m, Currency = "USD", FullNotifications = true, TaxIncluded = 50.516m }, Facade.Merchant);
+                Assert.Equal(50.51m, invoice5.Price);
             }
         }
 
@@ -3248,7 +3326,7 @@ namespace BTCPayServer.Tests
                 ("\\test.com", false),
                 ("te\\st.com", false)
             };
-            foreach(var t in tests)
+            foreach (var t in tests)
             {
                 Assert.Equal(t.Item2, t.Item1.IsValidFileName());
             }
@@ -3568,7 +3646,7 @@ namespace BTCPayServer.Tests
                 var acc = tester.NewAccount();
                 await acc.GrantAccessAsync(true);
                 await acc.CreateStoreAsync();
-                
+
                 // Test if legacy DerivationStrategy column is converted to DerivationStrategies
                 var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
                 var xpub = "tpubDDmH1briYfZcTDMEc7uMEA5hinzjUTzR9yMC1drxTMeiWyw1VyCqTuzBke6df2sqbfw9QG6wbgTLF5yLjcXsZNaXvJMZLwNEwyvmiFWcLav";
@@ -3583,7 +3661,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(derivation, v.AccountOriginal.ToString());
                 Assert.Equal(xpub, v.SigningKey.ToString());
                 Assert.Equal(xpub, v.GetSigningAccountKeySettings().AccountKey.ToString());
-                
+
                 await acc.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning, true);
                 store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
                 var lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
@@ -3730,43 +3808,43 @@ namespace BTCPayServer.Tests
 
                 var settings = tester.PayTester.GetService<SettingsRepository>();
                 var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
-                
+
                 Assert.Null(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings());
                 Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
-                
+
                 await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = false });
                 await settings.UpdateSetting(new EmailSettings()
                 {
-                 From   = "admin@admin.com",
-                 Login = "admin@admin.com",
-                 Password = "admin@admin.com",
-                 Port = 1234,
-                 Server = "admin.com",
-                 EnableSSL = true
+                    From = "admin@admin.com",
+                    Login = "admin@admin.com",
+                    Password = "admin@admin.com",
+                    Port = 1234,
+                    Server = "admin.com",
+                    EnableSSL = true
                 });
-                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
-                Assert.Equal("admin@admin.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com", (await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
                 await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = true });
-                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
                 Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
                 Assert.IsType<RedirectToActionResult>(await acc.GetController<StoresController>().Emails(acc.StoreId, new EmailsViewModel(new EmailSettings()
                 {
-                    From   = "store@store.com",
+                    From = "store@store.com",
                     Login = "store@store.com",
                     Password = "store@store.com",
                     Port = 1234,
                     Server = "store.com",
                     EnableSSL = true
                 }), ""));
-                
-                Assert.Equal("store@store.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+
+                Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
             }
         }
-        
-        
+
+
     }
 }

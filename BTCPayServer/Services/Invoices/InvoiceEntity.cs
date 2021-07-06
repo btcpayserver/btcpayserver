@@ -865,6 +865,10 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         public Money NetworkFee { get; set; }
         /// <summary>
+        /// Total amount of network fee to pay to the invoice
+        /// </summary>
+        public Money NetworkFeeAlreadyPaid { get; set; }
+        /// <summary>
         /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
         public Money MinimumTotalDue { get; set; }
@@ -991,13 +995,14 @@ namespace BTCPayServer.Services.Invoices
             var totalDueNoNetworkCost = Money.Coins(Extensions.RoundUp(totalDue, precision));
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
-
+            decimal networkFeeAlreadyPaid = 0.0m;
             _ = ParentEntity.GetPayments(true)
                 .Where(p => paymentPredicate(p))
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
                     var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee, precision);
+                    networkFeeAlreadyPaid += txFee;
                     paid += _.GetValue(paymentMethods, GetId(), null, precision);
                     if (!paidEnough)
                     {
@@ -1029,6 +1034,7 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
+            accounting.NetworkFeeAlreadyPaid = Money.Coins(Extensions.RoundUp(networkFeeAlreadyPaid, precision));
             // If the total due is 0, there is no payment tolerance to calculate
             var minimumTotalDueSatoshi = accounting.TotalDue.Satoshi == 0
                 ? 0

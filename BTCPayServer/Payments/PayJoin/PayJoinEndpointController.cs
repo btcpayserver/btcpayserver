@@ -370,6 +370,7 @@ namespace BTCPayServer.Payments.PayJoin
                 return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "The HD Key of the store changed");
             }
 
+            bool isTopUp = invoice?.Price is 0.0m;
             Money contributedAmount = Money.Zero;
             var newTx = ctx.OriginalTransaction.Clone();
             var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
@@ -413,7 +414,7 @@ namespace BTCPayServer.Payments.PayJoin
             if (additionalFee > Money.Zero)
             {
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
-                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero && !isTopUp; i++)
                 {
                     if (disableoutputsubstitution)
                         break;

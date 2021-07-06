@@ -229,7 +229,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private void checkHtmlNodesForReferrer(string filePath, string html, string tagName, string attribute)
+        private void CheckHtmlNodesForReferrer(string filePath, string html, string tagName, string attribute)
         {
             Regex aNodeRegex = new Regex("<" + tagName + "\\s.*?>");
             var matches = aNodeRegex.Matches(html).OfType<Match>();

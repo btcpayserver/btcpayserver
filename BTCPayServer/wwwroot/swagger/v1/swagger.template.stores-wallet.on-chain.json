@@ -382,7 +382,7 @@
                 "tags": [
                     "Store Wallet (On Chain)"
                 ],
-                "summary": "Get store on-chain wallet transactions",
+                "summary": "Get store on-chain wallet transaction",
                 "parameters": [
                     {
                         "name": "storeId",

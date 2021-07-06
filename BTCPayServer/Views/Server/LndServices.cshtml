@@ -15,22 +15,22 @@
         <div>
             @if (Model.Uri == null) // if GRPC
             {
-                <a href="https://www.pebble.indiesquare.me/" target="_blank" class="d-inline-block me-3 text-center">
+                <a href="https://www.pebble.indiesquare.me/" target="_blank" class="d-inline-block me-3 text-center" rel="noreferrer noopener">
                     <img src="~/img/pebblewallet.jpg" width="100" height="100" asp-append-version="true" alt="Pebble" />
                     <div class="mt-2">Pebble</div>
                 </a>
-                <a href="https://zaphq.io/" target="_blank" class="d-inline-block me-3 text-center">
+                <a href="https://zaphq.io/" target="_blank" class="d-inline-block me-3 text-center" rel="noreferrer noopener">
                     <img src="~/img/zapwallet.jpg" width="100" height="100" asp-append-version="true" alt="Zap" />
                     <div class="mt-2">Zap</div>
                 </a>
             }
             else
             {
-                <a href="https://lightningjoule.com/" target="_blank" class="d-inline-block me-3 mb-3 text-center">
+                <a href="https://lightningjoule.com/" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
                     <img src="~/img/joule.png" width="100" height="100" asp-append-version="true" alt="Joule" />
                     <div class="mt-2">Joule</div>
                 </a>
-                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center">
+                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
                     <img src="~/img/zeus.jpg" width="100" height="100" asp-append-version="true" alt="Zeus" />
                     <div class="mt-2">Zeus</div>
                 </a>
@@ -64,7 +64,7 @@
                     <input asp-for="QRCode" class="form-control" readonly />
                 </div>
                 <p>
-                    Click <a href="@Model.QRCodeLink" target="_blank">here</a> to open the configuration file.
+                    Click <a href="@Model.QRCodeLink" target="_blank" rel="noreferrer noopener">here</a> to open the configuration file.
                 </p>
             </div>
         }

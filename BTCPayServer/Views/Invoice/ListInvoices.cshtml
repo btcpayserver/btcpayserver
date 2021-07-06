@@ -179,7 +179,7 @@
             <h2 class="mb-0">
                 @ViewData["Title"]
                 <small>
-                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank">
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank" rel="noreferrer noopener">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
                 </small>
@@ -321,7 +321,7 @@
                     </div>
                 </span>
 
-                <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank">
+                <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
 
@@ -359,7 +359,7 @@
                             <td style="max-width: 180px;">
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {
-                                    <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
+                                    <a href="@invoice.RedirectUrl" class="wraptext200" rel="noreferrer noopener">@invoice.OrderId</a>
                                 }
                                 else
                                 {

@@ -30,7 +30,7 @@
 
             @if (!string.IsNullOrEmpty(Model.Action))
             {
-                <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl">
+                <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl" rel="noreferrer noopener">
                     <button type="submit" class="btn @Model.ButtonClass xmx-2" id="continue" style="min-width:25%;">@Model.Action</button>
                     <button type="submit" class="btn btn-secondary mx-2" onclick="history.back(); return false;" style="min-width:25%;">Go back</button>
                 </form>

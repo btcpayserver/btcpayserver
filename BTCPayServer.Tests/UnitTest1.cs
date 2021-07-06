@@ -206,10 +206,77 @@ namespace BTCPayServer.Tests
             List<Task> checkLinks = new List<Task>();
             foreach (var file in viewFiles)
             {
-                checkLinks.Add(CheckLinks(regex, httpClient, file));
+                checkLinks.Add(CheckDeadLinks(regex, httpClient, file));
             }
 
             await Task.WhenAll(checkLinks);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public async Task CheckExternalNoReferrerLinks()
+        {
+            var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
+            var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
+            Assert.NotEmpty(viewFiles);
+
+            foreach (var file in viewFiles)
+            {
+                var html = await File.ReadAllTextAsync(file);
+
+                CheckHtmlNodesForReferrer(file, html, "a", "href");
+                CheckHtmlNodesForReferrer(file, html, "form", "action");
+            }
+        }
+
+        private void CheckHtmlNodesForReferrer(string filePath, string html, string tagName, string attribute)
+        {
+            Regex aNodeRegex = new Regex("<" + tagName + "\\s.*?>");
+            var matches = aNodeRegex.Matches(html).OfType<Match>();
+
+            foreach (var match in matches)
+            {
+                var node = match.Groups[0].Value;
+                var attributeValue = GetAttributeValue(node, attribute);
+
+                if (attributeValue != null)
+                {
+                    if (attributeValue.Length == 0 || attributeValue.StartsWith("mailto:") || attributeValue.StartsWith("/") || attributeValue.StartsWith("~/") || attributeValue.StartsWith("#") || attributeValue.StartsWith("?") || attributeValue.StartsWith("javascript:") || attributeValue.StartsWith("@Url.Action("))
+                    {
+                        // Local link, this is fine
+                    }
+                    else if (attributeValue.StartsWith("http://") || attributeValue.StartsWith("https://") ||
+                             attributeValue.StartsWith("@"))
+                    {
+                        // This can be an external link. Treating it as such.
+                        var rel = GetAttributeValue(node, "rel");
+
+                        // Building the file path + line number helps us to navigate to the wrong HTML quickly!
+                        var lineNumber = html.Substring(0, html.IndexOf(node, StringComparison.InvariantCulture)).Split("\n").Length;
+                        Assert.True(rel != null, "Template file \"" + filePath + ":" + lineNumber + "\" contains a possibly external link (" + node + ") that is missing rel=\"noreferrer noopener\"");
+
+                        if (rel != null)
+                        {
+                            // All external links should have 'rel="noreferrer noopener"'
+                            var relWords = rel.Split(" ");
+                            Assert.Contains("noreferrer", relWords);
+                            Assert.Contains("noopener", relWords);
+                        }
+                    }
+                }
+            }
+        }
+
+        private String GetAttributeValue(String nodeHtml, string attribute)
+        {
+            Regex regex = new Regex("\\s" + attribute + "=\"(.*?)\"");
+            var match = regex.Match(nodeHtml);
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return null;
         }
 
         [Fact]
@@ -286,7 +353,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static async Task CheckLinks(Regex regex, HttpClient httpClient, string file)
+        private static async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
         {
             List<Task> checkLinks = new List<Task>();
             var text = await File.ReadAllTextAsync(file);

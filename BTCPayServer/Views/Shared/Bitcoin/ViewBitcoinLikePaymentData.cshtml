@@ -71,7 +71,7 @@
                         <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
                         <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate"  title="@payment.TransactionId">
                             <div class="wraptextAuto">
-                                <a href="@payment.TransactionLink" target="_blank">
+                                <a href="@payment.TransactionLink" target="_blank" rel="noreferrer noopener">
                                     @payment.TransactionId
                                 </a>
                             </div>

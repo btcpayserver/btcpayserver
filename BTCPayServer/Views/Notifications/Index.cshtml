@@ -70,7 +70,7 @@
                                         <td class="text-end fw-normal">
                                             @if (!String.IsNullOrEmpty(item.ActionLink))
                                             {
-                                                <a href="@item.ActionLink" class="btn btn-link p-0">Details</a>
+                                                <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
                                                 <span class="d-none d-md-inline-block"> - </span>
                                             }
                                             <button onclick="return rowseen(this)" class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">

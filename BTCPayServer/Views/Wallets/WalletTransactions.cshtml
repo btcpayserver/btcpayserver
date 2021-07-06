@@ -62,7 +62,7 @@
 <p>
     If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
     <br/>
-    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#missing-payments-in-my-software-or-hardware-wallet">follow these instructions</a>.
+    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
 </p>
 
 @if (Model.Transactions.Any())
@@ -136,7 +136,7 @@
                                     </div>
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {
-                                        <a href="@label.Link" target="_blank" class="badge transaction-details-icon" style="background-color: @label.Color; filter: brightness(1.1);">
+                                        <a href="@label.Link" target="_blank" class="badge transaction-details-icon" style="background-color: @label.Color; filter: brightness(1.1);" rel="noreferrer noopener">
                                             <span class="fa fa-info-circle" title="Transaction details" style="color: @label.Color; filter: brightness(0.5);">
                                                 <span class="visually-hidden">Transaction details</span>
                                             </span>
@@ -146,7 +146,7 @@
                             }
                         </td>
                         <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">
-                            <a href="@transaction.Link" target="_blank">
+                            <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
                                 @transaction.Id
                             </a>
                         </td>

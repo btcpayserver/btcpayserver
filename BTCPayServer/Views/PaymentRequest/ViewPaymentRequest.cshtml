@@ -328,7 +328,7 @@
                                                     </tr>
                                                     <tr v-for="payment of invoice.payments" class="table-borderless table-light">
                                                         <td class="ps-3 text-break">
-                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank">{{payment.id}}</a>
+                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank" rel="noreferrer noopener">{{payment.id}}</a>
                                                             <span v-else>{{payment.id}}</span>
                                                         </td>
                                                         <td v-text="formatDate(payment.receivedDate)"></td>
@@ -349,7 +349,7 @@
         </main>
         <footer class="pt-2 pb-4 d-print-none">
             <div class="container text-center">
-                Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
         </footer>
     </div>

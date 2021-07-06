@@ -162,7 +162,7 @@
                                                 <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>
+                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
@@ -186,7 +186,7 @@
         </main>
         <footer class="pt-2 pb-4 d-print-none">
             <div class="container text-center">
-                Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
         </footer>
     </div>

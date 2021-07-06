@@ -5,7 +5,7 @@
     {
         if (value is string str && str.StartsWith("http"))
         {
-            <a href="@str" target="_blank">@str</a>
+            <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
         }
         else
         {

@@ -20,7 +20,7 @@
         <h5>Compatible wallets</h5>
 
             <div>
-                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center">
+                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
                     <img src="~/img/zeus.jpg" width="100" height="100" asp-append-version="true" alt="Zeus" />
                     <div class="mt-2">Zeus</div>
                 </a>
@@ -55,7 +55,7 @@
                         <input asp-for="QRCode" readonly class="form-control" />
                     </div>
                     <div class="form-group">
-                        Click <a href="@Model.QRCodeLink" target="_blank">here</a> to open the configuration file.
+                        Click <a href="@Model.QRCodeLink" target="_blank" rel="noreferrer noopener">here</a> to open the configuration file.
                     </div>
                 </div>
             }

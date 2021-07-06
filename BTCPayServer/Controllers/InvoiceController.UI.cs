@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -463,6 +464,61 @@ namespace BTCPayServer.Controllers
 
             return View(nameof(Checkout), model);
         }
+        
+        [HttpPost]
+        [Route("i/{invoiceId}/fake-payment")]
+        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request)
+        {
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            var store = await _StoreRepository.FindStore(invoice.StoreId);
+            
+            // TODO security: only allow this controller to work on REGTEST!
+            
+            var NetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            
+            // TODO do we need to use GetEnvironment() ?? 
+            //var credentialString = GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3");
+            var credentialString = "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3";
+
+            
+            
+            // TODO support altcoins, not just bitcoin
+            //var network = invoice.Networks.GetNetwork(invoice.Currency);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+            var ExplorerNode = new RPCClient(RPCCredentialString.Parse(credentialString), network.NBitcoinNetwork);
+            //ExplorerNode.ScanRPCCapabilities();
+            var paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
+
+            //var network = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+            var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
+            
+            var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
+
+            // TODO support fiat amounts, not just crypto
+            //var btcAmount = invoice.Price;
+            var btcAmount = request.amount;
+
+            var FakePaymentResponse = new FakePaymentResponse();
+
+            try
+            {
+                FakePaymentResponse.txid = ExplorerNode.SendToAddress(bitcoinAddressObj, new Money(btcAmount, MoneyUnit.BTC)).ToString();
+                FakePaymentResponse.amountRemaining = invoice.Price - btcAmount;
+                FakePaymentResponse.successMessage = "Created transaction " + FakePaymentResponse.txid;
+            }
+            catch (Exception e)
+            {
+                FakePaymentResponse.errorMessage = e.Message;
+                FakePaymentResponse.amountRemaining = invoice.Price;
+            }
+
+            if (FakePaymentResponse.txid != null)
+            {
+                return Ok(FakePaymentResponse);                
+            }
+            return BadRequest(FakePaymentResponse);
+        }
+        
 
         [HttpGet]
         [Route("invoice-noscript")]

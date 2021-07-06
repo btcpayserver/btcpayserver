@@ -104,6 +104,11 @@ namespace BTCPayServer.Controllers.GreenField
                 context.User =
                     new ClaimsPrincipal(new ClaimsIdentity(claims, GreenFieldConstants.AuthenticationType));
             }
+            else
+            {
+                context.User =
+                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), $"Local{GreenFieldConstants.AuthenticationType}"));
+            }
 
             if (storeIds?.Any() is true)
             {

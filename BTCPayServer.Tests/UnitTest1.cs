@@ -267,7 +267,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private String getAttributeValue(String nodeHtml, string attribute)
+        private String GetAttributeValue(String nodeHtml, string attribute)
         {
             Regex regex = new Regex("\\s" + attribute + "=\"(.*?)\"");
             var match = regex.Match(nodeHtml);

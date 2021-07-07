@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -792,9 +793,14 @@ namespace BTCPayServer.Controllers
         [Route("invoices/create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> CreateInvoice()
+        public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {
-            var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
+            var stores = new SelectList(
+                await _StoreRepository.GetStoresByUserId(GetUserId()),
+                nameof(StoreData.Id),
+                nameof(StoreData.StoreName),
+                new SearchString(model?.SearchTerm).GetFilterArray("storeid")?.ToArray().FirstOrDefault()
+            );
             if (!stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";

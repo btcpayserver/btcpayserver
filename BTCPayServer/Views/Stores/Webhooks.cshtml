@@ -17,15 +17,26 @@
 {
     <table class="table table-sm table-responsive-md">
         <thead>
-        <tr>
-            <th>Url</th>
-            <th class="text-end">Actions</th>
-        </tr>
+            <tr>
+                <th>Status</th>
+                <th>Url</th>
+                <th class="text-end">Actions</th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var wh in Model.Webhooks)
         {
             <tr>
+                <td class="align-baseline">
+                    @if (wh.LastDeliverySuccessful)
+                    {
+                        <span class="d-flex align-items-center fa fa-check text-success" title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery on: " + @wh.LastDeliveryTimeStamp)"></span>
+                    }
+                    else
+                    {
+                        <span class="d-flex align-items-center fa fa-times text-danger" title="Error: @wh.LastDeliveryErrorMessage. Delivery last attempted on: @wh.LastDeliveryTimeStamp"></span>
+                    }
+                </td>
                 <td class="d-block text-break">@wh.Url</td>
                 <td class="text-end text-md-nowrap">
                     <a asp-action="TestWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
@@ -45,5 +56,5 @@ else
 }
 
 @section PageFootContent {
-<partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" />
 }

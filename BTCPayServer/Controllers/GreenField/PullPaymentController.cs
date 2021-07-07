@@ -99,19 +99,21 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
             PaymentMethodId[] paymentMethods = null;
-            if (request.PaymentMethods is string[] paymentMethodsStr)
+            if (request.PaymentMethods is { } paymentMethodsStr)
             {
-                paymentMethods = paymentMethodsStr.Select(p => new PaymentMethodId(p, PaymentTypes.BTCLike)).ToArray();
-                foreach (var p in paymentMethods)
+                paymentMethods = paymentMethodsStr.Select(s =>
                 {
-                    var n = _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode);
-                    if (n is null)
-                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
-                    if (n.ReadonlyWallet)
-                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method (We do not support the crypto currency for refund)");
-                }
-                if (paymentMethods.Any(p => _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode) is null))
-                    ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
+                    PaymentMethodId.TryParse(s, out var pmi);
+                    return pmi;
+                }).ToArray();
+               var supported = _payoutHandlers.SelectMany(handler => handler.GetSupportedPaymentMethods()).ToArray();
+               for (int i = 0; i < paymentMethods.Length; i++)
+               {
+                   if (!supported.Contains(paymentMethods[i]))
+                   {
+                       request.AddModelError(paymentRequest => paymentRequest.PaymentMethods[i], "Invalid or unsupported payment method", this);
+                   }
+               }
             }
             else
             {
@@ -246,7 +248,7 @@ namespace BTCPayServer.Controllers.GreenField
             var destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
             if (destination.Item1 is null)
             {
-                ModelState.AddModelError(nameof(request.Destination), "The destination must be an address or a BIP21 URI");
+                ModelState.AddModelError(nameof(request.Destination), "The destination is invalid for the payment specified");
                 return this.CreateValidationError(ModelState);
             }
 

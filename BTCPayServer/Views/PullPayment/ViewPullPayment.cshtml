@@ -15,11 +15,11 @@
         {
             case "Completed":
             case "In Progress":
-                return "text-success";
+                return "bg-success";
             case "Cancelled":
-                return "text-danger";
+                return "bg-danger";
             default:
-                return "text-warning";
+                return "bg-warning";
         }
     }
 }
@@ -163,16 +163,16 @@
                                                 <td class="text-break">
                                                     @invoice.Destination
                                                 </td>
-                                                <td class="text-end">@invoice.PaymentMethod.ToPrettyString()</td>
-                                                <td class="text-end">@invoice.AmountFormatted</td>
+                                                <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
+                                                <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
                                                 <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
+                                                        <a class="transaction-link text-print-default badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
+                                                        <span class="text-print-default badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>

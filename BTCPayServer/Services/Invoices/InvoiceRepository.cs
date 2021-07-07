@@ -404,7 +404,7 @@ namespace BTCPayServer.Services.Invoices
             var filteredTerms = terms.Where(t => !string.IsNullOrWhiteSpace(t)
                 && (invoice.InvoiceSearchData == null || invoice.InvoiceSearchData.All(data => data.Value != t)))
                 .Distinct()
-                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s });
+                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s.Truncate(512) });
             context.AddRange(filteredTerms);
         }
 
@@ -632,8 +632,9 @@ namespace BTCPayServer.Services.Invoices
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
+                var text = queryObject.TextSearch.Truncate(512);
 #pragma warning disable CA1307 // Specify StringComparison
-                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(queryObject.TextSearch)));
+                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(text)));
 #pragma warning restore CA1307 // Specify StringComparison
             }
 

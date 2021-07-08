@@ -20,6 +20,7 @@ namespace BTCPayServer.Plugins.Test.Services
             await using var context = _testPluginDbContextFactory.CreateContext();
 
             await context.TestPluginRecords.AddAsync(new TestPluginData() {Timestamp = DateTimeOffset.UtcNow});
+            await context.SaveChangesAsync();
         }
         
         

@@ -10,7 +10,7 @@
         <div class="row">
             <h2>Persisted Data</h2>
             <p>The following is data persisted to the configured database but in an isolated DbContext. Every time you start BTCPayw with this plugin enabled, a timestamp is logged.</p>
-            <ul class="list-group">>
+            <ul class="list-group">
                 @foreach (var item in Model.Data)
                 {
                     <li class="list-group-item">@item.Id at @item.Timestamp.ToString("F")</li>

@@ -409,8 +409,9 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MassAction(string command, string[] selectedItems)
+        public async Task<IActionResult> MassAction(string command, string[] selectedItems, string selectedAll)
         {
+            // TODO can selectedAll be a bool? Tried it but doesn't work. What value should be submitted for the casting to "bool" ? Number "1" does not cast to bool :(
             if (selectedItems != null)
             {
                 switch (command)
@@ -419,6 +420,14 @@ namespace BTCPayServer.Controllers
                         await _InvoiceRepository.MassArchive(selectedItems);
                         TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice(s) archived.";
 
+                        break;
+                    case "export_json":
+                        // TODO consider selectedAll === '1' or not
+                        // TODO export JSON
+                        break;
+                    case "export_csv":
+                        // TODO consider selectedAll === '1' or not
+                        // TODO export CSV
                         break;
                 }
             }
@@ -760,6 +769,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null, int timezoneOffset = 0)
         {
+            // TODO refactor
             var model = new InvoiceExport(_CurrencyNameTable);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);

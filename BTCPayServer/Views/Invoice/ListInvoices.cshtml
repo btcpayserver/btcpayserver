@@ -112,6 +112,12 @@
                 items[i].checked = e.checked;
             }
         }
+        
+        function unselectSelectAll(e)
+        {
+            var selectAllCheckbox = document.getElementById("selectAllCheckbox");
+            selectAllCheckbox.checked = false;
+        }
                         
         function getDateStringWithOffset(hoursDiff) {
             var datenow = new Date();
@@ -316,8 +322,8 @@
                         Export
                     </a>
                     <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                        <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                        <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                        <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="export_csv"><i class="fa fa-download"></i> CSV</button>
+                        <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="export_json"><i class="fa fa-download"></i> JSON</button>
                     </div>
                 </span>
 
@@ -329,7 +335,7 @@
                     <thead>
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
-                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" onclick="selectAll(this);"/>
+                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" name="selectedAll" value="1" onclick="selectAll(this);"/>
                         </th>
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
@@ -349,7 +355,7 @@
                     {
                         <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
                             <td class="only-for-js">
-                                <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId"/>
+                                <input name="selectedItems" type="checkbox" class="selector form-check-input" onclick="unselectSelectAll(this);" value="@invoice.InvoiceId"/>
                             </td>
                             <td>
                                 <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">

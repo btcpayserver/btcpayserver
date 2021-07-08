@@ -69,6 +69,27 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseMiscAPIs()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var acc = tester.NewAccount();
+                await acc.GrantAccessAsync();
+                var unrestricted = await acc.CreateClient();
+                var langs = await unrestricted.GetAvailableLanguages();
+                Assert.NotEmpty(langs);
+                Assert.NotNull(langs[0].Code);
+                Assert.NotNull(langs[0].DisplayName);
+
+                var perms = await unrestricted.GetPermissionMetadata();
+                Assert.NotEmpty(perms);
+                var p = perms.First(p => p.PermissionName == "unrestricted");
+                Assert.True(p.SubPermissions.Count > 6);
+            }
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

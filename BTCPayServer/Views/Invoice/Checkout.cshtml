@@ -115,7 +115,7 @@
     </invoice>
     <script>
     var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
-    var storeDefaultLang = @Safe.Json(langService.FindBestMatch(Model.DefaultLang)?.Code ?? Model.DefaultLang);
+    var defaultLang = @Safe.Json(Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
     i18next
@@ -134,8 +134,8 @@
         if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
             return urlParams.lang;
         }
-        else if (isLanguageAvailable(storeDefaultLang)) {
-            return storeDefaultLang;
+        else if (isLanguageAvailable(defaultLang)) {
+            return defaultLang;
         } else {
             return fallbackLanguage;
         }

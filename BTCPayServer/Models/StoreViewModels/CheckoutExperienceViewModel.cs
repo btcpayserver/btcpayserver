@@ -55,8 +55,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Recommended fee confirmation target blocks")]
         [Range(1, double.PositiveInfinity)]
         public int RecommendedFeeBlockTarget { get; set; }
-
-
+        
+        [Display(Name = "Auto-detect language on checkout")]
+        public bool AutoDetectLanguage { get; set; }
+        
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
 

@@ -615,7 +615,7 @@
                     "type": {
                         "type": "string",
                         "nullable": false,
-                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, and `InvoiceInvalid`."
+                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceSettled`, and `InvoiceInvalid`."
                     },
                     "timestamp": {
                         "description": "The timestamp when this delivery has been created",

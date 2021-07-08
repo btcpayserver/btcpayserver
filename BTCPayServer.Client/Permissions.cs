@@ -17,6 +17,9 @@ namespace BTCPayServer.Client
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
+        public const string CanUpdateInvoice = "btcpay.store.canupdateinvoice";
+        public const string CanUpdateInvoiceStatus = "btcpay.store.canupdateinvoicestatus";
+        public const string CanArchiveInvoice = "btcpay.store.canarchiveinvoice";
         public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
@@ -33,6 +36,9 @@ namespace BTCPayServer.Client
             {
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
+                yield return CanUpdateInvoice;
+                yield return CanArchiveInvoice;
+                yield return CanUpdateInvoiceStatus;
                 yield return CanModifyStoreWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
@@ -171,6 +177,9 @@ namespace BTCPayServer.Client
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:
                 case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanUpdateInvoice when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanArchiveInvoice when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanUpdateInvoiceStatus when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:

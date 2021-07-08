@@ -242,6 +242,7 @@
                 "security": [
                     {
                         "API Key": [
+                            "btcpay.store.canarchiveinvoice",
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -316,6 +317,7 @@
                 "security": [
                     {
                         "API Key": [
+                            "btcpay.store.canupdateinvoice",
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -516,6 +518,7 @@
                 "security": [
                     {
                         "API Key": [
+                            "btcpay.store.canupdateinvoicestatus",
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -579,6 +582,7 @@
                 "security": [
                     {
                         "API Key": [
+                            "btcpay.store.canarchiveinvoice",
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []

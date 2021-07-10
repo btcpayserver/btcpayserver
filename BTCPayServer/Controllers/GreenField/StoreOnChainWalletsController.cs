@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -156,8 +157,13 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions")]
-        public async Task<IActionResult> ShowOnChainWalletTransactions(string storeId, string cryptoCode,
-            [FromQuery]TransactionStatus[] statusFilter = null)
+        public async Task<IActionResult> ShowOnChainWalletTransactions(
+            string storeId, 
+            string cryptoCode,
+            [FromQuery] TransactionStatus[]? statusFilter = null,
+            [FromQuery] int skip = 0,
+            [FromQuery] int limit = int.MaxValue
+        )
         {
             if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
@@ -183,7 +189,7 @@ namespace BTCPayServer.Controllers.GreenField
                 filteredFlatList.AddRange(txs.ReplacedTransactions.Transactions);
             }
 
-            var result = filteredFlatList.Select(information =>
+            var result = filteredFlatList.Skip(skip).Take(limit).Select(information =>
             {
                 walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
                 return ToModel(transactionInfo, information, wallet);
@@ -297,7 +303,7 @@ namespace BTCPayServer.Controllers.GreenField
                     subtractFeesOutputsCount.Add(index);
                 }
 
-                BitcoinUrlBuilder bip21 = null;
+                BitcoinUrlBuilder? bip21 = null;
                 var amount = destination.Amount;
                 if (amount.GetValueOrDefault(0) <= 0)
                 {
@@ -542,15 +548,15 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod;
         }
 
-        private OnChainWalletTransactionData ToModel(WalletTransactionInfo walletTransactionsInfoAsync,
+        private OnChainWalletTransactionData ToModel(WalletTransactionInfo? walletTransactionsInfoAsync,
             TransactionInformation tx,
             BTCPayWallet wallet)
         {
             return new OnChainWalletTransactionData()
             {
                 TransactionHash = tx.TransactionId,
-                Comment = walletTransactionsInfoAsync?.Comment?? string.Empty,
-                Labels = walletTransactionsInfoAsync?.Labels?? new Dictionary<string, LabelData>(),
+                Comment = walletTransactionsInfoAsync?.Comment ?? string.Empty,
+                Labels = walletTransactionsInfoAsync?.Labels ?? new Dictionary<string, LabelData>(),
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

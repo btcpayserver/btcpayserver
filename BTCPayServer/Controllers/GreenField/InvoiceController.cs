@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(ToModel(invoice));
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> ArchiveInvoice(string storeId, string invoiceId)
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
@@ -220,7 +220,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
         public async Task<IActionResult> MarkInvoiceStatus(string storeId, string invoiceId,
@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers.GreenField
             return await GetInvoice(storeId, invoiceId);
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive")]
         public async Task<IActionResult> UnarchiveInvoice(string storeId, string invoiceId)

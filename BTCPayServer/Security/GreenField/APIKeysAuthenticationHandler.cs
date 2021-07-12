@@ -16,7 +16,6 @@ namespace BTCPayServer.Security.GreenField
     {
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public APIKeysAuthenticationHandler(
@@ -26,12 +25,10 @@ namespace BTCPayServer.Security.GreenField
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager) : base(options, logger, encoder, clock)
         {
             _apiKeyRepository = apiKeyRepository;
             _identityOptions = identityOptions;
-            _signInManager = signInManager;
             _userManager = userManager;
         }
 

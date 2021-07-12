@@ -37,6 +37,7 @@ namespace BTCPayServer.Security.GreenField
         {
             serviceCollection.AddSingleton<APIKeyRepository>();
             serviceCollection.AddScoped<IAuthorizationHandler, GreenFieldAuthorizationHandler>();
+            serviceCollection.AddScoped<IAuthorizationHandler, LocalGreenFieldAuthorizationHandler>();
             return serviceCollection;
         }
 

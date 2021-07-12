@@ -1,6 +1,8 @@
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Routing;
 
@@ -32,7 +34,16 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
             protected override void FillViewModel(PayoutNotification notification, NotificationViewModel vm)
             {
-                vm.Body = "A new payout is awaiting for approval";
+                switch (notification.State)
+                {
+                    case null:
+                    case PayoutState.AwaitingApproval:
+                        vm.Body = "A new payout is awaiting for approval";
+                        break;
+                    case PayoutState.AwaitingPayment:
+                        vm.Body = "A new payout is approved and awaiting payment";
+                        break;
+                }
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(WalletsController.Payouts),
                     "Wallets",
                     new {walletId = new WalletId(notification.StoreId, notification.PaymentMethod)}, _options.RootPath);
@@ -43,6 +54,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
         public string StoreId { get; set; }
         public string PaymentMethod { get; set; }
         public string Currency { get; set; }
+        public PayoutState? State { get; set; }
         public override string Identifier => TYPE;
         public override string NotificationType => TYPE;
     }

@@ -130,7 +130,8 @@ namespace BTCPayServer.Controllers.GreenField
                 Amount = request.Amount,
                 Currency = request.Currency,
                 StoreId = storeId,
-                PaymentMethodIds = paymentMethods
+                PaymentMethodIds = paymentMethods,
+                AutoApproveClaims = request.AutoApproveClaims
             });
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
@@ -149,6 +150,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Currency = ppBlob.Currency,
                 Period = ppBlob.Period,
                 Archived = pp.Archived,
+                AutoApproveClaims = ppBlob.AutoApproveClaims,
                 ViewLink = _linkGenerator.GetUriByAction(
                                 nameof(PullPaymentController.ViewPullPayment),
                                 "PullPayment",

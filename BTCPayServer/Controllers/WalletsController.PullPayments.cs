@@ -75,7 +75,8 @@ namespace BTCPayServer.Controllers
                 StoreId = walletId.StoreId,
                 PaymentMethodIds = new[] { paymentMethodId },
                 EmbeddedCSS = model.EmbeddedCSS,
-                CustomCSSLink = model.CustomCSSLink
+                CustomCSSLink = model.CustomCSSLink,
+                AutoApproveClaims = model.AutoApproveClaims
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {
@@ -120,7 +121,8 @@ namespace BTCPayServer.Controllers
                 var nfi = _currencyTable.GetNumberFormatInfo(ppBlob.Currency, true);
                 var period = pp.GetPeriod(now);
                 vm.PullPayments.Add(new PullPaymentsModel.PullPaymentModel()
-                {
+                { 
+                    AutoApproveClaims = ppBlob.AutoApproveClaims,
                     StartDate = pp.StartDate,
                     EndDate = pp.EndDate,
                     Id = pp.Id,

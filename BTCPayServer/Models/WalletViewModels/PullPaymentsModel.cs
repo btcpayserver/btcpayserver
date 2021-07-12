@@ -25,6 +25,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public ProgressModel Progress { get; set; }
             public DateTimeOffset StartDate { get; set; }
             public DateTimeOffset? EndDate { get; set; }
+            public bool AutoApproveClaims { get; set; }
         }
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
@@ -49,5 +50,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string CustomCSSLink { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
+        [Display(Name = "Automatically approve claims")]
+        public bool AutoApproveClaims { get; set; }
     }
 }

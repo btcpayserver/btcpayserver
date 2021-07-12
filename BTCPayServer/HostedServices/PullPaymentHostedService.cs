@@ -32,6 +32,7 @@ namespace BTCPayServer.HostedServices
         public string EmbeddedCSS { get; set; }
         public PaymentMethodId[] PaymentMethodIds { get; set; }
         public TimeSpan? Period { get; set; }
+        public bool AutoApproveClaims { get; set; }
     }
     public class PullPaymentHostedService : BaseAsyncService
     {
@@ -107,6 +108,7 @@ namespace BTCPayServer.HostedServices
                 Limit = create.Amount,
                 Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
                 SupportedPaymentMethods = create.PaymentMethodIds,
+                AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView()
                 {
                     Title = create.Name ?? string.Empty,
@@ -401,13 +403,32 @@ namespace BTCPayServer.HostedServices
                 try
                 {
                     await ctx.SaveChangesAsync();
+                    if (ppBlob.AutoApproveClaims)
+                    {
+                        payout.PullPaymentData.StoreData = await ctx.Stores.FindAsync(payout.PullPaymentData.StoreId);
+                        var rateResult = await GetRate(payout, null, CancellationToken.None);
+                        if (rateResult.BidAsk != null)
+                        {
+                            var approveResult = new TaskCompletionSource<PayoutApproval.Result>();
+                            await HandleApproval(new PayoutApproval()
+                            {
+                                PayoutId = payout.Id, Revision = payoutBlob.Revision, Rate = rateResult.BidAsk.Ask, Completion =approveResult
+                            });
+                            
+                            if ((await approveResult.Task) == PayoutApproval.Result.Ok)
+                            {
+                                payout.State = PayoutState.AwaitingPayment;
+                            }
+                        }
+                    }
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout));
                     await _notificationSender.SendNotification(new StoreScope(pp.StoreId), new PayoutNotification()
                     {
                         StoreId = pp.StoreId,
                         Currency = ppBlob.Currency,
                         PaymentMethod = payout.PaymentMethodId,
-                        PayoutId = pp.Id
+                        PayoutId = pp.Id,
+                        State = payout.State
                     });
                 }
                 catch (DbUpdateException)

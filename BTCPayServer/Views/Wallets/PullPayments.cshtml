@@ -59,6 +59,7 @@
                         <th scope="col">Start</th>
                         <th scope="col">Name</th>
                         <th scope="col">Refunded</th>
+                    	<th scope="col">Auto approved</th>
                         <th scope="col" class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -78,6 +79,16 @@
                                     </div>
                                 </div>
                             </td>
+                            <td class="align-middle">
+	                            @if (pp.AutoApproveClaims)
+	                            {
+	                                <span class="fa fa-check" data-toggle="tooltip" title="Payouts created on this pull payment are automatically approved"></span>
+	                            }
+	                            else
+	                            {
+	                                <span class="fa fa-times" data-toggle="tooltip" title="Payouts created on this pull payment are not automatically approved"></span>
+	                            }
+	                        </td>
                             <td class="text-end">
                                 <a asp-action="ViewPullPayment"
                                    asp-controller="PullPayment"

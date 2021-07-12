@@ -22,7 +22,7 @@
                 {
                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
 
-                    <li class="list-group-item bg-tile @(scheme.Collapsed ? "collapsed": "")">
+                    <li class="list-group-item bg-tile @(scheme.Collapsed ? "assets-collapsed": "")">
                         <div class="d-flex align-items-center">
                             <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
                                 <strong class="me-3">@scheme.Crypto</strong>
@@ -83,11 +83,20 @@
             @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
             {
                 <script>
-                    $(document).ready(function () {
-                        $(".collapsed").hide();
-                        $("#toggle-assets").click(function () {
-                            $(".collapsed").show();
-                        });
+                    document.addEventListener("DOMContentLoaded", (event) => {
+                        var collapsed = document.getElementsByClassName("assets-collapsed");
+                        for (let collapsedElement of collapsed) {
+                            collapsedElement.style.display = 'none'; 
+                        }
+                        document
+                            .getElementById("toggle-assets")
+                            .addEventListener("click", function (){
+                                var collapsed = document.getElementsByClassName("assets-collapsed");
+                                for (let collapsedElement of collapsed) {
+                                    collapsedElement.style.display = 'block';   
+                                }
+                                document.getElementById("toggle-assets").style.display="none";
+                            });
                     });
                 </script>
                 <button class="btn btn-link text-secondary mb-3 p-0 only-for-js" id="toggle-assets" type="button">Show additional assets</button>

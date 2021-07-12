@@ -17,6 +17,20 @@
                         <span>{{$t("Open in wallet")}}</span>
                     </a>
                 </div>
+                
+                <!-- TODO only show for REGTEST! -->
+                <form id="fake-payment" action="/i/@Model.InvoiceId/fake-payment" method="post">
+                    <label for="fake-payment-crypto-code" class="form-label">Fake a @Model.CryptoCode payment for testing</label>
+                    <p class="alert alert-danger" style="display: none;"></p>
+                    <p class="alert alert-success" style="display: none;"></p>
+                    <div class="input-group mb-3">
+                      <input id="fake-payment-amount" name="amount" type="number" step="any" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="fake-payment-crypto-code">
+                      <span class="input-group-text" id="fake-payment-crypto-code">@Model.CryptoCode</span>
+                      <button class="btn btn-outline-secondary" type="submit">Fake Payment</button>
+                      <p class="text-muted">This is the same as running bitcoin-cli.sh sendtoaddress xxx</p>
+                    </div>
+                </form>
+                
             </div>
             <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
                 <div class="manual__step-two__instructions">
@@ -95,6 +109,7 @@
                 }
             },
             mounted: function() {
+                initFakePaymentForm();
                 var self = this;
                 eventBus.$on("tab-switched",
                     function(tab) {
@@ -118,6 +133,54 @@
             }
         }
     });
+    
+    function initFakePaymentForm(){
+        let form = $('form#fake-payment');
+        let loader = $('form#fake-payment-loading');
+        
+        let inputField = $('#fake-payment-amount');
+        let submitButton = form.find('button[type=submit]');
+        let success = form.find('p.alert-success');
+        let alert = form.find('p.alert-danger');
+        
+        form.submit(function (e){
+             e.preventDefault();
+             
+             let form = $(this);
+             let data = form.serialize();
+                          
+             success.hide();
+             alert.hide();
+             loader.show();
+             inputField.prop('disabled', true);
+             submitButton.prop('disabled', true);
+             
+             $.post({
+                 url: form.attr('action'),
+                 data: data,
+                 success: function (data,status,xhr){
+                     debugger;
+                     success.html(data.successMessage);
+                     success.show();
+                     inputField.val(data.amountRemaining);
+                     if (data.amountRemaining <= 0){
+                         // No need to fake any more payments.
+                         form.hide();                             
+                     }
+                 },
+                 complete: function (xhr,status){
+                     loader.hide();
+                     inputField.prop('disabled', false);
+                     submitButton.prop('disabled', false);
+                 },
+                 error: function (xhr,status,error){
+                     var data = JSON.parse(xhr.responseText);
+                     alert.html(data.errorMessage);
+                     alert.show();
+                 }
+             });
+         });
+     }
 
     $(document).ready(function() {
         // Clipboard Copy

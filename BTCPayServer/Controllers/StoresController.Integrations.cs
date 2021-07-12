@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -18,17 +19,31 @@ namespace BTCPayServer.Controllers
             return View("Integrations", new IntegrationsViewModel());
         }
 
+        private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId) 
+        {
+            return (await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();
+        }
+
         [HttpGet("{storeId}/webhooks")]
         public async Task<IActionResult> Webhooks()
         {
             var webhooks = await _Repo.GetWebhooks(CurrentStore.Id);
             return View(nameof(Webhooks), new WebhooksViewModel()
-            {
-                Webhooks = webhooks.Select(w => new WebhooksViewModel.WebhookViewModel()
                 {
-                    Id = w.Id,
-                    Url = w.GetBlob().Url
-                }).ToArray()
+                    Webhooks = webhooks.Select(async w => {
+                        var lastDelivery = await LastDeliveryForWebhook(w.Id);
+                        var lastDeliveryBlob = lastDelivery?.GetBlob();
+                        
+                        return new WebhooksViewModel.WebhookViewModel()
+                        {
+                            Id = w.Id,
+                            Url = w.GetBlob().Url,
+                            LastDeliveryErrorMessage = lastDeliveryBlob?.ErrorMessage,
+                            LastDeliveryTimeStamp = lastDelivery?.Timestamp,
+                            LastDeliverySuccessful = lastDeliveryBlob == null ? true : lastDeliveryBlob.Status == WebhookDeliveryStatus.HttpSuccess,
+                        };
+                    } 
+                ).Select(t => t.Result).ToArray()
             });
         }
 

@@ -21,6 +21,9 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="Views\Account\_ViewImports.cshtml">
+      <Pack>false</Pack>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />

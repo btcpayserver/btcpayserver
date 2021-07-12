@@ -106,6 +106,7 @@ namespace BTCPayServer.Hosting
                 };
             });
             services.AddScoped<Fido2Service>();
+            services.AddSingleton<UserLoginCodeService>();
             
             var mvcBuilder= services.AddMvc(o =>
             {

@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
@@ -31,6 +32,7 @@ namespace BTCPayServer.Controllers
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly LinkGenerator _linkGenerator;
+        private readonly UserLoginCodeService _userLoginCodeService;
         readonly StoreRepository _StoreRepository;
 
 
@@ -41,13 +43,12 @@ namespace BTCPayServer.Controllers
           EmailSenderFactory emailSenderFactory,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
-          BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IWebHostEnvironment env,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
-          LinkGenerator linkGenerator
+          LinkGenerator linkGenerator,
+          UserLoginCodeService  userLoginCodeService 
           )
         {
             _userManager = userManager;
@@ -59,6 +60,7 @@ namespace BTCPayServer.Controllers
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
             _linkGenerator = linkGenerator;
+            _userLoginCodeService = userLoginCodeService;
             _StoreRepository = storeRepository;
         }
 
@@ -248,5 +250,18 @@ namespace BTCPayServer.Controllers
             }
         }
         #endregion
+
+        [HttpGet]
+        public async Task<IActionResult> LoginCodes()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            return View(nameof(LoginCodes),_userLoginCodeService.GetOrGenerate(user.Id));
+
+        }
     }
 }

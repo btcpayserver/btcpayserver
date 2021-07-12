@@ -1,12 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Cryptography;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -19,7 +18,6 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Plugins;
-using BTCPayServer.Plugins.Shopify;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.GreenField;
@@ -363,6 +361,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
 #endif    
             services.TryAddSingleton<ExplorerClientProvider>();
+            services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
+                x.GetRequiredService<ExplorerClientProvider>());
             services.TryAddSingleton<Bitpay>(o =>
             {
                 if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == ChainName.Mainnet)

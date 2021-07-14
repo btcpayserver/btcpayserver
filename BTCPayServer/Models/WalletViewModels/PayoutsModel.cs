@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string PullPaymentId { get; set; }
         public string Command { get; set; }
         public Dictionary<PayoutState, int> PayoutStateCount { get; set; }
-        public PaymentMethodId PaymentMethodId { get; set; }
+        public string PaymentMethodId { get; set; }
 
         public List<PayoutModel> Payouts { get; set; }
         public PayoutState PayoutState { get; set; }

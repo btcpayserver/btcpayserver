@@ -36,6 +36,15 @@
                         "$ref": "#/components/schemas/InvoiceStatus"
                     },
                     {
+                        "name": "textSearch",
+                        "in": "query",
+                        "required": false,
+                        "description": "A term that can help locating specific invoices.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "startDate",
                         "in": "query",
                         "required": false,
@@ -736,10 +745,36 @@
                     "PaidOver"
                 ]
             },
+            "InvoiceDataBase": {
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount of the invoice"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The currency the invoice will use"
+                    },
+                    "metadata": {
+                        "$ref": "#/components/schemas/InvoiceMetadata"
+                    },
+                    "checkout": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CheckoutOptions"
+                            }
+                        ],
+                        "description": "Additional settings to customize the checkout flow"
+                    }
+                }
+            },
             "InvoiceData": {
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/CreateInvoiceRequest"
+                        "$ref": "#/components/schemas/InvoiceDataBase"
                     },
                     {
                         "type": "object",
@@ -759,15 +794,15 @@
                             },
                             "createdTime": {
                                 "description": "The creation time of the invoice",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                             },
                             "expirationTime": {
                                 "description": "The expiration time of the invoice",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                             },
                             "monitoringTime": {
                                 "description": "The monitoring time of the invoice",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                             },
                             "status": {
                                 "$ref": "#/components/schemas/InvoiceStatus",
@@ -789,7 +824,7 @@
                 "type": "object",
                 "description": "Any json object in any schema you want. Will be rendered on a best effort basis in terms of style on the invoice details UI"
             },
-            "InvoiceMetadata":  {
+            "InvoiceMetadata": {
                 "type": "object",
                 "additionalProperties": true,
                 "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
@@ -929,32 +964,25 @@
                 ]
             },
             "CreateInvoiceRequest": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "amount": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The amount of the invoice"
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/InvoiceDataBase"
                     },
-                    "currency": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "The currency the invoice will use"
-                    },
-                    "metadata": {
-                        "$ref": "#/components/schemas/InvoiceMetadata"
-                    },
-                    "checkout": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/CheckoutOptions"
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "additionalSearchTerms": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "Additional search term to help you find this invoice via text search",
+                                "nullable": true
                             }
-                        ],
-                        "description": "Additional settings to customize the checkout flow"
+                        }
                     }
-                }
+                ]
             },
             "UpdateInvoiceRequest": {
                 "type": "object",
@@ -989,13 +1017,13 @@
                     "expirationMinutes": {
                         "nullable": true,
                         "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",
-                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanMinutes"}]
+                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanMinutes" } ]
                     },
                     "monitoringMinutes": {
                         "type": "integer",
                         "nullable": true,
                         "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Defaults to the store's settings. (The default store settings is 1440, 1 day)",
-                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanMinutes"}]
+                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanMinutes" } ]
                     },
                     "paymentTolerance": {
                         "type": "number",
@@ -1109,7 +1137,7 @@
                     },
                     "receivedDate": {
                         "description": "The date the payment was recorded",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                     },
                     "value": {
                         "type": "string",

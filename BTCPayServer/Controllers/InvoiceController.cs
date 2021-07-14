@@ -108,24 +108,13 @@ namespace BTCPayServer.Controllers
             FillBuyerInfo(invoice, entity);
 
             var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
-
-            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
-            if (currencyInfo != null)
-            {
-                int divisibility = currencyInfo.CurrencyDecimalDigits;
-                invoice.Price = invoice.Price.RoundToSignificant(ref divisibility);
-                divisibility = currencyInfo.CurrencyDecimalDigits;
-                invoice.TaxIncluded = taxIncluded.RoundToSignificant(ref divisibility);
-            }
-            invoice.Price = Math.Max(0.0m, invoice.Price);
-            invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
-            invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
+            var price = invoice.Price is decimal p ? p : 0.0m;
             entity.Metadata.ItemCode = invoice.ItemCode;
             entity.Metadata.ItemDesc = invoice.ItemDesc;
             entity.Metadata.Physical = invoice.Physical;
             entity.Metadata.TaxIncluded = invoice.TaxIncluded;
             entity.Currency = invoice.Currency;
-            entity.Price = invoice.Price;
+            entity.Price = price;
 
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
@@ -167,7 +156,7 @@ namespace BTCPayServer.Controllers
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
             invoice.Currency = invoice.Currency?.Trim().ToUpperInvariant() ?? "USD";
             entity.Currency = invoice.Currency;
-            entity.Price = invoice.Amount;
+            entity.Price = invoice.Amount is decimal v ? v : 0.0m;
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
@@ -190,6 +179,26 @@ namespace BTCPayServer.Controllers
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
+
+
+            entity.Price = Math.Max(0.0m, entity.Price);
+            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(entity.Currency, false);
+            if (currencyInfo != null)
+            {
+                entity.Price = entity.Price.RoundToSignificant(currencyInfo.CurrencyDecimalDigits);
+            }
+            if (entity.Metadata.TaxIncluded is decimal taxIncluded)
+            {
+                if (currencyInfo != null)
+                {
+                    taxIncluded = taxIncluded.RoundToSignificant(currencyInfo.CurrencyDecimalDigits);
+                }
+                taxIncluded = Math.Max(0.0m, taxIncluded);
+                taxIncluded = Math.Min(taxIncluded, entity.Price);
+                entity.Metadata.TaxIncluded = taxIncluded;
+            }
+            
+
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();

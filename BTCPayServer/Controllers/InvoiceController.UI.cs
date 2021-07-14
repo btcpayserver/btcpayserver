@@ -547,6 +547,7 @@ namespace BTCPayServer.Controllers
                 BtcDue = accounting.Due.ShowMoney(divisibility),
                 InvoiceCurrency = invoice.Currency,
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
+                IsTopUp = invoice.Price == 0.0m,
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,

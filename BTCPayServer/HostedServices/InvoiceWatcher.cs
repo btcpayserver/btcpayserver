@@ -43,6 +43,13 @@ namespace BTCPayServer.HostedServices
 
             public bool Dirty => _Dirty;
             public bool Unaffect => _Unaffect;
+
+            bool _IsBlobUpdated;
+            public bool IsBlobUpdated => _IsBlobUpdated;
+            public void BlobUpdated()
+            {
+                _IsBlobUpdated = true;
+            }
         }
 
         readonly InvoiceRepository _InvoiceRepository;
@@ -68,6 +75,7 @@ namespace BTCPayServer.HostedServices
         private void UpdateInvoice(UpdateInvoiceContext context)
         {
             var invoice = context.Invoice;
+            var isTopup = invoice.Price == 0.0m;
             if (invoice.Status == InvoiceStatusLegacy.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
             {
                 context.MarkDirty();
@@ -83,13 +91,26 @@ namespace BTCPayServer.HostedServices
                 return;
             if (invoice.Status == InvoiceStatusLegacy.New || invoice.Status == InvoiceStatusLegacy.Expired)
             {
-                if (accounting.Paid >= accounting.MinimumTotalDue)
+                var isPaid = isTopup ?
+                    accounting.Paid > Money.Zero :
+                    accounting.Paid >= accounting.MinimumTotalDue;
+                if (isPaid)
                 {
                     if (invoice.Status == InvoiceStatusLegacy.New)
                     {
                         context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidInFull));
                         invoice.Status = InvoiceStatusLegacy.Paid;
-                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
+                        if (isTopup)
+                        {
+                            invoice.ExceptionStatus = InvoiceExceptionStatus.None;
+                            invoice.Price = (accounting.Paid - accounting.NetworkFeeAlreadyPaid).ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate;
+                            accounting = paymentMethod.Calculate();
+                            context.BlobUpdated();
+                        }
+                        else
+                        {
+                            invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
+                        }
                         context.UnaffectAddresses();
                         context.MarkDirty();
                     }
@@ -292,6 +313,10 @@ namespace BTCPayServer.HostedServices
                         {
                             await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());
                             updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
+                        }
+                        if (updateContext.IsBlobUpdated)
+                        {
+                            await _InvoiceRepository.UpdateInvoicePrice(invoice.Id, invoice);
                         }
 
                         foreach (var evt in updateContext.Events)

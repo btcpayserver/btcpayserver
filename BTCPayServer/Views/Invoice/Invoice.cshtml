@@ -66,7 +66,29 @@
                     </tr>
                     <tr>
                         <th>Order Id</th>
-                        <td>@Model.TypedMetadata.OrderId</td>
+                        <td>
+                            @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+                            {
+                                @Model.TypedMetadata.OrderId
+                            }
+                            else
+                            {
+                                <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+                                    @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                                    {
+                                        <span>View Order</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.TypedMetadata.OrderId
+                                    }
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Payment Request Id</th>
+                        <td><a href="@Model.PaymentRequestLink">@Model.TypedMetadata.PaymentRequestId</a></td>
                     </tr>
                     <tr>
                         <th>State</th>

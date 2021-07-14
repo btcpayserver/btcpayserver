@@ -800,6 +800,11 @@
                                 "type": "string",
                                 "nullable": true,
                                 "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                            },
+                            "orderUrl": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "You can use this property to store the URL to the order of an external system. This makes navigating to the order easier."
                             }
                         }
                     },

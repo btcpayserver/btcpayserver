@@ -184,7 +184,7 @@
                     </a>
                 </small>
             </h2>
-            <a id="CreateNewInvoice" asp-action="CreateInvoice" class="btn btn-primary mt-3 mt-sm-0">
+            <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
                 <span class="fa fa-plus"></span>
                 Create an invoice
             </a>

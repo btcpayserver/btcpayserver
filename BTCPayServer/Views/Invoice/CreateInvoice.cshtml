@@ -11,7 +11,7 @@
                 $(this).find("input[type='submit']").prop('disabled', true);
             });
 
-            $("input").on("input", function () {
+            $("#create-invoice-form input").on("input", function () {
                 // Give it a timeout to make sure all form validation has completed by the time we run our callback
                 setTimeout(function() {
                     var validationErrors = $('.field-validation-error');

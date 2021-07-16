@@ -1044,27 +1044,21 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys(Keys.Enter);
             s.FindAlertMessage();
 
-            Assert.Contains("Awaiting Approval", s.Driver.PageSource);
+            Assert.Contains(PayoutState.AwaitingApproval.GetStateString(), s.Driver.PageSource);
             s.GoToWallet(newWalletId, WalletsNavPages.Payouts);
-            s.Driver.FindElement(By.Id("AwaitingApproval-view")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve")).Click();
             s.FindAlertMessage();
             var tx =await s.Server.ExplorerNode.SendToAddressAsync(address, Money.FromUnit(0.001m, MoneyUnit.BTC));
 
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                s.Driver.FindElement(By.Id("NotificationsDropdownToggle")).Click();
-                Assert.Equal("2",
-                    s.Driver.FindElement(By.CssSelector("#NotificationsDropdownToggle .notification-badge")).Text);
-                s.Driver.FindElement(By.LinkText("View all")).Click();
-                s.Driver.FindElement(By.LinkText("Details")).Click();
-            });
+            s.GoToWallet(newWalletId, WalletsNavPages.Payouts);
             
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-view")).Click();
+            Assert.Contains(PayoutState.AwaitingPayment.GetStateString(), s.Driver.PageSource);
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
-            
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-confirm-payment")).Click();
             s.FindAlertMessage();
             

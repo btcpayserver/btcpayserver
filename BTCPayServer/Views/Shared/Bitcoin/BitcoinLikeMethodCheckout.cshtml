@@ -24,7 +24,10 @@
                     </form>
                     <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post">
                         <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}} (TODO)</button>
-                    </form>                
+                    </form>
+                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire-monitoring" method="post">
+                        <button class="btn btn-secondary" type="submit">{{$t("Expire Monitoring Now")}} (TODO)</button>
+                    </form>     
                 </div>
             }
             <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">

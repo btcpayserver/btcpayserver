@@ -1,9 +1,32 @@
 @using BTCPayServer.BIP78.Sender
+@using NBitcoin
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 
 <script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
         <div class="bp-views">
+            @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
+            {
+                <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'fake'}">
+                    <form id="fake-payment" action="/i/@Model.InvoiceId/fake-payment" method="post" class="form-inline">
+                        <div class="form-group">
+                            <label for="fake-payment-crypto-code" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
+                            <p class="alert alert-danger" style="display: none;"></p>
+                            <p class="alert alert-success" style="display: none;"></p>
+                            <div class="input-group">
+                              <input id="fake-payment-amount" name="amount" type="number" step="any" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="fake-payment-crypto-code">
+                              <div class="input-group-addon" id="fake-payment-crypto-code">@Model.CryptoCode</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>
+                        <p class="text-muted">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</p>
+                    </form>
+                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post">
+                        <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}} (TODO)</button>
+                    </form>                
+                </div>
+            }
             <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
                 <div class="payment__scan">
                     <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
@@ -17,20 +40,6 @@
                         <span>{{$t("Open in wallet")}}</span>
                     </a>
                 </div>
-                
-                <!-- TODO only show for REGTEST! -->
-                <form id="fake-payment" action="/i/@Model.InvoiceId/fake-payment" method="post">
-                    <label for="fake-payment-crypto-code" class="form-label">Fake a @Model.CryptoCode payment for testing</label>
-                    <p class="alert alert-danger" style="display: none;"></p>
-                    <p class="alert alert-success" style="display: none;"></p>
-                    <div class="input-group mb-3">
-                      <input id="fake-payment-amount" name="amount" type="number" step="any" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="fake-payment-crypto-code">
-                      <span class="input-group-text" id="fake-payment-crypto-code">@Model.CryptoCode</span>
-                      <button class="btn btn-outline-secondary" type="submit">Fake Payment</button>
-                      <p class="text-muted">This is the same as running bitcoin-cli.sh sendtoaddress xxx</p>
-                    </div>
-                </form>
-                
             </div>
             <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
                 <div class="manual__step-two__instructions">
@@ -77,6 +86,13 @@
 
 <script type="text/x-template" id="bitcoin-method-checkout-header-template">
     <div class="payment-tabs">
+        @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
+        {
+            // TODO the Fake Payment is now in a tab, but the tabs disappear after payment. We want the fake payment form to remain visible so we can simulate more payments, over payments and payments after expiry.
+            <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('fake')"  v-bind:class="{ 'active': currentTab == 'fake'}" >
+                <span>{{$t("Fake Payment")}}</span>
+            </div>
+        }
         <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
             <span>{{$t("Scan")}}</span>
         </div>
@@ -97,6 +113,7 @@
             },
             data: function() {
                 return {
+                    // TODO detect the first tab using JS and not hard-code this
                     currentTab: "scan"
                 }
             },
@@ -123,6 +140,7 @@
         template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {
+                // TODO detect the first tab using JS and not hard-code this
                 currentTab: "scan"
             };
         },
@@ -133,24 +151,24 @@
             }
         }
     });
-    
+   
     function initFakePaymentForm(){
-        let form = $('form#fake-payment');
+        let payForm = $('form#fake-payment');
         let loader = $('form#fake-payment-loading');
         
         let inputField = $('#fake-payment-amount');
-        let submitButton = form.find('button[type=submit]');
-        let success = form.find('p.alert-success');
-        let alert = form.find('p.alert-danger');
+        let submitButton = payForm.find('button[type=submit]');
+        let paySuccess = payForm.find('p.alert-success');
+        let payAlert = payForm.find('p.alert-danger');
         
-        form.submit(function (e){
+        payForm.submit(function (e){
              e.preventDefault();
              
              let form = $(this);
              let data = form.serialize();
                           
-             success.hide();
-             alert.hide();
+             paySuccess.hide();
+             payAlert.hide();
              loader.show();
              inputField.prop('disabled', true);
              submitButton.prop('disabled', true);
@@ -159,9 +177,8 @@
                  url: form.attr('action'),
                  data: data,
                  success: function (data,status,xhr){
-                     debugger;
-                     success.html(data.successMessage);
-                     success.show();
+                     paySuccess.html(data.successMessage);
+                     paySuccess.show();
                      inputField.val(data.amountRemaining);
                      if (data.amountRemaining <= 0){
                          // No need to fake any more payments.
@@ -175,12 +192,44 @@
                  },
                  error: function (xhr,status,error){
                      var data = JSON.parse(xhr.responseText);
-                     alert.html(data.errorMessage);
-                     alert.show();
+                     payAlert.html(data.errorMessage);
+                     payAlert.show();
                  }
              });
          });
-     }
+        
+        
+        // Expire invoice form
+        let expireForm = $('form#expire-invoice');
+        let expireButton = expireForm.find('[type=submit]');
+        let expireSuccess = expireForm.find('p.alert-success');
+        let expireAlert = expireForm.find('p.alert-danger');
+        
+        expireForm.submit(function (e){
+                e.preventDefault();
+                expireSuccess.hide();
+                expireAlert.hide();
+                             
+                $.post({
+                    url: form.attr('action'),
+                    data: data,
+                    success: function (data,status,xhr){
+                        expireSuccess.html(data.successMessage);
+                        expireSuccess.show();
+                        expireButton.hide();
+                     },
+                     complete: function (xhr,status){
+                         loader.hide();
+                         submitButton.prop('disabled', false);
+                     },
+                     error: function (xhr,status,error){
+                         var data = JSON.parse(xhr.responseText);
+                         expireAlert.html(data.errorMessage);
+                         expireAlert.show();
+                     }
+                });
+        });
+    }
 
     $(document).ready(function() {
         // Clipboard Copy

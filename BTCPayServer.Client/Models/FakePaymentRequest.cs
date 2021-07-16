@@ -4,6 +4,6 @@ namespace BTCPayServer.Client.Models
 {
     public class FakePaymentRequest
     {
-        public Decimal amount { get; set; }
+        public Decimal Amount { get; set; }
     }
 }

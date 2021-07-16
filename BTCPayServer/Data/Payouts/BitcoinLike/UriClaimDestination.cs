@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using NBitcoin;
 using NBitcoin.Payment;
@@ -23,5 +24,7 @@ namespace BTCPayServer.Data
         {
             return _bitcoinUrl.ToString();
         }
+
+        public decimal? Amount => _bitcoinUrl.Amount?.ToDecimal(MoneyUnit.BTC);
     }
 }

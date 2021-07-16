@@ -105,8 +105,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             await using var ctx = _applicationDbContextFactory.CreateContext();
             
             var payouts = (await GetPayouts(ctx, pmi, payoutIds)).GroupBy(data => data.PullPaymentData.StoreId);
-
-
             var results = new List<ResultVM>();
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
             //we group per store and init the transfers by each
@@ -125,7 +123,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination);
                     try
                     {
-                        switch (claim.Item1)
+                        switch (claim)
                         {
                             case BoltInvoiceClaimDestination item1:
                                 var result = await client.Pay(blob.Destination);
@@ -134,7 +132,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     results.Add(new ResultVM()
                                     {
                                         PayoutId = payoutData.Id,
-                                        Success = true,
+                                        Result = result.Result,
                                         Destination = blob.Destination
                                     });
                                     payoutData.State = PayoutState.Completed;
@@ -144,7 +142,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     results.Add(new ResultVM()
                                     {
                                         PayoutId = payoutData.Id,
-                                        Success = false,
+                                        Result =  result.Result,
                                         Destination = blob.Destination
                                     });
                                 }
@@ -153,16 +151,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                             default:
                                 results.Add(new ResultVM()
                                 {
-                                    PayoutId = payoutData.Id, Success = false, Destination = blob.Destination
+                                    PayoutId = payoutData.Id, Result = PayResult.Error, Destination = blob.Destination
                                 });
                                 break;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         results.Add(new ResultVM()
                         {
-                            PayoutId = payoutData.Id, Success = false, Destination = blob.Destination
+                            PayoutId = payoutData.Id, Result = PayResult.Error, Destination = blob.Destination
                         });
                     }
                 }
@@ -176,7 +174,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             public string PayoutId { get; set; }
             public string Destination { get; set; }
-            public bool Success { get; set; }
+            public PayResult Result { get; set; }
         }
 
         public class ConfirmVM

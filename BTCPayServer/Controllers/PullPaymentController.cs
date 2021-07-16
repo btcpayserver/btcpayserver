@@ -109,21 +109,26 @@ namespace BTCPayServer.Controllers
             
             var paymentMethodId = ppBlob.SupportedPaymentMethods.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
             
-            var network = paymentMethodId is null? null:  _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            if (payoutHandler is null)
+            {
+                ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");   
+                return await ViewPullPayment(pullPaymentId);
+            }
             var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
-            if (destination.Item1 is null)
+            if (destination is null)
             {
                 ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination with selected payment method");
+                return await ViewPullPayment(pullPaymentId);
             }
-            if (vm.ClaimedAmount == 0 && destination.Item2 != null)
+            if (vm.ClaimedAmount == 0 && destination.Amount != null)
             {
-                vm.ClaimedAmount  = destination.Item2.Value;
+                vm.ClaimedAmount  = destination.Amount.Value;
             }
-            else if (vm.ClaimedAmount != 0 && destination.Item2 != null && vm.ClaimedAmount != destination.Item2)
+            else if (vm.ClaimedAmount != 0 && destination.Amount != null && vm.ClaimedAmount != destination.Amount)
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount),
-                    $"Amount is implied in destination ({destination.Item2}) that does not match the payout amount provided {vm.ClaimedAmount})");
+                    $"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
             }
 
             if (!ModelState.IsValid)
@@ -133,7 +138,7 @@ namespace BTCPayServer.Controllers
 
             var result = await _pullPaymentHostedService.Claim(new ClaimRequest()
             {
-                Destination = destination.Item1,
+                Destination = destination,
                 PullPaymentId = pullPaymentId,
                 Value = vm.ClaimedAmount,
                 PaymentMethodId = paymentMethodId

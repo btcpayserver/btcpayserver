@@ -1,14 +1,15 @@
 ﻿@using BTCPayServer.Client.Models
+@using BTCPayServer.Payments
 @model PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
-    var paymentMethods = PayoutHandlers.SelectMany(handler => handler.GetSupportedPaymentMethods());
+    var paymentMethods = PayoutHandlers.GetSupportedPaymentMethods();
     
     var stateActions = new List<(string Action, string Text)>();
-    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(Model.PaymentMethodId));
+    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(PaymentMethodId.Parse(Model.PaymentMethodId)));
     stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
     switch (Model.PayoutState)
     {
@@ -52,6 +53,7 @@
                            asp-route-paymentMethodId="@state.ToString()"
                            asp-route-pullPaymentId="@Model.PullPaymentId"
                            class="nav-link me-1 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                           id="@state.ToString()-view"
                            role="tab">
                             @state.ToPrettyString()
                         </a>
@@ -156,3 +158,16 @@
         <vc:pager view-model="Model"/>
     </div>
 </form>
+
+@section PageFootContent {
+    <script>
+       
+        function selectAll(e, selector)
+        {
+            var items = document.getElementsByClassName("selection-item-"+ selector);
+            for (var i = 0; i < items.length; i++) {
+                items[i].checked = e.checked;
+            }
+        }
+    </script>
+}

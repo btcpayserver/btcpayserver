@@ -299,7 +299,7 @@ namespace BTCPayServer.HostedServices
                 var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
                 var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
 
-                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.Item1);
+                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);

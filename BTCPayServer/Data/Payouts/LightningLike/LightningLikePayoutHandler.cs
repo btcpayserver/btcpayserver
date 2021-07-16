@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
@@ -46,16 +47,19 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                    _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.SupportLightning is true;
         }
 
-        public Task<(IClaimDestination, decimal?)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
+        public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<IClaimDestination> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             destination = destination.Trim();
-            if (BOLT11PaymentRequest.TryParse(destination, out var invoice, network.NBitcoinNetwork))
-            {
-                return Task.FromResult<(IClaimDestination, decimal?)>((new BoltInvoiceClaimDestination(destination), invoice.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)));
-            }
-            
-            return Task.FromResult<(IClaimDestination, decimal?)>((null,null));
+            return Task.FromResult<IClaimDestination>(
+                BOLT11PaymentRequest.TryParse(destination, out var invoice, network.NBitcoinNetwork)
+                    ? new BoltInvoiceClaimDestination(destination, invoice)
+                    : null);
         }
 
         public IPayoutProof ParseProof(PayoutData payout)
@@ -75,6 +79,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
         {
             return Task.FromResult(Money.Satoshis(1).ToDecimal(MoneyUnit.BTC));
+        }
+
+        public Dictionary<PayoutState, List<(string Action, string Text)>> GetPayoutSpecificActions()
+        {
+            return new Dictionary<PayoutState, List<(string Action, string Text)>>();
+        }
+
+        public Task<StatusMessageModel> DoSpecificAction(string action, string[] payoutIds, string storeId)
+        {
+            return Task.FromResult<StatusMessageModel>(null);
         }
 
         public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()

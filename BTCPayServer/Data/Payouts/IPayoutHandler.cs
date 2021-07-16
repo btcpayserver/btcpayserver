@@ -13,7 +13,7 @@ public interface IPayoutHandler
     public bool CanHandle(PaymentMethodId paymentMethod);
     public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination);
     //Allows payout handler to parse payout destinations on its own
-    public Task<(IClaimDestination, decimal?)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination);
+    public Task<IClaimDestination> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination);
     public IPayoutProof ParseProof(PayoutData payout);
     //Allows you to subscribe the main pull payment hosted service to events and prepare the handler 
     void StartBackgroundCheck(Action<Type[]> subscribe);

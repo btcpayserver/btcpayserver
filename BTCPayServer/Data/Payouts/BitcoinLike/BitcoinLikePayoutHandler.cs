@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,16 +10,10 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
-using BTCPayServer.Models;
-using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using Microsoft.AspNetCore.Routing;
-using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -43,8 +36,11 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly NotificationSender _notificationSender;
 
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
-        ExplorerClientProvider explorerClientProvider, BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
-        ApplicationDbContextFactory dbContextFactory, EventAggregator eventAggregator, NotificationSender notificationSender)
+        ExplorerClientProvider explorerClientProvider, 
+        BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
+        ApplicationDbContextFactory dbContextFactory, 
+        EventAggregator eventAggregator, 
+        NotificationSender notificationSender)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         _explorerClientProvider = explorerClientProvider;
@@ -68,7 +64,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
     }
 
-    public Task<(IClaimDestination, decimal?)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
+    public Task<IClaimDestination> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
     {
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
         destination = destination.Trim();
@@ -80,11 +76,11 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             //    return Task.FromResult<IClaimDestination>(new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)));
             //}
 
-            return Task.FromResult<(IClaimDestination, decimal?)>((new AddressClaimDestination(BitcoinAddress.Create(destination, network.NBitcoinNetwork)), (decimal?)null));
+            return Task.FromResult<IClaimDestination>(new AddressClaimDestination(BitcoinAddress.Create(destination, network.NBitcoinNetwork)));
         }
         catch
         {
-            return Task.FromResult<(IClaimDestination, decimal?)>((null,null));
+            return Task.FromResult<IClaimDestination>(null);
         }
     }
 
@@ -241,18 +237,28 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                            && data.State == PayoutState.AwaitingPayment)
             .ToListAsync();
 
+        var pullPaymentIds = payouts.Select(data => data.PullPaymentDataId).Distinct().ToArray();
         var storeId = payouts.First().PullPaymentData.StoreId;
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
         List<string> bip21 = new List<string>(); 
         foreach (var payout in payouts)
         {
+            if (payout.Proof != null)
+            {
+                continue;
+            }
             var blob = payout.GetBlob(_jsonSerializerSettings);
             if (payout.GetPaymentMethodId() != paymentMethodId)
                 continue;
-            bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)));          
+            bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)).ToString());          
         }
-
-        return  new RedirectToActionResult("WalletSend", "Wallets", new {walletId = new WalletId(storeId, paymentMethodId.CryptoCode).ToString(), bip21});
+        if(bip21.Any())
+            return  new RedirectToActionResult("WalletSend", "Wallets", new {walletId = new WalletId(storeId, paymentMethodId.CryptoCode).ToString(), bip21});
+        return new RedirectToActionResult("Payouts", "Wallets", new
+        {
+            walletId = new WalletId(storeId, paymentMethodId.CryptoCode).ToString(),
+            pullPaymentId = pullPaymentIds.Length == 1? pullPaymentIds.First(): null
+        });
     }
 
     private async Task UpdatePayoutsInProgress()

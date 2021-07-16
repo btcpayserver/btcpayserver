@@ -1018,13 +1018,18 @@ namespace BTCPayServer.Tests
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));
             }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance );
             await tester.ExplorerNode.GenerateAsync(1);
+            Invoice newInvoice = null;
             await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
-            var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-            var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            Assert.NotEqual(newBolt11, oldBolt11);
-            Assert.Equal(newInvoice.BtcDue.GetValue(), BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+                var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+                var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+                Assert.NotEqual(newBolt11, oldBolt11);
+                Assert.Equal(newInvoice.BtcDue.GetValue(),
+                    BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
+            });
+            
             Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {

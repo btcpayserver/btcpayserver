@@ -26,8 +26,14 @@
                         <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}} (TODO)</button>
                     </form>
                     <form id="expire-invoice" action="/i/@Model.InvoiceId/expire-monitoring" method="post">
+                        <!-- TODO only show when expired -->
                         <button class="btn btn-secondary" type="submit">{{$t("Expire Monitoring Now")}} (TODO)</button>
-                    </form>     
+                    </form>
+                    <form id="mine-block" action="/i/@Model.InvoiceId/mine-block" method="post">
+                        <!-- TODO only show when BTC On-chain -->
+                        <!-- TODO to make it work use Bitcoin RPC calls getnewaddress + generatetoaddress -->
+                        <button class="btn btn-secondary" type="submit">{{$t("Mine a block now")}} (TODO)</button>
+                    </form>
                 </div>
             }
             <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">

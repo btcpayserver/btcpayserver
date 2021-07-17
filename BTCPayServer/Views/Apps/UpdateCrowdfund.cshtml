@@ -96,11 +96,6 @@
                 </div>
                 <div class="col-lg-12">
                     <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
-                    <div class="form-check">
-                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
-                        <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
-                        <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
-                    </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="form-group">
@@ -108,8 +103,12 @@
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="PerksTemplate" class="text-danger"></span>
                     </div>
-
                     <h4 class="mt-5 mb-4">Contributions</h4>
+                    <div class="form-check mb-3">
+                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
+                        <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
+                        <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
+                    </div>
                     <div class="form-check mb-3">
                         <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check-input" />
                         <label asp-for="DisplayPerksRanking" class="form-check-label"></label>

@@ -191,7 +191,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js",
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js",
             "wwwroot/js/wallet/**/*.js"
         ],
         "minify": {
@@ -211,7 +212,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js"
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js"
         ],
         "minify": {
             "enabled": false

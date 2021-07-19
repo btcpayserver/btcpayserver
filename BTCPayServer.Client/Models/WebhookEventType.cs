@@ -11,6 +11,7 @@ namespace BTCPayServer.Client.Models
         InvoiceProcessing,
         InvoiceExpired,
         InvoiceSettled,
-        InvoiceInvalid
+        InvoiceInvalid,
+        InvoicePaymentSettled,
     }
 }

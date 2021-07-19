@@ -113,7 +113,8 @@
         $("button[data-qr]").on("click", function (){
             var data =  apiKeys[parseInt($(this).data("qr"))];
             qrApp.data = JSON.stringify(data);
-            qrApp.useBCUR = false;
+            qrApp.currentMode = "static";
+            qrApp.allowedModes = ["static"];
             $("#scan-qr-modal").modal("show");
         });
     });

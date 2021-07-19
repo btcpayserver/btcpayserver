@@ -5,7 +5,7 @@
                 <div class="modal-header">
                     <h5 class="modal-title">{{title}} <template v-if="fragments.length > 1">({{index+1}}/{{fragments.length}})</template></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <vc:icon symbol="close" />
+                        <vc:icon symbol="close"/>
                     </button>
                 </div>
                 <div class="modal-body ">
@@ -13,6 +13,14 @@
                         <qrcode v-bind:value="currentFragment" :options="{ width: 256,height:256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }">
                         </qrcode>
                     </div>
+                    <ul class="nav justify-content-center bg-light text-dark mt-2" v-if="allowedModes.length > 1">
+                        <li class="nav-item" v-for="allowedMode in allowedModes">
+                            <a class="nav-link"
+                               v-bind:class="{ 'active': allowedMode == currentMode}" href="#" v-on:click="currentMode = allowedMode">
+                                {{allowedMode}}
+                            </a>
+                        </li>
+                    </ul>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -40,7 +48,8 @@
  			fragments: [],
  			active: false,
  			modalId: modalId,
- 			useBCUR: true
+ 			currentMode: "bcur",
+ 			allowedModes: ["static","bcur"]
  		},
  		computed:
  		{
@@ -65,6 +74,9 @@
  		},
  		watch:
  		{
+ 		    currentMode: function(){
+ 				this.setFragments();
+ 		    },
  			data: function ()
  			{
  				this.setFragments();
@@ -79,7 +91,7 @@
  					this.fragments = [];
  					return;
  				}
- 				if (this.useBCUR){
+ 				if (this.currentMode == "bcur"){
  				    this.fragments = window.bcur.encodeUR(this.data.toString(), 200);
  				}else{
  				    this.fragments = [this.data.toString()];

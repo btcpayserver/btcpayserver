@@ -763,75 +763,95 @@ namespace BTCPayServer.Services.Invoices
         /// <returns>The PaymentEntity or null if already added</returns>
         public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            var invoice = await context.Invoices.FindAsync(invoiceId);
+            if (invoice == null)
+                return null;
+            InvoiceEntity invoiceEntity = invoice.GetBlob(_Networks);
+            PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
+            IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
+            PaymentEntity entity = new PaymentEntity
             {
-                var invoice = context.Invoices.Find(invoiceId);
-                if (invoice == null)
-                    return null;
-                InvoiceEntity invoiceEntity = invoice.GetBlob(_Networks);
-                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
-                IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
-                PaymentEntity entity = new PaymentEntity
-                {
-                    Version = 1,
+                Version = 1,
 #pragma warning disable CS0618
-                    CryptoCode = network.CryptoCode,
+                CryptoCode = network.CryptoCode,
 #pragma warning restore CS0618
-                    ReceivedTime = date.UtcDateTime,
-                    Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                    Network = network
-                };
-                entity.SetCryptoPaymentData(paymentData);
-                //TODO: abstract
-                if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
-                    bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
-                    bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
-                {
-                    bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
-                    paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
-                    invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, network);
-                }
-                PaymentData data = new PaymentData
-                {
-                    Id = paymentData.GetPaymentId(),
-                    Blob = ToBytes(entity, entity.Network),
-                    InvoiceDataId = invoiceId,
-                    Accounted = accounted
-                };
-
-                await context.Payments.AddAsync(data);
-
-                AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
-                try
-                {
-                    await context.SaveChangesAsync().ConfigureAwait(false);
-                }
-                catch (DbUpdateException) { return null; } // Already exists
-                return entity;
+                ReceivedTime = date.UtcDateTime,
+                Accounted = accounted,
+                NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
+                Network = network
+            };
+            entity.SetCryptoPaymentData(paymentData);
+            //TODO: abstract
+            if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
+                bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
+                bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
+            {
+                bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
+                paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
+                invoiceEntity.SetPaymentMethod(paymentMethod);
+                invoice.Blob = ToBytes(invoiceEntity, network);
             }
+            PaymentData data = new PaymentData
+            {
+                Id = paymentData.GetPaymentId(),
+                Blob = ToBytes(entity, entity.Network),
+                InvoiceDataId = invoiceId,
+                Accounted = accounted
+            };
+
+            await context.Payments.AddAsync(data);
+
+            AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
+            var alreadyExists = false;
+            try
+            {
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (DbUpdateException) { alreadyExists = true; }
+
+            if (alreadyExists)
+            {
+                return null;
+            }
+
+            if (paymentData.PaymentConfirmed(entity, invoiceEntity.SpeedPolicy))
+            {
+                _eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = entity });
+            }
+            return entity;
         }
 
         public async Task UpdatePayments(List<PaymentEntity> payments)
         {
             if (payments.Count == 0)
                 return;
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            var paymentsDict = payments
+                .Select(entity => (entity, entity.GetCryptoPaymentData()))
+                .ToDictionary(tuple => tuple.Item2.GetPaymentId());
+            var paymentIds = paymentsDict.Keys.ToArray();
+            var dbPayments = await context.Payments
+                .Include(data => data.InvoiceData)
+                .Where(data => paymentIds.Contains(data.Id)).ToDictionaryAsync(data => data.Id);
+            var eventsToSend = new List<InvoiceEvent>();
+            foreach (KeyValuePair<string,(PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
             {
-                foreach (var payment in payments)
+                var dbPayment = dbPayments[payment.Key];
+                var invBlob = dbPayment.InvoiceData.GetBlob(_Networks);
+                var dbPaymentEntity = dbPayment.GetBlob(_Networks);
+                var wasConfirmed = dbPayment.GetBlob(_Networks).GetCryptoPaymentData()
+                    .PaymentConfirmed(dbPaymentEntity, invBlob.SpeedPolicy);
+                if (!wasConfirmed &&  payment.Value.Item2.PaymentConfirmed(payment.Value.entity, invBlob.SpeedPolicy))
                 {
-                    var paymentData = payment.GetCryptoPaymentData();
-                    var data = new PaymentData();
-                    data.Id = paymentData.GetPaymentId();
-                    data.Accounted = payment.Accounted;
-                    data.Blob = ToBytes(payment, payment.Network);
-                    context.Attach(data);
-                    context.Entry(data).Property(o => o.Accounted).IsModified = true;
-                    context.Entry(data).Property(o => o.Blob).IsModified = true;
+                    eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment.Value.entity });
                 }
-                await context.SaveChangesAsync().ConfigureAwait(false);
+               
+                dbPayment.Accounted = payment.Value.entity.Accounted;
+                dbPayment.Blob = ToBytes(payment.Value.entity, payment.Value.entity.Network);
             }
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            eventsToSend.ForEach(_eventAggregator.Publish);
         }
 
         private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)

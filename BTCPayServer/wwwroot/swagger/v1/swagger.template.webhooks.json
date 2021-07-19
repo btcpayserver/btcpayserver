@@ -41,7 +41,9 @@
                 ]
             },
             "post": {
-                "tags": [ "Webhooks" ],
+                "tags": [
+                    "Webhooks"
+                ],
                 "summary": "Create a new webhook",
                 "description": "Create a new webhook",
                 "requestBody": {
@@ -141,7 +143,9 @@
                 ]
             },
             "put": {
-                "tags": [ "Webhooks" ],
+                "tags": [
+                    "Webhooks"
+                ],
                 "summary": "Update a webhook",
                 "description": "Update a webhook",
                 "requestBody": {
@@ -187,7 +191,9 @@
                 ]
             },
             "delete": {
-                "tags": [ "Webhooks" ],
+                "tags": [
+                    "Webhooks"
+                ],
                 "summary": "Delete a webhook",
                 "description": "Delete a webhook",
                 "requestBody": {
@@ -483,7 +489,11 @@
                     "timestamp": {
                         "nullable": false,
                         "description": "Timestamp of when the delivery got broadcasted",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "httpCode": {
                         "type": "number",
@@ -619,7 +629,11 @@
                     },
                     "timestamp": {
                         "description": "The timestamp when this delivery has been created",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     }
                 }
             },
@@ -712,8 +726,25 @@
                                 "type": "boolean",
                                 "description": "Whether this payment has been sent after expiration of the invoice",
                                 "nullable": false
+                            },
+                            "paymentMethod": {
+                                "type": "string",
+                                "description": "What payment method was used for this payment",
+                                "nullable": false
+                            },
+                            "payment": {
+                                "description": "Details about the payment",
+                                "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
                             }
                         }
+                    }
+                ]
+            },
+            "WebhookInvoicePaymentSettledEvent": {
+                "description": "Callback sent if the `type` is `InvoicePaymentSettled`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceReceivedPaymentEvent"
                     }
                 ]
             },
@@ -822,6 +853,36 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/WebhookInvoiceReceivedPaymentEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "InvoicePaymentSettled": {
+            "post": {
+                "summary": "InvoicePaymentSettled",
+                "description": "An payment relating to an invoice has settled",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoicePaymentSettledEvent"
                             }
                         }
                     }

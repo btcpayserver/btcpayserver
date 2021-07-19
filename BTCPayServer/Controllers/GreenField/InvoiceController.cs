@@ -363,26 +363,27 @@ namespace BTCPayServer.Controllers.GreenField
                         PaymentLink =
                             method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,
                                 Request.GetAbsoluteRoot()),
-                        Payments = payments.Select(paymentEntity =>
-                        {
-                            var data = paymentEntity.GetCryptoPaymentData();
-                            return new InvoicePaymentMethodDataModel.Payment()
-                            {
-                                Destination = data.GetDestination(),
-                                Id = data.GetPaymentId(),
-                                Status = !paymentEntity.Accounted
-                                    ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Invalid
-                                    : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy) ||
-                                      data.PaymentCompleted(paymentEntity)
-                                        ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Settled
-                                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.Processing,
-                                Fee = paymentEntity.NetworkFee,
-                                Value = data.GetValue(),
-                                ReceivedDate = paymentEntity.ReceivedTime.DateTime
-                            };
-                        }).ToList()
+                        Payments = payments.Select(paymentEntity => ToPaymentModel(entity, paymentEntity)).ToList()
                     };
                 }).ToArray();
+        }
+        
+        public static InvoicePaymentMethodDataModel.Payment ToPaymentModel(InvoiceEntity entity, PaymentEntity paymentEntity)
+        {
+            var data = paymentEntity.GetCryptoPaymentData();
+            return new InvoicePaymentMethodDataModel.Payment()
+            {
+                Destination = data.GetDestination(),
+                Id = data.GetPaymentId(),
+                Status = !paymentEntity.Accounted
+                    ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Invalid
+                    : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy) || data.PaymentCompleted(paymentEntity)
+                        ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Settled
+                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.Processing,
+                Fee = paymentEntity.NetworkFee,
+                Value = data.GetValue(),
+                ReceivedDate = paymentEntity.ReceivedTime.DateTime
+            };
         }
         private InvoiceData ToModel(InvoiceEntity entity)
         {

@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
 {
@@ -32,7 +33,7 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
             }
             else if (walletId != null)
             {
-                SelectedWallet = list.FirstOrDefault(w => w.WalletId == walletId);
+                SelectedWallet = list.FirstOrDefault(w => w.WalletId == walletId) ?? list.First();
                 Transactions = SelectedWallet?.Transactions.OrderByDescending(t => t.CreatedAt);
             }
         }

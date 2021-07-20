@@ -18,22 +18,22 @@
     </div>
 </header>
 
-<div>
-    <dl class="row">
-        <dt class="col-sm-3 col-lg-2">
-            @Html.DisplayNameFor(model => model.Wallet.WalletId)
-        </dt>
-        <dd class="col-sm-9 col-lg-10">
-            @Model.Wallet.WalletId
-        </dd>
-        <dt class="col-sm-3 col-lg-2">
-            @Html.DisplayNameFor(model => model.Wallet.CreatedAt)
-        </dt>
-        <dd class="col-sm-9 col-lg-10">
-            @Model.Wallet.CreatedAt
-        </dd>
-    </dl>
-
+<dl class="row">
+    <dt class="col-sm-3 col-lg-2">
+        @Html.DisplayNameFor(model => model.Wallet.WalletId)
+    </dt>
+    <dd class="col-sm-9 col-lg-10">
+        @Model.Wallet.WalletId
+    </dd>
+    <dt class="col-sm-3 col-lg-2">
+        @Html.DisplayNameFor(model => model.Wallet.CreatedAt)
+    </dt>
+    <dd class="col-sm-9 col-lg-10">
+        @Model.Wallet.CreatedAt
+    </dd>
+</dl>
+    
+<div class="d-none mt-4">
     <h2>Connection String</h2>
 
     @if (Model.ConnectionString.Contains("allowinsecure=true"))

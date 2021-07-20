@@ -148,23 +148,42 @@ namespace BTCPayServer.Controllers
 
 
         [HttpPost("server/files/upload")]
-        public async Task<IActionResult> CreateFile(IFormFile file)
+        public async Task<IActionResult> CreateFile(List<IFormFile> files)
         {
-            if (!file.FileName.IsValidFileName())
+            if (files.Count > 0)
             {
-                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                List<string> fileIds = new List<string>();
+                foreach (IFormFile file in files)
                 {
-                    Message = "Invalid file name",
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
+                    if (!file.FileName.IsValidFileName())
+                    {
+                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Message = "Invalid file name",
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
+                        continue;
+                    }
+                    var newFile = await _FileService.AddFile(file, GetUserId());
+                    fileIds.Add(newFile.Id);
+                }
+                if (fileIds.Count == 1)
+                {
+                    return RedirectToAction(nameof(Files), new
+                    {
+                        statusMessage = "File added!",
+                        fileId = fileIds[0]
+                    });
+                }
+                else
+                {
+                    return RedirectToAction(nameof(Files));
+                }
+            }
+            else
+            {
                 return RedirectToAction(nameof(Files));
             }
-            var newFile = await _FileService.AddFile(file, GetUserId());
-            return RedirectToAction(nameof(Files), new
-            {
-                statusMessage = "File added!",
-                fileId = newFile.Id
-            });
         }
 
         private string GetUserId()

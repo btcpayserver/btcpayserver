@@ -1,4 +1,5 @@
-﻿@model ListAppsViewModel
+﻿@using BTCPayServer.Services.Apps
+@model ListAppsViewModel
 @{
     ViewData.SetActivePageAndTitle(AppsNavPages.Index, "Apps");
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
@@ -85,7 +86,7 @@
                                     }
                                 </td>
                                 <td>@app.AppName</td>
-                                <td>@app.AppType</td>
+                                <td>@typeof(AppType).DisplayName(app.AppType)</td>
                                 <td style="text-align:right">
                                     @if (app.IsOwner)
                                     {

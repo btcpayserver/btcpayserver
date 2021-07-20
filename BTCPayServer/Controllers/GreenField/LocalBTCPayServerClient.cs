@@ -16,7 +16,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using YamlDotNet.Core.Tokens;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
+using Language = BTCPayServer.Client.Models.Language;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using PayoutData = BTCPayServer.Client.Models.PayoutData;
@@ -47,6 +49,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly GreenFieldServerInfoController _greenFieldServerInfoController;
         private readonly StoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
+        private readonly HomeController _homeController;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
             IOptionsMonitor<IdentityOptions> identityOptions,
@@ -65,7 +68,8 @@ namespace BTCPayServer.Controllers.GreenField
             UserManager<ApplicationUser> userManager,
             GreenFieldServerInfoController greenFieldServerInfoController,
             StoreWebhooksController storeWebhooksController,
-            GreenfieldPullPaymentController greenfieldPullPaymentController)
+            GreenfieldPullPaymentController greenfieldPullPaymentController,
+            HomeController homeController)
         {
             _storeRepository = storeRepository;
             _identityOptions = identityOptions;
@@ -85,6 +89,7 @@ namespace BTCPayServer.Controllers.GreenField
             _greenFieldServerInfoController = greenFieldServerInfoController;
             _storeWebhooksController = storeWebhooksController;
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
+            _homeController = homeController;
         }
 
         public async Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
@@ -136,6 +141,7 @@ namespace BTCPayServer.Controllers.GreenField
                 _greenFieldServerInfoController,
                 _storeWebhooksController,
                 _greenfieldPullPaymentController,
+                _homeController,
                 new HttpContextAccessor() {HttpContext = context}
             );
         }
@@ -158,6 +164,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly GreenFieldServerInfoController _greenFieldServerInfoController;
         private readonly StoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
+        private readonly HomeController _homeController;
 
         public LocalBTCPayServerClient(StoreOnChainPaymentMethodsController chainPaymentMethodsController,
             StoreOnChainWalletsController storeOnChainWalletsController,
@@ -174,6 +181,7 @@ namespace BTCPayServer.Controllers.GreenField
             GreenFieldServerInfoController greenFieldServerInfoController,
             StoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
+            HomeController homeController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.com"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -191,6 +199,7 @@ namespace BTCPayServer.Controllers.GreenField
             _greenFieldServerInfoController = greenFieldServerInfoController;
             _storeWebhooksController = storeWebhooksController;
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
+            _homeController = homeController;
 
             var controllers = new[]
             {
@@ -447,6 +456,8 @@ namespace BTCPayServer.Controllers.GreenField
             HandleActionResult(result);
             switch (result)
             {
+                case JsonResult jsonResult:
+                    return (T) jsonResult.Value;
                 case OkObjectResult {Value: T res}:
                     return res;
                 default:
@@ -756,13 +767,17 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
-            InvoiceStatus[] status = null, DateTimeOffset? startDate = null,
-            DateTimeOffset? endDate = null, bool includeArchived = false, CancellationToken token = default)
+            InvoiceStatus[] status = null,
+            DateTimeOffset? startDate = null,
+            DateTimeOffset? endDate = null,
+            string textSearch = null,
+            bool includeArchived = false,
+            CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await _greenFieldInvoiceController.GetInvoices(storeId, orderId,
                     status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
-                    endDate, includeArchived));
+                    endDate, textSearch, includeArchived));
         }
 
         public override async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
@@ -838,6 +853,16 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task DeleteUser(string userId, CancellationToken token = default)
         {
             HandleActionResult(await _usersController.DeleteUser(userId));
+        }
+
+        public override Task<Language[]> GetAvailableLanguages(CancellationToken token = default)
+        {
+            return Task.FromResult(_homeController.LanguageService.GetLanguages());
+        }
+
+        public override Task<PermissionMetadata[]> GetPermissionMetadata(CancellationToken token = default)
+        {
+            return Task.FromResult(GetFromActionResult<PermissionMetadata[]>(_homeController.Permissions()));
         }
     }
 }

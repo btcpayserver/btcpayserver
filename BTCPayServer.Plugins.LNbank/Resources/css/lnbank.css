@@ -16,3 +16,8 @@ pre.connection-string {
 main p {
     max-width: 40em;
 }
+
+svg[role="img"] {
+    width: 1em;
+    height: 1em;
+}

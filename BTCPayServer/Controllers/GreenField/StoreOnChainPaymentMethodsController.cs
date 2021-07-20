@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -12,27 +13,37 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StoreOnChainPaymentMethodsController : ControllerBase
+    public partial class StoreOnChainPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly BTCPayWalletProvider _walletProvider;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly CssThemeManager _cssThemeManager;
+        private readonly ExplorerClientProvider _explorerClientProvider;
 
         public StoreOnChainPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            BTCPayWalletProvider walletProvider)
+            BTCPayWalletProvider walletProvider,
+            IAuthorizationService authorizationService,
+            CssThemeManager cssThemeManager,
+            ExplorerClientProvider explorerClientProvider)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletProvider = walletProvider;
+            _authorizationService = authorizationService;
+            _cssThemeManager = cssThemeManager;
+            _explorerClientProvider = explorerClientProvider;
         }
 
         public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,
@@ -279,11 +290,8 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod == null
                 ? null
                 : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.AccountDerivation.ToString(), !excluded)
-                {
-                    Label = paymentMethod.Label,
-                    AccountKeyPath = paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath()
-                };
+                    paymentMethod.AccountDerivation.ToString(), !excluded, paymentMethod.Label,
+                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath());
         }
     }
 }

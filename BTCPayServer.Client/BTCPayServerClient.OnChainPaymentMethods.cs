@@ -78,5 +78,17 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Get), token);
             return await HandleResponse<OnChainPaymentMethodPreviewResultData>(response);
         }
+        
+        public virtual async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId,
+            string cryptoCode, GenerateOnChainWalletRequest request,
+            CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/generate",
+                    bodyPayload: request,
+                    method: HttpMethod.Post), token);
+            return await HandleResponse<OnChainPaymentMethodDataWithSensitiveData>(response);
+        }
+
     }
 }

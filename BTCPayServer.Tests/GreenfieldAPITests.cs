@@ -1439,7 +1439,7 @@ namespace BTCPayServer.Tests
                 await viewOnlyClient.UpdateStoreOnChainPaymentMethod(store.Id, "BTC", new OnChainPaymentMethodData() { });
             });
             var xpriv = new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
-                .Derive(KeyPath.Parse("m/84'/0'/0'"));
+                .Derive(KeyPath.Parse("m/84'/1'/0'"));
             var xpub = xpriv.Neuter().ToString(Network.RegTest);
             var firstAddress = xpriv.Derive(KeyPath.Parse("0/0")).Neuter().GetPublicKey().GetAddress(ScriptPubKeyType.Segwit, Network.RegTest).ToString();
             await AssertHttpError(404, async () =>
@@ -1475,6 +1475,34 @@ namespace BTCPayServer.Tests
             {
                 await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
             });
+            
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.GenerateOnChainWallet(store.Id, "BTC", new GenerateOnChainWalletRequest() { });
+            });
+            var allMnemonic = new Mnemonic("all all all all all all all all all all all all");
+            var generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() {ExistingMnemonic = allMnemonic,});
+            Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            Assert.Equal(generateResponse.DerivationScheme, xpub);
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() {});
+            Assert.NotEqual(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            Assert.Equal(generateResponse.Mnemonic.DeriveExtKey().Derive(KeyPath.Parse("m/84'/1'/0'")).Neuter().ToString(Network.RegTest), generateResponse.DerivationScheme);
+
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1});
+            
+            Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            
+            Assert.Equal(new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
+                .Derive(KeyPath.Parse("m/84'/1'/1'")).Neuter().ToString(Network.RegTest), generateResponse.DerivationScheme);
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() { WordList =  Wordlist.Japanese, WordCount = WordCount.TwentyFour});
+
+            Assert.Equal(24,generateResponse.Mnemonic.Words.Length);
+            Assert.Equal(Wordlist.Japanese,generateResponse.Mnemonic.WordList);
+
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

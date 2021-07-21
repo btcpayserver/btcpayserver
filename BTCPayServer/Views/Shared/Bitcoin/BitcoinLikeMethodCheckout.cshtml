@@ -4,31 +4,31 @@
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 
 @{
-    var allowFakePayment = BTCPayNetworkProvider.NetworkType == ChainName.Regtest;
+    var allowTestPayment = BTCPayNetworkProvider.NetworkType == ChainName.Regtest;
 }
 <script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
         <div class="bp-views">
-            @if (allowFakePayment)
+            @if (allowTestPayment)
             {
-                <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'fake'}">
-                    <form id="fake-payment" action="/i/@Model.InvoiceId/fake-payment" method="post" class="form-inline">
-                        <div class="form-group">
-                            <label for="fake-payment-crypto-code" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
+                <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'test'}">
+                    <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="form-inline mb-2">
+                        <div class="form-group mb-1">
+                            <label for="test-payment-crypto-code" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
                             <p class="alert alert-danger" style="display: none;"></p>
                             <p class="alert alert-success" style="display: none;"></p>
                             <div class="input-group">
-                              <input id="fake-payment-amount" name="amount" type="number" step="any" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="fake-payment-crypto-code">
-                              <div class="input-group-addon" id="fake-payment-crypto-code">@Model.CryptoCode</div>
+                              <input id="test-payment-amount" name="amount" type="number" step="any" min="0" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="test-payment-crypto-code">
+                              <div class="input-group-addon" id="test-payment-crypto-code">@Model.CryptoCode</div>
                             </div>
                         </div>
                         <button class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>
-                        <p class="text-muted">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</p>
+                        <p class="text-muted mt-1">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</p>
                     </form>
-                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post">
+                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post" class="mb-1">
                         <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}} (TODO)</button>
                     </form>
-                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire-monitoring" method="post">
+                    <form id="expire-invoice" action="/i/@Model.InvoiceId/expire-monitoring" method="post" class="mb-1">
                         <!-- TODO only show when expired -->
                         <button class="btn btn-secondary" type="submit">{{$t("Expire Monitoring Now")}} (TODO)</button>
                     </form>
@@ -98,11 +98,11 @@
 
 <script type="text/x-template" id="bitcoin-method-checkout-header-template">
     <div class="payment-tabs">
-        @if (allowFakePayment)
+        @if (allowTestPayment)
         {
             // TODO the Fake Payment is now in a tab, but the tabs disappear after payment. We want the fake payment form to remain visible so we can simulate more payments, over payments and payments after expiry.
-            <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('fake')" v-bind:class="{ 'active': currentTab == 'fake'}" >
-                <span>{{$t("Fake Payment")}}</span>
+            <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('test')" v-bind:class="{ 'active': currentTab == 'test'}" >
+                <span>{{$t("Testing")}}</span>
             </div>
         }
         <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')" v-bind:class="{ 'active': currentTab == 'scan'}" >
@@ -125,7 +125,7 @@
             },
             data: function() {
                 return {
-                    currentTab: '@(allowFakePayment ? "fake" : "scan")'
+                    currentTab: '@(allowTestPayment ? "test" : "scan")'
                 }
             },
             computed: {
@@ -137,7 +137,7 @@
                 }
             },
             mounted: function() {
-                initFakePaymentForm();
+                initTestPaymentForm();
                 var self = this;
                 eventBus.$on("tab-switched",
                     function(tab) {
@@ -151,7 +151,7 @@
         template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {
-                currentTab: '@(allowFakePayment ? "fake" : "scan")'
+                currentTab: '@(allowTestPayment ? "test" : "scan")'
             };
         },
         methods: {
@@ -162,11 +162,11 @@
         }
     });
    
-    function initFakePaymentForm(){
-        let payForm = $('form#fake-payment');
-        let loader = $('form#fake-payment-loading');
+    function initTestPaymentForm(){
+        let payForm = $('form#test-payment');
+        let loader = $('form#test-payment-loading');
         
-        let inputField = $('#fake-payment-amount');
+        let inputField = $('#test-payment-amount');
         let submitButton = payForm.find('button[type=submit]');
         let paySuccess = payForm.find('p.alert-success');
         let payAlert = payForm.find('p.alert-danger');

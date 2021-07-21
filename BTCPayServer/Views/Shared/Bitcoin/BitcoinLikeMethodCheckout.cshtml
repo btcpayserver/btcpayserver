@@ -3,10 +3,13 @@
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 
+@{
+    var allowFakePayment = BTCPayNetworkProvider.NetworkType == ChainName.Regtest;
+}
 <script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
         <div class="bp-views">
-            @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
+            @if (allowFakePayment)
             {
                 <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'fake'}">
                     <form id="fake-payment" action="/i/@Model.InvoiceId/fake-payment" method="post" class="form-inline">
@@ -95,17 +98,17 @@
 
 <script type="text/x-template" id="bitcoin-method-checkout-header-template">
     <div class="payment-tabs">
-        @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
+        @if (allowFakePayment)
         {
             // TODO the Fake Payment is now in a tab, but the tabs disappear after payment. We want the fake payment form to remain visible so we can simulate more payments, over payments and payments after expiry.
-            <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('fake')"  v-bind:class="{ 'active': currentTab == 'fake'}" >
+            <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('fake')" v-bind:class="{ 'active': currentTab == 'fake'}" >
                 <span>{{$t("Fake Payment")}}</span>
             </div>
         }
-        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
+        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')" v-bind:class="{ 'active': currentTab == 'scan'}" >
             <span>{{$t("Scan")}}</span>
         </div>
-        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
+        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')" v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs"})
@@ -122,8 +125,7 @@
             },
             data: function() {
                 return {
-                    // TODO detect the first tab using JS and not hard-code this
-                    currentTab: "scan"
+                    currentTab: '@(allowFakePayment ? "fake" : "scan")'
                 }
             },
             computed: {
@@ -149,8 +151,7 @@
         template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {
-                // TODO detect the first tab using JS and not hard-code this
-                currentTab: "scan"
+                currentTab: '@(allowFakePayment ? "fake" : "scan")'
             };
         },
         methods: {
@@ -206,7 +207,6 @@
                  }
              });
          });
-        
         
         // Expire invoice form
         let expireForm = $('form#expire-invoice');

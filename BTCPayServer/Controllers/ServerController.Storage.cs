@@ -146,27 +146,50 @@ namespace BTCPayServer.Controllers
             public bool IsDownload { get; set; }
         }
 
-
+        
         [HttpPost("server/files/upload")]
-        public async Task<IActionResult> CreateFile(List<IFormFile> files)
+        public async Task<IActionResult> CreateFiles(List<IFormFile> files)
         {
-            if (files.Count > 0)
+            if (files != null && files.Count > 0)
             {
+                int invalidFileNameCount = 0;
                 List<string> fileIds = new List<string>();
                 foreach (IFormFile file in files)
                 {
                     if (!file.FileName.IsValidFileName())
                     {
-                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Message = "Invalid file name",
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        });
+                        invalidFileNameCount++;
                         continue;
                     }
                     var newFile = await _FileService.AddFile(file, GetUserId());
                     fileIds.Add(newFile.Id);
                 }
+
+                StatusMessageModel.StatusSeverity statusMessageSeverity;
+                string statusMessage; 
+
+                if (invalidFileNameCount == 0)
+                {
+                    statusMessage = "Files Added Successfully";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Success;
+                }
+                else if (invalidFileNameCount > 0 && invalidFileNameCount < files.Count)
+                {
+                    statusMessage = $"{files.Count - invalidFileNameCount} files were added. {invalidFileNameCount} files had invalid names";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
+                }
+                else
+                {
+                    statusMessage = $"Files could not be added due to invalid names";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
+                }
+
+                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = statusMessage,
+                        Severity = statusMessageSeverity
+                    });
+
                 if (fileIds.Count == 1)
                 {
                     return RedirectToAction(nameof(Files), new

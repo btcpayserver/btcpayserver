@@ -6,7 +6,6 @@
 @model PaymentModel
 @{
     Layout = null;
-    var allowTestPayment = BTCPayNetworkProvider.NetworkType == ChainName.Regtest;
 }
 
 <!DOCTYPE html>
@@ -113,7 +112,7 @@
                     <div class="powered__by__btcpayserver">
                         Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
                     </div>
-                    @if (allowTestPayment)
+                    @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
                     {
                         <partial name="Checkout-Testing" />
                     }

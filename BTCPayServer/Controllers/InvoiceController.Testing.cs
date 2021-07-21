@@ -47,12 +47,12 @@ namespace BTCPayServer.Controllers
         [Route("i/{invoiceId}/test-payment")]
         public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request)
         {
+            if (_NetworkProvider.NetworkType != ChainName.Regtest) return Conflict();
+            
+            var credentialString = "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3";
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             
-            // TODO security: only allow this controller to work on REGTEST!
-            var credentialString = "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3";
-
             // TODO support altcoins, not just bitcoin
             //var network = invoice.Networks.GetNetwork(invoice.Currency);
             var cryptoCode = "BTC";
@@ -98,6 +98,8 @@ namespace BTCPayServer.Controllers
         [Route("i/{invoiceId}/expire")]
         public async Task<IActionResult> TestExpireNow(string invoiceId)
         {
+            if (_NetworkProvider.NetworkType != ChainName.Regtest) return Conflict();
+            
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             ExpireInvoiceResponse expireInvoiceResponse = new ExpireInvoiceResponse();
             

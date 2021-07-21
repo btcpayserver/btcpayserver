@@ -1,10 +1,14 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@using NBitcoin
 @model PaymentModel
 @{
     Layout = null;
+    var allowTestPayment = BTCPayNetworkProvider.NetworkType == ChainName.Regtest;
 }
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -109,6 +113,10 @@
                     <div class="powered__by__btcpayserver">
                         Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
                     </div>
+                    @if (allowTestPayment)
+                    {
+                        <partial name="Checkout-Testing" />
+                    }
                 </div>
             </div>
         </div>

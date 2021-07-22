@@ -132,7 +132,7 @@ namespace BTCPayServer.HostedServices
                                 $"Amount: {notification.Data.Price} {notification.Data.Currency}<br>" +
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
-                _EmailSenderFactory.GetEmailSender(invoice.StoreId).SendEmail(
+                (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
                     invoice.NotificationEmail,
                     $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);

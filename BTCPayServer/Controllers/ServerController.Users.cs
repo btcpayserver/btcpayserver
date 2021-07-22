@@ -116,10 +116,10 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser()
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
 
             return View();
         }
@@ -129,13 +129,14 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            var requiresConfirmedEmail = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
             if (!_Options.AllowAdminRegistration)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
                 IdentityResult result;
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = _cssThemeManager.Policies.RequiresConfirmedEmail, 
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = requiresConfirmedEmail, 
                     Created = DateTimeOffset.UtcNow };
 
                 if (!string.IsNullOrEmpty(model.Password))

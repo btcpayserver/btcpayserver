@@ -1065,7 +1065,7 @@ namespace BTCPayServer.Tests
                 var storeController = user.GetController<StoresController>();
                 var storeResponse = await storeController.UpdateStore();
                 Assert.IsType<ViewResult>(storeResponse);
-                Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
+                Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
                 var testResult = storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
                 {
@@ -3736,8 +3736,8 @@ namespace BTCPayServer.Tests
                 var settings = tester.PayTester.GetService<SettingsRepository>();
                 var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
                 
-                Assert.Null(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings());
-                Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
+                Assert.Null(await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings());
+                Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
                 
                 await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = false });
@@ -3750,12 +3750,12 @@ namespace BTCPayServer.Tests
                  Server = "admin.com",
                  EnableSSL = true
                 });
-                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
-                Assert.Equal("admin@admin.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com",(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
                 await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = true });
-                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
-                Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
+                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
                 Assert.IsType<RedirectToActionResult>(await acc.GetController<StoresController>().Emails(acc.StoreId, new EmailsViewModel(new EmailSettings()
                 {
@@ -3767,7 +3767,7 @@ namespace BTCPayServer.Tests
                     EnableSSL = true
                 }), ""));
                 
-                Assert.Equal("store@store.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+                Assert.Equal("store@store.com",(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
             }
         }

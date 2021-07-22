@@ -5,11 +5,12 @@
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Views.PaymentRequest
 @using BTCPayServer.Views.Wallets
+@using BTCPayServer.Abstractions.Contracts
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
-@inject BTCPayServer.HostedServices.CssThemeManager ThemeManager
+@inject ISettingsRepository SettingsRepository
 
 <!DOCTYPE html>
 <html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
@@ -76,7 +77,7 @@
                     else if (Env.IsSecure)
                     {
                         <ul class="navbar-nav">
-                            @if (ThemeManager.ShowRegister)
+                            @if (!(await SettingsRepository.GetPolicies()).LockSubscription)
                             {
                                 <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
                             }

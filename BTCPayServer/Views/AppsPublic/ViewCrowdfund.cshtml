@@ -1,9 +1,11 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
@@ -13,8 +15,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />

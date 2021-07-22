@@ -70,7 +70,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
                 var controller = user.GetController<StoresController>();
-                var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
+                var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(await controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
                 var response = await controller.SetLightningNodeEnabled(user.StoreId, cryptoCode, false);
                 Assert.IsType<RedirectToActionResult>(response);

@@ -102,7 +102,8 @@
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs5.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {
@@ -120,7 +121,8 @@
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs5.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {

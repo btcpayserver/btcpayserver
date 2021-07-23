@@ -498,10 +498,9 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Apps")).Click();
                 s.Driver.FindElement(By.Id("CreateNewApp")).Click();
                 s.Driver.FindElement(By.Name("Name")).SendKeys("PoS" + Guid.NewGuid());
-                s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("PointOfSale");
+                s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Point of Sale");
                 s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
-                s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Cart");
                 s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
                 s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
                 s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
@@ -510,6 +509,7 @@ namespace BTCPayServer.Tests
                 var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
                 Assert.Contains("buyButtonText: Take my money", template);
 
+                s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Item list and cart");
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
 

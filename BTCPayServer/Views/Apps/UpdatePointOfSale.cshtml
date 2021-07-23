@@ -10,11 +10,12 @@
 
         <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-        <div class="row">
-            <div class="col-lg-12">
-                <form method="post">
-                    <input type="hidden" asp-for="StoreId" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form method="post">
+            <input type="hidden" asp-for="StoreId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-lg-6">
                     <div class="form-group">
                         <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
@@ -25,26 +26,30 @@
                         <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
+                </div>
+                <div class="col-lg-9">
                     <div class="form-group">
-                        <div class="form-group">
-                            <label asp-for="DefaultView" class="form-label" data-required></label>
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
-                            <span asp-validation-for="DefaultView" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />
-                            <label asp-for="ShowCustomAmount" class="form-check-label"></label>
-                            <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
-                            <label asp-for="ShowDiscount" class="form-check-label"></label>
-                            <span asp-validation-for="ShowDiscount" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="EnableTips" type="checkbox" class="form-check-input" />
-                            <label asp-for="EnableTips" class="form-check-label"></label>
-                            <span asp-validation-for="EnableTips" class="text-danger"></span>
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
+                    <div class="form-group">
+                        <label asp-for="Template" class="form-label"></label>
+                        <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
+                        <span asp-validation-for="Template" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h4 class="mt-5 mb-4">Appearance</h4>
+                    <div class="form-group">
+                        <label asp-for="DefaultView" class="form-label" data-required></label>
+                        <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
+                        <span asp-validation-for="DefaultView" class="text-danger"></span>
+                        <div class="mt-2">
+                            <span class="text-secondary">Choose the point of sale style for your customers.</span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -52,89 +57,59 @@
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="CustomButtonText" class="form-label" data-required></label>
-                        <input asp-for="CustomButtonText" class="form-control" required />
-                        <span asp-validation-for="CustomButtonText" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="CustomTipText" class="form-label" data-required></label>
-                        <input asp-for="CustomTipText" class="form-control" required />
-                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="CustomTipPercentages" class="form-label"></label>
-                        <input asp-for="CustomTipPercentages" class="form-control" />
-                        <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                    </div>
-
-                    <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
-
-                    <div class="form-group">
-                        <label asp-for="Template" class="form-label"></label>
-                        <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
-                        <span asp-validation-for="Template" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="NotificationUrl" class="form-label"></label>
-                        <input asp-for="NotificationUrl" class="form-control" />
-                        <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RedirectUrl" class="form-label"></label>
-                        <input asp-for="RedirectUrl" class="form-control" />
-                        <span asp-validation-for="RedirectUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RedirectAutomatically" class="form-label"></label>
-                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select"></select>
-                        <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Description" class="form-label"></label>
-                        <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
-                        <span asp-validation-for="Description" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="form-label"></label>
-                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
-                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
-                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
-                        <div class="btn-group">
-                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
-                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                    <h4 class="mt-5 mb-4">Discounts</h4>
+                    <div class="form-check mb-4">
+                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
+                        <label asp-for="ShowDiscount" class="form-check-label"></label>
+                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+                        <div class="mt-2">
+                            <span class="text-secondary">Not recommended for customer self-checkout.</span>
                         </div>
                     </div>
+                    <h4 class="mt-5 mb-4">Custom Payments</h4>
+                    <div class="form-group mb-4 d-flex align-items-center">
+                        <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
+                        <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
+                        <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
+                    </div>
+                    <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="CustomButtonText" class="form-label" data-required></label>
+                            <input asp-for="CustomButtonText" class="form-control" required />
+                            <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <h4 class="mt-5 mb-4">Tips</h4>
+                    <div class="form-group mb-4 d-flex align-items-center">
+                        <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                        <label asp-for="EnableTips" class="form-label mb-0"></label>
+                        <span asp-validation-for="EnableTips" class="text-danger"></span>
+                    </div>
+                    <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
+                        <div class="form-group">
+                            <label asp-for="CustomTipText" class="form-label" data-required></label>
+                            <input asp-for="CustomTipText" class="form-control" required />
+                            <span asp-validation-for="CustomTipText" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="CustomTipPercentages" class="form-label"></label>
+                            <input asp-for="CustomTipPercentages" class="form-control" />
+                            <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <h4 class="mt-5 mb-4">Additional Options</h4>
                     <div class="form-group">
                         <div class="accordion" id="accordion-dev-info">
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-payment-button-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordion-dev-info-embed-payment-button">
-                                        Embed Payment Button linking to POS item
-                                        <vc:icon symbol="caret-down"/>
+                                        Embed a payment button linking to POS item
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-payment-button-header" data-bs-parent="#accordion-dev-info">
+                                <div id="accordion-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-payment-button-header">
                                     <div class="accordion-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
                                         @if (Model.Example1 != null)
@@ -153,13 +128,13 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="accordion-dev-info-embed-pos-iframe-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordion-dev-info-embed-pos-iframe">
-                                        Embed POS with Iframe
-                                        <vc:icon symbol="caret-down"/>
+                                        Embed Point of Sale via Iframe
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header" data-bs-parent="#accordion-dev-info">
+                                <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header">
                                     <div class="accordion-body">
-                                        You can embed the POS using an iframe
+                                        You can embed this POS via an iframe.
                                         @{
                                             var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
                                         }
@@ -168,14 +143,41 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-notification-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
-                                        Notification Url Callbacks
-                                        <vc:icon symbol="caret-down"/>
+                                <h2 class="accordion-header" id="accordion-dev-info-redirect-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-redirect" aria-expanded="false" aria-controls="accordion-dev-info-redirect">
+                                        Redirects
+                                        <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header" data-bs-parent="#accordion-dev-info">
+                                <div id="accordion-dev-info-redirect" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
                                     <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="RedirectUrl" class="form-label"></label>
+                                            <input asp-for="RedirectUrl" class="form-control" />
+                                            <span asp-validation-for="RedirectUrl" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="RedirectAutomatically" class="form-label"></label>
+                                            <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select"></select>
+                                            <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-notification-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
+                                        Notification URL Callbacks
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="NotificationUrl" class="form-label"></label>
+                                            <input asp-for="NotificationUrl" class="form-control" />
+                                            <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                                        </div>
                                         <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                         <pre><code class="json">@Model.ExampleCallback</code></pre>
                                         <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
@@ -189,11 +191,53 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-appearance-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-appearance" aria-expanded="false" aria-controls="accordion-dev-info-appearance">
+                                        Custom CSS
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="CustomCSSLink" class="form-label"></label>
+                                            <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
+                                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                            </a>
+                                            <input asp-for="CustomCSSLink" class="form-control" />
+                                            <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                            <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                            <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </form>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group ms-2">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group ms-2">
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
+                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group ms-2">
+                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
+                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </section>
 

@@ -1,0 +1,16 @@
+#template-editor-app .card-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-gap: .5rem;
+}
+
+#template-editor-app .card-deck .card{
+    max-width: 480px;
+}
+
+#template-editor-app .card-img-top {
+    min-height: 247px; 
+    background-repeat: no-repeat; 
+    background-size:contain; 
+    background-position: top;
+}

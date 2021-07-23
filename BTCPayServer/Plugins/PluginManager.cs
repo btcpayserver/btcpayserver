@@ -25,6 +25,7 @@ namespace BTCPayServer.Plugins
         private static readonly List<PluginLoader> _plugins = new List<PluginLoader>();
         private static ILogger _logger;
 
+        private static List<(PluginLoader, Assembly, IFileProvider)> loadedPlugins;
         public static bool IsExceptionByPlugin(Exception exception)
         {
             return _pluginAssemblies.Any(assembly => assembly?.FullName?.Contains(exception.Source!, StringComparison.OrdinalIgnoreCase) is true);
@@ -43,16 +44,24 @@ namespace BTCPayServer.Plugins
             _logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
             ExecuteCommands(pluginsFolder);
-            List<(PluginLoader, Assembly, IFileProvider)> loadedPlugins =
-                new List<(PluginLoader, Assembly, IFileProvider)>();
-            var systemExtensions = GetDefaultLoadedPluginAssemblies();
-            plugins.AddRange(systemExtensions.SelectMany(assembly =>
-                GetAllPluginTypesFromAssembly(assembly).Select(GetPluginInstanceFromType)));
-            foreach (IBTCPayServerPlugin btcPayServerExtension in plugins)
-            {
-                btcPayServerExtension.SystemPlugin = true;
-            }
+            loadedPlugins = new List<(PluginLoader, Assembly, IFileProvider)>();
+            var systemPlugins = GetDefaultLoadedPluginAssemblies();
 
+            foreach (Assembly systemExtension in systemPlugins)
+            {
+                var detectedPlugins = GetAllPluginTypesFromAssembly(systemExtension).Select(GetPluginInstanceFromType);
+                if (!detectedPlugins.Any())
+                {
+                    continue;
+                    
+                }
+                foreach (var btcPayServerPlugin in detectedPlugins)
+                {
+                    btcPayServerPlugin.SystemPlugin = true;
+                    loadedPlugins.Add((null,systemExtension, CreateEmbeddedFileProviderForAssembly(systemExtension)));
+                }
+                plugins.AddRange(detectedPlugins);
+            }
             var orderFilePath = Path.Combine(pluginsFolder, "order");
             
             var availableDirs = Directory.GetDirectories(pluginsFolder);
@@ -76,8 +85,6 @@ namespace BTCPayServer.Plugins
             }
 
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
-
-
 
             foreach (var dir in orderedDirs)
             {
@@ -154,9 +161,7 @@ namespace BTCPayServer.Plugins
 
             var webHostEnvironment = applicationBuilder.ApplicationServices.GetService<IWebHostEnvironment>();
             List<IFileProvider> providers = new List<IFileProvider>() {webHostEnvironment.WebRootFileProvider};
-            providers.AddRange(
-                _pluginAssemblies
-                    .Select(CreateEmbeddedFileProviderForAssembly));
+            providers.AddRange(loadedPlugins.Select(tuple => tuple.Item3));
             webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
         }
 

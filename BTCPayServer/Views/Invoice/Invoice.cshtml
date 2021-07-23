@@ -58,7 +58,7 @@
                 <table class="table table-sm table-responsive-md removetopborder">
                     <tr>
                         <th>Store</th>
-                        <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
+                        <td><a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a></td>
                     </tr>
                     <tr>
                         <th>Invoice Id</th>
@@ -66,7 +66,29 @@
                     </tr>
                     <tr>
                         <th>Order Id</th>
-                        <td>@Model.TypedMetadata.OrderId</td>
+                        <td>
+                            @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+                            {
+                                @Model.TypedMetadata.OrderId
+                            }
+                            else
+                            {
+                                <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+                                    @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                                    {
+                                        <span>View Order</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.TypedMetadata.OrderId
+                                    }
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Payment Request Id</th>
+                        <td><a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a></td>
                     </tr>
                     <tr>
                         <th>State</th>
@@ -110,7 +132,7 @@
                     {
                         <tr>
                             <th>Redirect Url</th>
-                            <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
+                            <td><a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a></td>
                         </tr>
                     }
                 </table>

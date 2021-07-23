@@ -22,7 +22,7 @@
                 {
                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
 
-                    <li class="list-group-item bg-tile @(scheme.Collapsed ? "collapsed": "")">
+                    <li class="list-group-item bg-tile @(scheme.Collapsed ? "assets-collapsed": "")">
                         <div class="d-flex align-items-center">
                             <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
                                 <strong class="me-3">@scheme.Crypto</strong>
@@ -83,11 +83,20 @@
             @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
             {
                 <script>
-                    $(document).ready(function () {
-                        $(".collapsed").hide();
-                        $("#toggle-assets").click(function () {
-                            $(".collapsed").show();
-                        });
+                    document.addEventListener("DOMContentLoaded", (event) => {
+                        var collapsed = document.getElementsByClassName("assets-collapsed");
+                        for (let collapsedElement of collapsed) {
+                            collapsedElement.style.display = 'none'; 
+                        }
+                        document
+                            .getElementById("toggle-assets")
+                            .addEventListener("click", function (){
+                                var collapsed = document.getElementsByClassName("assets-collapsed");
+                                for (let collapsedElement of collapsed) {
+                                    collapsedElement.style.display = 'block';   
+                                }
+                                document.getElementById("toggle-assets").style.display="none";
+                            });
                     });
                 </script>
                 <button class="btn btn-link text-secondary mb-3 p-0 only-for-js" id="toggle-assets" type="button">Show additional assets</button>
@@ -178,7 +187,7 @@
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-2" />
                 <label asp-for="AnyoneCanCreateInvoice" class="form-label mb-0 me-1"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
             </div>
@@ -188,7 +197,7 @@
                     <div class="d-flex align-items-center">
                         <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-2"/>
                         <label asp-for="PayJoinEnabled" class="form-label mb-0 me-1"></label>
-                        <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank">
+                        <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
                     </div>
@@ -197,7 +206,7 @@
             }
             <div class="form-group mt-4">
                 <label asp-for="NetworkFeeMode" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <select asp-for="NetworkFeeMode" class="form-select">
@@ -208,7 +217,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <div class="input-group">
@@ -219,7 +228,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="MonitoringExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <div class="input-group">
@@ -230,7 +239,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="PaymentTolerance" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <div class="input-group">
@@ -241,7 +250,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="SpeedPolicy" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank">
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0';">

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -14,6 +15,8 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using ExchangeSharp;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -68,6 +71,14 @@ namespace BTCPayServer.Controllers
         public IActionResult Languages()
         {
             return Json(LanguageService.GetLanguages(), new JsonSerializerSettings() { Formatting = Formatting.Indented });
+        }
+
+        
+        [Route("misc/permissions")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
+        public IActionResult Permissions()
+        {
+            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings() { Formatting = Formatting.Indented });
         }
 
         [Route("swagger/v1/swagger.json")]

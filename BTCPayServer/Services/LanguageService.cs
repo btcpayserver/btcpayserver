@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -9,20 +10,6 @@ using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Services
 {
-    public class Language
-    {
-        public Language(string code, string displayName)
-        {
-            DisplayName = displayName;
-            Code = code;
-        }
-
-        [JsonProperty("code")]
-        public string Code { get; set; }
-        [JsonProperty("currentLanguage")]
-        public string DisplayName { get; set; }
-    }
-
     public class LanguageService
     {
         private readonly Language[] _languages;

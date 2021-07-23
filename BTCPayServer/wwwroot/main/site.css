@@ -1,4 +1,9 @@
-﻿/* General and site-wide Bootstrap modifications */
+﻿/* Set scroll padding so that anchors don't disappear underneath the fixed navbar */ 
+html {
+    scroll-padding-top: 80px;
+}
+
+/* General and site-wide Bootstrap modifications */
 .logo {
     height: 34px;
 }

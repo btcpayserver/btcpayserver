@@ -153,7 +153,7 @@ namespace BTCPayServer.Controllers
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
 
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
@@ -183,10 +183,10 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, string[] additionalSearchTerms = null, CancellationToken cancellationToken = default)
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
 
             using (logs.Measure("Saving invoice"))
             {
-                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
+                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);
             }
             _ = Task.Run(async () =>
             {

@@ -41,12 +41,14 @@
         m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
         m.Replaced = !payment.Accounted;
         m.CryptoPaymentData = onChainPaymentData;
+        m.NetworkFee = payment.NetworkFee;
         return m;
     }).Where(model => model != null);
 }
 
 @if (onchainPayments.Any())
 {
+    var hasNetworkFee = onchainPayments.Sum(a => a.NetworkFee) > 0;
     <div class="row">
         <div class="col-md-12 invoice-payments">
             <h3>On-Chain payments</h3>
@@ -57,6 +59,15 @@
                     <th>Index</th>
                     <th>Deposit address</th>
                     <th>Amount</th>
+                    @if (hasNetworkFee)
+                    {
+                    <th>
+                        Network Fee
+                        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank"  rel="noreferrer noopener">
+                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        </a>
+                    </th>
+                    }
                     <th>Transaction Id</th>
                     <th class="text-end">Confirmations</th>
                 </tr>
@@ -69,9 +80,13 @@
                         <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                         <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
                         <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
-                        <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate"  title="@payment.TransactionId">
+                        @if (hasNetworkFee)
+                        {
+                            <td>@payment.NetworkFee</td>
+                        }
+                        <td style="max-width:200px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.TransactionId">
                             <div class="wraptextAuto">
-                                <a href="@payment.TransactionLink" target="_blank">
+                                <a href="@payment.TransactionLink" target="_blank" rel="noreferrer noopener">
                                     @payment.TransactionId
                                 </a>
                             </div>

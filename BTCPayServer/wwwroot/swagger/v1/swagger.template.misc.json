@@ -1,9 +1,50 @@
 {
     "paths": {
+        "/misc/permissions": {
+            "get": {
+                "tags": [
+                    "Miscelleneous"
+                ],
+                "summary": "Permissions metadata",
+                "description": "The metadata of available permissions",
+                "operationId": "permissionsMetadata",
+                "responses": {
+                    "200": {
+                        "description": "The metadata of available permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "The permission id",
+                                                "nullable": false
+                                            },
+                                            "included": {
+                                                "type": "array",
+                                                "description": "Permissions included in this array are also granted by this permission",
+                                                "nullable": false,
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/misc/lang": {
             "get": {
                 "tags": [
-                    "Miscalleneous"
+                    "Miscelleneous"
                 ],
                 "summary": "Language codes",
                 "description": "The supported language codes",
@@ -61,7 +102,7 @@
             ],
             "get": {
                 "tags": [
-                    "Miscalleneous"
+                    "Miscelleneous"
                 ],
                 "summary": "Invoice checkout",
                 "description": "View the checkout page of an invoice",
@@ -81,7 +122,7 @@
     },
     "tags": [
         {
-            "name": "Miscalleneous"
+            "name": "Miscelleneous"
         }
     ]
 }

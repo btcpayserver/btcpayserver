@@ -7,11 +7,20 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            $("#create-invoice-form").on("submit",
-                function() {
-                    $(this).find("input[type='submit']").prop('disabled', true);
-                });
-        })
+            $("#create-invoice-form").on("submit", function() {
+                $(this).find("input[type='submit']").prop('disabled', true);
+            });
+
+            $("#create-invoice-form input").on("input", function () {
+                // Give it a timeout to make sure all form validation has completed by the time we run our callback
+                setTimeout(function() {
+                    var validationErrors = $('.field-validation-error');
+                    if (validationErrors.length === 0) {
+                        $("input[type='submit']#Create").removeAttr('disabled');
+                    }
+                }, 100);
+            });
+        });
     </script>
 }
 

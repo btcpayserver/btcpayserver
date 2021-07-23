@@ -263,12 +263,30 @@
                         "name": "statusFilter",
                         "in": "query",
                         "required": false,
-                        "description": "statuses to filter the transactions with",
+                        "description": "Statuses to filter the transactions with",
                         "schema": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/components/schemas/TransactionStatus"
                             }
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of transactions to skip from the start",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "description": "Maximum number of transactions to return",
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -382,7 +400,7 @@
                 "tags": [
                     "Store Wallet (On Chain)"
                 ],
-                "summary": "Get store on-chain wallet transactions",
+                "summary": "Get store on-chain wallet transaction",
                 "parameters": [
                     {
                         "name": "storeId",

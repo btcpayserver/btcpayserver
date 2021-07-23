@@ -396,18 +396,10 @@
                     "$ref": "#/components/schemas/OnChainPaymentMethodData"
                 }
             },
-            "OnChainPaymentMethodData": {
+            "OnChainPaymentMethodBaseData": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
-                    },
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "Crypto code of the payment method"
-                    },
                     "derivationScheme": {
                         "type": "string",
                         "description": "The derivation scheme",
@@ -421,6 +413,22 @@
                         "type": "string",
                         "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
                         "example": "abcd82a1/84'/0'/0'"
+                    }
+                }
+            },
+            "OnChainPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
+                    },
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "Crypto code of the payment method"
                     }
                 }
             },

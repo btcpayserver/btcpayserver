@@ -27,20 +27,17 @@ namespace BTCPayServer.Controllers.GreenField
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _cssThemeManager;
 
         public StoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IAuthorizationService authorizationService,
             CssThemeManager cssThemeManager)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _lightningNetworkOptions = lightningNetworkOptions;
             _authorizationService = authorizationService;
             _cssThemeManager = cssThemeManager;
         }

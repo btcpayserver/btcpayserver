@@ -1,9 +1,6 @@
-using NBitcoin;
-using Newtonsoft.Json;
-
 namespace BTCPayServer.Client.Models
 {
-    public class OnChainPaymentMethodData
+    public class OnChainPaymentMethodData : OnChainPaymentMethodBaseData
     {
         /// <summary>
         /// Whether the payment method is enabled
@@ -15,18 +12,9 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public string CryptoCode { get; set; }
 
-        /// <summary>
-        /// The derivation scheme
-        /// </summary>
-        public string DerivationScheme { get; set; }
-
-        public string Label { get; set; }
-
-        [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
-        public RootedKeyPath AccountKeyPath { get; set; }
-
         public OnChainPaymentMethodData()
         {
+            
         }
 
         public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled)

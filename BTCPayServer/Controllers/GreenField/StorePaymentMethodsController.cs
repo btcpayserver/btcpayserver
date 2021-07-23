@@ -1,4 +1,6 @@
 #nullable enable
+using System.Collections.Generic;
+using System.Linq;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -23,17 +25,21 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods")]
-        public ActionResult<LightningNetworkPaymentMethodData> GetPaymentMethods(
+        public ActionResult<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(
             [FromQuery] bool enabledOnly = false
         )
         {
             var storeBlob = Store.GetStoreBlob();
             var excludedPaymentMethods = storeBlob.GetExcludedPaymentMethods();
-
-            return Ok(new {
-                onchain = StoreOnChainPaymentMethodsController.GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly),
-                lightning = StoreLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly)
-            });
+            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .Where(method => !enabledOnly || !excludedPaymentMethods.Match(method.PaymentId))
+                .ToDictionary(
+                method => method.PaymentId.ToStringNormalized(),
+                method => new GenericPaymentMethodData()
+                {
+                    Enabled = enabledOnly || !excludedPaymentMethods.Match(method.PaymentId),
+                    Data = method.PaymentId.PaymentType.GetGreenfieldData(method)
+                }));
         }
     }
 }

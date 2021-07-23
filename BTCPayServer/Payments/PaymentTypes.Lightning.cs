@@ -1,4 +1,6 @@
 using System;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
@@ -63,6 +65,16 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is LightningSupportedPaymentMethod lightningSupportedPaymentMethod)
+                return new LightningNetworkPaymentMethodBaseData()
+                {
+                    ConnectionString = lightningSupportedPaymentMethod.GetDisplayableConnectionString()
+                };
+            return null;
+        }
+
         public override bool IsPaymentType(string paymentType)
         {
             return paymentType?.Equals("offchain", StringComparison.InvariantCultureIgnoreCase) is true || base.IsPaymentType(paymentType);

@@ -79,7 +79,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 				errorMessage: null,
 				workload: [],
 				camera: 0,
-				cameraOff: false,
+				cameraOff: true,
 				cameras: ["auto"],
 				decoder: null
 			}
@@ -87,10 +87,11 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		mounted() {
 			if (this.isModal) {
 				const modal = document.getElementById(this.modalId);
-				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; });
-				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; });
+				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; this.cameraOff = false; });
+				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; this.cameraOff = true; });
 			} else {
 				this.isLoaded = true;
+				this.cameraOff = false;
 			}
 		},
 		computed: {

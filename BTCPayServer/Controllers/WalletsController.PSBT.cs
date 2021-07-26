@@ -130,6 +130,14 @@ namespace BTCPayServer.Controllers
             }
             switch (command)
             {
+                case "export":
+                    var viewModel = new WalletPSBTExportViewModel {SigningContext = vm.SigningContext};
+                    viewModel.PSBT = psbt.ToBase64();
+                    viewModel.PSBTHex = psbt.ToHex();
+                    viewModel.CryptoCode = network.CryptoCode;
+                    await FetchTransactionDetails(derivationSchemeSettings, viewModel, network);
+                    return View("WalletPSBTExport", viewModel);
+                
                 case "decode":
                     vm.Decoded = psbt.ToString();
                     ModelState.Remove(nameof(vm.PSBT));

@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string lang)
+        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
@@ -532,14 +532,17 @@ namespace BTCPayServer.Controllers
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
-            if ("auto".Equals(lang, StringComparison.InvariantCulture) || (lang == null && storeBlob.AutoDetectLanguage))
+            switch (lang?.ToLowerInvariant())
             {
-                // Auto-detect the langauge
-                lang = _languageService.AutoDetectLanguageUsingHeader(null).Code;
-            }
-            else if(lang != null)
-            {
-                lang = _languageService.FindLanguage(lang)?.Code;
+                case "auto":
+                case null when storeBlob.AutoDetectLanguage:
+                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null).Code;
+                    break;
+                case { } langs when !string.IsNullOrEmpty(langs):
+                {
+                    lang = _languageService.FindLanguage(langs)?.Code;
+                    break;
+                }
             }
             lang ??= storeBlob.DefaultLang;
             

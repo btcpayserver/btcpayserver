@@ -27,11 +27,9 @@ namespace BTCPayServer.Services
     public class LanguageService
     {
         private readonly Language[] _languages;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public LanguageService(IWebHostEnvironment environment, IHttpContextAccessor httpContextAccessor)
+        public LanguageService(IWebHostEnvironment environment)
         {
-            _httpContextAccessor = httpContextAccessor;
             var path = environment.WebRootPath;
             path = Path.Combine(path, "locales");
             var files = Directory.GetFiles(path, "*.json");
@@ -125,19 +123,12 @@ namespace BTCPayServer.Services
             var countryEnd = "-" + country;
             countryMatches = countryMatches.Where(l =>
                 l.Code.EndsWith(countryEnd, StringComparison.OrdinalIgnoreCase)).ToList();
-            var bestMatch = countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
-
-            if (bestMatch != null)
-            {
-                return bestMatch;
-            }
-
-            return null;
+            return countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
         }
 
-        public Language AutoDetectLanguageUsingHeader(string defaultLang)
+        public Language AutoDetectLanguageUsingHeader(IHeaderDictionary headerDictionary, string defaultLang)
         {
-            if (_httpContextAccessor.HttpContext?.Request?.Headers?.TryGetValue("Accept-Language",
+            if (headerDictionary?.TryGetValue("Accept-Language",
                 out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))
             {
                 return FindLanguageInAcceptLanguageHeader(acceptLanguage.ToString()) ?? FindLanguageInAcceptLanguageHeader(defaultLang);

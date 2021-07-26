@@ -1,3 +1,5 @@
+using NBitcoin;
+
 namespace BTCPayServer.Client.Models
 {
     public class OnChainPaymentMethodData : OnChainPaymentMethodBaseData

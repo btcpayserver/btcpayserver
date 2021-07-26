@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -27,7 +28,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _cssThemeManager;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
 
         public StoreOnChainPaymentMethodsController(
@@ -35,15 +36,14 @@ namespace BTCPayServer.Controllers.GreenField
             BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayWalletProvider walletProvider,
             IAuthorizationService authorizationService,
-            CssThemeManager cssThemeManager,
-            ExplorerClientProvider explorerClientProvider)
+            ExplorerClientProvider explorerClientProvider, ISettingsRepository settingsRepository)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletProvider = walletProvider;
             _authorizationService = authorizationService;
-            _cssThemeManager = cssThemeManager;
             _explorerClientProvider = explorerClientProvider;
+            _settingsRepository = settingsRepository;
         }
 
         public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,
@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.GreenField
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
-                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId)))
+                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId), strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath()))
                 .Where((result) => enabled is null || enabled == result.Enabled)
                 .ToList();
         }

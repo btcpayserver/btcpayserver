@@ -29,6 +29,13 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateAPIError("not-available",
                     $"{cryptoCode} services are not currently available");
             }
+            
+            var method = GetExistingBtcLikePaymentMethod(cryptoCode);
+            if (method != null)
+            {
+                return this.CreateAPIError("already-configured",
+                    $"{cryptoCode} wallet is already configured for this store");
+            }
 
             var canUseHotWallet = await CanUseHotWallet();
             if (request.SavePrivateKeys && !canUseHotWallet.HotWallet)
@@ -90,7 +97,7 @@ namespace BTCPayServer.Controllers.GreenField
         
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            return await _authorizationService.CanUseHotWallet(_cssThemeManager.Policies, User);
+            return await _authorizationService.CanUseHotWallet(await _settingsRepository.GetPolicies(), User);
         }
     }
 }

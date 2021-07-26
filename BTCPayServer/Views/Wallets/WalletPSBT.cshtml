@@ -29,7 +29,7 @@
 <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
 <div class="row">
-    <div class="col-md-10">
+    <div class="col-lg-10">
         @if (Model.Errors != null && Model.Errors.Count != 0)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
@@ -71,7 +71,7 @@
             <pre><code class="json">@Model.Decoded</code></pre>
         }
         <p>You can decode a PSBT by either pasting its content or by uploading the file.</p>
-        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")" enctype="multipart/form-data">
+        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
             <div class="form-group">
                 <label asp-for="PSBT" class="form-label"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
@@ -81,10 +81,10 @@
                 <label asp-for="UploadedPSBTFile" class="form-label"></label>
                 <input asp-for="UploadedPSBTFile" type="file" class="form-control">
             </div>
-            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
-            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
-                <i class="fa fa-camera"></i>
-            </button>
+            <div class="d-flex">
+                <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode PSBT</button>
+                <button type="button" id="scanqrcode" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+            </div>
         </form>
     </div>
 </div>

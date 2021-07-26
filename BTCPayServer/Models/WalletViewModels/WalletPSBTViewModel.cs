@@ -31,7 +31,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string PSBT { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
 
-        [Display(Name = "Upload PSBT from file...")]
+        [Display(Name = "Upload PSBT from file")]
         public IFormFile UploadedPSBTFile { get; set; }
 
         public SigningContextModel SigningContext { get; set; } = new SigningContextModel();

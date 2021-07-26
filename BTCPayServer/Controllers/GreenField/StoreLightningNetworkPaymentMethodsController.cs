@@ -42,7 +42,8 @@ namespace BTCPayServer.Controllers.GreenField
             _cssThemeManager = cssThemeManager;
         }
 
-        public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store, BTCPayNetworkProvider networkProvider, bool enabledOnly = false)
+        public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store,
+            BTCPayNetworkProvider networkProvider, bool? enabled)
         {
             var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
@@ -53,20 +54,21 @@ namespace BTCPayServer.Controllers.GreenField
                 .Select(paymentMethod =>
                     new LightningNetworkPaymentMethodData(
                         paymentMethod.PaymentId.CryptoCode,
-                        paymentMethod.GetExternalLightningUrl()?.ToString() ?? paymentMethod.GetDisplayableConnectionString(), 
+                        paymentMethod.GetExternalLightningUrl()?.ToString() ??
+                        paymentMethod.GetDisplayableConnectionString(),
                         !excludedPaymentMethods.Match(paymentMethod.PaymentId)
                     )
                 )
-                .Where((result) => !enabledOnly || result.Enabled)
+                .Where((result) => enabled is null || enabled == result.Enabled)
                 .ToList();
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork")]
         public ActionResult<IEnumerable<LightningNetworkPaymentMethodData>> GetLightningPaymentMethods(
-            [FromQuery] bool enabledOnly = false)
+            [FromQuery] bool? enabled)
         {
-            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly));
+            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabled));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -83,9 +85,10 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
+
             return Ok(method);
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
         public async Task<IActionResult> RemoveLightningNetworkPaymentMethod(
@@ -96,7 +99,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
-            
+
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var store = Store;
             store.SetSupportedPaymentMethod(id, null);
@@ -132,9 +135,11 @@ namespace BTCPayServer.Controllers.GreenField
                 {
                     if (!await CanUseInternalLightning())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You are not authorized to use the internal lightning node");
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
+                            $"You are not authorized to use the internal lightning node");
                         return this.CreateValidationError(ModelState);
                     }
+
                     paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
                     {
                         CryptoCode = paymentMethodId.CryptoCode
@@ -149,17 +154,21 @@ namespace BTCPayServer.Controllers.GreenField
                         ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"Invalid URL ({error})");
                         return this.CreateValidationError(ModelState);
                     }
+
                     if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                     {
                         ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
                             $"BTCPay does not support gRPC connections");
                         return this.CreateValidationError(ModelState);
                     }
+
                     if (!await CanManageServer() && !connectionString.IsSafe())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
+                            $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                         return this.CreateValidationError(ModelState);
                     }
+
                     paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
                     {
                         CryptoCode = paymentMethodId.CryptoCode
@@ -177,7 +186,8 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(GetExistingLightningLikePaymentMethod(cryptoCode, store));
         }
 
-        private LightningNetworkPaymentMethodData GetExistingLightningLikePaymentMethod(string cryptoCode, StoreData store = null)
+        private LightningNetworkPaymentMethodData GetExistingLightningLikePaymentMethod(string cryptoCode,
+            StoreData store = null)
         {
             store ??= Store;
             var storeBlob = store.GetStoreBlob();
@@ -200,16 +210,17 @@ namespace BTCPayServer.Controllers.GreenField
             network = network?.SupportLightning is true ? network : null;
             return network != null;
         }
-        
+
         private async Task<bool> CanUseInternalLightning()
         {
             return _cssThemeManager.AllowLightningInternalNodeForAll ||
-                (await _authorizationService.AuthorizeAsync(User, null,
-                    new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
+                   (await _authorizationService.AuthorizeAsync(User, null,
+                       new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }
+
         private async Task<bool> CanManageServer()
         {
-            return 
+            return
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
         }

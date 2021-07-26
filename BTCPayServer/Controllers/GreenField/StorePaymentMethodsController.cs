@@ -26,20 +26,20 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods")]
         public ActionResult<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(
-            [FromQuery] bool enabledOnly = false
-        )
+            [FromQuery] bool? enabled)
         {
             var storeBlob = Store.GetStoreBlob();
             var excludedPaymentMethods = storeBlob.GetExcludedPaymentMethods();
             return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .Where(method => !enabledOnly || !excludedPaymentMethods.Match(method.PaymentId))
+                .Where(method =>
+                    enabled is null || (enabled is false && excludedPaymentMethods.Match(method.PaymentId)))
                 .ToDictionary(
-                method => method.PaymentId.ToStringNormalized(),
-                method => new GenericPaymentMethodData()
-                {
-                    Enabled = enabledOnly || !excludedPaymentMethods.Match(method.PaymentId),
-                    Data = method.PaymentId.PaymentType.GetGreenfieldData(method)
-                }));
+                    method => method.PaymentId.ToStringNormalized(),
+                    method => new GenericPaymentMethodData()
+                    {
+                        Enabled = enabled.GetValueOrDefault(!excludedPaymentMethods.Match(method.PaymentId)),
+                        Data = method.PaymentId.PaymentType.GetGreenfieldData(method)
+                    }));
         }
     }
 }

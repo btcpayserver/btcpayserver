@@ -35,7 +35,8 @@ namespace BTCPayServer.Controllers.GreenField
             _walletProvider = walletProvider;
         }
 
-        public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store, BTCPayNetworkProvider networkProvider, bool enabledOnly = false)
+        public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,
+            BTCPayNetworkProvider networkProvider, bool? enabled)
         {
             var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
@@ -46,16 +47,16 @@ namespace BTCPayServer.Controllers.GreenField
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
                         strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId)))
-                .Where((result) => !enabledOnly || result.Enabled)
+                .Where((result) => enabled is null || enabled == result.Enabled)
                 .ToList();
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
         public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
-            [FromQuery] bool enabledOnly = false)
+            [FromQuery] bool? enabled)
         {
-            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabledOnly));
+            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -72,6 +73,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
+
             return Ok(method);
         }
 
@@ -91,6 +93,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
+
             try
             {
                 var strategy = DerivationSchemeSettings.Parse(paymentMethod.DerivationScheme, network);
@@ -109,7 +112,7 @@ namespace BTCPayServer.Controllers.GreenField
                                 .ToString()
                         });
                 }
-                
+
                 return Ok(result);
             }
             catch
@@ -118,11 +121,10 @@ namespace BTCPayServer.Controllers.GreenField
                     "Invalid Derivation Scheme");
                 return this.CreateValidationError(ModelState);
             }
-
         }
-        
-        
-         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+
+
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
         public IActionResult GetProposedOnChainPaymentMethodPreview(string cryptoCode,
             [FromBody] OnChainPaymentMethodData paymentMethodData,
@@ -132,11 +134,13 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
+
             if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
             {
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Missing derivationScheme");
             }
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
             DerivationSchemeSettings strategy;
@@ -182,7 +186,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
-            
+
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             var store = Store;
             store.SetSupportedPaymentMethod(id, null);
@@ -207,6 +211,7 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Missing derivationScheme");
             }
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -229,6 +234,7 @@ namespace BTCPayServer.Controllers.GreenField
                     signing.AccountKeyPath = null;
                     signing.RootFingerprint = null;
                 }
+
                 store.SetSupportedPaymentMethod(id, strategy);
                 storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
                 store.SetStoreBlob(storeBlob);

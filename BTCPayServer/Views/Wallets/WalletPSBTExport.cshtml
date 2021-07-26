@@ -1,0 +1,80 @@
+﻿@model WalletPSBTExportViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "PSBT Signing", Context.GetStoreData().StoreName);
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent {
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            initQRShow("Scan the PSBT with your wallet", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
+            initCameraScanningApp("Scan the PSBT from your wallet", function (data){
+               $("textarea#ImportedPSBT").val(data);
+               $("#Decode").click();
+            }, "scanModal");
+        });
+    </script>
+}
+
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
+
+<div class="row">
+    <div class="col-lg-9 col-xl-8">
+        @if (Model.CanCalculateBalance)
+        {
+            <p>
+                This transaction will change your balance:
+                @if (Model.Positive)
+                {
+                    <span class="text-success">@Model.BalanceChange</span>
+                }
+                else
+                {
+                    <span class="text-danger">@Model.BalanceChange</span>
+                }
+            </p>
+            <p>
+                Review the details and export the PSBT for your wallet.
+                Sign the PSBT with your wallet and import the signed version
+                here for finalization and broadcastimg.
+            </p>
+        }
+        <partial name="_PSBTInfo" model="Model" />
+        
+        <h4 class="mt-5 mb-3">Export PSBT for signing</h4>
+        <div class="form-group">
+            <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
+                <input type="hidden" asp-for="CryptoCode"/>
+                <input type="hidden" asp-for="PSBT"/>
+                <div class="d-flex">
+                    <button name="command" type="submit" class="btn btn-primary" value="save-psbt">Download PSBT file</button>
+                    <button name="command" type="button" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
+                </div>
+            </form>
+        </div>
+        
+        <h4 class="mt-5 mb-3">Import signed PSBT</h4>
+        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="ImportedPSBT" class="form-label">PSBT content</label>
+                <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+            </div>
+            <div class="d-flex">
+                <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode PSBT</button>
+                <button type="button" id="scanqrcode" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+            </div>
+        </form>
+    </div>
+</div>
+<partial name="ShowQR"/>
+<partial name="CameraScanner"/>

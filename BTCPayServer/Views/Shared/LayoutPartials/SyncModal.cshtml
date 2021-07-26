@@ -26,9 +26,8 @@
             </div>
         </div>
     </div>
-    
-    @section PageHeadContent {
-        <style type="text/css">
+
+    <style >
             #syncModal {
                 position: fixed;
                 bottom: 40px;
@@ -51,10 +50,8 @@
                 transform: rotate(-90deg);
             }
         </style>
-    }
-    
-    @section PageFootContent {
-        <script>
+
+    <script>
             var syncModalContent = $('#syncModalContent');
             var syncModal = $('#syncModal');
             if (localStorage.getItem("sync-collapsed")){
@@ -75,5 +72,4 @@
             $(document).on("scroll", handleFooterBottom);
             handleFooterBottom();
         </script>
-    }
 }

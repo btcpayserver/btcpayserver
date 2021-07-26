@@ -9,13 +9,19 @@ namespace BTCPayServer.Client
     public partial class BTCPayServerClient
     {
         public virtual async Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
-            bool enabledOnly = false,
+            bool? enabled = null,
             CancellationToken token = default)
         {
+            var query = new Dictionary<string, object>();
+            if (enabled != null)
+            {
+                query.Add(nameof(enabled), enabled);
+            }
+
             var response =
                 await _httpClient.SendAsync(
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain",
-                        new Dictionary<string, object>() {{nameof(enabledOnly), enabledOnly}}), token);
+                        query), token);
             return await HandleResponse<IEnumerable<OnChainPaymentMethodData>>(response);
         }
 

@@ -17,6 +17,15 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {

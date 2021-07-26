@@ -15,6 +15,15 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "description": "View information about the stores' configured Lightning Network payment methods",

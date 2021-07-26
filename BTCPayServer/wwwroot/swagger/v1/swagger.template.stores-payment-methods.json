@@ -19,10 +19,10 @@
                         }
                     },
                     {
-                        "name": "enabledOnly",
+                        "name": "enabled",
                         "in": "query",
                         "required": false,
-                        "description": "Fetch payment methods that are enable only",
+                        "description": "Fetch payment methods that are enabled/disabled only",
                         "schema": {
                             "type": "boolean"
                         }

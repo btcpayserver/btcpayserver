@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Services;
 
 namespace BTCPayServer.Models.ServerViewModels
@@ -23,7 +24,7 @@ namespace BTCPayServer.Models.ServerViewModels
             {
                 if (Settings?.LastUpdated is DateTimeOffset date)
                 {
-                    return Views.ViewsRazor.ToTimeAgo(date);
+                    return ViewsRazor.ToTimeAgo(date);
                 }
                 return null;
             }

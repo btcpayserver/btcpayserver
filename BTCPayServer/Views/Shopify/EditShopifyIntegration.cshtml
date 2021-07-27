@@ -1,12 +1,11 @@
 @using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
-    
     Layout = "../Shared/_NavLayout.cshtml";
     
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
-    
     
     var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
     var shopifyUrl = Model?.ShopifyUrl;

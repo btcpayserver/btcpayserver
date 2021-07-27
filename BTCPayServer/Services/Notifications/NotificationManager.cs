@@ -155,9 +155,7 @@ namespace BTCPayServer.Services.Notifications
         public INotificationHandler GetHandler(string notificationId)
         {
             _handlersByNotificationType.TryGetValue(notificationId, out var h);
-
             return h;
-            // throw new InvalidOperationException($"No INotificationHandler found for {notificationId}");
         }
     }
 

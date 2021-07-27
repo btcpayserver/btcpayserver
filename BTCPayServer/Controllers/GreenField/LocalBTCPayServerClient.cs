@@ -188,7 +188,7 @@ namespace BTCPayServer.Controllers.GreenField
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             HomeController homeController,
             StorePaymentMethodsController storePaymentMethodsController,
-            IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.com"), "", "")
+            IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
             _storeOnChainWalletsController = storeOnChainWalletsController;

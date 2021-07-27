@@ -23,6 +23,7 @@
         "inputFiles": [
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/main/utils.js",
             "wwwroot/main/site.js"
         ]

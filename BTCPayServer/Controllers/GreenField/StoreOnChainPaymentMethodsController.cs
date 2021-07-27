@@ -54,6 +54,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
         public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
+            string storeId,
             [FromQuery] bool? enabled)
         {
             return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled));

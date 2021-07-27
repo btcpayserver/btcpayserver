@@ -66,6 +66,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork")]
         public ActionResult<IEnumerable<LightningNetworkPaymentMethodData>> GetLightningPaymentMethods(
+            string storeId,
             [FromQuery] bool? enabled)
         {
             return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabled));

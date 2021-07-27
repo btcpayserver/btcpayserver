@@ -26,6 +26,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods")]
         public ActionResult<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(
+            string storeId,
             [FromQuery] bool? enabled)
         {
             var storeBlob = Store.GetStoreBlob();

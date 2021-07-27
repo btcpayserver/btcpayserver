@@ -50,6 +50,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly StoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly HomeController _homeController;
+        private readonly StorePaymentMethodsController _storePaymentMethodsController;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
             IOptionsMonitor<IdentityOptions> identityOptions,
@@ -69,7 +70,8 @@ namespace BTCPayServer.Controllers.GreenField
             GreenFieldServerInfoController greenFieldServerInfoController,
             StoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
-            HomeController homeController)
+            HomeController homeController,
+            StorePaymentMethodsController storePaymentMethodsController)
         {
             _storeRepository = storeRepository;
             _identityOptions = identityOptions;
@@ -90,6 +92,7 @@ namespace BTCPayServer.Controllers.GreenField
             _storeWebhooksController = storeWebhooksController;
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
             _homeController = homeController;
+            _storePaymentMethodsController = storePaymentMethodsController;
         }
 
         public async Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
@@ -142,6 +145,7 @@ namespace BTCPayServer.Controllers.GreenField
                 _storeWebhooksController,
                 _greenfieldPullPaymentController,
                 _homeController,
+                _storePaymentMethodsController,
                 new HttpContextAccessor() {HttpContext = context}
             );
         }
@@ -165,6 +169,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly StoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly HomeController _homeController;
+        private readonly StorePaymentMethodsController _storePaymentMethodsController;
 
         public LocalBTCPayServerClient(StoreOnChainPaymentMethodsController chainPaymentMethodsController,
             StoreOnChainWalletsController storeOnChainWalletsController,
@@ -182,6 +187,7 @@ namespace BTCPayServer.Controllers.GreenField
             StoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             HomeController homeController,
+            StorePaymentMethodsController storePaymentMethodsController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.com"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -200,14 +206,15 @@ namespace BTCPayServer.Controllers.GreenField
             _storeWebhooksController = storeWebhooksController;
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
             _homeController = homeController;
+            _storePaymentMethodsController = storePaymentMethodsController;
 
             var controllers = new[]
             {
                 chainPaymentMethodsController, storeOnChainWalletsController, healthController,
                 paymentRequestController, apiKeysController, notificationsController, usersController,
-                storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController,
-                greenFieldServerInfoController, greenfieldPullPaymentController, storesController,
-                lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
+                storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController, storeWebhooksController,
+                greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController
             };
             foreach (var controller in controllers)
             {
@@ -491,9 +498,9 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         public override Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
-            CancellationToken token = default)
+            bool? enabled, CancellationToken token)
         {
-            return Task.FromResult(GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId)));
+            return Task.FromResult(GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId, enabled)));
         }
 
         public override async Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
@@ -735,11 +742,11 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         public override Task<IEnumerable<LightningNetworkPaymentMethodData>>
-            GetStoreLightningNetworkPaymentMethods(string storeId, bool enabledOnly = false,
+            GetStoreLightningNetworkPaymentMethods(string storeId, bool? enabled,
                 CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult(
-                _storeLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(storeId, enabledOnly)));
+                _storeLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(storeId, enabled)));
         }
 
         public override Task<LightningNetworkPaymentMethodData> GetStoreLightningNetworkPaymentMethod(
@@ -857,12 +864,24 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override Task<Language[]> GetAvailableLanguages(CancellationToken token = default)
         {
-            return Task.FromResult(_homeController.LanguageService.GetLanguages());
+            return Task.FromResult(_homeController.LanguageService.GetLanguages().Select(language => new Language(language.Code, language.DisplayName)).ToArray());
         }
 
         public override Task<PermissionMetadata[]> GetPermissionMetadata(CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult<PermissionMetadata[]>(_homeController.Permissions()));
+        }
+
+        public override async Task<LightningNetworkPaymentMethodData> UpdateStoreLightningNetworkPaymentMethodToInternalNode(string storeId, string cryptoCode,
+            CancellationToken token = default)
+        {
+            //nothing to change, just local client sugar
+            return await base.UpdateStoreLightningNetworkPaymentMethodToInternalNode(storeId, cryptoCode, token);
+        }
+
+        public override Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId, bool? enabled = null, CancellationToken token = default)
+        {
+            return Task.FromResult(GetFromActionResult(_storePaymentMethodsController.GetStorePaymentMethods(storeId, enabled)));
         }
     }
 }

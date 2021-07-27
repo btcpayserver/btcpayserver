@@ -1,3 +1,5 @@
+using NBitcoin;
+
 namespace BTCPayServer.Client.Models
 {
     public class OnChainPaymentMethodData : OnChainPaymentMethodBaseData
@@ -17,9 +19,11 @@ namespace BTCPayServer.Client.Models
             
         }
 
-        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled)
+        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled, string label, RootedKeyPath accountKeyPath)
         {
             Enabled = enabled;
+            Label = label;
+            AccountKeyPath = accountKeyPath;
             CryptoCode = cryptoCode;
             DerivationScheme = derivationScheme;
         }

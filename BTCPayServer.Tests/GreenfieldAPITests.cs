@@ -1427,8 +1427,12 @@ namespace BTCPayServer.Tests
             using var tester = ServerTester.Create();
             await tester.StartAsync();
             var user = tester.NewAccount();
+            var user2 = tester.NewAccount();
             await user.GrantAccessAsync(true);
+            await user2.GrantAccessAsync(false);
+            
             var client = await user.CreateClient(Policies.CanModifyStoreSettings);
+            var client2 = await user2.CreateClient(Policies.CanModifyStoreSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
 
             var store = await client.CreateStore(new CreateStoreRequest() { Name = "test store" });
@@ -1437,9 +1441,10 @@ namespace BTCPayServer.Tests
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.UpdateStoreOnChainPaymentMethod(store.Id, "BTC", new OnChainPaymentMethodData() { });
-            });
+            }); 
+           
             var xpriv = new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
-                .Derive(KeyPath.Parse("m/84'/0'/0'"));
+                .Derive(KeyPath.Parse("m/84'/1'/0'"));
             var xpub = xpriv.Neuter().ToString(Network.RegTest);
             var firstAddress = xpriv.Derive(KeyPath.Parse("0/0")).Neuter().GetPublicKey().GetAddress(ScriptPubKeyType.Segwit, Network.RegTest).ToString();
             await AssertHttpError(404, async () =>
@@ -1475,6 +1480,60 @@ namespace BTCPayServer.Tests
             {
                 await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
             });
+            
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.GenerateOnChainWallet(store.Id, "BTC", new GenerateOnChainWalletRequest() { });
+            });
+             
+            await AssertValidationError(new []{"SavePrivateKeys", "ImportKeysToRPC"}, async () =>
+            {
+                await client2.GenerateOnChainWallet(user2.StoreId, "BTC", new GenerateOnChainWalletRequest()
+                {
+                    SavePrivateKeys = true,
+                    ImportKeysToRPC = true
+                });
+            });
+
+            
+            var allMnemonic = new Mnemonic("all all all all all all all all all all all all");
+            
+            
+            await client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            var generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() {ExistingMnemonic = allMnemonic,});
+            
+            Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            Assert.Equal(generateResponse.DerivationScheme, xpub);
+            
+            await AssertAPIError("already-configured", async () =>
+            {
+                await client.GenerateOnChainWallet(store.Id, "BTC",
+                    new GenerateOnChainWalletRequest() {ExistingMnemonic = allMnemonic,});
+            });
+            
+            await client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() {});
+            Assert.NotEqual(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            Assert.Equal(generateResponse.Mnemonic.DeriveExtKey().Derive(KeyPath.Parse("m/84'/1'/0'")).Neuter().ToString(Network.RegTest), generateResponse.DerivationScheme);
+
+            await client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1});
+            
+            Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
+            
+            Assert.Equal(new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
+                .Derive(KeyPath.Parse("m/84'/1'/1'")).Neuter().ToString(Network.RegTest), generateResponse.DerivationScheme);
+            
+            await client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
+                new GenerateOnChainWalletRequest() { WordList =  Wordlist.Japanese, WordCount = WordCount.TwentyFour});
+
+            Assert.Equal(24,generateResponse.Mnemonic.Words.Length);
+            Assert.Equal(Wordlist.Japanese,generateResponse.Mnemonic.WordList);
+
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -1883,7 +1942,7 @@ namespace BTCPayServer.Tests
             
             var randK = new Mnemonic(Wordlist.English, WordCount.Twelve).DeriveExtKey().Neuter().ToString(Network.RegTest);
             await adminClient.UpdateStoreOnChainPaymentMethod(admin.StoreId, "BTC",
-                new OnChainPaymentMethodData("BTC", randK, true));
+                new OnChainPaymentMethodData("BTC", randK, true, "testing", null));
 
             void VerifyOnChain(Dictionary<string, GenericPaymentMethodData> dictionary)
             {

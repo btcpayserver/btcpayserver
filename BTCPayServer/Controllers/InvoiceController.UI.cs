@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string lang)
+        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
@@ -531,6 +531,21 @@ namespace BTCPayServer.Controllers
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
+
+            switch (lang?.ToLowerInvariant())
+            {
+                case "auto":
+                case null when storeBlob.AutoDetectLanguage:
+                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null).Code;
+                    break;
+                case { } langs when !string.IsNullOrEmpty(langs):
+                {
+                    lang = _languageService.FindLanguage(langs)?.Code;
+                    break;
+                }
+            }
+            lang ??= storeBlob.DefaultLang;
+            
             var model = new PaymentModel()
             {
                 Activated = paymentMethodDetails.Activated,

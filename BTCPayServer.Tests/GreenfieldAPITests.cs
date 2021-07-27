@@ -1236,19 +1236,19 @@ namespace BTCPayServer.Tests
                 var langs = tester.PayTester.GetService<LanguageService>();
                 foreach (var match in new[] { "it", "it-IT", "it-LOL" })
                 {
-                    Assert.Equal("it-IT", langs.FindBestMatch(match).Code);
+                    Assert.Equal("it-IT", langs.FindLanguage(match).Code);
                 }
                 foreach (var match in new[] { "pt-BR" })
                 {
-                    Assert.Equal("pt-BR", langs.FindBestMatch(match).Code);
+                    Assert.Equal("pt-BR", langs.FindLanguage(match).Code);
                 }
                 foreach (var match in new[] { "en", "en-US" })
                 {
-                    Assert.Equal("en", langs.FindBestMatch(match).Code);
+                    Assert.Equal("en", langs.FindLanguage(match).Code);
                 }
                 foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
                 {
-                    Assert.Equal("pt-PT", langs.FindBestMatch(match).Code);
+                    Assert.Equal("pt-PT", langs.FindLanguage(match).Code);
                 }
 
                 //payment method activation tests

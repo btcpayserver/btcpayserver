@@ -39,7 +39,6 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @Safe.Raw(Model.EmbeddedCSS)
-    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <noscript>
         <style>
             .hide-when-js, [v-cloak] { display: block !important; }
@@ -191,6 +190,7 @@
             </div>
         </footer>
     </div>
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
     </script>

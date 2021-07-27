@@ -3,7 +3,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
-namespace BTCPayServer.Views
+namespace BTCPayServer.Abstractions.Extensions
 {
     public static class ViewsRazor
     {

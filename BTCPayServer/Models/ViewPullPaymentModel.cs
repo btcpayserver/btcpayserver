@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Views;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
 namespace BTCPayServer.Models

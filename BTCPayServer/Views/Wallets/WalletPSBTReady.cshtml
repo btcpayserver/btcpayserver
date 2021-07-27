@@ -1,79 +1,73 @@
 ﻿@model WalletPSBTReadyViewModel
 @{
-    Layout = "../Shared/_Layout.cshtml";
+    Layout = "_LayoutWizard";
     ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "Review PSBT", Context.GetStoreData().StoreName);
 }
 
-<section>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 section-heading text-center">
-                <partial name="_StatusMessage" />
+@section Navbar {
+    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
+        <vc:icon symbol="back" />
+    </a>
+    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+}
 
-                @if (Model.GlobalError != null)
-                {
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                            <vc:icon symbol="close" />
-                        </button>
-                        <span>@Model.GlobalError</span><br/>
-                    </div>
-                }
+<header class="text-center">
+    <h1>@ViewData["PageTitle"]</h1>
+    
+    @if (Model.CanCalculateBalance)
+    {
+        <p class="lead text-secondary mt-3">
+            If you broadcast this transaction, your balance will change:
+            <br>
+            @if (Model.Positive)
+            {
+                <span class="text-success">@Model.BalanceChange</span>
+            }
+            else
+            {
+                <span class="text-danger">@Model.BalanceChange</span>
+            }
+        </p>
+    }
+    else
+    {
+        <p class="lead text-secondary mt-3">This PSBT is already finalized. We can't properly detect which input or output belongs to you.</p>
+    }
+</header>
 
-                <h2 class="mb-4">@ViewData["PageTitle"]</h2>
+<partial name="_StatusMessage" />
 
-                @if (Model.CanCalculateBalance)
-                {
-                    <p>
-                        If you broadcast this transaction, your balance will change:
-                        @if (Model.Positive)
-                        {
-                            <span class="text-success">@Model.BalanceChange</span>
-                        }
-                        else
-                        {
-                            <span class="text-danger">@Model.BalanceChange</span>
-                        }
-                    </p>
-                    <p>Do you want to continue?</p>
-                }
-                else
-                {
-                    <p>This PSBT is already finalized. We can't properly detect which input or output belongs to you.</p>
-                }
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-3"></div>
-            <div class="col-lg-6">
-                <partial name="_PSBTInfo" model="Model" />
-            </div>
-            <div class="col-lg-3"></div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@Context.GetRouteValue("walletId")">
-                    <input type="hidden" asp-for="SigningKey" />
-                    <input type="hidden" asp-for="SigningKeyPath" />
-                    <partial name="SigningContext" for="SigningContext" />
-                    @if (!Model.HasErrors)
-                    {
-                        @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
-                        {
-                            <button type="submit" class="btn btn-primary" name="command" value="payjoin">Broadcast (Payjoin)</button>
-                            <span> or </span>
-                            <button type="submit" class="btn btn-secondary" name="command" value="broadcast">Broadcast (Simple)</button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
-                        }
-                        <span> or </span>
-                    }
-                    <button type="submit" class="btn btn-secondary" name="command" value="analyze-psbt">View PSBT</button>
-                    
-                </form>
-            </div>
-        </div>
+@if (Model.GlobalError != null)
+{
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+        <span>@Model.GlobalError</span><br/>
     </div>
-</section>
+}
+
+<partial name="_PSBTInfo" model="Model" />
+
+<form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@Context.GetRouteValue("walletId")" class="text-center">
+    <input type="hidden" asp-for="SigningKey" />
+    <input type="hidden" asp-for="SigningKeyPath" />
+    <partial name="SigningContext" for="SigningContext" />
+    @if (!Model.HasErrors)
+    {
+        @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
+        {
+            <button type="submit" class="btn btn-primary" name="command" value="payjoin">Broadcast (Payjoin)</button>
+            <span> or </span>
+            <button type="submit" class="btn btn-secondary" name="command" value="broadcast">Broadcast (Simple)</button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
+        }
+        <span> or </span>
+    }
+    <button type="submit" class="btn btn-secondary" name="command" value="analyze-psbt">View PSBT</button>
+</form>

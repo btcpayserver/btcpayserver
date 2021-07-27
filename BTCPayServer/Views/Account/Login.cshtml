@@ -1,6 +1,7 @@
-﻿@model LoginViewModel
+﻿@using BTCPayServer.Abstractions.Contracts
+@model LoginViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 @{
     ViewData["Title"] = "Log in";
     Layout = "_LayoutSimple";
@@ -50,7 +51,7 @@
                         </div>
                     </fieldset>
                 </form>
-                @if (themeManager.ShowRegister)
+                @if (!(await _settingsRepository.GetPolicies()).LockSubscription)
                 {
                     <p class="text-center mt-2 mb-0">
                         <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>

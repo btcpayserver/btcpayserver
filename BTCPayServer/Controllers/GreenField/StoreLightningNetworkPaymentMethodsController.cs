@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -28,18 +29,18 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _cssThemeManager;
+        private readonly ISettingsRepository _settingsRepository;
 
         public StoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
-            CssThemeManager cssThemeManager)
+            ISettingsRepository settingsRepository)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
-            _cssThemeManager = cssThemeManager;
+            _settingsRepository = settingsRepository;
         }
 
         public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store,
@@ -213,7 +214,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         private async Task<bool> CanUseInternalLightning()
         {
-            return _cssThemeManager.AllowLightningInternalNodeForAll ||
+            return (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll ||
                    (await _authorizationService.AuthorizeAsync(User, null,
                        new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

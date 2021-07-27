@@ -66,11 +66,8 @@ namespace BTCPayServer.Controllers
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
-            CssThemeManager cssThemeManager,
             AppService appService,
-            IWebHostEnvironment webHostEnvironment,
             WebhookNotificationManager webhookNotificationManager,
-            IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IDataProtectionProvider dataProtector)
         {
             _RateFactory = rateFactory;
@@ -83,10 +80,7 @@ namespace BTCPayServer.Controllers
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
-            _CssThemeManager = cssThemeManager;
             _appService = appService;
-            _webHostEnvironment = webHostEnvironment;
-            _lightningNetworkOptions = lightningNetworkOptions;
             DataProtector = dataProtector.CreateProtector("ConfigProtector");
             WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
@@ -111,10 +105,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]

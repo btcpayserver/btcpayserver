@@ -298,14 +298,12 @@ namespace BTCPayServer.Hosting
                 Fallback = new FeeRate(100L, 1)
             });
 
-            services.AddSingleton<CssThemeManager>();
             services.Configure<MvcOptions>((o) =>
             {
                 o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
             });
-            services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());

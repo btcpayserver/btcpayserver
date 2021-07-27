@@ -1,13 +1,14 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-
+    var theme = await _settingsRepository.GetTheme();
     string StatusTextClass(InvoiceState state)
     {
         switch (state.Status.ToModernStatus())
@@ -41,8 +42,8 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
     @if (Model.CustomCSSLink != null)
     {

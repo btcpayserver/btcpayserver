@@ -6,8 +6,10 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Common;
+using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
@@ -378,6 +380,11 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
+            
+            //create a simple client which hooks up to the http scope
+            services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
+            //also provide a factory that can impersonate user/store id
+            services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();

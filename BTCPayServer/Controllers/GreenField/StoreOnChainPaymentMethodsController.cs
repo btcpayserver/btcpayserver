@@ -54,6 +54,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
         public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
+            string storeId,
             [FromQuery] bool? enabled)
         {
             return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled));
@@ -61,7 +62,9 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public ActionResult<OnChainPaymentMethodData> GetOnChainPaymentMethod(string cryptoCode)
+        public async Task<ActionResult<OnChainPaymentMethodData>> GetOnChainPaymentMethod(
+            string storeId,
+            string cryptoCode)
         {
             if (!GetCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _))
             {
@@ -79,7 +82,8 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
-        public IActionResult GetOnChainPaymentMethodPreview(
+        public async Task<IActionResult> GetOnChainPaymentMethodPreview(
+            string storeId,
             string cryptoCode,
             int offset = 0, int amount = 10)
         {
@@ -126,7 +130,9 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
-        public IActionResult GetProposedOnChainPaymentMethodPreview(string cryptoCode,
+        public IActionResult GetProposedOnChainPaymentMethodPreview(
+            string storeId,
+            string cryptoCode,
             [FromBody] OnChainPaymentMethodData paymentMethodData,
             int offset = 0, int amount = 10)
         {
@@ -179,6 +185,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
         public async Task<IActionResult> RemoveOnChainPaymentMethod(
+            string storeId,
             string cryptoCode,
             int offset = 0, int amount = 10)
         {
@@ -196,7 +203,9 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public async Task<IActionResult> UpdateOnChainPaymentMethod(string cryptoCode,
+        public async Task<IActionResult> UpdateOnChainPaymentMethod(
+            string storeId,
+            string cryptoCode,
             [FromBody] OnChainPaymentMethodData paymentMethodData)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);

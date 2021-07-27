@@ -11,7 +11,8 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
+            InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,
             DateTimeOffset? endDate = null,
             string textSearch = null,

@@ -130,23 +130,22 @@ namespace BTCPayServer.Controllers
             }
             switch (command)
             {
-                case "export":
-                    var viewModel = new WalletPSBTExportViewModel {SigningContext = vm.SigningContext};
-                    viewModel.PSBT = psbt.ToBase64();
-                    viewModel.PSBTHex = psbt.ToHex();
-                    viewModel.CryptoCode = network.CryptoCode;
-                    await FetchTransactionDetails(derivationSchemeSettings, viewModel, network);
-                    return View("WalletPSBTExport", viewModel);
-                
                 case "decode":
-                    vm.Decoded = psbt.ToString();
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
                     ModelState.Remove(nameof(vm.UploadedPSBTFile));
-                    vm.PSBT = psbt.ToBase64();
+                    vm.PSBT = vm.SigningContext.PSBT;
                     vm.PSBTHex = psbt.ToHex();
-                    vm.FileName = vm.UploadedPSBTFile?.FileName;
-                    return View(vm);
+                    vm.Decoded = psbt.ToString();
+                    await FetchTransactionDetails(derivationSchemeSettings, vm, network);
+                    return View("WalletPSBTDecoded", vm);
+                
+                case "export":
+                    vm.PSBT = vm.SigningContext.PSBT;
+                    vm.PSBTHex = psbt.ToHex();
+                    vm.Decoded = psbt.ToString();
+                    await FetchTransactionDetails(derivationSchemeSettings, vm, network);
+                    return View("WalletPSBTExport", vm);
 
                 case "update":
                     psbt = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbt);
@@ -172,8 +171,10 @@ namespace BTCPayServer.Controllers
                 case "combine":
                     ModelState.Remove(nameof(vm.PSBT));
                     return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel { OtherPSBT = psbt.ToBase64() });
+                
                 case "save-psbt":
                     return FilePSBT(psbt, vm.FileName);
+                
                 default:
                     return View(vm);
             }

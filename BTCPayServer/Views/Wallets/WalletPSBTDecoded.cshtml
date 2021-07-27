@@ -1,0 +1,99 @@
+﻿@model WalletPSBTViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWizard";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "PSBT", Context.GetStoreData().StoreName);
+}
+
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent {
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
+        hljs.initHighlightingOnLoad();
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
+            initCameraScanningApp("Scan PSBT", function (data){
+               $("textarea[name=PSBT]").val(data);
+               $("#Decode").click();
+            }, "scanModal");
+        });
+    </script>
+}
+
+@section Navbar {
+    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
+        <vc:icon symbol="back" />
+    </a>
+    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["PageTitle"]</h1>
+    <p class="lead text-secondary mt-3">
+        You can either sign the PSBT or export and update it.
+    </p>
+    @if (Model.CanCalculateBalance)
+    {
+        <p class="lead text-secondary mt-3">
+            If you broadcast this transaction, your balance will change:
+            <br>
+            @if (Model.Positive)
+            {
+                <span class="text-success">@Model.BalanceChange</span>
+            }
+            else
+            {
+                <span class="text-danger">@Model.BalanceChange</span>
+            }
+        </p>
+    }
+</header>
+
+<partial name="_PSBTInfo" model="Model" />
+
+<div class="form-group">
+    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
+        <input type="hidden" asp-for="CryptoCode"/>
+        <input type="hidden" asp-for="NBXSeedAvailable"/>
+        <input type="hidden" asp-for="PSBT"/>
+        <input type="hidden" asp-for="FileName"/>
+        <div class="d-flex justify-content-center">
+            <button type="submit" id="SignTransaction" name="command" value="@(Model.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary me-2">Sign transaction</button>
+            <button type="submit" name="command" value="update" class="btn btn-secondary me-2">Update</button>
+            <button type="submit" name="command" value="combine" class="btn btn-secondary">Combine</button>
+        </div>
+    </form>
+</div>
+
+<p class="my-5 text-center">
+    <a href="#ExportOptions" data-bs-toggle="collapse" class="text-secondary">Show export options</a>
+</p>
+
+<div id="ExportOptions" class="collapse">
+    <h4 class="mb-3">Export PSBT for signing</h4>
+    <div class="form-group">
+        <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
+            <input type="hidden" asp-for="CryptoCode"/>
+            <input type="hidden" asp-for="PSBT"/>
+            <div class="d-flex">
+                <button name="command" type="submit" class="btn btn-primary me-2" value="save-psbt">Download PSBT file</button>
+                <button name="command" type="button" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
+            </div>
+        </form>
+    </div>
+    
+    <h4 class="mt-5 mb-3">Raw version</h4>
+    <pre><code class="json">@Model.Decoded</code></pre>
+    <pre><code class="text">@Model.PSBT</code></pre>
+</div>
+
+<partial name="ShowQR"/>
+<partial name="CameraScanner"/>

@@ -138,58 +138,81 @@
                     </div>
                     <h4 class="mt-5 mb-4">Sound</h4>
                     <div class="form-group mb-3 d-flex align-items-center">
-                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" />
+                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings" />
                         <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Sounds" class="form-label"></label>
-                        <textarea asp-for="Sounds" class="form-control"></textarea>
-                        <span asp-validation-for="Sounds" class="text-danger"></span>
+                    <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="Sounds" class="form-label"></label>
+                            <textarea asp-for="Sounds" class="form-control"></textarea>
+                            <span asp-validation-for="Sounds" class="text-danger"></span>
+                        </div>
                     </div>
                     <h4 class="mt-5 mb-4">Animation</h4>
                     <div class="form-group mb-3 d-flex align-items-center">
-                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" />
+                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings" />
                         <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="AnimationColors" class="form-label"></label>
-                        <textarea asp-for="AnimationColors" class="form-control"></textarea>
-                        <span asp-validation-for="AnimationColors" class="text-danger"></span>
+                    <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="AnimationColors" class="form-label"></label>
+                            <textarea asp-for="AnimationColors" class="form-control"></textarea>
+                            <span asp-validation-for="AnimationColors" class="text-danger"></span>
+                        </div>
                     </div>
                     <h4 class="mt-5 mb-4">Discussion</h4>
                     <div class="form-group mb-3 d-flex align-items-center">
-                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" />
+                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings" />
                         <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
                         <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="DisqusShortname" class="form-label"></label>
-                        <input asp-for="DisqusShortname" class="form-control" />
-                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                    <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="DisqusShortname" class="form-label"></label>
+                            <input asp-for="DisqusShortname" class="form-control" />
+                            <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                        </div>
                     </div>
-                    <h4 class="mt-5 mb-4">Custom Appearance</h4>
+                    
+                    <h4 class="mt-5 mb-2">Additional Options</h4>
                     <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="MainImageUrl" class="form-label"></label>
-                        <input asp-for="MainImageUrl" class="form-control" />
-                        <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                        <div class="accordion" id="accordion-dev-info">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-appearance-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-appearance" aria-expanded="false" aria-controls="accordion-dev-info-appearance">
+                                        Custom CSS
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="CustomCSSLink" class="form-label"></label>
+                                            <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
+                                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                            </a>
+                                            <input asp-for="CustomCSSLink" class="form-control" />
+                                            <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="MainImageUrl" class="form-label"></label>
+                                            <input asp-for="MainImageUrl" class="form-control" />
+                                            <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group mb-4">
+                                            <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                            <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                            <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="form-group mb-4">
-                        <label asp-for="EmbeddedCSS" class="form-label"></label>
-                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                    </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
                         <div class="btn-group ms-2">

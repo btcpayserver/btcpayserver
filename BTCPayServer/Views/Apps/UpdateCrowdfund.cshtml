@@ -82,7 +82,7 @@
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group mb-4">
                         <label asp-for="ResetEvery" class="form-label"></label>
                         <div class="input-group">
                             <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
@@ -93,6 +93,11 @@
                                 }
                             </select>
                         </div>
+                    </div>
+                    <div class="form-group mb-3 d-flex align-items-center">
+                        <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2" />
+                        <label asp-for="Enabled" class="form-label mb-0"></label>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-lg-12">
@@ -125,11 +130,6 @@
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-                        <label asp-for="Enabled" class="form-check-label"></label>
-                        <span asp-validation-for="Enabled" class="text-danger"></span>
                     </div>
                     <div class="form-check">
                         <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />

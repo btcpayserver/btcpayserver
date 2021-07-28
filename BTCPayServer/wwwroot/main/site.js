@@ -45,7 +45,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 maxDate: max,
                 defaultDate: defaultDate,
                 time_24hr: true,
-                defaultHour: 0
+                defaultHour: 0,
+                static: true
             });
         }
     });

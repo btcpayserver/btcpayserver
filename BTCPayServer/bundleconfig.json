@@ -23,6 +23,7 @@
         "inputFiles": [
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/main/utils.js",
             "wwwroot/main/site.js"
         ]
@@ -102,7 +103,8 @@
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs5.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {
@@ -120,7 +122,8 @@
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs5.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {
@@ -189,7 +192,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js",
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js",
             "wwwroot/js/wallet/**/*.js"
         ],
         "minify": {
@@ -209,7 +213,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js"
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js"
         ],
         "minify": {
             "enabled": false

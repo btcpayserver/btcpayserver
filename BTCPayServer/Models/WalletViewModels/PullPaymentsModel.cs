@@ -45,7 +45,7 @@ namespace BTCPayServer.Models.WalletViewModels
         [ReadOnly(true)]
         public string Currency { get; set; }
         [MaxLength(500)]
-        [Display(Name = "Custom bootstrap CSS file")]
+        [Display(Name = "Custom CSS URL")]
         public string CustomCSSLink { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }

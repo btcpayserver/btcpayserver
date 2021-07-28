@@ -7,7 +7,7 @@
 
 <script id="template-cart-item" type="text/template">
     <tr data-id="{id}">
-        {image}
+        <td class="align-middle pe-0" width="1%">{image}</td>
         <td class="align-middle pe-0 ps-2"><b>{title}</b></td>
         <td class="align-middle px-0">
             <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
@@ -26,7 +26,7 @@
 </script>
 
 <script id="template-cart-item-image" type="text/template">
-    <td class="align-middle pe-0" width="1%"><img src="{image}" width="50" alt=""></td>
+    <img src="{image}" width="50" alt="">
 </script>
 
 <script id="template-cart-custom-amount" type="text/template">
@@ -219,9 +219,9 @@
                     var description = item.Description;
 
                     <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
-                        @if (!String.IsNullOrWhiteSpace(image))
+                        @if (!string.IsNullOrWhiteSpace(image))
                         {
-                            @:<img class="card-img-top" src="@image" alt="Card image cap" asp-append-version="true">
+                            <img class="card-img-top" src="@image" alt="@item.Title" asp-append-version="true">
                         }
                         <div class="card-body p-3">
                             <h6 class="card-title mb-0">@item.Title</h6>

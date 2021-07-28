@@ -18,7 +18,7 @@
                 <div class="form-group">
                     <h5>Scripting</h5>
                     <p>Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
-                    <p>We are retrieving the rate of each exchange either directly, or via <a href="https://www.coingecko.com/" target="_blank">CoinGecko (free)</a>.</p>
+                    <p>We are retrieving the rate of each exchange either directly, or via <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">CoinGecko (free)</a>.</p>
                     
                     <div class="accordion" id="accordion-info">
                         <div class="accordion-item">
@@ -32,7 +32,7 @@
                                 <div class="accordion-body">
                                     @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Direct))
                                     {
-                                        <a href="@exchange.Url">@exchange.Id</a><span>&nbsp;</span>
+                                        <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a><span>&nbsp;</span>
                                     }
                                 </div>
                             </div>
@@ -48,7 +48,7 @@
                                 <div class="accordion-body">
                                     @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Coingecko))
                                     {
-                                        <a href="@exchange.Url">@exchange.Id</a><span>&nbsp;</span>
+                                        <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a><span>&nbsp;</span>
                                     }
                                 </div>
                             </div>
@@ -157,7 +157,7 @@
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
-                        Current Rates source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
+                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
                     </p>
                 </div>
                 <p>

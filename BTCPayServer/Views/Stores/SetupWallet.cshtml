@@ -4,18 +4,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Setup {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
 }
 
-@section Navbar {
-    @if (string.IsNullOrWhiteSpace(Model.DerivationScheme)) {
-        <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
-            <vc:icon symbol="back"/>
-        </a>
-    } else {
-        <a asp-controller="Stores" asp-action="ModifyWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
-            <vc:icon symbol="back"/>
-        </a>
-    }
-}
-
 <h1 class="text-center">Let's get started</h1>
 <br>
 <div class="mt-5">

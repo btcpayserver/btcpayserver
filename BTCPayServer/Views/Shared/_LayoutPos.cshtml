@@ -1,11 +1,13 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
@@ -20,8 +22,9 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />

@@ -1,0 +1,94 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payment-methods": {
+            "get": {
+                "tags": [
+                    "Store Payment Methods"
+                ],
+                "summary": "Get store payment methods",
+                "description": "View information about the stores' configured payment methods",
+                "operationId": "StorePaymentMethods_GetStorePaymentMethods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of payment methods",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/GenericPaymentMethodData"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "GenericPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "description": "Associated dynamic data based on payment method type.",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                            },
+                            {
+                                "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                            },
+                            {
+                                "description": "Any other unofficial payment method data",
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Store Payment Methods"
+        }
+    ]
+}

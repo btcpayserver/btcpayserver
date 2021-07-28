@@ -11,9 +11,11 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
+            InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,
             DateTimeOffset? endDate = null,
+            string textSearch = null,
             bool includeArchived = false,
             CancellationToken token = default)
         {
@@ -28,7 +30,8 @@ namespace BTCPayServer.Client
 
             if (orderId != null)
                 queryPayload.Add(nameof(orderId), orderId);
-
+            if (textSearch != null)
+                queryPayload.Add(nameof(textSearch), textSearch);
             if (status != null)
                 queryPayload.Add(nameof(status), status.Select(s=> s.ToString().ToLower()).ToArray());
             
@@ -90,7 +93,7 @@ namespace BTCPayServer.Client
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-            if (request.Status!= InvoiceStatus.Settled && request.Status!= InvoiceStatus.Invalid)
+            if (request.Status != InvoiceStatus.Settled && request.Status != InvoiceStatus.Invalid)
                 throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", bodyPayload: request,

@@ -24,28 +24,32 @@
 </template>
 
 <div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
-	<scanner-wrap v-bind="$data" v-on:close="close">
-		<div v-if="isLoaded && requestInput" class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
-			<div class="spinner-border text-secondary position-absolute" role="status"></div>
-			<qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
-				<qrcode-stream v-on:decode="onDecode" v-on:init="onInit" :camera="camera" :track="paint"/>
-			</qrcode-drop-zone>
-			<qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="camera"/>
-		</div>
-		<div v-else-if="qrData || errorMessage">
-			<div v-if="errorMessage" class="alert alert-danger" role="alert">
-				{{errorMessage}}
-			</div>
-			<div class="text-break font-monospace">
-				{{qrData}}
-			</div>
-			<div class="mt-4">
-				<button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
-				<button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
-				<button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
-			</div>
-		</div>
-	</scanner-wrap>
+    <scanner-wrap v-bind="$data" v-on:close="close">
+        <div  class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
+            <div class="spinner-border text-secondary position-absolute" role="status"></div>
+            <qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
+                <qrcode-stream v-on:decode="onDecode" v-on:init="onInit" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]" :track="paint"/>
+            </qrcode-drop-zone>
+            <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]"/>
+            
+        </div>
+        <div v-if="isLoaded && requestInput && cameras.length >2" class="d-flex justify-content-center align-items-center">
+                        <button class="btn btn-link text-center" v-on:click="nextCamera">Switch camera</button>
+        </div>
+        <div v-else-if="qrData || errorMessage">
+            <div v-if="errorMessage" class="alert alert-danger" role="alert">
+                {{errorMessage}}
+            </div>
+            <div class="text-break font-monospace">
+                {{qrData}}
+            </div>
+            <div class="mt-4">
+                <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
+                <button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
+                <button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
+            </div>
+        </div>
+    </scanner-wrap>
 </div>
 
 <script>
@@ -62,7 +66,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		}
   	});
 
-	new Vue({
+    const app = new Vue({
 		el: '#camera-qr-scanner-modal-app',
 		data() {
 			return {
@@ -74,30 +78,45 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 				qrData: null,
 				errorMessage: null,
 				workload: [],
-				camera: "auto"
+				camera: 0,
+				cameraOff: true,
+				cameras: ["auto"],
+				decoder: null
 			}
 		},
 		mounted() {
 			if (this.isModal) {
 				const modal = document.getElementById(this.modalId);
-				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; });
-				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; });
+				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; this.cameraOff = false; });
+				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; this.cameraOff = true; });
 			} else {
 				this.isLoaded = true;
+				this.cameraOff = false;
 			}
 		},
 		computed: {
 			requestInput() {
-				return this.camera === 'auto' && this.errorMessage === null;
+				return !this.cameraOff && this.errorMessage === null;
 			}
 		},
 		methods: {
+		    nextCamera: function (){
+		        if (this.camera == 0){
+		            this.camera++;
+		        }else if(this.camera == this.cameras.length -1){
+		                    
+		            this.camera = 1;
+		        }else{
+		            this.camera ++;
+		        }
+		        
+		    },
 			setQrData (qrData) {
 				this.qrData = qrData;
-				this.camera = qrData ? "off" : "auto";
+				this.cameraOff = !!qrData;
 			},
 			retry() {
-				this.camera = "off";
+				this.cameraOff = true;
 				this.$nextTick(this.reset);
 			},
 			reset() {
@@ -159,8 +178,19 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 				})
 			},
 			onInit(promise) {
+		        
 				promise.then(() => {
 					this.errorMessage = null;
+					if (app.cameras.length === 1)
+                    {
+                        navigator.mediaDevices.enumerateDevices().then(function (devices) {
+                            for (const device of devices) {
+                                if (device.kind == "videoinput"){
+                                   app.cameras.push( device.deviceId)
+                                }
+                            }
+                        });
+                    }					 
 				}).catch(error => {
 					if (error.name === 'StreamApiNotSupportedError') {
 						this.noStreamApiSupport = true;

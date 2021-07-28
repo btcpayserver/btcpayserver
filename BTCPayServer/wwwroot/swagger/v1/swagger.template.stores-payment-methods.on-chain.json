@@ -17,6 +17,15 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -396,18 +405,27 @@
                     "$ref": "#/components/schemas/OnChainPaymentMethodData"
                 }
             },
-            "OnChainPaymentMethodData": {
+            "OnChainPaymentMethodDataWithSensitiveData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/OnChainPaymentMethodData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "mnemonic": {
+                                "type": "string",
+                                "description": "The mnemonic used to generate the wallet",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "OnChainPaymentMethodBaseData": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
-                    },
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "Crypto code of the payment method"
-                    },
                     "derivationScheme": {
                         "type": "string",
                         "description": "The derivation scheme",
@@ -421,6 +439,22 @@
                         "type": "string",
                         "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
                         "example": "abcd82a1/84'/0'/0'"
+                    }
+                }
+            },
+            "OnChainPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
+                    },
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "Crypto code of the payment method"
                     }
                 }
             },
@@ -448,6 +482,86 @@
                     "address": {
                         "type": "string",
                         "description": "The address generated at the key path"
+                    }
+                }
+            },
+            "GenerateOnChainWalletRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "existingMnemonic": {
+                        "type": "string",
+                        "description": "An existing BIP39 mnemonic seed to generate the wallet with"
+                    },
+                    "passphrase": {
+                        "type": "string",
+                        "description": "A passphrase for the BIP39 mnemonic seed"
+                    },
+                    "accountNumber": {
+                        "type": "number",
+                        "default": 0,
+                        "description": "The account to derive from the BIP39 mnemonic seed"
+                    },
+                    "savePrivateKeys": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to store the seed inside BTCPay Server to enable some additional services. IF `false` AND `existingMnemonic` IS NOT SPECIFIED, BE SURE TO SECURELY STORE THE SEED IN THE RESPONSE!"
+                    },
+                    "importKeysToRPC": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to import all addresses generated via BTCPay Server into the underlying node wallet. (Private keys will also be imported if `savePrivateKeys` is set to true."
+                    },
+                    "wordList": {
+                        "type": "string",
+                        "description": "If `existingMnemonic` is not set, a mnemonic is generated using the specified wordList.",
+                        "default": "English",
+                        "x-enumNames": [
+                            "English",
+                            "Japanese",
+                            "Spanish",
+                            "ChineseSimplified",
+                            "ChineseTraditional",
+                            "French",
+                            "PortugueseBrazil",
+                            "Czech"
+                        ],
+                        "enum": [
+                            "English",
+                            "Japanese",
+                            "Spanish",
+                            "ChineseSimplified",
+                            "ChineseTraditional",
+                            "French",
+                            "PortugueseBrazil",
+                            "Czech"
+                        ]
+                    },
+                    "wordCount": {
+                        "type": "number",
+                        "description": "If `existingMnemonic` is not set, a mnemonic is generated using the specified wordCount.",
+                        "default": 12,
+                        "x-enumNames": [
+                            12,15,18,21,24
+                        ],
+                        "enum": [
+                            12,15,18,21,24
+                        ]
+                    },
+                    "scriptPubKeyType": {
+                        "type": "string",
+                        "description": "the type of wallet to generate",
+                        "default": "Segwit",
+                        "x-enumNames": [
+                            "Legacy",
+                            "Segwit",
+                            "SegwitP2SH"
+                        ],
+                        "enum": [
+                            "Legacy",
+                            "Segwit",
+                            "SegwitP2SH"
+                        ]
                     }
                 }
             }

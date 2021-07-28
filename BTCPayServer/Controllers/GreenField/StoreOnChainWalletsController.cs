@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -5,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -38,7 +40,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly WalletRepository _walletRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private readonly CssThemeManager _cssThemeManager;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly NBXplorerDashboard _nbXplorerDashboard;
         private readonly WalletsController _walletsController;
         private readonly PayjoinClient _payjoinClient;
@@ -53,7 +55,7 @@ namespace BTCPayServer.Controllers.GreenField
             BTCPayNetworkProvider btcPayNetworkProvider,
             WalletRepository walletRepository,
             ExplorerClientProvider explorerClientProvider,
-            CssThemeManager cssThemeManager,
+            ISettingsRepository settingsRepository,
             NBXplorerDashboard nbXplorerDashboard,
             WalletsController walletsController,
             PayjoinClient payjoinClient,
@@ -67,7 +69,7 @@ namespace BTCPayServer.Controllers.GreenField
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletRepository = walletRepository;
             _explorerClientProvider = explorerClientProvider;
-            _cssThemeManager = cssThemeManager;
+            _settingsRepository = settingsRepository;
             _nbXplorerDashboard = nbXplorerDashboard;
             _walletsController = walletsController;
             _payjoinClient = payjoinClient;
@@ -156,8 +158,13 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions")]
-        public async Task<IActionResult> ShowOnChainWalletTransactions(string storeId, string cryptoCode,
-            [FromQuery]TransactionStatus[] statusFilter = null)
+        public async Task<IActionResult> ShowOnChainWalletTransactions(
+            string storeId, 
+            string cryptoCode,
+            [FromQuery] TransactionStatus[]? statusFilter = null,
+            [FromQuery] int skip = 0,
+            [FromQuery] int limit = int.MaxValue
+        )
         {
             if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
@@ -183,7 +190,7 @@ namespace BTCPayServer.Controllers.GreenField
                 filteredFlatList.AddRange(txs.ReplacedTransactions.Transactions);
             }
 
-            var result = filteredFlatList.Select(information =>
+            var result = filteredFlatList.Skip(skip).Take(limit).Select(information =>
             {
                 walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
                 return ToModel(transactionInfo, information, wallet);
@@ -297,7 +304,7 @@ namespace BTCPayServer.Controllers.GreenField
                     subtractFeesOutputsCount.Add(index);
                 }
 
-                BitcoinUrlBuilder bip21 = null;
+                BitcoinUrlBuilder? bip21 = null;
                 var amount = destination.Amount;
                 if (amount.GetValueOrDefault(0) <= 0)
                 {
@@ -498,7 +505,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            return await _authorizationService.CanUseHotWallet(_cssThemeManager.Policies, User);
+            return await _authorizationService.CanUseHotWallet(await _settingsRepository.GetPolicies(), User);
         }
 
         private bool IsInvalidWalletRequest(string cryptoCode, out BTCPayNetwork network,
@@ -542,15 +549,15 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod;
         }
 
-        private OnChainWalletTransactionData ToModel(WalletTransactionInfo walletTransactionsInfoAsync,
+        private OnChainWalletTransactionData ToModel(WalletTransactionInfo? walletTransactionsInfoAsync,
             TransactionInformation tx,
             BTCPayWallet wallet)
         {
             return new OnChainWalletTransactionData()
             {
                 TransactionHash = tx.TransactionId,
-                Comment = walletTransactionsInfoAsync?.Comment?? string.Empty,
-                Labels = walletTransactionsInfoAsync?.Labels?? new Dictionary<string, LabelData>(),
+                Comment = walletTransactionsInfoAsync?.Comment ?? string.Empty,
+                Labels = walletTransactionsInfoAsync?.Labels ?? new Dictionary<string, LabelData>(),
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

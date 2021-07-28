@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
             var email = user.Email;
-            _EmailSenderFactory.GetEmailSender().SendEmailConfirmation(email, callbackUrl);
+            (await _EmailSenderFactory.GetEmailSender()).SendEmailConfirmation(email, callbackUrl);
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Index));
         }

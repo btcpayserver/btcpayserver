@@ -89,7 +89,12 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AddApiKey")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value='btcpay.store.canmodifystoresettings:change-store-mode']")).Click();
                 //there should be a store already by default in the dropdown
-                var dropdown = s.Driver.FindElement(By.Name("PermissionValues[4].SpecificStores[0]"));
+                var src = s.Driver.PageSource;
+                var getPermissionValueIndex =
+                    s.Driver.FindElement(By.CssSelector("input[value='btcpay.store.canmodifystoresettings']"))
+                        .GetAttribute("name")
+                        .Replace(".Permission", ".SpecificStores[0]");
+                var dropdown = s.Driver.FindElement(By.Name(getPermissionValueIndex));
                 var option = dropdown.FindElement(By.TagName("option"));
                 var storeId = option.GetAttribute("value");
                 option.Click();

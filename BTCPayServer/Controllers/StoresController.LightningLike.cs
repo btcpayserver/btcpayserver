@@ -15,7 +15,7 @@ namespace BTCPayServer.Controllers
     public partial class StoresController
     {
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
-        public IActionResult SetupLightningNode(string storeId, string cryptoCode)
+        public async Task<IActionResult> SetupLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
                 CryptoCode = cryptoCode,
                 StoreId = storeId
             };
-            SetExistingValues(store, vm);
+            await SetExistingValues(store, vm);
             return View(vm);
         }
 
@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            vm.CanUseInternalNode = CanUseInternalLightning();
+            vm.CanUseInternalNode = await CanUseInternalLightning();
 
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers
             LightningSupportedPaymentMethod paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
-                if (!CanUseInternalLightning())
+                if (!await CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use the internal lightning node");
                     return View(vm);
@@ -154,14 +154,14 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(UpdateStore), new { storeId });
         }
 
-        private bool CanUseInternalLightning()
+        private async Task<bool> CanUseInternalLightning()
         {
-            return User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll;
+            return User.IsInRole(Roles.ServerAdmin) || (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll;
         }
 
-        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
+        private async Task SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.CanUseInternalNode = CanUseInternalLightning();
+            vm.CanUseInternalNode = await CanUseInternalLightning();
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
             if (lightning != null)
             {

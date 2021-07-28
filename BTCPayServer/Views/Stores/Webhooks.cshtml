@@ -17,19 +17,39 @@
 {
     <table class="table table-sm table-responsive-md">
         <thead>
-        <tr>
-            <th>Url</th>
-            <th class="text-end">Actions</th>
-        </tr>
+            <tr>
+                <th>Status</th>
+                <th>Url</th>
+                <th class="text-end">Actions</th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var wh in Model.Webhooks)
         {
             <tr>
+                <td class="align-baseline">
+                    @if (wh.LastDeliverySuccessful)
+                    {
+                        <span
+                            class="fa fa-check text-success"
+                            id="delivery-status-icon"
+                            data-bs-toggle="tooltip"
+                            title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())"></span>
+                    }
+                    else
+                    {
+                        <span
+                            class="fa fa-times text-danger"
+                            id="delivery-status-icon"
+                            data-bs-toggle="tooltip"
+                            data-bs-html="true"
+                            title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>"></span>
+                    }
+                </td>
                 <td class="d-block text-break">@wh.Url</td>
                 <td class="text-end text-md-nowrap">
                     <a asp-action="TestWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
-                    <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - 
+                    <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
                     <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
                 </td>
             </tr>
@@ -45,5 +65,5 @@ else
 }
 
 @section PageFootContent {
-<partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" />
 }

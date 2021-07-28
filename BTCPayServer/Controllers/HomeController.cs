@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -14,6 +16,8 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using ExchangeSharp;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +33,7 @@ namespace BTCPayServer.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly CssThemeManager _cachedServerSettings;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly IFileProvider _fileProvider;
 
         public IHttpClientFactory HttpClientFactory { get; }
@@ -37,13 +41,13 @@ namespace BTCPayServer.Controllers
         SignInManager<ApplicationUser> SignInManager { get; }
 
         public HomeController(IHttpClientFactory httpClientFactory,
-                              CssThemeManager cachedServerSettings,
+                              ISettingsRepository settingsRepository,
                               IWebHostEnvironment webHostEnvironment,
                               LanguageService languageService,
                               SignInManager<ApplicationUser> signInManager)
         {
+            _settingsRepository = settingsRepository;
             HttpClientFactory = httpClientFactory;
-            _cachedServerSettings = cachedServerSettings;
             LanguageService = languageService;
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
@@ -51,9 +55,9 @@ namespace BTCPayServer.Controllers
 
         [Route("")]
         [DomainMappingConstraint()]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            if (_cachedServerSettings.FirstRun)
+            if ((await _settingsRepository.GetTheme()).FirstRun)
             {
                 return RedirectToAction(nameof(AccountController.Register), "Account");
             }
@@ -68,6 +72,14 @@ namespace BTCPayServer.Controllers
         public IActionResult Languages()
         {
             return Json(LanguageService.GetLanguages(), new JsonSerializerSettings() { Formatting = Formatting.Indented });
+        }
+
+        
+        [Route("misc/permissions")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
+        public IActionResult Permissions()
+        {
+            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings() { Formatting = Formatting.Indented });
         }
 
         [Route("swagger/v1/swagger.json")]

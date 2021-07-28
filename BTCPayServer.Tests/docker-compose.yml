@@ -17,7 +17,7 @@ services:
       TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_HOSTNAME: tests
-      TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-false}
+      TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"

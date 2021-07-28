@@ -1,9 +1,11 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
 @{
     Layout = null;
+    var theme = await _settingsRepository.GetTheme();
 }
 <!DOCTYPE html>
 <html>
@@ -15,16 +17,10 @@
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png" asp-append-version="true">
     <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
     <link rel="manifest" href="~/manifest.json">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
-    <script src="~/js/copy-to-clipboard.js"></script>
-    <script>
-    window.onload = function (){        
-        document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
-    }
-    </script>
 </head>
 <body>
     <div id="app" class="container">
@@ -61,5 +57,6 @@
             </div>
         </div>
     </div>
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -56,7 +56,6 @@ namespace BTCPayServer.Controllers
         private readonly AppService _AppService;
         private readonly CheckConfigurationHostedService _sshState;
         private readonly EventAggregator _eventAggregator;
-        private readonly CssThemeManager _cssThemeManager;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
@@ -78,7 +77,6 @@ namespace BTCPayServer.Controllers
             AppService appService,
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
-            CssThemeManager cssThemeManager,
             IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _Options = options;
@@ -96,7 +94,6 @@ namespace BTCPayServer.Controllers
             _AppService = appService;
             _sshState = sshState;
             _eventAggregator = eventAggregator;
-            _cssThemeManager = cssThemeManager;
             _externalServiceOptions = externalServiceOptions;
         }
 
@@ -408,7 +405,7 @@ namespace BTCPayServer.Controllers
         private async Task<List<SelectListItem>> GetAppSelectList()
         {
             var apps = (await _AppService.GetAllApps(null, true))
-                .Select(a => new SelectListItem($"{a.AppType} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
+                .Select(a => new SelectListItem($"{typeof(AppType).DisplayName(a.AppType)} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;
         }

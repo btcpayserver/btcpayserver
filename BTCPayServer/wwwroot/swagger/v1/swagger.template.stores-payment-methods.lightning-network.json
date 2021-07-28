@@ -15,6 +15,15 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "description": "View information about the stores' configured Lightning Network payment methods",
@@ -238,9 +247,22 @@
                     "$ref": "#/components/schemas/LightningNetworkPaymentMethodData"
                 }
             },
-            "LightningNetworkPaymentMethodData": {
+            "LightningNetworkPaymentMethodBaseData": {
                 "type": "object",
                 "additionalProperties": false,
+                "properties": {
+                    "connectionString": {
+                        "type": "string",
+                        "description": "The lightning connection string. Set to 'Internal Node' to use the internal node. (See [this doc](https://github.com/btcpayserver/BTCPayServer.Lightning/blob/master/README.md#examples) for some example)",
+                        "example": "type=clightning;server=..."
+                    }
+                }
+            },
+            "LightningNetworkPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                },
                 "properties": {
                     "enabled": {
                         "type": "boolean",
@@ -249,11 +271,6 @@
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"
-                    },
-                    "connectionString": {
-                        "type": "string",
-                        "description": "The lightning connection string. Set to 'Internal Node' to use the internal node. (See [this doc](https://github.com/btcpayserver/BTCPayServer.Lightning/blob/master/README.md#examples) for some example)",
-                        "example": "type=clightning;server=..."
                     }
                 }
             }

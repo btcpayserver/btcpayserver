@@ -1,13 +1,14 @@
 ﻿@using NUglify.Helpers
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-
+    var theme = await _settingsRepository.GetTheme();
     string StatusTextClass(string status)
     {
         switch (status)
@@ -30,15 +31,14 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @Safe.Raw(Model.EmbeddedCSS)
-    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <noscript>
         <style>
             .hide-when-js, [v-cloak] { display: block !important; }
@@ -162,7 +162,7 @@
                                                 <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>
+                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
@@ -186,10 +186,11 @@
         </main>
         <footer class="pt-2 pb-4 d-print-none">
             <div class="container text-center">
-                Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
         </footer>
     </div>
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
     </script>

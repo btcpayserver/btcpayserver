@@ -57,6 +57,18 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Monero/ViewMoneroLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is MoneroSupportedPaymentMethod moneroSupportedPaymentMethod)
+            {
+                return new
+                {
+                    moneroSupportedPaymentMethod.AccountIndex,
+                };
+            }
+
+            return null;
+        }
     }
 }
 #endif

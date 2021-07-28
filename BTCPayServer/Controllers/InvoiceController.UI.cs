@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -109,6 +110,7 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 StoreName = store.StoreName,
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
+                PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
                 State = invoice.GetInvoiceState().ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
@@ -433,8 +435,8 @@ namespace BTCPayServer.Controllers
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
         [ReferrerPolicyAttribute("origin")]
-        public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null,
-            [FromQuery] string view = null, [FromQuery] string lang = null)
+        public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
+            [FromQuery] string? view = null, [FromQuery] string? lang = null)
         {
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
@@ -466,7 +468,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoice-noscript")]
-        public async Task<IActionResult> CheckoutNoScript(string invoiceId, string id = null, string paymentMethodId = null, [FromQuery] string lang = null)
+        public async Task<IActionResult> CheckoutNoScript(string? invoiceId, string? id = null, string? paymentMethodId = null, [FromQuery] string? lang = null)
         {
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
@@ -480,7 +482,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string lang)
+        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
@@ -529,6 +531,21 @@ namespace BTCPayServer.Controllers
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
+
+            switch (lang?.ToLowerInvariant())
+            {
+                case "auto":
+                case null when storeBlob.AutoDetectLanguage:
+                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null).Code;
+                    break;
+                case { } langs when !string.IsNullOrEmpty(langs):
+                {
+                    lang = _languageService.FindLanguage(langs)?.Code;
+                    break;
+                }
+            }
+            lang ??= storeBlob.DefaultLang;
+            
             var model = new PaymentModel()
             {
                 Activated = paymentMethodDetails.Activated,
@@ -557,6 +574,13 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
                 TxCount = accounting.TxRequired,
+                TxCountForFee = storeBlob.NetworkFeeMode switch
+                {
+                    NetworkFeeMode.Always => accounting.TxRequired,
+                    NetworkFeeMode.MultiplePaymentsOnly => accounting.TxRequired - 1,
+                    NetworkFeeMode.Never => 0,
+                    _ => throw new NotImplementedException()
+                },
                 BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
@@ -597,7 +621,7 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
-        private string OrderAmountFromInvoice(string cryptoCode, InvoiceEntity invoiceEntity)
+        private string? OrderAmountFromInvoice(string cryptoCode, InvoiceEntity invoiceEntity)
         {
             // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
             if (cryptoCode == invoiceEntity.Currency)
@@ -617,7 +641,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice/{invoiceId}/status")]
         [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
         [Route("invoice/status")]
-        public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null, [FromQuery] string lang = null)
+        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, [FromQuery] string? lang = null)
         {
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
@@ -692,7 +716,7 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(InvoicesModel model = null)
+        public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
 
@@ -728,7 +752,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(string searchTerm = null, int timezoneOffset = 0)
+        private InvoiceQuery GetInvoiceQuery(string? searchTerm = null, int timezoneOffset = 0)
         {
             var fs = new SearchString(searchTerm);
             var invoiceQuery = new InvoiceQuery()
@@ -751,7 +775,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string searchTerm = null, int timezoneOffset = 0)
+        public async Task<IActionResult> Export(string format, string? searchTerm = null, int timezoneOffset = 0)
         {
             var model = new InvoiceExport(_CurrencyNameTable);
 
@@ -785,9 +809,14 @@ namespace BTCPayServer.Controllers
         [Route("invoices/create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> CreateInvoice()
+        public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {
-            var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
+            var stores = new SelectList(
+                await _StoreRepository.GetStoresByUserId(GetUserId()),
+                nameof(StoreData.Id),
+                nameof(StoreData.StoreName),
+                new SearchString(model?.SearchTerm).GetFilterArray("storeid")?.ToArray().FirstOrDefault()
+            );
             if (!stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";

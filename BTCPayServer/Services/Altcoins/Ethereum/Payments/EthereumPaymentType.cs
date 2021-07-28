@@ -1,7 +1,6 @@
 #if ALTCOINS
 using System.Globalization;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -54,6 +53,19 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; }= "Ethereum/ViewEthereumLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is EthereumSupportedPaymentMethod ethereumSupportedPaymentMethod)
+            {
+                return new
+                {
+                    ethereumSupportedPaymentMethod.XPub
+                    //no clue what all those properties saved are and don't care.
+                };
+            }
+
+            return null;
+        }
     }
 }
 #endif

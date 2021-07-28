@@ -1,14 +1,15 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Cryptography;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Common;
+using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
@@ -19,7 +20,6 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Plugins;
-using BTCPayServer.Plugins.Shopify;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.GreenField;
@@ -300,14 +300,12 @@ namespace BTCPayServer.Hosting
                 Fallback = new FeeRate(100L, 1)
             });
 
-            services.AddSingleton<CssThemeManager>();
             services.Configure<MvcOptions>((o) =>
             {
                 o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
             });
-            services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
@@ -357,12 +355,14 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
-
+            services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
             services.AddSingleton<IHostedService, DbMigrationsHostedService>();
 #if DEBUG
             services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
 #endif    
             services.TryAddSingleton<ExplorerClientProvider>();
+            services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
+                x.GetRequiredService<ExplorerClientProvider>());
             services.TryAddSingleton<Bitpay>(o =>
             {
                 if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == ChainName.Mainnet)
@@ -380,6 +380,11 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
+            
+            //create a simple client which hooks up to the http scope
+            services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
+            //also provide a factory that can impersonate user/store id
+            services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();

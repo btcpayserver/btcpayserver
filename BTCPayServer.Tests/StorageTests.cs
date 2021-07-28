@@ -10,6 +10,7 @@ using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -180,7 +181,10 @@ namespace BTCPayServer.Tests
         private async Task CanUploadRemoveFiles(ServerController controller)
         {
             var fileContent = "content";
-            var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFile(TestUtils.GetFormFile("uploadtestfile.txt", fileContent)));
+            List<IFormFile> fileList = new List<IFormFile>();
+            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
+
+            var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
             var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();
             Assert.Equal("Files", uploadFormFileResult.ActionName);

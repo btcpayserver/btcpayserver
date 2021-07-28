@@ -36,7 +36,6 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly RateLimitService _throttleService;
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _themeManager;
         private readonly UserService _userService;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
@@ -47,7 +46,6 @@ namespace BTCPayServer.Controllers.GreenField
             RateLimitService throttleService,
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
-            CssThemeManager themeManager,
             UserService userService)
         {
             _userManager = userManager;
@@ -58,7 +56,6 @@ namespace BTCPayServer.Controllers.GreenField
             _throttleService = throttleService;
             _options = options;
             _authorizationService = authorizationService;
-            _themeManager = themeManager;
             _userService = userService;
         }
 
@@ -114,7 +111,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (request.IsAdministrator is true && !isAdmin)
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
 
-            if (!isAdmin && (policies.LockSubscription || _themeManager.Policies.DisableNonAdminCreateUserApi))
+            if (!isAdmin && (policies.LockSubscription || (await _settingsRepository.GetPolicies()).DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;

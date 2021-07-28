@@ -6,8 +6,8 @@
 
 <p>
     The <a asp-controller="Home" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay
-    Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/GreenFieldExample/">use case examples</a>).
-    For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "Home")#section/Authentication" target="_blank">API authentication docs</a>.
+    Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/GreenFieldExample/" rel="noreferrer noopener">use case examples</a>).
+    For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "Home")#section/Authentication" target="_blank" rel="noreferrer noopener">API authentication docs</a>.
 </p>
 <table class="table table-lg">
     <thead>
@@ -86,7 +86,6 @@
 @section PageFootContent {
 
 <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
-<script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         $("[data-reveal-btn]").on("click", function (){
@@ -113,7 +112,8 @@
         $("button[data-qr]").on("click", function (){
             var data =  apiKeys[parseInt($(this).data("qr"))];
             qrApp.data = JSON.stringify(data);
-            qrApp.useBCUR = false;
+            qrApp.currentMode = "static";
+            qrApp.allowedModes = ["static"];
             $("#scan-qr-modal").modal("show");
         });
     });

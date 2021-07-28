@@ -54,7 +54,9 @@ namespace BTCPayServer.Controllers.GreenField
             DateTimeOffset? startDate = null,
             [FromQuery] 
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
-            DateTimeOffset? endDate = null, [FromQuery] bool includeArchived = false)
+            DateTimeOffset? endDate = null,
+            string textSearch = null,
+            [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -79,7 +81,8 @@ namespace BTCPayServer.Controllers.GreenField
                     StartDate = startDate,
                     EndDate = endDate,
                     OrderId = orderId,
-                    Status = status
+                    Status = status,
+                    TextSearch = textSearch
                 });
 
             return Ok(invoices.Select(ToModel));
@@ -105,7 +108,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(ToModel(invoice));
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> ArchiveInvoice(string storeId, string invoiceId)
@@ -124,7 +127,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
@@ -192,7 +195,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (request.Checkout.DefaultLanguage != null)
             {
-                var lang = LanguageService.FindBestMatch(request.Checkout.DefaultLanguage);
+                var lang = LanguageService.FindLanguage(request.Checkout.DefaultLanguage);
                 if (lang == null)
                 {
                     request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,
@@ -220,7 +223,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
         public async Task<IActionResult> MarkInvoiceStatus(string storeId, string invoiceId,
@@ -250,7 +253,7 @@ namespace BTCPayServer.Controllers.GreenField
             return await GetInvoice(storeId, invoiceId);
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive")]
         public async Task<IActionResult> UnarchiveInvoice(string storeId, string invoiceId)

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
@@ -33,17 +34,15 @@ namespace BTCPayServer.Controllers.GreenField
     public abstract class LightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        private readonly CssThemeManager _cssThemeManager;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
 
         protected LightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
-            BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager,
+            ISettingsRepository settingsRepository,
             IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _btcPayServerEnvironment = btcPayServerEnvironment;
-            _cssThemeManager = cssThemeManager;
+            _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
         }
 
@@ -302,7 +301,8 @@ namespace BTCPayServer.Controllers.GreenField
 
         protected async Task<bool> CanUseInternalLightning(bool doingAdminThings)
         {
-            return (!doingAdminThings && _cssThemeManager.AllowLightningInternalNodeForAll) ||
+            
+            return (!doingAdminThings && (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll) ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

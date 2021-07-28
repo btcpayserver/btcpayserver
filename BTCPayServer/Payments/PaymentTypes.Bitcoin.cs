@@ -6,6 +6,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -84,6 +85,18 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is DerivationSchemeSettings derivationSchemeSettings)
+                return new OnChainPaymentMethodBaseData()
+                {
+                    DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
+                    AccountKeyPath = derivationSchemeSettings.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                    Label = derivationSchemeSettings.Label
+                };
+            return null;
+        }
+
         public override bool IsPaymentType(string paymentType)
         {
             return string.IsNullOrEmpty(paymentType) || base.IsPaymentType(paymentType);

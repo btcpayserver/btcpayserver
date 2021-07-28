@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -27,14 +28,15 @@ namespace BTCPayServer.Filters
         {
             if (context.RouteContext.RouteData.Values.ContainsKey("appId"))
                 return true;
-            var css = context.RouteContext.HttpContext.RequestServices.GetService<CssThemeManager>();
-            if (css?.DomainToAppMapping is List<PoliciesSettings.DomainToAppMappingItem> mapping)
+            var settingsRepository = context.RouteContext.HttpContext.RequestServices.GetService<ISettingsRepository>();
+            var policies = settingsRepository.GetPolicies().GetAwaiter().GetResult();
+            if (policies?.DomainToAppMapping is { } mapping && mapping.Any())
             {
-                var matchedDomainMapping = css.DomainToAppMapping.FirstOrDefault(item =>
+                var matchedDomainMapping = policies.DomainToAppMapping.FirstOrDefault(item =>
                 item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
-                if (matchedDomainMapping is PoliciesSettings.DomainToAppMappingItem)
+                if (matchedDomainMapping != null)
                 {
-                    if (!(AppType is AppType appType))
+                    if (!(AppType is { } appType))
                         return false;
                     if (appType != matchedDomainMapping.AppType)
                         return false;
@@ -42,18 +44,16 @@ namespace BTCPayServer.Filters
                     return true;
                 }
 
-                if (AppType == css.RootAppType) {
-                    context.RouteContext.RouteData.Values.Add("appId", css.RootAppId);
+                if (AppType == policies.RootAppType) {
+                    context.RouteContext.RouteData.Values.Add("appId", policies.RootAppId);
 
                     return true;
                 }
 
                 return AppType is null;
             }
-            else
-            {
-                return AppType is null;
-            }
+
+            return AppType is null;
         }
     }
 }

@@ -22,13 +22,15 @@ namespace BTCPayServer.Services.Invoices
     public class InvoiceMetadata
     {
         public static readonly JsonSerializer MetadataSerializer;
+
         static InvoiceMetadata()
         {
-            var seria = new JsonSerializer();
-            seria.DefaultValueHandling = DefaultValueHandling.Ignore;
-            seria.FloatParseHandling = FloatParseHandling.Decimal;
-            seria.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            MetadataSerializer = seria;
+            MetadataSerializer = new JsonSerializer
+            {
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                FloatParseHandling = FloatParseHandling.Decimal,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
         }
         
         [JsonIgnore]

@@ -150,17 +150,20 @@ namespace BTCPayServer.PaymentRequest
             {
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
+                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment || invoiceEvent.Name == InvoiceEvent.MarkedCompleted  || invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
-                        await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
-                            new object[]
-                            {
-                            data.GetValue(),
-                            invoiceEvent.Payment.GetCryptoCode(),
-                            invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
-                            });
+                        var data = invoiceEvent.Payment?.GetCryptoPaymentData();
+                        if (data != null)
+                        {
+                            await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
+                                new object[]
+                                {
+                                    data.GetValue(),
+                                    invoiceEvent.Payment.GetCryptoCode(),
+                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
+                                }, cancellationToken);
+                        }
                     }
 
                     await InfoUpdated(paymentId);
@@ -168,6 +171,7 @@ namespace BTCPayServer.PaymentRequest
             }
             else if (evt is PaymentRequestUpdated updated)
             {
+                await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.PaymentRequestId);
                 await InfoUpdated(updated.PaymentRequestId);
 
                 var expiry = updated.Data.GetBlob().ExpiryDate;

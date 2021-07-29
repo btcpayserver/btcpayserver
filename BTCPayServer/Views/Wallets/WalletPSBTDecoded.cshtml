@@ -59,7 +59,8 @@
 
 <partial name="_PSBTInfo" model="Model" />
 
-<div class="form-group">
+@if (Model.HasErrors)
+{
     <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
         <input type="hidden" asp-for="CryptoCode"/>
         <input type="hidden" asp-for="NBXSeedAvailable"/>
@@ -71,7 +72,27 @@
             <button type="submit" name="command" value="combine" class="btn btn-secondary">Combine</button>
         </div>
     </form>
-</div>
+}
+else
+{
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@Context.GetRouteValue("walletId")">
+        <input type="hidden" asp-for="SigningKey" />
+        <input type="hidden" asp-for="SigningKeyPath" />
+        <partial name="SigningContext" for="SigningContext" />
+        <div class="d-flex justify-content-center">
+            @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
+            {
+                <button type="submit" class="btn btn-primary" name="command" value="payjoin">Broadcast (Payjoin)</button>
+                <span class="mx-2">or</span>
+                <button type="submit" class="btn btn-secondary" name="command" value="broadcast">Broadcast (Simple)</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
+            }
+        </div>
+    </form>
+}
 
 <p class="my-5 text-center">
     <a href="#ExportOptions" data-bs-toggle="collapse" class="text-secondary">Show export options</a>

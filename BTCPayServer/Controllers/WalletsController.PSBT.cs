@@ -86,12 +86,14 @@ namespace BTCPayServer.Controllers
 
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
+                vm.PSBT = vm.SigningContext.PSBT = psbt.ToBase64();
+                vm.PSBTHex = psbt.ToHex();                
                 vm.Decoded = psbt.ToString();
-                vm.PSBT = psbt.ToBase64();
-                vm.PSBTHex = psbt.ToHex();
+                await FetchTransactionDetails(derivationSchemeSettings, vm, network);
+                return View("WalletPSBTDecoded", vm);
             }
 
-            return View(nameof(WalletPSBT), vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
+            return View(vm);
         }
 
         [HttpPost("{walletId}/psbt")]
@@ -176,7 +178,8 @@ namespace BTCPayServer.Controllers
                     return FilePSBT(psbt, vm.FileName);
                 
                 default:
-                    return View(vm);
+                    var viewName = string.IsNullOrEmpty(vm.PSBT) ? "WalletPSBT" : "WalletPSBTDecoded";
+                    return View(viewName, vm);
             }
         }
 

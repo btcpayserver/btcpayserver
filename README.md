@@ -74,15 +74,21 @@
 
 ## 💼 Table of Contents
 
-* [Features](#-features)
-* [Getting Started](#-getting-started)
-* [Documentation](#-documentation)
-* [Contributing](#-contributing)
-* [Developing](#-developing)
-  * [API](#-api)
-* [Community](#-community)
-* [License](#-license)
-* [Supporters](#-supporters)
+- [BTCPay Server](#btcpay-server)
+  - [💼 Table of Contents](#-table-of-contents)
+  - [🎨 Features](#-features)
+  - [🚀 Getting Started](#-getting-started)
+  - [📗 Documentation](#-documentation)
+  - [🤝 Contributing](#-contributing)
+  - [🧑‍💻 Developing](#-developing)
+    - [How to build](#how-to-build)
+    - [How to run](#how-to-run)
+    - [How to debug](#how-to-debug)
+    - [Other dependencies](#other-dependencies)
+    - [🧪 API](#-api)
+  - [💚 Community](#-community)
+  - [📝 License](#-license)
+  - [🙏 Supporters](#-supporters)
 
 ![](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/master/docs/img/BTCPayServerScreenshot.png)
 
@@ -271,6 +277,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
          <img  src="BTCPayServer/wwwroot/img/coincards.svg" alt="Coincards" height=100>
          <br/>
          <span>Coincards</span>
+       </a>
+     </td>
+     <td align="center" valign="middle">
+       <a href="https://www.bailliegifford.com//" target="_blank">
+         <img  src="BTCPayServer/wwwroot/img/bailliegifford-logo-122x122.png" alt="Baillie Gifford" height=100>
+         <br/>
+         <span>Baillie Gifford</span>
        </a>
      </td>
     </tr>

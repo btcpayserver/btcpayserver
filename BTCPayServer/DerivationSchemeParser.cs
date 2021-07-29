@@ -47,7 +47,7 @@ namespace BTCPayServer
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             str = str.Trim();
-            var outputDescriptor = OutputDescriptor.Parse(str);
+            var outputDescriptor = OutputDescriptor.Parse(str, Network);
             switch(outputDescriptor)
             {
                 case OutputDescriptor.PK _:

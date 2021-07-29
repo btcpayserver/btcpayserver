@@ -270,7 +270,7 @@ namespace BTCPayServer.HostedServices
                             await Task.Delay(wait, CancellationToken);
                             ctx = await CreateRedeliveryRequest(originalDeliveryId);
                             // This may have changed
-                            if (!ctx.WebhookBlob.AutomaticRedelivery ||
+                            if (ctx is null || !ctx.WebhookBlob.AutomaticRedelivery ||
                                 !ShouldDeliver(ctx.WebhookEvent.Type, ctx.WebhookBlob))
                                 break;
                             result = await SendAndSaveDelivery(ctx);

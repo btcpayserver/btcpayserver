@@ -462,10 +462,11 @@ namespace BTCPayServer.Payments.PayJoin
                 var coin = selectedUtxo.AsCoin(derivationSchemeSettings.AccountDerivation);
                 signedInput.UpdateFromCoin(coin);
                 var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
-                signedInput.Sign(privateKey, new SigningOptions()
+                signedInput.PSBT.Settings.SigningOptions = new SigningOptions()
                 {
                     EnforceLowR = enforcedLowR
-                });
+                };
+                signedInput.Sign(privateKey);
                 signedInput.FinalizeInput();
                 newTx.Inputs[signedInput.Index].WitScript = newPsbt.Inputs[(int)signedInput.Index].FinalScriptWitness;
             }

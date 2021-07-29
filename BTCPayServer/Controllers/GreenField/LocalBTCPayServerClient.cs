@@ -504,11 +504,11 @@ namespace BTCPayServer.Controllers.GreenField
             return Task.FromResult(GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId, enabled)));
         }
 
-        public override async Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
+        public override Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
             string cryptoCode, CancellationToken token = default)
         {
-            return GetFromActionResult(
-                await _chainPaymentMethodsController.GetOnChainPaymentMethod(storeId, cryptoCode));
+            return Task.FromResult(GetFromActionResult(
+                _chainPaymentMethodsController.GetOnChainPaymentMethod(storeId, cryptoCode)));
         }
 
         public override async Task RemoveStoreOnChainPaymentMethod(string storeId, string cryptoCode,
@@ -534,13 +534,13 @@ namespace BTCPayServer.Controllers.GreenField
                     paymentMethod, offset, amount)));
         }
 
-        public override async Task<OnChainPaymentMethodPreviewResultData> PreviewStoreOnChainPaymentMethodAddresses(
+        public override Task<OnChainPaymentMethodPreviewResultData> PreviewStoreOnChainPaymentMethodAddresses(
             string storeId, string cryptoCode, int offset = 0, int amount = 10,
             CancellationToken token = default)
         {
-            return GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
-                await _chainPaymentMethodsController.GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
-                    amount));
+            return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
+                    _chainPaymentMethodsController.GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
+                    amount)));
         }
 
         public override Task<ApiHealthData> GetHealth(CancellationToken token = default)

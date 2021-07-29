@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -122,7 +123,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (string.IsNullOrEmpty(paymentMethodData?.ConnectionString))
+            if (string.IsNullOrEmpty(paymentMethodData.ConnectionString))
             {
                 ModelState.AddModelError(nameof(LightningNetworkPaymentMethodData.ConnectionString),
                     "Missing connectionString");
@@ -131,8 +132,8 @@ namespace BTCPayServer.Controllers.GreenField
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            LightningSupportedPaymentMethod paymentMethod = null;
-            if (!string.IsNullOrEmpty(paymentMethodData.ConnectionString))
+            LightningSupportedPaymentMethod? paymentMethod = null;
+            if (!string.IsNullOrEmpty(paymentMethodData!.ConnectionString))
             {
                 if (paymentMethodData.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
                 {
@@ -189,8 +190,8 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(GetExistingLightningLikePaymentMethod(cryptoCode, store));
         }
 
-        private LightningNetworkPaymentMethodData GetExistingLightningLikePaymentMethod(string cryptoCode,
-            StoreData store = null)
+        private LightningNetworkPaymentMethodData? GetExistingLightningLikePaymentMethod(string cryptoCode,
+            StoreData? store = null)
         {
             store ??= Store;
             var storeBlob = store.GetStoreBlob();
@@ -201,13 +202,13 @@ namespace BTCPayServer.Controllers.GreenField
                 .FirstOrDefault(method => method.PaymentId == id);
 
             var excluded = storeBlob.IsExcluded(id);
-            return paymentMethod == null
+            return paymentMethod is null
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.GetDisplayableConnectionString(), !excluded);
         }
 
-        private bool GetNetwork(string cryptoCode, out BTCPayNetwork network)
+        private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)
         {
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             network = network?.SupportLightning is true ? network : null;

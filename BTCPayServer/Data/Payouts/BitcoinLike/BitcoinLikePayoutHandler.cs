@@ -302,7 +302,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 .ThenInclude(o => o.StoreData)
                 .Where(p => p.State == PayoutState.AwaitingPayment)
                 .Where(p => p.PaymentMethodId == paymentMethodId.ToString())
+#pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.Destination))
+#pragma warning restore CA1307 // Specify StringComparison
                 .ToListAsync();
             var payoutByDestination = payouts.ToDictionary(p => p.Destination);
 

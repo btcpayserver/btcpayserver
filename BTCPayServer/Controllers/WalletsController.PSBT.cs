@@ -335,13 +335,14 @@ namespace BTCPayServer.Controllers
                             derivationSchemeSettings, network, cancellationToken);
                         try
                         {
+                            proposedPayjoin.Settings.SigningOptions = new SigningOptions()
+                            {
+                                EnforceLowR = !(vm.SigningContext?.EnforceLowR is false)
+                            };
                             var extKey = ExtKey.Parse(vm.SigningKey, network.NBitcoinNetwork);
                             proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,
                                 extKey,
-                                RootedKeyPath.Parse(vm.SigningKeyPath), new SigningOptions()
-                                {
-                                    EnforceLowR = !(vm.SigningContext?.EnforceLowR is false)
-                                });
+                                RootedKeyPath.Parse(vm.SigningKeyPath));
                             vm.SigningContext.PSBT = proposedPayjoin.ToBase64();
                             vm.SigningContext.OriginalPSBT = psbt.ToBase64();
                             proposedPayjoin.Finalize();

@@ -146,7 +146,7 @@ namespace BTCPayServer.Tests
         {
             var tx = network.NBitcoinNetwork.CreateTransaction();
             tx.Inputs.Add(new OutPoint(RandomUtils.GetUInt256(), 0), Script.Empty);
-            tx.Outputs.Add(Money.Coins(1.0m), new Key().ScriptPubKey);
+            tx.Outputs.Add(Money.Coins(1.0m), new Key().GetScriptPubKey(ScriptPubKeyType.Legacy));
             return tx;
         }
 
@@ -184,12 +184,16 @@ namespace BTCPayServer.Tests
 
                 foreach (ScriptPubKeyType senderAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
                 {
+                    if (senderAddressType == ScriptPubKeyType.TaprootBIP86)
+                        continue;
                     var senderUser = tester.NewAccount();
                     senderUser.GrantAccess(true);
                     senderUser.RegisterDerivationScheme("BTC", senderAddressType);
 
                     foreach (ScriptPubKeyType receiverAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
                     {
+                        if (receiverAddressType == ScriptPubKeyType.TaprootBIP86)
+                            continue;
                         var senderCoin = await senderUser.ReceiveUTXO(Money.Satoshis(100000), network);
 
                         Logs.Tester.LogInformation($"Testing payjoin with sender: {senderAddressType} receiver: {receiverAddressType}");

@@ -83,7 +83,7 @@ namespace BTCPayServer.Services
                         acceptedLocales[locale] = qualityScore;
                     }
                 }
-                catch (System.FormatException e)
+                catch (System.FormatException)
                 {
                     // Can't use this piece, moving on...
                 }

@@ -1937,7 +1937,7 @@ namespace BTCPayServer.Tests
             }
 
             var methods = await adminClient.GetStorePaymentMethods(store.Id);
-            Assert.Equal(1, methods.Count);
+            Assert.Single(methods);
             VerifyLightning(methods);
             
             var randK = new Mnemonic(Wordlist.English, WordCount.Twelve).DeriveExtKey().Neuter().ToString(Network.RegTest);

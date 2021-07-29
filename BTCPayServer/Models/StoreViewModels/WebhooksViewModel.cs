@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -11,7 +10,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Url { get; set; }
             public bool LastDeliverySuccessful { get; set; } = true;
             public DateTimeOffset? LastDeliveryTimeStamp { get; set; } = null;
-            public string? LastDeliveryErrorMessage { get; set; } = null;
+            public string LastDeliveryErrorMessage { get; set; } = null;
         }
         public WebhookViewModel[] Webhooks { get; set; }
     }

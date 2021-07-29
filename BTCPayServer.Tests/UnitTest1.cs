@@ -1689,7 +1689,10 @@ namespace BTCPayServer.Tests
                 var invoice2Address =
                     BitcoinAddress.Create(invoice2.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
                 uint256 invoice2tx1Id =
-                    await tester.ExplorerNode.SendToAddressAsync(invoice2Address, invoice2.BtcDue, replaceable: true);
+                    await tester.ExplorerNode.SendToAddressAsync(invoice2Address, invoice2.BtcDue, new NBitcoin.RPC.SendToAddressParameters()
+                    {
+                        Replaceable = true
+                    });
                 Transaction invoice2Tx1 = null;
                 TestUtils.Eventually(() =>
                 {
@@ -1707,7 +1710,7 @@ namespace BTCPayServer.Tests
                 output = invoice2Tx2.Outputs.First(o =>
                     o.ScriptPubKey == invoice2Address.ScriptPubKey);
                 output.Value -= new Money(10_000, MoneyUnit.Satoshi);
-                output.ScriptPubKey = new Key().ScriptPubKey;
+                output.ScriptPubKey = new Key().GetScriptPubKey(ScriptPubKeyType.Legacy);
                 invoice2Tx2 = await tester.ExplorerNode.SignRawTransactionAsync(invoice2Tx2);
                 await tester.ExplorerNode.SendRawTransactionAsync(invoice2Tx2);
                 tester.ExplorerNode.Generate(1);

@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public async Task<ActionResult<OnChainPaymentMethodData>> GetOnChainPaymentMethod(
+        public ActionResult<OnChainPaymentMethodData> GetOnChainPaymentMethod(
             string storeId,
             string cryptoCode)
         {
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
-        public async Task<IActionResult> GetOnChainPaymentMethodPreview(
+        public IActionResult GetOnChainPaymentMethodPreview(
             string storeId,
             string cryptoCode,
             int offset = 0, int amount = 10)

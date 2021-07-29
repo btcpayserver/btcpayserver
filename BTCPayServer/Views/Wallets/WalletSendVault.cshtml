@@ -1,28 +1,39 @@
 @model WalletSendVaultModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction with BTCPay Server Vault", Context.GetStoreData().StoreName);
+    Layout = "_LayoutWizard";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
 }
 
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+@section Navbar {
+    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
+        <vc:icon symbol="back" />
+    </a>
+    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+}
 
-<div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
+<header class="text-center">
+    <h1>@ViewData["PageTitle"]</h1>
+    <p class="lead text-secondary mt-3">Using BTCPay Server Vault</p>
+</header>
+
+<div id="walletAlert" class="alert alert-danger alert-dismissible my-4" style="display:none;" role="alert">
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
         <vc:icon symbol="close" />
     </button>
     <span id="alertMessage"></span>
 </div>
-<div class="row">
-    <div id="body" class="col-md-10">
-        <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
-            <input type="hidden" id="WalletId" asp-for="WalletId" />
-            <input type="hidden" asp-for="WebsocketPath" />
-            <partial name="SigningContext" for="SigningContext" />
-        </form>
-        <div id="vaultPlaceholder"></div>
-        <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button">Retry</button>
-        <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-    </div>
+
+<div id="body" class="my-4">
+    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@Context.GetRouteValue("walletId")" method="post" style="display:none;">
+        <input type="hidden" id="WalletId" asp-for="WalletId" />
+        <input type="hidden" asp-for="WebsocketPath" />
+        <partial name="SigningContext" for="SigningContext" />
+    </form>
+    <div id="vaultPlaceholder"></div>
+    <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button">Retry</button>
+    <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
 </div>
 
 <partial name="VaultElements" />

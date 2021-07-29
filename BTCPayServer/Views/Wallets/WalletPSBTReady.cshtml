@@ -60,14 +60,14 @@
         @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
         {
             <button type="submit" class="btn btn-primary" name="command" value="payjoin">Broadcast (Payjoin)</button>
-            <span> or </span>
+            <span class="mx-2">or</span>
             <button type="submit" class="btn btn-secondary" name="command" value="broadcast">Broadcast (Simple)</button>
         }
         else
         {
             <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
         }
-        <span> or </span>
+        <span class="mx-2">or</span>
     }
     <button type="submit" class="btn btn-secondary" name="command" value="analyze-psbt">View PSBT</button>
 </form>

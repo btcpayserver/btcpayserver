@@ -738,9 +738,9 @@
         }
     },
     "x-webhooks": {
-        "Invoice created": {
+        "InvoiceCreated": {
             "post": {
-                "summary": "Invoice created",
+                "summary": "InvoiceCreated",
                 "description": "A new invoice has been created",
                 "parameters": [
                     {
@@ -768,9 +768,9 @@
                 }
             }
         },
-        "Invoice expired": {
+        "InvoiceExpired": {
             "post": {
-                "summary": "Invoice expired",
+                "summary": "InvoiceExpired",
                 "description": "An invoice expired",
                 "parameters": [
                     {
@@ -798,9 +798,9 @@
                 }
             }
         },
-        "Payment received": {
+        "InvoiceReceivedPayment": {
             "post": {
-                "summary": "Payment received",
+                "summary": "InvoiceReceivedPayment",
                 "description": "An invoice received a payment",
                 "parameters": [
                     {
@@ -828,10 +828,10 @@
                 }
             }
         },
-        "Invoice processing": {
+        "InvoicePaidInFull": {
             "post": {
-                "summary": "Invoice processing",
-                "description": "An invoice has been fully paid",
+                "summary": "InvoicePaidInFull",
+                "description": "Triggers when an invoice is fully paid, but doesn't have the required amount of confirmations on the blockchain yet according to your store's settings.",
                 "parameters": [
                     {
                         "in": "header",
@@ -858,9 +858,9 @@
                 }
             }
         },
-        "Invoice invalid": {
+        "InvoiceInvalid": {
             "post": {
-                "summary": "Invoice invalid",
+                "summary": "InvoiceInvalid",
                 "description": "An invoice became invalid",
                 "parameters": [
                     {
@@ -888,10 +888,10 @@
                 }
             }
         },
-        "Invoice settled": {
+        "InvoiceSettled": {
             "post": {
-                "summary": "Invoice settled",
-                "description": "An invoice has been settled",
+                "summary": "InvoiceSettled",
+                "description": "Triggers when an invoice is considered settled and the merchant can proceed with the order's delivery. The invoice now has enough confirmations on the blockchain (if paid on-chain) according to your store's configuration.",
                 "parameters": [
                     {
                         "in": "header",

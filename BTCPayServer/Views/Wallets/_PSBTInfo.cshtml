@@ -1,5 +1,21 @@
 @model WalletPSBTReadyViewModel
 
+@if (Model.CanCalculateBalance)
+{
+    <p class="lead text-center text-secondary">
+        This transaction will change your balance:
+        <br>
+        @if (Model.Positive)
+        {
+            <span class="text-success">@Model.BalanceChange</span>
+        }
+        else
+        {
+            <span class="text-danger">@Model.BalanceChange</span>
+        }
+    </p>
+}
+
 <h4 class="mb-n3">Inputs</h4>
 <table class="table table-sm table-responsive-lg">
     <thead class="thead-inverse">

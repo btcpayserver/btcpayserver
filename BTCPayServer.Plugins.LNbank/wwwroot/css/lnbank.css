@@ -1,0 +1,22 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+/* Bootstrap modifications */
+.qrcode,
+pre.payment-request,
+pre.connection-string{
+  max-width: 445px;
+}
+
+pre.payment-request,
+pre.connection-string {
+  white-space: pre-wrap;       /* css-3 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+main p {
+  max-width: 40em;
+}

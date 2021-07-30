@@ -1,0 +1,50 @@
+﻿using System;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Plugins.LNbank.Extensions;
+using BTCPayServer.Plugins.LNbank.Hubs;
+using BTCPayServer.Plugins.LNbank.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace BTCPayServer.Plugins.LNbank
+{
+    public class LNbankPlugin : BaseBTCPayServerPlugin
+    {
+        public override string Identifier { get; } = "BTCPayServer.Plugins.LNbank";
+        public override string Name { get; } = "LNbank Plugin!";
+        public override string Description { get; } = "This is a description of the loaded test extension!";
+
+        public override void Execute(IServiceCollection services)
+        {
+            services.AddSingleton<IUIExtension>(new UIExtension("LNbankNavExtension", "header-nav"));
+            services.AddSingleton<LNbankPluginDbContextFactory>();
+            services.AddDbContext<LNbankPluginDbContext>((provider, o) =>
+            {
+                var factory = provider.GetRequiredService<LNbankPluginDbContextFactory>();
+                factory.ConfigureBuilder(o);
+            });
+            
+            services.AddAppServices();
+            services.AddAppAuthorization();
+            
+            // API leftover:
+            // services.AddAppAuthentication();
+        }
+
+        public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
+        {
+            base.Execute(applicationBuilder, applicationBuilderApplicationServices);
+            applicationBuilderApplicationServices.GetService<LNbankPluginDbContextFactory>().CreateContext().Database.Migrate();
+
+            /*
+             TODO:
+             applicationBuilder.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<TransactionHub>("/Hubs/Transaction");
+            });*/
+        }
+    }
+}

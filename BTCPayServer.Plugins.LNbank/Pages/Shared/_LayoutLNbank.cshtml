@@ -1,0 +1,20 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+@section PageHeadContent {
+    <link href="~/css/lnbank.css" rel="stylesheet" asp-append-version="true"/>
+    @await RenderSectionAsync("Styles", false)
+}
+
+@section PageFootContent {
+    <script src="~/lib/signalr/dist/browser/signalr.js" asp-append-version="true"></script>
+    <script src="~/js/lnbank.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", false)
+}
+
+<section>
+    <div class="container">
+        @RenderBody()
+    </div>
+</section>

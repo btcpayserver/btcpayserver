@@ -142,6 +142,7 @@
 	  <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
+	  <ProjectReference Include="..\BTCPayServer.Plugins.LNbank\BTCPayServer.Plugins.LNbank.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	</ItemGroup>

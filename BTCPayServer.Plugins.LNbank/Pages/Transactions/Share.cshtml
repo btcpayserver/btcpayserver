@@ -1,0 +1,58 @@
+@page "/Plugins/LNbank/TX/{transactionId}"
+@using BTCPayServer.Lightning
+@model BTCPayServer.Plugins.LNbank.Pages.Transactions.ShareModel
+
+@{
+    Layout = "_LayoutSimple";
+    Model.SetTitle(Model.Transaction.Description);
+}
+
+<div class="text-center">
+    @if (Model.Transaction.IsPaid)
+    {
+        <h2 class="text-success">
+            @Model.Transaction.AmountSettled.ToUnit(LightMoneyUnit.Satoshi)
+            sats
+            @Model.Transaction.Status
+        </h2>
+        <h3 class="h4 text-muted">
+            Paid at
+            @Model.Transaction.PaidAt
+        </h3>
+    }
+    else
+    {
+        <h2 class="text-@(Model.Transaction.IsExpired ? "danger" : "warning")">
+            @Model.Transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
+            sats
+            @Model.Transaction.Status
+        </h2>
+        <h3 class="h4 text-muted">
+            @(Model.Transaction.IsExpired ? "Expired" : "Expires")
+            @Model.Transaction.ExpiresAt
+        </h3>
+
+        @if (!Model.Transaction.IsExpired)
+        {
+            <img src="/QR/@Model.Transaction.PaymentRequest" class="qrcode my-4" alt="Payment Request as QR code"/>
+
+            <button class="btn btn-primary my-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest">Copy payment request</button>
+
+            <pre class="payment-request d-inline-block mb-0 text-left">@Model.Transaction.PaymentRequest</pre>
+
+            <script>
+                window.LNbankHubs = window.LNbankHubs || []
+                window.LNbankHubs.push({
+                    id: 'Transaction',
+                    handlers: {
+                        'transaction-update': data => {
+                            if (data.transactionId === "@Model.Transaction.TransactionId") {
+                                window.location.reload();
+                            }
+                        }
+                    }
+                })
+            </script>
+        }
+    }
+</div>

@@ -15,7 +15,7 @@
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <script>
         hljs.initHighlightingOnLoad();
-
+        
         document.addEventListener("DOMContentLoaded", function () {
             initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
             initCameraScanningApp("Scan PSBT", function (data){

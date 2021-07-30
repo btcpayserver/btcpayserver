@@ -33,10 +33,7 @@
 
 <header class="text-center">
     <h1>@ViewData["PageTitle"]</h1>
-    <p class="lead text-secondary mt-3">
-        Export the PSBT for your wallet. Sign the PSBT with your wallet and 
-        import the signed version here for finalization and broadcasting.
-    </p>
+    
     @if (Model.CanCalculateBalance)
     {
         <p class="lead text-secondary mt-3">
@@ -56,33 +53,59 @@
 
 <partial name="_PSBTInfo" model="Model" />
 
-<h4 class="mt-5 mb-3">Export PSBT for signing</h4>
-<div class="form-group">
-    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
-        <input type="hidden" asp-for="CryptoCode"/>
-        <input type="hidden" asp-for="PSBT"/>
-        <div class="d-flex">
-            <button name="command" type="submit" class="btn btn-primary" value="save-psbt">Download PSBT file</button>
-            <button name="command" type="button" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
-        </div>
-    </form>
-</div>
+<p class="lead text-secondary mt-5">
+    Export the PSBT for your wallet. Sign it with your wallet and 
+    import the signed PSBT version here for finalization and broadcasting.
+</p>
 
-<h4 class="mt-5 mb-3">Import signed PSBT</h4>
-<form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
-    <div class="form-group">
-        <label for="ImportedPSBT" class="form-label">PSBT content</label>
-        <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
+<div class="accordion" id="PSBTOptions">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="PSBTOptionsExportHeader">
+            <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="true">
+                <span class="h5">Export PSBT for signing</span>
+                <vc:icon symbol="caret-down"/>
+            </button>
+        </h2>
+        <div id="PSBTOptionsExportContent" class="accordion-collapse collapse show" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
+            <div class="accordion-body">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
+                    <input type="hidden" asp-for="CryptoCode"/>
+                    <input type="hidden" asp-for="PSBT"/>
+                    <div class="form-group d-flex">
+                        <button name="command" type="submit" class="btn btn-primary" value="save-psbt">Download PSBT file</button>
+                        <button name="command" type="button" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label asp-for="UploadedPSBTFile" class="form-label"></label>
-        <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="PSBTOptionsImportHeader">
+            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
+                <span class="h5">Import signed PSBT</span>
+                <vc:icon symbol="caret-down"/>
+            </button>
+        </h2>
+        <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
+            <div class="accordion-body">
+                <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="ImportedPSBT" class="form-label">PSBT content</label>
+                        <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                        <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+                    </div>
+                    <div class="d-flex">
+                        <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode PSBT</button>
+                        <button type="button" id="scanqrcode" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="d-flex">
-        <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode PSBT</button>
-        <button type="button" id="scanqrcode" class="btn btn-primary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
-    </div>
-</form>
+</div>
 
 <partial name="ShowQR"/>
 <partial name="CameraScanner"/>

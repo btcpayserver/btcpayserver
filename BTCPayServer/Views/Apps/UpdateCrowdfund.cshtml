@@ -21,11 +21,12 @@
 
         <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-        <div class="row">
-            <div class="col-lg-12">
-                <form method="post">
-                    <input type="hidden" asp-for="StoreId" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form method="post">
+            <input type="hidden" asp-for="StoreId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-lg-6">
                     <div class="form-group">
                         <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
@@ -36,11 +37,15 @@
                         <input asp-for="Tagline" class="form-control" />
                         <span asp-validation-for="Tagline" class="text-danger"></span>
                     </div>
+                </div>
+                <div class="col-lg-9">
                     <div class="form-group">
                         <label asp-for="Description" class="form-label" data-required></label>
                         <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
+                </div>
+                <div class="col-lg-6">
                     <div class="form-group">
                         <label asp-for="TargetCurrency" class="form-label" data-required></label>
                         <input asp-for="TargetCurrency" class="form-control" required />
@@ -56,7 +61,8 @@
                         <div class="input-group">
                             <input type="datetime-local" asp-for="StartDate"
                                    value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />
+                                   class="form-control flatdtpicker"
+                                   placeholder="No start date has been set" />
                             <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                 <span class="fa fa-times"></span>
                             </button>
@@ -64,6 +70,19 @@
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="EndDate" class="form-label"></label>
+                        <div class="input-group">
+                            <input type="datetime-local" asp-for="EndDate"
+                                   value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
+                                   placeholder="No end date has been set" />
+                            <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-4">
                         <label asp-for="ResetEvery" class="form-label"></label>
                         <div class="input-group">
                             <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
@@ -75,133 +94,156 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="EndDate" class="form-label"></label>
-                        <div class="input-group">
-                            <input type="datetime-local" asp-for="EndDate"
-                                   value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control flatdtpicker"
-                                   placeholder="No end date has been set for this crowdfund" />
-                            <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
-                                <span class="fa fa-times"></span>
-                            </button>
+                    <div class="form-group mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
+                            <label asp-for="Enabled" class="form-label mb-0"></label>
                         </div>
-                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
+                        <div class="text-muted">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
                     </div>
-
+                </div>
+                <div class="col-lg-12">
                     <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
-
+                </div>
+                <div class="col-lg-6">
                     <div class="form-group">
                         <label asp-for="PerksTemplate" class="form-label"></label>
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="PerksTemplate" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    <h4 class="mt-5 mb-4">Contributions</h4>
+                    <div class="form-check mb-3">
+                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
+                        <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
+                        <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="MainImageUrl" class="form-label"></label>
-                        <input asp-for="MainImageUrl" class="form-control" />
-                        <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                    <div class="form-check mb-3">
+                        <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check-input" />
+                        <label asp-for="DisplayPerksRanking" class="form-check-label"></label>
+                        <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="form-label"></label>
-                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                    <div class="form-check mb-3">
+                        <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check-input" />
+                        <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
+                        <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Crowdfund Behavior</h4>
                     <div class="form-group">
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-                            <label asp-for="Enabled" class="form-check-label"></label>
-                            <span asp-validation-for="Enabled" class="text-danger"></span>
+                    <div class="form-check">
+                        <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
+                        <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
+                        <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+                    </div>
+                    <h4 class="mt-5 mb-4">Sound</h4>
+                    <div class="form-group mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                            <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
                         </div>
-                        <div class="form-check">
-                            <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
-                            <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
-                            <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check-input" />
-                            <label asp-for="DisplayPerksRanking" class="form-check-label"></label>
-                            <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check-input" />
-                            <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
-                            <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
-                            <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
-                            <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="SoundsEnabled" type="checkbox" class="form-check-input" />
-                            <label asp-for="SoundsEnabled" class="form-check-label"></label>
-                            <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                        <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="Sounds" class="form-label"></label>
+                            <textarea asp-for="Sounds" class="form-control"></textarea>
+                            <span asp-validation-for="Sounds" class="text-danger"></span>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Sounds" class="form-label"></label>
-                        <textarea asp-for="Sounds" class="form-control"></textarea>
-                        <span asp-validation-for="Sounds" class="text-danger"></span>
+                    <h4 class="mt-5 mb-4">Animation</h4>
+                    <div class="form-group mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                            <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                        </div>
+                        <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input asp-for="AnimationsEnabled" type="checkbox" class="form-check-input" />
-                            <label asp-for="AnimationsEnabled" class="form-check-label"></label>
-                            <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                    <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="AnimationColors" class="form-label"></label>
+                            <textarea asp-for="AnimationColors" class="form-control"></textarea>
+                            <span asp-validation-for="AnimationColors" class="text-danger"></span>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="AnimationColors" class="form-label"></label>
-                        <textarea asp-for="AnimationColors" class="form-control"></textarea>
-                        <span asp-validation-for="AnimationColors" class="text-danger"></span>
+                    <h4 class="mt-5 mb-4">Discussion</h4>
+                    <div class="form-group mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                            <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                        </div>
+                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input asp-for="DisqusEnabled" type="checkbox" class="form-check-input" />
-                            <label asp-for="DisqusEnabled" class="form-check-label"></label>
-                            <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                    <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
+                        <div class="form-group mb-0 pb-3">
+                            <label asp-for="DisqusShortname" class="form-label"></label>
+                            <input asp-for="DisqusShortname" class="form-control" />
+                            <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                         </div>
                     </div>
+
+                    <h4 class="mt-5 mb-2">Additional Options</h4>
                     <div class="form-group">
-                        <label asp-for="DisqusShortname" class="form-label"></label>
-                        <input asp-for="DisqusShortname" class="form-control" />
-                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                        <div class="accordion" id="accordion-dev-info">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordion-dev-info-appearance-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-appearance" aria-expanded="false" aria-controls="accordion-dev-info-appearance">
+                                        Custom CSS
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
+                                    <div class="accordion-body">
+                                        <div class="form-group">
+                                            <label asp-for="CustomCSSLink" class="form-label"></label>
+                                            <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
+                                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                            </a>
+                                            <input asp-for="CustomCSSLink" class="form-control" />
+                                            <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="MainImageUrl" class="form-label"></label>
+                                            <input asp-for="MainImageUrl" class="form-control" />
+                                            <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group mb-4">
+                                            <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                            <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                            <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                <div class="col-lg-9">
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group">
+                        <div class="btn-group ms-2">
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
                                target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
                         </div>
                         @if (Model.ModelWithMinimumData)
                         {
-                            <div class="btn-group">
+                            <div class="btn-group ms-2">
                                 <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
                                 <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
                                    target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
                             </div>
                         }
-                        <div class="btn-group">
+                        <div class="btn-group ms-2">
                             <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
                             <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </section>

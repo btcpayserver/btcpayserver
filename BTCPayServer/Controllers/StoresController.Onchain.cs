@@ -305,8 +305,10 @@ namespace BTCPayServer.Controllers
             derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();
 
             // Set wallet properties from generate response
+            vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
+            vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
+            vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
             vm.Config = ProtectString(derivationSchemeSettings.ToJson());
-
 
             var result = await UpdateWallet(vm);
 

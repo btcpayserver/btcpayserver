@@ -888,8 +888,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
                 Assert.Contains("0.01000000", s.Driver.PageSource);
-                s.Driver.FindElement(By.CssSelector("button[value=analyze-psbt]")).Click();
-                Assert.EndsWith("psbt", s.Driver.Url);
+                Assert.EndsWith("psbt/ready", s.Driver.Url);
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);
 

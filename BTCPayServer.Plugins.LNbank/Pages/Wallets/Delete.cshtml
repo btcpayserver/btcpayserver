@@ -2,7 +2,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.DeleteModel
 
 @{
-    Model.SetTitle($"Delete \"{Model.Wallet.Name}\"");
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Wallets, $"Delete \"{Model.Wallet.Name}\"");
 }
 
 <header class="mb-3">

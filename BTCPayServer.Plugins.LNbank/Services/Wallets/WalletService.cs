@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client;
 using BTCPayServer.Lightning;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Hubs;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Transaction = BTCPayServer.Plugins.LNbank.Data.Models.Transaction;
@@ -27,19 +23,17 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
         private readonly Network _network;
 
         public WalletService(
-            IWebHostEnvironment env,
             ILogger<WalletService> logger,
             IHubContext<TransactionHub> transactionHub,
             BTCPayService btcpayService,
+            BTCPayNetworkProvider btcPayNetworkProvider,
             LNbankPluginDbContextFactory dbContextFactory)
         {
             _logger = logger;
             _btcpayService = btcpayService;
             _dbContextFactory = dbContextFactory;
             _transactionHub = transactionHub;
-
-            // TODO: Configure network properly
-            _network = env.IsDevelopment() ? Network.RegTest : Network.Main;
+            _network = btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(BTCPayService.CryptoCode).NBitcoinNetwork;
         }
 
         public async Task<IEnumerable<Wallet>> GetWallets(WalletsQuery query)
@@ -72,12 +66,12 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
         public async Task<Transaction> Receive(Wallet wallet, long amount, string description) =>
             await Receive(wallet, amount, description, LightningInvoiceCreateRequest.ExpiryDefault);
 
-        public async Task<Transaction> Receive(Wallet wallet, long amount, string description, TimeSpan expiry)
+        private async Task<Transaction> Receive(Wallet wallet, long amount, string description, TimeSpan expiry)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
             if (amount <= 0) throw new ArgumentException(nameof(amount));
 
-            var data = await _btcpayService.CreateLightningInvoice(new LightningInvoiceCreateRequest
+            var data = await _btcpayService.CreateLightningInvoice(wallet.UserId, new LightningInvoiceCreateRequest
             {
                 WalletId = wallet.WalletId,
                 Amount = amount,
@@ -99,7 +93,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             return entry.Entity;
         }
 
-        public async Task<Transaction> Send(Wallet wallet, BOLT11PaymentRequest bolt11, string paymentRequest)
+        public async Task Send(Wallet wallet, BOLT11PaymentRequest bolt11, string paymentRequest)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
             var amount = bolt11.MinimumAmount;
@@ -116,25 +110,12 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 throw new Exception($"Insufficient balance: {balanceSats} sats, tried to send {amountSats} sats.");
             }
 
-            // pay via the node and fall back to internal payment
-            Transaction internalReceivingTransaction = null;
-            try
+            // try internal payment and fall back to paying via the node
+            Transaction internalReceivingTransaction = await GetTransaction(new TransactionQuery
             {
-                await _btcpayService.PayLightningInvoice(new LightningInvoicePayRequest
-                {
-                    PaymentRequest = paymentRequest
-                });
-            }
-            catch (GreenFieldAPIException ex) when (ex.APIError.Code == "could-not-find-route")
-            {
-                internalReceivingTransaction = await GetTransaction(new TransactionQuery
-                {
-                    PaymentRequest = paymentRequest,
-                    HasInvoiceId = true
-                });
-                if (internalReceivingTransaction == null) throw;
-            }
-
+                PaymentRequest = paymentRequest, HasInvoiceId = true
+            });
+            
             if (internalReceivingTransaction != null)
             {
                 if (internalReceivingTransaction.IsExpired)
@@ -146,48 +127,60 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                     throw new Exception($"Payment request has already been paid.");
                 }
             }
-
-            // https://docs.microsoft.com/en-us/ef/core/saving/transactions#controlling-transactions
-            await using var dbTransaction = await dbContext.Database.BeginTransactionAsync();
-            var now = DateTimeOffset.UtcNow;
-            var entry = await dbContext.Transactions.AddAsync(new Transaction
+            else
             {
-                WalletId = wallet.WalletId,
-                PaymentRequest = paymentRequest,
-                Amount = amount,
-                AmountSettled = new LightMoney(amount.MilliSatoshi * -1),
-                ExpiresAt = bolt11.ExpiryDate,
-                Description = bolt11.ShortDescription,
-                PaidAt = now
-            });
-            await dbContext.SaveChangesAsync();
-
-            if (internalReceivingTransaction != null)
-            {
-                await MarkTransactionPaid(internalReceivingTransaction, amount, now);
+                await _btcpayService.PayLightningInvoice(wallet.UserId,
+                                    new LightningInvoicePayRequest {PaymentRequest = paymentRequest});
             }
-            await dbTransaction.CommitAsync();
+            
+            var executionStrategy = dbContext.Database.CreateExecutionStrategy();
 
-            return entry.Entity;
+            await executionStrategy.ExecuteAsync(async () =>
+            {
+                // https://docs.microsoft.com/en-us/ef/core/saving/transactions#controlling-transactions
+                await using var dbTransaction = await dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    var now = DateTimeOffset.UtcNow;
+                    await dbContext.Transactions.AddAsync(new Transaction
+                    {
+                        WalletId = wallet.WalletId,
+                        PaymentRequest = paymentRequest,
+                        Amount = amount,
+                        AmountSettled = new LightMoney(amount.MilliSatoshi * -1),
+                        ExpiresAt = bolt11.ExpiryDate,
+                        Description = bolt11.ShortDescription,
+                        PaidAt = now
+                    });
+                    await dbContext.SaveChangesAsync();
+
+                    if (internalReceivingTransaction != null)
+                    {
+                        await MarkTransactionPaid(internalReceivingTransaction, amount, now);
+                    }
+                    await dbTransaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await dbTransaction.RollbackAsync();
+                }
+            });
         }
 
-        public async Task<Wallet> AddOrUpdateWallet(Wallet wallet)
+        public async Task AddOrUpdateWallet(Wallet wallet)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
-            EntityEntry<Wallet> entry;
 
             if (string.IsNullOrEmpty(wallet.WalletId))
             {
-                entry = dbContext.Wallets.Add(wallet);
+                dbContext.Wallets.Add(wallet);
             }
             else
             {
-                entry = dbContext.Entry(wallet);
+                var entry = dbContext.Entry(wallet);
                 entry.State = EntityState.Modified;
             }
             await dbContext.SaveChangesAsync();
-
-            return entry.Entity;
         }
 
         public async Task RemoveWallet(Wallet wallet)
@@ -195,45 +188,6 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             await using var dbContext = _dbContextFactory.CreateContext();
             dbContext.Wallets.Remove(wallet);
             await dbContext.SaveChangesAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactions(TransactionsQuery query)
-        {
-            await using var dbContext = _dbContextFactory.CreateContext();
-            var queryable = dbContext.Transactions.AsQueryable();
-
-            if (query.UserId != null) query.IncludeWallet = true;
-
-            if (query.WalletId != null)
-            {
-                queryable = queryable.Where(t => t.WalletId == query.WalletId);
-            }
-            if (query.IncludeWallet)
-            {
-                queryable = queryable.Include(t => t.Wallet).AsNoTracking();
-            }
-            if (query.UserId != null)
-            {
-                queryable = queryable.Where(t => t.Wallet.UserId == query.UserId);
-            }
-
-            if (!query.IncludingPaid)
-            {
-                queryable = queryable.Where(t => t.PaidAt == null);
-            }
-
-            if (!query.IncludingPending)
-            {
-                queryable = queryable.Where(t => t.PaidAt != null);
-            }
-
-            if (!query.IncludingExpired)
-            {
-                var enumerable = queryable.AsEnumerable(); // Switch to client side filtering
-                return enumerable.Where(t => t.ExpiresAt > DateTimeOffset.UtcNow).ToList();
-            }
-
-            return await queryable.ToListAsync();
         }
 
         public async Task<IEnumerable<Transaction>> GetPendingTransactions()
@@ -246,7 +200,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             });
         }
 
-        public async Task CheckPendingTransaction(Transaction transaction, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task CheckPendingTransaction(Transaction transaction, CancellationToken cancellationToken = default)
         {
             var invoice = await _btcpayService.GetLightningInvoice(transaction.InvoiceId, cancellationToken);
             if (invoice.Status == LightningInvoiceStatus.Paid)
@@ -299,27 +253,57 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             return queryable.SingleOrDefault();
         }
 
-        public async Task<Transaction> UpdateTransaction(Transaction transaction)
+        public async Task UpdateTransaction(Transaction transaction)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
             var entry = dbContext.Entry(transaction);
             entry.State = EntityState.Modified;
 
             await dbContext.SaveChangesAsync();
-
-            return entry.Entity;
-        }
-
-        public async Task RemoveTransaction(Transaction transaction)
-        {
-            await using var dbContext = _dbContextFactory.CreateContext();
-            dbContext.Transactions.Remove(transaction);
-            await dbContext.SaveChangesAsync();
         }
 
         public BOLT11PaymentRequest ParsePaymentRequest(string payReq)
         {
             return BOLT11PaymentRequest.Parse(payReq, _network);
+        }
+
+        private async Task<IEnumerable<Transaction>> GetTransactions(TransactionsQuery query)
+        {
+            await using var dbContext = _dbContextFactory.CreateContext();
+            var queryable = dbContext.Transactions.AsQueryable();
+
+            if (query.UserId != null) query.IncludeWallet = true;
+
+            if (query.WalletId != null)
+            {
+                queryable = queryable.Where(t => t.WalletId == query.WalletId);
+            }
+            if (query.IncludeWallet)
+            {
+                queryable = queryable.Include(t => t.Wallet).AsNoTracking();
+            }
+            if (query.UserId != null)
+            {
+                queryable = queryable.Where(t => t.Wallet.UserId == query.UserId);
+            }
+
+            if (!query.IncludingPaid)
+            {
+                queryable = queryable.Where(t => t.PaidAt == null);
+            }
+
+            if (!query.IncludingPending)
+            {
+                queryable = queryable.Where(t => t.PaidAt != null);
+            }
+
+            if (!query.IncludingExpired)
+            {
+                var enumerable = queryable.AsEnumerable(); // Switch to client side filtering
+                return enumerable.Where(t => t.ExpiresAt > DateTimeOffset.UtcNow).ToList();
+            }
+
+            return await queryable.ToListAsync();
         }
 
         private async Task MarkTransactionPaid(Transaction transaction, LightMoney amountSettled, DateTimeOffset? date)

@@ -8,7 +8,6 @@ using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
 {
@@ -60,7 +59,9 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
             }
             catch (Exception exception)
             {
-                ErrorMessage = exception.Message;
+                ErrorMessage = string.IsNullOrEmpty(exception.Message)
+                    ? "Invoice creation failed."
+                    : exception.Message;
             }
 
             return Page();

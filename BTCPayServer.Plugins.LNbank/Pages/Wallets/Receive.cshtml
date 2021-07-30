@@ -3,7 +3,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.ReceiveModel
 
 @{
-    Model.SetTitle("Receive");
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Receive, "Receive");
 }
 
 <header class="mb-3">
@@ -15,10 +15,10 @@
 
 @if (!ModelState.IsValid)
 {
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+    <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
 }
 
-@if (Model.ErrorMessage != null)
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger mb-4" role="alert">
         @Model.ErrorMessage
@@ -35,7 +35,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Amount" class="form-label"></label>
-                <input asp-for="Amount" class="form-control text-right" type="number" style="width:15ch;" required />
+                <input asp-for="Amount" class="form-control text-end hide-number-spin" type="number" style="width:15ch;" required />
                 <small asp-validation-for="Amount" class="form-text text-danger"></small>
             </div>
             <div class="form-group">

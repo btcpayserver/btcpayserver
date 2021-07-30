@@ -3,7 +3,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.IndexModel
 
 @{
-    Model.SetTitle("Your wallets");
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Wallets, "Your wallets");
 }
 
 @if (Model.Wallets.Any())
@@ -70,8 +70,8 @@
                         <tr>
                             <th>Date</th>
                             <th>Description</th>
-                            <th class="text-right">Amount</th>
-                            <th class="text-right">Settled</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Settled</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -86,11 +86,11 @@
                                 <td>
                                     @transaction.Description
                                 </td>
-                                <td class="text-nowrap text-right">
+                                <td class="text-nowrap text-end">
                                     @transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
                                     sats
                                 </td>
-                                <td class="text-nowrap text-right">
+                                <td class="text-nowrap text-end">
                                     @if (transaction.IsPaid)
                                     {
                                         <span class="text-@(transaction.AmountSettled > 0 ? "success" : "danger")">

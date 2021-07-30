@@ -3,7 +3,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.SendModel
 
 @{
-    Model.SetTitle("Send");
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Send, "Send");
 }
 
 <header class="mb-3">
@@ -15,10 +15,10 @@
 
 @if (!ModelState.IsValid)
 {
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+    <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
 }
 
-@if (Model.ErrorMessage != null)
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger mb-4" role="alert">
         @Model.ErrorMessage

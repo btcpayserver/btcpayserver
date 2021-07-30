@@ -3,7 +3,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Transactions.DetailsModel
 
 @{
-    Model.SetTitle(Model.Transaction.Description);
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Transactions, Model.Transaction.Description);
 }
 
 <header class="d-flex align-items-center justify-content-between mb-3">
@@ -50,10 +50,12 @@
                 <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest">Copy payment request</button>
                 <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })">Copy public share URL</button>
             </div>
+            
+            <div class="qrcode my-4">
+                @await Component.InvokeAsync("QRCode", new { data = Model.Transaction.PaymentRequest })
+            </div>
 
-            <img src="/QR/@Model.Transaction.PaymentRequest" class="qrcode my-4" alt="Payment Request as QR code"/>
-
-            <pre class="payment-request">@Model.Transaction.PaymentRequest</pre>
+            <pre class="payment-request"><code>@Model.Transaction.PaymentRequest</code></pre>
 
             <script>
                 window.LNbankHubs = window.LNbankHubs || []

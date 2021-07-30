@@ -1,1 +1,4 @@
-<li class="nav-item"><a href="/Plugins/LNbank/Wallets" class="nav-link js-scroll-trigger">LNbank</a></li>
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Plugins.LNbank.Pages
+
+<li class="nav-item"><a href="/Plugins/LNbank/Wallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(LNbankNavPages))" id="LNbank">LNbank</a></li>

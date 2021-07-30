@@ -2,7 +2,7 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.DetailsModel
 
 @{
-    Model.SetTitle(Model.Wallet.Name);
+    ViewData.SetActivePageAndTitle(LNbankNavPages.Wallets, Model.Wallet.Name);
 }
 
 <header class="d-flex align-items-center justify-content-between mb-3">
@@ -21,13 +21,13 @@
 <div>
     <dl class="row">
         <dt class="col-sm-3 col-lg-2">
-            @Model.Wallet.WalletId
+            @Html.DisplayNameFor(model => model.Wallet.WalletId)
         </dt>
         <dd class="col-sm-9 col-lg-10">
             @Model.Wallet.WalletId
         </dd>
         <dt class="col-sm-3 col-lg-2">
-            @Model.Wallet.CreatedAt
+            @Html.DisplayNameFor(model => model.Wallet.CreatedAt)
         </dt>
         <dd class="col-sm-9 col-lg-10">
             @Model.Wallet.CreatedAt
@@ -50,7 +50,7 @@
 
     <button class="btn btn-primary my-2" type="button" data-clipboard="@Model.ConnectionString">Copy connection string</button>
 
-    <pre class="connection-string my-3">@Model.ConnectionString</pre>
+    <pre class="connection-string my-3"><code>@Model.ConnectionString</code></pre>
 </div>
 
 <p>

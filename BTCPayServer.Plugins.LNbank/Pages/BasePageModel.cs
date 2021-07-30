@@ -10,8 +10,6 @@ namespace BTCPayServer.Plugins.LNbank.Pages
     {
         private readonly UserManager<ApplicationUser> _userManager;
         protected readonly WalletService WalletService;
-        
-        public void SetTitle(string title) { ViewData["Title"] = title; }
         protected string UserId => _userManager.GetUserId(User);
         
         protected BasePageModel(

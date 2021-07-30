@@ -2803,6 +2803,22 @@ namespace BTCPayServer.Tests
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice() { Price = -0.1m, Currency = "BTC", FullNotifications = true }, Facade.Merchant);
                 Assert.Equal(0.0m, invoice.Price);
+
+                // Should round down to 50.51, taxIncluded should be also clipped to this value because taxIncluded can't be higher than the price.
+                var invoice5 = user.BitPay.CreateInvoice(
+                    new Invoice() { Price = 50.513m, Currency = "USD", FullNotifications = true, TaxIncluded = 50.516m }, Facade.Merchant);
+                Assert.Equal(50.51m, invoice5.Price);
+                Assert.Equal(50.51m, invoice5.TaxIncluded);
+
+                var greenfield = await user.CreateClient();
+                var invoice5g = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+                {
+                    Amount = 50.513m,
+                    Currency = "USD",
+                    Metadata = new JObject() { new JProperty("taxIncluded", 50.516m) }
+                });
+                Assert.Equal(50.51m, invoice5g.Amount);
+                Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
             }
         }
 

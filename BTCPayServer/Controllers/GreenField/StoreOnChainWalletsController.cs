@@ -127,17 +127,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return BadRequest();
             }
 
-            var bip21 = network.GenerateBIP21(kpi.Address.ToString(), null);
+            var bip21 = network.GenerateBIP21(kpi.Address?.ToString(), null);
             var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
             if (allowedPayjoin)
             {
-               bip21 +=
-                   $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {cryptoCode}))}";
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new { cryptoCode })));
             }
             return Ok(new OnChainWalletAddressData()
             {
-                Address = kpi.Address.ToString(),
-                PaymentLink =  bip21,
+                Address = kpi.Address?.ToString(),
+                PaymentLink = bip21.ToString(),
                 KeyPath = kpi.KeyPath
             });
         }

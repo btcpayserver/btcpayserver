@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -285,7 +286,7 @@ namespace BTCPayServer.Controllers
                             continue;
                         }
                         var blob = payout.GetBlob(_jsonSerializerSettings);
-                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)));
+                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)).ToString());
                         
                     }
                     if(bip21.Any())

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BTCPayServer.Common;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
@@ -121,9 +122,15 @@ namespace BTCPayServer
             });
         }
 
-        public virtual string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        public virtual PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            return $"{UriScheme}:{cryptoInfoAddress}{(cryptoInfoDue is null? string.Empty: $"?amount={cryptoInfoDue.ToString(false, true)}")}";
+            var builder = new PaymentUrlBuilder(UriScheme);
+            builder.Host = cryptoInfoAddress;
+            if (cryptoInfoDue != null && cryptoInfoDue != Money.Zero)
+            {
+                builder.QueryParams.Add("amount", cryptoInfoDue.ToString(false, true));
+            }
+            return builder;
         }
 
         public virtual List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)

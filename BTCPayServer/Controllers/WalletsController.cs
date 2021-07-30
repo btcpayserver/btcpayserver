@@ -368,18 +368,17 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var address = _walletReceiveService.Get(walletId)?.Address;
             var allowedPayjoin = paymentMethod.IsHotWallet && CurrentStore.GetStoreBlob().PayJoinEnabled;
-            var bip21 = address is null ? null : network.GenerateBIP21(address.ToString(), null);
+            var bip21 = network.GenerateBIP21(address?.ToString(), null);
             if (allowedPayjoin)
             {
-                bip21 +=
-                    $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {walletId.CryptoCode}))}";
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new { walletId.CryptoCode })));
             }
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
                 CryptoImage = GetImage(paymentMethod.PaymentId, network),
-                PaymentLink = bip21
+                PaymentLink = bip21.ToString()
             });
         }
 

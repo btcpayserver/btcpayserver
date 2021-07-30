@@ -191,26 +191,6 @@ namespace BTCPayServer.Controllers
             return await _payjoinClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, cancellationToken);
         }
 
-        [HttpGet("{walletId}/psbt/ready")]
-        public async Task<IActionResult> WalletPSBTReady(
-            [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId,
-            WalletPSBTReadyViewModel vm)
-        {
-            if (vm is null)
-                return NotFound();
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
-            if (derivationSchemeSettings == null)
-                return NotFound();
-            try
-            {
-                await FetchTransactionDetails(derivationSchemeSettings, vm, network);
-            }
-            catch { return BadRequest(); }
-            return View(nameof(WalletPSBTReady), vm);
-        }
-
         private async Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
         {
             var psbtObject = PSBT.Parse(vm.SigningContext.PSBT, network.NBitcoinNetwork);
@@ -316,11 +296,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("{walletId}/psbt/ready")]
         public async Task<IActionResult> WalletPSBTReady(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletPSBTReadyViewModel vm, string command = null, CancellationToken cancellationToken = default)
+            WalletId walletId, WalletPSBTViewModel vm, string command = null, CancellationToken cancellationToken = default)
         {
             if (command == null)
-                return await WalletPSBTReady(walletId, vm);
-            PSBT psbt = null;
+                return await WalletPSBT(walletId, vm);
+            PSBT psbt;
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             DerivationSchemeSettings derivationSchemeSettings = null;
             try
@@ -334,7 +314,7 @@ namespace BTCPayServer.Controllers
             catch
             {
                 vm.GlobalError = "Invalid PSBT";
-                return View(nameof(WalletPSBTReady), vm);
+                return View(nameof(WalletPSBT), vm);
             }
 
             switch (command)
@@ -410,7 +390,7 @@ namespace BTCPayServer.Controllers
                     return await WalletPSBTReady(walletId, vm, "broadcast");
                 case "broadcast" when !psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors):
                     vm.SetErrors(errors);
-                    return View(nameof(WalletPSBTReady), vm);
+                    return View(nameof(WalletPSBT), vm);
                 case "broadcast":
                     {
                         var transaction = psbt.ExtractTransaction();
@@ -433,13 +413,13 @@ namespace BTCPayServer.Controllers
                                 }
 
                                 vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
-                                return View(nameof(WalletPSBTReady), vm);
+                                return View(nameof(WalletPSBT), vm);
                             }
                         }
                         catch (Exception ex)
                         {
                             vm.GlobalError = "Error while broadcasting: " + ex.Message;
-                            return View(nameof(WalletPSBTReady), vm);
+                            return View(nameof(WalletPSBT), vm);
                         }
 
                         if (!TempData.HasStatusMessage())
@@ -455,7 +435,7 @@ namespace BTCPayServer.Controllers
                     });
                 default:
                     vm.GlobalError = "Unknown command";
-                    return View(nameof(WalletPSBTReady), vm);
+                    return View(nameof(WalletPSBT), vm);
             }
         }
 

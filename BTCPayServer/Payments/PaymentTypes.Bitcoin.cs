@@ -79,9 +79,9 @@ namespace BTCPayServer.Payments
 
             if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true && serverUri != null)
             {
-                bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}");
             }
-            return bip21;
+            return bip21.ToString();
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";

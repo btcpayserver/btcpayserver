@@ -230,6 +230,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
         </a>
       </td>
       <td align="center" valign="middle">
+        <a href="https://www.bailliegifford.com" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/bailliegifford.svg" alt="bailliegifford" height=100>
+          <br/>
+          <span>Baillie Gifford</span>
+        </a>
+      </td>
+      <td align="center" valign="middle">
         <a href="https://www.pnxbet.com" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/pnxbet.png" alt="PNXBET" height=100>
           <br/>

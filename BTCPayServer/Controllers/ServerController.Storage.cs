@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
@@ -29,18 +30,48 @@ namespace BTCPayServer.Controllers
     public partial class ServerController
     {
         [HttpGet("server/files/{fileId?}")]
-        public async Task<IActionResult> Files(string fileId = null)
+        public async Task<IActionResult> Files(string fileId = null, bool multiple = false)
         {
-            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
-
-            var model = new ViewFilesViewModel()
+            if (string.IsNullOrEmpty(fileId))
             {
-                Files = await _StoredFileRepository.GetFiles(),
-                SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
-                DirectFileUrl = fileUrl,
-                StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-            };
-            return View(model);
+                var model = new ViewFilesViewModel()
+                {
+                    Files = await _StoredFileRepository.GetFiles(),
+                    SelectedFileIds = null,
+                    DirectFileUrls = null,
+                    StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                };
+                return View(model);
+            }
+            else
+            {
+                List<string> fileIds;
+                if (multiple)
+                {
+                    fileIds = JsonConvert.DeserializeObject<List<string>>(fileId);
+                }
+                else
+                {
+                    fileIds = new List<string>();
+                    fileIds.Add(fileId);
+                }
+
+                List<string> fileUrlList = (fileIds == null || fileIds.Count == 0) ? null : new List<string>();
+                foreach (string filename in fileIds)
+                {
+                    string fileUrl = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
+                    fileUrlList.Add(fileUrl);
+                }
+
+                var model = new ViewFilesViewModel()
+                {
+                    Files = await _StoredFileRepository.GetFiles(),
+                    SelectedFileIds = (fileIds == null || fileUrlList == null || fileUrlList.Count != fileIds.Count) ? null : fileIds,
+                    DirectFileUrls = (fileIds == null || fileUrlList == null || fileUrlList.Count != fileIds.Count) ? null : fileUrlList,
+                    StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                };
+                return View(model);
+            }
         }
 
         [HttpGet("server/files/{fileId}/delete")]
@@ -190,18 +221,11 @@ namespace BTCPayServer.Controllers
                         Severity = statusMessageSeverity
                     });
 
-                if (fileIds.Count == 1)
-                {
-                    return RedirectToAction(nameof(Files), new
-                    {
-                        statusMessage = "File added!",
-                        fileId = fileIds[0]
-                    });
-                }
-                else
-                {
-                    return RedirectToAction(nameof(Files));
-                }
+                return RedirectToAction(nameof(Files), new
+                { 
+                    fileId = JsonConvert.SerializeObject(fileIds),
+                    multiple = true
+                });
             }
             else
             {

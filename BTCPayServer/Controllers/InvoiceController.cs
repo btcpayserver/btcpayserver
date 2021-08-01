@@ -119,7 +119,16 @@ namespace BTCPayServer.Controllers
             entity.Metadata.Physical = invoice.Physical;
             entity.Metadata.TaxIncluded = invoice.TaxIncluded;
             entity.Currency = invoice.Currency;
-            entity.Price = price;
+            if (price is decimal vv)
+            {
+                entity.Price = vv;
+                entity.Type = InvoiceType.Standard;
+            }
+            else
+            {
+                entity.Price = 0m;
+                entity.Type = InvoiceType.TopUp;
+            }
 
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
@@ -161,7 +170,16 @@ namespace BTCPayServer.Controllers
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
             invoice.Currency = invoice.Currency?.Trim().ToUpperInvariant() ?? "USD";
             entity.Currency = invoice.Currency;
-            entity.Price = invoice.Amount;
+            if (invoice.Amount is decimal v)
+            {
+                entity.Price = v;
+                entity.Type = InvoiceType.Standard;
+            }
+            else
+            {
+                entity.Price = 0.0m;
+                entity.Type = InvoiceType.TopUp;
+            }
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;

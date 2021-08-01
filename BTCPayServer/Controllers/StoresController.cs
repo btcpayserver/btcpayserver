@@ -999,7 +999,7 @@ namespace BTCPayServer.Controllers
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {
-                Price = 10,
+                Price = null,
                 Currency = DEFAULT_CURRENCY,
                 ButtonSize = 2,
                 UrlRoot = appUrl,

@@ -19,14 +19,14 @@
                 </div>
             </div>
             <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
-                <div class="manual__step-two__instructions">
+                <div class="manual__step-two__instructions" v-if="!srvModel.isUnsetTopUp">
                     <span v-html="$t('CompletePay_Body', srvModel)"></span>
                 </div>
                 <div class="copyLabelPopup">
                     <span>{{$t("Copied")}}</span>
                 </div>
                 <nav class="copyBox">
-                    <div class="copySectionBox bottomBorder">
+                    <div class="copySectionBox bottomBorder" v-if="!srvModel.isUnsetTopUp">
                         <label>{{$t("Amount")}}</label>
                         <div class="copyAmountText copy-cursor _copySpan">
                             <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}

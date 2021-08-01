@@ -247,8 +247,7 @@ namespace BTCPayServer.Controllers
                             cdCurrency.Divisibility);
                     model.CryptoAmountThen = Math.Round(paidCurrency / paymentMethod.Rate, paymentMethodDivisibility);
                     model.RateThenText =
-                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode,
-                            true);
+                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
                     rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                     rateResult = await _RateProvider.FetchRate(
                         new Rating.CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules,
@@ -263,10 +262,9 @@ namespace BTCPayServer.Controllers
 
                     model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
                     model.CurrentRateText =
-                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode,
-                            true);
+                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
                     model.FiatAmount = paidCurrency;
-                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency, true);
+                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency);
                     return View(model);
                 case RefundSteps.SelectRate:
                     createPullPayment = new HostedServices.CreatePullPayment();
@@ -545,7 +543,7 @@ namespace BTCPayServer.Controllers
                 }
             }
             lang ??= storeBlob.DefaultLang;
-            
+
             var model = new PaymentModel()
             {
                 Activated = paymentMethodDetails.Activated,
@@ -562,6 +560,7 @@ namespace BTCPayServer.Controllers
                 BtcDue = accounting.Due.ShowMoney(divisibility),
                 InvoiceCurrency = invoice.Currency,
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
+                IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
@@ -846,17 +845,12 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);
             }
-            if (model.Amount is null)
-            {
-                ModelState.AddModelError(nameof(model.Amount), "Thhe invoice amount can't be empty");
-                return View(model);
-            }
 
             try
             {
                 var result = await CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
-                    Price = model.Amount.Value,
+                    Price = model.Amount,
                     Currency = model.Currency,
                     PosData = model.PosData,
                     OrderId = model.OrderId,

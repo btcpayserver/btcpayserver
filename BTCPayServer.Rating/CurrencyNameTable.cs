@@ -28,7 +28,6 @@ namespace BTCPayServer.Services.Rates
         }
 
         static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
-
         public string FormatCurrency(string price, string currency)
         {
             return FormatCurrency(decimal.Parse(price, CultureInfo.InvariantCulture), currency);
@@ -110,9 +109,8 @@ namespace BTCPayServer.Services.Rates
         /// </summary>
         /// <param name="value">The value</param>
         /// <param name="currency">Currency code</param>
-        /// <param name="threeLetterSuffix">Add three letter suffix (like USD)</param>
         /// <returns></returns>
-        public string DisplayFormatCurrency(decimal value, string currency, bool threeLetterSuffix = true)
+        public string DisplayFormatCurrency(decimal value, string currency)
         {
             var provider = GetNumberFormatInfo(currency, true);
             var currencyData = GetCurrencyData(currency, true);

@@ -935,7 +935,8 @@ namespace BTCPayServer.Tests
             {
                 (0.0005m, "$0.0005 (USD)", "USD"), (0.001m, "$0.001 (USD)", "USD"), (0.01m, "$0.01 (USD)", "USD"),
                 (0.1m, "$0.10 (USD)", "USD"), (0.1m, "0,10 € (EUR)", "EUR"), (1000m, "¥1,000 (JPY)", "JPY"),
-                (1000.0001m, "₹ 1,000.00 (INR)", "INR")
+                (1000.0001m, "₹ 1,000.00 (INR)", "INR"),
+                (0.0m, "$0.00 (USD)", "USD")
             })
             {
                 var actual = CurrencyNameTable.Instance.DisplayFormatCurrency(test.Item1, test.Item3);
@@ -2097,6 +2098,90 @@ namespace BTCPayServer.Tests
                 var expectedCoins = invoice2.Price / expectedRate;
                 Assert.True(invoice2.BtcPrice.Almost(Money.Coins(expectedCoins), 0.00001m));
             }
+        }
+
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCreateTopupInvoices()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var rng = new Random();
+                var seed = rng.Next();
+                rng = new Random(seed);
+                Logs.Tester.LogInformation("Seed: " + seed);
+                foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
+                {
+                    await user.SetNetworkFeeMode(networkFeeMode);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(1.0m), 5000.0m, networkFeeMode);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(1.23456789m), 5000.0m * 1.23456789m, networkFeeMode);
+                    // Check if there is no strange roundup issues
+                    var v = (decimal)(rng.NextDouble() + 1.0);
+                    v = Money.Coins(v).ToDecimal(MoneyUnit.BTC);
+                    await AssertTopUpBtcPrice(tester, user, Money.Coins(v), 5000.0m * v, networkFeeMode);
+                }
+            }
+        }
+
+        private static async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
+        {
+            var cashCow = tester.ExplorerNode;
+            // First we try payment with a merchant having only BTC
+            var client = await user.CreateClient();
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+            {
+                Amount = null,
+                Currency = "USD"
+            });
+            Assert.Equal(0m, invoice.Amount);
+            Assert.Equal(InvoiceType.TopUp, invoice.Type);
+            var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+            var paid = btcSent;
+            var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
+
+
+            var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
+            var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
+                            .GetPaymentMethods()[btc]
+                            .GetPaymentMethodDetails()
+                            .AssertType<BitcoinLikeOnChainPaymentMethod>()
+                            .GetNextNetworkFee();
+            if (networkFeeMode != NetworkFeeMode.Always)
+            {
+                networkFee = 0.0m;
+            }
+
+            cashCow.SendToAddress(invoiceAddress, paid);
+
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                try
+                {
+                    var bitpayinvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+                    Assert.NotEqual(0.0m, bitpayinvoice.Price);
+                    var due = Money.Parse(bitpayinvoice.CryptoInfo[0].CryptoPaid);
+                    Assert.Equal(paid, due);
+                    Assert.Equal(expectedPriceWithoutNetworkFee - networkFee * bitpayinvoice.Rate, bitpayinvoice.Price);
+                    Assert.Equal(Money.Zero, bitpayinvoice.BtcDue);
+                    Assert.Equal("paid", bitpayinvoice.Status);
+                    Assert.Equal("False", bitpayinvoice.ExceptionStatus.ToString());
+
+                    // Check if we index by price correctly once we know it
+                    var invoices = await client.GetInvoices(user.StoreId, textSearch: $"{bitpayinvoice.Price.ToString(CultureInfo.InvariantCulture)}");
+                    Assert.Contains(invoices, inv => inv.Id == bitpayinvoice.Id);
+                }
+                catch (JsonSerializationException)
+                {
+                    Assert.False(true, "The bitpay's amount is not set");
+                }
+            });
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

@@ -1,4 +1,4 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @model WalletSendModel
 @{
@@ -82,9 +82,9 @@
                     <p class="form-text text-secondary crypto-info">
                         Your available balance is
                         <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
-                        @if (Model.ImmatureBalance>0)
+                        @if (Model.ImmatureBalance > 0)
                         {
-                            <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
+                            <span><br><span class="text-warning">⚠</span> @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
                         }
                     </p>
                 </div>

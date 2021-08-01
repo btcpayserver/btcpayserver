@@ -33,6 +33,7 @@
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
+            <input type="hidden" asp-for="ImmatureBalance" />
             <input type="hidden" asp-for="CryptoCode" />
             <input type="hidden" name="BIP21" id="BIP21" />
         
@@ -79,8 +80,12 @@
                     </div>
                     <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
                     <p class="form-text text-secondary crypto-info">
-                        Your current balance is
+                        Your available balance is
                         <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                        @if (Model.ImmatureBalance>0)
+                        {
+                            <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
+                        }
                     </p>
                 </div>
             }
@@ -109,6 +114,10 @@
                                         <p class="form-text text-secondary crypto-info mb-2">
                                             Your current balance is
                                             <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                                            @if (Model.ImmatureBalance > 0)
+                                            {
+                                                <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
+                                            }
                                         </p>
                                         <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
                                     </div>

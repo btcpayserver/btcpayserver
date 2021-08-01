@@ -489,8 +489,13 @@ namespace BTCPayServer.Controllers
                     .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
             model.NBXSeedAvailable = await GetSeed(walletId, network) != null;
-            model.CurrentBalance = (await balance).Total.GetValue(network);
-
+            var Balance= await balance;
+            model.CurrentBalance = (Balance.Available ?? Balance.Total).GetValue(network);
+            if (Balance.Immature is null)
+                model.ImmatureBalance = 0;
+            else
+                model.ImmatureBalance = Balance.Immature.GetValue(network);
+                
             await Task.WhenAll(recommendedFees);
             model.RecommendedSatoshiPerByte =
                 recommendedFees.Select(tuple => tuple.Result).Where(option => option != null).ToList();

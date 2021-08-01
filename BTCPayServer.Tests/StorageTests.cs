@@ -13,6 +13,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -182,11 +183,12 @@ namespace BTCPayServer.Tests
         {
             var fileContent = "content";
             List<IFormFile> fileList = new List<IFormFile>();
-            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
+            fileList.Add(TestUtils.GetFormFile("uploadtestfile2.txt", fileContent));
 
             var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
-            var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();
+            var uploadFileList = JsonConvert.DeserializeObject<List<string>>(uploadFormFileResult.RouteValues["fileId"].ToString());
+            var fileId = uploadFileList[0];
             Assert.Equal("Files", uploadFormFileResult.ActionName);
 
             //check if file was uploaded and saved in db
@@ -194,13 +196,13 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
 
             Assert.NotEmpty(viewFilesViewModel.Files);
-            Assert.Equal(fileId, viewFilesViewModel.SelectedFileId);
-            Assert.NotEmpty(viewFilesViewModel.DirectFileUrl);
+            Assert.Equal(fileId, viewFilesViewModel.SelectedFileIds[0]);
+            Assert.NotEmpty(viewFilesViewModel.DirectFileUrls[0]);
 
 
             //verify file is available and the same
             var net = new System.Net.WebClient();
-            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrl));
+            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrls[0]));
             Assert.Equal(fileContent, data);
 
             //create a temporary link to file
@@ -233,9 +235,8 @@ namespace BTCPayServer.Tests
             //attempt to fetch deleted file
             viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
-
-            Assert.Null(viewFilesViewModel.DirectFileUrl);
-            Assert.Null(viewFilesViewModel.SelectedFileId);
+            Assert.Null(viewFilesViewModel.DirectFileUrls);
+            Assert.Null(viewFilesViewModel.SelectedFileIds);
         }
 
 

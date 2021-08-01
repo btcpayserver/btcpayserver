@@ -57,10 +57,29 @@ namespace BTCPayServer.Controllers
                 }
 
                 List<string> fileUrlList = (fileIds == null || fileIds.Count == 0) ? null : new List<string>();
+                bool allFilesExist = true;
                 foreach (string filename in fileIds)
                 {
                     string fileUrl = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
+                    if (fileUrl == null)
+                    {
+                        allFilesExist = false;
+                        break;
+                    }
                     fileUrlList.Add(fileUrl);
+                }
+
+                if (!allFilesExist)
+                {
+                    return View(
+                        new ViewFilesViewModel()
+                        {
+                            Files = await _StoredFileRepository.GetFiles(),
+                            SelectedFileIds = null,
+                            DirectFileUrls = null,
+                            StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                        }
+                    );
                 }
 
                 var model = new ViewFilesViewModel()

@@ -1063,7 +1063,8 @@ namespace BTCPayServer.Controllers
             using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             try
             {
-                return (await wallet.GetBalance(derivationStrategy, cts.Token)).Total.ShowMoney(wallet.Network);
+                var b = await wallet.GetBalance(derivationStrategy, cts.Token);
+                return (b.Available ?? b.Total).ShowMoney(wallet.Network);
             }
             catch
             {

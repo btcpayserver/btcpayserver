@@ -8,12 +8,12 @@
 * Greenfield: Add StoreId to Invoice model (#2592)  @kukks
 * Greenfield: Change `enabledOnly` filter to `enabled` @kukks
 * Self host PoS app default images (#2449) @dennisreimann
-* Varius UI Tweaks and improvements (#2558 #2562 #2568 #2572 #2606 #2608 #2615 #2627 #2628 #2649 #2645 #2673 #2646 #2647) @dstrukt @dennisreimann @woutersamaey @johanf85 @bolatovumar
-* Notify users to use newer BTCPay Vault app if necessary. @nicolasdorier
+* Various UI Tweaks and improvements (#2558 #2562 #2568 #2572 #2606 #2608 #2615 #2627 #2628 #2649 #2645 #2673 #2646 #2647) @dstrukt @dennisreimann @woutersamaey @johanf85 @bolatovumar
+* Notify users to use newer BTCPay Vault app if necessary @nicolasdorier
 * Set lightning invoice fallback in QR code as uppercase (#2492) @bjarnemagnussen @Kukks
 * Optimize payout database fetching @nicolasdorier
 * Wallet Signing UI improvements (#2559) @dennisreimann
-* Add payjoin to hot wallet setup and turn on by default @dennisreimann
+* Add payjoin to hot wallet setup and turn on by default (#2450) @dennisreimann
 * Add permission code to API page (#2599)  @woutersamaey @dennisreimann
 * Introduce Server paging for Payouts List (#2564) @kukks @dennisreimann
 * Hide referer URL to hide our BTCPay Server URL (#2655) @woutersamaey
@@ -27,7 +27,7 @@
 * Greenfield: Delete User API (#2340) @bolatovumar @kukks
 * Greenfield: Add misc/permissions to document the hierarchical structure (#2654) @nicolasdorier
 * Greenfield: Add "skip" and "limit" params for onchain txs API endpoint (#2688) @bolatovumar
-* Greenfield: Add CanModifyInvoices Permissions (#2595) @kukks
+* Greenfield: Add `CanModifyInvoices` permission (#2595) @kukks
 * Greenfield: Add text search terms to an invoice (#2648) @NicolasDorier
 * Greenfield: Add Get store Payment methods API (#2545) @kukks @bolatovumar
 * GreenField: Add Generate Store OnChain Wallet API (#2708) @kukks

@@ -128,6 +128,7 @@ namespace BTCPayServer.Tests
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
+            var isImport = !string.IsNullOrEmpty(seed);
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
 
             // Replace previous wallet case
@@ -137,20 +138,20 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("continue")).Click();
             }
 
-            if (string.IsNullOrEmpty(seed))
-            {
-                var option = privkeys ? "Hotwallet" : "Watchonly";
-                Logs.Tester.LogInformation($"Generating new seed ({option})");
-                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
-                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
-            }
-            else
+            if (isImport)
             {
                 Logs.Tester.LogInformation("Progressing with existing seed");
                 Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
                 Driver.FindElement(By.Id("ImportSeedLink")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
                 Driver.SetCheckbox(By.Id("SavePrivateKeys"), privkeys);
+            }
+            else
+            {
+                var option = privkeys ? "Hotwallet" : "Watchonly";
+                Logs.Tester.LogInformation($"Generating new seed ({option})");
+                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
+                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
@@ -160,17 +161,25 @@ namespace BTCPayServer.Tests
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
 
-            // Seed backup page
-            FindAlertMessage();
-            if (string.IsNullOrEmpty(seed))
+            if (isImport)
             {
-                seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
+                // Confirm addresses
+                Driver.FindElement(By.Id("Confirm")).Click();
             }
+            else
+            {
+                // Seed backup
+                FindAlertMessage();
+                if (string.IsNullOrEmpty(seed))
+                {
+                    seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
+                }
 
-            // Confirm seed backup
-            Driver.FindElement(By.Id("confirm")).Click();
-            Driver.FindElement(By.Id("submit")).Click();
-
+                // Confirm seed backup
+                Driver.FindElement(By.Id("confirm")).Click();
+                Driver.FindElement(By.Id("submit")).Click();
+            }
+            
             WalletId = new WalletId(StoreId, cryptoCode);
             return new Mnemonic(seed);
         }

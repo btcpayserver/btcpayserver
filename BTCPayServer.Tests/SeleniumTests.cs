@@ -831,6 +831,11 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
 
                 s.ClickOnAllSideMenus();
+                
+                // Make sure wallet info is correct
+                s.Driver.FindElement(By.Id("WalletSettings")).Click();
+                Assert.Contains(mnemonic.DeriveExtKey().GetPublicKey().GetHDFingerPrint().ToString(), s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).GetAttribute("value"));
+                Assert.Contains("m/84'/1'/0'", s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
 
                 // Make sure we can rescan, because we are admin!
                 s.Driver.FindElement(By.Id("WalletRescan")).Click();
@@ -905,6 +910,23 @@ namespace BTCPayServer.Tests
                 Assert.Empty(s.Driver.FindElements(By.Id("confirm")));
                 s.Driver.FindElement(By.Id("proceed")).Click();
                 Assert.Equal(walletUrl, s.Driver.Url);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanImportWallet()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                var (_, storeId) = s.CreateNewStore();
+                var mnemonic = s.GenerateWallet("BTC", "click chunk owner kingdom faint steak safe evidence bicycle repeat bulb wheel");
+                
+                // Make sure wallet info is correct
+                s.GoToWallet(new WalletId(storeId, "BTC"), WalletsNavPages.Settings);
+                Assert.Contains(mnemonic.DeriveExtKey().GetPublicKey().GetHDFingerPrint().ToString(), s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).GetAttribute("value"));
+                Assert.Contains( "m/84'/1'/0'", s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
             }
         }
 

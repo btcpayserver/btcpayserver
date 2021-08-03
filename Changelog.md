@@ -33,7 +33,7 @@
 * GreenField: Add Generate Store OnChain Wallet API (#2708) @kukks
 * Test Webhooks functionality (#2474) @bolatovumar
 * Allow marking payout as paid manually (#2539) @Kukks
-* Payouts: Detect External OnChain Payouts (#2462) @Kukks
+* Pull payments: Detect External OnChain Payouts (#2462) @Kukks
 * Auto-detect language on payment page (#2552) @woutersamaey @Kukks
 * Support spending to Taproot (#2718) @nicolasdorier
 * Show Immature Balance in walletsend page (#2731 @732) @sageprogrammer @nicolasdorier

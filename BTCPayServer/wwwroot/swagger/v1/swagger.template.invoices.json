@@ -747,11 +747,6 @@
             },
             "InvoiceDataBase": {
                 "properties": {
-                    "amount": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The amount of the invoice"
-                    },
                     "currency": {
                         "type": "string",
                         "nullable": true,
@@ -787,6 +782,15 @@
                             "storeId": {
                                 "type": "string",
                                 "description": "The store identifier that the invoice belongs to"
+                            },
+                            "amount": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The amount of the invoice"
+                            },
+                            "type": {
+                                "$ref": "#/components/schemas/InvoiceType",
+                                "description": "The type of invoice"
                             },
                             "checkoutLink": {
                                 "type": "string",
@@ -972,6 +976,12 @@
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
+                            "amount": {
+                                "type": "string",
+                                "format": "decimal",
+                                "nullable": true,
+                                "description": "The amount of the invoice. If null or unspecified, the invoice will be a top-up invoice. (ie. The invoice will consider any payment as a full payment)"
+                            },
                             "additionalSearchTerms": {
                                 "type": "array",
                                 "items": {
@@ -1171,6 +1181,18 @@
                     "Invalid",
                     "Processing",
                     "Settled"
+                ]
+            },
+            "InvoiceType": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Standard",
+                    "TopUp"
+                ],
+                "enum": [
+                    "Standard",
+                    "TopUp"
                 ]
             }
         }

@@ -95,10 +95,10 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid'">
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp">
                 <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
             </div>
-            <div class="single-item-order__right__btc-price" v-else>
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp">
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
@@ -106,10 +106,10 @@
                 <span v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</span>
             </div>
         </div>
-        <span class="fa fa-angle-double-down"></span>
-        <span class="fa fa-angle-double-up"></span>
+        <span class="fa fa-angle-double-down" v-if="!srvModel.isUnsetTopUp"></span>
+        <span class="fa fa-angle-double-up" v-if="!srvModel.isUnsetTopUp"></span>
     </div>
-    <line-items>
+    <line-items v-if="!srvModel.isUnsetTopUp">
         <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
             {{$t("NotPaid_ExtraTransaction")}}
         </div>

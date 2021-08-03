@@ -148,7 +148,8 @@ function inputChanges(event, buttonSize) {
 
     // Fixed amount: Add price and currency as hidden inputs
     if (isFixedAmount) {
-        html += addInput(priceInputName, srvModel.price);
+        if (srvModel.price !== '')
+            html += addInput(priceInputName, srvModel.price);
         if(allowCurrencySelection){
             html += addInput("currency", srvModel.currency);
         }

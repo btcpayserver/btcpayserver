@@ -206,7 +206,8 @@ namespace BTCPayServer.Services.Invoices
 
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
-                textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
+                if (!invoice.IsUnsetTopUp())
+                    textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Metadata.OrderId);
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
@@ -422,6 +423,22 @@ namespace BTCPayServer.Services.Invoices
                     return;
                 invoiceData.Status = InvoiceState.ToString(invoiceState.Status);
                 invoiceData.ExceptionStatus = InvoiceState.ToString(invoiceState.ExceptionStatus);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+        internal async Task UpdateInvoicePrice(string invoiceId, InvoiceEntity invoice)
+        {
+            if (invoice.Type != InvoiceType.TopUp)
+                throw new ArgumentException("The invoice type should be TopUp to be able to update invoice price", nameof(invoice));
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData == null)
+                    return;
+                var blob = invoiceData.GetBlob(_Networks);
+                blob.Price = invoice.Price;
+                AddToTextSearch(context, invoiceData, new[] { invoice.Price.ToString(CultureInfo.InvariantCulture) });
+                invoiceData.Blob = ToBytes(blob, null);
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }

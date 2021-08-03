@@ -9,7 +9,7 @@ namespace BTCPayServer.Models.StoreViewModels
     public class PayButtonViewModel
     {
         [ModelBinder(BinderType = typeof(InvariantDecimalModelBinder))]
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
         public string InvoiceId { get; set; }
         [Required]
         public string Currency { get; set; }

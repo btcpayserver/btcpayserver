@@ -393,6 +393,7 @@ namespace BTCPayServer.Controllers.GreenField
                 MonitoringExpiration = entity.MonitoringExpiration,
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
+                Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = _linkGenerator.CheckoutLink(entity.Id, Request.Scheme, Request.Host, Request.PathBase),
                 Status = entity.Status.ToModernStatus(),

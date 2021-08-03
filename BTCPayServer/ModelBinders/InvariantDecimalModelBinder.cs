@@ -51,7 +51,7 @@ namespace BTCPayServer.ModelBinders
                     // Parse() method trims the value (with common NumberStyles) then throws if the result is empty.
                     model = null;
                 }
-                else if (type == typeof(decimal))
+                else if (type == typeof(decimal) || type == typeof(decimal?))
                 {
                     model = decimal.Parse(value, _supportedStyles, culture);
                 }

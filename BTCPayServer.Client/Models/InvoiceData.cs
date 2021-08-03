@@ -7,10 +7,15 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
+    public enum InvoiceType
+    {
+        Standard,
+        TopUp
+    }
     public class InvoiceDataBase
     {
-        [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal Amount { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public InvoiceType Type { get; set; }
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
@@ -41,6 +46,8 @@ namespace BTCPayServer.Client.Models
     {
         public string Id { get; set; }
         public string StoreId { get; set; }
+        [JsonConverter(typeof(NumericStringJsonConverter))]
+        public decimal Amount { get; set; }
         public string CheckoutLink { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public InvoiceStatus Status { get; set; }

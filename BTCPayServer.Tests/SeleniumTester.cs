@@ -331,11 +331,12 @@ namespace BTCPayServer.Tests
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "/login"));
         }
 
-        public string CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
+        public string CreateInvoice(string storeName, decimal? amount = 100, string currency = "USD", string refundEmail = "")
         {
             GoToInvoices();
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
-            Driver.FindElement(By.Id("Amount")).SendKeys(amount.ToString(CultureInfo.InvariantCulture));
+            if (amount is decimal v)
+                Driver.FindElement(By.Id("Amount")).SendKeys(v.ToString(CultureInfo.InvariantCulture));
             var currencyEl = Driver.FindElement(By.Id("Currency"));
             currencyEl.Clear();
             currencyEl.SendKeys(currency);

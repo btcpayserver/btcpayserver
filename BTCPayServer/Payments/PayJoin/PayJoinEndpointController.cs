@@ -413,7 +413,7 @@ namespace BTCPayServer.Payments.PayJoin
             if (additionalFee > Money.Zero)
             {
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
-                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero && !invoice.IsUnsetTopUp(); i++)
                 {
                     if (disableoutputsubstitution)
                         break;

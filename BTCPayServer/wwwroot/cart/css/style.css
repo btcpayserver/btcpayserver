@@ -76,7 +76,8 @@
     overflow-x: hidden;
     overflow-y: auto;
     z-index: 999;
-    background: #e1e6ea;
+    color: var(--btcpay-white);
+    background: var(--btcpay-bg-dark);
     transition: all 0.3s;
     -webkit-overflow-scrolling: touch;
 }

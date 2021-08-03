@@ -6,16 +6,12 @@
 }
 
 @section PageHeadContent {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
 
 @section PageFootContent {
-    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <script>
-        hljs.initHighlightingOnLoad();
-
         document.addEventListener("DOMContentLoaded", function () {
             initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
             initCameraScanningApp("Scan PSBT", function (data){

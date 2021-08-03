@@ -5,14 +5,7 @@
     <p class="lead text-center text-secondary">
         This transaction will change your balance:
         <br>
-        @if (Model.Positive)
-        {
-            <span class="text-success">@Model.BalanceChange</span>
-        }
-        else
-        {
-            <span class="text-danger">@Model.BalanceChange</span>
-        }
+        <span class="text-@(Model.Positive ? "success" : "danger")">@Model.BalanceChange</span>
     </p>
 }
 
@@ -38,15 +31,7 @@
             {
                 <td>@input.Index</td>
             }
-
-            @if (input.Positive)
-            {
-                <td class="text-end text-success">@input.BalanceChange</td>
-            }
-            else
-            {
-                <td class="text-end text-danger">@input.BalanceChange</td>
-            }
+            <td class="text-end text-@(input.Positive ? "success" : "danger")">@input.BalanceChange</td>
         </tr>
     }
     </tbody>
@@ -65,14 +50,7 @@
     {
         <tr>
             <td>@destination.Destination</td>
-            @if (destination.Positive)
-            {
-                <td class="text-end text-success">@destination.Balance</td>
-            }
-            else
-            {
-                <td class="text-end text-danger">@destination.Balance</td>
-            }
+            <td class="text-end text-@(destination.Positive ? "success" : "danger")">@destination.Balance</td>
         </tr>
     }
     </tbody>

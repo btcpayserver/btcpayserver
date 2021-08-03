@@ -721,13 +721,8 @@ namespace BTCPayServer.Controllers
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString()
             };
-                
-            var routeBack = new Dictionary<string, string>
-            {
-                {"action", nameof(WalletSend)}, {"walletId", walletId.ToString()}
-            };
 
-            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeBack);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, nameof(WalletSend));
             if (res != null)
             {
                 return res;

@@ -108,26 +108,26 @@ addLoadEvent(function (ev) {
                     this.pay();
                 }
             },
-            statusTextClass: function (state) {
+            statusClass: function (state) {
                 var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
                 switch (status) {
                     case "confirmed":
                     case "complete":
                     case "paid":
-                        return "text-success";
+                        return "success";
                     case "expired":
                         switch (exceptionStatus) {
                             case "paidLate":
                             case "paidPartial":
                             case "paidOver":
-                                return "text-warning";
+                                return "warning";
                             default:
-                                return "text-danger";
+                                return "danger";
                         }
                     case "invalid":
-                        return "text-danger";
+                        return "danger";
                     default:
-                        return "text-warning";
+                        return "warning";
                 }
             }
         },

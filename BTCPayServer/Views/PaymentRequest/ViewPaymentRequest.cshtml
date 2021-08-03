@@ -9,27 +9,27 @@
     ViewData["Title"] = Model.Title;
     Layout = null;
     var theme = await _settingsRepository.GetTheme();
-    string StatusTextClass(InvoiceState state)
+    string StatusClass(InvoiceState state)
     {
         switch (state.Status.ToModernStatus())
         {
             case InvoiceStatus.Settled:
             case InvoiceStatus.Processing:
-                return "text-success";
+                return "success";
             case InvoiceStatus.Expired:
                 switch (state.ExceptionStatus)
                 {
                     case InvoiceExceptionStatus.PaidLate:
                     case InvoiceExceptionStatus.PaidPartial:
                     case InvoiceExceptionStatus.PaidOver:
-                        return "text-warning";
+                        return "warning";
                     default:
-                        return "text-danger";
+                        return "danger";
                 }
             case InvoiceStatus.Invalid:
-                return "text-danger";
+                return "danger";
             default:
-                return "text-warning";
+                return "warning";
         }
     }
 }
@@ -56,6 +56,11 @@
     @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     @Safe.Raw(Model.EmbeddedCSS)
+    <style>
+        .invoice { margin-top: var(--btcpay-space-s); }
+        .invoice + .invoice { margin-top: var(--btcpay-space-m); }
+        .invoice .badge { font-size: var(--btcpay-font-size-s); }
+    </style>
     <noscript>
         <style>
             .hide-when-js, [v-cloak] { display: block !important; }
@@ -241,30 +246,32 @@
                                     }
                                     else
                                     {
-                                        <table class="table my-0">
-                                            <thead>
-                                                <tr class="table-borderless">
-                                                    <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
-                                                    <th class="fw-normal text-secondary w-175px">Expiry</th>
-                                                    <th class="fw-normal text-secondary text-end w-125px">Amount</th>
-                                                    <th class="fw-normal text-secondary text-end w-125px"></th>
-                                                    <th class="fw-normal text-secondary text-end">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var invoice in Model.Invoices)
-                                                {
-                                                    <tr>
+                                        @foreach (var invoice in Model.Invoices)
+                                        {
+                                            <table class="invoice table">
+                                                <thead>
+                                                    <tr class="table-borderless">
+                                                        <th class="fw-normal text-secondary w-350px" scope="col">Invoice Id</th>
+                                                        <th class="fw-normal text-secondary w-175px">Expiry</th>
+                                                        <th class="fw-normal text-secondary text-end w-125px">Amount</th>
+                                                        <th class="fw-normal text-secondary text-end w-125px"></th>
+                                                        <th class="fw-normal text-secondary text-end">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="table-borderless table-light">
                                                         <td>@invoice.Id</td>
                                                         <td>@invoice.ExpiryDate.ToString("g")</td>
                                                         <td class="text-end">@invoice.AmountFormatted</td>
                                                         <td class="text-end"></td>
-                                                        <td class="text-end text-print-default @StatusTextClass(invoice.State)">@invoice.StateFormatted</td>
+                                                        <td class="text-end text-print-default">
+                                                            <span class="badge bg-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
+                                                        </td>
                                                     </tr>
-                                                    if (invoice.Payments != null && invoice.Payments.Any())
+                                                    @if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
                                                         <tr class="table-borderless table-light">
-                                                            <th class="fw-normal text-secondary ps-3">Transaction Id</th>
+                                                            <th class="fw-normal text-secondary">Destination</th>
                                                             <th class="fw-normal text-secondary">Received</th>
                                                             <th class="fw-normal text-secondary text-end">Paid</th>
                                                             <th class="fw-normal text-secondary text-end">Rate</th>
@@ -273,26 +280,30 @@
                                                         @foreach (var payment in invoice.Payments)
                                                         {
                                                             <tr class="table-borderless table-light">
-                                                                <td class="ps-3 text-break">
-                                                                    @if (!string.IsNullOrEmpty(payment.Link))
-                                                                    {
-                                                                        <a href="@payment.Link" class="text-print-default" rel="noreferrer noopener" target="_blank">@payment.Id</a>
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        <span>@payment.Id</span>
-                                                                    }
-                                                                </td>
+                                                                <td class="text-break"><code>@payment.Destination</code></td>
                                                                 <td>@payment.ReceivedDate.ToString("g")</td>
                                                                 <td class="text-end">@payment.PaidFormatted</td>
                                                                 <td class="text-end">@payment.RateFormatted</td>
                                                                 <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                             </tr>
+                                                            <tr class="table-borderless table-light">
+                                                                <td class="fw-normal" colspan="5">
+                                                                    <span class="text-secondary">Transaction Id:</span> 
+                                                                    @if (!string.IsNullOrEmpty(payment.Link))
+                                                                    {
+                                                                        <a href="@payment.Link" class="text-print-default text-break" rel="noreferrer noopener" target="_blank">@payment.Id</a>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="text-break">@payment.Id</span>
+                                                                    }
+                                                                </td>
+                                                            </tr>
                                                         }
                                                     }
-                                                }
-                                            </tbody>
-                                        </table>
+                                                </tbody>
+                                            </table>
+                                        }
                                     }
                                 </noscript>
 
@@ -300,10 +311,10 @@
                                     <p class="text-muted">No payments made yet.</p>
                                 </template>
                                 <template v-else>
-                                    <table class="table my-0">
+                                    <table v-for="invoice of srvModel.invoices" :key="invoice.id" class="invoice table">
                                         <thead>
                                             <tr class="table-borderless">
-                                                <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
+                                                <th class="fw-normal text-secondary w-350px" scope="col">Invoice Id</th>
                                                 <th class="fw-normal text-secondary w-175px">Expiry</th>
                                                 <th class="fw-normal text-secondary text-end w-125px">Amount</th>
                                                 <th class="fw-normal text-secondary text-end w-125px"></th>
@@ -311,31 +322,37 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <template v-for="invoice of srvModel.invoices" :key="invoice.id">
-                                                <tr>
-                                                    <td>{{invoice.id}}</td>
-                                                    <td v-text="formatDate(invoice.expiryDate)"></td>
-                                                    <td class="text-end">{{invoice.amountFormatted}}</td>
-                                                    <td class="text-end"></td>
-                                                    <td class="text-end text-print-default" :class="statusTextClass(invoice.stateFormatted)">{{invoice.stateFormatted}}</td>
+                                            <tr class="table-borderless table-light">
+                                                <td>{{invoice.id}}</td>
+                                                <td v-text="formatDate(invoice.expiryDate)"></td>
+                                                <td class="text-end">{{invoice.amountFormatted}}</td>
+                                                <td class="text-end"></td>
+                                                <td class="text-end text-print-default">
+                                                    <span class="badge" :class="`bg-${statusClass(invoice.stateFormatted)}`">{{invoice.stateFormatted}}</span>
+                                                </td>
+                                            </tr>
+                                            <template v-if="invoice.payments && invoice.payments.length > 0">
+                                                <tr class="table-borderless table-light">
+                                                    <th class="fw-normal text-secondary">Destination</th>
+                                                    <th class="fw-normal text-secondary">Received</th>
+                                                    <th class="fw-normal text-secondary text-end">Paid</th>
+                                                    <th class="fw-normal text-secondary text-end">Rate</th>
+                                                    <th class="fw-normal text-secondary text-end">Payment</th>
                                                 </tr>
-                                                <template v-if="invoice.payments && invoice.payments.length > 0">
+                                                <template v-for="payment of invoice.payments">
                                                     <tr class="table-borderless table-light">
-                                                        <th class="fw-normal text-secondary ps-3">Transaction Id</th>
-                                                        <th class="fw-normal text-secondary">Received</th>
-                                                        <th class="fw-normal text-secondary text-end">Paid</th>
-                                                        <th class="fw-normal text-secondary text-end">Rate</th>
-                                                        <th class="fw-normal text-secondary text-end">Payment</th>
-                                                    </tr>
-                                                    <tr v-for="payment of invoice.payments" class="table-borderless table-light">
-                                                        <td class="ps-3 text-break">
-                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank" rel="noreferrer noopener">{{payment.id}}</a>
-                                                            <span v-else>{{payment.id}}</span>
-                                                        </td>
+                                                        <td class="text-break"><code>{{payment.destination}}</code></td>
                                                         <td v-text="formatDate(payment.receivedDate)"></td>
                                                         <td class="text-end">{{payment.paidFormatted}}</td>
                                                         <td class="text-end">{{payment.rateFormatted}}</td>
                                                         <td class="text-end text-nowrap">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>
+                                                    </tr>
+                                                    <tr class="table-borderless table-light">
+                                                        <td class="fw-normal" colspan="5">
+                                                            <span class="text-secondary">Transaction Id:</span> 
+                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank" rel="noreferrer noopener">{{payment.id}}</a>
+                                                            <span v-else>{{payment.id}}</span>
+                                                        </td>
                                                     </tr>
                                                 </template>
                                             </template>

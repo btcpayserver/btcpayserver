@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
 {
     public class EthereumLikePaymentData : CryptoPaymentData
     {
-        public ulong Amount { get; set; }
+        public BigInteger Amount { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }
         public long AccountIndex { get; set; }

@@ -19,6 +19,7 @@
         m.BalanceLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.DepositAddress);
         m.Replaced = !payment.Accounted;
         m.Index = onChainPaymentData.AccountIndex;
+        m.Sweep = onChainPaymentData.SweepingTransaction;
         return m;
     });
 }
@@ -35,13 +36,13 @@
                     <th>Amount</th>
                     <th>Address</th>
                     <th>Index</th>
+                    <th>Swept</th>
                     <th class="text-right">Confirmations</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var payment in onchainPayments)
                 {
-                    
                     <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
                         <td>@payment.Amount</td>
@@ -54,6 +55,17 @@
                             </div>
                         </td>
                         <td>@payment.Index</td>
+                        <td>
+                            <div class="wraptextAuto">
+                                @payment.Sweep
+                                @if (!string.IsNullOrEmpty(payment.Sweep))
+                                {
+                                    <a asp-controller="EthereumLikeStore" asp-action="RemoveSweepMarker" asp-route-cryptoCode="@payment.Crypto" asp-route-address="@payment.DepositAddress" target="_blank">
+                                        Unmark
+                                    </a>
+                                }
+                            </div>
+                        </td>
                         <td class="text-right">@payment.Confirmations</td>
                     </tr>
                 }

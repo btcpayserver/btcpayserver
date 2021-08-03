@@ -48,11 +48,64 @@
                         </td>
                     </tr>
                 }
-                </tbody>
-            </table>
-        </div>
+                <h3 class="card-header">@network Chain Id: @chain.Key</h3>
+                <div class="card-body">
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
+                        <tr>
+                            <th>Crypto</th>
+                            <th>Root address</th>
+                            <th class="text-center">Enabled</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in chain.Value)
+                        {
+                            <tr>
+                                <td>@item.CryptoCode</td>
+                                <td>@item.RootAddress</td>
+                                <td class="text-center">
+                                    @if (item.Enabled)
+                                    {
+                                        <span class="text-success fa fa-check"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fa fa-times"></span>
+                                    }
+                                </td>
+                                <td class="text-right">
+                                    <a id="Modify@(item.CryptoCode)" asp-action="GetStoreEthereumLikePaymentMethod"
+                                       asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                                       asp-route-cryptoCode="@item.CryptoCode">
+                                        Modify
+                                    </a>
+
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <a asp-action="SweepFundsSelectXPub"
+                       asp-route-chainId="@chain.Key"
+                       asp-route-storeId="@this.Context.GetRouteValue("storeId")">Sweep funds</a>
+                    @if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin))
+                    {
+                        <span> - </span><a asp-action="UpdateChainConfig" asp-controller="EthereumConfig" asp-route-chainId="@chain">Configure Web3</a>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </div>
+  
+@section Scripts {
+  
+}
+  
 @if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin))
 {
     var chains = BTCPayNetworkProvider.GetAll().OfType<EthereumBTCPayNetwork>().Select(network => network.ChainId).Distinct();

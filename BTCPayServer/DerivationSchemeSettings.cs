@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using BTCPayServer.Payments;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -98,6 +99,10 @@ namespace BTCPayServer
             JObject jobj = null;
             try
             {
+                if (HexEncoder.IsWellFormed(fileContents))
+                {
+                    fileContents = Encoding.UTF8.GetString(Encoders.Hex.DecodeData(fileContents));
+                }
                 jobj = JObject.Parse(fileContents);
             }
             catch
@@ -271,8 +276,8 @@ namespace BTCPayServer
         [JsonIgnore]
         public BTCPayNetwork Network { get; set; }
         public string Source { get; set; }
-        [JsonIgnore]
-        public bool IsHotWallet => Source == "NBXplorer";
+
+        public bool IsHotWallet { get; set; }
 
         [Obsolete("Use GetSigningAccountKeySettings().AccountKeyPath instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]

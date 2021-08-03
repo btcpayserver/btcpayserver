@@ -9,6 +9,20 @@ using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Security.GreenField
 {
+    public class LocalGreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
+        {
+            var succeed = context.User.Identity.AuthenticationType == $"Local{GreenFieldConstants.AuthenticationType}";
+
+            if (succeed)
+            {
+                context.Succeed(requirement);
+            }
+            return Task.CompletedTask;
+        }
+    }
+    
     public class GreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
 
     {
@@ -93,6 +107,7 @@ namespace BTCPayServer.Security.GreenField
                 case Policies.CanViewNotificationsForUser:
                 case Policies.CanModifyProfile:
                 case Policies.CanViewProfile:
+                case Policies.CanDeleteUser:
                 case Policies.Unrestricted:
                     success = context.HasPermission(Permission.Create(policy), requiredUnscoped);
                     break;

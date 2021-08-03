@@ -1,27 +1,27 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
+using BTCPayServer.Fido2.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin.DataEncoders;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
+using PeterO.Cbor;
 
 namespace BTCPayServer.Hosting
 {
@@ -121,12 +121,92 @@ namespace BTCPayServer.Hosting
                     settings.TransitionInternalNodeConnectionString = true;
                     await _Settings.UpdateSetting(settings);
                 }
+
+                if (!settings.MigrateU2FToFIDO2)
+                {
+                    await MigrateU2FToFIDO2();
+                    settings.MigrateU2FToFIDO2 = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.MigrateHotwalletProperty)
+                {
+                    await MigrateHotwalletProperty();
+                    settings.MigrateHotwalletProperty = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateHotwalletProperty()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+            {
+                foreach (var paymentMethod in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<DerivationSchemeSettings>())
+                {
+                    paymentMethod.IsHotWallet = paymentMethod.Source == "NBXplorer";
+                    paymentMethod.Source = "NBXplorerGenerated";
+                }
+            }
+            await ctx.SaveChangesAsync();
+        }
+
+        private async Task MigrateU2FToFIDO2()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var u2fDevices = await ctx.U2FDevices.ToListAsync();
+            foreach (U2FDevice u2FDevice in u2fDevices)
+            {
+                var fido2 = new Fido2Credential()
+                {
+                    ApplicationUserId = u2FDevice.ApplicationUserId,
+                    Name = u2FDevice.Name,
+                    Type = Fido2Credential.CredentialType.FIDO2
+                };
+                fido2.SetBlob(new Fido2CredentialBlob()
+                {
+                    SignatureCounter = (uint)u2FDevice.Counter,
+                    PublicKey = CreatePublicKeyFromU2fRegistrationData( u2FDevice.PublicKey).EncodeToBytes() ,
+                    UserHandle = u2FDevice.KeyHandle,
+                    Descriptor = new PublicKeyCredentialDescriptor(u2FDevice.KeyHandle),
+                    CredType = "u2f"
+                });
+
+                await ctx.AddAsync(fido2);
+                
+                ctx.Remove(u2FDevice);
+            }
+            await ctx.SaveChangesAsync();
+        }
+        //from https://github.com/abergs/fido2-net-lib/blob/0fa7bb4b4a1f33f46c5f7ca4ee489b47680d579b/Test/ExistingU2fRegistrationDataTests.cs#L70
+        private static CBORObject CreatePublicKeyFromU2fRegistrationData(byte[] publicKeyData)
+        {
+            if (publicKeyData.Length != 65)
+            {
+                throw new ArgumentException("u2f public key must be 65 bytes", nameof(publicKeyData));
+            }
+            var x = new byte[32];
+            var y = new byte[32];
+            Buffer.BlockCopy(publicKeyData, 1, x, 0, 32);
+            Buffer.BlockCopy(publicKeyData, 33, y, 0, 32);
+
+
+            var coseKey = CBORObject.NewMap();
+
+            coseKey.Add(COSE.KeyCommonParameter.KeyType, COSE.KeyType.EC2);
+            coseKey.Add(COSE.KeyCommonParameter.Alg, -7);
+
+            coseKey.Add(COSE.KeyTypeParameter.Crv, COSE.EllipticCurve.P256);
+
+            coseKey.Add(COSE.KeyTypeParameter.X, x);
+            coseKey.Add(COSE.KeyTypeParameter.Y, y);
+
+            return coseKey;
         }
 
         private async Task TransitionInternalNodeConnectionString()

@@ -1,5 +1,6 @@
 @using BTCPayServer.Views.Server
 @using System.Net.Http
+@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Services.Altcoins.Ethereum.Configuration.EthereumLikeConfiguration
 @inject BTCPayNetworkProvider BTCPayNetworkProvider;
 @inject IHttpClientFactory HttpClientFactory;
@@ -10,8 +11,7 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Policies, $"ETH Chain {Model.ChainId} Configuration");
 }
 
-<partial name="_StatusMessage"/>
-@if (!this.ViewContext.ModelState.IsValid)
+@if (!ViewContext.ModelState.IsValid)
 {
     <div asp-validation-summary="All" class="text-danger"></div>
 }
@@ -20,27 +20,28 @@
     <div class="form-group">
         <input type="hidden" asp-for="ChainId"/>
         <div class="form-check">
-            <label asp-for="Web3ProviderUrl" class="form-control-label"></label>
+            <label asp-for="Web3ProviderUrl" class="form-label"></label>
             <input asp-for="Web3ProviderUrl" type="text" class="form-control"/>
             <span asp-validation-for="Web3ProviderUrl" class="text-danger"></span>
             <div>
                 Possible free options are
                 <ul>
-                    <li><a href="https://medium.com/linkpool/release-of-public-ethereum-rpcs-f5dd57455d2e" target="_blank">linkpool.io</a> - Free, just set the url to <code>https://main-rpc.linkpool.io</code></li>
-                    <li><a href="https://chainstack.com/" target="_blank">chainstack.com</a> - Free plan, choose shared public node</li>
-                    <li><a href="https://infura.io/" target="_blank">infura.io</a> - Free tier but limited calls per day</li>
-                    <li><a href="https://ethereumnodes.com/" target="_blank">https://ethereumnodes.com/</a> - list of other free nodes</li>
+
+                    <li><a href="https://medium.com/linkpool/release-of-public-ethereum-rpcs-f5dd57455d2e" target="_blank" rel="noreferrer noopener">linkpool.io</a> - Free, just set the url to <code>https://main-rpc.linkpool.io</code></li>
+                    <li><a href="https://chainstack.com/" target="_blank" rel="noreferrer noopener">chainstack.com</a> - Free plan, choose shared public node</li>
+                    <li><a href="https://infura.io/" target="_blank" rel="noreferrer noopener">infura.io</a> - Free tier but limited calls per day</li>
+
                     <li>Your own geth/openethereum node</li>
                 </ul>
             </div>
         </div>
         <div class="form-check">
-            <label asp-for="Web3ProviderUsername" class="form-control-label"></label>
+            <label asp-for="Web3ProviderUsername" class="form-label"></label>
             <input asp-for="Web3ProviderUsername" type="text" class="form-control"/>
             <span asp-validation-for="Web3ProviderUsername" class="text-danger"></span>
         </div>
         <div class="form-check">
-            <label asp-for="Web3ProviderPassword" class="form-control-label"></label>
+            <label asp-for="Web3ProviderPassword" class="form-label"></label>
             <input asp-for="Web3ProviderPassword" type="text" class="form-control"/>
             <span asp-validation-for="Web3ProviderPassword" class="text-danger"></span>
         </div>

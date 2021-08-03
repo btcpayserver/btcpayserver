@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -33,22 +34,22 @@ namespace BTCPayServer.Controllers.GreenField
         }
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
-        public ActionResult<IEnumerable<Client.Models.StoreData>> GetStores()
+        public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
         {
             var stores = HttpContext.GetStoresData();
-            return Ok(stores.Select(FromModel));
+            return Task.FromResult<ActionResult<IEnumerable<Client.Models.StoreData>>>(Ok(stores.Select(FromModel)));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
-        public ActionResult<Client.Models.StoreData> GetStore(string storeId)
+        public Task<ActionResult<Client.Models.StoreData>> GetStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
-                return NotFound();
+                return Task.FromResult<ActionResult<Client.Models.StoreData>>(NotFound());
             }
-            return Ok(FromModel(store));
+            return Task.FromResult<ActionResult<Client.Models.StoreData>>(Ok(FromModel(store)));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -131,6 +132,7 @@ namespace BTCPayServer.Controllers.GreenField
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
+                LazyPaymentMethods = storeBlob.LazyPaymentMethods,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 DefaultLang = storeBlob.DefaultLang,
@@ -167,6 +169,7 @@ namespace BTCPayServer.Controllers.GreenField
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;
+            blob.LazyPaymentMethods = restModel.LazyPaymentMethods;
             blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;

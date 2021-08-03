@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Confirm addresses";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Confirm addresses", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -25,9 +25,9 @@
     <div class="modal-dialog" role="document">
         <form class="modal-content"  method="post" enctype="multipart/form-data">
             <div class="modal-header">
-                <h5 class="modal-title" Fid="exampleModalLabel">Address verification</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <h5 class="modal-title" id="addressVerification">Address verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close" />
                 </button>
             </div>
             <div class="modal-body">
@@ -38,7 +38,7 @@
                 <div id="vault-status"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
             </div>
         </form>
@@ -50,7 +50,9 @@
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="DerivationScheme" type="hidden"/>
-    <input asp-for="Enabled" type="hidden"/>
+    <input asp-for="AccountKey" type="hidden" />
+    <input asp-for="RootFingerprint" type="hidden" />
+    <input asp-for="KeyPath" type="hidden" />
 
     <div class="form-group">
         <table class="table table-sm table-responsive-md">
@@ -72,7 +74,7 @@
                     <td><code>@sample.Address</code></td>
                     @if (Model.Source == "Vault")
                     {
-                        <td class="text-right">
+                        <td class="text-end">
                             @* Using single quotes for the data attributes on purpose *@
                             <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())'>Show on device</a>
                         </td>
@@ -83,34 +85,19 @@
         </table>
     </div>
 
-    <div class="text-center mb-4">
-        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#wrong-addresses" aria-expanded="false" aria-controls="wrong-addresses">
-            Wrong addresses?
-        </button>
-        <div id="wrong-addresses" class="collapse @(ViewContext.ModelState.IsValid ? "" : "show")">
-            <div class="pb-1">
-                <label asp-for="HintAddress">Help us to find the correct settings by telling us the first address of your wallet.</label>
-                <div class="form-group">
-                    <input asp-for="HintAddress" class="form-control"/>
-                    <span asp-validation-for="HintAddress" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="text-center">
         <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
     </div>
 </form>
 
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-    @await Html.PartialAsync("VaultElements")
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="VaultElements" />
 
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
 
-    <script type="text/javascript">
+    <script>
         window.addEventListener("load", async () => {
             const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
             const wsProto = location.protocol.replace(/^http/, "ws");

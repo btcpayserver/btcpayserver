@@ -38,7 +38,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId)
+        public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId, string[] transactionIds = null)
         {
             if (walletId == null)
                 throw new ArgumentNullException(nameof(walletId));
@@ -46,6 +46,7 @@ namespace BTCPayServer.Services
             {
                 return (await ctx.WalletTransactions
                                 .Where(w => w.WalletDataId == walletId.ToString())
+                                .Where(data => transactionIds == null || transactionIds.Contains(data.TransactionId))
                                 .Select(w => w)
                                 .ToArrayAsync())
                                 .ToDictionary(w => w.TransactionId, w => w.GetBlobInfo());

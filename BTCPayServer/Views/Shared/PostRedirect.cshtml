@@ -13,18 +13,18 @@
 
 <html lang="en">
 <head>
-    <partial name="Header" />
+    <partial name="LayoutHead" />
     <title>Post Redirect</title>
 </head>
 <body>
-    <form method="post" id="postform" action="@action">
+    <form method="post" id="postform" action="@action" rel="noreferrer noopener">
         @Html.AntiForgeryToken()
         @foreach (var o in Model.Parameters)
         {
             <input type="hidden" name="@o.Key" value="@o.Value"/>
         }
         <noscript>
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered min-vh-100">
                 <div class="modal-content">
                     <div class="modal-body text-center my-3">
                         <p>
@@ -41,5 +41,6 @@
     <script type="text/javascript">
         document.forms.item(0).submit();
     </script>
+    <partial name="LayoutFoot" />
 </body>
 </html>

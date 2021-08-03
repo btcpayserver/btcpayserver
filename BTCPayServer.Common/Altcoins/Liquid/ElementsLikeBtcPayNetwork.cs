@@ -1,6 +1,7 @@
 #if ALTCOINS
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Common;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
@@ -24,38 +25,24 @@ namespace BTCPayServer
             });
         }
 
-        public override GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        public override List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)
         {
-            TransactionInformationSet Filter(TransactionInformationSet transactionInformationSet)
-            {
-                return new TransactionInformationSet()
-                {
-                    Transactions =
-                        transactionInformationSet.Transactions.FindAll(information =>
-                            information.Outputs.Any(output =>
-                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId) ||
-                            information.Inputs.Any(output =>
-                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId))
-                };
-            }
-
-            return new GetTransactionsResponse()
-            {
-                Height = response.Height,
-                ConfirmedTransactions = Filter(response.ConfirmedTransactions),
-                ReplacedTransactions = Filter(response.ReplacedTransactions),
-                UnconfirmedTransactions = Filter(response.UnconfirmedTransactions)
-            };
+            return transactionInformationSet.FindAll(information =>
+                information.Outputs.Any(output =>
+                    output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId) ||
+                information.Inputs.Any(output =>
+                    output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId));
         }
 
-
-        public override string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        public override PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
             //precision 0: 10 = 0.00000010
             //precision 2: 10 = 0.00001000
             //precision 8: 10 = 10
-            var money = new Money(cryptoInfoDue.ToDecimal(MoneyUnit.BTC) / decimal.Parse("1".PadRight(1 + 8 - Divisibility, '0')), MoneyUnit.BTC);
-            return $"{base.GenerateBIP21(cryptoInfoAddress, money)}&assetid={AssetId}";
+            var money = cryptoInfoDue is null ? null : new Money(cryptoInfoDue.ToDecimal(MoneyUnit.BTC) / decimal.Parse("1".PadRight(1 + 8 - Divisibility, '0')), MoneyUnit.BTC);
+            var builder = base.GenerateBIP21(cryptoInfoAddress, money);
+            builder.QueryParams.Add("assetid", AssetId.ToString());
+            return builder;
         }
     }
 }

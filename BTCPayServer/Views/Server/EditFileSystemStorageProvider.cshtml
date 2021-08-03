@@ -1,0 +1,17 @@
+﻿@model BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration.FileSystemStorageConfiguration
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Local Filesystem Storage");
+}
+
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
+<p>Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
+<div class="row">
+    <div class="col-lg-6">
+        <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

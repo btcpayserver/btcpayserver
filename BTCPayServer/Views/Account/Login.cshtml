@@ -1,13 +1,14 @@
-﻿@model LoginViewModel
+﻿@using BTCPayServer.Abstractions.Contracts
+@model LoginViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 @{
     ViewData["Title"] = "Log in";
     Layout = "_LayoutSimple";
 }
 
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
 }
 
 <div class="row justify-content-center mb-2">
@@ -18,10 +19,7 @@
 
         <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        <partial name="_StatusMessage" />
     </div>
 </div>
 
@@ -36,24 +34,24 @@
                     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
-                            <label asp-for="Email"></label>
+                            <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" required tabindex="1" autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">
                             <div class="d-flex justify-content-between">
-                                <label asp-for="Password"></label>
+                                <label asp-for="Password" class="form-label"></label>
                                 <a asp-action="ForgotPassword" tabindex="5">Forgot password?</a>
                             </div>
                             <input asp-for="Password" class="form-control" required tabindex="2" />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton" tabindex="3">Sign in</button>
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton" tabindex="3">Sign in</button>
                         </div>
                     </fieldset>
                 </form>
-                @if (themeManager.ShowRegister)
+                @if (!(await _settingsRepository.GetPolicies()).LockSubscription)
                 {
                     <p class="text-center mt-2 mb-0">
                         <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>

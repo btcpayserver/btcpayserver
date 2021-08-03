@@ -1,21 +1,15 @@
 @model WalletSendVaultModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction with BTCPay Server Vault", Context.GetStoreData().StoreName);
 }
 
-<h4>Sign the transaction with BTCPayServer Vault</h4>
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
 <div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <vc:icon symbol="close" />
+    </button>
     <span id="alertMessage"></span>
 </div>
 <div class="row">
@@ -31,13 +25,13 @@
     </div>
 </div>
 
-
 <partial name="VaultElements" />
-@section Scripts
+
+@section PageFootContent
 {
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script type="text/javascript">
+    <script>
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;
@@ -60,7 +54,7 @@
             $("#SigningContext_PSBT").val(vaultUI.psbt);
             $("#broadcastForm").submit();
         }
-        $(function () {
+        document.addEventListener("DOMContentLoaded", function () {
             askSign();
         });
     </script>

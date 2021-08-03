@@ -1,0 +1,46 @@
+@model BTCPayServer.Fido2.Models.Fido2AuthenticationViewModel
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.Fido2, "Registered FIDO2 Credentials");
+}
+
+<table class="table table-lg mb-4">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th class="text-end">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var device in Model.Credentials)
+    {
+        <tr>
+            <td>@(string.IsNullOrEmpty(device.Name)? "Unnamed FIDO2 credential": device.Name)</td>
+            <td class="text-end">
+                <a asp-action="Remove" asp-route-id="@device.Id">Remove</a>
+            </td>
+        </tr>
+    }
+    @if (!Model.Credentials.Any())
+    {
+        <tr>
+            <td colspan="2" class="text-center h5 py-2">
+                No registered credentials
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<form asp-action="Create" method="get">
+    <div class="row g-1">
+        <div class="col">
+            <input type="text" class="form-control" name="Name" placeholder="New Credential Name"/>
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-primary ms-2">
+                <span class="fa fa-plus"></span>
+                Add New Credential
+            </button>
+        </div>
+    </div>
+</form>

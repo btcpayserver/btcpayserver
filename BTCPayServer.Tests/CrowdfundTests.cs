@@ -23,7 +23,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()
         {
@@ -63,7 +63,7 @@ namespace BTCPayServer.Tests
 
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanContributeOnlyWhenAllowed()
         {
@@ -155,7 +155,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanComputeCrowdfundModel()
         {
@@ -165,7 +165,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
+                await user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";

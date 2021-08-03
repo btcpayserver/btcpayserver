@@ -9,11 +9,19 @@ namespace BTCPayServer.Client
     public partial class BTCPayServerClient
     {
         public virtual async Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
+            bool? enabled = null,
             CancellationToken token = default)
         {
+            var query = new Dictionary<string, object>();
+            if (enabled != null)
+            {
+                query.Add(nameof(enabled), enabled);
+            }
+
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain"), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain",
+                        query), token);
             return await HandleResponse<IEnumerable<OnChainPaymentMethodData>>(response);
         }
 
@@ -70,5 +78,17 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Get), token);
             return await HandleResponse<OnChainPaymentMethodPreviewResultData>(response);
         }
+        
+        public virtual async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId,
+            string cryptoCode, GenerateOnChainWalletRequest request,
+            CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/generate",
+                    bodyPayload: request,
+                    method: HttpMethod.Post), token);
+            return await HandleResponse<OnChainPaymentMethodDataWithSensitiveData>(response);
+        }
+
     }
 }

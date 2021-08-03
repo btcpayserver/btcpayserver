@@ -4,15 +4,10 @@
 @model WalletSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Wallet settings";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Settings);
-}
-@if (TempData.HasStatusMessage())
-{
-    <partial name="_StatusMessage" />
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Settings, "Wallet settings", Context.GetStoreData().StoreName);
 }
 
-<h4 class="mb-3">Additional wallet information</h4>
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
 <div class="row">
     <div class="col-md-8 col-lg-6">
@@ -20,61 +15,61 @@
             <input type="hidden" asp-for="StoreName"/>
             <input type="hidden" asp-for="UriScheme"/>
             <div class="form-group">
-                <label asp-for="Label"></label>
+                <label asp-for="Label" class="form-label"></label>
                 <input asp-for="Label" class="form-control"/>
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="DerivationScheme"></label>
+                <label asp-for="DerivationScheme" class="form-label"></label>
                 <input asp-for="DerivationScheme" class="form-control" readonly/>
                 <span asp-validation-for="DerivationScheme" class="text-danger"></span>
             </div>
             @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
             {
                 <div class="form-group">
-                    <label asp-for="DerivationSchemeInput"></label>
+                    <label asp-for="DerivationSchemeInput" class="form-label"></label>
                     <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
                     <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
                 </div>
             }
-            @for (int i = 0; i < Model.AccountKeys.Count; i++)
+            @for (var i = 0; i < Model.AccountKeys.Count; i++)
             {
-                <hr class="my-4"/>
-<span class="d-flex">
-                <h4 class="mb-3">Account key @i</h4>
-                <button type="button" class="btn btn-link only-for-js mb-2 fa fa-qrcode text-decoration-none" data-wallet="@i" title="Show QR"></button></span>
+                <div class="d-flex mt-5 mb-3">
+                    <h4 class="mb-0">Account key @i</h4>
+                    <button type="button" class="btn btn-link only-for-js mb-2 fa fa-qrcode text-decoration-none" data-wallet="@i" title="Show QR"></button>
+                </div>
                 <div class="form-group">
-                    <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
+                    <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
                 </div>
-                <div class="form-row">
+                <div class="row">
                     <div class="form-group col-auto">
-                        <label asp-for="@Model.AccountKeys[i].MasterFingerprint"></label>
+                        <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
                         <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;"/>
                         <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
                     </div>
                     <div class="form-group col-auto">
-                        <label asp-for="@Model.AccountKeys[i].AccountKeyPath"></label>
-                        <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
+                        <label asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-label"></label>
+                        <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;"/>
                         <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
                     </div>
                 </div>
                 @if (Model.IsMultiSig)
                 {
-                    <div class="form-check form-check-inline">
+                    <div class="form-check">
                         <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
                         <label asp-for="SelectedSigningKey" class="form-check-label"></label>
                     </div>
                 }
             }
             <div class="form-group d-flex mt-3">
-                <button name="command" type="submit" class="btn btn-primary mr-2" value="save">Save</button>
+                <button name="command" type="submit" class="btn btn-primary me-2" value="save">Save</button>
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="SettingsMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Other actions...
                     </button>
-                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                    <div class="dropdown-menu" aria-labelledby="OtherActionsDropdownToggle">
                         <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
                         @if (Model.NBXSeedAvailable)
                         {
@@ -90,40 +85,40 @@
         </form>
     </div>
 </div>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/bc-ur/web-bundle.js" asp-append-version="true"></script>
-    <script src="~/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js" asp-append-version="true"></script>
-<link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 
 <partial name="ShowQR"/>
-<script>
-    var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))));
-    $(document).ready(function(){        
-        var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
-        $("button[data-wallet]").on("click", function (){
-            var data = $(this).data("wallet");
-            var wallet = wallets[parseInt(data)];
-            qrApp.data = wallet;
-            $("#scan-qr-modal").modal("show");
+@section PageHeadContent {
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+    <style>
+        .register-wallet{ display: none; }
+    </style>
+}
+
+@section PageFootContent {
+    <script>
+        var wallets = @Safe.Json(Model.AccountKeys.Select(model => Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))));
+        document.addEventListener("DOMContentLoaded", function () {     
+            var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
+            $("button[data-wallet]").on("click", function (){
+                var data = $(this).data("wallet");
+                var wallet = wallets[parseInt(data)];
+                qrApp.data = wallet;
+                $("#scan-qr-modal").modal("show");
+            });
+            
+            
+            if(navigator.registerProtocolHandler){
+                $(".register-wallet")
+                    .show()
+                    .on("click", function(){
+                       var store = $(this).data("storename");
+                       var scheme = $(this).data("scheme");
+                       var url = decodeURIComponent($(this).data("url"));
+                       navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store);
+                   });
+            } 
         });
-        
-        
-        if(navigator.registerProtocolHandler){
-            $(".register-wallet")
-                .show()
-                .on("click", function(){
-                   var store = $(this).data("storename");
-                   var scheme = $(this).data("scheme");
-                   var url = decodeURIComponent($(this).data("url"));
-                   navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store);
-               });
-        } 
-    });
-</script>
-<style>
-    .register-wallet{
-        display: none;
-    }
-</style>
+    </script>
+}
 

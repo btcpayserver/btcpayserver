@@ -5,12 +5,12 @@
 
 @if (Context.Request.Query.ContainsKey("simple"))
 {
-    @await Html.PartialAsync("/Views/AppsPublic/PointOfSale/MinimalLight.cshtml", Model)
+    <partial name="/Views/AppsPublic/PointOfSale/MinimalLight.cshtml" model="Model" />
 }
 else
 {
     <noscript>
-        @await Html.PartialAsync("/Views/AppsPublic/PointOfSale/MinimalLight.cshtml", Model)
+        <partial name="/Views/AppsPublic/PointOfSale/MinimalLight.cshtml" model="Model" />
     </noscript>
-    @await Html.PartialAsync("/Views/AppsPublic/PointOfSale/VueLight.cshtml", Model)
+    <partial name="/Views/AppsPublic/PointOfSale/VueLight.cshtml" model="Model" />
 }

@@ -3,5 +3,8 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Emails);
 }
 
+<partial name="EmailsBody" model="Model" />
 
-<partial name="EmailsBody" model="@Model"/>
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

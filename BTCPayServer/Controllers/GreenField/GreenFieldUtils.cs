@@ -9,6 +9,11 @@ namespace BTCPayServer.Controllers.GreenField
     {
         public static IActionResult CreateValidationError(this ControllerBase controller, ModelStateDictionary modelState)
         {
+            return controller.UnprocessableEntity(modelState.ToGreenfieldValidationError());
+        }
+
+        public static List<GreenfieldValidationError> ToGreenfieldValidationError(this ModelStateDictionary modelState)
+        {
             List<GreenfieldValidationError> errors = new List<GreenfieldValidationError>();
             foreach (var error in modelState)
             {
@@ -17,11 +22,17 @@ namespace BTCPayServer.Controllers.GreenField
                     errors.Add(new GreenfieldValidationError(error.Key, errorMessage.ErrorMessage));
                 }
             }
-            return controller.UnprocessableEntity(errors.ToArray());
+
+            return errors;
         }
+
         public static IActionResult CreateAPIError(this ControllerBase controller, string errorCode, string errorMessage)
         {
             return controller.BadRequest(new GreenfieldAPIError(errorCode, errorMessage));
+        }
+        public static IActionResult CreateAPIError(this ControllerBase controller, int httpCode, string errorCode, string errorMessage)
+        {
+            return controller.StatusCode(httpCode, new GreenfieldAPIError(errorCode, errorMessage));
         }
     }
 }

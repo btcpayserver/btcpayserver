@@ -1,17 +1,17 @@
 ﻿@model CreateTokenViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Create a new token");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Create a new token", Context.GetStoreData()?.StoreName);
     ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
     ViewBag.ShowStores = ViewBag.ShowStores ?? false;
 }
 
-
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-lg-6">
+        <h4 class="mb-4">@ViewData["PageTitle"]</h4>
         <form method="post">
             <div class="form-group">
-                <label asp-for="Label"></label>
+                <label asp-for="Label" class="form-label"></label>
                 @if (ViewBag.HidePublicKey)
                 {
                     <small class="text-muted">optional</small>
@@ -22,7 +22,7 @@
             @if (!ViewBag.HidePublicKey)
             {
                 <div class="form-group">
-                    <label asp-for="PublicKey"></label>
+                    <label asp-for="PublicKey" class="form-label"></label>
                     <small class="text-muted">Keep empty for server-initiated pairing</small>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
@@ -32,8 +32,8 @@
             @if (ViewBag.ShowStores)
             {
                 <div class="form-group">
-                    <label asp-for="StoreId" class="control-label"></label>
-                    <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
+                    <label asp-for="StoreId" class="form-label"></label>
+                    <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                     <span asp-validation-for="StoreId" class="text-danger"></span>
                 </div>
             }

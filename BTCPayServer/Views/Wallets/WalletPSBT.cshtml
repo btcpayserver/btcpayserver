@@ -2,24 +2,39 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "PSBT";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, string.IsNullOrEmpty(Model.Decoded) ? "Decode PSBT" : "Decoded PSBT", Context.GetStoreData().StoreName);
 }
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-10 text-center">
-            <partial name="_StatusMessage"/>
-        </div>
-    </div>
+
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
+
+@section PageFootContent {
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
+        hljs.initHighlightingOnLoad();
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
+            initCameraScanningApp("Scan PSBT", function (data){
+               $("textarea[name=PSBT]").val(data);
+               $("#Decode").click();
+            }, "scanModal");
+        });
+    </script>
+}
+
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
+
 <div class="row">
     <div class="col-md-10">
         @if (Model.Errors != null && Model.Errors.Count != 0)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <vc:icon symbol="close" />
                 </button>
                 @foreach (var error in Model.Errors)
                 {
@@ -30,25 +45,24 @@
         }
         @if (!string.IsNullOrEmpty(Model.Decoded))
         {
-            <h3>Decoded PSBT</h3>
             <div class="form-group">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="CryptoCode"/>
                     <input type="hidden" asp-for="NBXSeedAvailable"/>
                     <input type="hidden" asp-for="PSBT"/>
                     <input type="hidden" asp-for="FileName"/>
                     <div class="d-flex">
-                        <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
-                        <div class="ml-2 dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button type="submit" id="SignTransaction" name="command" value="@(Model.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary">Sign transaction</button>
+                        <div class="ms-2 dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...
                             </button>
-                            <div class="dropdown-menu" aria-labelledby="OtherActions">
+                            <div class="dropdown-menu" aria-labelledby="OtherActionsDropdownToggle">
                                 <button name="command" type="submit" class="dropdown-item" value="broadcast">Review</button>
                                 <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
                                 <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
                                 <button name="command" type="submit" class="dropdown-item" value="save-psbt">Download</button>
-                                <button name="command" type="button" class="dropdown-item only-for-js" data-toggle="modal" data-target="#scan-qr-modal">Show QR</button>
+                                <button name="command" type="button" class="dropdown-item only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR</button>
                             </div>
                         </div>
                     </div>
@@ -56,45 +70,23 @@
             </div>
             <pre><code class="json">@Model.Decoded</code></pre>
         }
-        <h4 class="mb-3">Decode PSBT</h4>
         <p>You can decode a PSBT by either pasting its content or by uploading the file.</p>
         <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")" enctype="multipart/form-data">
             <div class="form-group">
-                <label asp-for="PSBT"></label>
+                <label asp-for="PSBT" class="form-label"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>
-
             </div>
             <div class="form-group">
-                <label asp-for="UploadedPSBTFile"></label>
-                <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
+                <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                <input asp-for="UploadedPSBTFile" type="file" class="form-control">
             </div>
-
-            <button type="button" id="scanqrcode" class="ml-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan with camera">
+            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
+            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
                 <i class="fa fa-camera"></i>
             </button>
-            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
         </form>
     </div>
 </div>
 <partial name="ShowQR"/>
 <partial name="CameraScanner"/>
-
-
-@section Scripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
-    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
-    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-    <script>
-        hljs.initHighlightingOnLoad();
-
-        $(function (){
-            initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
-            initCameraScanningApp("Scan PSBT", function (data){
-               $("textarea[name=PSBT]").val(data);
-               $("#Decode").click();
-            }, "scanModal");
-        });
-    </script>
-}

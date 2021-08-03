@@ -35,6 +35,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public bool SubtractFeesFromOutput { get; set; }
         }
         public decimal CurrentBalance { get; set; }
+        public decimal ImmatureBalance { get; set; }
 
         public string CryptoCode { get; set; }
 
@@ -73,6 +74,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public decimal Amount { get; set; }
             public string Outpoint { get; set; }
             public string Link { get; set; }
+            public int Confirmations { get; set; }
         }
     }
 }

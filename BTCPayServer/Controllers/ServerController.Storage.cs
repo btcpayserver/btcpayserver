@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -19,6 +20,8 @@ using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Views;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
@@ -30,13 +33,14 @@ namespace BTCPayServer.Controllers
         {
             var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
-            return View(new ViewFilesViewModel()
+            var model = new ViewFilesViewModel()
             {
                 Files = await _StoredFileRepository.GetFiles(),
                 SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
                 DirectFileUrl = fileUrl,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-            });
+            };
+            return View(model);
         }
 
         [HttpGet("server/files/{fileId}/delete")]
@@ -142,16 +146,67 @@ namespace BTCPayServer.Controllers
             public bool IsDownload { get; set; }
         }
 
-
+        
         [HttpPost("server/files/upload")]
-        public async Task<IActionResult> CreateFile(IFormFile file)
+        public async Task<IActionResult> CreateFiles(List<IFormFile> files)
         {
-            var newFile = await _FileService.AddFile(file, GetUserId());
-            return RedirectToAction(nameof(Files), new
+            if (files != null && files.Count > 0)
             {
-                statusMessage = "File added!",
-                fileId = newFile.Id
-            });
+                int invalidFileNameCount = 0;
+                List<string> fileIds = new List<string>();
+                foreach (IFormFile file in files)
+                {
+                    if (!file.FileName.IsValidFileName())
+                    {
+                        invalidFileNameCount++;
+                        continue;
+                    }
+                    var newFile = await _FileService.AddFile(file, GetUserId());
+                    fileIds.Add(newFile.Id);
+                }
+
+                StatusMessageModel.StatusSeverity statusMessageSeverity;
+                string statusMessage; 
+
+                if (invalidFileNameCount == 0)
+                {
+                    statusMessage = "Files Added Successfully";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Success;
+                }
+                else if (invalidFileNameCount > 0 && invalidFileNameCount < files.Count)
+                {
+                    statusMessage = $"{files.Count - invalidFileNameCount} files were added. {invalidFileNameCount} files had invalid names";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
+                }
+                else
+                {
+                    statusMessage = $"Files could not be added due to invalid names";
+                    statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
+                }
+
+                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = statusMessage,
+                        Severity = statusMessageSeverity
+                    });
+
+                if (fileIds.Count == 1)
+                {
+                    return RedirectToAction(nameof(Files), new
+                    {
+                        statusMessage = "File added!",
+                        fileId = fileIds[0]
+                    });
+                }
+                else
+                {
+                    return RedirectToAction(nameof(Files));
+                }
+            }
+            else
+            {
+                return RedirectToAction(nameof(Files));
+            }
         }
 
         private string GetUserId()
@@ -165,8 +220,13 @@ namespace BTCPayServer.Controllers
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
+                var providersList = _StorageProviderServices.Select(a =>
+                    new SelectListItem(a.StorageProvider().ToString(), a.StorageProvider().ToString())
+                );
+
                 return View(new ChooseStorageViewModel()
                 {
+                    ProvidersList = providersList,
                     ShowChangeWarning = savedSettings != null,
                     Provider = savedSettings?.Provider ?? BTCPayServer.Storage.Models.StorageProvider.FileSystem
                 });

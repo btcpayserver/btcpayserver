@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -111,7 +114,7 @@ namespace BTCPayServer.Tests
                 s.GoToRegister();
                 s.RegisterNewUser(true);
                 var store = s.CreateNewStore();
-                s.AddInternalLightningNode("BTC");
+                s.AddLightningNode();
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
                 var command = s.Driver.FindElement(By.Name("command"));

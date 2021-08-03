@@ -51,6 +51,7 @@ namespace BTCPayServer
             InitMonacoin();
             InitDash();
             InitFeathercoin();
+            InitAlthash();
             InitGroestlcoin();
             InitViacoin();
             InitMonero();
@@ -130,6 +131,11 @@ namespace BTCPayServer
                     return GetNetwork<T>("BTC");
             }
             return network as T;
+        }
+        public bool TryGetNetwork<T>(string cryptoCode, out T network) where T : BTCPayNetworkBase
+        {
+            network = GetNetwork<T>(cryptoCode);
+            return network != null;
         }
     }
 }

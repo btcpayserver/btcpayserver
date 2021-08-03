@@ -26,8 +26,8 @@
                         "description": "Description of the invoice in the BOLT11"
                     },
                     "expiry": {
-                        "type": "integer",
-                        "description": "Expiration time in seconds"
+                        "description": "Expiration time in seconds",
+                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanSeconds"}]
                     },
                     "privateRouteHints": {
                         "type": "boolean",
@@ -87,13 +87,13 @@
                         "nullable": false
                     },
                     "paidAt": {
-                        "type": "integer",
                         "description": "The unix timestamp when the invoice got paid",
-                        "nullable": true
+                        "nullable": true,
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "expiresAt": {
-                        "type": "integer",
-                        "description": "The unix timestamp when the invoice expires"
+                        "description": "The unix timestamp when the invoice expires",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "amount": {
                         "type": "string",

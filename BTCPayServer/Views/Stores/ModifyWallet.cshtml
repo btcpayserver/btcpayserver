@@ -1,13 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = $"Modify {Model.CryptoCode} Wallet";
-}
-
-@section Navbar {
-    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
-        <vc:icon symbol="back" />
-    </a>
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Modify {Model.CryptoCode} Wallet");
 }
 
 <header class="text-center">
@@ -45,19 +39,15 @@
                 <td>@Model.Source</td>
             </tr>
             <tr>
-                <th>
-                    Enabled
-                </th>
-                <td>
-                    <button type="submit" class="btcpay-toggle @if (Model.Enabled) { @("btcpay-toggle--active") }" id="Modify" name="Enabled" value="@(Model.Enabled ? "false" : "true")">Save</button>
-                </td>
+                <th>Type</th>
+                <td>@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</td>
             </tr>
             </tbody>
         </table>
     </form>
     <br>
     <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="mt-5">
-        <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ChangeWalletLink" class="btn btn-secondary mr-2">
+        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ChangeWalletLink" class="btn btn-secondary me-2">
             Replace wallet
         </a>
         <button type="submit" class="btn btn-danger" id="Delete">Remove wallet</button>

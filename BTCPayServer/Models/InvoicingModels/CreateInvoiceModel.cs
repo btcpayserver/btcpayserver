@@ -14,7 +14,6 @@ namespace BTCPayServer.Models.InvoicingModels
             Currency = "USD";
         }
 
-        [Required]
         public decimal? Amount
         {
             get; set;

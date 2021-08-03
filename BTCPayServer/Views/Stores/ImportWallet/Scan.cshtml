@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Scan QR code";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Scan QR code", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -56,14 +56,14 @@
     </tbody>
 </table>
 
-
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+@section PageHeadContent {
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
 
-    <script type="text/javascript">
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
         window.addEventListener("load", async () => {
             initCameraScanningApp("Scan wallet QR", data => {

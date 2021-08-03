@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,13 +32,15 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
             ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
-            BTCPayNetworkProvider networkProvider)
+            BTCPayNetworkProvider networkProvider,
+            IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -45,6 +48,7 @@ namespace BTCPayServer.Controllers.GreenField
             _currencyNameTable = currencyNameTable;
             _serializerSettings = serializerSettings;
             _networkProvider = networkProvider;
+            _payoutHandlers = payoutHandlers;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -128,7 +132,7 @@ namespace BTCPayServer.Controllers.GreenField
                 StoreId = storeId,
                 PaymentMethodIds = paymentMethods
             });
-            var pp = await _pullPaymentService.GetPullPayment(ppId);
+            var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }
 
@@ -160,10 +164,10 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> GetPullPayment(string pullPaymentId)
         {
             if (pullPaymentId is null)
-                return NotFound();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+                return PullPaymentNotFound();
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
-                return NotFound();
+                return PullPaymentNotFound();
             return Ok(CreatePullPaymentData(pp));
         }
 
@@ -172,17 +176,31 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> GetPayouts(string pullPaymentId, bool includeCancelled = false)
         {
             if (pullPaymentId is null)
-                return NotFound();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId);
+                return PullPaymentNotFound();
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
             if (pp is null)
-                return NotFound();
-            using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId)
-                        .Where(p => p.State != Data.PayoutState.Cancelled || includeCancelled)
-                       .ToListAsync();
+                return PullPaymentNotFound();
+            var payouts = pp.Payouts .Where(p => p.State != PayoutState.Cancelled || includeCancelled).ToList();
             var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
             return base.Ok(payouts
                     .Select(p => ToModel(p, cd)).ToList());
+        }
+
+        [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/payouts/{payoutId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPayout(string pullPaymentId, string payoutId)
+        {
+            if (payoutId is null)
+                return PayoutNotFound();
+            await using var ctx = _dbContextFactory.CreateContext();
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
+            if (pp is null)
+                return PullPaymentNotFound();
+            var payout = pp.Payouts.FirstOrDefault(p => p.Id == payoutId);
+            if(payout is null )
+                return PayoutNotFound();
+            var cd = _currencyNameTable.GetCurrencyData(payout.PullPaymentData.GetBlob().Currency, false);
+            return base.Ok(ToModel(payout, cd));
         }
 
         private Client.Models.PayoutData ToModel(Data.PayoutData p, CurrencyData cd)
@@ -196,14 +214,9 @@ namespace BTCPayServer.Controllers.GreenField
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
                 Revision = blob.Revision,
-                State = p.State == Data.PayoutState.AwaitingPayment ? Client.Models.PayoutState.AwaitingPayment :
-                                            p.State == Data.PayoutState.AwaitingApproval ? Client.Models.PayoutState.AwaitingApproval :
-                                            p.State == Data.PayoutState.Cancelled ? Client.Models.PayoutState.Cancelled :
-                                            p.State == Data.PayoutState.Completed ? Client.Models.PayoutState.Completed :
-                                            p.State == Data.PayoutState.InProgress ? Client.Models.PayoutState.InProgress :
-                                            throw new NotSupportedException(),
+                State = p.State
             };
-            model.Destination = blob.Destination.ToString();
+            model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
             return model;
         }
@@ -214,21 +227,26 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (request is null)
                 return NotFound();
-
-            var network = request?.PaymentMethod is string paymentMethod ?
-                            this._networkProvider.GetNetwork<BTCPayNetwork>(paymentMethod) : null;
-            if (network is null)
+            if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            {
+                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                return this.CreateValidationError(ModelState);
+            }
+            
+            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            if (payoutHandler is null)
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
-            using var ctx = _dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
-                return NotFound();
+                return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
-            if (request.Destination is null || !ClaimDestination.TryParse(request.Destination, network, out var destination))
+            IClaimDestination destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
+            if (destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), "The destination must be an address or a BIP21 URI");
                 return this.CreateValidationError(ModelState);
@@ -245,7 +263,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Destination = destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
-                PaymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike)
+                PaymentMethodId = paymentMethodId
             });
             switch (result.Result)
             {
@@ -278,7 +296,7 @@ namespace BTCPayServer.Controllers.GreenField
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null || pp.StoreId != storeId)
-                return NotFound();
+                return PullPaymentNotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
             return Ok();
         }
@@ -290,7 +308,7 @@ namespace BTCPayServer.Controllers.GreenField
             using var ctx = _dbContextFactory.CreateContext();
             var payout = await ctx.Payouts.GetPayout(payoutId, storeId);
             if (payout is null)
-                return NotFound();
+                return PayoutNotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }));
             return Ok();
         }
@@ -310,7 +328,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             var payout = await ctx.Payouts.GetPayout(payoutId, storeId, true, true);
             if (payout is null)
-                return NotFound();
+                return PayoutNotFound();
             RateResult rateResult = null;
             try
             {
@@ -345,10 +363,46 @@ namespace BTCPayServer.Controllers.GreenField
                 case PullPaymentHostedService.PayoutApproval.Result.OldRevision:
                     return this.CreateAPIError("old-revision", errorMessage);
                 case PullPaymentHostedService.PayoutApproval.Result.NotFound:
-                    return NotFound();
+                    return PayoutNotFound();
                 default:
                     throw new NotSupportedException();
             }
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid")]
+        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            var result = await _pullPaymentService.MarkPaid(new PayoutPaidRequest()
+            {
+                //TODO: Allow API to specify the manual proof object
+                Proof = null,
+                PayoutId = payoutId
+            });
+            var errorMessage = PayoutPaidRequest.GetErrorMessage(result);
+            switch (result)
+            {
+                case PayoutPaidRequest.PayoutPaidResult.Ok:
+                    return Ok();
+                case PayoutPaidRequest.PayoutPaidResult.InvalidState:
+                    return this.CreateAPIError("invalid-state", errorMessage);
+                case PayoutPaidRequest.PayoutPaidResult.NotFound:
+                    return PayoutNotFound();
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+        
+        private IActionResult PayoutNotFound()
+        {
+            return this.CreateAPIError(404, "payout-not-found", "The payout was not found");
+        }
+        private IActionResult PullPaymentNotFound()
+        {
+            return this.CreateAPIError(404, "pullpayment-not-found", "The pull payment was not found");
         }
     }
 }

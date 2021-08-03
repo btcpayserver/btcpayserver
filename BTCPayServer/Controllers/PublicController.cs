@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError("Store", "Store has not enabled Pay Button");
             }
 
-            if (model == null || model.Price <= 0)
+            if (model == null || (model.Price is decimal v ? v <= 0 : false))
                 ModelState.AddModelError("Price", "Price must be greater than 0");
 
             if (!ModelState.IsValid)

@@ -51,11 +51,24 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails, Money cryptoInfoDue, string serverUri)
         {
-            return
-                $"{(network as MoneroLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?tx_amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}";
+            return paymentMethodDetails.Activated
+                ? $"{(network as MoneroLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?tx_amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}"
+                : string.Empty;
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Monero/ViewMoneroLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is MoneroSupportedPaymentMethod moneroSupportedPaymentMethod)
+            {
+                return new
+                {
+                    moneroSupportedPaymentMethod.AccountIndex,
+                };
+            }
+
+            return null;
+        }
     }
 }
 #endif

@@ -1,11 +1,13 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
@@ -20,8 +22,9 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -34,6 +37,7 @@
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
         </script>
+        <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
         <bundle name="wwwroot/bundles/cart-bundle.min.js" asp-append-version="true" />
     }
     @if (Model.ViewType == PosViewType.Light)
@@ -48,12 +52,12 @@
         .card-deck {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: .5rem;
+            grid-gap: 1.5rem;
         }
 
-        .card-deck .card:only-of-type {
+        .card:only-of-type {
             max-width: 320px;
-            margin: auto;
+            margin: auto !important;
         }
 
         .js-cart-item-minus .fa,
@@ -66,27 +70,12 @@
             justify-content: center;
             align-items: center;
         }
-
-        .js-cart-item-count {
-            -moz-appearance:textfield;
-            margin: 0;
-            text-align: right;
-        }
-
-        .js-cart-item-count::-webkit-inner-spin-button,
-        .js-cart-item-count::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
-
 </head>
-
 <body class="h-100">
     @RenderBody()
 </body>

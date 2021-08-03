@@ -15,7 +15,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
@@ -26,11 +25,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Payments.PayJoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -50,7 +51,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        private readonly WalletReceiveStateService _WalletReceiveStateService;
+        private readonly WalletReceiveService _walletReceiveService;
         private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
@@ -59,6 +60,7 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly PullPaymentHostedService _pullPaymentService;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
 
         public RateFetcher RateFetcher { get; }
 
@@ -75,7 +77,7 @@ namespace BTCPayServer.Controllers
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
-                                 WalletReceiveStateService walletReceiveStateService,
+                                 WalletReceiveService walletReceiveService,
                                  EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
@@ -83,7 +85,8 @@ namespace BTCPayServer.Controllers
                                  LabelFactory labelFactory,
                                  ApplicationDbContextFactory dbContextFactory,
                                  BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
-                                 HostedServices.PullPaymentHostedService pullPaymentService)
+                                 HostedServices.PullPaymentHostedService pullPaymentService,
+                                 IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -97,7 +100,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
-            _WalletReceiveStateService = walletReceiveStateService;
+            _walletReceiveService = walletReceiveService;
             _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
             _broadcaster = broadcaster;
@@ -106,6 +109,7 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
             _pullPaymentService = pullPaymentService;
+            _payoutHandlers = payoutHandlers;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
@@ -339,6 +343,8 @@ namespace BTCPayServer.Controllers
                 model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).Skip(skip).Take(count).ToList();
             }
 
+            model.CryptoCode = walletId.CryptoCode;
+
             return View(model);
         }
 
@@ -360,13 +366,19 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-
-            var address = _WalletReceiveStateService.Get(walletId)?.Address;
+            var address = _walletReceiveService.Get(walletId)?.Address;
+            var allowedPayjoin = paymentMethod.IsHotWallet && CurrentStore.GetStoreBlob().PayJoinEnabled;
+            var bip21 = network.GenerateBIP21(address?.ToString(), null);
+            if (allowedPayjoin)
+            {
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new { walletId.CryptoCode })));
+            }
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
-                CryptoImage = GetImage(paymentMethod.PaymentId, network)
+                CryptoImage = GetImage(paymentMethod.PaymentId, network),
+                PaymentLink = bip21.ToString()
             });
         }
 
@@ -383,29 +395,22 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-            var wallet = _walletProvider.GetWallet(network);
             switch (command)
             {
                 case "unreserve-current-address":
-                    KeyPathInformation cachedAddress = _WalletReceiveStateService.Get(walletId);
-                    if (cachedAddress == null)
+                    var address = await _walletReceiveService.UnReserveAddress(walletId);
+                    if (!string.IsNullOrEmpty(address))
                     {
-                        break;
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            AllowDismiss = true,
+                            Message = $"Address {address} was unreserved.",
+                            Severity = StatusMessageModel.StatusSeverity.Success,
+                        });
                     }
-                    var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
-                    ExplorerClientProvider.GetExplorerClient(network)
-                        .CancelReservation(cachedAddress.DerivationStrategy, new[] { cachedAddress.KeyPath });
-                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        AllowDismiss = true,
-                        Message = $"Address {address} was unreserved.",
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                    });
-                    _WalletReceiveStateService.Remove(walletId);
                     break;
                 case "generate-new-address":
-                    var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
-                    _WalletReceiveStateService.Set(walletId, reserve);
+                    await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;
             }
             return RedirectToAction(nameof(WalletReceive), new { walletId });
@@ -413,18 +418,14 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
-            if (isAdmin)
-                return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            return policies?.AllowHotWalletForAll is true;
+            return (await _authorizationService.CanUseHotWallet(policies, User)).HotWallet;
         }
 
-        [HttpGet]
-        [Route("{walletId}/send")]
+        [HttpGet("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string defaultDestination = null, string defaultAmount = null, string bip21 = null)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null, string[] bip21 = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -442,19 +443,29 @@ namespace BTCPayServer.Controllers
             double.TryParse(defaultAmount, out var amount);
             var model = new WalletSendModel()
             {
-                Outputs = new List<WalletSendModel.TransactionOutput>()
+                CryptoCode = walletId.CryptoCode
+            };
+            if (bip21?.Any() is true)
+            {
+                foreach (var link in bip21)
+                {
+                    if (!string.IsNullOrEmpty(link))
+                    {
+                        
+                        LoadFromBIP21(model, link, network);
+                    }
+                }
+            }
+
+            if (!(model.Outputs?.Any() is true))
+            {
+                model.Outputs = new List<WalletSendModel.TransactionOutput>()
                 {
                     new WalletSendModel.TransactionOutput()
                     {
-                        Amount = Convert.ToDecimal(amount),
-                        DestinationAddress = defaultDestination
+                        Amount = Convert.ToDecimal(amount), DestinationAddress = defaultDestination
                     }
-                },
-                CryptoCode = walletId.CryptoCode
-            };
-            if (!string.IsNullOrEmpty(bip21))
-            {
-                LoadFromBIP21(model, bip21, network);
+                };
             }
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees =
@@ -477,11 +488,14 @@ namespace BTCPayServer.Controllers
                     })
                     .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
-            model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey));
-            model.CurrentBalance = await balance;
-
+            model.NBXSeedAvailable = await GetSeed(walletId, network) != null;
+            var Balance= await balance;
+            model.CurrentBalance = (Balance.Available ?? Balance.Total).GetValue(network);
+            if (Balance.Immature is null)
+                model.ImmatureBalance = 0;
+            else
+                model.ImmatureBalance = Balance.Immature.GetValue(network);
+                
             await Task.WhenAll(recommendedFees);
             model.RecommendedSatoshiPerByte =
                 recommendedFees.Select(tuple => tuple.Result).Where(option => option != null).ToList();
@@ -512,9 +526,17 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private async Task<string> GetSeed(WalletId walletId, BTCPayNetwork network)
+        {
+            return await CanUseHotWallet() &&
+                    GetDerivationSchemeSettings(walletId) is DerivationSchemeSettings s &&
+                    s.IsHotWallet &&
+                    ExplorerClientProvider.GetExplorerClient(network) is ExplorerClient client &&
+                    await client.GetMetadataAsync<string>(s.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is string seed &&
+                    !string.IsNullOrEmpty(seed) ? seed : null;
+        }
 
-        [HttpPost]
-        [Route("{walletId}/send")]
+        [HttpPost("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default, string bip21 = "")
@@ -524,15 +546,14 @@ namespace BTCPayServer.Controllers
             var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
-            vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey, cancellation));
+            vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {
+                vm.Outputs?.Clear();
                 LoadFromBIP21(vm, bip21, network);
             }
 
@@ -557,7 +578,8 @@ namespace BTCPayServer.Controllers
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
                         Labels = info == null ? null : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request),
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString())
+                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString()),
+                        Confirmations = coin.Confirmations
                     };
                 }).ToArray();
             }
@@ -570,6 +592,10 @@ namespace BTCPayServer.Controllers
 
             if (!string.IsNullOrEmpty(bip21))
             {
+                if (!vm.Outputs.Any())
+                {
+                    vm.Outputs.Add(new WalletSendModel.TransactionOutput());
+                }
                 return View(vm);
             }
             if (command == "add-output")
@@ -659,16 +685,14 @@ namespace BTCPayServer.Controllers
                             "The fee rate should be above 0", this);
                 }
             }
-
             if (!ModelState.IsValid)
                 return View(vm);
-
+            
             DerivationSchemeSettings derivationScheme = GetDerivationSchemeSettings(walletId);
-
-            CreatePSBTResponse psbt = null;
+            CreatePSBTResponse psbtResponse;
             try
             {
-                psbt = await CreatePSBT(network, derivationScheme, vm, cancellation);
+                psbtResponse = await CreatePSBT(network, derivationScheme, vm, cancellation);
             }
             catch (NBXplorerException ex)
             {
@@ -680,16 +704,23 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(string.Empty, "You need to update your version of NBXplorer");
                 return View(vm);
             }
-            derivationScheme.RebaseKeyPaths(psbt.PSBT);
 
-            var signingContext = new SigningContextModel()
+            var psbt = psbtResponse.PSBT;
+            derivationScheme.RebaseKeyPaths(psbt);
+            
+            var signingContext = new SigningContextModel
             {
                 PayJoinBIP21 = vm.PayJoinBIP21,
-                EnforceLowR = psbt.Suggestions?.ShouldEnforceLowR,
-                ChangeAddress = psbt.ChangeAddress?.ToString()
+                EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
+                ChangeAddress = psbtResponse.ChangeAddress?.ToString()
+            };
+                
+            var routeBack = new Dictionary<string, string>
+            {
+                {"action", nameof(WalletSend)}, {"walletId", walletId.ToString()}
             };
 
-            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, signingContext);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeBack);
             if (res != null)
             {
                 return res;
@@ -700,19 +731,19 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(new WalletPSBTViewModel()
+                    return RedirectToWalletPSBT(new WalletPSBTViewModel
                     {
-                        PSBT = psbt.PSBT.ToBase64(),
+                        PSBT = psbt.ToBase64(),
                         FileName = name
                     });
                 default:
                     return View(vm);
             }
-
         }
 
         private void LoadFromBIP21(WalletSendModel vm, string bip21, BTCPayNetwork network)
         {
+            vm.Outputs ??= new List<WalletSendModel.TransactionOutput>();
             try
             {
                 if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
@@ -721,15 +752,13 @@ namespace BTCPayServer.Controllers
                 }
 
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
-                vm.Outputs = new List<WalletSendModel.TransactionOutput>()
+
+                vm.Outputs.Add(new WalletSendModel.TransactionOutput()
                 {
-                    new WalletSendModel.TransactionOutput()
-                    {
-                        Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
-                        DestinationAddress = uriBuilder.Address.ToString(),
-                        SubtractFeesFromOutput = false
-                    }
-                };
+                    Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
+                    DestinationAddress = uriBuilder.Address.ToString(),
+                    SubtractFeesFromOutput = false
+                });
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -747,13 +776,11 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    vm.Outputs = new List<WalletSendModel.TransactionOutput>()
-                    {
-                        new WalletSendModel.TransactionOutput()
+                    vm.Outputs.Add(new WalletSendModel.TransactionOutput()
                         {
                             DestinationAddress = BitcoinAddress.Create(bip21, network.NBitcoinNetwork).ToString()
                         }
-                    };
+                    );
                 }
                 catch
                 {
@@ -898,17 +925,18 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable cause are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable causes are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
                 return View(nameof(SignWithSeed), viewModel);
             }
 
-            var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath, new SigningOptions()
+            psbt.Settings.SigningOptions = new SigningOptions()
             {
                 EnforceLowR = !(viewModel.SigningContext?.EnforceLowR is false)
-            }));
+            };
+            var changed = psbt.PSBTChanged( () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
             if (!changed)
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable causes: Incorrect account key path in wallet settings or PSBT already signed.");
                 return View(nameof(SignWithSeed), viewModel);
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
@@ -919,15 +947,6 @@ namespace BTCPayServer.Controllers
                 SigningKeyPath = rootedKeyPath?.ToString(),
                 SigningContext = viewModel.SigningContext
             });
-        }
-
-
-        private bool PSBTChanged(PSBT psbt, Action act)
-        {
-            var before = psbt.ToBase64();
-            act();
-            var after = psbt.ToBase64();
-            return before != after;
         }
 
         private string ValueToString(Money v, BTCPayNetworkBase network)
@@ -1036,26 +1055,20 @@ namespace BTCPayServer.Controllers
 
         internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(NetworkProvider)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
+            return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
         {
-            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try
             {
-                try
-                {
-                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ShowMoney(wallet.Network
-                        .Divisibility);
-                }
-                catch
-                {
-                    return "--";
-                }
+                var b = await wallet.GetBalance(derivationStrategy, cts.Token);
+                return (b.Available ?? b.Total).ShowMoney(wallet.Network);
+            }
+            catch
+            {
+                return "--";
             }
         }
 
@@ -1081,7 +1094,9 @@ namespace BTCPayServer.Controllers
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
                 SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString(),
-                NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                NBXSeedAvailable = derivationSchemeSettings.IsHotWallet && 
+                                   await CanUseHotWallet() &&
+                                   !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                     .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                         WellknownMetadataKeys.MasterHDKey))
             };
@@ -1150,28 +1165,28 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "view-seed" && await CanUseHotWallet())
             {
-                var seed = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                if (await GetSeed(walletId, derivationScheme.Network) != null)
+                {
+                    var mnemonic = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                     .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                         WellknownMetadataKeys.Mnemonic, cancellationToken);
-                if (string.IsNullOrEmpty(seed))
+                    var recoveryVm = new RecoverySeedBackupViewModel()
+                    {
+                        CryptoCode = walletId.CryptoCode,
+                        Mnemonic = mnemonic,
+                        IsStored = true,
+                        RequireConfirm = false,
+                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
+                    };
+                    return this.RedirectToRecoverySeedBackup(recoveryVm);
+                }
+                else
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "The seed was not found"
                     });
-                }
-                else
-                {
-                    var recoveryVm = new RecoverySeedBackupViewModel()
-                    {
-                        CryptoCode = walletId.CryptoCode,
-                        Mnemonic = seed,
-                        IsStored = true,
-                        RequireConfirm = false,
-                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
-                    };
-                    return this.RedirectToRecoverySeedBackup(recoveryVm);
                 }
 
                 return RedirectToAction(nameof(WalletSettings));
@@ -1196,6 +1211,7 @@ namespace BTCPayServer.Controllers
         public string CryptoImage { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }
+        public string PaymentLink { get; set; }
     }
 
 

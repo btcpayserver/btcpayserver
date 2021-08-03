@@ -1,48 +1,35 @@
 ﻿@model LndSeedBackupViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "LND Seed Backup");
 }
 
-<h4>LND Seed Backup</h4>
-
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-8 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 @if (Model.IsWalletUnlockPresent)
 {
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="form-group">
                 <p>The LND seed backup is useful to recover funds of your LND wallet in case of a corruption of your server.</p>
-                <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md">this page</a>.</p>
+                <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <a class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" href="#">See confidential seed information</a>
             <div class="form-group @(Model.Removed ? "" : "collapse")">
                 <div class="input-group">
-                    <div class="input-group-prepend">
-                        <label for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ml-2">Seed</span></label>
-                    </div>
-                    <textarea id="SeedTextArea" asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="@(Model.Removed ? "1" : "3")"></textarea>
+                    <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
+                    <textarea asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="@(Model.Removed ? "1" : "3")"></textarea>
                 </div>
             </div>
             @if (!Model.Removed)
             {
                 <div class="form-group collapse">
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <label for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ml-2">Password</span></label>
-                        </div>
-                        <input id="PasswordInput" asp-for="WalletPassword" onClick="this.select();" class="form-control" readonly />
+                        <label asp-for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ms-2">Password</span></label>
+                        <input asp-for="WalletPassword" onClick="this.select();" class="form-control" readonly />
                     </div>
                 </div>
                 <div class="form-group collapse">
-                    <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@this.Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")">
+                    <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
                         <button id="delete" class="btn btn-primary" type="submit">Remove Seed from server</button>
                     </form>
                 </div>
@@ -51,12 +38,12 @@
     </div>
 }
 
-@section Scripts {
-    <script type="text/javascript">
-        $(function () {
-            $("#details").click(function () {
-                $(".collapse").removeClass("collapse");
-                $(this).addClass("collapse");
+@section PageFootContent {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("details").addEventListener("click", function () {
+                document.querySelectorAll(".form-group.collapse").forEach(el => el.classList.remove("collapse"));
+                this.classList.add("collapse");
             });
         });
     </script>

@@ -6,6 +6,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -70,16 +71,32 @@ namespace BTCPayServer.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
+            if (!paymentMethodDetails.Activated)
+            {
+                return string.Empty;
+            }
             var bip21 = ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
 
             if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true && serverUri != null)
             {
-                bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}");
             }
-            return bip21;
+            return bip21.ToString();
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            if (supportedPaymentMethod is DerivationSchemeSettings derivationSchemeSettings)
+                return new OnChainPaymentMethodBaseData()
+                {
+                    DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
+                    AccountKeyPath = derivationSchemeSettings.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                    Label = derivationSchemeSettings.Label
+                };
+            return null;
+        }
+
         public override bool IsPaymentType(string paymentType)
         {
             return string.IsNullOrEmpty(paymentType) || base.IsPaymentType(paymentType);

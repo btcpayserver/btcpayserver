@@ -17,10 +17,11 @@
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.css" asp-append-version="true" />
 
-    <script type="text/javascript">
+    <script>
         var initialSrvModel = @Safe.Json(Model);
     </script>
 
+    <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" asp-append-version="true" />
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
@@ -106,15 +107,15 @@
                         </script>
                     </div>
                     <div class="powered__by__btcpayserver">
-                        Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a>
+                        Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
                     </div>
                 </div>
             </div>
         </div>
     </invoice>
-    <script type="text/javascript">
+    <script>
     var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
-    var storeDefaultLang = @Safe.Json(langService.FindBestMatch(Model.DefaultLang)?.Code ?? Model.DefaultLang);
+    var defaultLang = @Safe.Json(Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
     i18next
@@ -133,8 +134,8 @@
         if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
             return urlParams.lang;
         }
-        else if (isLanguageAvailable(storeDefaultLang)) {
-            return storeDefaultLang;
+        else if (isLanguageAvailable(defaultLang)) {
+            return defaultLang;
         } else {
             return fallbackLanguage;
         }
@@ -328,6 +329,8 @@
                 this.endDate = newEnd;
                 // updating ui
                 this.srvModel = jsonData;
+                
+                eventBus.$emit("data-fetched", this.srvModel);
                 if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                     this.loading = true;
                     setTimeout(function () {
@@ -371,5 +374,6 @@
 {
     <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model"/>
 }
+@await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-end"})
 </body>
 </html>

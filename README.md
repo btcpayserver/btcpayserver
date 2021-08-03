@@ -5,7 +5,7 @@
 <h3 align="center">
   Accept Bitcoin payments ₿
 </h3>
-<p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediary.
+<p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediaries.
 </p>
 <p align="center">
   <a href="https://circleci.com/gh/btcpayserver/btcpayserver">
@@ -42,7 +42,7 @@
       API
     </a>
     <span> | </span>
-    <a href="https://docs.btcpayserver.org/Contribute/>"
+    <a href="https://docs.btcpayserver.org/Contribute/">
       Contribute
     </a>
     <span> | </span>
@@ -230,28 +230,19 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.btse.com" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/btse.svg" alt="BTSE" height=100>
+        <a href="https://www.bailliegifford.com" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/bailliegifford.svg" alt="bailliegifford" height=100>
           <br/>
-          <span>BTSE</span>
+          <span>Baillie Gifford</span>
         </a>
       </td>
       <td align="center" valign="middle">
-        <a href="https://www.okcoin.com/" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>
+        <a href="https://www.pnxbet.com" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/pnxbet.png" alt="PNXBET" height=100>
           <br/>
-          <span>OKCoin</span>
+          <span>PNXBET</span>
         </a>
       </td>
-      <td align="center" valign="middle">
-        <a href="https://www.dglab.com/en/" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/dglab.svg" alt="DG Lab" height=100>
-          <br/>
-          <span>DG Lab</span>
-        </a>
-      </td>
-    </tr>
-    <tr>
        <td align="center" valign="middle">
         <a href="https://acinq.co/" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/acinq-logo.svg" alt="ACINQ" height=100>
@@ -259,6 +250,8 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>ACINQ</span>
         </a>
       </td>
+      </tr>
+      <tr>
       <td align="center" valign="middle">
         <a href="https://lunanode.com" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/lunanode.svg" alt="LunaNode" height=100>
@@ -280,6 +273,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>Nomics</span>
         </a>
       </td>
+      <td align="center" valign="middle">
+       <a href="https://coincards.com/" target="_blank">
+         <img  src="BTCPayServer/wwwroot/img/coincards.svg" alt="Coincards" height=100>
+         <br/>
+         <span>Coincards</span>
+       </a>
+     </td>
     </tr>
   </tbody>
 </table>

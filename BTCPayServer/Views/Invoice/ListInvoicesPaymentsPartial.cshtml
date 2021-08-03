@@ -14,12 +14,12 @@
                 {
                 <th>Address</th>
                 }
-                <th class="text-right">Rate</th>
-                <th class="text-right">Paid</th>
-                <th class="text-right">Due</th>
+                <th class="text-end">Rate</th>
+                <th class="text-end">Paid</th>
+                <th class="text-end">Due</th>
                 @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
                 {
-                    <th class="text-right">Overpaid</th>
+                    <th class="text-end">Overpaid</th>
                 }
             </tr>
             </thead>
@@ -34,12 +34,12 @@
                         <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
                     </td>
                     }
-                    <td class="text-right">@payment.Rate</td>
-                    <td class="text-right">@payment.Paid</td>
-                    <td class="text-right">@payment.Due</td>
+                    <td class="text-end">@payment.Rate</td>
+                    <td class="text-end">@payment.Paid</td>
+                    <td class="text-end">@payment.Due</td>
                     @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
                     {
-                        <td class="text-right">@payment.Overpaid</td>
+                        <td class="text-end">@payment.Overpaid</td>
                     }
                 </tr>
             }

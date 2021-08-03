@@ -2,7 +2,6 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",
@@ -10,17 +9,22 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/bootstrap-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery/jquery.min.js",
+            "wwwroot/vendor/bootstrap/bootstrap.bundle.min.js"
+        ],
+        "minify": {
+            "enabled": false
+        }
+    },
+    {
         "outputFileName": "wwwroot/bundles/main-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/popper/popper.js",
-            "wwwroot/vendor/jquery-easing/jquery.easing.js",
-            "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
-            "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
-            "wwwroot/main/bootstrap4-creativestart/creative.js",
+            "wwwroot/js/copy-to-clipboard.js",
+            "wwwroot/main/utils.js",
             "wwwroot/main/site.js"
         ]
     },
@@ -46,7 +50,6 @@
         "outputFileName": "wwwroot/bundles/checkout-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/clipboard.js/clipboard.js",
-            "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/i18next/i18next.js",
@@ -60,8 +63,6 @@
     {
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]
@@ -90,10 +91,11 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/crowdfund-admin/main.js"
         ]
     },
@@ -101,16 +103,18 @@
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/js/summernote-options.js",
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/pos-admin/main.js"
         ]
     },
@@ -118,7 +122,8 @@
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css",
+            "wwwroot/main/template-editor.css"
         ]
     },
     {
@@ -145,14 +150,15 @@
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/js/summernote-options.js",
+            "wwwroot/vendor/summernote/summernote-bs5.js",
             "wwwroot/payment-request-admin/**/*.js"
         ]
     },
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/summernote/summernote-bs4.css"
+            "wwwroot/vendor/summernote/summernote-bs5.css"
         ]
     },
     {
@@ -186,7 +192,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js",
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js",
             "wwwroot/js/wallet/**/*.js"
         ],
         "minify": {
@@ -206,7 +213,8 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/bc-ur/web-bundle.js",
-            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js"
+            "wwwroot/vendor/ur-registry/urlib.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js"
         ],
         "minify": {
             "enabled": false

@@ -2,74 +2,77 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services
 {
-    public class TorServices
+    public class TorServices : BaseAsyncService
     {
-        private readonly BTCPayNetworkProvider _networks;
-        readonly BTCPayServerOptions _Options;
-        public TorServices(BTCPayServer.BTCPayNetworkProvider networks, BTCPayServerOptions options)
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly IOptions<BTCPayServerOptions> _options;
+
+        public TorServices(BTCPayNetworkProvider btcPayNetworkProvider, IOptions<BTCPayServerOptions> options)
         {
-            _networks = networks;
-            _Options = options;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _options = options;
         }
 
         public TorService[] Services { get; internal set; } = Array.Empty<TorService>();
 
-
+        private bool firstRun = true;
         internal async Task Refresh()
         {
-            if (string.IsNullOrEmpty(_Options.TorrcFile) || !File.Exists(_Options.TorrcFile))
+            if (firstRun)
             {
-                if (!string.IsNullOrEmpty(_Options.TorrcFile))
-                    Logs.PayServer.LogWarning("Torrc file is not found");
-                Services = Array.Empty<TorService>();
-                return;
+                firstRun = false;
+            }
+            else
+            {
+                await Task.Delay(TimeSpan.FromSeconds(120), Cancellation);
             }
             List<TorService> result = new List<TorService>();
             try
             {
-                var torrcContent = await File.ReadAllTextAsync(_Options.TorrcFile);
+                if (!File.Exists(_options.Value.TorrcFile))
+                {
+                    Logs.PayServer.LogWarning("Torrc file is not found");
+                    Services = Array.Empty<TorService>();
+                    return;
+                }
+
+                var torrcContent = await File.ReadAllTextAsync(_options.Value.TorrcFile);
                 if (!Torrc.TryParse(torrcContent, out var torrc))
                 {
                     Logs.PayServer.LogWarning("Torrc file could not be parsed");
                     Services = Array.Empty<TorService>();
                     return;
                 }
-                var torrcDir = Path.GetDirectoryName(_Options.TorrcFile);
-                var services = torrc.ServiceDirectories.SelectMany(d => d.ServicePorts.Select(p => (Directory: GetDirectory(d, torrcDir), VirtualPort: p.VirtualPort)))
-                .Select(d => (ServiceName: d.Directory.Name,
-                              ReadingLines: System.IO.File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
-                              VirtualPort: d.VirtualPort))
-                .ToArray();
+
+                var torrcDir = Path.GetDirectoryName(_options.Value.TorrcFile);
+                var services = torrc.ServiceDirectories.SelectMany(d =>
+                        d.ServicePorts.Select(p => (Directory: GetDirectory(d, torrcDir), VirtualPort: p.VirtualPort)))
+                    .Select(d => (ServiceName: d.Directory.Name,
+                        ReadingLines: System.IO.File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
+                        VirtualPort: d.VirtualPort))
+                    .ToArray();
                 foreach (var service in services)
                 {
                     try
                     {
                         var onionHost = (await service.ReadingLines)[0].Trim();
-                        var torService = new TorService()
-                        {
-                            Name = service.ServiceName,
-                            OnionHost = onionHost,
-                            VirtualPort = service.VirtualPort
-                        };
-                        if (service.ServiceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
-                            torService.ServiceType = TorServiceType.BTCPayServer;
-                        else if (TryParseP2PService(service.ServiceName, out var network, out var serviceType))
-                        {
-                            torService.ServiceType = serviceType;
-                            torService.Network = network;
-                        }
+                        var torService = ParseService(service.ServiceName, onionHost, service.VirtualPort);
                         result.Add(torService);
                     }
                     catch (Exception ex)
                     {
-                        Logs.PayServer.LogWarning(ex, $"Error while reading hidden service {service.ServiceName} configuration");
+                        Logs.PayServer.LogWarning(ex,
+                            $"Error while reading hidden service {service.ServiceName} configuration");
                     }
                 }
             }
@@ -77,7 +80,27 @@ namespace BTCPayServer.Services
             {
                 Logs.PayServer.LogWarning(ex, $"Error while reading torrc file");
             }
+
             Services = result.ToArray();
+        }
+
+        private TorService ParseService(string serviceName, string onionHost, int virtualPort)
+        {
+            var torService = new TorService() {Name = serviceName, OnionHost = onionHost, VirtualPort = virtualPort};
+
+            if (Enum.TryParse<TorServiceType>(serviceName, true, out var serviceType))
+                torService.ServiceType = serviceType;
+            else if (TryParseCryptoSpecificService(serviceName, out var network, out serviceType))
+            {
+                torService.ServiceType = serviceType;
+                torService.Network = network;
+            }
+            else
+            {
+                torService.ServiceType = TorServiceType.Other;
+            }
+
+            return torService;
         }
 
         private static DirectoryInfo GetDirectory(HiddenServiceDir hs, string relativeTo)
@@ -87,25 +110,42 @@ namespace BTCPayServer.Services
             return new DirectoryInfo(Path.Combine(relativeTo, hs.DirectoryPath));
         }
 
-        private bool TryParseP2PService(string name, out BTCPayNetworkBase network, out TorServiceType serviceType)
+        private bool TryParseCryptoSpecificService(string name, out BTCPayNetworkBase network,
+            out TorServiceType serviceType)
         {
             network = null;
             serviceType = TorServiceType.Other;
             var splitted = name.Trim().Split('-');
-            if (splitted.Length == 2 && splitted[1] == "P2P")
+            return splitted.Length == 2 && Enum.TryParse(splitted[1], true, out serviceType) &&
+                   _btcPayNetworkProvider.TryGetNetwork(splitted[0], out network);
+        }
+
+        public override async Task StartAsync(CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(_options.Value.TorrcFile) && _options.Value.TorServices != null)
             {
-                serviceType = TorServiceType.P2P;
+                LoadFromConfig();
             }
-            else if (splitted.Length == 2 && splitted[1] == "RPC")
+            else if(!string.IsNullOrEmpty(_options.Value.TorrcFile))
             {
-                serviceType = TorServiceType.RPC;
+                await Refresh();
+                await base.StartAsync(cancellationToken);
             }
-            else
-            {
-                return false;
-            }
-            network = _networks.GetNetwork<BTCPayNetworkBase>(splitted[0]);
-            return network != null;
+        }
+
+        internal override Task[] InitializeTasks()
+        {
+            return new[] {CreateLoopTask(Refresh)};
+        }
+
+        private void LoadFromConfig()
+        {
+            Services = _options.Value.TorServices.Select(p => p.Split(":", StringSplitOptions.RemoveEmptyEntries))
+                .Where(p => p.Length == 3)
+                .Select(strings =>
+                    int.TryParse(strings[2], out var port) ? ParseService(strings[0], strings[1], port) : null)
+                .Where(p => p != null)
+                .ToArray();
         }
     }
 

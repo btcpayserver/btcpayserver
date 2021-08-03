@@ -14,6 +14,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -44,12 +45,11 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
-        readonly IServiceProvider _ServiceProvider;
+        private readonly LanguageService _languageService;
 
         public WebhookNotificationManager WebhookNotificationManager { get; }
 
         public InvoiceController(
-            IServiceProvider serviceProvider,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
@@ -61,9 +61,9 @@ namespace BTCPayServer.Controllers
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             ApplicationDbContextFactory dbContextFactory,
             PullPaymentHostedService paymentHostedService,
-            WebhookNotificationManager webhookNotificationManager)
+            WebhookNotificationManager webhookNotificationManager,
+            LanguageService languageService)
         {
-            _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
@@ -76,6 +76,7 @@ namespace BTCPayServer.Controllers
             _paymentHostedService = paymentHostedService;
             WebhookNotificationManager = webhookNotificationManager;
             _CSP = csp;
+            _languageService = languageService;
         }
 
 
@@ -111,24 +112,23 @@ namespace BTCPayServer.Controllers
             FillBuyerInfo(invoice, entity);
 
             var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
+            var price = invoice.Price;
 
-            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
-            if (currencyInfo != null)
-            {
-                int divisibility = currencyInfo.CurrencyDecimalDigits;
-                invoice.Price = invoice.Price.RoundToSignificant(ref divisibility);
-                divisibility = currencyInfo.CurrencyDecimalDigits;
-                invoice.TaxIncluded = taxIncluded.RoundToSignificant(ref divisibility);
-            }
-            invoice.Price = Math.Max(0.0m, invoice.Price);
-            invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
-            invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
             entity.Metadata.ItemCode = invoice.ItemCode;
             entity.Metadata.ItemDesc = invoice.ItemDesc;
             entity.Metadata.Physical = invoice.Physical;
             entity.Metadata.TaxIncluded = invoice.TaxIncluded;
             entity.Currency = invoice.Currency;
-            entity.Price = invoice.Price;
+            if (price is decimal vv)
+            {
+                entity.Price = vv;
+                entity.Type = InvoiceType.Standard;
+            }
+            else
+            {
+                entity.Price = 0m;
+                entity.Type = InvoiceType.TopUp;
+            }
 
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
 
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
@@ -170,7 +170,16 @@ namespace BTCPayServer.Controllers
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
             invoice.Currency = invoice.Currency?.Trim().ToUpperInvariant() ?? "USD";
             entity.Currency = invoice.Currency;
-            entity.Price = invoice.Amount;
+            if (invoice.Amount is decimal v)
+            {
+                entity.Price = v;
+                entity.Type = InvoiceType.Standard;
+            }
+            else
+            {
+                entity.Price = 0.0m;
+                entity.Type = InvoiceType.TopUp;
+            }
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
@@ -186,13 +195,30 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, string[] additionalSearchTerms = null, CancellationToken cancellationToken = default)
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
+
+            entity.Price = Math.Max(0.0m, entity.Price);
+            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(entity.Currency, false);
+            if (currencyInfo != null)
+            {
+                entity.Price = entity.Price.RoundToSignificant(currencyInfo.CurrencyDecimalDigits);
+            }
+            if (entity.Metadata.TaxIncluded is decimal taxIncluded)
+            {
+                if (currencyInfo != null)
+                {
+                    taxIncluded = taxIncluded.RoundToSignificant(currencyInfo.CurrencyDecimalDigits);
+                }
+                taxIncluded = Math.Max(0.0m, taxIncluded);
+                taxIncluded = Math.Min(taxIncluded, entity.Price);
+                entity.Metadata.TaxIncluded = taxIncluded;
+            }
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
@@ -276,7 +302,7 @@ namespace BTCPayServer.Controllers
 
             using (logs.Measure("Saving invoice"))
             {
-                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
+                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);
             }
             _ = Task.Run(async () =>
             {
@@ -321,7 +347,16 @@ namespace BTCPayServer.Controllers
             {
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
-                var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
+
+                object preparePayment;
+                if (storeBlob.LazyPaymentMethods)
+                {
+                    preparePayment = null;
+                }
+                else
+                {
+                    preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
+                }
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];
                 if (rate.BidAsk == null)
                 {

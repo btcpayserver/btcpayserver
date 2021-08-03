@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
                 Installed = pluginService.LoadedPlugins,
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
+                Disabled = pluginService.GetDisabledPlugins(),
                 CanShowRestart = btcPayServerOptions.DockerDeployment
             };
             return View(res);
@@ -50,6 +51,7 @@ namespace BTCPayServer.Controllers
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
+            public string[] Disabled { get; set; }
         }
 
         [HttpPost("server/plugins/uninstall")]
@@ -117,7 +119,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> UploadPlugin([FromServices] PluginService pluginService,
             List<IFormFile> files)
         {
-            foreach (var formFile in files.Where(file => file.Length > 0))
+            foreach (var formFile in files.Where(file => file.Length > 0).Where(file => file.FileName.IsValidFileName()))
             {
                 await pluginService.UploadPlugin(formFile);
                 pluginService.InstallPlugin(formFile.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix,

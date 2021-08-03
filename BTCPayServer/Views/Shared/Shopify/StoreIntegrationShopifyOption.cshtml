@@ -1,0 +1,45 @@
+@using BTCPayServer.Plugins.Shopify
+@{
+    var shopify = Context.GetStoreData().GetStoreBlob().GetShopifySettings();
+    
+    var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
+    var shopifyUrl = shopify?.ShopifyUrl;
+}
+<li class="list-group-item bg-tile ">
+    <div class="d-flex align-items-center">
+        <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
+            <strong class="me-3">
+                Shopify
+                <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                </a>
+            </strong>
+            <span title="" class="d-flex me-3">
+                <span class="text-secondary">@shopifyUrl</span>
+            </span>
+        </span>
+        <span class="d-flex align-items-center fw-semibold">
+            @if (shopifyCredsSet)
+            {
+                <span class="d-flex align-items-center text-success">
+                    <span class="me-2 btcpay-status btcpay-status--enabled"></span>
+                    Enabled
+                </span>
+                <span class="text-light ms-3 me-2">|</span>
+                <a lass="btn btn-link px-1 py-1 fw-semibold" asp-controller="Shopify" asp-action="EditShopifyIntegration" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                    Modify
+                </a>
+            }
+            else
+            {
+                <span class="d-flex align-items-center text-danger">
+                    <span class="me-2 btcpay-status btcpay-status--disabled"></span>
+                    Disabled
+                </span>
+                <a class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="Shopify" asp-action="EditShopifyIntegration" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                    Setup
+                </a>
+            }
+        </span>
+    </div>
+</li>

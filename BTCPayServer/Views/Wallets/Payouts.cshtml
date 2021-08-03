@@ -1,70 +1,128 @@
-﻿@model PayoutsModel
+﻿@using BTCPayServer.Client.Models
+@model PayoutsModel
+
+@inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage payouts";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts);
-}
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
 
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
-
-<script type="text/javascript">
-    function selectAll(e)
+    var stateActions = new List<(string Action, string Text)>();
+    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(Model.PaymentMethodId));
+    stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
+    switch (Model.PayoutState)
     {
-        var items = document.getElementsByClassName("selection-item");
-        for (var i = 0; i < items.length; i++) {
-            items[i].checked = e.checked;
-        }
+        case PayoutState.AwaitingApproval:
+            stateActions.Add(("approve", "Approve selected payouts"));
+            stateActions.Add(("approve-pay", "Approve & Send selected payouts"));
+            stateActions.Add(("cancel", "Cancel selected payouts"));
+            break;
+        case PayoutState.AwaitingPayment:
+            stateActions.Add(("pay", "Send selected payouts"));
+            stateActions.Add(("cancel", "Cancel selected payouts"));
+            stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
+            break;
     }
-</script>
-<form method="post">
-    <div class="row button-row">
-        <div class="col">
-            <h4 class="mb-3">Payouts to process</h4>
-        </div>
-        @if (Model.WaitingForApproval.Any())
+}
+
+@section PageFootContent {
+    <script>
+        function selectAll(e, elementClass)
         {
-            <div class="col text-right">
-                <button type="submit" id="payCommand" name="Command" class="btn btn-primary" role="button" value="pay">Confirm selected payouts</button>
-                <button type="submit" id="payCommand" name="Command" class="btn btn-secondary" role="button" value="cancel">Cancel selected payouts</button>
+            const items = document.getElementsByClassName("selection-item-"+elementClass);
+            for (let i = 0; i < items.length; i++) {
+                items[i].checked = e.checked;
+            }
+        }
+    </script>
+}
+
+<form method="post">
+    <input type="hidden" asp-for="PaymentMethodId"/>
+    <input type="hidden" asp-for="PayoutState"/>
+    <h4 class="mb-4">@ViewData["Title"]</h4>
+
+    <div class="row">
+        <div class="col-auto">
+            <ul class="nav nav-pills">
+                @foreach (var state in Model.PayoutStateCount)
+                {
+                    <li class="nav-item py-0">
+                        <a id="@state.Key-view" asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                    </li>
+                }
+            </ul>
+        </div>
+        @if (Model.Payouts.Any() && stateActions.Any())
+        {
+            <div class="dropdown col-auto mt-4 ms-xl-auto mt-xl-0">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
+                    Actions
+                </button>
+                <div class="dropdown-menu" aria-labelledby="@Model.PayoutState-actions">
+                    @foreach (var action in stateActions)
+                    {
+                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="dropdown-item" role="button" value="@Model.PayoutState-@action.Action">@action.Text</button>
+                    }
+                </div>
             </div>
         }
     </div>
+
     <div class="row">
-        <div class="col-md-12">
-            @if (Model.WaitingForApproval.Any())
+
+        <div>
+            @if (Model.Payouts.Any())
             {
                 <table class="table table-sm table-responsive-lg">
                     <thead class="thead-inverse">
                     <tr>
-                        <th><input id="selectAllCheckbox" type="checkbox" onclick="selectAll(this); return true;" /></th>
-                        <th style="min-width: 90px;" class="col-md-auto">Date</th>
-                        <th class="text-left">Source</th>
-                        <th class="text-left">Destination</th>
-                        <th class="text-right">Amount</th>
+                        <th>
+                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input" onclick="selectAll(this, '@Model.PayoutState.ToString()'); return true;"/>
+                        </th>
+                        <th style="min-width: 90px;" class="col-md-auto">
+                            Date
+                        </th>
+                        <th class="text-start">Source</th>
+                        <th class="text-start">Destination</th>
+                        <th class="text-end">Amount</th>
+                        @if (Model.PayoutState != PayoutState.AwaitingApproval)
+                        {
+                            <th class="text-end">Transaction</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
-                    @for (int i = 0; i < Model.WaitingForApproval.Count; i++)
+                    @for (int i = 0; i < Model.Payouts.Count; i++)
                     {
-                        var pp = Model.WaitingForApproval[i];
-                        <tr>
+                        var pp = Model.Payouts[i];
+                        <tr class="payout">
                             <td>
                                 <span>
-                                    <input type="checkbox" class="selection-item" asp-for="WaitingForApproval[i].Selected" />
-                                    <input type="hidden" asp-for="WaitingForApproval[i].PayoutId" />
+                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected"/>
+                                    <input type="hidden" asp-for="Payouts[i].PayoutId"/>
                                 </span>
                             </td>
-                            <td><span>@pp.Date.ToBrowserDate()</span></td>
-                            <td class="mw-100"><span>@pp.PullPaymentName</span></td>
-                            <td><span>@pp.Destination</span></td>
-                            <td class="text-right"><span>@pp.Amount</span></td>
+                            <td>
+                                <span>@pp.Date.ToBrowserDate()</span>
+                            </td>
+                            <td class="mw-100">
+                                <span>@pp.PullPaymentName</span>
+                            </td>
+                            <td>
+                                <span>@pp.Destination</span>
+                            </td>
+                            <td class="text-end">
+                                <span>@pp.Amount</span>
+                            </td>
+                            @if (Model.PayoutState != PayoutState.AwaitingApproval)
+                            {
+                                <td class="text-end">
+                                    @if (!(pp.ProofLink is null))
+                                    {
+                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                    }
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -72,56 +130,9 @@
             }
             else
             {
-                <p class="mb-0">No payout waiting for approval.</p>
+                <p class="mb-0 py-4" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
             }
         </div>
-    </div>
-
-    <hr class="my-4"/>
-
-    <div class="row">
-        <div class="col-md-12">
-            <h4 class="mb-3">Completed payouts</h4>
-            @if (Model.Other.Any())
-            {
-                <table class="table table-sm table-responsive-lg">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th style="min-width: 90px;" class="col-md-auto">
-                                Date
-                            </th>
-                            <th class="text-left">Source</th>
-                            <th class="text-left">Destination</th>
-                            <th class="text-right">Amount</th>
-                            <th class="text-right">Transaction</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < Model.Other.Count; i++)
-                        {
-                            var pp = Model.Other[i];
-                            <tr>
-                                <td><span>@pp.Date.ToBrowserDate()</span></td>
-                                <td class="mw-100"><span>@pp.PullPaymentName</span></td>
-                                <td><span>@pp.Destination</span></td>
-                                <td class="text-right"><span>@pp.Amount</span></td>
-                                @if (pp.TransactionLink is null)
-                                {
-                                    <td class="text-right"><span>Cancelled</span></td>
-                                }
-                                else
-                                {
-                                    <td class="text-right"><span><a class="transaction-link" href="@pp.TransactionLink">Link</a></span></td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p class="mb-0">No payout in history.</p>
-            }
-        </div>
+        <vc:pager view-model="Model"/>
     </div>
 </form>

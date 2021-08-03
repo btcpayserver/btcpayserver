@@ -1,9 +1,10 @@
 ﻿@model RescanWalletModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Rescan wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Rescan);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Rescan, "Rescan wallet", Context.GetStoreData().StoreName);
 }
+
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
 @if (!Model.Ok)
 {
@@ -43,26 +44,28 @@ else if (!Model.Progress.HasValue)
         @if (Model.PreviousError != null)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
                 <span>The previous scan stopped with an error: @Model.PreviousError</span>
             </div>
         }
         else if (Model.LastSuccess != null)
         {
             <div class="alert alert-success alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
                 <span>The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>
             </div>
         }
         <div class="col-lg-8">
             <p>
                 Scanning the UTXO set allow you to restore the balance of your wallet, but not all the transaction history.
-            </p>
-            <p>
                 This operation will scan the HD Path <b>0/*</b>, <b>1/*</b> and <b>*</b> from a starting index, until no UTXO are found in a whole gap limit.
             </p>
             <p>The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
-            <p>If you do not understand above, just keep the default values and click on <b>Start Scan</b></p>
+            <p>If you do not understand the above, go with the defaults and start scanning.</p>
         </div>
     </div>
 
@@ -70,15 +73,15 @@ else if (!Model.Progress.HasValue)
         <div class="col-lg-8">
             <form method="post">
                 <div class="form-group">
-                    <label asp-for="StartingIndex"></label>
+                    <label asp-for="StartingIndex" class="form-label"></label>
                     <input asp-for="StartingIndex" class="form-control" type="number" style="max-width:14ch;" />
                 </div>
                 <div class="form-group">
-                    <label asp-for="GapLimit"></label>
+                    <label asp-for="GapLimit" class="form-label"></label>
                     <input asp-for="GapLimit" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
                 <div class="form-group">
-                    <label asp-for="BatchSize"></label>
+                    <label asp-for="BatchSize" class="form-label"></label>
                     <input asp-for="BatchSize" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
                 <button type="submit" class="btn btn-primary">Start scan</button>

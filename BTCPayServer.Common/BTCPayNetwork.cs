@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BTCPayServer.Common;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
@@ -54,7 +55,7 @@ namespace BTCPayServer
     {
         public Network NBitcoinNetwork { get { return NBXplorerNetwork?.NBitcoinNetwork; } }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
-        public bool SupportRBF { get; internal set; }
+        public bool SupportRBF { get; set; }
         public string LightningImagePath { get; set; }
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; set; }
@@ -63,9 +64,9 @@ namespace BTCPayServer
 
         public virtual bool WalletSupported { get; set; } = true;
         public virtual bool ReadonlyWallet { get; set; } = false;
-
-        public int MaxTrackedConfirmation { get; internal set; } = 6;
-        public string UriScheme { get; internal set; }
+        public virtual bool VaultSupported { get; set; } = false;
+        public int MaxTrackedConfirmation { get; set; } = 6;
+        public string UriScheme { get; set; }
         public bool SupportPayJoin { get; set; } = false;
         public bool SupportLightning { get; set; } = true;
 
@@ -121,14 +122,20 @@ namespace BTCPayServer
             });
         }
 
-        public virtual string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        public virtual PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
+            var builder = new PaymentUrlBuilder(UriScheme);
+            builder.Host = cryptoInfoAddress;
+            if (cryptoInfoDue != null && cryptoInfoDue != Money.Zero)
+            {
+                builder.QueryParams.Add("amount", cryptoInfoDue.ToString(false, true));
+            }
+            return builder;
         }
 
-        public virtual GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        public virtual List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)
         {
-            return response;
+            return transactionInformationSet;
         }
     }
 
@@ -152,7 +159,7 @@ namespace BTCPayServer
             }
         }
 
-        public string BlockExplorerLinkDefault { get; internal set; }
+        public string BlockExplorerLinkDefault { get; set; }
         public string DisplayName { get; set; }
         public int Divisibility { get; set; } = 8;
         [Obsolete("Should not be needed")]

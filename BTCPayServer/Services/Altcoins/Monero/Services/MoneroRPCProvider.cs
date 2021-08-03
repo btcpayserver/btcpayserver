@@ -15,7 +15,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
     {
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
         private readonly EventAggregator _eventAggregator;
-        private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         public ImmutableDictionary<string, JsonRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, JsonRpcClient> WalletRpcClients;
 
@@ -24,11 +23,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
         public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;
 
-        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration, EventAggregator eventAggregator, IHttpClientFactory httpClientFactory, BTCPayServerEnvironment btcPayServerEnvironment)
+        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration, EventAggregator eventAggregator, IHttpClientFactory httpClientFactory)
         {
             _moneroLikeConfiguration = moneroLikeConfiguration;
             _eventAggregator = eventAggregator;
-            _btcPayServerEnvironment = btcPayServerEnvironment;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
                     pair => new JsonRpcClient(pair.Value.DaemonRpcUri, "", "", httpClientFactory.CreateClient()));

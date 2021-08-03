@@ -19,13 +19,40 @@ namespace BTCPayServer.Controllers
     public partial class ServerController
     {
         [Route("server/users")]
-        public async Task<IActionResult> ListUsers(UsersViewModel model)
+        public async Task<IActionResult> ListUsers(
+            UsersViewModel model,
+            string sortOrder = null
+        )
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
-            var users = _UserManager.Users;
-             model.Total = await users.CountAsync();   
-             model.Users = await users  
-                .Skip(model.Skip).Take(model.Count)
+            
+            var usersQuery = _UserManager.Users;
+            if (!string.IsNullOrWhiteSpace(model.SearchTerm))
+            {
+#pragma warning disable CA1307 // Specify StringComparison
+                // Entity Framework don't support StringComparison
+                usersQuery = usersQuery.Where(u => u.Email.Contains(model.SearchTerm));
+#pragma warning restore CA1307 // Specify StringComparison
+            }
+
+            if (sortOrder != null) 
+            {
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData["NextUserEmailSortOrder"] = "asc";
+                        usersQuery = usersQuery.OrderByDescending(user => user.Email);
+                        break;
+                    case "asc":
+                        usersQuery = usersQuery.OrderBy(user => user.Email);
+                        ViewData["NextUserEmailSortOrder"] = "desc";
+                        break;
+                }
+            }
+
+            model.Users = await usersQuery
+                .Skip(model.Skip)
+                .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
                 {
                     Name = u.UserName,
@@ -33,7 +60,9 @@ namespace BTCPayServer.Controllers
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
                     Created = u.Created
-                }).ToListAsync();
+                })
+                .ToListAsync();
+            model.Total = await usersQuery.CountAsync();
              
             return View(model);
         }
@@ -50,14 +79,9 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
-                IsAdmin = IsAdmin(roles)
+                IsAdmin = _userService.IsRoleAdmin(roles)
             };
             return View(userVM);
-        }
-
-        private static bool IsAdmin(IList<string> roles)
-        {
-            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
         }
 
         [Route("server/users/{userId}")]
@@ -70,7 +94,7 @@ namespace BTCPayServer.Controllers
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = IsAdmin(roles);
+            var wasAdmin = _userService.IsRoleAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
@@ -92,10 +116,10 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser()
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
 
             return View();
         }
@@ -105,13 +129,14 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            var requiresConfirmedEmail = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
             if (!_Options.AllowAdminRegistration)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
                 IdentityResult result;
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = _cssThemeManager.Policies.RequiresConfirmedEmail, 
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = requiresConfirmedEmail, 
                     Created = DateTimeOffset.UtcNow };
 
                 if (!string.IsNullOrEmpty(model.Password))
@@ -177,7 +202,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var roles = await _UserManager.GetRolesAsync(user);
-            if (IsAdmin(roles))
+            if (_userService.IsRoleAdmin(roles))
             {
                 var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
                 if (admins.Count == 1)
@@ -207,15 +232,8 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            var files = await _StoredFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
-            {
-                UserIds = new[] { userId },
-            });
+            await _userService.DeleteUserAndAssociatedData(user);
 
-            await Task.WhenAll(files.Select(file => _FileService.RemoveFile(file.Id, userId)));
-
-            await _UserManager.DeleteAsync(user);
-            await _StoreRepository.CleanUnreachableStores();
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }

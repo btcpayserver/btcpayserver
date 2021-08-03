@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -31,19 +30,21 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
-
-
+        
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
-        [Display(Name = "Display lightning payment amounts in Satoshis")]
+        [Display(Name = "Display Lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
 
-        [Display(Name = "Add hop hints for private channels to the lightning invoice")]
+        [Display(Name = "Add hop hints for private channels to the Lightning invoice")]
         public bool LightningPrivateRouteHints { get; set; }
 
-        [Display(Name = "Include lightning invoice fallback to on-chain BIP21 payment url")]
+        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
+
+        [Display(Name = "Only enable the payment method after user explicitly chooses it")]
+        public bool LazyPaymentMethods { get; set; }
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
@@ -54,8 +55,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Recommended fee confirmation target blocks")]
         [Range(1, double.PositiveInfinity)]
         public int RecommendedFeeBlockTarget { get; set; }
-
-
+        
+        [Display(Name = "Auto-detect language on checkout")]
+        public bool AutoDetectLanguage { get; set; }
+        
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
 

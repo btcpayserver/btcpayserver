@@ -1,33 +1,20 @@
 @model (string templateId, string title)
-<style>
-        .card-deck {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: .5rem;
-        }
-        .card-deck .card{
-            max-width:480px;
-        }
-        .card-img-top{
-            min-height:247px; background-repeat: no-repeat; background-size:contain; background-position: top;
-        }
-</style>
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
-        <label class="control-label mb-3">@Model.title </label>
+        <h4 class="mt-5 mb-4">@Model.title </h4>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
             {
-                <br/>
+                <br />
                 <span class="text-danger">@error.ErrorMessage</span>
             }
         }
-        
+
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
@@ -38,17 +25,17 @@
                     </div>
                 </div>
                 <div v-if="!items || items.length === 0" class="col-12 text-center">
-                    No items.<br/>
+                    No items.<br />
                     <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
                         Add your first item
                     </button>
                 </div>
             </div>
-            <div class="card-footer text-left">
-                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
+            <div class="card-footer text-start p-3">
+                <button type="button" class="btn btn-primary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary ms-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
                     Toggle raw editor
                 </button>
             </div>
@@ -58,20 +45,20 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                            <vc:icon symbol="close" />
                         </button>
                     </div>
                     <div class="modal-body" v-if="editingItem">
                         <div class="mb-3">
                             <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
-                            <div class="form-row">
+                            <div class="form-group row">
                                 <div class="col-sm-6">
-                                    <label>Title</label>*
+                                    <label class="form-label" data-required>Title</label>
                                     <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
                                 </div>
                                 <div class="col-sm-3">
-                                    <label>Price</label>*
+                                    <label class="form-label" data-required>Price</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"
@@ -79,50 +66,39 @@
                                            min="0"
                                            type="number"
                                            required
-                                           v-model="editingItem.price" ref="txtPrice"/>
+                                           v-model="editingItem.price" ref="txtPrice" />
                                 </div>
                                 <div class="col-sm-3">
-                                    <label>Custom price</label>
-                                    <select class="form-control" v-model="editingItem.custom">
+                                    <label class="form-label">Custom price</label>
+                                    <select class="form-select" v-model="editingItem.custom">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Image</label>
-                                    <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Image</label>
+                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage" />
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Description</label>
-                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Inventory (leave blank to not use inventory feature)</label>
-                                    <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
-                                </div>
-                                
+                            <div class="form-group">
+                                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
+                                <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Id (leave blank to generate from title)</label>
-                                    <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Id (leave blank to generate from title)</label>
+                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
                             </div>
-                            <div class="form-row">
-                                <div class="col">
-                                    <label>Buy Button Text</label>
-                                    <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Buy Button Text</label>
+                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
                         <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save Changes</button>
                     </div>
                 </div>
@@ -132,7 +108,7 @@
 </div>
 
 <script>
-$(function() {
+document.addEventListener("DOMContentLoaded", function () {
     new Vue({
         el: '#template-editor-app',
         data: {
@@ -161,8 +137,10 @@ $(function() {
                 this.getInputElement().parent().toggle();
             },
             getImage: function(item){
+                var image = this.unEscapeKey(item.image) || "~/img/img-placeholder.svg";
+                var url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;
                 return {
-                    "background-image" : "url('" + (this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
+                    "background-image" : "url('" + url +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },
@@ -211,6 +189,13 @@ $(function() {
                         }
                         if (productProperty.indexOf('description:') !== -1) {
                             description =productProperty.replace('description:', '').trim();
+                            if (description.startsWith('"') && description.endsWith('"')){
+                                description = description.substr(1, description.length-2);
+                            }
+                            description = description
+                            .replaceAll("<br>", "\n")
+                            .replaceAll("<br/>", "\n")
+                            .replaceAll('\\"', '"')
                         }
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
@@ -236,7 +221,7 @@ $(function() {
                             title: title,
                             price: price,
                             image: image || null,
-                            description: description || '',
+                            description:  description || '',
                             custom: custom === "true",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
@@ -266,7 +251,7 @@ $(function() {
                         '  title: ' + title + '\n';
 
                         if (description) {
-                            template += '  description: ' + description + '\n';
+                            template += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
                         }
                         if (image) {
                             template += '  image: ' + image + '\n';

@@ -296,10 +296,9 @@
                         "nullable": false
                     },
                     "created": {
-                        "type": "string",
                         "description": "The creation date of the payment request",
-                        "nullable": false,
-                        "format": "int64"
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                        "nullable": false
                     }
                 }
             },
@@ -339,10 +338,9 @@
                         "format": "html"
                     },
                     "expiryDate": {
-                        "type": "string",
                         "description": "The expiry date of the payment request",
                         "nullable": true,
-                        "format": "int64"
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "embeddedCSS": {
                         "type": "string",

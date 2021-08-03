@@ -77,11 +77,11 @@
                         <h5>@(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency </h5>
                         <h5 class="text-muted">Raised</h5>
                     </div>
-                    <div class="col-sm  border-right">
+                    <div class="col-sm border-right">
                         <h5>@(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h5>
                         <h5 class="text-muted">Of Goal</h5>
                     </div>
-                    <div class="col-sm  text-right">
+                    <div class="col-sm text-end">
                         <h5>
                             @Model.Info.TotalContributors
                         </h5>
@@ -136,18 +136,12 @@
                         <div class="col-md-4 col-sm-12">
                             <partial 
                                 name="/Views/AppsPublic/Crowdfund/ContributeForm.cshtml"
-                                model="@(new ContributeToCrowdfund()
-                                              {
-                                                  ViewCrowdfundViewModel = Model,
-                                                  RedirectToCheckout = true,
-                                                  
-                                              })"></partial>
+                                model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })"></partial>
                         </div>
                     </div>
             </div>
-            <div class="card-footer text-muted d-flex" >
-
-                <div class="align-self-end pr-4">Updated @Model.Info.LastUpdated</div>
+            <div class="card-footer text-muted d-flex">
+                <div class="align-self-end pe-4">Updated @Model.Info.LastUpdated</div>
             </div>
         </div>
     </div>

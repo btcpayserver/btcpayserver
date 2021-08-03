@@ -1,4 +1,4 @@
-﻿@model PaymentModel
+@model PaymentModel
 
 <div class="top-header">
     <div class="header">
@@ -60,7 +60,7 @@
                         @foreach (var crypto in Model.AvailableCryptos)
                         {
                             <li class="vexmenuitem">
-                                <a href="@crypto.Link" onclick="closePaymentMethodDialog('@crypto.PaymentMethodId');return false;">
+                                <a href="@crypto.Link" onclick="closePaymentMethodDialog('@crypto.PaymentMethodId');return false;" rel="noreferrer noopener">
                                     <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" asp-append-version="true" />
                                     @crypto.PaymentMethodName
                                     @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
@@ -95,10 +95,10 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid'">
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp">
                 <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
             </div>
-            <div class="single-item-order__right__btc-price" v-else>
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp">
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
@@ -106,10 +106,10 @@
                 <span v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</span>
             </div>
         </div>
-        <span class="fa fa-angle-double-down"></span>
-        <span class="fa fa-angle-double-up"></span>
+        <span class="fa fa-angle-double-down" v-if="!srvModel.isUnsetTopUp"></span>
+        <span class="fa fa-angle-double-up" v-if="!srvModel.isUnsetTopUp"></span>
     </div>
-    <line-items>
+    <line-items v-if="!srvModel.isUnsetTopUp">
         <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
             {{$t("NotPaid_ExtraTransaction")}}
         </div>
@@ -124,7 +124,7 @@
                     {{srvModel.orderAmountFiat}}
                 </div>
             </div>
-            <div class="line-items__item" v-show="srvModel.networkFee > 0">
+            <div class="line-items__item" v-show="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
                 <div class="line-items__item__label">
                     <span>{{$t("Network Cost")}}</span>
                 </div>
@@ -132,7 +132,7 @@
                     <span v-if="srvModel.isMultiCurrency">
                         {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
-                    <span v-else>
+                    <span v-else-if="srvModel.txCountForFee > 0">
                         {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
                 </div>
@@ -149,7 +149,7 @@
             </div>
         </div>
     </line-items>
-    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName"
+    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName && srvModel.activated"
                v-bind:srv-model="srvModel"
                v-bind:is="srvModel.uiSettings.checkoutHeaderVueComponentName">
     </component>
@@ -168,7 +168,7 @@
                 <span class="submission-error-label" v-show="emailAddressInputInvalid">{{$t("Please enter a valid email address")}}</span>
             </div>
             <div class="input-wrapper">
-                <input class="bp-input email-input "
+                <input class="bp-input email-input"
                        v-bind:class="{ 'ng-pristine ng-submitted ng-touched': !emailAddressInputDirty,  'ng-invalid form-input-invalid': emailAddressInputInvalid }" id="emailAddressFormInput"
                        v-bind:placeholder="$t('Your email')" type="email" v-model="emailAddressInput"
                        v-on:change="onEmailChange">
@@ -184,7 +184,7 @@
         </form>
     </div>
     <div v-if="showPaymentUI">
-        <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName"
+        <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName && srvModel.activated"
                    v-bind:srv-model="srvModel"
                    v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
         </component>

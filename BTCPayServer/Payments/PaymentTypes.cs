@@ -81,6 +81,8 @@ namespace BTCPayServer.Payments
             Money cryptoInfoDue, string serverUri);
         public abstract string InvoiceViewPaymentPartialName { get; }
 
+        public abstract object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod);
+        
         public virtual bool IsPaymentType(string paymentType)
         {
             paymentType = paymentType?.ToLowerInvariant();

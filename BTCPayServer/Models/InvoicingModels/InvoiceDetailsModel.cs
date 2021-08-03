@@ -22,6 +22,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Replaced { get; set; }
         public BitcoinLikePaymentData CryptoPaymentData { get; set; }
         public string AdditionalInformation { get; set; }
+
+        public decimal NetworkFee { get; set; }
     }
 
     public class OffChainPaymentViewModel
@@ -95,6 +97,13 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
+
+        public string PaymentRequestLink
+        {
+            get;
+            set;
+        }
+        
         public string NotificationUrl
         {
             get;
@@ -116,5 +125,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public List<PaymentEntity> Payments { get; set; }
         public bool Archived { get; set; }
         public bool CanRefund { get; set; }
+        public bool ShowCheckout { get; set; }
     }
 }

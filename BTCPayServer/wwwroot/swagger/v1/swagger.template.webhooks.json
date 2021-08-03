@@ -481,10 +481,9 @@
                         "nullable": false
                     },
                     "timestamp": {
-                        "type": "number",
-                        "format": "int64",
                         "nullable": false,
-                        "description": "Timestamp of when the delivery got broadcasted"
+                        "description": "Timestamp of when the delivery got broadcasted",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "httpCode": {
                         "type": "number",
@@ -572,13 +571,16 @@
                         "description": "Which event should be received by this endpoint",
                         "properties": {
                             "everything": {
-                                "type": "string",
+                                "type": "boolean",
                                 "description": "If true, the endpoint will receive all events related to the store.",
                                 "nullable": false,
                                 "default": true
                             },
                             "specificEvents": {
-                                "type": "string",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
                                 "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`.",
                                 "nullable": false
                             }
@@ -613,12 +615,11 @@
                     "type": {
                         "type": "string",
                         "nullable": false,
-                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, and `InvoiceInvalid`."
+                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceSettled`, and `InvoiceInvalid`."
                     },
                     "timestamp": {
-                        "type": "number",
-                        "format": "int64",
-                        "description": "The timestamp when this delivery has been created"
+                        "description": "The timestamp when this delivery has been created",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     }
                 }
             },
@@ -737,9 +738,9 @@
         }
     },
     "x-webhooks": {
-        "Invoice created": {
+        "InvoiceCreated": {
             "post": {
-                "summary": "Invoice created",
+                "summary": "InvoiceCreated",
                 "description": "A new invoice has been created",
                 "parameters": [
                     {
@@ -767,9 +768,9 @@
                 }
             }
         },
-        "Invoice expired": {
+        "InvoiceExpired": {
             "post": {
-                "summary": "Invoice expired",
+                "summary": "InvoiceExpired",
                 "description": "An invoice expired",
                 "parameters": [
                     {
@@ -797,9 +798,9 @@
                 }
             }
         },
-        "Payment received": {
+        "InvoiceReceivedPayment": {
             "post": {
-                "summary": "Payment received",
+                "summary": "InvoiceReceivedPayment",
                 "description": "An invoice received a payment",
                 "parameters": [
                     {
@@ -827,10 +828,10 @@
                 }
             }
         },
-        "Invoice processing": {
+        "InvoicePaidInFull": {
             "post": {
-                "summary": "Invoice processing",
-                "description": "An invoice has been fully paid",
+                "summary": "InvoicePaidInFull",
+                "description": "Triggers when an invoice is fully paid, but doesn't have the required amount of confirmations on the blockchain yet according to your store's settings.",
                 "parameters": [
                     {
                         "in": "header",
@@ -857,9 +858,9 @@
                 }
             }
         },
-        "Invoice invalid": {
+        "InvoiceInvalid": {
             "post": {
-                "summary": "Invoice invalid",
+                "summary": "InvoiceInvalid",
                 "description": "An invoice became invalid",
                 "parameters": [
                     {
@@ -887,10 +888,10 @@
                 }
             }
         },
-        "Invoice settled": {
+        "InvoiceSettled": {
             "post": {
-                "summary": "Invoice settled",
-                "description": "An invoice has been settled",
+                "summary": "InvoiceSettled",
+                "description": "Triggers when an invoice is considered settled and the merchant can proceed with the order's delivery. The invoice now has enough confirmations on the blockchain (if paid on-chain) according to your store's configuration.",
                 "parameters": [
                     {
                         "in": "header",

@@ -144,7 +144,7 @@
                             <h2 class="text-muted" v-if="srvModel.tagline" id="crowdfund-body-header-tagline">{{srvModel.tagline}}</h2>
                         </div>
                         <div class="col-sm-12 col-md-4 col-lg-3" id="crowdfund-body-header-cta-container">
-                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
+                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 fw-bold" v-on:click="contributeModalOpen = true">Contribute</button>
                         </div>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
             </div>
             <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
               
-                <div class="align-self-end pr-4">Updated {{lastUpdated}}</div>
+                <div class="align-self-end pe-4">Updated {{lastUpdated}}</div>
                 <div class="form-check mx-1"  v-if="srvModel.animationsEnabled || animation">
                     <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
                     <label class="form-check-label" for="cbAnime">
@@ -251,7 +251,7 @@
 
     <div class="perk-zoom " v-if="canExpand">
         <div class="perk-zoom-bg bg-primary"> </div>
-        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
+        <div class="perk-zoom-text w-100 text-center text-white fw-bold">
             Select this contribution perk
         </div>
     </div>
@@ -284,20 +284,18 @@
                     :min="perk.price.value"  
                     step="any"  
                     placeholder="Contribution Amount"
-                    required >
-                <div class="input-group-append">                    
-                    <span class='input-group-text'>{{targetCurrency}}</span>
-                    <button 
-                        class="btn btn-primary" 
-                        v-bind:class="{ 'btn-disabled': loading}"
-                        :disabled="!active || loading" 
-                        type="submit">
-                         <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                        {{perk.buyButtonText || 'Continue'}}
-                    </button>
-                </div>
+                    required>
+                <span class='input-group-text'>{{targetCurrency}}</span>
+                <button
+                    class="btn btn-primary"
+                    v-bind:class="{ 'btn-disabled': loading}"
+                    :disabled="!active || loading"
+                    type="submit">
+                     <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    {{perk.buyButtonText || 'Continue'}}
+                </button>
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">

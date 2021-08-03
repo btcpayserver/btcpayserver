@@ -170,6 +170,31 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Fido2Credentials");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.HistoricalAddressInvoiceData", b =>
                 {
                     b.Property<string>("InvoiceDataId")
@@ -955,6 +980,14 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("Apps")
                         .HasForeignKey("StoreDataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
+                        .WithMany("Fido2Credentials")
+                        .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

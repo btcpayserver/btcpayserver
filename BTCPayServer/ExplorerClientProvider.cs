@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -11,7 +12,7 @@ using NBXplorer;
 
 namespace BTCPayServer
 {
-    public class ExplorerClientProvider
+    public class ExplorerClientProvider : IExplorerClientProvider
     {
         readonly BTCPayNetworkProvider _NetworkProviders;
 

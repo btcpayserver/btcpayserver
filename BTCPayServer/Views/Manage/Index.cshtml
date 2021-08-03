@@ -3,34 +3,28 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.Index, "Profile");
 }
 
-
-<partial name="_StatusMessage" />
-
-@if (!this.ViewContext.ModelState.IsValid)
-{
-    <div class="row">
-        <div class="col-md-6">
-            <div asp-validation-summary="All" class="text-danger"></div>
-        </div>
-    </div>
-}
 <form method="post">
-    <div class="form-row">
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="text-danger"></div>
+    }
+
+    <div class="form-group row">
         <div class="col-md-6 mb-3">
-            <label asp-for="Username"></label>
-            <input asp-for="Username" class="form-control" disabled />
+            <label asp-for="Username" class="form-label"></label>
+            <input asp-for="Username" class="form-control" disabled/>
         </div>
     </div>
-    <div class="form-row">
+    <div class="form-group row">
         <div class="col-md-6 mb-3">
-            <label asp-for="Email"></label>
-            <input asp-for="Email" class="form-control" />
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control"/>
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
         <div class="col-md-6 mb-3 d-flex align-items-end">
-            @if(Model.IsEmailConfirmed)
+            @if (Model.IsEmailConfirmed)
             {
-                <span class="badge badge-success p-2 my-1">
+                <span class="badge bg-success p-2 my-1">
                     <span class="fa fa-check"></span>
                     confirmed
                 </span>
@@ -44,6 +38,6 @@
     <button type="submit" id="save" class="btn btn-primary">Save</button>
 </form>
 
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
 }

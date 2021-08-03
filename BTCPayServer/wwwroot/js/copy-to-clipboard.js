@@ -18,5 +18,11 @@ window.copyToClipboard = function (e, text) {
 }
 
 window.copyUrlToClipboard = function (e) {
-    window.copyToClipboard(e,  window.location);
+    window.copyToClipboard(e, window.location)
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-clipboard]").forEach(item => {
+        item.addEventListener("click", window.copyToClipboard)
+    })
+})

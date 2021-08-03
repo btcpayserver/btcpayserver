@@ -46,6 +46,15 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
+        public static bool IsValidFileName(this string fileName)
+        {
+            return !fileName.ToCharArray().Any(c => Path.GetInvalidFileNameChars().Contains(c)
+            || c == Path.AltDirectorySeparatorChar
+            || c == Path.DirectorySeparatorChar
+            || c == Path.PathSeparator
+            || c == '\\');
+        }
+
         public static bool IsSafe(this LightningConnectionString connectionString)
         {
             if (connectionString.CookieFilePath != null ||
@@ -124,9 +133,9 @@ namespace BTCPayServer
             finally { try { webSocket.Dispose(); } catch { } }
         }
 
-        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice)
+        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, bool accountedOnly)
         {
-            return invoice.GetPayments()
+            return invoice.GetPayments(accountedOnly)
                 .Where(p => p.GetPaymentMethodId()?.PaymentType == PaymentTypes.BTCLike)
                 .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData())
                 .Where(data => data != null);
@@ -193,27 +202,6 @@ namespace BTCPayServer
                 resp.Headers.Remove(name);
             else
                 resp.Headers[name] = value;
-        }
-
-        public static bool IsSegwit(this DerivationStrategyBase derivationStrategyBase)
-        {
-            return ScriptPubKeyType(derivationStrategyBase) != NBitcoin.ScriptPubKeyType.Legacy;
-        }
-        public static ScriptPubKeyType ScriptPubKeyType(this DerivationStrategyBase derivationStrategyBase)
-        {
-            if (IsSegwitCore(derivationStrategyBase))
-            {
-                return NBitcoin.ScriptPubKeyType.Segwit;
-            }
-
-            return (derivationStrategyBase is P2SHDerivationStrategy p2shStrat && IsSegwitCore(p2shStrat.Inner))
-                ? NBitcoin.ScriptPubKeyType.SegwitP2SH
-                : NBitcoin.ScriptPubKeyType.Legacy;
-        }
-        private static bool IsSegwitCore(DerivationStrategyBase derivationStrategyBase)
-        {
-            return (derivationStrategyBase is P2WSHDerivationStrategy) ||
-                            (derivationStrategyBase is DirectDerivationStrategy direct) && direct.Segwit;
         }
 
         public static bool IsLocalNetwork(string server)

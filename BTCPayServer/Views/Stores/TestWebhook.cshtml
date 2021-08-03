@@ -1,0 +1,26 @@
+@model EditWebhookViewModel
+@using  BTCPayServer.Client.Models;
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().StoreName);
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post">
+            <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+
+            <div class="form-group">
+                <label for="Type" class="form-label">Event type</label>
+                <select 
+                    asp-items="Html.GetEnumSelectList<WebhookEventType>()" 
+                    name="Type" 
+                    id="Type"
+                    class="form-select w-auto"
+                ></select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Send test webhook</button>
+        </form>
+    </div>
+</div>

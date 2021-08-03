@@ -148,7 +148,8 @@ function inputChanges(event, buttonSize) {
 
     // Fixed amount: Add price and currency as hidden inputs
     if (isFixedAmount) {
-        html += addInput(priceInputName, srvModel.price);
+        if (srvModel.price !== '')
+            html += addInput(priceInputName, srvModel.price);
         if(allowCurrencySelection){
             html += addInput("currency", srvModel.currency);
         }
@@ -156,9 +157,9 @@ function inputChanges(event, buttonSize) {
     // Custom amount
     else if (isCustomAmount) {
         html += '  <div class="btcpay-custom-container">\n    <div class="btcpay-custom">\n';
-        html += srvModel.simpleInput ? '' : addPlusMinusButton("-");
-        html += '  ' + addInputPrice(priceInputName, srvModel.price, widthInput, "", srvModel.simpleInput ? "number": null, srvModel.min, srvModel.max, srvModel.step);
-        html += srvModel.simpleInput ? '' : addPlusMinusButton("+");
+        html += srvModel.simpleInput ? '' : addPlusMinusButton("-", srvModel.step, srvModel.min, srvModel.max);
+        html += '  ' + addInputPrice(priceInputName, srvModel.price, widthInput, "",   "number", srvModel.min, srvModel.max, srvModel.step);
+        html += srvModel.simpleInput ? '' : addPlusMinusButton("+", srvModel.step, srvModel.min, srvModel.max);
         html += '    </div>\n';
         if(allowCurrencySelection) {
             html += addSelectCurrency(srvModel.currency);
@@ -167,8 +168,13 @@ function inputChanges(event, buttonSize) {
     }
     // Slider
     else if (isSlider) {
+        var step = srvModel.step =="any"? 1: srvModel.step;
+        var min = srvModel.min == null? 1: parseInt(srvModel.min);
+        var max = srvModel.max == null? 1: parseInt(srvModel.max);
+        var onChange = "var el=document.querySelector(\'#btcpay-input-price\'); var price = parseInt(el.value);  if(price< "+min+") { el.value = "+min+"} else if(price> "+max+") { el.value = "+max+"} document.querySelector(\'#btcpay-input-range\').value = el.value"
+
         html += '  <div class="btcpay-custom-container">\n';
-        html += addInputPrice(priceInputName, srvModel.price, width, 'onchange="document.querySelector(\'#btcpay-input-range\').value = document.querySelector(\'#btcpay-input-price\').value"');
+        html += addInputPrice(priceInputName, srvModel.price, width, 'onchange= \"'+onChange+'\"');
         if(allowCurrencySelection) {
             html += addSelectCurrency(srvModel.currency);
         }
@@ -197,7 +203,8 @@ function inputChanges(event, buttonSize) {
         }
     });
     url = url.href;
-    $("#preview-link").html(`<a href="${url}">${url}</a>`)
+    
+    $("#preview-link").empty().append($('<a></a>').text(url).attr('href', url));
     
     $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
@@ -210,12 +217,23 @@ function addInput(name, value) {
     return '  <input type="hidden" name="' + esc(name) + '" value="' + esc(value) + '" />\n';
 }
 
-function addPlusMinusButton(type) {
-    return '      <button class="plus-minus" onclick="event.preventDefault(); var price = parseInt(document.querySelector(\'#btcpay-input-price\').value); if (\'' + type + '\' == \'-\' && (price - 1) < 1) { return; } document.querySelector(\'#btcpay-input-price\').value = parseInt(document.querySelector(\'#btcpay-input-price\').value) ' + type + ' 1;">' + type + '</button>\n';
-}
+function addPlusMinusButton(type, step, min, max) {
+    step = step =="any"? 1: step;
+    min = min == null? 1: parseInt(min);
+    max = max == null? 1: parseInt(max);
+    var onChange = "event.preventDefault(); var el=document.querySelector(\'#btcpay-input-price\'); var price = parseInt(el.value);"
+    if(type == "-"){
+        onChange += " if((price - "+step+" )< "+min+") { el.value = "+min+"} else {el.value = parseInt(el.value) - "+step + " }";
+    } else if(type == "+"){
+        onChange += " if((price + "+step+" )> "+max+") { el.value = "+max+"} else {el.value = parseInt(el.value) + "+step + " }";
+    }
+    
+    
+    return '      <button class="plus-minus" onclick="'+onChange+'">' + type + '</button>\n';
+   }
 
 function addInputPrice(name, price, widthInput, customFn, type, min, max, step) {
-    return '    <input id="btcpay-input-price" name="'+name+'" type="' + (type || "text") + '" min="' + (min || 0) + '" max="' + (max || "none") + '" step="' + (step || "any") + '" value="' + price + '" style="width: ' + widthInput + ';" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value" ' + (customFn || '') + ' />\n';
+    return '    <input id="btcpay-input-price" name="'+name+'" type="' + (type || "text") + '" min="' + (min || 0) + '" max="' + (max || "none") + '" step="' + (step || "any") + '" value="' + price + '" style="width: ' + widthInput + ';" oninput="event.preventDefault();isNaN(event.target.value)? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value; if (this.value < '+min+') {this.value = '+min+'; } else if(this.value > '+max+'){  this.value = '+max+';}" ' + (customFn || '') + ' />\n';
 }
 
 function addSelectCurrency(currency) {

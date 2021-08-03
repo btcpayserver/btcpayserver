@@ -71,25 +71,20 @@
     }
     @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)
     {
-    <div class="form-group">
-        <label asp-for="Email"></label>
-        <input asp-for="Email" type="email" class="form-control"/>
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>   
-    <div class="form-group">
-        <label asp-for="Amount"></label>
-    <div class="input-group mb-3">
-        <input asp-for="Amount" type="number" step="any" class="form-control"/>
-        <div class="input-group-append">
+        <div class="form-group">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" type="email" class="form-control"/>
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Amount"></label>
+        <div class="input-group mb-3">
+            <input asp-for="Amount" type="number" step="any" class="form-control"/>
             <span class="input-group-text">@Model.ViewCrowdfundViewModel.TargetCurrency.ToUpperInvariant()</span>
         </div>
-    </div>
-        <span asp-validation-for="Amount" class="text-danger"></span>
-    </div>   
-    <input type="hidden" asp-for="RedirectToCheckout"/>
-   
-     
-        <button type="submit" class="btn btn-primary" >Contribute</button>
-           
+            <span asp-validation-for="Amount" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="RedirectToCheckout"/>
+        <button type="submit" class="btn btn-primary">Contribute</button>
     }
 </form>

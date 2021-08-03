@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,10 @@ namespace BTCPayServer.Storage.Services
         public async Task<StoredFile> AddFile(IFormFile file, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            if (settings is null)
+                throw new InvalidOperationException("StoreSettings not configured");
+            if (!file.FileName.IsValidFileName())
+                throw new InvalidOperationException("Invalid file name");
             var provider = GetProvider(settings);
 
             var storedFile = await provider.AddFile(file, settings);
@@ -35,18 +40,22 @@ namespace BTCPayServer.Storage.Services
             return storedFile;
         }
 
-        public async Task<string> GetFileUrl(Uri baseUri, string fileId)
+        public async Task<string?> GetFileUrl(Uri baseUri, string fileId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            if (settings is null)
+                return null;
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
             return storedFile == null ? null : await provider.GetFileUrl(baseUri, storedFile, settings);
         }
 
-        public async Task<string> GetTemporaryFileUrl(Uri baseUri, string fileId, DateTimeOffset expiry,
+        public async Task<string?> GetTemporaryFileUrl(Uri baseUri, string fileId, DateTimeOffset expiry,
             bool isDownload)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            if (settings is null)
+                return null;
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
             return storedFile == null ? null : await provider.GetTemporaryFileUrl(baseUri, storedFile, settings, expiry, isDownload);
@@ -55,6 +64,8 @@ namespace BTCPayServer.Storage.Services
         public async Task RemoveFile(string fileId, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            if (settings is null)
+                return;
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
             if (string.IsNullOrEmpty(userId) ||

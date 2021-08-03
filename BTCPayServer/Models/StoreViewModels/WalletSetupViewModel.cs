@@ -1,5 +1,3 @@
-using NBXplorer.Models;
-
 namespace BTCPayServer.Models.StoreViewModels
 {
     public enum WalletSetupMethod
@@ -18,8 +16,9 @@ namespace BTCPayServer.Models.StoreViewModels
     public class WalletSetupViewModel : DerivationSchemeViewModel
     {
         public WalletSetupMethod? Method { get; set; }
-        public GenerateWalletRequest SetupRequest { get; set; }
+        public WalletSetupRequest SetupRequest { get; set; }
         public string StoreId { get; set; }
+        public bool IsHotWallet { get; set; }
 
         public string ViewName =>
             Method switch

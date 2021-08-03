@@ -17,6 +17,7 @@ namespace BTCPayServer.Client
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
+        public const string CanModifyInvoices = "btcpay.store.canmodifyinvoices";
         public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
@@ -24,6 +25,7 @@ namespace BTCPayServer.Client
         public const string CanManageNotificationsForUser = "btcpay.user.canmanagenotificationsforuser";
         public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
+        public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
@@ -32,6 +34,7 @@ namespace BTCPayServer.Client
             {
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
+                yield return CanModifyInvoices;
                 yield return CanModifyStoreWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
@@ -41,6 +44,7 @@ namespace BTCPayServer.Client
                 yield return CanModifyProfile;
                 yield return CanViewProfile;
                 yield return CanCreateUser;
+                yield return CanDeleteUser;
                 yield return CanManageNotificationsForUser;
                 yield return CanViewNotificationsForUser;
                 yield return Unrestricted;
@@ -162,10 +166,12 @@ namespace BTCPayServer.Client
             switch (subpolicy)
             {
                 case Policies.CanViewInvoices when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanViewInvoices when this.Policy == Policies.CanModifyInvoices:
                 case Policies.CanModifyStoreWebhooks when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewInvoices when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanModifyInvoices when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:
                 case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
@@ -173,6 +179,7 @@ namespace BTCPayServer.Client
                 case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
                 case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:
+                case Policies.CanUseInternalLightningNode when this.Policy == Policies.CanModifyServerSettings:
                     return true;
                 default:
                     return false;

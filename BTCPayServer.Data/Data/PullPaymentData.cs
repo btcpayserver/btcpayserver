@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 
 namespace BTCPayServer.Data
 {
+
     public class PullPaymentData
     {
         [Key]
@@ -85,7 +87,6 @@ namespace BTCPayServer.Data
             return !Archived && !IsExpired(now) && HasStarted(now);
         }
     }
-
 
     public static class PayoutExtensions
     {

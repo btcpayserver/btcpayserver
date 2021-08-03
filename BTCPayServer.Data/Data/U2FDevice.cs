@@ -23,11 +23,12 @@ namespace BTCPayServer.Data
         
         internal static void OnModelCreating(ModelBuilder builder)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             builder.Entity<U2FDevice>()
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(i => i.U2FDevices)
                 .HasForeignKey(i => i.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
-            
+#pragma warning restore CS0618 // Type or member is obsolete
         }
     }
 }

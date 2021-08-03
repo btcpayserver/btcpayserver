@@ -1,4 +1,8 @@
-﻿@{
+﻿@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views
+@using BTCPayServer.Views.Server
+@{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewBag.MainTitle = "Server settings";
+    ViewBag.CategoryTitle = "Server settings";
+    ViewData.SetActiveCategory(typeof(ServerNavPages));
 }

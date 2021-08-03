@@ -5,8 +5,8 @@
     Layout = "_LayoutSimple";
 }
 
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
 }
 
 <div class="row justify-content-center mb-2">
@@ -22,10 +22,7 @@
             <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
         </p>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        <partial name="_StatusMessage" />
     </div>
 </div>
 
@@ -40,17 +37,17 @@
                     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
-                            <label asp-for="Email"></label>
+                            <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" required autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Password"></label>
+                            <label asp-for="Password" class="form-label"></label>
                             <input asp-for="Password" class="form-control" required />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="ConfirmPassword"></label>
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
                             <input asp-for="ConfirmPassword" class="form-control" required />
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
@@ -63,7 +60,7 @@
                             </div>
                         }
                         <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="RegisterButton">Create account</button>
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="RegisterButton">Create account</button>
                         </div>
                     </fieldset>
                 </form>

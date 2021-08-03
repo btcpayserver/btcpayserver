@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -11,6 +8,9 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             public string Id { get; set; }
             public string Url { get; set; }
+            public bool LastDeliverySuccessful { get; set; } = true;
+            public DateTimeOffset? LastDeliveryTimeStamp { get; set; } = null;
+            public string LastDeliveryErrorMessage { get; set; } = null;
         }
         public WebhookViewModel[] Webhooks { get; set; }
     }

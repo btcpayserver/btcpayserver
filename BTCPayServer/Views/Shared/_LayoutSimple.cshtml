@@ -5,9 +5,8 @@
 <!DOCTYPE html>
 <html lang="en"@(env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="Header" />
-    @RenderSection("HeadScripts", false)
-    @RenderSection("HeaderContent", false)
+    <partial name="LayoutHead" />
+    @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body>
     <section class="content-wrapper @(ViewBag.TopSmallMargin != null ? "pt-4" : "")">
@@ -17,6 +16,7 @@
             @RenderBody()
         </div>
     </section>
-    @RenderSection("Scripts", false)
+    <partial name="LayoutFoot" />
+    @await RenderSectionAsync("PageFootContent", false)
 </body>
 </html>

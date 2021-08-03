@@ -27,6 +27,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string DefaultLang { get; set; }
         public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();
         public bool IsModal { get; set; }
+        public bool IsUnsetTopUp { get; set; }
         public string CryptoCode { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }
@@ -49,6 +50,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceBitcoinUrl { get; set; }
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }
+        public int TxCountForFee { get; set; }
         public string BtcPaid { get; set; }
         public string StoreEmail { get; set; }
 
@@ -62,13 +64,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public string CryptoImage { get; set; }
         public string StoreId { get; set; }
         public string PeerInfo { get; set; }
-
-        public bool CoinSwitchEnabled { get; set; }
-        public string CoinSwitchMode { get; set; }
-        public string CoinSwitchMerchantId { get; set; }
         public string RootPath { get; set; }
-        public decimal CoinSwitchAmountMarkupPercentage { get; set; }
         public bool RedirectAutomatically { get; set; }
+        public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
     }
 }

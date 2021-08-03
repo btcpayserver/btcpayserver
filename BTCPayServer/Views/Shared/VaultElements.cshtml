@@ -1,21 +1,19 @@
 <script id="VaultConnection" type="text/template">
     <div class="vault-feedback vault-feedback1 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 mr-2"></span> <span class="vault-feedback-content flex-1"></span>
+        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-1"></span>
     </div>
     <div class="vault-feedback vault-feedback2 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 mr-2"></span> <span class="vault-feedback-content flex-1"></span>
+        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-1"></span>
     </div>
     <div class="vault-feedback vault-feedback3 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 mr-2"></span> <span class="vault-feedback-content flex-1"></span>
+        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-1"></span>
     </div>
     <div id="pin-input" class="mt-4" style="display: none;">
         <div class="row">
             <div class="col">
                 <div class="input-group mb-2">
                     <input id="pin-display" type="text" class="form-control" readonly>
-                    <div class="input-group-append">
-                        <div id="pin-display-delete" class="input-group-text" style="cursor: pointer"><span class="fa fa-remove"></span></div>
-                    </div>
+                    <div id="pin-display-delete" class="input-group-text cursor-pointer"><span class="fa fa-remove"></span></div>
                 </div>
             </div>
         </div>
@@ -37,18 +35,12 @@
     </div>
     <div id="passphrase-input" class="mt-4" style="display: none;">
         <div class="form-group">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                </div>
-                <input id="Password" type="password" class="form-control" placeholder="Passphrase" />
-            </div>
+            <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+            <input id="Password" type="password" class="form-control" placeholder="Passphrase" />
         </div>
         <div class="form-group">
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <label for="PasswordConfirmation" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                </div>
+                <label for="PasswordConfirmation" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
                 <input id="PasswordConfirmation" type="password" class="form-control" placeholder="Passphrase confirmation" />
             </div>
         </div>

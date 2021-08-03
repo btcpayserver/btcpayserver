@@ -24,6 +24,7 @@ namespace BTCPayServer.Services.Wallets
         public KeyPath KeyPath { get; set; }
         public IMoney Value { get; set; }
         public Coin Coin { get; set; }
+        public int Confirmations { get; set; }
     }
     public class NetworkCoins
     {
@@ -202,7 +203,40 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
         {
-            return _Network.FilterValidTransactions(await _Client.GetTransactionsAsync(derivationStrategyBase));
+            return FilterValidTransactions(await _Client.GetTransactionsAsync(derivationStrategyBase));
+        }
+
+        private GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        {
+            return new GetTransactionsResponse()
+            {
+                Height = response.Height,
+                UnconfirmedTransactions =
+                    new TransactionInformationSet()
+                    {
+                        Transactions = _Network.FilterValidTransactions(response.UnconfirmedTransactions.Transactions)
+                    },
+                ConfirmedTransactions =
+                    new TransactionInformationSet()
+                    {
+                        Transactions = _Network.FilterValidTransactions(response.ConfirmedTransactions.Transactions)
+                    },
+                ReplacedTransactions = new TransactionInformationSet()
+                {
+                    Transactions = _Network.FilterValidTransactions(response.ReplacedTransactions.Transactions)
+                }
+            };
+        }
+
+        public async Task<TransactionInformation> FetchTransaction(DerivationStrategyBase derivationStrategyBase, uint256 transactionId)
+        {
+            var tx = await _Client.GetTransactionAsync(derivationStrategyBase, transactionId);
+            if (tx is null || !_Network.FilterValidTransactions(new List<TransactionInformation>() {tx}).Any())
+            {
+                return null;
+            }
+
+            return tx;
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)
@@ -226,17 +260,18 @@ namespace BTCPayServer.Services.Wallets
                               Timestamp = c.Timestamp,
                               OutPoint = c.Outpoint,
                               ScriptPubKey = c.ScriptPubKey,
-                              Coin = c.AsCoin(derivationStrategy)
+                              Coin = c.AsCoin(derivationStrategy),
+                              Confirmations = c.Confirmations
                           }).ToArray();
         }
 
-        public Task<decimal> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
             return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-                return result.Total.GetValue(_Network);
+                return result;
             });
         }
     }

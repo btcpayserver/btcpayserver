@@ -34,6 +34,8 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "Upload PSBT from file...")]
         public IFormFile UploadedPSBTFile { get; set; }
 
+        public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
+
         public async Task<PSBT> GetPSBT(Network network)
         {
             if (UploadedPSBTFile != null)
@@ -55,6 +57,10 @@ namespace BTCPayServer.Models.WalletViewModels
                     using var stream = new StreamReader(UploadedPSBTFile.OpenReadStream());
                     PSBT = await stream.ReadToEndAsync();
                 }
+            }
+            if (SigningContext != null && !string.IsNullOrEmpty(SigningContext.PSBT))
+            {
+                PSBT = SigningContext.PSBT;
             }
             if (!string.IsNullOrEmpty(PSBT))
             {

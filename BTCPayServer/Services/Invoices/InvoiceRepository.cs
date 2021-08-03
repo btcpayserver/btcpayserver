@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -147,9 +148,9 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, string[] additionalSearchTerms = null)
         {
-            var textSearch = new List<string>();
+            var textSearch = new HashSet<string>();
             invoice = Clone(invoice);
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -180,8 +181,12 @@ namespace BTCPayServer.Services.Invoices
                 {
                     if (paymentMethod.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
-                    var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
-
+                    var details = paymentMethod.GetPaymentMethodDetails();
+                    if (!details.Activated)
+                    {
+                        continue;
+                    }
+                    var paymentDestination = details.GetPaymentDestination();
                     string address = GetDestination(paymentMethod);
                     await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                     {
@@ -201,10 +206,16 @@ namespace BTCPayServer.Services.Invoices
 
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
-                textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
+                if (!invoice.IsUnsetTopUp())
+                    textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Metadata.OrderId);
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
+
+                if (additionalSearchTerms != null)
+                {
+                    textSearch.AddRange(additionalSearchTerms);
+                }
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -244,7 +255,13 @@ namespace BTCPayServer.Services.Invoices
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
                 var network = (BTCPayNetwork)paymentMethod.Network;
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
+                var details =
+                    (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
+                if (!details.Activated)
+                {
+                    return null;
+                }
+                return details.GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
@@ -292,6 +309,39 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoice = await context.Invoices.FindAsync(invoiceId);
+                if (invoice == null)
+                    return;
+                var network = paymentMethod.Network;
+                var invoiceEntity = invoice.GetBlob(_Networks);
+                var newDetails = paymentMethod.GetPaymentMethodDetails();
+                var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());
+                if (existing.GetPaymentMethodDetails().GetPaymentDestination() != newDetails.GetPaymentDestination() && newDetails.Activated)
+                {
+                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                        {
+                            InvoiceDataId = invoiceId,
+                            CreatedTime = DateTimeOffset.UtcNow
+                        }
+                        .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
+                    await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
+                    {
+                        InvoiceDataId = invoiceId,
+                        Assigned = DateTimeOffset.UtcNow
+                    }.SetAddress(paymentMethod.GetPaymentMethodDetails().GetPaymentDestination(), network.CryptoCode));
+                }
+                invoiceEntity.SetPaymentMethod(paymentMethod);
+                invoice.Blob = ToBytes(invoiceEntity, network);
+                AddToTextSearch(context, invoice, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
+                await context.SaveChangesAsync();
+                
+            }
         }
 
         public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
@@ -360,7 +410,7 @@ namespace BTCPayServer.Services.Invoices
             var filteredTerms = terms.Where(t => !string.IsNullOrWhiteSpace(t)
                 && (invoice.InvoiceSearchData == null || invoice.InvoiceSearchData.All(data => data.Value != t)))
                 .Distinct()
-                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s });
+                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s.Truncate(512) });
             context.AddRange(filteredTerms);
         }
 
@@ -373,6 +423,22 @@ namespace BTCPayServer.Services.Invoices
                     return;
                 invoiceData.Status = InvoiceState.ToString(invoiceState.Status);
                 invoiceData.ExceptionStatus = InvoiceState.ToString(invoiceState.ExceptionStatus);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+        internal async Task UpdateInvoicePrice(string invoiceId, InvoiceEntity invoice)
+        {
+            if (invoice.Type != InvoiceType.TopUp)
+                throw new ArgumentException("The invoice type should be TopUp to be able to update invoice price", nameof(invoice));
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData == null)
+                    return;
+                var blob = invoiceData.GetBlob(_Networks);
+                blob.Price = invoice.Price;
+                AddToTextSearch(context, invoiceData, new[] { invoice.Price.ToString(CultureInfo.InvariantCulture) });
+                invoiceData.Blob = ToBytes(blob, null);
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
@@ -588,8 +654,9 @@ namespace BTCPayServer.Services.Invoices
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
+                var text = queryObject.TextSearch.Truncate(512);
 #pragma warning disable CA1307 // Specify StringComparison
-                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(queryObject.TextSearch)));
+                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(text)));
 #pragma warning restore CA1307 // Specify StringComparison
             }
 

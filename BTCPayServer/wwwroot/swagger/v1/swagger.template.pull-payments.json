@@ -83,15 +83,17 @@
                                     },
                                     "startsAt": {
                                         "type": "integer",
+                                        "format": "unix timestamp in seconds",
                                         "example": 1592312018,
                                         "nullable": true,
-                                        "description": "The unix timestamp when this pull payment is effective. Starts now if null or unspecified."
+                                        "description": "When this pull payment is effective. Already started if null or unspecified."
                                     },
                                     "expiresAt": {
                                         "type": "integer",
+                                        "format": "unix timestamp in seconds",
                                         "example": 1593129600,
                                         "nullable": true,
-                                        "description": "The unix timestamp when this pull payment is expired. Never expires if null or unspecified."
+                                        "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
                                     "paymentMethods": {
                                         "type": "array",
@@ -406,6 +408,67 @@
                 "responses": {
                     "200": {
                         "description": "The payout has been cancelled"
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": { "type": "string" }
+                },
+                {
+                    "name": "payoutId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the payout",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "post": {
+
+                "summary": "Mark Payout as Paid",
+                "operationId": "PullPayments_MarkPayoutPaid",
+                "description": "Mark a payout as paid",
+                "responses": {
+                    "200": {
+                        "description": "The payout has been marked paid, transitioning to `Completed` state."                        
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `invalid-state`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "The payout is not found"

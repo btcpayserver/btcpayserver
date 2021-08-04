@@ -65,7 +65,7 @@
             {
                 <div class="form-group">
                     <div class="d-flex align-items-center justify-content-between">
-                    <label asp-for="Outputs[0].DestinationAddress" class="form-label"></label>
+                        <label asp-for="Outputs[0].DestinationAddress" class="form-label"></label>
                         <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-secondary btn-link p-0 mb-2">Add another destination</button>
                     </div>
                     <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
@@ -94,13 +94,10 @@
             }
             else
             {
-                <div class="list-group-item">
-                    <h5 class="mb-0">Destinations</h5>
-                </div>
-                <div class="list-group mb-4">
+                <div class="list-group list-group-flush mt-n3 mb-4">
                     @for (var index = 0; index < Model.Outputs.Count; index++)
                     {
-                        <div class="list-group-item transaction-output-form">
+                        <div class="list-group-item transaction-output-form px-0 py-4">
                             <div class="row">
                                 <div class="col-sm-12 col-lg-10">
                                     <div class="form-group">
@@ -116,7 +113,7 @@
                                                <span class="input-group-text p-0">=</span>
                                                <input type="number" class="input-group-text fiat-value-edit-input py-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
                                                <span class="input-group-text p-0">@Model.Fiat</span>
-                                        </div>
+                                           </div>
                                         </div>
                                         <p class="form-text text-secondary crypto-info mb-2">
                                             Your available balance is

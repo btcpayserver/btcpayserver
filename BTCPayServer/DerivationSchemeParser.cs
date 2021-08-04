@@ -20,9 +20,23 @@ namespace BTCPayServer
             BtcPayNetwork = expectedNetwork;
         }
 
-        public (DerivationStrategyBase, RootedKeyPath[]) ParseOutputDescriptor(string str)
+        public DerivationSchemeSettings ParseOutputDescriptor(string str)
         {
-            (DerivationStrategyBase, RootedKeyPath[]) ExtractFromPkProvider(PubKeyProvider pubKeyProvider,
+            DerivationSchemeSettings CreateDerivationSchemeSettings(DerivationStrategyBase derivationStrategy, RootedKeyPath[] origins)
+            {
+                var derivationSchemeSettings = new DerivationSchemeSettings();
+                derivationSchemeSettings.Network = BtcPayNetwork;
+                derivationSchemeSettings.AccountOriginal = str.Trim();
+                derivationSchemeSettings.AccountDerivation = derivationStrategy;
+                derivationSchemeSettings.AccountKeySettings = origins?.Select((path, i) => new AccountKeySettings()
+                {
+                    RootFingerprint = path?.MasterFingerprint,
+                    AccountKeyPath = path?.KeyPath,
+                    AccountKey = derivationStrategy.GetExtPubKeys().ElementAt(i).GetWif(Network)
+                }).ToArray() ?? new AccountKeySettings[derivationStrategy.GetExtPubKeys().Count()];
+                return derivationSchemeSettings;
+            }
+            DerivationSchemeSettings ExtractFromPkProvider(PubKeyProvider pubKeyProvider,
                 string suffix = "")
             {
                 switch (pubKeyProvider)
@@ -35,10 +49,10 @@ namespace BTCPayServer
                             throw new FormatException("Custom change paths are not supported.");
                         }
 
-                        return (Parse($"{hd.Extkey}{suffix}"), null);
+                        return CreateDerivationSchemeSettings(Parse($"{hd.Extkey}{suffix}"), null);
                     case PubKeyProvider.Origin origin:
                         var innerResult = ExtractFromPkProvider(origin.Inner, suffix);
-                        return (innerResult.Item1, new[] {origin.KeyOriginInfo});
+                        return CreateDerivationSchemeSettings(innerResult.AccountDerivation, new[] {origin.KeyOriginInfo});
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -58,10 +72,10 @@ namespace BTCPayServer
                     throw new FormatException("Only output descriptors of one format are supported.");
                 case OutputDescriptor.Multi multi:
                     var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
-                    return (
+                    return CreateDerivationSchemeSettings(
                         Parse(
-                            $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted?"":"-[keeporder]")}"),
-                        xpubs.SelectMany(tuple => tuple.Item2).ToArray());
+                            $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.AccountDerivation.ToString())))}{(multi.IsSorted?"":"-[keeporder]")}"),
+                        xpubs.SelectMany(tuple => tuple.AccountKeySettings.Select(a => a.GetRootedKeyPath())).ToArray());
                 case OutputDescriptor.PKH pkh:
                     return ExtractFromPkProvider(pkh.PkProvider, "-[legacy]");
                 case OutputDescriptor.SH sh:
@@ -76,7 +90,7 @@ namespace BTCPayServer
                         sh.Inner is OutputDescriptor.WSH)
                     {
                         var ds = ParseOutputDescriptor(sh.Inner.ToString());
-                        return (Parse(ds.Item1 + suffix), ds.Item2);
+                        return CreateDerivationSchemeSettings(Parse(ds.AccountDerivation.ToString() + suffix), ds.AccountKeySettings.Select(d => d.GetRootedKeyPath()).ToArray());
                     };
                     throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");
                 case OutputDescriptor.WPKH wpkh:

@@ -689,16 +689,7 @@ namespace BTCPayServer.Controllers
             {
                 var derivationSchemeSettings = new DerivationSchemeSettings();
                 derivationSchemeSettings.Network = network;
-                var result = parser.ParseOutputDescriptor(derivationScheme);
-                derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
-                derivationSchemeSettings.AccountDerivation = result.Item1;
-                derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
-                {
-                    RootFingerprint = path?.MasterFingerprint,
-                    AccountKeyPath = path?.KeyPath,
-                    AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
-                }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
-                return derivationSchemeSettings;
+                return parser.ParseOutputDescriptor(derivationScheme);
             }
             catch (Exception)
             {

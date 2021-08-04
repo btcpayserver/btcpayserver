@@ -204,10 +204,18 @@ namespace BTCPayServer.Controllers
                 });
             }
             var command = vm.Command.Substring(vm.Command.IndexOf('-', StringComparison.InvariantCulture) + 1);
-
+            var handler = _payoutHandlers
+                .FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            if (handler != null)
+            {
+                var result = await handler.DoSpecificAction(command, payoutIds, walletId.StoreId);
+                if (result != null)
+                {
+                    TempData.SetStatusMessageModel(result);
+                }
+            }
             switch (command)
             {
-                
                 case "approve-pay":
                 case "approve":
                 {
@@ -264,8 +272,7 @@ namespace BTCPayServer.Controllers
                     {
                         Message = "Payouts approved", Severity = StatusMessageModel.StatusSeverity.Success
                     });
-                    return RedirectToAction(nameof(Payouts),
-                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+                    break;
                 }
 
                 case "pay":
@@ -337,8 +344,7 @@ namespace BTCPayServer.Controllers
                     {
                         Message = "Payouts marked as paid", Severity = StatusMessageModel.StatusSeverity.Success
                     });
-                    return RedirectToAction(nameof(Payouts),
-                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+                    break;
                 }
 
                 case "cancel":
@@ -348,25 +354,10 @@ namespace BTCPayServer.Controllers
                     {
                         Message = "Payouts archived", Severity = StatusMessageModel.StatusSeverity.Success
                     });
-                    return RedirectToAction(nameof(Payouts),
-                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+                    break;
             }
-            
-            var handler = _payoutHandlers
-                .FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
-
-            if (handler != null)
-            {
-                var result = await handler.DoSpecificAction(command, payoutIds, walletId.StoreId);
-                TempData.SetStatusMessageModel(result);
-                return RedirectToAction(nameof(Payouts), new
-                {
-                    walletId = walletId.ToString(),
-                    pullPaymentId = vm.PullPaymentId
-                });
-            }
-            
-            return NotFound();
+            return RedirectToAction(nameof(Payouts),
+                new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
         }
 
         private static async Task<List<PayoutData>> GetPayoutsForPaymentMethod(PaymentMethodId paymentMethodId,

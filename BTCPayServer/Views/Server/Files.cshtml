@@ -45,7 +45,7 @@ else
                         <td>@file.Timestamp.ToBrowserDate()</td>
                         <td>@file.ApplicationUser.UserName</td>
                         <td class="text-end">
-                            <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                            <a href="@Url.Action("Files", "Server", new { fileIds = new string[] { file.Id} })">Get Link</a>
                             - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
                             - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
                         </td>
@@ -63,13 +63,13 @@ else
 }
 
 
-@if(Model.SelectedFileIds!=null && Model.SelectedFileIds.Count > 0)
+@if(Model.SelectedFileIds!=null && Model.SelectedFileIds.Length > 0)
 {
-    for (int i = 0; i < Model.SelectedFileIds.Count; ++i)
+    for (int i = 0; i < Model.SelectedFileIds.Length; ++i)
     {
         var file = Model.Files.Single(storedFile => storedFile.Id.Equals(Model.SelectedFileIds[i], StringComparison.InvariantCultureIgnoreCase));
         var fileId = Model.SelectedFileIds[i];
-        var fileUrl = Model.DirectFileUrls[i];
+        var fileUrl = Model.DirectUrlByFiles[fileId];
 
         <div class="card mb-2">
             <div class="card-text">

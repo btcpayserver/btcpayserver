@@ -29,35 +29,21 @@ namespace BTCPayServer.Controllers
 {
     public partial class ServerController
     {
-        [HttpGet("server/files/{fileId?}")]
-        public async Task<IActionResult> Files(string fileId = null, bool multiple = false)
+        [HttpGet("server/files")]
+        public async Task<IActionResult> Files([FromQuery] string[] fileIds = null)
         {
-            if (string.IsNullOrEmpty(fileId))
+            var model = new ViewFilesViewModel()
             {
-                var model = new ViewFilesViewModel()
-                {
-                    Files = await _StoredFileRepository.GetFiles(),
-                    SelectedFileIds = null,
-                    DirectFileUrls = null,
-                    StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-                };
-                return View(model);
-            }
-            else
-            {
-                List<string> fileIds;
-                if (multiple)
-                {
-                    fileIds = JsonConvert.DeserializeObject<List<string>>(fileId);
-                }
-                else
-                {
-                    fileIds = new List<string>();
-                    fileIds.Add(fileId);
-                }
+                Files = await _StoredFileRepository.GetFiles(),
+                SelectedFileIds = null,
+                DirectUrlByFiles = null,
+                StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+            };
 
-                List<string> fileUrlList = (fileIds == null || fileIds.Count == 0) ? null : new List<string>();
+            if (fileIds != null && fileIds.Length > 0)
+            {
                 bool allFilesExist = true;
+                Dictionary<string, string> directUrlByFiles = new Dictionary<string, string>();
                 foreach (string filename in fileIds)
                 {
                     string fileUrl = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
@@ -66,31 +52,24 @@ namespace BTCPayServer.Controllers
                         allFilesExist = false;
                         break;
                     }
-                    fileUrlList.Add(fileUrl);
+                    directUrlByFiles.Add(filename, fileUrl);
                 }
 
                 if (!allFilesExist)
                 {
-                    return View(
-                        new ViewFilesViewModel()
-                        {
-                            Files = await _StoredFileRepository.GetFiles(),
-                            SelectedFileIds = null,
-                            DirectFileUrls = null,
-                            StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-                        }
-                    );
+                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = "Some of the files were not found",
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                    });
                 }
-
-                var model = new ViewFilesViewModel()
+                else
                 {
-                    Files = await _StoredFileRepository.GetFiles(),
-                    SelectedFileIds = (fileIds == null || fileUrlList == null || fileUrlList.Count != fileIds.Count) ? null : fileIds,
-                    DirectFileUrls = (fileIds == null || fileUrlList == null || fileUrlList.Count != fileIds.Count) ? null : fileUrlList,
-                    StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-                };
-                return View(model);
+                    model.SelectedFileIds = fileIds;
+                    model.DirectUrlByFiles = directUrlByFiles;
+                }
             }
+            return View(model);
         }
 
         [HttpGet("server/files/{fileId}/delete")]
@@ -101,7 +80,7 @@ namespace BTCPayServer.Controllers
                 await _FileService.RemoveFile(fileId, null);
                 return RedirectToAction(nameof(Files), new
                 {
-                    fileId = "",
+                    fileIds = Array.Empty<string>(),
                     statusMessage = "File removed"
                 });
             }
@@ -177,7 +156,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction(nameof(Files), new
             {
-                fileId
+                fileIds = new string[] { fileId }
             });
 
         }
@@ -242,8 +221,7 @@ namespace BTCPayServer.Controllers
 
                 return RedirectToAction(nameof(Files), new
                 { 
-                    fileId = JsonConvert.SerializeObject(fileIds),
-                    multiple = true
+                    fileIds = fileIds.ToArray(),
                 });
             }
             else

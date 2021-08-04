@@ -183,26 +183,26 @@ namespace BTCPayServer.Tests
         {
             var fileContent = "content";
             List<IFormFile> fileList = new List<IFormFile>();
-            fileList.Add(TestUtils.GetFormFile("uploadtestfile2.txt", fileContent));
+            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
 
             var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
-            Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
-            var uploadFileList = JsonConvert.DeserializeObject<List<string>>(uploadFormFileResult.RouteValues["fileId"].ToString());
+            Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileIds"));
+            string[] uploadFileList = (string[])uploadFormFileResult.RouteValues["fileIds"];
             var fileId = uploadFileList[0];
             Assert.Equal("Files", uploadFormFileResult.ActionName);
 
             //check if file was uploaded and saved in db
             var viewFilesViewModel =
-                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
 
             Assert.NotEmpty(viewFilesViewModel.Files);
             Assert.Equal(fileId, viewFilesViewModel.SelectedFileIds[0]);
-            Assert.NotEmpty(viewFilesViewModel.DirectFileUrls[0]);
+            Assert.NotEmpty(viewFilesViewModel.DirectUrlByFiles[fileId]);
 
 
             //verify file is available and the same
             var net = new System.Net.WebClient();
-            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrls[0]));
+            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectUrlByFiles[fileId]));
             Assert.Equal(fileContent, data);
 
             //create a temporary link to file
@@ -234,8 +234,8 @@ namespace BTCPayServer.Tests
 
             //attempt to fetch deleted file
             viewFilesViewModel =
-                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
-            Assert.Null(viewFilesViewModel.DirectFileUrls);
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
+            Assert.Null(viewFilesViewModel.DirectUrlByFiles);
             Assert.Null(viewFilesViewModel.SelectedFileIds);
         }
 

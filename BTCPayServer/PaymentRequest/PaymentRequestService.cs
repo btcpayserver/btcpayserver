@@ -136,7 +136,8 @@ namespace BTCPayServer.PaymentRequest
                         .Where(payment => payment != null)
                         .ToList();
 
-                    if (state.Status == InvoiceStatusLegacy.Invalid || !payments.Any())
+                    if (state.Status == InvoiceStatusLegacy.Invalid ||
+                        state.Status == InvoiceStatusLegacy.Expired && !payments.Any())
                         return null;
                     
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice

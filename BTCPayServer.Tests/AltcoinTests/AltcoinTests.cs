@@ -993,16 +993,26 @@ normal:
             Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(sortedmulti(2,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01))"));
 
             //let's see what we actually support now
-            
+
+
+            void AssertOuptutDescriptor(string descriptor, string expectedKeyPath, string expectedFingerprint, string expectedDerivationScheme)
+            {
+                var parsedDescriptor = mainnetParser.ParseOutputDescriptor(descriptor);
+                Assert.Equal(KeyPath.Parse(expectedKeyPath), Assert.Single(parsedDescriptor.AccountKeySettings).AccountKeyPath);
+                Assert.Equal(HDFingerprint.Parse(expectedFingerprint), Assert.Single(parsedDescriptor.AccountKeySettings).RootFingerprint);
+                Assert.Equal(expectedDerivationScheme, parsedDescriptor.AccountDerivation.ToString());
+            }
+
             //standard legacy hd wallet
-            var parsedDescriptor = mainnetParser.ParseOutputDescriptor(
-                "pkh([d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)");
-            Assert.Equal(KeyPath.Parse("44'/0'/0'"),Assert.Single(parsedDescriptor.AccountKeySettings).AccountKeyPath);
-            Assert.Equal( HDFingerprint.Parse("d34db33f"),Assert.Single(parsedDescriptor.AccountKeySettings).RootFingerprint);
-            Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]",parsedDescriptor.AccountDerivation.ToString() );
+            AssertOuptutDescriptor(
+                descriptor: "pkh([d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)",
+                expectedKeyPath: "44'/0'/0'",
+                expectedFingerprint: "d34db33f",
+                expectedDerivationScheme: "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]"
+                );
             
             //masterfingerprint and key path are optional
-            parsedDescriptor = mainnetParser.ParseOutputDescriptor(
+            var parsedDescriptor = mainnetParser.ParseOutputDescriptor(
                 "pkh([d34db33f]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)");
             Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]",parsedDescriptor.AccountDerivation.ToString() );
             //a master fingerprint must always be present if youre providing rooted path
@@ -1017,18 +1027,20 @@ normal:
             Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"));
 
             //p2sh-segwit hd wallet
-             parsedDescriptor = mainnetParser.ParseOutputDescriptor(
-                "sh(wpkh([d34db33f/49'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*))");
-            Assert.Equal(KeyPath.Parse("49'/0'/0'"),Assert.Single(parsedDescriptor.AccountKeySettings).AccountKeyPath);
-            Assert.Equal( HDFingerprint.Parse("d34db33f"),Assert.Single(parsedDescriptor.AccountKeySettings).RootFingerprint);
-            Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[p2sh]",parsedDescriptor.AccountDerivation.ToString() );
+            AssertOuptutDescriptor(
+                descriptor: "sh(wpkh([d34db33f/49'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*))",
+                expectedKeyPath: "49'/0'/0'",
+                expectedFingerprint: "d34db33f",
+                expectedDerivationScheme: "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[p2sh]"
+                );
 
             //segwit hd wallet
-            parsedDescriptor = mainnetParser.ParseOutputDescriptor(
-                "wpkh([d34db33f/84'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)");
-            Assert.Equal(KeyPath.Parse("84'/0'/0'"),Assert.Single(parsedDescriptor.AccountKeySettings).AccountKeyPath);
-            Assert.Equal( HDFingerprint.Parse("d34db33f"),Assert.Single(parsedDescriptor.AccountKeySettings).RootFingerprint);
-            Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL",parsedDescriptor.AccountDerivation.ToString() );
+            AssertOuptutDescriptor(
+                descriptor: "wpkh([d34db33f/84'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)",
+                expectedKeyPath: "84'/0'/0'",
+                expectedFingerprint: "d34db33f",
+                expectedDerivationScheme: "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"
+                );
 
             //multisig tests
 

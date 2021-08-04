@@ -113,10 +113,8 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white border-0">
                 <h5 class="modal-title">Confirmation</h5>
-                <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">
-                        <i class="fa fa-times fa-fw"></i>
-                    </span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                    <vc:icon symbol="close" />
                 </button>
             </div>
             <div class="modal-body p-0">
@@ -258,7 +256,7 @@
     </div>
 
     <!-- Sidebar  -->
-    <nav id="sidebar" class="bg-dark text-white">
+    <nav id="sidebar">
         <div class="bg-primary p-3 clearfix">
             <h3 class="text-white m-0 pull-left">Cart</h3>
             <a class="js-cart btn btn-sm bg-white text-black pull-right ms-5" href="#">

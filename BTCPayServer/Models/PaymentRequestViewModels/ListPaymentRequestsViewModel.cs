@@ -159,6 +159,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public DateTime ReceivedDate { get; set; }
             public string Link { get; set; }
             public string Id { get; set; }
+            public string Destination { get; set; }
         }
     }
 }

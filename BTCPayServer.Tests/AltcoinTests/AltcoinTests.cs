@@ -1001,6 +1001,14 @@ normal:
                 Assert.Equal(KeyPath.Parse(expectedKeyPath), Assert.Single(parsedDescriptor.AccountKeySettings).AccountKeyPath);
                 Assert.Equal(HDFingerprint.Parse(expectedFingerprint), Assert.Single(parsedDescriptor.AccountKeySettings).RootFingerprint);
                 Assert.Equal(expectedDerivationScheme, parsedDescriptor.AccountDerivation.ToString());
+
+                Assert.Contains(parsedDescriptor.GetOutputDescriptors(), o =>
+                {
+                    var outputStr = o.ToString();
+                    // Remove checksum, tests don't have it
+                    outputStr = outputStr.Substring(0, outputStr.Length - 9);
+                    return outputStr == descriptor;
+                });
             }
 
             //standard legacy hd wallet

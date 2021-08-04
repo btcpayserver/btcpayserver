@@ -10,6 +10,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string Label { get; set; }
         [DisplayName("Derivation scheme")]
         public string DerivationScheme { get; set; }
+        public string[] OutputDescriptors { get; set; }
         public string DerivationSchemeInput { get; set; }
         [Display(Name = "Is signing key")]
         public string SelectedSigningKey { get; set; }

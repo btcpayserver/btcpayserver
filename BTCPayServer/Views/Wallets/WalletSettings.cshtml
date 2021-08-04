@@ -1,4 +1,4 @@
-﻿@using Newtonsoft.Json
+@using Newtonsoft.Json
 @using System.Text
 @using NBitcoin.DataEncoders
 @model WalletSettingsViewModel
@@ -12,25 +12,35 @@
 <div class="row">
     <div class="col-md-8 col-lg-6">
         <form method="post" asp-action="WalletSettings">
-            <input type="hidden" asp-for="StoreName"/>
-            <input type="hidden" asp-for="UriScheme"/>
+            <input type="hidden" asp-for="StoreName" />
+            <input type="hidden" asp-for="UriScheme" />
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
-                <input asp-for="Label" class="form-control"/>
+                <input asp-for="Label" class="form-control" />
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DerivationScheme" class="form-label"></label>
-                <input asp-for="DerivationScheme" class="form-control" readonly/>
+                <input asp-for="DerivationScheme" class="form-control" readonly />
                 <span asp-validation-for="DerivationScheme" class="text-danger"></span>
             </div>
             @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
             {
                 <div class="form-group">
                     <label asp-for="DerivationSchemeInput" class="form-label"></label>
-                    <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
+                    <input asp-for="DerivationSchemeInput" class="form-control" readonly />
                     <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
                 </div>
+            }
+            @if (Model.OutputDescriptors.Length != 0)
+            {
+                for (int i = 0; i < Model.OutputDescriptors.Length; i++)
+                {
+                    <div class="form-group">
+                        <label asp-for="@Model.OutputDescriptors[i]" class="form-label"></label>
+                        <input asp-for="@Model.OutputDescriptors[i]" class="form-control" readonly />
+                    </div>
+                }
             }
             @for (var i = 0; i < Model.AccountKeys.Count; i++)
             {
@@ -40,25 +50,25 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
-                    <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
+                    <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly />
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
                 </div>
                 <div class="row">
                     <div class="form-group col-auto">
                         <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
-                        <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;"/>
+                        <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;" />
                         <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
                     </div>
                     <div class="form-group col-auto">
                         <label asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-label"></label>
-                        <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;"/>
+                        <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
                         <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
                     </div>
                 </div>
                 @if (Model.IsMultiSig)
                 {
                     <div class="form-check">
-                        <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
+                        <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey" />
                         <label asp-for="SelectedSigningKey" class="form-check-label"></label>
                     </div>
                 }

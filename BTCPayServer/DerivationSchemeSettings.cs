@@ -5,6 +5,7 @@ using System.Text;
 using BTCPayServer.Payments;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.Scripting;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -373,6 +374,45 @@ namespace BTCPayServer
             {
                 psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath);
             }
+        }
+
+        static KeyPath[] TrackedPaths = new[] { new KeyPath("0"), new KeyPath("1") };
+        public OutputDescriptor[] GetOutputDescriptors()
+        {
+            var signing = this.GetSigningAccountKeySettings();
+            if (!signing.RootFingerprint.HasValue || signing.AccountKeyPath is null)
+                return Array.Empty<OutputDescriptor>();
+            if (this.AccountDerivation is DirectDerivationStrategy direct)
+            {
+                var hdkey = direct.GetExtPubKeys().First().GetWif(this.Network.NBitcoinNetwork);
+                if (direct.ScriptPubKeyType() == ScriptPubKeyType.Segwit)
+                {
+                    return TrackedPaths.Select(path => OutputDescriptor.NewWPKH(
+                        PubKeyProvider.NewOrigin(
+                            signing.AccountKeyPath.ToRootedKeyPath(signing.RootFingerprint.Value),
+                            PubKeyProvider.NewHD(hdkey, path, PubKeyProvider.DeriveType.UNHARDENED)), Network.NBitcoinNetwork)).ToArray();
+                }
+                else if (direct.ScriptPubKeyType() == ScriptPubKeyType.Legacy)
+                {
+                    return TrackedPaths.Select(path => OutputDescriptor.NewPKH(
+                        PubKeyProvider.NewOrigin(
+                            signing.AccountKeyPath.ToRootedKeyPath(signing.RootFingerprint.Value),
+                            PubKeyProvider.NewHD(hdkey, path, PubKeyProvider.DeriveType.UNHARDENED)), Network.NBitcoinNetwork)).ToArray();
+                }
+            }
+            else if (this.AccountDerivation is P2SHDerivationStrategy p2sh)
+            {
+                if (this.AccountDerivation.ScriptPubKeyType() == ScriptPubKeyType.SegwitP2SH)
+                {
+                    var hdkey = p2sh.GetExtPubKeys().First().GetWif(this.Network.NBitcoinNetwork);
+                    return TrackedPaths.Select(path => OutputDescriptor.NewSH(
+                        OutputDescriptor.NewWPKH(PubKeyProvider.NewOrigin(
+                            signing.AccountKeyPath.ToRootedKeyPath(signing.RootFingerprint.Value),
+                            PubKeyProvider.NewHD(hdkey, path, PubKeyProvider.DeriveType.UNHARDENED)), Network.NBitcoinNetwork), Network.NBitcoinNetwork)).ToArray();
+                }
+            }
+            // TODO support multisig
+            return Array.Empty<OutputDescriptor>();
         }
     }
     public class AccountKeySettings

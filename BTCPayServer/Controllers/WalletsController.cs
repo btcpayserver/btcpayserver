@@ -1092,6 +1092,7 @@ namespace BTCPayServer.Controllers
                 UriScheme = derivationSchemeSettings.Network.UriScheme,
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
+                OutputDescriptors = derivationSchemeSettings.GetOutputDescriptors().Select(d => d.ToString()).ToArray(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
                 SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString(),
                 NBXSeedAvailable = derivationSchemeSettings.IsHotWallet && 

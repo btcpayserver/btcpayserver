@@ -65,7 +65,7 @@
             {
                 <div class="form-group">
                     <label asp-for="Outputs[0].DestinationAddress" class="form-label"></label>
-                    <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" />
+                    <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
                     <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
                 </div>
                 <div class="form-group">
@@ -102,7 +102,7 @@
                                 <div class="col-sm-12 col-lg-10">
                                     <div class="form-group">
                                         <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
-                                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" />
+                                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" autocomplete="off" />
                                         <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                                     </div>
                                     <div class="form-group">

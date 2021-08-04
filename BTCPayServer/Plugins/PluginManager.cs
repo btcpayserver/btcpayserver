@@ -55,11 +55,14 @@ namespace BTCPayServer.Plugins
                     continue;
                     
                 }
-                foreach (var btcPayServerPlugin in detectedPlugins)
+
+                detectedPlugins = detectedPlugins.Select(plugin =>
                 {
-                    btcPayServerPlugin.SystemPlugin = true;
-                    loadedPlugins.Add((null,systemExtension, CreateEmbeddedFileProviderForAssembly(systemExtension)));
-                }
+                    plugin.SystemPlugin = true;
+                    return plugin;
+                });
+                
+                loadedPlugins.Add((null,systemExtension, CreateEmbeddedFileProviderForAssembly(systemExtension)));
                 plugins.AddRange(detectedPlugins);
             }
             var orderFilePath = Path.Combine(pluginsFolder, "order");

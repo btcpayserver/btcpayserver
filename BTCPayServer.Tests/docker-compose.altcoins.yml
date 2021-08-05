@@ -69,7 +69,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.21.0
+    image: btcpayserver/bitcoin:0.21.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -84,7 +84,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.55
+    image: nicolasdorier/nbxplorer:2.1.56
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -118,7 +118,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.21.0
+    image: btcpayserver/bitcoin:0.21.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"

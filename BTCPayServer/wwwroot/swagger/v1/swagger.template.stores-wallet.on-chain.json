@@ -61,7 +61,7 @@
                 "tags": [
                     "Store Wallet (On Chain)"
                 ],
-                "summary": "Get store on-chain wallet overview",
+                "summary": "Get store on-chain wallet fee rate",
                 "parameters": [
                     {
                         "name": "storeId",

@@ -8,7 +8,7 @@
 * Greenfield: Add StoreId to Invoice model (#2592)  @kukks
 * Greenfield: Change `enabledOnly` filter to `enabled` @kukks
 * Self host PoS app default images (#2449) @dennisreimann
-* Various UI Tweaks and improvements (#2558 #2562 #2568 #2572 #2606 #2608 #2615 #2627 #2628 #2649 #2645 #2673 #2646 #2647) @dstrukt @dennisreimann @woutersamaey @johanf85 @bolatovumar
+* Various UI Tweaks and improvements (#2558 #2562 #2568 #2572 #2606 #2608 #2615 #2627 #2628 #2649 #2645 #2673 #2646 #2647 #2745 #2746) @dstrukt @dennisreimann @woutersamaey @johanf85 @bolatovumar
 * Notify users to use newer BTCPay Vault app if necessary @nicolasdorier
 * Set lightning invoice fallback in QR code as uppercase (#2492) @bjarnemagnussen @Kukks
 * Optimize payout database fetching @nicolasdorier
@@ -22,9 +22,12 @@
 * Auto-select store when creating a new invoice (#2680) @bolatovumar
 * Save paymentRequestId in Metadata when creating invoice for Payment Request (#2644) @woutersamaey
 * Support multiple file upload (#2705) @cypherbeerus
+* Improve Dutch translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  @woutersamaey 
+* Improve Portuguese translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  rafaelpac
 
 ### New features:
 * Greenfield: Delete User API (#2340) @bolatovumar @kukks
+* Can create invoices without a specific amount: Top-up invoices (#2730 #2659) @NicolasDorier
 * Greenfield: Add misc/permissions to document the hierarchical structure (#2654) @nicolasdorier
 * Greenfield: Add "skip" and "limit" params for onchain txs API endpoint (#2688) @bolatovumar
 * Greenfield: Add `CanModifyInvoices` permission (#2595) @kukks
@@ -37,6 +40,8 @@
 * Auto-detect language on payment page (#2552) @woutersamaey @Kukks
 * Support spending to Taproot (#2718) @nicolasdorier
 * Show Immature Balance in walletsend page (#2731 @732) @sageprogrammer @nicolasdorier
+* Add hebrew translation for checkout (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57) @jonathanalevi
+* Add korean translation for checkout (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  Saeyoung Kim
 
 ### Bug fixes:
 * Fix issue with mysql migration and maxLength (#2541) @jkljajic

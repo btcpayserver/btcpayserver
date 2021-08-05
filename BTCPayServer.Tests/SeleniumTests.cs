@@ -1081,7 +1081,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(PayoutState.AwaitingPayment.GetStateString(), s.Driver.PageSource);
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-confirm-payment")).Click();
+            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
             s.FindAlertMessage();
             
             s.Driver.FindElement(By.Id("InProgress-view")).Click();

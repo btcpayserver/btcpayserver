@@ -143,7 +143,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         {
             {PayoutState.AwaitingPayment, new List<(string Action, string Text)>()
             {
-                ("confirm-payment", "Confirm payouts as paid"),
                 ("reject-payment", "Reject payout transaction")
             }}
         };
@@ -153,7 +152,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     {
         switch (action)
         {
-            case "confirm-payment":
+            case "mark-paid":
                 await using (var context = _dbContextFactory.CreateContext())
                 {
                     var payouts = (await context.Payouts

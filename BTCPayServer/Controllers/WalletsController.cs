@@ -630,16 +630,23 @@ namespace BTCPayServer.Controllers
                 }
                 transactionOutput.DestinationAddress = transactionOutput.DestinationAddress?.Trim() ?? string.Empty;
 
+                var inputName =
+                        string.Format(CultureInfo.InvariantCulture, "Outputs[{0}].", i.ToString(CultureInfo.InvariantCulture)) +
+                        nameof(transactionOutput.DestinationAddress);
                 try
                 {
-                    BitcoinAddress.Create(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
+                    var address = BitcoinAddress.Create(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
+                    if (address is TaprootAddress)
+                    {
+                        var supportTaproot = _dashboard.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanSupportTaproot;
+                        if (!(supportTaproot is true))
+                        {
+                            ModelState.AddModelError(inputName, "You need to update your full node, and/or NBXplorer (Version >= 2.1.56) to be able to send to a taproot address.");
+                        }
+                    }
                 }
                 catch
                 {
-                    var inputName =
-                        string.Format(CultureInfo.InvariantCulture, "Outputs[{0}].", i.ToString(CultureInfo.InvariantCulture)) +
-                        nameof(transactionOutput.DestinationAddress);
-
                     ModelState.AddModelError(inputName, "Invalid address");
                 }
 

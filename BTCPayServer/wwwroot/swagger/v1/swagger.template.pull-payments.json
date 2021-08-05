@@ -72,7 +72,7 @@
                                     "currency": {
                                         "type": "string",
                                         "example": "BTC",
-                                        "description": "The currency of the amount. In this current release, this parameter must be set to a cryptoCode like (`BTC`)."
+                                        "description": "The currency of the amount."
                                     },
                                     "period": {
                                         "type": "integer",
@@ -97,7 +97,7 @@
                                     },
                                     "paymentMethods": {
                                         "type": "array",
-                                        "description": "The list of supported payment methods supported. In this current release, this must be set to an array with a single entry equals to `currency` (eg. `[ \"BTC\" ]`)",
+                                        "description": "The list of supported payment methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"

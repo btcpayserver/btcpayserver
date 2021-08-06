@@ -196,7 +196,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
 
             Assert.NotEmpty(viewFilesViewModel.Files);
-            Assert.Equal(fileId, viewFilesViewModel.SelectedFileIds[0]);
+            Assert.True(viewFilesViewModel.DirectUrlByFiles.ContainsKey(fileId));
             Assert.NotEmpty(viewFilesViewModel.DirectUrlByFiles[fileId]);
 
 
@@ -236,7 +236,6 @@ namespace BTCPayServer.Tests
             viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
             Assert.Null(viewFilesViewModel.DirectUrlByFiles);
-            Assert.Null(viewFilesViewModel.SelectedFileIds);
         }
 
 

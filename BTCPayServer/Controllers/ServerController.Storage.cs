@@ -34,8 +34,7 @@ namespace BTCPayServer.Controllers
         {
             var model = new ViewFilesViewModel()
             {
-                Files = await _StoredFileRepository.GetFiles(),
-                SelectedFileIds = null,
+                Files = await _StoredFileRepository.GetFiles(),          
                 DirectUrlByFiles = null,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             };
@@ -64,8 +63,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
                 else
-                {
-                    model.SelectedFileIds = fileIds;
+                {                
                     model.DirectUrlByFiles = directUrlByFiles;
                 }
             }

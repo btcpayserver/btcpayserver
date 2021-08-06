@@ -63,13 +63,14 @@ else
 }
 
 
-@if(Model.SelectedFileIds!=null && Model.SelectedFileIds.Length > 0)
+@if(Model.DirectUrlByFiles!=null && Model.DirectUrlByFiles.Count > 0)
 {
-    for (int i = 0; i < Model.SelectedFileIds.Length; ++i)
+    foreach (KeyValuePair<string, string> fileUrlPair in Model.DirectUrlByFiles)
     {
-        var file = Model.Files.Single(storedFile => storedFile.Id.Equals(Model.SelectedFileIds[i], StringComparison.InvariantCultureIgnoreCase));
-        var fileId = Model.SelectedFileIds[i];
-        var fileUrl = Model.DirectUrlByFiles[fileId];
+        var fileId = fileUrlPair.Key;
+        var fileUrl = fileUrlPair.Value;
+        var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
+
 
         <div class="card mb-2">
             <div class="card-text">

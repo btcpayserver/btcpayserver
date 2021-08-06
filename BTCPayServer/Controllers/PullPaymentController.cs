@@ -121,11 +121,11 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            if (vm.ClaimedAmount == 0 && destination.Amount != null)
+            if (vm.ClaimedAmount.GetValueOrDefault(0) == 0 && destination.Amount != null)
             {
                 vm.ClaimedAmount  = destination.Amount.Value;
             }
-            else if (vm.ClaimedAmount != 0 && destination.Amount != null && vm.ClaimedAmount != destination.Amount)
+            else if (vm.ClaimedAmount.GetValueOrDefault(0) != 0 && destination.Amount != null && vm.ClaimedAmount != destination.Amount)
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount),
                     $"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
@@ -146,24 +146,17 @@ namespace BTCPayServer.Controllers
 
             if (result.Result != ClaimRequest.ClaimResult.Ok)
             {
-                if (result.Result == ClaimRequest.ClaimResult.AmountTooLow)
-                {
-                    ModelState.AddModelError(nameof(vm.ClaimedAmount), ClaimRequest.GetErrorMessage(result.Result));
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, ClaimRequest.GetErrorMessage(result.Result));
-                }
+                ModelState.AddModelError(
+                    result.Result == ClaimRequest.ClaimResult.AmountTooLow ? nameof(vm.ClaimedAmount) : string.Empty,
+                    ClaimRequest.GetErrorMessage(result.Result));
                 return await ViewPullPayment(pullPaymentId);
             }
-            else
+
+            TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting approval.",
-                    Severity = StatusMessageModel.StatusSeverity.Success
-                });
-            }
+                Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount!.Value, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting approval.",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId = pullPaymentId });
         }
     }

@@ -455,7 +455,7 @@ namespace BTCPayServer.Controllers
 
 
         [Route("server/services/{serviceName}/{cryptoCode?}")]
-        public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
+        public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, ulong? nonce = null)
         {
             var service = GetService(serviceName, cryptoCode);
             if (service == null)
@@ -603,7 +603,7 @@ namespace BTCPayServer.Controllers
             return View(nameof(LightningChargeServices), vm);
         }
 
-        private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce, string view = nameof(LndServices))
+        private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, ulong? nonce, string view = nameof(LndServices))
         {
             var model = new LndServicesViewModel();
             if (service.Type == ExternalServiceTypes.LNDGRPC)
@@ -645,14 +645,14 @@ namespace BTCPayServer.Controllers
             return View(view, model);
         }
 
-        private static uint GetConfigKey(string type, string serviceName, string cryptoCode, uint nonce)
+        private static ulong GetConfigKey(string type, string serviceName, string cryptoCode, ulong nonce)
         {
-            return (uint)HashCode.Combine(type, serviceName, cryptoCode, nonce);
+            return ((ulong)(uint)HashCode.Combine(type, serviceName, cryptoCode, nonce) | (nonce & 0xffffffff00000000UL));
         }
 
         [Route("lnd-config/{configKey}/lnd.config")]
         [AllowAnonymous]
-        public IActionResult GetLNDConfig(uint configKey)
+        public IActionResult GetLNDConfig(ulong configKey)
         {
             var conf = _LnConfigProvider.GetConfig(configKey);
             if (conf == null)
@@ -712,7 +712,7 @@ namespace BTCPayServer.Controllers
             commonConf.ReadonlyMacaroon = connectionString.Macaroons?.ReadonlyMacaroon?.Hex;
             commonConf.InvoiceMacaroon = connectionString.Macaroons?.InvoiceMacaroon?.Hex;
 
-            var nonce = RandomUtils.GetUInt32();
+            var nonce = RandomUtils.GetUInt64();
             var configKey = GetConfigKey("lnd", serviceName, cryptoCode, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
             return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });

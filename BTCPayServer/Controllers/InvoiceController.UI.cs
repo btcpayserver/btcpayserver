@@ -339,7 +339,7 @@ namespace BTCPayServer.Controllers
             var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                Html = "Share this page with a customer so they can claim a refund <br />Once claimed you need to initiate a refund from Wallet > Payouts",
+                Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Wallet > Manage > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             (await ctx.Invoices.FindAsync(invoice.Id)).CurrentRefundId = ppId;

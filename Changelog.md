@@ -1,5 +1,67 @@
 # Changelog
 
+## 1.2.0
+
+### Improvements:
+* Migrate to Bootstrap5 (#2490) @dennisreimann
+* Greenfield: Server Info: Support all currency codes for sync status (#2511) @kukks
+* Greenfield: Add StoreId to Invoice model (#2592)  @kukks
+* Greenfield: Change `enabledOnly` filter to `enabled` @kukks
+* Self host PoS app default images (#2449) @dennisreimann
+* Various UI Tweaks and improvements (#2558 #2562 #2568 #2572 #2606 #2608 #2615 #2627 #2628 #2649 #2645 #2673 #2646 #2647 #2745 #2746) @dstrukt @dennisreimann @woutersamaey @johanf85 @bolatovumar
+* Notify users to use newer BTCPay Vault app if necessary @nicolasdorier
+* Set lightning invoice fallback in QR code as uppercase (#2492) @bjarnemagnussen @Kukks
+* Optimize payout database fetching @nicolasdorier
+* Wallet Signing UI improvements (#2559) @dennisreimann
+* Add payjoin to hot wallet setup and turn on by default (#2450) @dennisreimann
+* Add permission code to API page (#2599)  @woutersamaey @dennisreimann
+* Introduce Server paging for Payouts List (#2564) @kukks @dennisreimann
+* Hide referer URL to hide our BTCPay Server URL (#2655) @woutersamaey
+* Deeper accessibility for plugin system @kukks
+* Add webhook delivery status indicator (#2679) @bolatovumar
+* Auto-select store when creating a new invoice (#2680) @bolatovumar
+* Save paymentRequestId in Metadata when creating invoice for Payment Request (#2644) @woutersamaey
+* Support multiple file upload (#2705) @cypherbeerus
+* Improve Dutch translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  @woutersamaey 
+* Improve Portuguese translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  rafaelpac
+* Improve payment view (#2748) @dennisreimann @dstrukt 
+* Improve Wallet Send UI (#2750) @dennisreimann 
+* Show new store warning icon only if neither on-chain wallet nor LN is configured (#2760) @bolatovumar 
+* Update successful refund message (#2764) @cypherbeerus
+* Fix translation on finnish, bulgarian, Kazath (fa91174b1a310e46a37e1862f2b9c263f5e26408, 10e3595a829052573a9918eacafabc6d10e03ea6 965beebc6624906a1f3127623576088dee23e9bf) @NicolasDorier 
+
+### New features:
+* Greenfield: Delete User API (#2340) @bolatovumar @kukks
+* Can create invoices without a specific amount: Top-up invoices (#2730 #2659) @NicolasDorier
+* Greenfield: Add misc/permissions to document the hierarchical structure (#2654) @nicolasdorier
+* Greenfield: Add "skip" and "limit" params for onchain txs API endpoint (#2688) @bolatovumar
+* Greenfield: Add `CanModifyInvoices` permission (#2595) @kukks
+* Greenfield: Add text search terms to an invoice (#2648) @NicolasDorier
+* Greenfield: Add Get store Payment methods API (#2545) @kukks @bolatovumar
+* GreenField: Add Generate Store OnChain Wallet API (#2708) @kukks
+* Test Webhooks functionality (#2474) @bolatovumar
+* Allow marking payout as paid manually (#2539) @Kukks
+* Pull payments: Detect External OnChain Payouts (#2462) @Kukks
+* Auto-detect language on payment page (#2552) @woutersamaey @Kukks
+* Support spending to Taproot (#2718) @nicolasdorier
+* Show Immature Balance in walletsend page (#2731 @732) @sageprogrammer @nicolasdorier
+* Add hebrew translation for checkout (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57) @jonathanalevi
+* Add korean translation for checkout (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  Saeyoung Kim
+
+### Bug fixes:
+* Fix issue with mysql migration and maxLength (#2541) @jkljajic
+* Fix broken shopify links @kukks
+* Fix bug with LN payment method API endpoint throwing 500 (#2567) @bolatovumar
+* Fix various wording and typos @pavlenex @britttttk @Zaxounette Jimi Ford
+* Fix visual bug with invoices search help text overlapping invoice action buttons (#2583) @bolatovumar
+* Fix: Invoice Search Text crashes invoice creation when value is too long (#2675) @kukks
+* Greenfield documentation fixes (#2657 #2674 #2681 #2598) @woutersamaey @bolatovumar
+* Re-enable "Create" button for invoices on correct form input (#2694) @bolatovumar
+* Fix: Payment Request status does not update on invoice marked events or when pr amount is changed (#2700) @kukks
+* Properly clip taxIncluded and invoice's amount (#2724) @nicolasdorier
+* Fix PoS bug on dark mode (#2743) @dennisreimann 
+* Remove support for payout to a Bitcoin Url (#2766) @NicolasDorier 
+
 ## 1.1.2
 
 * Fix: Unable to activate shopify integration @Kukks

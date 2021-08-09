@@ -70,10 +70,11 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         destination = destination.Trim();
         try
         {
-            if (destination.StartsWith($"{network.UriScheme}:", StringComparison.OrdinalIgnoreCase))
-            {
-                return Task.FromResult<IClaimDestination>(new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)));
-            }
+            // This doesn't work properly, (payouts are not detected), we can reactivate later when we fix the bug https://github.com/btcpayserver/btcpayserver/issues/2765
+            //if (destination.StartsWith($"{network.UriScheme}:", StringComparison.OrdinalIgnoreCase))
+            //{
+            //    return Task.FromResult<IClaimDestination>(new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)));
+            //}
 
             return Task.FromResult<IClaimDestination>(new AddressClaimDestination(BitcoinAddress.Create(destination, network.NBitcoinNetwork)));
         }

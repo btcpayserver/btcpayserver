@@ -26,6 +26,9 @@
 * Improve Portuguese translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  rafaelpac
 * Improve payment view (#2748) @dennisreimann @dstrukt 
 * Improve Wallet Send UI (#2750) @dennisreimann 
+* Show new store warning icon only if neither on-chain wallet nor LN is configured (#2760) @bolatovumar 
+* Update successful refund message (#2764) @cypherbeerus
+* Fix translation on finnish, bulgarian, Kazath (fa91174b1a310e46a37e1862f2b9c263f5e26408, 10e3595a829052573a9918eacafabc6d10e03ea6 965beebc6624906a1f3127623576088dee23e9bf) @NicolasDorier 
 
 ### New features:
 * Greenfield: Delete User API (#2340) @bolatovumar @kukks
@@ -57,6 +60,7 @@
 * Fix: Payment Request status does not update on invoice marked events or when pr amount is changed (#2700) @kukks
 * Properly clip taxIncluded and invoice's amount (#2724) @nicolasdorier
 * Fix PoS bug on dark mode (#2743) @dennisreimann 
+* Remove support for payout to a Bitcoin Url (#2766) @NicolasDorier 
 
 ## 1.1.2
 

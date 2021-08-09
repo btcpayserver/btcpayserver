@@ -212,10 +212,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 };
         }
 
-        return new StatusMessageModel()
-        {
-            Message = "Unknown action", Severity = StatusMessageModel.StatusSeverity.Error
-        };
+        return null;
     }
 
     public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()

@@ -4,15 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
@@ -20,25 +14,10 @@ namespace BTCPayServer.Data.Payouts.LightningLike
     public class LightningLikePayoutHandler : IPayoutHandler
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly ApplicationDbContextFactory _applicationDbContextFactory;
-        private readonly StoreRepository _storeRepository;
-        private readonly IOptions<LightningNetworkOptions> _options;
-        private readonly LightningClientFactoryService _lightningClientFactoryService;
-        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
 
-        public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider, 
-            ApplicationDbContextFactory applicationDbContextFactory,
-            StoreRepository storeRepository,
-            IOptions<LightningNetworkOptions> options,
-            LightningClientFactoryService lightningClientFactoryService, 
-            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
+        public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _applicationDbContextFactory = applicationDbContextFactory;
-            _storeRepository = storeRepository;
-            _options = options;
-            _lightningClientFactoryService = lightningClientFactoryService;
-            _jsonSerializerSettings = jsonSerializerSettings;
         }
 
         public bool CanHandle(PaymentMethodId paymentMethod)
@@ -56,10 +35,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             destination = destination.Trim();
-            return Task.FromResult<IClaimDestination>(
+            var result = 
                 BOLT11PaymentRequest.TryParse(destination, out var invoice, network.NBitcoinNetwork)
                     ? new BoltInvoiceClaimDestination(destination, invoice)
-                    : null);
+                    : null;
+
+            if (result == null) return Task.FromResult<IClaimDestination>(result);
+            return (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days < 30 ? null : Task.FromResult<IClaimDestination>(result);
         }
 
         public IPayoutProof ParseProof(PayoutData payout)

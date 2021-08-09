@@ -297,7 +297,10 @@ namespace BTCPayServer.Controllers
                         
                     }
                     if(bip21.Any())
+                    {
+                        TempData.SetStatusMessageModel(null);
                         return RedirectToAction(nameof(WalletSend), new {walletId, bip21});
+                    }
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,

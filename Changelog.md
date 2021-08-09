@@ -24,6 +24,8 @@
 * Support multiple file upload (#2705) @cypherbeerus
 * Improve Dutch translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  @woutersamaey 
 * Improve Portuguese translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  rafaelpac
+* Improve payment view (#2748) @dennisreimann @dstrukt 
+* Improve Wallet Send UI (#2750) @dennisreimann 
 
 ### New features:
 * Greenfield: Delete User API (#2340) @bolatovumar @kukks
@@ -54,6 +56,7 @@
 * Re-enable "Create" button for invoices on correct form input (#2694) @bolatovumar
 * Fix: Payment Request status does not update on invoice marked events or when pr amount is changed (#2700) @kukks
 * Properly clip taxIncluded and invoice's amount (#2724) @nicolasdorier
+* Fix PoS bug on dark mode (#2743) @dennisreimann 
 
 ## 1.1.2
 

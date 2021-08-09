@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
                     IsOwner = store.Role == StoreRoles.Owner,
-                    HintWalletWarning = blob.Hints.Wallet
+                    HintWalletWarning = blob.Hints.Wallet && blob.Hints.Lightning
                 });
             }
             return View(result);

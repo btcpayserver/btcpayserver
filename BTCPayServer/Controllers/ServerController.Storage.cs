@@ -22,24 +22,51 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
     public partial class ServerController
     {
-        [HttpGet("server/files/{fileId?}")]
-        public async Task<IActionResult> Files(string fileId = null)
+        [HttpGet("server/files")]
+        public async Task<IActionResult> Files([FromQuery] string[] fileIds = null)
         {
-            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
-
             var model = new ViewFilesViewModel()
             {
-                Files = await _StoredFileRepository.GetFiles(),
-                SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
-                DirectFileUrl = fileUrl,
+                Files = await _StoredFileRepository.GetFiles(),          
+                DirectUrlByFiles = null,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             };
+
+            if (fileIds != null && fileIds.Length > 0)
+            {
+                bool allFilesExist = true;
+                Dictionary<string, string> directUrlByFiles = new Dictionary<string, string>();
+                foreach (string filename in fileIds)
+                {
+                    string fileUrl = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
+                    if (fileUrl == null)
+                    {
+                        allFilesExist = false;
+                        break;
+                    }
+                    directUrlByFiles.Add(filename, fileUrl);
+                }
+
+                if (!allFilesExist)
+                {
+                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = "Some of the files were not found",
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                    });
+                }
+                else
+                {                
+                    model.DirectUrlByFiles = directUrlByFiles;
+                }
+            }
             return View(model);
         }
 
@@ -51,7 +78,7 @@ namespace BTCPayServer.Controllers
                 await _FileService.RemoveFile(fileId, null);
                 return RedirectToAction(nameof(Files), new
                 {
-                    fileId = "",
+                    fileIds = Array.Empty<string>(),
                     statusMessage = "File removed"
                 });
             }
@@ -127,7 +154,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction(nameof(Files), new
             {
-                fileId
+                fileIds = new string[] { fileId }
             });
 
         }
@@ -190,18 +217,10 @@ namespace BTCPayServer.Controllers
                         Severity = statusMessageSeverity
                     });
 
-                if (fileIds.Count == 1)
-                {
-                    return RedirectToAction(nameof(Files), new
-                    {
-                        statusMessage = "File added!",
-                        fileId = fileIds[0]
-                    });
-                }
-                else
-                {
-                    return RedirectToAction(nameof(Files));
-                }
+                return RedirectToAction(nameof(Files), new
+                { 
+                    fileIds = fileIds.ToArray(),
+                });
             }
             else
             {

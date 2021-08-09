@@ -45,7 +45,7 @@ else
                         <td>@file.Timestamp.ToBrowserDate()</td>
                         <td>@file.ApplicationUser.UserName</td>
                         <td class="text-end">
-                            <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                            <a href="@Url.Action("Files", "Server", new { fileIds = new string[] { file.Id} })">Get Link</a>
                             - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
                             - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
                         </td>
@@ -63,31 +63,38 @@ else
 }
 
 
-@if (!string.IsNullOrEmpty(Model.SelectedFileId))
+@if(Model.DirectUrlByFiles!=null && Model.DirectUrlByFiles.Count > 0)
 {
-    var file = Model.Files.Single(storedFile => storedFile.Id.Equals(Model.SelectedFileId, StringComparison.InvariantCultureIgnoreCase));
-    <div class="card mb-2">
-        <div class="card-text">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">
-                    @file.FileName
-                </li>
-                <li class="list-group-item">
-                    <strong>URL:</strong>
-                    <a asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
-                        @Url.Action("GetFile", "Storage", new
-                        {
-                            fileId = Model.SelectedFileId
-                        }, Context.Request.Scheme, Context.Request.Host.ToString())
-                    </a>
-                </li>
-                <li class="list-group-item">
-                    <strong>Direct URL:</strong>
-                    <a href="@Model.DirectFileUrl" target="_blank" rel="noreferrer noopener">@Model.DirectFileUrl</a>
-                </li>
-            </ul>
+    foreach (KeyValuePair<string, string> fileUrlPair in Model.DirectUrlByFiles)
+    {
+        var fileId = fileUrlPair.Key;
+        var fileUrl = fileUrlPair.Value;
+        var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
+
+
+        <div class="card mb-2">
+            <div class="card-text">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        @file.FileName
+                    </li>
+                    <li class="list-group-item">
+                        <strong>URL:</strong>
+                        <a asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@fileId" target="_blank">
+                            @Url.Action("GetFile", "Storage", new
+                       {
+                           fileId = fileId
+                       }, Context.Request.Scheme, Context.Request.Host.ToString())
+                        </a>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Direct URL:</strong>
+                        <a href="@fileUrl" target="_blank" rel="noreferrer noopener">@fileUrl</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
+    }
 }
 
 @if (Model.StorageConfigured)

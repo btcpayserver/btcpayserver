@@ -151,6 +151,7 @@ namespace BTCPayServer.Hosting
                 {
                     paymentMethod.IsHotWallet = paymentMethod.Source == "NBXplorer";
                     paymentMethod.Source = "NBXplorerGenerated";
+                    store.SetSupportedPaymentMethod(paymentMethod);
                 }
             }
             await ctx.SaveChangesAsync();

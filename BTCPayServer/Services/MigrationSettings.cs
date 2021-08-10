@@ -1,7 +1,10 @@
+using Newtonsoft.Json;
+
 namespace BTCPayServer.Services
 {
     public class MigrationSettings
     {
+        [JsonProperty("MigrateHotwalletProperty2")]
         public bool MigrateHotwalletProperty { get; set; }
         public bool MigrateU2FToFIDO2{ get; set; }
         public bool UnreachableStoreCheck { get; set; }

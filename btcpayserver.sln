@@ -18,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		docker-entrypoint.sh = docker-entrypoint.sh
 		.circleci\run-tests.sh = .circleci\run-tests.sh
 		Build\Version.csproj = Build\Version.csproj
+		Changelog.md = Changelog.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCPayServer.Rating\BTCPayServer.Rating.csproj", "{6DC77459-D52F-45EE-B3F3-315043D33A1B}"

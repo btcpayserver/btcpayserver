@@ -61,6 +61,7 @@
 * Properly clip taxIncluded and invoice's amount (#2724) @nicolasdorier
 * Fix PoS bug on dark mode (#2743) @dennisreimann 
 * Remove support for payout to a Bitcoin Url (#2766) @NicolasDorier 
+* Fix: Support Clightning 0.10.1 @kukks
 
 ## 1.1.2
 

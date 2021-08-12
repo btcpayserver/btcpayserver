@@ -148,7 +148,7 @@ function inputChanges(event, buttonSize) {
 
     // Fixed amount: Add price and currency as hidden inputs
     if (isFixedAmount) {
-        if (srvModel.price !== '')
+        if (srvModel.price)
             html += addInput(priceInputName, srvModel.price);
         if(allowCurrencySelection){
             html += addInput("currency", srvModel.currency);
@@ -158,7 +158,8 @@ function inputChanges(event, buttonSize) {
     else if (isCustomAmount) {
         html += '  <div class="btcpay-custom-container">\n    <div class="btcpay-custom">\n';
         html += srvModel.simpleInput ? '' : addPlusMinusButton("-", srvModel.step, srvModel.min, srvModel.max);
-        html += '  ' + addInputPrice(priceInputName, srvModel.price, widthInput, "",   "number", srvModel.min, srvModel.max, srvModel.step);
+        if (srvModel.price)
+            html += '  ' + addInputPrice(priceInputName, srvModel.price, widthInput, "",   "number", srvModel.min, srvModel.max, srvModel.step);
         html += srvModel.simpleInput ? '' : addPlusMinusButton("+", srvModel.step, srvModel.min, srvModel.max);
         html += '    </div>\n';
         if(allowCurrencySelection) {
@@ -198,7 +199,7 @@ function inputChanges(event, buttonSize) {
     var url =  new URL(form.getAttribute("action"));
     var formData =   new FormData(form);
     formData.forEach((value, key) => {
-        if(key !== "jsonResponse"){
+        if (key !== "jsonResponse") {
             url.searchParams.append(key, value);
         }
     });

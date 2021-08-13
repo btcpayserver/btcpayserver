@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+### Bug fix:
+
+* Fix Display app on website root feature @NicolasDorier
+
 ## 1.2.0
 
 ### Improvements:

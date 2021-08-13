@@ -30,9 +30,9 @@ namespace BTCPayServer.Filters
                 return true;
             var settingsRepository = context.RouteContext.HttpContext.RequestServices.GetService<ISettingsRepository>();
             var policies = settingsRepository.GetPolicies().GetAwaiter().GetResult();
-            if (policies?.DomainToAppMapping is { } mapping && mapping.Any())
+            if (policies?.DomainToAppMapping is { } mapping)
             {
-                var matchedDomainMapping = policies.DomainToAppMapping.FirstOrDefault(item =>
+                var matchedDomainMapping = mapping.FirstOrDefault(item =>
                 item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
                 if (matchedDomainMapping != null)
                 {

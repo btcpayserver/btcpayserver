@@ -32,16 +32,24 @@ namespace BTCPayServer.Services.Apps
             {
                 foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
                 {
-                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
+                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment ||
+                        invoiceEvent.Name == InvoiceEvent.MarkedCompleted ||
+                        invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
                     {
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
-                        await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived, new object[]
-                            {
-                        data.GetValue(),
-                        invoiceEvent.Payment.GetCryptoCode(),
-                        invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
-                            }, cancellationToken);
+                        var data = invoiceEvent.Payment?.GetCryptoPaymentData();
+                        if (data != null)
+                        {
+
+
+                            await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived,
+                                new object[]
+                                {
+                                    data.GetValue(), invoiceEvent.Payment.GetCryptoCode(),
+                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
+                                }, cancellationToken);
+                        }
                     }
+
                     await InfoUpdated(appId);
                 }
             }

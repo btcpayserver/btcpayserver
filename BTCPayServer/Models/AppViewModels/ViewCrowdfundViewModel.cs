@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Models.AppViewModels
@@ -58,14 +61,47 @@ namespace BTCPayServer.Models.AppViewModels
             public PaymentMethodId PaymentMethodId { get; set; }
             public decimal Value { get; set; }
             public decimal CurrencyValue { get; set; }
+            public string Currency { get; set; }
         }
-        public class Contributions : Dictionary<PaymentMethodId, Contribution>
+        public class Contributions
         {
-            public Contributions(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
+            public Dictionary<string, Dictionary<PaymentMethodId, Contribution>> Collection { get; }
+
+            
+            public Contributions(Dictionary<string, Dictionary<PaymentMethodId, Contribution>> collection)
             {
-                TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
+                Collection = collection;
             }
-            public decimal TotalCurrency { get; }
+
+            public async Task<decimal> GetTotalCurrency(string targetCurrency, RateRules rateRules, RateFetcher rateFetcher)
+            {
+                var currencyPairs = Collection.Keys.Select(s => new CurrencyPair(targetCurrency, s)).ToHashSet();
+                var rates = rateFetcher.FetchRates(currencyPairs, rateRules, CancellationToken.None);
+                await Task.WhenAll(rates.Values);
+                return Collection.Sum(pair =>
+                {
+                    var rate = rates[new CurrencyPair(targetCurrency, pair.Key)].Result;
+                    if (rate.BidAsk is null)
+                    {
+                        return 0;
+                    }
+                    return pair.Value.Sum(valuePair => valuePair.Value.CurrencyValue) / rate.BidAsk.Bid;
+                });
+            }
+
+            public Dictionary<PaymentMethodId, Contribution> GetTotalPaymentMethodContributions()
+            {
+                return Collection.Select(pair => pair.Value).SelectMany(dictionary => dictionary.Select(pair => pair)).GroupBy(pair => pair.Key)
+                    .ToDictionary(pairs => 
+                        pairs.Key, 
+                        pairs => 
+                            new Contribution()
+                            {
+                                Value = pairs.Sum(pair => pair.Value.Value),
+                                PaymentMethodId = pairs.Key
+                            });
+            }
+            
         }
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;

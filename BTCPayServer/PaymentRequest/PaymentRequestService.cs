@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Apps;
@@ -10,12 +12,14 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.WindowsAzure.Storage.Blob;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
 {
     public class PaymentRequestService
     {
+        private readonly RateFetcher _rateFetcher;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly AppService _AppService;
@@ -23,11 +27,13 @@ namespace BTCPayServer.PaymentRequest
 
         public PaymentRequestService(
             IHubContext<PaymentRequestHub> hubContext,
+            RateFetcher rateFetcher,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
             CurrencyNameTable currencies)
         {
+            _rateFetcher = rateFetcher;
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _AppService = appService;
@@ -54,9 +60,9 @@ namespace BTCPayServer.PaymentRequest
             {
                 var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
-                var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
-
-                currentStatus = contributions.TotalCurrency >= blob.Amount
+                var contributions = _AppService.GetContributionsByPaymentMethodId(invoices, true);
+                var totalCurrency = await contributions.GetTotalCurrency(blob.Currency, rateRules, _rateFetcher);
+                currentStatus = totalCurrency >= blob.Amount
                     ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
                     : Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
 
@@ -81,8 +87,10 @@ namespace BTCPayServer.PaymentRequest
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
 
-            var paymentStats = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
-            var amountDue = blob.Amount - paymentStats.TotalCurrency;
+            var paymentStats = _AppService.GetContributionsByPaymentMethodId(invoices, true);
+            var totalCurrency = await paymentStats.GetTotalCurrency(blob.Currency,
+                pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider), _rateFetcher);
+            var amountDue = blob.Amount - totalCurrency;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
                 .FirstOrDefault(entity => entity.Status == InvoiceStatusLegacy.New);
 
@@ -90,8 +98,8 @@ namespace BTCPayServer.PaymentRequest
             {
                 Archived = pr.Archived,
                 AmountFormatted = _currencies.FormatCurrency(blob.Amount, blob.Currency),
-                AmountCollected = paymentStats.TotalCurrency,
-                AmountCollectedFormatted = _currencies.FormatCurrency(paymentStats.TotalCurrency, blob.Currency),
+                AmountCollected = totalCurrency,
+                AmountCollectedFormatted = _currencies.FormatCurrency(totalCurrency, blob.Currency),
                 AmountDue = amountDue,
                 AmountDueFormatted = _currencies.FormatCurrency(amountDue, blob.Currency),
                 CurrencyData = _currencies.GetCurrencyData(blob.Currency, true),

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -33,18 +34,24 @@ namespace BTCPayServer.Services.Apps
         readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
+        private readonly RateFetcher _rateFetcher;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         public CurrencyNameTable Currencies => _Currencies;
         public AppService(ApplicationDbContextFactory contextFactory,
                           InvoiceRepository invoiceRepository,
                           CurrencyNameTable currencies,
                           StoreRepository storeRepository,
-                          HtmlSanitizer htmlSanitizer)
+                          HtmlSanitizer htmlSanitizer,
+                          RateFetcher rateFetcher,
+                          BTCPayNetworkProvider btcPayNetworkProvider)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _storeRepository = storeRepository;
             _HtmlSanitizer = htmlSanitizer;
+            _rateFetcher = rateFetcher;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
         }
 
         public async Task<object> GetAppInfo(string appId)
@@ -94,8 +101,8 @@ namespace BTCPayServer.Services.Apps
             var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed)).ToArray();
             var paidInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid).ToArray();
 
-            var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
-            var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
+            var pendingPayments = GetContributionsByPaymentMethodId(pendingInvoices, !settings.EnforceTargetAmount);
+            var currentPayments = GetContributionsByPaymentMethodId(completeInvoices, !settings.EnforceTargetAmount);
 
             var perkCount = paidInvoices
                 .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
@@ -114,6 +121,14 @@ namespace BTCPayServer.Services.Apps
                 newPerksOrder.AddRange(remainingPerks);
                 perks = newPerksOrder.ToArray();
             }
+
+            var totalCurrentPayments = await currentPayments.GetTotalCurrency(settings.TargetCurrency,
+                appData.StoreData.GetStoreBlob().GetRateRules(_btcPayNetworkProvider), _rateFetcher);
+            var totalPendingPayments = await pendingPayments.GetTotalCurrency(settings.TargetCurrency,
+                appData.StoreData.GetStoreBlob().GetRateRules(_btcPayNetworkProvider), _rateFetcher);
+           
+            var currentPaymentsTotalPaymentMethodContributions = currentPayments.GetTotalPaymentMethodContributions();
+            var pendingPaymentsTotalPaymentMethodContributions = pendingPayments.GetTotalPaymentMethodContributions();
             return new ViewCrowdfundViewModel()
             {
                 Title = settings.Title,
@@ -143,23 +158,23 @@ namespace BTCPayServer.Services.Apps
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
-                CurrencyDataPayments = currentPayments.Select(pair => pair.Key)
-                    .Concat(pendingPayments.Select(pair => pair.Key))
+                CurrencyDataPayments = currentPaymentsTotalPaymentMethodContributions.Select(pair => pair.Key)
+                    .Concat(pendingPaymentsTotalPaymentMethodContributions.Select(pair => pair.Key))
                     .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true))
                     .DistinctBy(data => data.Code)
                     .ToDictionary(data => data.Code, data => data),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = paidInvoices.Length,
-                    ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
-                    PendingProgressPercentage = (pendingPayments.TotalCurrency / settings.TargetAmount) * 100,
+                    ProgressPercentage = settings.TargetAmount.HasValue? (totalCurrentPayments / settings.TargetAmount) * 100 : 0,
+                    PendingProgressPercentage = settings.TargetAmount.HasValue? (totalPendingPayments / settings.TargetAmount) * 100 : 0,
                     LastUpdated = DateTime.Now,
-                    PaymentStats = currentPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
-                    PendingPaymentStats = pendingPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
+                    PaymentStats = currentPaymentsTotalPaymentMethodContributions.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
+                    PendingPaymentStats = pendingPaymentsTotalPaymentMethodContributions.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
                     LastResetDate = lastResetDate,
                     NextResetDate = nextResetDate,
-                    CurrentPendingAmount = pendingPayments.TotalCurrency,
-                    CurrentAmount = currentPayments.TotalCurrency
+                    CurrentPendingAmount = totalPendingPayments,
+                    CurrentAmount = totalCurrentPayments
                 }
             };
         }
@@ -342,17 +357,17 @@ namespace BTCPayServer.Services.Apps
                 .ToArray();
         }
 
-        public Contributions GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
+        public Contributions GetContributionsByPaymentMethodId(InvoiceEntity[] invoices, bool softcap)
         {
             var contributions = invoices
-                .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
+                // .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(p =>
                 {
                     var contribution = new Contribution();
                     contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
                     contribution.CurrencyValue = p.Price;
                     contribution.Value = contribution.CurrencyValue;
-
+                    contribution.Currency = p.Currency;
                     // For hardcap, we count newly created invoices as part of the contributions
                     if (!softcap && p.Status == InvoiceStatusLegacy.New)
                         return new[] { contribution };
@@ -367,7 +382,6 @@ namespace BTCPayServer.Services.Apps
 
                     contribution.CurrencyValue = 0m;
                     contribution.Value = 0m;
-
                     // If an invoice has been marked invalid, remove the contribution
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
                         p.Status == InvoiceStatusLegacy.Invalid)
@@ -376,24 +390,28 @@ namespace BTCPayServer.Services.Apps
 
                     // Else, we just sum the payments
                     return payments
-                             .Select(pay =>
-                             {
-                                 var paymentMethodContribution = new Contribution();
-                                 paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
-                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
-                                 return paymentMethodContribution;
-                             })
-                             .ToArray();
+                        .Select(pay =>
+                        {
+                            var paymentMethodContribution = new Contribution();
+                            paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
+                            paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                            var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
+                            paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
+                            paymentMethodContribution.Currency = p.Currency;
+                            return paymentMethodContribution;
+                        })
+                        .ToArray();
                 })
-                .GroupBy(p => p.PaymentMethodId)
-                .ToDictionary(p => p.Key, p => new Contribution()
-                {
-                    PaymentMethodId = p.Key,
-                    Value = p.Select(v => v.Value).Sum(),
-                    CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
-                });
+                .GroupBy(contribution => contribution.Currency)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.GroupBy(p => p.PaymentMethodId)
+                    .ToDictionary(p => p.Key,
+                        p => new Contribution()
+                        {
+                            PaymentMethodId = p.Key,
+                            Value = p.Select(v => v.Value).Sum(),
+                            CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
+                        }));
+                
             return new Contributions(contributions);
         }
 

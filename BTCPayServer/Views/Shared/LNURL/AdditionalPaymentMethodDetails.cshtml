@@ -10,3 +10,13 @@
     </td>
 </tr>
 }
+@if (!string.IsNullOrEmpty(Model.ConsumedLightningAddress))
+{
+    
+<tr>
+    <td colspan="100% bg-tile">
+
+        Lightning address used: @Model.ConsumedLightningAddress
+    </td>
+</tr>
+}

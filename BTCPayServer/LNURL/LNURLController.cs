@@ -133,6 +133,47 @@ namespace BTCPayServer
                 () => (null, new List<string> { AppService.GetAppInternalTag(appId) }, item.Price.Value, true));
         }
 
+        public class EditLightningAddressVM
+        {
+            public class EditLightningAddressItem : LightningAddressSettings.LightningAddressItem
+            {
+                [Required]
+                [RegularExpression("[a-zA-Z0-9-_]+")]
+                public string Username { get; set; }
+            }
+
+            public List<EditLightningAddressItem> Items { get; set; }
+        }
+
+        public class LightningAddressSettings
+        {
+            public class LightningAddressItem
+            {
+                public string StoreId { get; set; }
+                public string CurrencyCode { get; set; }
+                public string CryptoCode { get; set; }
+                public decimal? Min { get; set; }
+                public decimal? Max { get; set; }
+            }
+
+            public ConcurrentDictionary<string, LightningAddressItem> Items { get; set; } =
+                new ConcurrentDictionary<string, LightningAddressItem>();
+
+            public ConcurrentDictionary<string, string[]> StoreToItemMap { get; set; } =
+                new ConcurrentDictionary<string, string[]>();
+        }
+
+        [HttpGet("~/.well-known/lnurlp/{username}")]
+        public async Task<IActionResult> ResolveLightningAddress(string username)
+        {
+            if (!_lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
+            {
+                return NotFound();
+            }
+
+            return await GetLNURL(item.CryptoCode, item.StoreId, item.CurrencyCode, item.Min, item.Max,
+                () => (username, null, null, true));
+        }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
@@ -178,6 +219,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
+            var lnAddress = username is null ? null : $"{username}@{Request.Host.ToString()}";
             List<string[]> lnurlMetadata = new List<string[]>();
 
             var i = await _invoiceController.CreateInvoiceCoreRaw(
@@ -200,7 +242,21 @@ namespace BTCPayServer
                 max = min;
             }
 
+            if (!string.IsNullOrEmpty(username))
+            {
+                var pm = i.GetPaymentMethod(pmi);
+                var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
+                paymentMethodDetails.ConsumedLightningAddress = lnAddress;
+                pm.SetPaymentMethodDetails(paymentMethodDetails);
+                await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
+            }
+
             lnurlMetadata.Add(new[] { "text/plain", i.Id });
+            if (!string.IsNullOrEmpty(username))
+            {
+                lnurlMetadata.Add(new[] { "text/identifier", lnAddress });
+            }
+
             return Ok(new LNURLPayRequest
             {
                 Tag = "payRequest",
@@ -258,6 +314,10 @@ namespace BTCPayServer
                 List<string[]> lnurlMetadata = new List<string[]>();
 
                 lnurlMetadata.Add(new[] { "text/plain", i.Id });
+                if (!string.IsNullOrEmpty(paymentMethodDetails.ConsumedLightningAddress))
+                {
+                    lnurlMetadata.Add(new[] { "text/identifier", paymentMethodDetails.ConsumedLightningAddress });
+                }
 
                 var metadata = JsonConvert.SerializeObject(lnurlMetadata);
                 if (amount.HasValue && (amount < min || amount > max))
@@ -323,6 +383,7 @@ namespace BTCPayServer
                     lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
                     await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);
 
+
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId,
                         paymentMethodDetails, pmi));
                     return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
@@ -364,6 +425,114 @@ namespace BTCPayServer
             {
                 Status = "ERROR", Reason = "Invoice not in a valid payable state"
             });
+        }
+
+
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
+        public async Task<IActionResult> EditLightningAddress(string storeId)
+        {
+            var store = Request.HttpContext.GetStoreData();
+            var storeBlob = store.GetStoreBlob();
+            if (!storeBlob.AnyoneCanInvoice)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "You must enable \"Allow anyone to create invoice\" for lightning addresses to work."
+                });
+            }
+
+            if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
+            {
+                return View(new EditLightningAddressVM
+                {
+                    Items = addresses.Select(s => new EditLightningAddressVM.EditLightningAddressItem
+                    {
+                        Max = _lightningAddressSettings.Items[s].Max,
+                        Min = _lightningAddressSettings.Items[s].Min,
+                        CurrencyCode = _lightningAddressSettings.Items[s].CurrencyCode,
+                        CryptoCode = _lightningAddressSettings.Items[s].CryptoCode,
+                        StoreId = _lightningAddressSettings.Items[s].StoreId,
+                        Username = s,
+                    }).ToList()
+                });
+            }
+
+            return View(new EditLightningAddressVM
+            {
+                Items = new List<EditLightningAddressVM.EditLightningAddressItem>
+                {
+                    new EditLightningAddressVM.EditLightningAddressItem()
+                }
+            });
+        }
+
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpPost("~/stores/{storeId}/integrations/lightning-address")]
+        public async Task<IActionResult> EditLightningAddress(string storeId, [FromForm] EditLightningAddressVM vm,
+            string command)
+        {
+            if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
+            {
+                ModelState.Clear();
+                var index = int.Parse(
+                    command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
+                    CultureInfo.InvariantCulture);
+                vm.Items.RemoveAt(index);
+                return View(vm);
+            }
+
+            if (command == "add")
+            {
+                vm.Items.Add(new EditLightningAddressVM.EditLightningAddressItem());
+                return View(vm);
+            }
+
+            if (vm.Items?.Any() is true)
+            {
+                for (var i = 0; i < vm.Items.Count; i++)
+                {
+                    if (vm.Items[i].Username is null)
+                    {
+                        continue;
+                    }
+
+                    if (_lightningAddressSettings.Items.TryGetValue(vm.Items[i].Username.ToLowerInvariant(),
+                        out var existing) && existing.StoreId != storeId)
+                    {
+                        ModelState.AddModelError(dictionary => vm.Items[i].Username, "Username is already taken", this);
+                    }
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            if (command == "save")
+            {
+                var ids = vm.Items.Select(item => item.Username.ToLowerInvariant()).ToArray();
+                _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
+                foreach (var lightningAddressItem in vm.Items)
+                {
+                    lightningAddressItem.StoreId = storeId;
+                    lightningAddressItem.CryptoCode = "BTC";
+                    _lightningAddressSettings.Items.AddOrReplace(lightningAddressItem.Username.ToLowerInvariant(),
+                        lightningAddressItem);
+                }
+            }
+
+            await _settingsRepository.UpdateSetting(_lightningAddressSettings);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Message = "Saved Lightning addresses successfully."
+            });
+
+            return RedirectToAction("EditLightningAddress");
         }
     }
 }

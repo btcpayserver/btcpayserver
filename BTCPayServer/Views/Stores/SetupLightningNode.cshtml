@@ -7,7 +7,7 @@
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
     <div class="d-flex mt-4 mb-5">
-        <vc:icon symbol="warning" />
+        <vc:icon symbol="warning"/>
         <p class="text-secondary text-start mb-0">
             Please understand that the Lightning Network is still under active development and considered experimental.
             Before you proceed, take time to familiarize yourself with the risks.
@@ -62,6 +62,15 @@
         margin: .25rem 0;
         padding: .75rem 1rem;
         border-radius: 4px;
+    }
+    .lnurl-setup {
+        display: none;
+    }
+    #LNURLEnabled:checked + * ,
+    #LNURLEnabled:checked + * + *,
+    #LNURLEnabled:checked + * + * + *,
+    #LNURLEnabled:checked + * + * + * + *{
+        display:  block;
     }
 </style>
 }
@@ -178,11 +187,34 @@
             </div>
         </div>
     </div>
+
+    <div class="text-start">
+        <label asp-for="LNURLEnabled">Enable LNURL</label>
+        <input type="checkbox" asp-for="LNURLEnabled" class="btcpay-toggle ml-2"/>
+        <div class="form-group mt-4 lnurl-setup">
+            <label asp-for="LNURLBech32Mode">LNURL Classic Mode</label>
+            <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle ml-2"/>
+            <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-4 lnurl-setup">
+            <label asp-for="LNURLStandardInvoiceEnabled">LNURL enabled for standard invoices </label>
+            <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle ml-2"/>
+        </div>
+        <div class="form-group mt-4 lnurl-setup DisableBolt11PaymentMethod">
+            <label asp-for="DisableBolt11PaymentMethod" >Do not offer BOLT11 for standard invoices</label>
+            <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle ml-2"/>
+        </div>
+        <div class="form-group mt-4 lnurl-setup">
+            <label asp-for="LUD12Enabled" >Allow payee to pass a comment</label>
+            <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle ml-2"/>
+        </div>
+    </div>
+
     <div class="text-start mt-4">
         <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

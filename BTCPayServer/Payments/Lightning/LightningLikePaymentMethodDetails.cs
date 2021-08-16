@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments.Lightning
         public string InvoiceId { get; set; }
         public string NodeInfo { get; set; }
 
-        public string GetPaymentDestination()
+        public virtual string GetPaymentDestination()
         {
             return BOLT11;
         }
@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments.Lightning
             return PaymentHash ?? BOLT11PaymentRequest.Parse(BOLT11, network).PaymentHash;
         }
 
-        public PaymentType GetPaymentType()
+        public virtual PaymentType GetPaymentType()
         {
             return PaymentTypes.LightningLike;
         }
@@ -35,5 +35,10 @@ namespace BTCPayServer.Payments.Lightning
             return 0.0m;
         }
         public bool Activated { get; set; }
+
+        public virtual string GetAdditionalDataPartialName()
+        {
+            return null;
+        }
     }
 }

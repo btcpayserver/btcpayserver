@@ -69,6 +69,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
             return null;
         }
+
+        public override void PopulateCryptoInfo(PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
+        {
+            
+        }
     }
 }
 #endif

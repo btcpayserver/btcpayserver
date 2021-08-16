@@ -66,6 +66,10 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
 
             return null;
         }
+
+        public override void PopulateCryptoInfo(PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
+        {
+        }
     }
 }
 #endif

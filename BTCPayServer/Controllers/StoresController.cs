@@ -506,6 +506,7 @@ namespace BTCPayServer.Controllers
             var lightningByCryptoCode = store
                 .GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
+                .Where(method => method.PaymentId.PaymentType == LightningPaymentType.Instance)
                 .ToDictionary(c => c.CryptoCode.ToUpperInvariant());
 
             foreach (var paymentMethodId in _paymentMethodHandlerDictionary.Distinct().SelectMany(handler => handler.GetSupportedPaymentMethods()))
@@ -528,6 +529,8 @@ namespace BTCPayServer.Controllers
                             Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
 #endif
                         });
+                        break;
+                    case LNURLPayPaymentType lnurlPayPaymentType:
                         break;
                     case LightningPaymentType _:
                         var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);

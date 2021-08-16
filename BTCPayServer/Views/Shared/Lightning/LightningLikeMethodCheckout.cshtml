@@ -5,7 +5,8 @@
     <div>
         <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
             <div class="wrapBtnGroup" v-bind:class="{ invisible: !scanDisplayQr }">
-                <div class="btnGroupLnd">
+                <div class="btnGroupLnd" 
+                        v-if="srvModel.peerInfo" >
                     <button 
                             v-on:click="toggleLightningData('bolt11')" 
                             v-bind:class="{ active: currentLightningDisplay === 'bolt11' }"
@@ -48,8 +49,8 @@
                         <img v-bind:src="srvModel.cryptoImage"/>
                     </div>
                 </div>
-                <div class="separatorGem"></div>
-                <div class="copySectionBox">
+                <div class="separatorGem"  v-if="srvModel.peerInfo" ></div>
+                <div class="copySectionBox"  v-if="srvModel.peerInfo">
                     <label>{{$t("Node Info")}}</label>
                     <div class="inputWithIcon _copyInput">
                         <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly"/>

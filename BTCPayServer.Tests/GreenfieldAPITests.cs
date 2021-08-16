@@ -2037,7 +2037,7 @@ namespace BTCPayServer.Tests
 
             Assert.Empty(await adminClient.GetStorePaymentMethods(store.Id));
 
-            await adminClient.UpdateStoreLightningNetworkPaymentMethod(admin.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest("Internal Node", true));
+            await adminClient.UpdateStoreLightningNetworkPaymentMethod(admin.StoreId, "BTC", new LightningNetworkPaymentMethodData("BTC", "Internal Node", true));
 
             void VerifyLightning(Dictionary<string, GenericPaymentMethodData> dictionary)
             {

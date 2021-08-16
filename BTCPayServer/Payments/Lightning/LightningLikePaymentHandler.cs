@@ -55,6 +55,10 @@ namespace BTCPayServer.Payments.Lightning
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (supportedPaymentMethod.DisableBOLT11PaymentOption)
+            {
+                throw new PaymentMethodUnavailableException("BOLT11 payment method is disabled");
+            }
             if (paymentMethod.ParentEntity.Type == InvoiceType.TopUp) {
                 throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
             }
@@ -66,7 +70,6 @@ namespace BTCPayServer.Payments.Lightning
                     Activated = false
                 };
             }
-            //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
             var nodeInfo = GetNodeInfo(supportedPaymentMethod, network, logs, paymentMethod.PreferOnion);
             

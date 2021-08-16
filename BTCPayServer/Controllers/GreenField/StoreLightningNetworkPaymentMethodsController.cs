@@ -59,7 +59,8 @@ namespace BTCPayServer.Controllers.GreenField
                         paymentMethod.GetExternalLightningUrl()?.ToString() ??
                         paymentMethod.GetDisplayableConnectionString(),
                         !excludedPaymentMethods.Match(paymentMethod.PaymentId),
-                        paymentMethod.PaymentId.ToStringNormalized()
+                        paymentMethod.PaymentId.ToStringNormalized(),
+                        paymentMethod.DisableBOLT11PaymentOption
                     )
                 )
                 .Where((result) => enabled is null || enabled == result.Enabled)
@@ -206,7 +207,7 @@ namespace BTCPayServer.Controllers.GreenField
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.GetDisplayableConnectionString(), !excluded, 
-                    paymentMethod.PaymentId.ToStringNormalized());
+                    paymentMethod.PaymentId.ToStringNormalized(), paymentMethod.DisableBOLT11PaymentOption);
         }
 
         private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)

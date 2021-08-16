@@ -60,7 +60,8 @@ namespace BTCPayServer.Controllers
                 }
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode
+                    CryptoCode = paymentMethodId.CryptoCode,
+                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
                 };
                 paymentMethod.SetInternalNode();
             }
@@ -89,7 +90,8 @@ namespace BTCPayServer.Controllers
 
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode
+                    CryptoCode = paymentMethodId.CryptoCode,
+                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
                 };
                 paymentMethod.SetLightningUrl(connectionString);
                 
@@ -184,6 +186,8 @@ namespace BTCPayServer.Controllers
             {
                 vm.LightningNodeType = lightning.IsInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
+                
+                vm.DisableBolt11PaymentMethod = lightning.DisableBOLT11PaymentOption;
             }
             else
             {

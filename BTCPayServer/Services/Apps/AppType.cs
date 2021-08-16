@@ -16,7 +16,8 @@ namespace BTCPayServer.Services.Apps
         [Display(Name = "Item list and cart")]
         Cart,
         [Display(Name = "Keypad only")]
-        Light
+        Light,
+        Print
     }
 
     public enum RequiresRefundEmail

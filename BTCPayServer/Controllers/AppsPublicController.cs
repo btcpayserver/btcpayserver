@@ -100,6 +100,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
+                Store = store,
                 Description = settings.Description,
                 EmbeddedCSS = settings.EmbeddedCSS,
                 RequiresRefundEmail = settings.RequiresRefundEmail

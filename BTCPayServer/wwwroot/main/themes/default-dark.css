@@ -12,6 +12,7 @@
   --btcpay-neutral-800: var(--btcpay-neutral-dark-800);
   --btcpay-neutral-900: var(--btcpay-neutral-dark-900);
   --btcpay-neutral-950: #0D1117;
+  --btcpay-body-rgb: 22, 27, 34;
   --btcpay-bg-dark: var(--btcpay-neutral-950);
   --btcpay-bg-tile: var(--btcpay-bg-dark);
   --btcpay-body-bg: var(--btcpay-neutral-900);
@@ -24,7 +25,7 @@
   --btcpay-body-border-medium: var(--btcpay-neutral-700);
   --btcpay-body-text: var(--btcpay-white);
   --btcpay-wizard-bg: var(--btcpay-body-bg);
-  --btcpay-wizard-color: var(--btcpay-body-text);
+  --btcpay-wizard-text: var(--btcpay-body-text);
   --btcpay-form-text-label: var(--btcpay-neutral-300);
   --btcpay-header-bg: var(--btcpay-bg-dark);
   --btcpay-header-link-active: var(--btcpay-primary);
@@ -36,6 +37,12 @@
   --btcpay-footer-link: var(--btcpay-neutral-600);
   --btcpay-footer-link-accent: var(--btcpay-neutral-300);
   --btcpay-pre-bg: var(--btcpay-bg-dark);
+  --btcpay-secondary: transparent;
+  --btcpay-secondary-text-hover: var(--btcpay-primary);
+  --btcpay-secondary-text-active: var(--btcpay-primary);
+  --btcpay-secondary-border: var(--btcpay-neutral-700);
+  --btcpay-secondary-border-hover: var(--btcpay-neutral-600);
+  --btcpay-secondary-border-active: var(--btcpay-neutral-500);
   --btcpay-light: var(--btcpay-neutral-800);
   --btcpay-light-accent: var(--btcpay-black);
   --btcpay-light-text: var(--btcpay-neutral-200);
@@ -57,6 +64,7 @@
   --btcpay-light-dim-text-hover: var(--btcpay-light-dim-text);
   --btcpay-light-dim-text-active: var(--btcpay-neutral-100);
   --btcpay-light-shadow: rgba(66, 70, 73, 0.33);
+  --btcpay-light-rgb: 33, 38, 45;
   --btcpay-dark: var(--btcpay-neutral-200);
   --btcpay-dark-accent: var(--btcpay-neutral-400);
   --btcpay-dark-text: var(--btcpay-neutral-800);
@@ -78,6 +86,7 @@
   --btcpay-dark-dim-text-hover: var(--btcpay-dark-dim-text);
   --btcpay-dark-dim-text-active: var(--btcpay-neutral-900);
   --btcpay-dark-shadow: rgba(211, 212, 213, 0.33);
+  --btcpay-dark-rgb: 201, 209, 217;
 }
 
 .social-logo {

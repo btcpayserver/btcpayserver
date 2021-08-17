@@ -15,7 +15,6 @@ namespace BTCPayServer.Models.AppViewModels
         [MaxLength(30)]
         public string Title { get; set; }
 
-        [MaxLength(50)]
         public string Tagline { get; set; }
 
         [Required]

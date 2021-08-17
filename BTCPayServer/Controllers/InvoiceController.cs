@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,7 +78,7 @@ namespace BTCPayServer.Controllers
 
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(BitpayCreateInvoiceRequest invoice,
-            StoreData store, string serverUrl, List<string> additionalTags = null,
+            StoreData store, string serverUrl, List<string>? additionalTags = null,
             CancellationToken cancellationToken = default)
         {
             var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken);
@@ -85,7 +86,7 @@ namespace BTCPayServer.Controllers
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
@@ -131,7 +132,7 @@ namespace BTCPayServer.Controllers
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
-            IPaymentFilter excludeFilter = null;
+            IPaymentFilter? excludeFilter = null;
             if (invoice.PaymentCurrencies?.Any() is true)
             {
                 invoice.SupportedTransactionCurrencies ??=
@@ -155,7 +156,7 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
@@ -179,7 +180,7 @@ namespace BTCPayServer.Controllers
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
-            IPaymentFilter excludeFilter = null;
+            IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
                 var supportedTransactionCurrencies = invoice.Checkout.PaymentMethods
@@ -194,7 +195,7 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, string[] additionalSearchTerms = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default)
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
@@ -335,7 +336,7 @@ namespace BTCPayServer.Controllers
             }).ToArray());
         }
 
-        private async Task<PaymentMethod> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair,
+        private async Task<PaymentMethod?> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair,
             IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetworkBase network, InvoiceEntity entity,
             StoreData store, InvoiceLogs logs)
         {
@@ -344,7 +345,7 @@ namespace BTCPayServer.Controllers
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
 
-                object preparePayment;
+                object? preparePayment;
                 if (storeBlob.LazyPaymentMethods && entity.Type != InvoiceType.TopUp)
                 {
                     preparePayment = null;

@@ -5,7 +5,7 @@
     var isSignable = !isReady && Model.NBXSeedAvailable;
     var needsExport = !isSignable && !isReady;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, isReady ? "Transaction Broadcasting" : "Transaction Details", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -114,36 +114,39 @@ else
             </div>
         </div>
     </div>
-    <div class="accordion-item">
-        <h2 class="accordion-header" id="PSBTOptionsImportHeader">
-            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
-                <span class="h5">Import PSBT</span>
-                <vc:icon symbol="caret-down"/>
-            </button>
-        </h2>
-        <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
-            <div class="accordion-body">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data" class="mb-2">
-                    <div class="form-group">
-                        <label for="ImportedPSBT" class="form-label">PSBT content</label>
-                        <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="UploadedPSBTFile" class="form-label"></label>
-                        <input asp-for="UploadedPSBTFile" type="file" class="form-control">
-                    </div>
-                    <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                        <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode">Decode PSBT</button>
-                        <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
-                    </div>
-                </form>
+    @if (!isReady)
+    {
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="PSBTOptionsImportHeader">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
+                    <span class="h5">Provide updated PSBT</span>
+                    <vc:icon symbol="caret-down"/>
+                </button>
+            </h2>
+            <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
+                <div class="accordion-body">
+                    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data" class="mb-2">
+                        <div class="form-group">
+                            <label for="ImportedPSBT" class="form-label">PSBT content</label>
+                            <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                            <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
+                            <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode">Decode PSBT</button>
+                            <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    }
     <div class="accordion-item">
         <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
             <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
-                <span class="h5">Update or combine PSBT (advanced)</span>
+                <span class="h5">Add metadata to PSBT (advanced)</span>
                 <vc:icon symbol="caret-down"/>
             </button>
         </h2>
@@ -154,10 +157,10 @@ else
                     <input type="hidden" asp-for="NBXSeedAvailable"/>
                     <input type="hidden" asp-for="PSBT"/>
                     <input type="hidden" asp-for="FileName"/>
-                    <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                        <button type="submit" name="command" value="update" class="btn btn-secondary mb-3 mb-sm-0 me-sm-2">Update PSBT</button>
-                        <button type="submit" name="command" value="combine" class="btn btn-secondary">Combine PSBT</button>
-                    </div>
+                    <p class="mb-2">For exporting the signed PSBT and transaction information to a wallet, update the PSBT.</p>
+                    <button type="submit" name="command" value="update" class="btn btn-secondary">Update PSBT</button>
+                    <p class="mt-4 mb-2">For batching transactions, you can combine this PSBT with another one.</p>
+                    <button type="submit" name="command" value="combine" class="btn btn-secondary">Combine PSBT</button>
                 </form>
             </div>
         </div>

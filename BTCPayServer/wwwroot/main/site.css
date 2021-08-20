@@ -4,6 +4,16 @@ html {
 }
 
 /* General and site-wide Bootstrap modifications */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: 600;
+}
+
+.table,
+.table-sm {
+    width: calc(100% + 1rem);
+    margin: 1.5rem -.5rem;
+}
+
 .logo {
     height: 34px;
 }
@@ -167,9 +177,8 @@ h2 small .fa-question-circle-o {
     background-color: lightgray;
 }
 
-/* Fix for small table showing unnecessary scrollbars */
-.table-responsive .table-sm {
-    width: 100% !important;
+#mainNav {
+    background: var(--btcpay-header-bg);
 }
 
 [v-cloak] { display:none }

@@ -383,37 +383,6 @@
   --btcpay-dark-rgb: 33, 38, 45;
 }
 
-/* Bootstrap modifications */
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-  font-weight: 600;
-}
-
-.table-sm {
-  width: calc(100% + 1rem);
-  margin: 1.5rem -.5rem;
-  border-radius: 4px;
-  border-collapse: separate !important;
-  border-spacing: 0px !important;
-}
-
-.table-sm th,
-.table-sm td {
-  padding: .5rem;
-}
-
-.table-sm.table-sm-nohover tbody tr:hover {
-  background-color: transparent;
-}
-
-.removetopborder tr:first-child th,
-.removetopborder tr:first-child td {
-  border-top: none;
-}
-
-#mainNav {
-  background: var(--btcpay-header-bg);
-}
-
 header.masthead::before,
 .service-box img {
   filter: hue-rotate(318deg);

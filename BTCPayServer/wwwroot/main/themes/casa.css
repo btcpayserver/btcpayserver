@@ -355,10 +355,6 @@ body {
   filter: contrast(0) brightness(200%);
 }
 
-.bg-dark {
-  background-color: var(--btcpay-bg-dark) !important;
-}
-
 #mainNav {
   background: var(--btcpay-header-bg) !important;
 }
@@ -366,16 +362,4 @@ body {
 header.masthead::before,
 .service-box img {
   filter: hue-rotate(100deg) opacity(60%) contrast(125%);
-}
-
-.table {
-  margin: 1.5rem 0 3rem;
-}
-
-.table th {
-  border-top: 0;
-}
-
-.list-group-item-action {
-    color: var(--btcpay-body-color);
 }

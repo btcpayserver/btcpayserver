@@ -352,46 +352,6 @@
   --btcpay-dark-shadow: rgba(66, 70, 73, 0.33);
 }
 
-/* Bootstrap modifications */
-.bg-dark {
-  background-color: var(--btcpay-bg-dark) !important;
-}
-
-.table-sm {
-  margin: 1.5rem 0;
-  background: var(--btcpay-white);
-  border: 1px solid var(--btcpay-light-300);
-  border-radius: 4px;
-  border-collapse: separate !important;
-  border-spacing: 0px !important;
-}
-
-.table-sm thead > tr {
-  height: 40px;
-}
-
-.table-sm thead th {
-  border-bottom: none;
-  border-top: none;
-  font-size: 1.0rem;
-}
-
-.table-sm th,
-.table-sm td {
-  padding: 8px 12px;
-  vertical-align: middle;
-  font-size: 0.92rem;
-}
-
-.table-sm tbody tr:hover {
-    background-color: var(--btcpay-light-100);
-}
-
-.removetopborder tr:first-child th,
-.removetopborder tr:first-child td {
-  border-top: none;
-}
-
 #mainNav.sticky-top {
   background: var(--btcpay-white);
 }

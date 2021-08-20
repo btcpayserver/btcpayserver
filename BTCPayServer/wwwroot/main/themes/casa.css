@@ -135,7 +135,7 @@
   --btcpay-body-link-accent: var(--btcpay-primary-accent);
   --btcpay-body-shadow: rgba(25, 135, 84, 0.33);
   --btcpay-wizard-bg: var(--btcpay-white);
-  --btcpay-wizard-color: var(--btcpay-body-text);
+  --btcpay-wizard-text: var(--btcpay-body-text);
   --btcpay-header-bg: var(--btcpay-brand-dark);
   --btcpay-header-text: var(--btcpay-body-text);
   --btcpay-header-link: var(--btcpay-header-text);

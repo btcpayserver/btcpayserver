@@ -5,57 +5,16 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 :root {
-  --bs-blue: #0d6efd;
-  --bs-indigo: #6610f2;
-  --bs-purple: #6f42c1;
-  --bs-pink: var(--btcpay-code-text);
-  --bs-red: #dc3545;
-  --bs-orange: #fd7e14;
-  --bs-yellow: #ffc107;
-  --bs-green: #198754;
-  --bs-teal: #20c997;
-  --bs-cyan: #0dcaf0;
-  --bs-white: var(--btcpay-white);
-  --bs-gray: var(--btcpay-neutral-600);
-  --bs-gray-dark: var(--btcpay-neutral-800);
-  --bs-gray-100: var(--btcpay-neutral-100);
-  --bs-gray-200: var(--btcpay-neutral-200);
-  --bs-gray-300: var(--btcpay-neutral-300);
-  --bs-gray-400: var(--btcpay-neutral-400);
-  --bs-gray-500: var(--btcpay-neutral-500);
-  --bs-gray-600: var(--btcpay-neutral-600);
-  --bs-gray-700: var(--btcpay-neutral-700);
-  --bs-gray-800: var(--btcpay-neutral-800);
-  --bs-gray-900: var(--btcpay-neutral-900);
-  --bs-primary: var(--btcpay-primary);
-  --bs-secondary: var(--btcpay-secondary);
-  --bs-success: var(--btcpay-success);
-  --bs-info: var(--btcpay-info);
-  --bs-warning: var(--btcpay-warning);
-  --bs-danger: var(--btcpay-danger);
-  --bs-light: var(--btcpay-light);
-  --bs-dark: var(--btcpay-dark);
-  --bs-primary-rgb: var(--btcpay-primary-rgb);
-  --bs-secondary-rgb: var(--btcpay-secondary-rgb);
-  --bs-success-rgb: var(--btcpay-success-rgb);
-  --bs-info-rgb: var(--btcpay-info-rgb);
-  --bs-warning-rgb: var(--btcpay-warning-rgb);
-  --bs-danger-rgb: var(--btcpay-danger-rgb);
-  --bs-light-rgb: var(--btcpay-light-rgb);
-  --bs-dark-rgb: var(--btcpay-dark-rgb);
-  --bs-white-rgb: var(--btcpay-white-rgb);
-  --bs-black-rgb: var(--btcpay-black-rgb);
-  --bs-body-rgb: var(--btcpay-body-rgb);
-  --bs-font-sans-serif: var(--btcpay-font-family-base);
-  --bs-font-monospace: var(--btcpay-font-family-monospace);
-  --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
-  --bs-root-font-size: 16px;
-  --bs-body-font-family: var(--btcpay-font-family-base);
-  --bs-body-font-size: 0.875rem;
-  --bs-body-font-weight: 400;
-  --bs-body-line-height: 1.6;
-  --bs-body-color: var(--btcpay-body-text);
-  --bs-body-bg: var(--btcpay-body-bg);
+  --btcpay-font-sans-serif: var(--btcpay-font-family-base);
+  --btcpay-font-monospace: var(--btcpay-font-family-monospace);
+  --btcpay-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+  --btcpay-root-font-size: 16px;
+  --btcpay-body-font-family: var(--btcpay-font-family-base);
+  --btcpay-body-font-size: 0.875rem;
+  --btcpay-body-font-weight: 400;
+  --btcpay-body-line-height: 1.6;
+  --btcpay-body-color: var(--btcpay-body-text);
+  --btcpay-body-bg: var(--btcpay-white);
 }
 
 *,
@@ -65,18 +24,18 @@
 }
 
 :root {
-  font-size: var(--bs--root-font-size);
+  font-size: var(--btcpay--root-font-size);
 }
 
 body {
   margin: 0;
-  font-family: var(--bs-body-font-family);
-  font-size: var(--bs-body-font-size);
-  font-weight: var(--bs-body-font-weight);
-  line-height: var(--bs-body-line-height);
-  color: var(--bs-body-color);
-  text-align: var(--bs-body-text-align);
-  background-color: var(--bs-body-bg);
+  font-family: var(--btcpay-body-font-family);
+  font-size: var(--btcpay-body-font-size);
+  font-weight: var(--btcpay-body-font-weight);
+  line-height: var(--btcpay-body-line-height);
+  color: var(--btcpay-body-color);
+  text-align: var(--btcpay-body-text-align);
+  background-color: var(--btcpay-body-bg);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: var(--btcpay-black);
 }
@@ -311,7 +270,7 @@ table {
 caption {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   text-align: left;
 }
 
@@ -611,7 +570,7 @@ progress {
   margin-top: -1rem;
   margin-bottom: 1rem;
   font-size: 0.875em;
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
 }
 
 .blockquote-footer::before {
@@ -653,8 +612,8 @@ progress {
 .container-lg,
 .container-xl {
   width: 100%;
-  padding-right: var(--bs-gutter-x, 0.75rem);
-  padding-left: var(--bs-gutter-x, 0.75rem);
+  padding-right: var(--btcpay-gutter-x, 0.75rem);
+  padding-left: var(--btcpay-gutter-x, 0.75rem);
   margin-right: auto;
   margin-left: auto;
 }
@@ -684,22 +643,22 @@ progress {
 }
 
 .row {
-  --bs-gutter-x: 1.5rem;
-  --bs-gutter-y: 0;
+  --btcpay-gutter-x: 1.5rem;
+  --btcpay-gutter-y: 0;
   display: flex;
   flex-wrap: wrap;
-  margin-top: calc(var(--bs-gutter-y) * -1);
-  margin-right: calc(var(--bs-gutter-x) * -.5);
-  margin-left: calc(var(--bs-gutter-x) * -.5);
+  margin-top: calc(var(--btcpay-gutter-y) * -1);
+  margin-right: calc(var(--btcpay-gutter-x) * -.5);
+  margin-left: calc(var(--btcpay-gutter-x) * -.5);
 }
 
 .row > * {
   flex-shrink: 0;
   width: 100%;
   max-width: 100%;
-  padding-right: calc(var(--bs-gutter-x) * .5);
-  padding-left: calc(var(--bs-gutter-x) * .5);
-  margin-top: var(--bs-gutter-y);
+  padding-right: calc(var(--btcpay-gutter-x) * .5);
+  padding-left: calc(var(--btcpay-gutter-x) * .5);
+  margin-top: var(--btcpay-gutter-y);
 }
 
 .col {
@@ -852,62 +811,62 @@ progress {
 
 .g-0,
 .gx-0 {
-  --bs-gutter-x: 0;
+  --btcpay-gutter-x: 0;
 }
 
 .g-0,
 .gy-0 {
-  --bs-gutter-y: 0;
+  --btcpay-gutter-y: 0;
 }
 
 .g-1,
 .gx-1 {
-  --bs-gutter-x: 0.25rem;
+  --btcpay-gutter-x: 0.25rem;
 }
 
 .g-1,
 .gy-1 {
-  --bs-gutter-y: 0.25rem;
+  --btcpay-gutter-y: 0.25rem;
 }
 
 .g-2,
 .gx-2 {
-  --bs-gutter-x: 0.5rem;
+  --btcpay-gutter-x: 0.5rem;
 }
 
 .g-2,
 .gy-2 {
-  --bs-gutter-y: 0.5rem;
+  --btcpay-gutter-y: 0.5rem;
 }
 
 .g-3,
 .gx-3 {
-  --bs-gutter-x: 1rem;
+  --btcpay-gutter-x: 1rem;
 }
 
 .g-3,
 .gy-3 {
-  --bs-gutter-y: 1rem;
+  --btcpay-gutter-y: 1rem;
 }
 
 .g-4,
 .gx-4 {
-  --bs-gutter-x: 1.5rem;
+  --btcpay-gutter-x: 1.5rem;
 }
 
 .g-4,
 .gy-4 {
-  --bs-gutter-y: 1.5rem;
+  --btcpay-gutter-y: 1.5rem;
 }
 
 .g-5,
 .gx-5 {
-  --bs-gutter-x: 3rem;
+  --btcpay-gutter-x: 3rem;
 }
 
 .g-5,
 .gy-5 {
-  --bs-gutter-y: 3rem;
+  --btcpay-gutter-y: 3rem;
 }
 
 @media (min-width: 576px) {
@@ -1032,51 +991,51 @@ progress {
   }
   .g-sm-0,
   .gx-sm-0 {
-    --bs-gutter-x: 0;
+    --btcpay-gutter-x: 0;
   }
   .g-sm-0,
   .gy-sm-0 {
-    --bs-gutter-y: 0;
+    --btcpay-gutter-y: 0;
   }
   .g-sm-1,
   .gx-sm-1 {
-    --bs-gutter-x: 0.25rem;
+    --btcpay-gutter-x: 0.25rem;
   }
   .g-sm-1,
   .gy-sm-1 {
-    --bs-gutter-y: 0.25rem;
+    --btcpay-gutter-y: 0.25rem;
   }
   .g-sm-2,
   .gx-sm-2 {
-    --bs-gutter-x: 0.5rem;
+    --btcpay-gutter-x: 0.5rem;
   }
   .g-sm-2,
   .gy-sm-2 {
-    --bs-gutter-y: 0.5rem;
+    --btcpay-gutter-y: 0.5rem;
   }
   .g-sm-3,
   .gx-sm-3 {
-    --bs-gutter-x: 1rem;
+    --btcpay-gutter-x: 1rem;
   }
   .g-sm-3,
   .gy-sm-3 {
-    --bs-gutter-y: 1rem;
+    --btcpay-gutter-y: 1rem;
   }
   .g-sm-4,
   .gx-sm-4 {
-    --bs-gutter-x: 1.5rem;
+    --btcpay-gutter-x: 1.5rem;
   }
   .g-sm-4,
   .gy-sm-4 {
-    --bs-gutter-y: 1.5rem;
+    --btcpay-gutter-y: 1.5rem;
   }
   .g-sm-5,
   .gx-sm-5 {
-    --bs-gutter-x: 3rem;
+    --btcpay-gutter-x: 3rem;
   }
   .g-sm-5,
   .gy-sm-5 {
-    --bs-gutter-y: 3rem;
+    --btcpay-gutter-y: 3rem;
   }
 }
 
@@ -1202,51 +1161,51 @@ progress {
   }
   .g-md-0,
   .gx-md-0 {
-    --bs-gutter-x: 0;
+    --btcpay-gutter-x: 0;
   }
   .g-md-0,
   .gy-md-0 {
-    --bs-gutter-y: 0;
+    --btcpay-gutter-y: 0;
   }
   .g-md-1,
   .gx-md-1 {
-    --bs-gutter-x: 0.25rem;
+    --btcpay-gutter-x: 0.25rem;
   }
   .g-md-1,
   .gy-md-1 {
-    --bs-gutter-y: 0.25rem;
+    --btcpay-gutter-y: 0.25rem;
   }
   .g-md-2,
   .gx-md-2 {
-    --bs-gutter-x: 0.5rem;
+    --btcpay-gutter-x: 0.5rem;
   }
   .g-md-2,
   .gy-md-2 {
-    --bs-gutter-y: 0.5rem;
+    --btcpay-gutter-y: 0.5rem;
   }
   .g-md-3,
   .gx-md-3 {
-    --bs-gutter-x: 1rem;
+    --btcpay-gutter-x: 1rem;
   }
   .g-md-3,
   .gy-md-3 {
-    --bs-gutter-y: 1rem;
+    --btcpay-gutter-y: 1rem;
   }
   .g-md-4,
   .gx-md-4 {
-    --bs-gutter-x: 1.5rem;
+    --btcpay-gutter-x: 1.5rem;
   }
   .g-md-4,
   .gy-md-4 {
-    --bs-gutter-y: 1.5rem;
+    --btcpay-gutter-y: 1.5rem;
   }
   .g-md-5,
   .gx-md-5 {
-    --bs-gutter-x: 3rem;
+    --btcpay-gutter-x: 3rem;
   }
   .g-md-5,
   .gy-md-5 {
-    --bs-gutter-y: 3rem;
+    --btcpay-gutter-y: 3rem;
   }
 }
 
@@ -1372,51 +1331,51 @@ progress {
   }
   .g-lg-0,
   .gx-lg-0 {
-    --bs-gutter-x: 0;
+    --btcpay-gutter-x: 0;
   }
   .g-lg-0,
   .gy-lg-0 {
-    --bs-gutter-y: 0;
+    --btcpay-gutter-y: 0;
   }
   .g-lg-1,
   .gx-lg-1 {
-    --bs-gutter-x: 0.25rem;
+    --btcpay-gutter-x: 0.25rem;
   }
   .g-lg-1,
   .gy-lg-1 {
-    --bs-gutter-y: 0.25rem;
+    --btcpay-gutter-y: 0.25rem;
   }
   .g-lg-2,
   .gx-lg-2 {
-    --bs-gutter-x: 0.5rem;
+    --btcpay-gutter-x: 0.5rem;
   }
   .g-lg-2,
   .gy-lg-2 {
-    --bs-gutter-y: 0.5rem;
+    --btcpay-gutter-y: 0.5rem;
   }
   .g-lg-3,
   .gx-lg-3 {
-    --bs-gutter-x: 1rem;
+    --btcpay-gutter-x: 1rem;
   }
   .g-lg-3,
   .gy-lg-3 {
-    --bs-gutter-y: 1rem;
+    --btcpay-gutter-y: 1rem;
   }
   .g-lg-4,
   .gx-lg-4 {
-    --bs-gutter-x: 1.5rem;
+    --btcpay-gutter-x: 1.5rem;
   }
   .g-lg-4,
   .gy-lg-4 {
-    --bs-gutter-y: 1.5rem;
+    --btcpay-gutter-y: 1.5rem;
   }
   .g-lg-5,
   .gx-lg-5 {
-    --bs-gutter-x: 3rem;
+    --btcpay-gutter-x: 3rem;
   }
   .g-lg-5,
   .gy-lg-5 {
-    --bs-gutter-y: 3rem;
+    --btcpay-gutter-y: 3rem;
   }
 }
 
@@ -1542,63 +1501,63 @@ progress {
   }
   .g-xl-0,
   .gx-xl-0 {
-    --bs-gutter-x: 0;
+    --btcpay-gutter-x: 0;
   }
   .g-xl-0,
   .gy-xl-0 {
-    --bs-gutter-y: 0;
+    --btcpay-gutter-y: 0;
   }
   .g-xl-1,
   .gx-xl-1 {
-    --bs-gutter-x: 0.25rem;
+    --btcpay-gutter-x: 0.25rem;
   }
   .g-xl-1,
   .gy-xl-1 {
-    --bs-gutter-y: 0.25rem;
+    --btcpay-gutter-y: 0.25rem;
   }
   .g-xl-2,
   .gx-xl-2 {
-    --bs-gutter-x: 0.5rem;
+    --btcpay-gutter-x: 0.5rem;
   }
   .g-xl-2,
   .gy-xl-2 {
-    --bs-gutter-y: 0.5rem;
+    --btcpay-gutter-y: 0.5rem;
   }
   .g-xl-3,
   .gx-xl-3 {
-    --bs-gutter-x: 1rem;
+    --btcpay-gutter-x: 1rem;
   }
   .g-xl-3,
   .gy-xl-3 {
-    --bs-gutter-y: 1rem;
+    --btcpay-gutter-y: 1rem;
   }
   .g-xl-4,
   .gx-xl-4 {
-    --bs-gutter-x: 1.5rem;
+    --btcpay-gutter-x: 1.5rem;
   }
   .g-xl-4,
   .gy-xl-4 {
-    --bs-gutter-y: 1.5rem;
+    --btcpay-gutter-y: 1.5rem;
   }
   .g-xl-5,
   .gx-xl-5 {
-    --bs-gutter-x: 3rem;
+    --btcpay-gutter-x: 3rem;
   }
   .g-xl-5,
   .gy-xl-5 {
-    --bs-gutter-y: 3rem;
+    --btcpay-gutter-y: 3rem;
   }
 }
 
 .table {
-  --bs-table-bg: transparent;
-  --bs-table-accent-bg: transparent;
-  --bs-table-striped-color: var(--btcpay-body-text);
-  --bs-table-striped-bg: var(--btcpay-body-bg-striped);
-  --bs-table-active-color: var(--btcpay-body-text-active);
-  --bs-table-active-bg: var(--btcpay-body-bg-active);
-  --bs-table-hover-color: var(--btcpay-body-text-hover);
-  --bs-table-hover-bg: var(--btcpay-body-bg-hover);
+  --btcpay-table-bg: transparent;
+  --btcpay-table-accent-bg: transparent;
+  --btcpay-table-striped-color: var(--btcpay-body-text);
+  --btcpay-table-striped-bg: var(--btcpay-body-bg-striped);
+  --btcpay-table-active-color: var(--btcpay-body-text-active);
+  --btcpay-table-active-bg: var(--btcpay-body-bg-active);
+  --btcpay-table-hover-color: var(--btcpay-body-text-hover);
+  --btcpay-table-hover-bg: var(--btcpay-body-bg-hover);
   width: 100%;
   margin-bottom: 1rem;
   color: var(--btcpay-body-text);
@@ -1608,9 +1567,9 @@ progress {
 
 .table > :not(caption) > * > * {
   padding: 0.5rem 0.5rem;
-  background-color: var(--bs-table-bg);
+  background-color: var(--btcpay-table-bg);
   border-bottom-width: 1px;
-  box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+  box-shadow: inset 0 0 0 9999px var(--btcpay-table-accent-bg);
 }
 
 .table > tbody {
@@ -1646,112 +1605,112 @@ progress {
 }
 
 .table-striped > tbody > tr:nth-of-type(odd) {
-  --bs-table-accent-bg: var(--bs-table-striped-bg);
-  color: var(--bs-table-striped-color);
+  --btcpay-table-accent-bg: var(--btcpay-table-striped-bg);
+  color: var(--btcpay-table-striped-color);
 }
 
 .table-active {
-  --bs-table-accent-bg: var(--bs-table-active-bg);
-  color: var(--bs-table-active-color);
+  --btcpay-table-accent-bg: var(--btcpay-table-active-bg);
+  color: var(--btcpay-table-active-color);
 }
 
 .table-hover > tbody > tr:hover {
-  --bs-table-accent-bg: var(--bs-table-hover-bg);
-  color: var(--bs-table-hover-color);
+  --btcpay-table-accent-bg: var(--btcpay-table-hover-bg);
+  color: var(--btcpay-table-hover-color);
 }
 
 .table-primary {
-  --bs-table-bg: var(--btcpay-primary-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-primary-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-primary-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-primary-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-primary-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-primary-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-primary-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-primary-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-primary-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-primary-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-primary-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-primary-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-primary-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-primary-dim-text-hover);
   color: var(--btcpay-primary-dim-text);
   border-color: var(--btcpay-primary-dim-border);
 }
 
 .table-secondary {
-  --bs-table-bg: var(--btcpay-secondary-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-secondary-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-secondary-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-secondary-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-secondary-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-secondary-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-secondary-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-secondary-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-secondary-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-secondary-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-secondary-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-secondary-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-secondary-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-secondary-dim-text-hover);
   color: var(--btcpay-secondary-dim-text);
   border-color: var(--btcpay-secondary-dim-border);
 }
 
 .table-success {
-  --bs-table-bg: var(--btcpay-success-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-success-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-success-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-success-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-success-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-success-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-success-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-success-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-success-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-success-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-success-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-success-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-success-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-success-dim-text-hover);
   color: var(--btcpay-success-dim-text);
   border-color: var(--btcpay-success-dim-border);
 }
 
 .table-info {
-  --bs-table-bg: var(--btcpay-info-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-info-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-info-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-info-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-info-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-info-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-info-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-info-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-info-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-info-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-info-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-info-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-info-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-info-dim-text-hover);
   color: var(--btcpay-info-dim-text);
   border-color: var(--btcpay-info-dim-border);
 }
 
 .table-warning {
-  --bs-table-bg: var(--btcpay-warning-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-warning-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-warning-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-warning-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-warning-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-warning-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-warning-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-warning-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-warning-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-warning-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-warning-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-warning-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-warning-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-warning-dim-text-hover);
   color: var(--btcpay-warning-dim-text);
   border-color: var(--btcpay-warning-dim-border);
 }
 
 .table-danger {
-  --bs-table-bg: var(--btcpay-danger-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-danger-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-danger-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-danger-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-danger-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-danger-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-danger-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-danger-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-danger-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-danger-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-danger-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-danger-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-danger-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-danger-dim-text-hover);
   color: var(--btcpay-danger-dim-text);
   border-color: var(--btcpay-danger-dim-border);
 }
 
 .table-light {
-  --bs-table-bg: var(--btcpay-light-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-light-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-light-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-light-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-light-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-light-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-light-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-light-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-light-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-light-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-light-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-light-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-light-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-light-dim-text-hover);
   color: var(--btcpay-light-dim-text);
   border-color: var(--btcpay-light-dim-border);
 }
 
 .table-dark {
-  --bs-table-bg: var(--btcpay-dark-dim-bg);
-  --bs-table-striped-bg: var(--btcpay-dark-dim-bg-striped);
-  --bs-table-striped-color: var(--btcpay-dark-dim-text-striped);
-  --bs-table-active-bg: var(--btcpay-dark-dim-bg-active);
-  --bs-table-active-color: var(--btcpay-dark-dim-text-active);
-  --bs-table-hover-bg: var(--btcpay-dark-dim-bg-hover);
-  --bs-table-hover-color: var(--btcpay-dark-dim-text-hover);
+  --btcpay-table-bg: var(--btcpay-dark-dim-bg);
+  --btcpay-table-striped-bg: var(--btcpay-dark-dim-bg-striped);
+  --btcpay-table-striped-color: var(--btcpay-dark-dim-text-striped);
+  --btcpay-table-active-bg: var(--btcpay-dark-dim-bg-active);
+  --btcpay-table-active-color: var(--btcpay-dark-dim-text-active);
+  --btcpay-table-hover-bg: var(--btcpay-dark-dim-bg-hover);
+  --btcpay-table-hover-color: var(--btcpay-dark-dim-text-hover);
   color: var(--btcpay-dark-dim-text);
   border-color: var(--btcpay-dark-dim-border);
 }
@@ -1860,12 +1819,12 @@ progress {
 }
 
 .form-control::-moz-placeholder {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   opacity: 1;
 }
 
 .form-control::placeholder {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   opacity: 1;
 }
 
@@ -2465,7 +2424,7 @@ textarea.form-control-lg {
   margin-top: .1rem;
   font-size: 0.75rem;
   color: var(--btcpay-white);
-  background-color: rgba(25, 135, 84, 0.9);
+  background-color: rgba(var(--btcpay-success-rgb), 0.9);
   border-radius: var(--btcpay-border-radius);
 }
 
@@ -2561,7 +2520,7 @@ textarea.form-control-lg {
   margin-top: .1rem;
   font-size: 0.75rem;
   color: var(--btcpay-white);
-  background-color: rgba(220, 53, 69, 0.9);
+  background-color: rgba(var(--btcpay-danger-rgb), 0.9);
   border-radius: var(--btcpay-border-radius);
 }
 
@@ -2998,7 +2957,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-primary, .btn-outline-primary:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-primary-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-primary-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-primary,
@@ -3010,7 +2969,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-primary:focus,
 .btn-check:active + .btn-outline-primary:focus, .btn-outline-primary:active:focus, .btn-outline-primary.active:focus, .btn-outline-primary.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-primary-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-primary-rgb), 0.5);
 }
 
 .btn-outline-primary:disabled, .btn-outline-primary.disabled {
@@ -3030,7 +2989,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-secondary, .btn-outline-secondary:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-secondary-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-secondary-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-secondary,
@@ -3042,7 +3001,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-secondary:focus,
 .btn-check:active + .btn-outline-secondary:focus, .btn-outline-secondary:active:focus, .btn-outline-secondary.active:focus, .btn-outline-secondary.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-secondary-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-secondary-rgb), 0.5);
 }
 
 .btn-outline-secondary:disabled, .btn-outline-secondary.disabled {
@@ -3062,7 +3021,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-success, .btn-outline-success:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-success-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-success-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-success,
@@ -3074,7 +3033,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-success:focus,
 .btn-check:active + .btn-outline-success:focus, .btn-outline-success:active:focus, .btn-outline-success.active:focus, .btn-outline-success.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-success-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-success-rgb), 0.5);
 }
 
 .btn-outline-success:disabled, .btn-outline-success.disabled {
@@ -3094,7 +3053,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-info, .btn-outline-info:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-info-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-info-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-info,
@@ -3106,7 +3065,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-info:focus,
 .btn-check:active + .btn-outline-info:focus, .btn-outline-info:active:focus, .btn-outline-info.active:focus, .btn-outline-info.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-info-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-info-rgb), 0.5);
 }
 
 .btn-outline-info:disabled, .btn-outline-info.disabled {
@@ -3126,7 +3085,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-warning, .btn-outline-warning:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-warning-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-warning-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-warning,
@@ -3138,7 +3097,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-warning:focus,
 .btn-check:active + .btn-outline-warning:focus, .btn-outline-warning:active:focus, .btn-outline-warning.active:focus, .btn-outline-warning.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-warning-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-warning-rgb), 0.5);
 }
 
 .btn-outline-warning:disabled, .btn-outline-warning.disabled {
@@ -3158,7 +3117,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-danger, .btn-outline-danger:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-danger-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-danger-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-danger,
@@ -3170,7 +3129,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-danger:focus,
 .btn-check:active + .btn-outline-danger:focus, .btn-outline-danger:active:focus, .btn-outline-danger.active:focus, .btn-outline-danger.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-danger-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-danger-rgb), 0.5);
 }
 
 .btn-outline-danger:disabled, .btn-outline-danger.disabled {
@@ -3190,7 +3149,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-light, .btn-outline-light:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-light-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-light-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-light,
@@ -3202,7 +3161,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-light:focus,
 .btn-check:active + .btn-outline-light:focus, .btn-outline-light:active:focus, .btn-outline-light.active:focus, .btn-outline-light.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-light-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-light-rgb), 0.5);
 }
 
 .btn-outline-light:disabled, .btn-outline-light.disabled {
@@ -3222,7 +3181,7 @@ fieldset:disabled .btn {
 }
 
 .btn-check:focus + .btn-outline-dark, .btn-outline-dark:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-dark-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-dark-rgb), 0.5);
 }
 
 .btn-check:checked + .btn-outline-dark,
@@ -3234,7 +3193,7 @@ fieldset:disabled .btn {
 
 .btn-check:checked + .btn-outline-dark:focus,
 .btn-check:active + .btn-outline-dark:focus, .btn-outline-dark:active:focus, .btn-outline-dark.active:focus, .btn-outline-dark.dropdown-toggle.show:focus {
-  box-shadow: 0 0 0 0.25rem var(--btcpay-dark-shadow);
+  box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-dark-rgb), 0.5);
 }
 
 .btn-outline-dark:disabled, .btn-outline-dark.disabled {
@@ -3258,7 +3217,7 @@ fieldset:disabled .btn {
 }
 
 .btn-link:disabled, .btn-link.disabled {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
 }
 
 .btn-lg, .btn-group-lg > .btn {
@@ -3741,7 +3700,7 @@ fieldset:disabled .btn {
 }
 
 .nav-link.disabled {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   pointer-events: none;
   cursor: default;
 }
@@ -3764,7 +3723,7 @@ fieldset:disabled .btn {
 }
 
 .nav-tabs .nav-link.disabled {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   background-color: transparent;
   border-color: transparent;
 }
@@ -3909,7 +3868,7 @@ fieldset:disabled .btn {
 }
 
 .navbar-nav-scroll {
-  max-height: var(--bs-scroll-height, 75vh);
+  max-height: var(--btcpay-scroll-height, 75vh);
   overflow-y: auto;
 }
 
@@ -4586,7 +4545,7 @@ fieldset:disabled .btn {
   float: left;
   padding-right: 0.5rem;
   color: var(--btcpay-secondary);
-  content: var(--bs-breadcrumb-divider, "/") /* rtl: var(--bs-breadcrumb-divider, "/") */;
+  content: var(--btcpay-breadcrumb-divider, "/") /* rtl: var(--btcpay-breadcrumb-divider, "/") */;
 }
 
 .breadcrumb-item.active {
@@ -4688,7 +4647,7 @@ fieldset:disabled .btn {
 
 .badge {
   display: inline-block;
-  padding: 0.5em 1em;
+  padding: 0.5em 0.5em;
   font-size: 0.75em;
   font-weight: 700;
   line-height: 1;
@@ -4915,7 +4874,7 @@ fieldset:disabled .btn {
 }
 
 .list-group-item.disabled, .list-group-item:disabled {
-  color: var(--btcpay-secondary);
+  color: var(--btcpay-body-text-muted);
   pointer-events: none;
   background-color: var(--btcpay-body-bg);
 }
@@ -6321,7 +6280,7 @@ fieldset:disabled .btn {
 
 .ratio::before {
   display: block;
-  padding-top: var(--bs-aspect-ratio);
+  padding-top: var(--btcpay-aspect-ratio);
   content: "";
 }
 
@@ -6334,19 +6293,19 @@ fieldset:disabled .btn {
 }
 
 .ratio-1x1 {
-  --bs-aspect-ratio: 100%;
+  --btcpay-aspect-ratio: 100%;
 }
 
 .ratio-4x3 {
-  --bs-aspect-ratio: calc(3 / 4 * 100%);
+  --btcpay-aspect-ratio: calc(3 / 4 * 100%);
 }
 
 .ratio-16x9 {
-  --bs-aspect-ratio: calc(9 / 16 * 100%);
+  --btcpay-aspect-ratio: calc(9 / 16 * 100%);
 }
 
 .ratio-21x9 {
-  --bs-aspect-ratio: calc(9 / 21 * 100%);
+  --btcpay-aspect-ratio: calc(9 / 21 * 100%);
 }
 
 .fixed-top {
@@ -7416,7 +7375,7 @@ fieldset:disabled .btn {
 }
 
 .font-monospace {
-  font-family: var(--bs-font-monospace) !important;
+  font-family: var(--btcpay-font-monospace) !important;
 }
 
 .fs-1 {
@@ -7539,178 +7498,178 @@ fieldset:disabled .btn {
 
 /* rtl:end:remove */
 .text-primary {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-primary-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-primary-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-secondary {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-secondary-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-secondary-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-success {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-success-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-info {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-info-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-info-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-warning {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-warning-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-danger {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-danger-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-light {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-light-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-light-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-dark {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-dark-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-dark-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-black {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-black-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-black-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-white {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-white-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-white-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-body {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-body-rgb), var(--bs-text-opacity)) !important;
+  --btcpay-text-opacity: 1;
+  color: rgba(var(--btcpay-body-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-muted {
-  --bs-text-opacity: 1;
-  color: var(--btcpay-secondary) !important;
+  --btcpay-text-opacity: 1;
+  color: var(--btcpay-body-text-muted) !important;
 }
 
 .text-black-50 {
-  --bs-text-opacity: 1;
+  --btcpay-text-opacity: 1;
   color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .text-white-50 {
-  --bs-text-opacity: 1;
+  --btcpay-text-opacity: 1;
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .text-reset {
-  --bs-text-opacity: 1;
+  --btcpay-text-opacity: 1;
   color: inherit !important;
 }
 
 .text-opacity-25 {
-  --bs-text-opacity: 0.25;
+  --btcpay-text-opacity: 0.25;
 }
 
 .text-opacity-50 {
-  --bs-text-opacity: 0.5;
+  --btcpay-text-opacity: 0.5;
 }
 
 .text-opacity-75 {
-  --bs-text-opacity: 0.75;
+  --btcpay-text-opacity: 0.75;
 }
 
 .text-opacity-100 {
-  --bs-text-opacity: 1;
+  --btcpay-text-opacity: 1;
 }
 
 .bg-primary {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-primary-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-secondary {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-secondary-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-secondary-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-success {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-success-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-info {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-info-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-info-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-warning {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-warning-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-danger {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-danger-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-light {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-light-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-light-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-dark {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-dark-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-black {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-black-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-black-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-white {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-white-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-body {
-  --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-body-rgb), var(--bs-bg-opacity)) !important;
+  --btcpay-bg-opacity: 1;
+  background-color: rgba(var(--btcpay-body-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-transparent {
-  --bs-bg-opacity: 1;
+  --btcpay-bg-opacity: 1;
   background-color: transparent !important;
 }
 
 .bg-opacity-10 {
-  --bs-bg-opacity: 0.1;
+  --btcpay-bg-opacity: 0.1;
 }
 
 .bg-opacity-25 {
-  --bs-bg-opacity: 0.25;
+  --btcpay-bg-opacity: 0.25;
 }
 
 .bg-opacity-50 {
-  --bs-bg-opacity: 0.5;
+  --btcpay-bg-opacity: 0.5;
 }
 
 .bg-opacity-75 {
-  --bs-bg-opacity: 0.75;
+  --btcpay-bg-opacity: 0.75;
 }
 
 .bg-opacity-100 {
-  --bs-bg-opacity: 1;
+  --btcpay-bg-opacity: 1;
 }
 
 .bg-gradient {
-  background-image: var(--bs-gradient) !important;
+  background-image: var(--btcpay-gradient) !important;
 }
 
 .user-select-all {
@@ -9833,7 +9792,7 @@ fieldset:disabled .btn {
 /* Workaround until this is released > v5.1.0:
    https://github.com/twbs/bootstrap/commit/f4fd27118fb2b384968068f66361f020a0996a1a */
 :root {
-  font-size: var(--bs-root-font-size);
+  font-size: var(--btcpay-root-font-size);
 }
 
 html {
@@ -9886,6 +9845,10 @@ ul {
 ul li {
   padding-top: .2em;
   padding-bottom: .2em;
+}
+
+.text-secondary {
+  color: var(--btcpay-body-text-muted) !important;
 }
 
 /* Accordion */

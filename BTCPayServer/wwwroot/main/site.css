@@ -59,11 +59,6 @@ html {
     opacity: .5;
 }
 
-.dropdown-toggle-split,
-.dropdown-toggle-split:hover {
-    border-left: 1px solid var(--btcpay-white);
-}
-
 .breadcrumb {
     background-color: transparent;
     border-radius: 0;

@@ -1,5 +1,5 @@
 body {
-    color: var(--btcpay-wizard-color);
+    color: var(--btcpay-wizard-text);
     background-color: var(--btcpay-wizard-bg);
 }
 

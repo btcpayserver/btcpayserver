@@ -15,8 +15,6 @@ namespace BTCPayServer
             var result = await settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
             result.ThemeCssUri = string.IsNullOrWhiteSpace(result.ThemeCssUri) ? "/main/themes/default.css" : result.ThemeCssUri;
             result.CustomThemeCssUri = string.IsNullOrWhiteSpace(result.CustomThemeCssUri) ? null : result.CustomThemeCssUri;
-            result.BootstrapCssUri = string.IsNullOrWhiteSpace(result.BootstrapCssUri) ? "/main/bootstrap/bootstrap.css" : result.BootstrapCssUri;
-            result.CreativeStartCssUri = string.IsNullOrWhiteSpace(result.CreativeStartCssUri) ? "/main/bootstrap/creative.css" : result.CreativeStartCssUri;
             return result;
         }
     }

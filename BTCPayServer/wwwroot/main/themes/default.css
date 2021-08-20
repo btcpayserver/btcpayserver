@@ -154,7 +154,7 @@
   --btcpay-body-bg-light: var(--btcpay-white);
   --btcpay-body-bg-medium: var(--btcpay-neutral-200);
   --btcpay-body-bg-striped: var(--btcpay-neutral-200);
-  --btcpay-body-bg-hover: var(--btcpay-neutral-200);
+  --btcpay-body-bg-hover: var(--btcpay-white);
   --btcpay-body-bg-active: var(--btcpay-primary);
   --btcpay-body-border-light: var(--btcpay-neutral-200);
   --btcpay-body-border-medium: var(--btcpay-neutral-300);
@@ -167,7 +167,7 @@
   --btcpay-body-link-accent: var(--btcpay-primary);
   --btcpay-body-shadow: rgba(25, 135, 84, 0.33);
   --btcpay-body-rgb: 248, 249, 250;
-  --btcpay-wizard-bg: var(--btcpay-white);
+  --btcpay-wizard-bg: var(--btcpay-body-bg);
   --btcpay-wizard-text: var(--btcpay-body-text);
   --btcpay-header-bg: var(--btcpay-white);
   --btcpay-header-text: var(--btcpay-body-text);
@@ -388,10 +388,6 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   font-weight: 600;
 }
 
-.bg-dark {
-  background-color: var(--btcpay-bg-dark) !important;
-}
-
 .table-sm {
   width: calc(100% + 1rem);
   margin: 1.5rem -.5rem;
@@ -400,29 +396,9 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   border-spacing: 0px !important;
 }
 
-.table-sm thead > tr {
-  height: 40px;
-}
-
-.table-sm thead th {
-  border-bottom: 2px solid var(--btcpay-body-border-medium);
-  border-top: none;
-  font-size: 1.0rem;
-  color: var(--btcpay-secondary);
-}
-
 .table-sm th,
 .table-sm td {
   padding: .5rem;
-}
-
-.table-sm tbody tr:first-child td {
-  border-top: none;
-}
-
-.list-group-item-action:hover,
-.table-sm tbody tr:hover {
-  background-color: var(--btcpay-white);
 }
 
 .table-sm.table-sm-nohover tbody tr:hover {

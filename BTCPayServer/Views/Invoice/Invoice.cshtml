@@ -55,7 +55,7 @@
         <div class="row">
             <div class="col-md-6 mb-4">
                 <h3 class="mb-3">Invoice Information</h3>
-                <table class="table table-sm table-responsive-md removetopborder">
+                <table class="table table-responsive-md">
                     <tr>
                         <th>Store</th>
                         <td><a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a></td>
@@ -139,7 +139,7 @@
             </div>
             <div class="col-md-6 mb-4">
                 <h3 class="mb-3">Buyer Information</h3>
-                <table class="table table-sm table-responsive-md removetopborder">
+                <table class="table table-responsive-md">
                     <tr>
                         <th>Name</th>
                         <td>@Model.TypedMetadata.BuyerName</td>
@@ -180,7 +180,7 @@
                 @if (Model.PosData.Count == 0)
                 {
                     <h3 class="mb-3">Product Information</h3>
-                    <table class="table table-sm table-responsive-md removetopborder">
+                    <table class="table table-responsive-md">
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                         {
                             <tr>
@@ -213,7 +213,7 @@
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <h3 class="mb-3">Product information</h3>
-                    <table class="table table-sm table-responsive-md removetopborder">
+                    <table class="table table-responsive-md">
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                         {
                             <tr>
@@ -304,7 +304,7 @@
         <div class="row">
             <div class="col-md-12">
                 <h3 class="mb-0">Events</h3>
-                <table class="table table-sm table-responsive-md">
+                <table class="table table-hover table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>
                             <th>Date</th>

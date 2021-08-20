@@ -5,9 +5,6 @@
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
-        <vc:icon symbol="back" />
-    </a>
     <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
         <vc:icon symbol="close" />
     </a>

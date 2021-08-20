@@ -126,7 +126,6 @@ namespace BTCPayServer.Controllers
             }
             switch (command)
             {
-                case "export":
                 case "decode":
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));

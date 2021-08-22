@@ -346,7 +346,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
 
                 object? preparePayment;
-                if (storeBlob.LazyPaymentMethods && entity.Type != InvoiceType.TopUp)
+                if (storeBlob.LazyPaymentMethods)
                 {
                     preparePayment = null;
                 }

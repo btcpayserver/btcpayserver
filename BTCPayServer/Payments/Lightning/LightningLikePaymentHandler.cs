@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +12,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Rating;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -51,9 +52,13 @@ namespace BTCPayServer.Payments.Lightning
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
-            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
+            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (paymentMethod.ParentEntity.Type == InvoiceType.TopUp) {
+                throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
+            }
+
             if (preparePaymentObject is null)
             {
                 return new LightningLikePaymentMethodDetails()
@@ -80,7 +85,7 @@ namespace BTCPayServer.Payments.Lightning
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
-            LightningInvoice lightningInvoice = null;
+            LightningInvoice? lightningInvoice = null;
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
@@ -247,7 +252,7 @@ namespace BTCPayServer.Payments.Lightning
             return $"{network.DisplayName} (Lightning)";
         }
 
-        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, StoreData store,
+        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, Data.StoreData store,
             BTCPayNetworkBase network)
         {
             // pass a non null obj, so that if lazy payment feature is used, it has a marker to trigger activation

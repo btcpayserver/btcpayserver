@@ -991,9 +991,10 @@ namespace BTCPayServer.Controllers
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
+            var data = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
             return View(data);
         }
+        
         [Route("server/theme")]
         [HttpPost]
         public async Task<IActionResult> Theme(ThemeSettings settings)

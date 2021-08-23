@@ -22,11 +22,7 @@ namespace BTCPayServer.HostedServices
             if (policies != null)
             {
                 var theme = settingsRepository.GetTheme().GetAwaiter().GetResult();
-                if (theme.ThemeCssUri != null && Uri.TryCreate(theme.ThemeCssUri, UriKind.Absolute, out var uri))
-                {
-                    policies.Clear();
-                }
-                if (theme.CustomThemeCssUri != null && Uri.TryCreate(theme.CustomThemeCssUri, UriKind.Absolute, out uri))
+                if (theme.CssUri != null && Uri.TryCreate(theme.CssUri, UriKind.Absolute, out var uri))
                 {
                     policies.Clear();
                 }

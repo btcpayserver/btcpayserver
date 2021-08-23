@@ -67,6 +67,56 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     opacity: .5;
 }
 
+/* Theme Switch */
+.btcpay-theme-switch {
+    background: none;
+    cursor: pointer;
+    border: 0;
+}
+
+.btcpay-theme-switch svg {
+    height: 1rem;
+    width: 1rem;
+}
+
+.btcpay-theme-switch path {
+    stroke-width: .5px;
+    fill: currentColor;
+}
+
+.btcpay-theme-switch:hover .btcpay-theme-switch-light,
+.btcpay-theme-switch:hover .btcpay-theme-switch-dark {
+    fill: currentColor;
+}
+
+.btcpay-theme-switch-dark {
+    stroke: currentColor;
+}
+
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch-dark {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-btcpay-theme="dark"]) .btcpay-theme-switch-dark {
+        display: inline-block;
+    }
+}
+
+.btcpay-theme-switch-light {
+    display: none;
+}
+
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch-light {
+    display: inline-block;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-btcpay-theme="light"]) .btcpay-theme-switch-light {
+        display: inline-block;
+    }
+}
+
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;

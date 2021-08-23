@@ -5,24 +5,17 @@ namespace BTCPayServer.Services
 {
     public class ThemeSettings
     {
+        [Display(Name = "Use custom theme")]
+        public bool CustomTheme { get; set; }
+        
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [MaxLength(500)]
-        [Display(Name = "Select Theme")]
-        public string ThemeCssUri { get; set; }
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [MaxLength(500)]
-        [Display(Name = "Custom Theme CSS file")]
+        [Display(Name = "Custom Theme CSS URL")]
         public string CustomThemeCssUri { get; set; }
 
         public string CssUri
         {
-            get
-            {
-                return !string.IsNullOrWhiteSpace(CustomThemeCssUri)
-                    ? CustomThemeCssUri
-                    : ThemeCssUri;
-            }
+            get => CustomTheme ? CustomThemeCssUri : "/main/themes/default.css";
         }
 
         public bool FirstRun { get; set; }

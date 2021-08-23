@@ -1,5 +1,3 @@
-@import 'default.css';
-
 /* Dark theme overrides */
 :root {
   --btcpay-neutral-100: var(--btcpay-neutral-dark-100);

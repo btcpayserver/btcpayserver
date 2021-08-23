@@ -95,9 +95,9 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public static async Task EventuallyAsync(Func<Task> act)
+        public static async Task EventuallyAsync(Func<Task> act, int delay = 20000)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(20000);
+            CancellationTokenSource cts = new CancellationTokenSource(delay);
             while (true)
             {
                 try
@@ -107,7 +107,7 @@ namespace BTCPayServer.Tests
                 }
                 catch (XunitException) when (!cts.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(500, cts.Token);
                 }
             }
         }

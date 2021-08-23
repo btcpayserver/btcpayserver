@@ -1020,16 +1020,16 @@ namespace BTCPayServer.Tests
             }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance );
             await tester.ExplorerNode.GenerateAsync(1);
             Invoice newInvoice = null;
-            await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             await TestUtils.EventuallyAsync(async () =>
             {
+                await Task.Delay(1000); // wait a bit for payment to process before fetching new invoice
                 newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
                 var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 Assert.NotEqual(newBolt11, oldBolt11);
                 Assert.Equal(newInvoice.BtcDue.GetValue(),
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-            });
+            }, 40000);
             
             Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>

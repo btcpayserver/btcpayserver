@@ -1026,6 +1026,8 @@ namespace BTCPayServer.Tests
                 newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
                 var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+                var sInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
+                Logs.Tester.LogInformation(string.Join(Environment.NewLine, sInvoice.Events.Select(data => data.Message)));
                 Assert.NotEqual(newBolt11, oldBolt11);
                 Assert.Equal(newInvoice.BtcDue.GetValue(),
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));

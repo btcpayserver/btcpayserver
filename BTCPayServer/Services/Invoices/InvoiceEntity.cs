@@ -250,6 +250,7 @@ namespace BTCPayServer.Services.Invoices
 
         public decimal Price { get; set; }
         public string Currency { get; set; }
+        public string DefaultPaymentMethod { get; set; }
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }

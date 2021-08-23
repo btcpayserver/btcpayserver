@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NBitpayClient;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
@@ -52,6 +51,8 @@ namespace BTCPayServer.Models
         public string Currency { get; set; }
         [JsonProperty(PropertyName = "price", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal? Price { get; set; }
+        [JsonProperty(PropertyName = "defaultPaymentMethod", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string DefaultPaymentMethod { get; set; }
         [JsonProperty(PropertyName = "notificationEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string NotificationEmail { get; set; }
         [JsonConverter(typeof(DateTimeJsonConverter))]

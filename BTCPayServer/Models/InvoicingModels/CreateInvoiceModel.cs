@@ -44,6 +44,12 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
+        [Display(Name = "Default payment method on checkout")]
+        public string DefaultPaymentMethod
+        {
+            get; set;
+        }
+
         [DisplayName("POS Data")]
         public string PosData
         {

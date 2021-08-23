@@ -151,6 +151,7 @@ namespace BTCPayServer.Controllers
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
 

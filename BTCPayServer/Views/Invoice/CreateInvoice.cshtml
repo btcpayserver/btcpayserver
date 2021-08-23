@@ -80,6 +80,11 @@
                         <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="DefaultPaymentMethod" class="form-label"></label>
+                        <select asp-for="DefaultPaymentMethod" asp-items="Model.AvailablePaymentMethods" class="form-select"></select>
+                        <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
                         <a asp-action="ListInvoices" class="text-muted ms-3">Back to list</a>
                     </div>

@@ -476,7 +476,7 @@ namespace BTCPayServer.Controllers
             bool isDefaultPaymentId = false;
             if (paymentMethodId is null)
             {
-                paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
+                paymentMethodId = _InvoiceRepository.GetDefaultPaymentId(store.GetEnabledPaymentIds(_NetworkProvider), invoice) ?? store.GetDefaultPaymentId(_NetworkProvider);
                 isDefaultPaymentId = true;
             }
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
@@ -854,7 +854,8 @@ namespace BTCPayServer.Controllers
                     SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
                     {
                         Enabled = true
-                    })
+                    }),
+                    DefaultPaymentMethod = model.DefaultPaymentMethod,
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

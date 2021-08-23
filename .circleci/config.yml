@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "EnsureNewLightningInvoiceOnPartialPayment=EnsureNewLightningInvoiceOnPartialPayment"
+            cd .circleci && ./run-tests.sh "FullyQualifiedName~EnsureNewLightningInvoiceOnPartialPayment"
 
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined

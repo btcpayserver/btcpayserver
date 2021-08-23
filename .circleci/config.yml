@@ -1,21 +1,5 @@
 version: 2
 jobs:
-  fast_tests:
-    machine:
-        enabled: true
-    steps:
-      - checkout
-      - run:
-          command: |
-            cd .circleci && ./run-tests.sh "Fast=Fast" && ./can-build.sh
-  selenium_tests:
-    machine:
-        enabled: true
-    steps:
-      - checkout
-      - run:
-          command: |
-            cd .circleci && ./run-tests.sh "Selenium=Selenium"
   integration_tests:
     machine:
         enabled: true
@@ -23,19 +7,7 @@ jobs:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "Integration=Integration"
-  external_tests:
-    machine:
-        enabled: true
-    steps:
-      - checkout
-      - run:
-          command: |
-            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
-                cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
-            else
-              echo "Skipping running ExternalIntegration tests outside of context of main user and repository that have access to secrets"
-            fi
+            cd .circleci && ./run-tests.sh "EnsureNewLightningInvoiceOnPartialPayment=EnsureNewLightningInvoiceOnPartialPayment"
 
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined

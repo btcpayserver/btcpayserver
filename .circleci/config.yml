@@ -89,13 +89,7 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - fast_tests
-      - selenium_tests
       - integration_tests
-      - external_tests:
-          filters:
-            branches:
-                only: master
   publish:
     jobs:
       - amd64:

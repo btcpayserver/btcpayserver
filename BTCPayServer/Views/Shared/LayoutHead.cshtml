@@ -16,11 +16,7 @@
 <title>@ViewData["Title"]</title>
 @* CSS *@
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true" />
-@if (!string.IsNullOrWhiteSpace(theme.CustomThemeCssUri))
-{
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.CustomThemeCssUri)" rel="stylesheet" asp-append-version="true" />
-}
+<link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true" />
 @* Non-JS *@
 <noscript>
     <style>

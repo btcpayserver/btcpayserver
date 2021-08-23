@@ -15,6 +15,16 @@ namespace BTCPayServer.Services
         [Display(Name = "Custom Theme CSS file")]
         public string CustomThemeCssUri { get; set; }
 
+        public string CssUri
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(CustomThemeCssUri)
+                    ? CustomThemeCssUri
+                    : ThemeCssUri;
+            }
+        }
+
         public bool FirstRun { get; set; }
         public override string ToString()
         {

@@ -3,6 +3,21 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Theme, "Theme");
 }
 
+@section PageHeadContent {
+    <style>
+        #CustomTheme { display: none; }
+        #ThemeCssUri[data-value=''] + * + #CustomTheme { display: block; }
+    </style>
+}
+
+@section PageFootContent {
+    <script>
+        const themeSelect = document.getElementById('ThemeCssUri')
+        themeSelect.dataset.value = themeSelect.value
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}
+
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div class="row">
@@ -16,26 +31,24 @@
             }
             <div class="form-group">
                 <label asp-for="ThemeCssUri" class="form-label"></label>
-                <select asp-for="ThemeCssUri" class="form-select">
+                <select asp-for="ThemeCssUri" class="form-select" onchange="this.dataset.value=this.value">
                     <option value="/main/themes/default.css">Default (Light)</option>
                     <option value="/main/themes/default-dark.css">Default (Dark)</option>
+                    <option value="">Custom</option>
                 </select>
                 <span asp-validation-for="ThemeCssUri" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CustomThemeCssUri" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-                <input asp-for="CustomThemeCssUri" class="form-control" />
-                <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                
+                <div class="form-group mt-3" id="CustomTheme">
+                    <label asp-for="CustomThemeCssUri" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <input asp-for="CustomThemeCssUri" class="form-control" />
+                    <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>
     </div>
 </div>
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-}

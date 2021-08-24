@@ -30,7 +30,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet("api-keys/{id}/delete")]
+        [HttpGet("~/api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
                 DescriptionHtml = true,
@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost("api-keys/{id}/delete")]
+        [HttpPost("~/api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);

@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers
 
             return View("Confirm", new ConfirmModel
             {
-                Title = $"Delete a webhook",
+                Title = "Delete a webhook",
                 Description = "This webhook will be removed from this store, do you wish to continue?",
                 Action = "Delete"
             });

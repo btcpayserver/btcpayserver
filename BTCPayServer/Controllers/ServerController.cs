@@ -550,7 +550,7 @@ namespace BTCPayServer.Controllers
         [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
         public IActionResult RemoveLndSeed(string serviceName, string cryptoCode)
         {
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Title = "Delete LND Seed",
                 Description = "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server, are you sure to continue?",
@@ -827,7 +827,7 @@ namespace BTCPayServer.Controllers
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Title = "Delete the dynamic dns service for " + hostname,
                 Description = "BTCPayServer will stop updating this DNS record periodically",
@@ -966,10 +966,10 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
-        [Route("server/services/ssh/disable")]
+        [HttpGet("server/services/ssh/disable")]
         public IActionResult SSHServiceDisable()
         {
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Action = "Disable",
                 Title = "Disable modification of SSH settings",
@@ -977,8 +977,8 @@ namespace BTCPayServer.Controllers
                 ButtonClass = "btn-danger"
             });
         }
-        [Route("server/services/ssh/disable")]
-        [HttpPost]
+
+        [HttpPost("server/services/ssh/disable")]
         public async Task<IActionResult> SSHServiceDisablePost()
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();

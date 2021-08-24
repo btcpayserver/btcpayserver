@@ -73,8 +73,28 @@
         </div>
         <div>
             <form method="post">
-                <button name="command" id="disable" type="submit" class="btn btn-outline-danger mb-5" value="disable">Disable</button>
+                <button name="command" id="disable" type="submit" class="btn btn-outline-danger mb-5" value="disable" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal">Disable</button>
             </form>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <partial name="ConfirmModal" model="@(new ConfirmModel("Disable modification of SSH settings", "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.", "Disable"))"/>
+</div>
+
+@section PageFootContent {
+    <script>
+        const disableButton = document.getElementById('disable')
+        disableButton.addEventListener('click', function (event) {
+            event.preventDefault()
+        });
+        
+        const modal = document.getElementById('DeleteConfirmModal')
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget
+            const form = modal.querySelector('form')
+            form.setAttribute('action', button.form.getAttribute('action'))
+        });
+    </script>
+}

@@ -184,7 +184,7 @@ namespace BTCPayServer.Controllers
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Title = $"Delete app {appData.Name} ({appData.AppType})",
                 Description = "This app will be removed from this store",

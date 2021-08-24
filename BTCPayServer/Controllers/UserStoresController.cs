@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Title = "Delete store " + store.StoreName,
                 Description = "This store will still be accessible to users sharing it",

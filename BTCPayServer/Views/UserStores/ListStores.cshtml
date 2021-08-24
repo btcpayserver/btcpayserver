@@ -76,7 +76,7 @@
                                         {
                                             <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
                                         }
-                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id">Remove</a>
+                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-store-name="@store.Name">Remove</a>
                                     </td>
                                 </tr>
                             }
@@ -93,3 +93,21 @@
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <partial name="ConfirmModal" model="@(new ConfirmModel("Delete this store", "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)", "Delete"))" />
+</div>
+
+@section PageFootContent {
+    <script>
+        const modal = document.getElementById('DeleteConfirmModal')
+        modal.addEventListener('show.bs.modal', function (event) {
+            const link = event.relatedTarget
+            const title = document.getElementById('ConfirmTitle')
+            const form = modal.querySelector('form')
+            const { storeName } = link.dataset
+            title.textContent = `Delete the store "${storeName}"`
+            form.setAttribute('action', link.getAttribute('href'))
+        });
+    </script>
+}

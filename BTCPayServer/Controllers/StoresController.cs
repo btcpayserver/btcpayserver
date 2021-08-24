@@ -192,15 +192,14 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUser(string userId)
         {
-            StoreUsersViewModel vm = new StoreUsersViewModel();
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
-                Title = $"Remove store user",
+                Title = "Remove store user",
                 Description = $"Are you sure you want to remove store access for {user.Email}?",
-                Action = "Delete"
+                Action = "Remove"
             });
         }
 
@@ -210,7 +209,7 @@ namespace BTCPayServer.Controllers
         {
             await _Repo.RemoveStoreUser(storeId, userId);
             TempData[WellKnownTempData.SuccessMessage] = "User removed successfully";
-            return RedirectToAction(nameof(StoreUsers), new { storeId = storeId, userId = userId });
+            return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 
         [HttpGet]
@@ -670,7 +669,7 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/delete")]
         public IActionResult DeleteStore(string storeId)
         {
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Action = "Delete",
                 Title = "Delete this store",

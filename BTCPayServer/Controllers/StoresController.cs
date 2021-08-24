@@ -353,7 +353,7 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/rates/confirm")]
         public IActionResult ShowRateRules(bool scripting)
         {
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Action = "Continue",
                 Title = "Rate rule scripting",
@@ -373,7 +373,7 @@ namespace BTCPayServer.Controllers
             blob.RateScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
             CurrentStore.SetStoreBlob(blob);
             await _Repo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting activated";
+            TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting " + (scripting ? "activated" : "deactivated");
             return RedirectToAction(nameof(Rates), new { storeId = CurrentStore.Id });
         }
 

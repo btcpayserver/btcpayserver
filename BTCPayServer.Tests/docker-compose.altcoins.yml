@@ -195,7 +195,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.10.1-dev
+    image: btcpayserver/lightning:v0.10.1-1-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"

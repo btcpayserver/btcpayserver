@@ -57,7 +57,7 @@
                 }
             </td>
             <td class="text-end">
-                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-key-id="@keyData.Id" data-key-label="@keyData.Label">Remove</a>
+                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-key-id="@keyData.Id" data-key-label="@keyData.Label">Remove</a>
                 <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
             </td>
@@ -78,6 +78,12 @@
     <span class="fa fa-plus"></span>
     Generate new key
 </a>
+
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <partial name="ConfirmModal" model="@(new ConfirmModel("Delete API Key", "Any application using this API key will immediately lose access.", "Delete"))" />
+</div>
+
+<partial name="ShowQR"/>
 
 @section PageHeadContent {
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
@@ -117,7 +123,7 @@
             });
         });
         
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const title = document.getElementById('ConfirmTitle')
@@ -130,10 +136,4 @@
         });
     </script>
 }
-
-<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
-    <partial name="ConfirmModal" model="@(new ConfirmModel("Delete API Key", "Any application using this API key will immediately lose access.", "Delete"))" />
-</div>
-
-<partial name="ShowQR"/>
 

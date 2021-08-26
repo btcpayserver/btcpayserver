@@ -308,19 +308,19 @@
                 See more actions
             </button>
             <div id="danger-zone" class="collapse">
-                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-store-name="@Model.StoreName">Delete this store</a>
+                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-store-name="@Model.StoreName">Delete this store</a>
             </div>
         }
     </div>
 </div>
 
-<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <partial name="ConfirmModal" model="@(new ConfirmModel("Delete this store", "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)", "Delete"))" />
 </div>
 
 @section PageFootContent {
     <script>
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const title = document.getElementById('ConfirmTitle')

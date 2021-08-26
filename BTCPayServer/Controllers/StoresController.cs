@@ -188,23 +188,16 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(StoreUsers));
         }
 
-        [HttpGet]
-        [Route("{storeId}/users/{userId}/delete")]
+        [HttpGet("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUser(string userId)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel
-            {
-                Title = "Remove store user",
-                Description = $"Are you sure you want to remove store access for {user.Email}?",
-                Action = "Remove"
-            });
+            return View("Confirm", new ConfirmModel("Remove store user", $"Are you sure you want to remove store access for {user.Email}?", "Remove"));
         }
 
-        [HttpPost]
-        [Route("{storeId}/users/{userId}/delete")]
+        [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
             await _Repo.RemoveStoreUser(storeId, userId);
@@ -212,8 +205,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 
-        [HttpGet]
-        [Route("{storeId}/rates")]
+        [HttpGet("{storeId}/rates")]
         public IActionResult Rates()
         {
             var exchanges = GetSupportedExchanges();
@@ -230,8 +222,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/rates")]
+        [HttpPost("{storeId}/rates")]
         public async Task<IActionResult> Rates(RatesViewModel model, string command = null, string storeId = null, CancellationToken cancellationToken = default)
         {
             if (command == "scripting-on")
@@ -349,8 +340,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{storeId}/rates/confirm")]
+        [HttpGet("{storeId}/rates/confirm")]
         public IActionResult ShowRateRules(bool scripting)
         {
             return View("Confirm", new ConfirmModel
@@ -364,8 +354,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("{storeId}/rates/confirm")]
+        [HttpPost("{storeId}/rates/confirm")]
         public async Task<IActionResult> ShowRateRulesPost(bool scripting)
         {
             var blob = CurrentStore.GetStoreBlob();
@@ -665,21 +654,13 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("{storeId}/delete")]
+        [HttpGet("{storeId}/delete")]
         public IActionResult DeleteStore(string storeId)
         {
-            return View("Confirm", new ConfirmModel
-            {
-                Action = "Delete",
-                Title = "Delete this store",
-                Description = "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)",
-                ButtonClass = "btn-danger"
-            });
+            return View("Confirm", new ConfirmModel("Delete this store", "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)", "Delete"));
         }
 
-        [HttpPost]
-        [Route("{storeId}/delete")]
+        [HttpPost("{storeId}/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             await _Repo.DeleteStore(CurrentStore.Id);
@@ -743,25 +724,17 @@ namespace BTCPayServer.Controllers
                 model.EncodedApiKey = Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
             return View(model);
         }
-
-
-        [HttpGet]
-        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        
+        [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeToken(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Action = "Revoke",
-                Title = "Revoke the token",
-                Description = $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?",
-                ButtonClass = "btn-danger"
-            });
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?", "Revoke"));
         }
-        [HttpPost]
-        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        
+        [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);

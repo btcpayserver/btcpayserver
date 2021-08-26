@@ -51,7 +51,7 @@
                         <td>@user.Email</td>
                         <td>@user.Role</td>
                         <td style="text-align:right">
-                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-user="@user.Email">Remove</a>
+                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-user="@user.Email">Remove</a>
                         </td>
                     </tr>
                 }
@@ -61,13 +61,13 @@
     </div>
 </div>
 
-<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <partial name="ConfirmModal" model="@(new ConfirmModel("Remove store user", "Are you sure you want to remove store access for this user?", "Delete"))" />
 </div>
 
 @section PageFootContent {
     <script>
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const desc = modal.querySelector('.modal-body')

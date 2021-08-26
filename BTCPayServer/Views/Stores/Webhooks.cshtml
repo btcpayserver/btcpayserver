@@ -50,14 +50,14 @@
                 <td class="text-end text-md-nowrap">
                     <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
                     <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
-                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal">Delete</a>
+                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Delete</a>
                 </td>
             </tr>
         }
         </tbody>
     </table>
     
-    <div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
         <partial name="ConfirmModal" model="@(new ConfirmModel("Delete webhook", "This webhook will be removed from this store.", "Delete"))" />
     </div>
 }
@@ -70,7 +70,7 @@ else
 
 @section PageFootContent {
     <script>
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const form = modal.querySelector('form')

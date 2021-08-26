@@ -97,7 +97,7 @@
                                     <a asp-action="@app.ViewAction" asp-controller="AppsPublic" asp-route-appId="@app.Id" target="_blank"
                                        title="View in New Window"><span class="fa fa-external-link"></span></a>
                                     <span> - </span>
-                                    <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-app-name="@app.AppName" data-app-type="@app.AppType">Remove</a>
+                                    <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-app-name="@app.AppName" data-app-type="@app.AppType">Remove</a>
                                 </td>
                             </tr>
                         }
@@ -115,13 +115,13 @@
     </div>
 </section>
 
-<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <partial name="ConfirmModal" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
 </div>
 
 @section PageFootContent {
     <script>
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const title = document.getElementById('ConfirmTitle')

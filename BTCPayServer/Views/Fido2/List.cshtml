@@ -17,7 +17,7 @@
         <tr>
             <td>@name</td>
             <td class="text-end">
-                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal" data-device-name="@name">Remove</a>
+                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-device-name="@name">Remove</a>
             </td>
         </tr>
     }
@@ -46,13 +46,13 @@
     </div>
 </form>
 
-<div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <partial name="ConfirmModal" model="@(new ConfirmModel("Remove FIDO2 device", "Your account will no longer have this credential as an option for MFA.", "Remove"))" />
 </div>
 
 @section PageFootContent {
     <script>
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const link = event.relatedTarget
             const title = document.getElementById('ConfirmTitle')

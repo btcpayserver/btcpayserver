@@ -177,19 +177,13 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{appId}/delete")]
+        [HttpGet("{appId}/delete")]
         public async Task<IActionResult> DeleteApp(string appId)
         {
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel
-            {
-                Title = $"Delete app {appData.Name} ({appData.AppType})",
-                Description = "This app will be removed from this store",
-                Action = "Delete"
-            });
+            return View("Confirm", new ConfirmModel($"Delete app {appData.Name} ({appData.AppType})", "This app will be removed from this store", "Delete"));
         }
 
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)

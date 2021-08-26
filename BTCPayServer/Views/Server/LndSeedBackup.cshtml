@@ -19,7 +19,7 @@
             {
                 <div class="alert alert-light d-flex align-items-center" role="alert">
                     <vc:icon symbol="warning" />
-                    <span class="ms-3">@Model.Seed</span>
+                    <span class="ms-3" id="Seed">@Model.Seed</span>
                 </div>
             }
             else
@@ -38,7 +38,7 @@
                 </div>
                 <div class="form-group collapse">
                     <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
-                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#DeleteConfirmModal">Remove LND seed from server</button>
+                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Remove LND seed from server</button>
                     </form>
                 </div>
             }
@@ -48,7 +48,7 @@
 
 @if (!Model.Removed)
 {
-    <div class="modal fade" id="DeleteConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
         <partial name="ConfirmModal" model="@(new ConfirmModel("Delete LND Seed", "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server!", "Delete"))"/>
     </div>
 }
@@ -60,7 +60,7 @@
             event.preventDefault()
         });
         
-        const modal = document.getElementById('DeleteConfirmModal')
+        const modal = document.getElementById('ConfirmModal')
         modal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget
             const form = modal.querySelector('form')

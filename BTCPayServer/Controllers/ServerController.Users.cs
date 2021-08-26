@@ -194,7 +194,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [Route("server/users/{userId}/delete")]
+        [HttpGet("server/users/{userId}/delete")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
@@ -216,16 +216,11 @@ namespace BTCPayServer.Controllers
                     "Are you sure you want to delete this Admin and delete all accounts, users and data associated with the server account?",
                     "Delete"));
             }
-            else
-            {
-                return View("Confirm", new ConfirmModel("Delete user " + user.Email,
-                                    "This user will be permanently deleted",
-                                    "Delete"));
-            }
+            
+            return View("Confirm", new ConfirmModel("Delete user " + user.Email, "This user will be permanently deleted", "Delete"));
         }
 
-        [Route("server/users/{userId}/delete")]
-        [HttpPost]
+        [HttpPost("server/users/{userId}/delete")]
         public async Task<IActionResult> DeleteUserPost(string userId)
         {
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);

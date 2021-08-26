@@ -816,13 +816,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsService(string hostname)
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>() ?? new DynamicDnsSettings();
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
             return View("Confirm",
-                new ConfirmModel($"Delete the dynamic dns service for {hostname}",
-                    "BTCPayServer will stop updating this DNS record periodically", "Delete"));
+                new ConfirmModel($"Delete the dynamic DNS service for {hostname}",
+                    "BTCPayServer will stop updating this DNS record periodically.", "Delete"));
         }
         
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
@@ -835,7 +835,7 @@ namespace BTCPayServer.Controllers
             settings.Services.RemoveAt(i);
             await _SettingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Dynamic DNS service successfully removed";
-            this.RouteData.Values.Remove(nameof(hostname));
+            RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
 

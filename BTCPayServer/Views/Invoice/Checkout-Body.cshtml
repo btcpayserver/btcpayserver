@@ -98,7 +98,7 @@
             <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp">
                 <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
             </div>
-            <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp">
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp && parseFloat(srvModel.btcDue) > 0">
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
@@ -143,7 +143,7 @@
                 </div>
                 <div class="line-items__item__value">-{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</div>
             </div>
-            <div class="line-items__item line-items__item--total">
+            <div class="line-items__item line-items__item--total" v-show="parseFloat(srvModel.btcDue) > 0">
                 <div class="line-items__item__label">{{$t("Due")}}</div>
                 <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
             </div>

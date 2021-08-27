@@ -246,7 +246,7 @@ namespace BTCPayServer.Controllers
                     var paidCurrency =
                         Math.Round(cryptoPaid * paymentMethod.Rate,
                             cdCurrency.Divisibility);
-                    model.CryptoAmountThen = cryptoPaid;
+                    model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                     model.RateThenText =
                         _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
                     rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);

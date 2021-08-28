@@ -8,12 +8,6 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 600;
 }
 
-/*.table,
-.table-sm {
-    width: calc(100% + 1rem);
-    margin: 1.5rem -.5rem;
-}*/
-
 .logo {
     height: 32px;
 }
@@ -101,6 +95,7 @@ h2 small .fa-question-circle-o {
     border-left: 2px solid transparent;
     padding: .2rem 1rem;
     font-weight: var(--btcpay-font-weight-semibold);
+    line-height: 1.5rem;
 }
 
 #sideNav .nav-link.active,

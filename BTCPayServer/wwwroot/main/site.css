@@ -8,11 +8,11 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 600;
 }
 
-.table,
+/*.table,
 .table-sm {
     width: calc(100% + 1rem);
     margin: 1.5rem -.5rem;
-}
+}*/
 
 .logo {
     height: 34px;
@@ -96,6 +96,7 @@ h2 small .fa-question-circle-o {
 }
 
 #sideNav .nav-link {
+    font-size: 1rem;
     margin: .3rem 0;
     border-left: 2px solid transparent;
     padding: .2rem 1rem;
@@ -105,7 +106,7 @@ h2 small .fa-question-circle-o {
 #sideNav .nav-link.active,
 #sideNav .show > .nav-link {
     color: var(--btcpay-nav-link-active);
-    font-weight: 700;
+/*    font-weight: 700;*/
     border-left-color: var(--btcpay-nav-border-active);
     background: var(--btcpay-nav-bg-active);
 }

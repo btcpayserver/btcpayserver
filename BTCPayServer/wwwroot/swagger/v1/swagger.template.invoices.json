@@ -1025,6 +1025,11 @@
                         },
                         "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods enabled in the store."
                     },
+                    "defaultPaymentMethod": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Default payment type for the invoice (e.g., BTC, BTC_LightningLike). Default payment method set for the store is used if this parameter is not specified."
+                    },
                     "expirationMinutes": {
                         "nullable": true,
                         "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",

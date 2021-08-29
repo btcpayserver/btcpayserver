@@ -26,6 +26,7 @@ namespace BTCPayServer.Client.Models
             public SpeedPolicy? SpeedPolicy { get; set; }
 
             public string[] PaymentMethods { get; set; }
+            public string DefaultPaymentMethod { get; set; }
 
             [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
             [JsonProperty("expirationMinutes")]

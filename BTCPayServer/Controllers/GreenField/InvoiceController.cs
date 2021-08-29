@@ -407,6 +407,7 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentTolerance = entity.PaymentTolerance,
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
+                    DefaultPaymentMethod = entity.DefaultPaymentMethod,
                     SpeedPolicy = entity.SpeedPolicy,
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,

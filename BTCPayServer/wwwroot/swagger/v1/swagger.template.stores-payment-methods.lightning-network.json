@@ -136,7 +136,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/LightningNetworkPaymentMethodData"
+                                "$ref": "#/components/schemas/UpdateLightningNetworkPaymentMethodRequest"
                             }
                         }
                     },
@@ -271,6 +271,18 @@
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"
+                    }
+                }
+            },
+            "UpdateLightningNetworkPaymentMethodRequest": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
                     }
                 }
             }

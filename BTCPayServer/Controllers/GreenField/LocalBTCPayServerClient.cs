@@ -771,7 +771,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return GetFromActionResult<LightningNetworkPaymentMethodData>(await
                 _storeLightningNetworkPaymentMethodsController.UpdateLightningNetworkPaymentMethod(storeId, cryptoCode,
-                    paymentMethod));
+                    new UpdateLightningNetworkPaymentMethodRequest(paymentMethod.ConnectionString, paymentMethod.Enabled)));
         }
 
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,

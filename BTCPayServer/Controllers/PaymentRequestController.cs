@@ -344,6 +344,7 @@ namespace BTCPayServer.Controllers
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
                 model.Id = null;
                 model.Archived = false;
+                model.ExpiryDate = null;
                 model.Title = $"Clone of {model.Title}";
                 return View("EditPaymentRequest", model);
             }

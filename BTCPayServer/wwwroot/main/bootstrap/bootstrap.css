@@ -427,10 +427,6 @@ legend + * {
   font: inherit;
 }
 
-::file-selector-button {
-  font: inherit;
-}
-
 ::-webkit-file-upload-button {
   font: inherit;
   -webkit-appearance: button;
@@ -1834,11 +1830,40 @@ progress {
   opacity: 1;
 }
 
-.form-control:hover:not(:disabled):not([readonly])::-webkit-file-upload-button {
-  background-color: var(--btcpay-form-bg-hover);
+.form-control::-webkit-file-upload-button {
+  padding: 0.5rem 0.75rem;
+  margin: -0.5rem -0.75rem;
+  -webkit-margin-end: 0.75rem;
+          margin-inline-end: 0.75rem;
+  color: var(--btcpay-form-text);
+  background-color: var(--btcpay-form-bg-addon);
+  pointer-events: none;
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+  border-inline-end-width: 1px;
+  border-radius: 0;
+  -webkit-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.form-control:hover:not(:disabled):not([readonly])::file-selector-button {
+.form-control::file-selector-button {
+  padding: 0.5rem 0.75rem;
+  margin: -0.5rem -0.75rem;
+  -webkit-margin-end: 0.75rem;
+          margin-inline-end: 0.75rem;
+  color: var(--btcpay-form-text);
+  background-color: var(--btcpay-form-bg-addon);
+  pointer-events: none;
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+  border-inline-end-width: 1px;
+  border-radius: 0;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:hover:not(:disabled):not([readonly])::-webkit-file-upload-button {
   background-color: var(--btcpay-form-bg-hover);
 }
 
@@ -1905,13 +1930,6 @@ progress {
           margin-inline-end: 0.75rem;
 }
 
-.form-control-sm::file-selector-button {
-  padding: 0.5rem 0.75rem;
-  margin: -0.5rem -0.75rem;
-  -webkit-margin-end: 0.75rem;
-          margin-inline-end: 0.75rem;
-}
-
 .form-control-sm::-webkit-file-upload-button {
   padding: 0.5rem 0.75rem;
   margin: -0.5rem -0.75rem;
@@ -1927,13 +1945,6 @@ progress {
 }
 
 .form-control-lg::-webkit-file-upload-button {
-  padding: 1rem 1.25rem;
-  margin: -1rem -1.25rem;
-  -webkit-margin-end: 1.25rem;
-          margin-inline-end: 1.25rem;
-}
-
-.form-control-lg::file-selector-button {
   padding: 1rem 1.25rem;
   margin: -1rem -1.25rem;
   -webkit-margin-end: 1.25rem;
@@ -3785,8 +3796,8 @@ fieldset:disabled .btn {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .navbar > .container,
@@ -9804,6 +9815,7 @@ html {
 
 a,
 .btn-link {
+  font-weight: var(--btcpay-font-weight-semibold);
   transition-duration: 0.2s;
   transition-property: background, color;
 }
@@ -9890,6 +9902,7 @@ ul li {
 
 .alert-dismissible .btn-close {
   color: inherit;
+  padding: 1.25rem;
 }
 
 .btn-outline-secondary {
@@ -9933,8 +9946,8 @@ ul li {
   position: relative;
   top: -.4rem;
   display: inline-block;
-  width: .8rem;
-  height: .8rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .font-monospace {

@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> UpdateOnChainPaymentMethod(
             string storeId,
             string cryptoCode,
-            [FromBody] OnChainPaymentMethodData paymentMethodData)
+            [FromBody] UpdateOnChainPaymentMethodRequest request)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
 
@@ -226,7 +226,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
+            if (string.IsNullOrEmpty(request?.DerivationScheme))
             {
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Missing derivationScheme");
@@ -239,12 +239,12 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var store = Store;
                 var storeBlob = store.GetStoreBlob();
-                var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
+                var strategy = DerivationSchemeSettings.Parse(request.DerivationScheme, network);
                 if (strategy != null)
                     await wallet.TrackAsync(strategy.AccountDerivation);
-                strategy.Label = paymentMethodData.Label;
+                strategy.Label = request.Label;
                 var signing = strategy.GetSigningAccountKeySettings();
-                if (paymentMethodData.AccountKeyPath is RootedKeyPath r)
+                if (request.AccountKeyPath is RootedKeyPath r)
                 {
                     signing.AccountKeyPath = r.KeyPath;
                     signing.RootFingerprint = r.MasterFingerprint;
@@ -256,7 +256,7 @@ namespace BTCPayServer.Controllers.GreenField
                 }
 
                 store.SetSupportedPaymentMethod(id, strategy);
-                storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
+                storeBlob.SetExcluded(id, !request.Enabled);
                 store.SetStoreBlob(storeBlob);
                 await _storeRepository.UpdateStore(store);
                 return Ok(GetExistingBtcLikePaymentMethod(cryptoCode, store));

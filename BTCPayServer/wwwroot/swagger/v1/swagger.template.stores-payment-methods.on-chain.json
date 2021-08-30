@@ -361,7 +361,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OnChainPaymentMethodData"
+                                "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
                             }
                         }
                     },
@@ -445,13 +445,21 @@
             "OnChainPaymentMethodData": {
                 "type": "object",
                 "additionalProperties": {
-                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                    "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
                 },
                 "properties": {
                     "enabled": {
                         "type": "boolean",
                         "description": "Whether the payment method is enabled"
-                    },
+                    }
+                }
+            },
+            "OnChainPaymentMethodDataPreview": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                },
+                "properties": {
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"

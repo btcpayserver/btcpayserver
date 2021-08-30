@@ -50,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}": {
             "get": {
                 "tags": [
                     "Store Payment Methods (On Chain)"
@@ -136,7 +136,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OnChainPaymentMethodData"
+                                "$ref": "#/components/schemas/UpdateOnChainPaymentMethodRequest"
                             }
                         }
                     },
@@ -439,6 +439,18 @@
                         "type": "string",
                         "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
                         "example": "abcd82a1/84'/0'/0'"
+                    }
+                }
+            },
+            "UpdateOnChainPaymentMethodRequest": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
                     }
                 }
             },

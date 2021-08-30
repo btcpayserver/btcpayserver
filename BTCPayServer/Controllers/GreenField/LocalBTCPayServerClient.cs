@@ -522,7 +522,12 @@ namespace BTCPayServer.Controllers.GreenField
             CancellationToken token = default)
         {
             return GetFromActionResult<OnChainPaymentMethodData>(
-                await _chainPaymentMethodsController.UpdateOnChainPaymentMethod(storeId, cryptoCode, paymentMethod));
+                await _chainPaymentMethodsController.UpdateOnChainPaymentMethod(storeId, cryptoCode, new UpdateOnChainPaymentMethodRequest(
+                    enabled: paymentMethod.Enabled,
+                    label: paymentMethod.Label,
+                    accountKeyPath: paymentMethod.AccountKeyPath,
+                    derivationScheme: paymentMethod.DerivationScheme
+                )));
         }
 
         public override Task<OnChainPaymentMethodPreviewResultData> PreviewProposedStoreOnChainPaymentMethodAddresses(

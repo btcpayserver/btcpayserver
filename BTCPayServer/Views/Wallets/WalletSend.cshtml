@@ -12,6 +12,11 @@
     <style>
         .remove-destination-btn { font-size: 1.5rem; }
         .remove-destination-btn:hover { border-color: var(--btcpay-danger); }
+        .crypto-fee-link { padding-left: 1rem; padding-right: 1rem; }
+        .btn-group > .crypto-fee-link:last-of-type {
+            border-top-right-radius: .2rem  !important;
+            border-bottom-right-radius: .2rem !important;
+        }
     </style>
 }
 
@@ -23,7 +28,7 @@
 <partial name="CameraScanner"/>
 
 <div class="row">
-    <div class="col-lg-8 col-xl-6 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
+    <div class="col-lg-8 col-xl-7 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
         <h4 class="mb-3">@ViewData["PageTitle"]</h4>
         <form method="post" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")">
             <input type="hidden" asp-for="InputSelection" />
@@ -163,15 +168,15 @@
                 <span id="FeeRate-Error" class="text-danger"></span>
                 @if (Model.RecommendedSatoshiPerByte.Any())
                 {
-                    <div class="text-start mt-2 d-flex align-items-center">
-                        <span class="text-secondary me-2">
+                    <div class="text-start mt-2 d-flex align-items-sm-center flex-column flex-sm-row">
+                        <span class="text-secondary me-3">
                             Confirm in the next
                         </span>
-                        <div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
+                        <div class="btn-group btn-group-toggle feerate-options mt-2 mt-sm-0" role="group" data-bs-toggle="buttons">
                             @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
                             {
                                 var feeRateOption = Model.RecommendedSatoshiPerByte[index];
-                                <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-bs-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
+                                <button type="button" class="btn btn-sm btn-secondary crypto-fee-link" value="@feeRateOption.FeeRate" data-bs-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
                                     @feeRateOption.Target.TimeString()
                                 </button>
                                 <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />

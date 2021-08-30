@@ -199,6 +199,10 @@ h2 small .fa-question-circle-o {
     }
 }
 
+.notification-badge {
+    min-width: 2em;
+}
+
 @media (min-width: 992px) {
     .notification-badge {
         position: relative;

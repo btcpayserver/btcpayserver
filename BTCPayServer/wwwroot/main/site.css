@@ -1,6 +1,6 @@
 ﻿/* Set scroll padding so that anchors don't disappear underneath the fixed navbar */ 
 html {
-    scroll-padding-top: 80px;
+    scroll-padding-top: 6.5rem;
 }
 
 /* General and site-wide Bootstrap modifications */

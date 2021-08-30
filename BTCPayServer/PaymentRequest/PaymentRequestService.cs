@@ -49,6 +49,10 @@ namespace BTCPayServer.PaymentRequest
                 if (blob.ExpiryDate.Value <= DateTimeOffset.UtcNow)
                     currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Expired;
             }
+            else if (currentStatus != Client.Models.PaymentRequestData.PaymentRequestStatus.Completed)
+            {
+                currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
+            }
 
             if (currentStatus != Client.Models.PaymentRequestData.PaymentRequestStatus.Expired)
             {

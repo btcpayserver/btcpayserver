@@ -116,14 +116,14 @@
                                                 </div>
                                             </div>
                                             <div class="col mt-2 col-12 col-sm-6 mt-sm-0 col-md-12 mt-md-2">
-                                                <button class="btn btn-primary w-100 text-nowrap" type="submit">Pay Invoice</button>
+                                                <button class="btn btn-primary w-100 text-nowrap" type="submit" data-test="pay-button">Pay Invoice</button>
                                             </div>
                                         </div>
                                     </form>
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id">
+                                    <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" data-test="pay-button">
                                         Pay Invoice
                                     </a>
                                     if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
@@ -137,7 +137,7 @@
                             else
                             {
                                 <div class="h2 text-md-end">
-                                    <span class="badge @if (Model.Status == "Settled") { @("bg-primary") } else if (Model.Status == "Expired") { @("bg-danger") } else { @("bg-info") }">
+                                    <span class="badge @if (Model.Status == "Settled") { @("bg-primary") } else if (Model.Status == "Expired") { @("bg-danger") } else { @("bg-info") }" data-test="status">
                                         @Model.Status
                                         @if (Model.Archived)
                                         {
@@ -158,7 +158,7 @@
                                             </div>
                                         </div>
                                         <div class="col mt-2 col-12 col-sm-6 mt-sm-0 col-md-12 mt-md-2">
-                                            <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading}" :disabled="loading" type="submit">
+                                            <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading}" :disabled="loading" type="submit" data-test="pay-button">
                                                 <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
@@ -169,7 +169,7 @@
                                 </form>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading">
+                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading" data-test="pay-button">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
@@ -185,7 +185,7 @@
                         </template>
                         <template v-else>
                             <div class="h2 text-md-end">
-                                <span class="badge" :class="{ 'bg-primary': srvModel.status === 'Settled', 'bg-danger': srvModel.status === 'Expired', 'bg-info': (srvModel.status !== 'Settled' && srvModel.status !== 'Expired') }">
+                                <span class="badge" :class="{ 'bg-primary': srvModel.status === 'Settled', 'bg-danger': srvModel.status === 'Expired', 'bg-info': (srvModel.status !== 'Settled' && srvModel.status !== 'Expired') }" data-test="status">
                                     {{srvModel.status}}
                                     <span v-if="srvModel.archived">(archived)</span>
                                 </span>

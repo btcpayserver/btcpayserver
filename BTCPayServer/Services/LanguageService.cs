@@ -53,6 +53,8 @@ namespace BTCPayServer.Services
 
         public Language FindLanguageInAcceptLanguageHeader(string acceptLanguageHeader)
         {
+            if (acceptLanguageHeader is null)
+                return null;
             IDictionary<string, float> acceptedLocales = new Dictionary<string, float>();
             var locales = acceptLanguageHeader.Split(',', StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < locales.Length; i++)

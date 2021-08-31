@@ -11,6 +11,7 @@
 * Lightning payments should not be proposed for top-up invoices (#2772, #2780) @ubolator
 * Typo fixes (#2774) @jorisvial
 * Fix payjoin client to properly handle receiver using output substitution (#2677) @NicolasDorier
+* The checkout would crash for some client if automatic detection of language was checked, and the browser was not setting the accepted language @NicolasDorier
 
 ## 1.2.1
 

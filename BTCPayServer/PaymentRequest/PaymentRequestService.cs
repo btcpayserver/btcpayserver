@@ -22,7 +22,6 @@ namespace BTCPayServer.PaymentRequest
         private readonly CurrencyNameTable _currencies;
 
         public PaymentRequestService(
-            IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
@@ -49,17 +48,19 @@ namespace BTCPayServer.PaymentRequest
                 if (blob.ExpiryDate.Value <= DateTimeOffset.UtcNow)
                     currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Expired;
             }
+            else if (currentStatus != Client.Models.PaymentRequestData.PaymentRequestStatus.Completed)
+            {
+                currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
+            }
 
             if (currentStatus != Client.Models.PaymentRequestData.PaymentRequestStatus.Expired)
             {
-                var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
 
                 currentStatus = contributions.TotalCurrency >= blob.Amount
                     ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
                     : Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
-
             }
 
             if (currentStatus != pr.Status)

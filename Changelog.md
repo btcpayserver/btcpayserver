@@ -1,8 +1,19 @@
 # Changelog
 
+## 1.2.2
+
+# Bug fixes:
+
+* It was impossible to send from the wallet to more than two destinations (#2825) @NicolasDorier
+* Fix rounding issue in the invoice refund flow (#2778, #2810) @NicolasDorier
+* When cloning an expired payment request, the new payment request was also expired (#2820) @dennisreimann
+* Fix instructions to import a coldcard wallet via file upload (#2809) @mandelbit
+* Lightning payments should not be proposed for top-up invoices (#2772, #2780) @ubolator
+* Typo fixes (#2774) @jorisvial
+
 ## 1.2.1
 
-### Bug fix:
+### Bug fixes:
 
 * Fix Display app on website root feature @NicolasDorier
 

@@ -66,7 +66,7 @@
                 <div class="form-group">
                     <div class="d-flex align-items-center justify-content-between">
                         <label asp-for="Outputs[0].DestinationAddress" class="form-label"></label>
-                        <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-secondary btn-link p-0 mb-2">Add another destination</button>
+                        <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2"><span class="fa fa-plus"></span> Add another destination</button>
                     </div>
                     <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
                     <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
@@ -101,7 +101,17 @@
                             <div class="row">
                                 <div class="col-sm-12 col-lg-10">
                                     <div class="form-group">
-                                        <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
+                                        @if (index == Model.Outputs.Count - 1)
+                                        {
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
+                                                <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2"><span class="fa fa-plus"></span> Add another destination</button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
+                                        }
                                         <input asp-for="Outputs[index].DestinationAddress" class="form-control" autocomplete="off" />
                                         <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                                     </div>

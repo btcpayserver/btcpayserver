@@ -36,6 +36,7 @@
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (Purely Experimental, ONLY FOR DEVELOPMENT)</option>
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>

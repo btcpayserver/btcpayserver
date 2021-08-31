@@ -222,7 +222,21 @@ namespace BTCPayServer.Controllers
                                     continue;
                                 }
 
-                                if (addressType == "segwit")
+                                if (!network.NBitcoinNetwork.Consensus.SupportTaproot && addressType == "taproot")
+                                {
+                                    await websocketHelper.Send("{ \"error\": \"taproot-notsupported\"}", cancellationToken);
+                                    continue;
+                                }
+                                if (addressType == "taproot")
+                                {
+                                    keyPath = new KeyPath("86'").Derive(network.CoinType).Derive(accountNumber, true);
+                                    xpub = await device.GetXPubAsync(keyPath);
+                                    strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    {
+                                        ScriptPubKeyType = ScriptPubKeyType.TaprootBIP86
+                                    });
+                                }
+                                else if (addressType == "segwit")
                                 {
                                     keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(accountNumber, true);
                                     xpub = await device.GetXPubAsync(keyPath);

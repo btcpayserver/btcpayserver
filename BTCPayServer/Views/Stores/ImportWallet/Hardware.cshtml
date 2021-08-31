@@ -6,14 +6,16 @@
 }
 
 @section Navbar {
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
-        <vc:icon symbol="back" />
-    </a>
+<a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId"
+    asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <vc:icon symbol="back" />
+</a>
 }
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
+    <p class="lead text-secondary mt-3">In order to securely connect to your hardware wallet you must first download,
+        install, and run the BTCPay Server Vault.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -31,6 +33,7 @@
                     <option value="segwit">Segwit (Recommended, cheapest fee)</option>
                     <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
                     <option value="legacy">Legacy (Not recommended)</option>
+                    <option value="taproot">Taproot (ONLY FOR DEVELOPMENT)</option>
                 </select>
             </div>
             <div class="form-group">
@@ -54,7 +57,7 @@
     <input asp-for="Config" type="hidden" />
     <input asp-for="CryptoCode" type="hidden" />
     <input asp-for="AccountKey" type="hidden" />
-    <input asp-for="Source" type="hidden" value="Vault"/>
+    <input asp-for="Source" type="hidden" value="Vault" />
     <input asp-for="DerivationSchemeFormat" type="hidden" value="BTCPay" />
 
     <div class="row mb-5">
@@ -63,7 +66,8 @@
 
             <div class="form-group">
                 <label asp-for="DerivationScheme" class="form-label"></label>
-                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="3" readonly></textarea>
+                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2"
+                    rows="3" readonly></textarea>
             </div>
             <div class="form-group">
                 <label asp-for="RootFingerprint" class="form-label"></label>
@@ -79,35 +83,34 @@
 </form>
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <partial name="VaultElements" />
+<partial name="_ValidationScriptsPartial" />
+<partial name="VaultElements" />
 
-    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
+<script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
+<script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
 
-    <script>
-        window.addEventListener("load", async () => {
-            const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
-            const wsProto = location.protocol.replace(/^http/, "ws");
-            const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
+<script>
+    window.addEventListener("load", async () => {
+        const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
+        const wsProto = location.protocol.replace(/^http/, "ws");
+        const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
 
-            document.getElementById("vault-status").innerHTML = document.getElementById("VaultConnection").innerHTML;
+        document.getElementById("vault-status").innerHTML = document.getElementById("VaultConnection").innerHTML;
 
-            window.addEventListener("beforeunload", () => {
-                vaultUI.closeBridge();
-            });
-
-            while (!await vaultUI.askForDevice() || !await vaultUI.askForXPubs()) {};
-
-            const { xpub: { strategy, fingerprint, accountKey, keyPath } } = vaultUI;
-
-            document.getElementById("DerivationScheme").value = strategy;
-            document.getElementById("RootFingerprint").value = fingerprint;
-            document.getElementById("AccountKey").value = accountKey;
-            document.getElementById("KeyPath").value = keyPath;
-
-            document.getElementById("walletInfo").style = null;
+        window.addEventListener("beforeunload", () => {
+            vaultUI.closeBridge();
         });
-    </script>
-}
 
+        while (!await vaultUI.askForDevice() || !await vaultUI.askForXPubs()) { };
+
+        const { xpub: { strategy, fingerprint, accountKey, keyPath } } = vaultUI;
+
+        document.getElementById("DerivationScheme").value = strategy;
+        document.getElementById("RootFingerprint").value = fingerprint;
+        document.getElementById("AccountKey").value = accountKey;
+        document.getElementById("KeyPath").value = keyPath;
+
+        document.getElementById("walletInfo").style = null;
+    });
+</script>
+}

@@ -12,20 +12,25 @@
 @if (!User.IsInRole(Roles.ServerAdmin))
 {
     <div class="alert alert-warning">
-        You are not an admin on this server. While you are able to import or generate a wallet via seed with
-        your account, please understand that you are trusting the server admins not just with your
-        <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">privacy</a>
-        but also with <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#trust-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">trivial access to your funds.</a>
-        If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance.
-    </div>
+    You are not an admin on this server. While you are able to import or generate a wallet via seed with
+    your account, please understand that you are trusting the server admins not just with your
+    <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link"
+        rel="noreferrer noopener">privacy</a>
+    but also with <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#trust-concerns" target="_blank"
+        class="alert-link" rel="noreferrer noopener">trivial access to your funds.</a>
+    If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance.
+</div>
 }
 
-<form id="generate-wallet-form" method="post" asp-action="GenerateWallet" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")" asp-route-method="@method">
+<form id="generate-wallet-form" method="post" asp-action="GenerateWallet"
+    asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
+    asp-route-method="@method">
     @if (isImport)
     {
         <div class="form-group">
             <label asp-for="ExistingMnemonic" class="form-label">Wallet Recovery Seed</label>
-            <textarea asp-for="ExistingMnemonic" class="form-control font-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            <textarea asp-for="ExistingMnemonic" class="form-control font-monospace py-2" rows="2" autocomplete="off"
+            autocorrect="off" autocapitalize="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }
@@ -36,7 +41,7 @@
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
-            <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (Purely Experimental, ONLY FOR DEVELOPMENT)</option>
+            <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (ONLY FOR DEVELOPMENT)</option>
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>
@@ -75,10 +80,12 @@
     }
 
     <div class="mb-4">
-        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
+        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse"
+            data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
             Advanced settings
         </button>
-        <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
+        <div id="AdvancedSettings"
+            class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3 pb-1">
                 @if (isImport) // hide account option when creating a wallet
                 {
@@ -95,12 +102,12 @@
                 }
                 <div class="form-group">
                     <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
-                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
+                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off" />
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
-                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
+                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control" />
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
 
@@ -111,10 +118,12 @@
                         <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle ms-2" />
                         <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                         <p class="text-muted pt-2">
-                            Each address generated will be imported into the node wallet and you can view your balance through the node.
+                            Each address generated will be imported into the node wallet and you can view your balance
+                            through the node.
                             @if (isImport || isHotWallet)
                             {
-                                <span>When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
+                                <span>When this is enabled for a hot wallet, you are also able to use the node wallet to
+                                    spend.</span>
                             }
                         </p>
                     </div>

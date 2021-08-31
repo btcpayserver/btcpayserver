@@ -242,10 +242,11 @@ namespace BTCPayServer.Controllers
                     model.RefundStep = RefundSteps.SelectRate;
                     model.Title = "What to refund?";
                     var paymentMethod = invoice.GetPaymentMethods()[paymentMethodId];
+                    var cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
                     var paidCurrency =
-                        Math.Round(paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate,
+                        Math.Round(cryptoPaid * paymentMethod.Rate,
                             cdCurrency.Divisibility);
-                    model.CryptoAmountThen = Math.Round(paidCurrency / paymentMethod.Rate, paymentMethodDivisibility);
+                    model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                     model.RateThenText =
                         _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
                     rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);

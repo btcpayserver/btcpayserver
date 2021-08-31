@@ -10,6 +10,7 @@
 * Fix instructions to import a coldcard wallet via file upload (#2809) @mandelbit
 * Lightning payments should not be proposed for top-up invoices (#2772, #2780) @ubolator
 * Typo fixes (#2774) @jorisvial
+* Fix payjoin client to properly handle receiver using output substitution (#2677) @NicolasDorier
 
 ## 1.2.1
 

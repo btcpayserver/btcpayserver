@@ -258,7 +258,7 @@ namespace BTCPayServer.Controllers
 
             if (psbtObject.TryGetFee(out var fee))
             {
-                vm.Destinations.Add(new WalletPSBTReadyViewModel.DestinationViewModel()
+                vm.Destinations.Add(new WalletPSBTReadyViewModel.DestinationViewModel
                 {
                     Positive = false,
                     Balance = ValueToString(-fee, network),
@@ -288,15 +288,17 @@ namespace BTCPayServer.Controllers
         {
             if (command == null)
                 return await WalletPSBT(walletId, vm);
+            
             PSBT psbt;
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            DerivationSchemeSettings derivationSchemeSettings = null;
+            DerivationSchemeSettings derivationSchemeSettings;
             try
             {
                 psbt = PSBT.Parse(vm.SigningContext.PSBT, network.NBitcoinNetwork);
                 derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                 if (derivationSchemeSettings == null)
                     return NotFound();
+                
                 await FetchTransactionDetails(derivationSchemeSettings, vm, network);
             }
             catch
@@ -308,14 +310,14 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "payjoin":
-                    string error = null;
+                    string error;
                     try
                     {
                         var proposedPayjoin = await GetPayjoinProposedTX(new BitcoinUrlBuilder(vm.SigningContext.PayJoinBIP21, network.NBitcoinNetwork), psbt,
                             derivationSchemeSettings, network, cancellationToken);
                         try
                         {
-                            proposedPayjoin.Settings.SigningOptions = new SigningOptions()
+                            proposedPayjoin.Settings.SigningOptions = new SigningOptions
                             {
                                 EnforceLowR = !(vm.SigningContext?.EnforceLowR is false)
                             };
@@ -328,7 +330,7 @@ namespace BTCPayServer.Controllers
                             proposedPayjoin.Finalize();
                             var hash = proposedPayjoin.ExtractTransaction().GetHash();
                             _EventAggregator.Publish(new UpdateTransactionLabel(walletId, hash, UpdateTransactionLabel.PayjoinLabelTemplate()));
-                            TempData.SetStatusMessageModel(new StatusMessageModel()
+                            TempData.SetStatusMessageModel(new StatusMessageModel
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Success,
                                 AllowDismiss = false,
@@ -343,9 +345,9 @@ namespace BTCPayServer.Controllers
                                 Severity = StatusMessageModel.StatusSeverity.Warning,
                                 AllowDismiss = false,
                                 Html =
-                                    $"This transaction has been coordinated between the receiver and you to create a <a href='https://en.bitcoin.it/wiki/PayJoin' target='_blank'>payjoin transaction</a> by adding inputs from the receiver.<br/>" +
-                                    $"The amount being sent may appear higher but is in fact almost same.<br/><br/>" +
-                                    $"If you cancel or refuse to sign this transaction, the payment will proceed without payjoin"
+                                    "This transaction has been coordinated between the receiver and you to create a <a href='https://en.bitcoin.it/wiki/PayJoin' target='_blank'>payjoin transaction</a> by adding inputs from the receiver.<br/>" +
+                                    "The amount being sent may appear higher but is in fact almost same.<br/><br/>" +
+                                    "If you cancel or refuse to sign this transaction, the payment will proceed without payjoin"
                             });
                             vm.SigningContext.PSBT = proposedPayjoin.ToBase64();
                             vm.SigningContext.OriginalPSBT = psbt.ToBase64();
@@ -367,7 +369,7 @@ namespace BTCPayServer.Controllers
 
                     //we possibly exposed the tx to the receiver, so we need to broadcast straight away
                     psbt.Finalize();
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Warning,
                         AllowDismiss = false,
@@ -389,7 +391,7 @@ namespace BTCPayServer.Controllers
                             {
                                 if (!string.IsNullOrEmpty(vm.SigningContext.OriginalPSBT))
                                 {
-                                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                                    TempData.SetStatusMessageModel(new StatusMessageModel
                                     {
                                         Severity = StatusMessageModel.StatusSeverity.Warning,
                                         AllowDismiss = false,

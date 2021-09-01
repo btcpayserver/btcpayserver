@@ -83,6 +83,13 @@
     <tr>
         <td class="font-monospace">pkh(xpub…/0/*)</td>
     </tr>
+    @if (Model.CanUseTaproot)
+    {
+        <tr>
+            <td rowspan="1">P2TR</td>
+            <td class="font-monospace">xpub…-[taproot]</td>
+        </tr>
+    }
     <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2WSH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…</td>

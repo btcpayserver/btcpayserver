@@ -110,6 +110,11 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     strategy = ParseDerivationStrategy(vm.DerivationScheme, network);
+                    if(strategy.AccountDerivation is TaprootDerivationStrategy && !TaprootSupported(vm.CryptoCode))
+                    {
+                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Taproot is not supported");
+                        return View(vm.ViewName, vm);
+                    }
                     strategy.Source = "ManualDerivationScheme";
                     if (!string.IsNullOrEmpty(vm.AccountKey))
                     {

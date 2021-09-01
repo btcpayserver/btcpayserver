@@ -9,15 +9,15 @@ section {
 }
 
 @media (min-width: 768px) {
-    section {
-        padding: 6rem 0;
-    }
+  section {
+    padding: 6rem 0;
+  }
 }
 
 @media (min-width: 992px) {
-    section {
-        padding: 8rem 0;
-    }
+  section {
+    padding: 8rem 0;
+  }
 }
 
 p {
@@ -35,6 +35,28 @@ hr.light {
   background: var(--btcpay-white);
 }
 
+.service-box {
+    max-width: 400px;
+    margin: 50px auto 0;
+}
+
+.service-box p {
+    margin-bottom: 0;
+}
+
+.call-to-action {
+    padding: 50px 0;
+}
+
+.call-to-action h2 {
+    margin: 0 auto 20px;
+}
+
+.no-gutter > [class*='col-'] {
+    padding-right: 0;
+    padding-left: 0;
+}
+
 #mainNav {
   color: var(--btcpay-header-text);
   background: var(--btcpay-header-bg);
@@ -42,19 +64,8 @@ hr.light {
   transition-duration: 0.2s;
 }
 
-@media (min-width: 992px) {
-  #mainNav {
-    background: transparent;
-  }
-
-  #mainNav.navbar-shrink {
-    background: var(--btcpay-header-bg);
-  }
-}
-
 #mainNav .navbar-nav > li.nav-item > a.nav-link {
-  font-size: 14px;
-  font-weight: bold;
+  font-weight: var(--btcpay-font-weight-bold);
   color: var(--btcpay-header-link);
 }
 
@@ -71,16 +82,19 @@ hr.light {
 
 header.masthead {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: auto;
-  text-align: center;
 }
 
 header.masthead::before {
   content: "";
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0; 
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-image: url("../../img/bg.png");
   background-position: center;
   background-size: cover;
@@ -88,14 +102,19 @@ header.masthead::before {
 
 header.masthead .header-content {
   position: relative;
-  width: 100%;
   padding: 150px 15px 100px;
   text-align: center;
 }
 
+header.masthead .header-content .header-content-inner {
+  max-width: 1000px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 header.masthead .header-content .header-content-inner h1 {
-  font-size: 30px;
-  font-weight: 700;
+  font-size: var(--btcpay-font-size-xl);
+  font-weight: var(--btcpay-font-weight-bold);
   margin-top: 0;
   margin-bottom: 0;
   text-transform: uppercase;
@@ -106,9 +125,8 @@ header.masthead .header-content .header-content-inner hr {
 }
 
 header.masthead .header-content .header-content-inner p {
-  font-size: 16px;
-  font-weight: 300;
-  margin-bottom: 50px;
+  font-size: var(--btcpay-font-size-l);
+  margin-bottom: var(--btcpay-space-xl);
 }
 
 @media (min-width: 768px) {
@@ -118,36 +136,30 @@ header.masthead .header-content .header-content-inner p {
   }
 
   header.masthead .header-content {
-    position: absolute;
-    top: 50%;
-    padding: 0 50px;
-    transform: translateY(-50%);
-  }
-
-  header.masthead .header-content .header-content-inner {
-    max-width: 1000px;
-    margin-right: auto;
-    margin-left: auto;
+    padding: 0 var(--btcpay-space-l);
   }
 
   header.masthead .header-content .header-content-inner h1 {
-    font-size: 50px;
+    font-size: var(--btcpay-font-size-xxl);
   }
 
   header.masthead .header-content .header-content-inner p {
-    font-size: 18px;
-    max-width: 80%;
+    font-size: var(--btcpay-font-size-l);
+    max-width: 38rem;
     margin-right: auto;
     margin-left: auto;
   }
 }
 
-.service-box {
-  max-width: 400px;
-  margin: 50px auto 0;
-}
-
 @media (min-width: 992px) {
+  #mainNav {
+    background: transparent;
+  }
+
+  #mainNav.navbar-shrink {
+    background: var(--btcpay-header-bg);
+  }
+  
   #mainNav .navbar-nav > li.nav-item {
     padding: 0 .5rem;
   }
@@ -159,21 +171,4 @@ header.masthead .header-content .header-content-inner p {
   .service-box {
     margin: 20px auto 0;
   }
-}
-
-.service-box p {
-  margin-bottom: 0;
-}
-
-.call-to-action {
-  padding: 50px 0;
-}
-
-.call-to-action h2 {
-  margin: 0 auto 20px;
-}
-
-.no-gutter > [class*='col-'] {
-  padding-right: 0;
-  padding-left: 0;
 }

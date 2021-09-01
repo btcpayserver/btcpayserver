@@ -8,6 +8,12 @@ section {
   padding: 80px 0px;
 }
 
+@media (min-width: 768px) {
+    section {
+        padding: 96px 0px;
+    }
+}
+
 @media (min-width: 992px) {
     section {
         padding: 128px 0px;

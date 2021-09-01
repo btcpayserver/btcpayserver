@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
+            vm.CanUseTaproot = TaprootSupported(vm.CryptoCode);
 
             if (vm.Method == null)
             {
@@ -208,6 +209,7 @@ namespace BTCPayServer.Controllers
 
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
+            vm.CanUseTaproot = TaprootSupported(vm.CryptoCode);
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
 
@@ -262,6 +264,12 @@ namespace BTCPayServer.Controllers
                 CanUseRPCImport = rpcImport
             };
 
+            if (request.ScriptPubKeyType == ScriptPubKeyType.TaprootBIP86 && !TaprootSupported(cryptoCode) )
+            {
+                ModelState.AddModelError(nameof(request.ScriptPubKeyType), $"Taproot not supported");
+                return View(vm.ViewName, vm);
+            }
+            
             if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
             {
                 ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");

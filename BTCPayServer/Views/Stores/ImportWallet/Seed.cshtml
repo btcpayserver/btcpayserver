@@ -21,6 +21,7 @@
     {
         ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
         ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+        ViewData.Add(nameof(Model.CanUseTaproot), Model.CanUseTaproot);
         ViewData.Add(nameof(Model.Method), Model.Method);
 
         <partial name="_GenerateWalletForm" model="Model.SetupRequest" />

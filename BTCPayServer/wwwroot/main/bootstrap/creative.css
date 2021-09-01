@@ -86,6 +86,8 @@ header.masthead {
   align-items: center;
   justify-content: center;
   min-height: auto;
+  margin-top: 4rem;
+  padding: var(--btcpay-space-xxl) var(--btcpay-space-m);
 }
 
 header.masthead::before {
@@ -102,7 +104,6 @@ header.masthead::before {
 
 header.masthead .header-content {
   position: relative;
-  padding: 150px 15px 100px;
   text-align: center;
 }
 
@@ -115,43 +116,31 @@ header.masthead .header-content .header-content-inner {
 header.masthead .header-content .header-content-inner h1 {
   font-size: var(--btcpay-font-size-xl);
   font-weight: var(--btcpay-font-weight-bold);
-  margin-top: 0;
-  margin-bottom: 0;
+  margin: 0;
   text-transform: uppercase;
 }
 
 header.masthead .header-content .header-content-inner hr {
-  margin: 30px auto;
+  margin: var(--btcpay-space-m) auto;
 }
 
 header.masthead .header-content .header-content-inner p {
   font-size: var(--btcpay-font-size-l);
-  margin-bottom: var(--btcpay-space-xl);
+  margin: var(--btcpay-space-l) 0;
+  max-width: 38rem;
 }
 
 @media (min-width: 768px) {
-  header.masthead {
-    height: 70%;
-    min-height: 600px;
-  }
-
-  header.masthead .header-content {
-    padding: 0 var(--btcpay-space-l);
-  }
-
   header.masthead .header-content .header-content-inner h1 {
     font-size: var(--btcpay-font-size-xxl);
-  }
-
-  header.masthead .header-content .header-content-inner p {
-    font-size: var(--btcpay-font-size-l);
-    max-width: 38rem;
-    margin-right: auto;
-    margin-left: auto;
   }
 }
 
 @media (min-width: 992px) {
+  header.masthead {
+    margin-top: 5rem;
+  }
+
   #mainNav {
     background: transparent;
   }

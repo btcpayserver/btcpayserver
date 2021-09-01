@@ -351,6 +351,8 @@ askdevice:
         private ScriptPubKeyType GetScriptPubKeyType(RootedKeyPath keyPath)
         {
             var path = keyPath.KeyPath.ToString();
+            if (path.StartsWith("86'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.TaprootBIP86;
             if (path.StartsWith("84'", StringComparison.OrdinalIgnoreCase))
                 return ScriptPubKeyType.Segwit;
             if (path.StartsWith("49'", StringComparison.OrdinalIgnoreCase))

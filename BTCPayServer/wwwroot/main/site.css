@@ -91,7 +91,6 @@ h2 small .fa-question-circle-o {
 #sideNav .nav-link.active,
 #sideNav .show > .nav-link {
     color: var(--btcpay-nav-link-active);
-/*    font-weight: 700;*/
     border-left-color: var(--btcpay-nav-border-active);
     background: var(--btcpay-nav-bg-active);
 }

@@ -332,7 +332,13 @@ namespace BTCPayServer.Tests
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "/login"));
         }
 
-        public string CreateInvoice(string storeName, decimal? amount = 100, string currency = "USD", string refundEmail = "")
+        public string CreateInvoice(
+            string storeName, 
+            decimal? amount = 100, 
+            string currency = "USD", 
+            string refundEmail = "",
+            string defaultPaymentMethod = "BTC"
+        )
         {
             GoToInvoices();
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
@@ -343,6 +349,7 @@ namespace BTCPayServer.Tests
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
+            Driver.FindElement(By.Name("DefaultPaymentMethod")).SendKeys(defaultPaymentMethod);
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage();

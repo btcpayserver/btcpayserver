@@ -1289,6 +1289,32 @@ namespace BTCPayServer.Tests
                 paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
                 Assert.Single(paymentMethods);
                 Assert.True(paymentMethods.First().Activated);
+
+                var invoiceWithdefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Currency = "USD",
+                        Amount = 100,
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                        {
+                            PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
+                            DefaultPaymentMethod = "BTC_LightningLike" 
+                        }
+                    });
+                Assert.Equal("BTC_LightningLike", invoiceWithdefaultPaymentMethodLN.Checkout.DefaultPaymentMethod);
+
+                var invoiceWithdefaultPaymentMethodOnChain = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Currency = "USD",
+                        Amount = 100,
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                        {
+                            PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
+                            DefaultPaymentMethod = "BTC" 
+                        }
+                    });
+                Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
             }
         }
 

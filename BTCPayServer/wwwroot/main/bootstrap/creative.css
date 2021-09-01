@@ -5,18 +5,18 @@
  */
 
 section {
-  padding: 80px 0px;
+  padding: 5rem 0;
 }
 
 @media (min-width: 768px) {
     section {
-        padding: 96px 0px;
+        padding: 6rem 0;
     }
 }
 
 @media (min-width: 992px) {
     section {
-        padding: 128px 0px;
+        padding: 8rem 0;
     }
 }
 

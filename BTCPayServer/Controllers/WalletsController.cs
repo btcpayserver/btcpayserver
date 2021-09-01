@@ -817,9 +817,10 @@ namespace BTCPayServer.Controllers
                 SigningContext = model.SigningContext
             });
         }
+        
         private IActionResult RedirectToWalletPSBTReady(WalletPSBTReadyViewModel vm)
         {
-            var redirectVm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBTReady),
@@ -943,7 +944,7 @@ namespace BTCPayServer.Controllers
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext.PSBT = psbt.ToBase64();
-            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
             {
                 SigningKey = signingKey.GetWif(network.NBitcoinNetwork).ToString(),
                 SigningKeyPath = rootedKeyPath?.ToString(),

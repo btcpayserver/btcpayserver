@@ -3796,8 +3796,8 @@ fieldset:disabled .btn {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .navbar > .container,
@@ -3992,6 +3992,10 @@ fieldset:disabled .btn {
 }
 
 @media (min-width: 992px) {
+  .navbar {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
   .navbar-expand-lg {
     flex-wrap: nowrap;
     justify-content: flex-start;

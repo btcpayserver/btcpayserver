@@ -3,12 +3,6 @@ html {
     scroll-padding-top: 5rem;
 }
 
-@media (min-width: 992px) {
-    html {
-        scroll-padding-top: 6.5rem;
-    }
-}
-
 /* General and site-wide Bootstrap modifications */
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 600;

@@ -90,7 +90,8 @@
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"
                                data-bs-target="#ConfirmModal"
-                               data-name="@pp.Name">Archive</a>
+                               data-text="@pp.Name"
+                               data-item-id="@pp.Name">Archive</a>
                         </td>
                     </tr>
                 }
@@ -99,22 +100,10 @@
         </div>
     </div>
     
-    <div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
-        <partial name="ConfirmModal" model="@(new ConfirmModel("Archive the pull payment", "Do you really want to archive this pull payment?", "Archive"))" />
-    </div>
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive the pull payment", "Do you really want to archive this pull payment?", "Archive"))" />
 
     @section PageFootContent {
         <script>
-            const modal = document.getElementById('ConfirmModal')
-            modal.addEventListener('show.bs.modal', function (event) {
-                const link = event.relatedTarget
-                const title = document.getElementById('ConfirmTitle')
-                const form = modal.querySelector('form')
-                const { name } = link.dataset
-                title.textContent = `Archive the pull payment "${name}"`
-                form.setAttribute('action', link.getAttribute('href'))
-            });
-            
             var ppProgresses = document.getElementsByClassName("ppProgress");
             for (var i = 0; i < ppProgresses.length; i++) {
                 var pp = ppProgresses[i];

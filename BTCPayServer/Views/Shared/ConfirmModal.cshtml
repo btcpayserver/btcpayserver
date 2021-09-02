@@ -10,14 +10,17 @@
         </div>
 
         <div class="modal-body">
-            @if (Model.DescriptionHtml)
-            {
-                @Safe.Raw(Model.Description)
-            }
-            else
-            {
-                @Model.Description
-            }
+            <div id="ConfirmDescription">
+                @if (Model.DescriptionHtml)
+                {
+                    @Safe.Raw(Model.Description)
+                }
+                else
+                {
+                    @Model.Description
+                }
+            </div>
+            <div id="ConfirmText" class="mt-3" hidden></div>
         </div>
 
         @if (!string.IsNullOrEmpty(Model.Action))

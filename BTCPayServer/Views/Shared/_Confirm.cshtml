@@ -1,0 +1,29 @@
+@model ConfirmModel
+
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <partial name="ConfirmModal" model="Model" />
+</div>
+
+<script>
+    const modal = document.getElementById('ConfirmModal')
+    modal.addEventListener('show.bs.modal', event => {
+        const $target = event.relatedTarget
+        const $text = document.getElementById('ConfirmText')
+        const { title, description, text, confirm, itemId } = $target.dataset
+        const action = $target.dataset.action || ($target.nodeName === 'A'
+            ? $target.getAttribute('href')
+            : $target.form.getAttribute('action'))
+        
+        modal.querySelector('form').setAttribute('action', action)
+        
+        if (title) document.getElementById('ConfirmTitle').textContent = title
+        if (confirm) document.getElementById('ConfirmContinue').textContent = confirm
+        if (description) document.getElementById('ConfirmDescription').textContent = description
+        if (text) {
+            $text.textContent = text
+            $text.removeAttribute('hidden')
+        } else {
+            $text.setAttribute('hidden', 'hidden')  
+        }
+    });
+</script>

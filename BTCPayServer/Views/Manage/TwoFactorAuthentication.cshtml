@@ -81,24 +81,5 @@
     }
 </div>
 
-<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
-    <partial name="ConfirmModal" model="@(new ConfirmModel("2FA", "Your account will no longer have this credential as an option for MFA.", "Remove"))" />
-</div>
+<partial name="_Confirm" model="@(new ConfirmModel("2FA", "Your account will no longer have this credential as an option for MFA.", "Remove"))" />
 
-@section PageFootContent {
-    <script>
-        const modal = document.getElementById('ConfirmModal')
-        modal.addEventListener('show.bs.modal', function (event) {
-            const link = event.relatedTarget
-            const titleEl = document.getElementById('ConfirmTitle')
-            const buttonEl = document.getElementById('ConfirmContinue')
-            const formEl = modal.querySelector('form')
-            const bodyEl = modal.querySelector('.modal-body')
-            const { title, description, confirm } = link.dataset
-            titleEl.textContent = title
-            bodyEl.textContent = description
-            buttonEl.textContent = confirm
-            formEl.setAttribute('action', link.getAttribute('href'))
-        });
-    </script>
-}

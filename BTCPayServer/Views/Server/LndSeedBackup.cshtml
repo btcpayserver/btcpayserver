@@ -48,23 +48,14 @@
 
 @if (!Model.Removed)
 {
-    <div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
-        <partial name="ConfirmModal" model="@(new ConfirmModel("Delete LND Seed", "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server!", "Delete"))"/>
-    </div>
+    <partial name="_Confirm" model="@(new ConfirmModel("Delete LND Seed", "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server!", "Delete"))"/>
 }
 
 @section PageFootContent {
     <script>
         const deleteButton = document.getElementById('delete')
-        deleteButton.addEventListener('click', function (event) {
+        deleteButton.addEventListener('click', event => {
             event.preventDefault()
-        });
-        
-        const modal = document.getElementById('ConfirmModal')
-        modal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget
-            const form = modal.querySelector('form')
-            form.setAttribute('action', button.form.getAttribute('action'))
         });
         
         document.addEventListener("DOMContentLoaded", function () {

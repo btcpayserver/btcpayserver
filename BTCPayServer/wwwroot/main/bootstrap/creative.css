@@ -14,12 +14,6 @@ section {
   }
 }
 
-@media (min-width: 992px) {
-  section {
-    padding: 8rem 0;
-  }
-}
-
 p {
   margin-bottom: 1.5rem;
 }

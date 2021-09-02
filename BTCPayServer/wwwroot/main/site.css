@@ -1,6 +1,12 @@
 ﻿/* Set scroll padding so that anchors don't disappear underneath the fixed navbar */ 
 html {
-    scroll-padding-top: 6.5rem;
+    scroll-padding-top: 5rem;
+}
+
+@media (min-width: 992px) {
+    html {
+        scroll-padding-top: 6.5rem;
+    }
 }
 
 /* General and site-wide Bootstrap modifications */
@@ -70,8 +76,8 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;
-    top: -.2rem;
-    font-size: 1.2rem;
+    top: -.1rem;
+    font-size: var(--btcpay-font-size-l);
 }
 
 /* Admin Sidebar Navigation */
@@ -80,7 +86,6 @@ h2 small .fa-question-circle-o {
 }
 
 #sideNav .nav-link {
-    font-size: 0.875rem;
     margin: .3rem 0;
     border-left: 2px solid transparent;
     padding: .2rem 1rem;

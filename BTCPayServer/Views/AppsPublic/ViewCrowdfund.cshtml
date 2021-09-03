@@ -15,8 +15,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
+    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -31,13 +32,10 @@
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
         <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
-
-    <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
-
 </head>
 <body>
     @if (Context.Request.Query.ContainsKey("simple"))

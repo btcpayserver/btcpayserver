@@ -17,9 +17,8 @@
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png" asp-append-version="true">
     <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
     <link rel="manifest" href="~/manifest.json">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true"/>
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true"/>
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
+    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
 </head>
 <body>

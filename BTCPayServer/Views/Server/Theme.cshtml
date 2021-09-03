@@ -3,64 +3,38 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Theme, "Theme");
 }
 
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
+
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div class="row">
     <div class="col-lg-6">
         <form method="post">
             <h4 class="mb-3">Custom theme</h4>
-            <p>Select one of our predefined themes. Optionally you can also provide a CSS file that customizes the chosen theme.</p>
+            <p>Use the default Light or Dark Themes, or provide a CSS theme file below.</p>
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All" class="text-danger"></div>
             }
-            <div class="form-group">
-                <label asp-for="ThemeCssUri" class="form-label"></label>
-                <select asp-for="ThemeCssUri" class="form-select">
-                    <option value="/main/themes/default.css">Default (Light)</option>
-                    <option value="/main/themes/default-dark.css">Default (Dark)</option>
-                    <option value="/main/themes/classic.css">Classic</option>
-                    <option value="/main/themes/casa.css">Casa</option>
-                </select>
-                <span asp-validation-for="ThemeCssUri" class="text-danger"></span>
+            <div class="form-group d-flex align-items-center">
+                <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@Model.CustomTheme" aria-controls="CustomThemeSettings" />
+                <label asp-for="CustomTheme" class="form-label mb-0"></label>
+                <span asp-validation-for="CustomTheme" class="text-danger"></span>
             </div>
-            <div class="form-group mb-5">
-                <label asp-for="CustomThemeCssUri" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-                <input asp-for="CustomThemeCssUri" class="form-control" />
-                <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+            <div class="collapse @(Model.CustomTheme ? "show" : "")" id="CustomThemeSettings">
+                <div class="form-group">
+                    <label asp-for="CustomThemeCssUri" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <input asp-for="CustomThemeCssUri" class="form-control" />
+                    <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                </div>
             </div>
-
-            <h4 class="mb-3">Bootstrap theme</h4>
-            <div class="form-group">
-                <label asp-for="BootstrapCssUri" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-                <input asp-for="BootstrapCssUri" class="form-control" />
-                <span asp-validation-for="BootstrapCssUri" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    <a href="https://pikock.github.io/bootstrap-magic/app/index.html" target="_blank" rel="noreferrer noopener">Build your own theme</a>
-                    or <a href="https://bootswatch.com/" target="_blank" rel="noreferrer noopener">pick one already made</a>
-                </p>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreativeStartCssUri" class="form-label"></label>
-                <input asp-for="CreativeStartCssUri" class="form-control" />
-                <span asp-validation-for="CreativeStartCssUri" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    <a href="https://startbootstrap.com/template-overviews/creative/" target="_blank" rel="noreferrer noopener">Creative Start theme</a>
-                    is used on top of Bootstrap
-                </p>
-            </div>
-
+            
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>
     </div>
 </div>
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-}

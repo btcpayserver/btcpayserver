@@ -1,10 +1,7 @@
 ﻿@using BTCPayServer.Abstractions.Contracts
 @inject ISettingsRepository _settingsRepository
 @addTagHelper *, BundlerMinifier.TagHelpers
-@{
-    var theme = await _settingsRepository.GetTheme();
-    var policies = await _settingsRepository.GetPolicies();
-}
+@{ var policies = await _settingsRepository.GetPolicies(); }
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="">
@@ -15,14 +12,8 @@
 }
 <title>@ViewData["Title"]</title>
 @* CSS *@
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.BootstrapCssUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.CreativeStartCssUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.ThemeCssUri)" rel="stylesheet" asp-append-version="true" />
-@if (!string.IsNullOrWhiteSpace(theme.CustomThemeCssUri))
-{
-<link href="@Context.Request.GetRelativePathOrAbsolute(theme.CustomThemeCssUri)" rel="stylesheet" asp-append-version="true" />
-}
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+<partial name="LayoutHeadTheme" />
 @* Non-JS *@
 <noscript>
     <style>

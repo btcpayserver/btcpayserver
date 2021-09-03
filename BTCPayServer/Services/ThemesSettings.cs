@@ -5,24 +5,19 @@ namespace BTCPayServer.Services
 {
     public class ThemeSettings
     {
+        [Display(Name = "Use custom theme")]
+        public bool CustomTheme { get; set; }
+        
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [MaxLength(500)]
-        [Display(Name = "Select Theme")]
-        public string ThemeCssUri { get; set; }
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [MaxLength(500)]
-        [Display(Name = "Custom Theme CSS file")]
+        [Display(Name = "Custom Theme CSS URL")]
         public string CustomThemeCssUri { get; set; }
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [MaxLength(500)]
-        [Display(Name = "Custom Bootstrap CSS file")]
-        public string BootstrapCssUri { get; set; }
+        public string CssUri
+        {
+            get => CustomTheme ? CustomThemeCssUri : "/main/themes/default.css";
+        }
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [Display(Name = "Custom Creative Start CSS file")]
-        public string CreativeStartCssUri { get; set; }
         public bool FirstRun { get; set; }
         public override string ToString()
         {

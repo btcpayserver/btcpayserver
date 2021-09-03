@@ -2,6 +2,7 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
+            "wwwroot/main/bootstrap/bootstrap.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",

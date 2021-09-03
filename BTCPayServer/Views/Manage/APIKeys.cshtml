@@ -57,7 +57,7 @@
                 }
             </td>
             <td class="text-end">
-                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@(keyData.Label ?? keyData.Id)<strong> will immediately lose access." data-item-id="@(keyData.Label ?? keyData.Id)">Remove</a>
+                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@(keyData.Label ?? keyData.Id)<strong> will immediately lose access." data-confirm-input="REMOVE">Remove</a>
                 <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
             </td>

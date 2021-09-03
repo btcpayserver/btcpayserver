@@ -11,7 +11,7 @@
         const $form = document.getElementById('ConfirmForm')
         const $text = document.getElementById('ConfirmText')
         const $continue = document.getElementById('ConfirmContinue')
-        const { title, description, text, confirm, itemId } = $target.dataset
+        const { title, description, text, confirm, confirmInput } = $target.dataset
         const action = $target.dataset.action || ($target.nodeName === 'A'
             ? $target.getAttribute('href')
             : $target.form.getAttribute('action'))
@@ -26,12 +26,12 @@
         if (text) {
             $text.textContent = text
         }
-        if (itemId) {
+        if (confirmInput) {
             $text.removeAttribute('hidden')
             $continue.setAttribute('disabled', 'disabled')
-            document.getElementById('ConfirmItemId').textContent = itemId
+            document.getElementById('ConfirmInputText').textContent = confirmInput
             document.getElementById('ConfirmInput').addEventListener('input', event => {
-                event.target.value.trim().toLowerCase() === itemId.toLowerCase()
+                event.target.value.trim() === confirmInput
                     ? $continue.removeAttribute('disabled')
                     : $continue.setAttribute('disabled', 'disabled')
             })

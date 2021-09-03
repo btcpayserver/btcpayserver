@@ -17,7 +17,7 @@
         <tr>
             <td>@name</td>
             <td class="text-end">
-                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Your account will no longer have the credential <strong>@name</strong> as an option for multi-factor authentication." data-item-id="@name">Remove</a>
+                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Your account will no longer have the credential <strong>@name</strong> as an option for multi-factor authentication." data-confirm-input="REMOVE">Remove</a>
             </td>
         </tr>
     }

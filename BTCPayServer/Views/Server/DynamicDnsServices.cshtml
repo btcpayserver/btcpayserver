@@ -60,7 +60,7 @@
                         <td class="text-end">
                             <a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a>
                             <span> - </span>
-                            <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@service.Settings.Hostname</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-item-id="@service.Settings.Hostname">Remove</a>
+                            <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@service.Settings.Hostname</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="DELETE">Delete</a>
                         </td>
                     </tr>
                 }

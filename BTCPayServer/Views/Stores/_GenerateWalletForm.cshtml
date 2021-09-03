@@ -7,7 +7,7 @@
     var isHotWallet = method is WalletSetupMethod.HotWallet;
     var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
     var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
-    var canUseTaproot = ViewData["CanUseTaproot"] is true;
+    var isTaprootActivated = ViewData["IsTaprootActivated"] is true;
 }
 
 @if (!User.IsInRole(Roles.ServerAdmin))
@@ -34,12 +34,27 @@
     <div class="form-group">
         <label asp-for="ScriptPubKeyType" class="form-label">Address type</label>
         <select class="form-select w-auto" asp-for="ScriptPubKeyType">
-            <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
-            <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
-            <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
-            @if (canUseTaproot)
+            @if (ViewData["SupportSegwit"] is true)
             {
-                <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (ONLY FOR DEVELOPMENT)</option>
+                <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended)</option>
+                <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
+                <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            }
+            else
+            {
+                <option value="@ScriptPubKeyType.Legacy">Legacy</option>
+            }
+
+            @if (ViewData["SupportTaproot"] is true)
+            {
+                @if (isTaprootActivated)
+                {
+                    <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (For advanced users)</option>
+                }
+                else
+                {
+                    <option value="@ScriptPubKeyType.TaprootBIP86" disabled>Taproot (Available from block 709632)</option>
+                }
             }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>

@@ -47,32 +47,35 @@
     </tr>
     </thead>
     <tbody>
-    <tr>
-        <td rowspan="4">P2WPKH</td>
-        <td class="font-monospace">xpub…</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">zpub…</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">wpkh(xpub…/0/*)</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
-    </tr>
-    <tr>
-        <td rowspan="4">P2SH-P2WPKH</td>
-        <td class="font-monospace">xpub…-[p2sh]</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">ypub…</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">sh(wpkh(xpub…/0/*)</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
-    </tr>
+    @if (Model.SupportSegwit)
+    {
+        <tr>
+            <td rowspan="4">P2WPKH</td>
+            <td class="font-monospace">xpub…</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">zpub…</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">wpkh(xpub…/0/*)</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
+        </tr>
+        <tr>
+            <td rowspan="4">P2SH-P2WPKH</td>
+            <td class="font-monospace">xpub…-[p2sh]</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">ypub…</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">sh(wpkh(xpub…/0/*)</td>
+        </tr>
+        <tr>
+            <td class="font-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
+        </tr>
+    }
     <tr>
         <td rowspan="3">P2PKH</td>
         <td class="font-monospace">xpub…-[legacy]</td>
@@ -83,7 +86,7 @@
     <tr>
         <td class="font-monospace">pkh(xpub…/0/*)</td>
     </tr>
-    @if (Model.CanUseTaproot)
+    @if (Model.SupportTaproot && Model.IsTaprootActivated)
     {
         <tr>
             <td rowspan="1">P2TR</td>

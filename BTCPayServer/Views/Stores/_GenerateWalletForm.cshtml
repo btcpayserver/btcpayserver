@@ -7,6 +7,7 @@
     var isHotWallet = method is WalletSetupMethod.HotWallet;
     var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
     var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
+    var canUseTaproot = ViewData["CanUseTaproot"] is true;
 }
 
 @if (!User.IsInRole(Roles.ServerAdmin))
@@ -36,6 +37,10 @@
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            @if (canUseTaproot)
+            {
+                <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (ONLY FOR DEVELOPMENT)</option>
+            }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>

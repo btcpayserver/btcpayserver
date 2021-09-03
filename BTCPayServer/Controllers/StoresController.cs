@@ -68,7 +68,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             AppService appService,
             WebhookNotificationManager webhookNotificationManager,
-            IDataProtectionProvider dataProtector)
+            IDataProtectionProvider dataProtector,
+            NBXplorerDashboard Dashboard)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -89,6 +90,7 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
+            _Dashboard = Dashboard;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
@@ -107,6 +109,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
+        private readonly NBXplorerDashboard _Dashboard;
 
         [TempData]
         public bool StoreNotConfigured
@@ -141,6 +144,13 @@ namespace BTCPayServer.Controllers
             {
                 return this.HttpContext.GetStoreData();
             }
+        }
+
+        public bool TaprootSupported(string crytoCode)
+        {
+            var networkSupport = ((BTCPayNetwork)_NetworkProvider.GetNetwork(crytoCode))?.NBitcoinNetwork?.Consensus?.SupportTaproot is true;
+            var status = _Dashboard.Get(crytoCode).Status;
+            return networkSupport && !(status.NetworkType == ChainName.Mainnet && status.ChainHeight < 709632);
         }
 
 
@@ -444,7 +454,7 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
-            model.PaymentMethodCriteria??= new List<PaymentMethodCriteriaViewModel>();
+            model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {
                 var methodCriterion = model.PaymentMethodCriteria[index];
@@ -457,7 +467,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -550,7 +560,7 @@ namespace BTCPayServer.Controllers
                 }
             }
         }
-        
+
         [HttpGet("{storeId}")]
         public async Task<IActionResult> UpdateStore()
         {
@@ -575,16 +585,16 @@ namespace BTCPayServer.Controllers
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             vm.HintWallet = storeBlob.Hints.Wallet;
             vm.HintLightning = storeBlob.Hints.Lightning;
-            
+
             (bool canUseHotWallet, _) = await CanUseHotWallet();
             vm.CanUsePayJoin = canUseHotWallet && store
                 .GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet);
-            
+
             return View(vm);
         }
-        
+
         [HttpPost("{storeId}")]
         public async Task<IActionResult> UpdateStore(StoreViewModel model, string command = null)
         {
@@ -704,7 +714,7 @@ namespace BTCPayServer.Controllers
             {
                 // ignored
             }
-            
+
             return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
         }
 

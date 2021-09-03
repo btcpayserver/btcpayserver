@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
             if (appData == null)
                 return NotFound();
             if (await _AppService.DeleteApp(appData))
-                TempData[WellKnownTempData.SuccessMessage] = "App removed successfully";
+                TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
             return RedirectToAction(nameof(ListApps));
         }
 
@@ -183,14 +183,13 @@ namespace BTCPayServer.Controllers
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel($"Delete app {appData.Name} ({appData.AppType})", "This app will be removed from this store", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{appData.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
             return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
-
 
         private string GetUserId()
         {

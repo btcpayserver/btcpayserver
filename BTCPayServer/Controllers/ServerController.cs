@@ -549,7 +549,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/services/{serviceName}/{cryptoCode}/removelndseed")]
         public IActionResult RemoveLndSeed(string serviceName, string cryptoCode)
         {
-            return View("Confirm", new ConfirmModel("Delete LND Seed", "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server, are you sure to continue?", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete LND seed", "This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup. Are you sure?", "Delete"));
         }
 
         [HttpPost("server/services/{serviceName}/{cryptoCode}/removelndseed")]
@@ -821,8 +821,8 @@ namespace BTCPayServer.Controllers
             if (i == -1)
                 return NotFound();
             return View("Confirm",
-                new ConfirmModel($"Delete the dynamic DNS service for {hostname}",
-                    "BTCPayServer will stop updating this DNS record periodically.", "Delete"));
+                new ConfirmModel("Delete dynamic DNS service",
+                    $"Deleting the dynamic DNS service for <strong>{hostname}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
         }
         
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]

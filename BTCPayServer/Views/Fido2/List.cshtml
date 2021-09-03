@@ -17,7 +17,7 @@
         <tr>
             <td>@name</td>
             <td class="text-end">
-                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-text="Remove FIDO2 device @name" data-item-id="@name">Remove</a>
+                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Your account will no longer have the credential <strong>@name</strong> as an option for multi-factor authentication." data-item-id="@name">Remove</a>
             </td>
         </tr>
     }
@@ -46,4 +46,4 @@
     </div>
 </form>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Remove FIDO2 device", "Your account will no longer have this credential as an option for multi-factor authentication.", "Remove"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Remove FIDO2 credential", "Your account will no longer have the credential as an option for multi-factor authentication.", "Remove"))" />

@@ -153,7 +153,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId,
             string pullPaymentId)
         {
-            return View("Confirm", new ConfirmModel("Archive the pull payment", "Do you really want to archive this pull payment?", "Archive"));
+            return View("Confirm", new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"));
         }
         
         [HttpPost("{walletId}/pull-payments/{pullPaymentId}/archive")]

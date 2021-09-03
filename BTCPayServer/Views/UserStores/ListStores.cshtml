@@ -76,7 +76,7 @@
                                         {
                                             <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
                                         }
-                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-text="Delete the store @store.Name?" data-item-id="@store.Name">Remove</a>
+                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-item-id="@store.Name">Remove</a>
                                     </td>
                                 </tr>
                             }
@@ -94,4 +94,4 @@
     </div>
 </section>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />

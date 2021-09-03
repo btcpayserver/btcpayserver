@@ -20,14 +20,19 @@
                     @Model.Description
                 }
             </div>
-            <div id="ConfirmText" class="mt-3" hidden></div>
         </div>
 
         @if (!string.IsNullOrEmpty(Model.Action))
         {
-            <form method="post" class="modal-footer" action="@Model.ActionUrl" rel="noreferrer noopener">
-                <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="ConfirmCancel">Cancel</button>
-                <button type="submit" class="btn @Model.ButtonClass" id="ConfirmContinue">@Model.Action</button>
+            <form id="ConfirmForm" method="post" action="@Model.ActionUrl" rel="noreferrer noopener">
+                <div class="modal-body pt-0" id="ConfirmText" hidden>
+                    <label for="ConfirmInput" class="form-label">Confirm the action by typing <strong id="ConfirmItemId"></strong>:</label>
+                    <input id="ConfirmInput" class="form-control"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="ConfirmCancel">Cancel</button>
+                    <button type="submit" class="btn @Model.ButtonClass" id="ConfirmContinue">@Model.Action</button>
+                </div>
             </form>
         }
     </div>

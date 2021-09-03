@@ -90,8 +90,7 @@
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"
                                data-bs-target="#ConfirmModal"
-                               data-text="@pp.Name"
-                               data-item-id="@pp.Name">Archive</a>
+                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">Archive</a>
                         </td>
                     </tr>
                 }
@@ -100,7 +99,7 @@
         </div>
     </div>
     
-    <partial name="_Confirm" model="@(new ConfirmModel("Archive the pull payment", "Do you really want to archive this pull payment?", "Archive"))" />
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />
 
     @section PageFootContent {
         <script>

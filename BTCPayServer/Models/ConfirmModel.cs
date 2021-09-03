@@ -1,3 +1,5 @@
+using System;
+
 namespace BTCPayServer.Models
 {
     public class ConfirmModel
@@ -12,6 +14,11 @@ namespace BTCPayServer.Models
             Description = desc;
             Action = action;
             ButtonClass = buttonClass;
+
+            if (Description.Contains("<strong>", StringComparison.InvariantCultureIgnoreCase))
+            {
+                DescriptionHtml = true;
+            }
         }
 
         public string Title { get; set; }

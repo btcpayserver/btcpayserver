@@ -47,7 +47,7 @@
                         <td>@token.Label</td>
                         <td class="text-end">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - 
-                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-text="Revoke the token @token.Label" data-item-id="@token.Label">Revoke</a>
+                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@token.Label</strong> will be revoked." data-item-id="@token.Label">Revoke</a>
                         </td>
                     </tr>
                 }
@@ -85,5 +85,5 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Revoke the token", "The access token with the label will be revoked, do you wish to continue?", "Revoke"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" />
 

@@ -8,22 +8,36 @@
     const modal = document.getElementById('ConfirmModal')
     modal.addEventListener('show.bs.modal', event => {
         const $target = event.relatedTarget
+        const $form = document.getElementById('ConfirmForm')
         const $text = document.getElementById('ConfirmText')
+        const $continue = document.getElementById('ConfirmContinue')
         const { title, description, text, confirm, itemId } = $target.dataset
         const action = $target.dataset.action || ($target.nodeName === 'A'
             ? $target.getAttribute('href')
             : $target.form.getAttribute('action'))
         
-        modal.querySelector('form').setAttribute('action', action)
+        $form.setAttribute('action', action)
         
         if (title) document.getElementById('ConfirmTitle').textContent = title
-        if (confirm) document.getElementById('ConfirmContinue').textContent = confirm
-        if (description) document.getElementById('ConfirmDescription').textContent = description
+        if (confirm) $continue.textContent = confirm
+        if (description) {
+            document.getElementById('ConfirmDescription').innerHTML = description
+        }
         if (text) {
             $text.textContent = text
+        }
+        if (itemId) {
             $text.removeAttribute('hidden')
+            $continue.setAttribute('disabled', 'disabled')
+            document.getElementById('ConfirmItemId').textContent = itemId
+            document.getElementById('ConfirmInput').addEventListener('input', event => {
+                event.target.value.trim().toLowerCase() === itemId.toLowerCase()
+                    ? $continue.removeAttribute('disabled')
+                    : $continue.setAttribute('disabled', 'disabled')
+            })
         } else {
-            $text.setAttribute('hidden', 'hidden')  
+            $text.setAttribute('hidden', 'hidden')
+            $continue.removeAttribute('disabled')
         }
     });
 </script>

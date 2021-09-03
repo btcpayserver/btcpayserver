@@ -184,7 +184,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
                 return View(vm);
             }
-            TempData[WellKnownTempData.SuccessMessage] = "User added successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "User added successfully.";
             return RedirectToAction(nameof(StoreUsers));
         }
 
@@ -194,14 +194,14 @@ namespace BTCPayServer.Controllers
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Remove store user", $"Are you sure you want to remove store access for {user.Email}?", "Remove"));
+            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{user.Email}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
         }
 
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
             await _Repo.RemoveStoreUser(storeId, userId);
-            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
             return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 
@@ -657,14 +657,14 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/delete")]
         public IActionResult DeleteStore(string storeId)
         {
-            return View("Confirm", new ConfirmModel("Delete this store", "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?", "Delete"));
         }
 
         [HttpPost("{storeId}/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             await _Repo.DeleteStore(CurrentStore.Id);
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted";
+            TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
             return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
         }
 
@@ -731,7 +731,7 @@ namespace BTCPayServer.Controllers
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?", "Revoke"));
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{token.Label}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
         
         [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
@@ -741,7 +741,7 @@ namespace BTCPayServer.Controllers
             if (token == null ||
                 token.StoreId != CurrentStore.Id ||
                !await _TokenRepository.DeleteToken(tokenId))
-                TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token";
+                TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token.";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
             return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId });

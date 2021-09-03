@@ -51,7 +51,7 @@
                         <td>@user.Email</td>
                         <td>@user.Role</td>
                         <td style="text-align:right">
-                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Are you sure you want to remove store access for @user.Email?" data-item-id="@user.Email">Remove</a>
+                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@user.Email</strong> from accessing this store and its settings." data-item-id="@user.Email">Remove</a>
                         </td>
                     </tr>
                 }
@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Remove store user", "Are you sure you want to remove store access for this user?", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Remove store user", "This action will prevent the user from accessing this store and its settings. Are you sure?", "Delete"))" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

@@ -40,7 +40,7 @@
 <div class="list-group">
     @if (Model.Is2faEnabled)
     {
-        <a asp-action="Disable2fa" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Disable two-factor authentication (2FA)" data-description="Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key used in an authenticator app you should reset your authenticator keys." data-confirm="Disable 2FA">
+        <a asp-action="Disable2fa" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Disable two-factor authentication (2FA)" data-description="Disabling 2FA does not change the keys used in the authenticator apps. If you wish to change the key used in an authenticator app you should reset your authenticator keys." data-confirm="Disable 2FA">
             <div>
                 <h5>Disable 2FA</h5>
                 <p class="mb-0 me-3">Disable two-factor authentication. Re-enabling will not require you to reconfigure your Authenticator app. </p>
@@ -81,5 +81,5 @@
     }
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("2FA", "Your account will no longer have this credential as an option for MFA.", "Remove"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Remove 2FA credential", "Your account will no longer have the credential as an option for multi-factor authentication.", "Remove"))" />
 

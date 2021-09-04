@@ -333,7 +333,8 @@ svg.icon-note {
 .notification-badge {
     position: relative;
     top: -1px;
-    min-width: 2em;
+    min-width: 1.5em;
+    padding: .25em;
 }
 
 @media (min-width: 992px) {
@@ -342,7 +343,7 @@ svg.icon-note {
     }
     .notification-badge {
         position: absolute;
-        top: 0;
+        top: .125rem;
         left: 1rem;
     }
 }

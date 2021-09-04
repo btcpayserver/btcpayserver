@@ -55,7 +55,9 @@ namespace BTCPayServer.Controllers
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
-            vm.CanUseTaproot = TaprootSupported(vm.CryptoCode);
+            vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
+            vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
+            vm.IsTaprootActivated = TaprootActivated(vm.CryptoCode);
 
             if (vm.Method == null)
             {
@@ -110,11 +112,6 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     strategy = ParseDerivationStrategy(vm.DerivationScheme, network);
-                    if(strategy.AccountDerivation is TaprootDerivationStrategy && !TaprootSupported(vm.CryptoCode))
-                    {
-                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Taproot is not supported");
-                        return View(vm.ViewName, vm);
-                    }
                     strategy.Source = "ManualDerivationScheme";
                     if (!string.IsNullOrEmpty(vm.AccountKey))
                     {
@@ -214,7 +211,9 @@ namespace BTCPayServer.Controllers
 
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
-            vm.CanUseTaproot = TaprootSupported(vm.CryptoCode);
+            vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
+            vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
+            vm.IsTaprootActivated = TaprootActivated(vm.CryptoCode);
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
 
@@ -266,14 +265,11 @@ namespace BTCPayServer.Controllers
                 IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
                 DerivationSchemeFormat = "BTCPay",
                 CanUseHotWallet = hotWallet,
-                CanUseRPCImport = rpcImport
+                CanUseRPCImport = rpcImport,
+                IsTaprootActivated = TaprootActivated(cryptoCode),
+                SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
+                SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
             };
-
-            if (request.ScriptPubKeyType == ScriptPubKeyType.TaprootBIP86 && !TaprootSupported(cryptoCode) )
-            {
-                ModelState.AddModelError(nameof(request.ScriptPubKeyType), $"Taproot not supported");
-                return View(vm.ViewName, vm);
-            }
             
             if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
             {

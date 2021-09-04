@@ -146,11 +146,16 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        public bool TaprootSupported(string crytoCode)
+        public bool TaprootActivated(string crytoCode)
         {
-            var networkSupport = ((BTCPayNetwork)_NetworkProvider.GetNetwork(crytoCode))?.NBitcoinNetwork?.Consensus?.SupportTaproot is true;
+            var network = (BTCPayNetwork)_NetworkProvider.GetNetwork(crytoCode);
+#pragma warning disable CS0618
+            if (!(network.IsBTC && network.NBitcoinNetwork.ChainName == ChainName.Mainnet))
+                // Consider it activated for everything that is not mainnet bitcoin
+                return true;
+#pragma warning restore CS0618
             var status = _Dashboard.Get(crytoCode).Status;
-            return networkSupport && !(status.NetworkType == ChainName.Mainnet && status.ChainHeight < 709632);
+            return  status.ChainHeight >= 709632;
         }
 
 

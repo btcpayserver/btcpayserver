@@ -48,19 +48,5 @@ namespace BTCPayServer.Services.Invoices
                 eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
             }
         }
-
-        public static PaymentMethodId GetDefaultPaymentId(
-            this InvoiceRepository invoiceRepository,
-            PaymentMethodId[] paymentMethodIds,
-            InvoiceEntity invoice
-        )
-        {
-            PaymentMethodId.TryParse(invoice.DefaultPaymentMethod, out var defaultPaymentId);
-            var chosen = paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
-                         paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
-                         paymentMethodIds.FirstOrDefault();
-            return chosen;
-        }
-
     }
 }

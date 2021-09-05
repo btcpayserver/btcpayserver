@@ -95,6 +95,10 @@
                                 <label class="form-label">Buy Button Text</label>
                                 <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
                             </div>
+                            <div class="form-group d-flex align-items-center">
+                                <input type="checkbox" id="Hidden" class="btcpay-toggle me-2" v-model="editingItem.hidden" ref="txtHiddenText" />
+                                <label class="form-label mb-0">Hidden</label>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -167,7 +171,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 for (var kl in lines) {
                     var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
                         id = null, price = null, title = null, description = null, image = null,
-                        custom = null, buyButtonText = null, inventory = null, paymentMethods = [];
+                        custom = null, buyButtonText = null, inventory = null, paymentMethods = [],
+                        hidden = false;
 
                     for (var kp in product) {
                         var productProperty = product[kp].trim();
@@ -212,6 +217,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (productProperty.indexOf('payment_methods:') !== -1) {
                             goingThroughMethods = true;
                         }
+                        if (productProperty.indexOf('hidden:') !== -1) {
+                            hidden = productProperty.replace('hidden:', '').trim() === "true";
+                        }
                     }
             
                     if (price != null || title != null) {
@@ -225,7 +233,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             custom: custom === "true",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
-                            paymentMethods: paymentMethods
+                            paymentMethods: paymentMethods,
+                            hidden: hidden
                         });
                     }                    
                 }
@@ -244,7 +253,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             custom = product.custom,
                             buyButtonText = product.buyButtonText,
                             inventory = product.inventory,
-                            paymentMethods = product.paymentMethods;
+                            paymentMethods = product.paymentMethods,
+                            hidden = product.hidden;
 
                         template += id + ':\n' +
                         '  price: ' + parseFloat(price).noExponents() + '\n' +
@@ -265,6 +275,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (buyButtonText != null && buyButtonText.length > 0) {
                             template += '  buyButtonText: ' + buyButtonText + '\n';
                         }
+                        if (hidden != null) {
+                            template += '  hidden: ' + hidden.toString() + '\n';
+                        }
                         if(paymentMethods != null && paymentMethods.length > 0){
                             template+= '  payment_methods:\n';
                             for (var method of paymentMethods){
@@ -278,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: []};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: [], hidden: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }
@@ -369,7 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             unEscape: function(item){
                 for(var k in item){
-                    if(k !== "paymentMethods" && k!=="id"){
+                    if(k !== "paymentMethods" && k!=="id" && k !== "hidden"){
                         item[k] = this.unEscapeKey(item[k]);
                     }
                 }

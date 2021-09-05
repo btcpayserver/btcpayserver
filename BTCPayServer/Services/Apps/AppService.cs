@@ -290,6 +290,7 @@ namespace BTCPayServer.Services.Apps
                     itemNode.Add("image", new YamlScalarNode(item.Image));
                 }
                 itemNode.Add("custom", new YamlScalarNode(item.Custom.ToStringLowerInvariant()));
+                itemNode.Add("hidden", new YamlScalarNode(item.Hidden.ToStringLowerInvariant()));
                 if (item.Inventory.HasValue)
                 {
                     itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
@@ -337,7 +338,8 @@ namespace BTCPayServer.Services.Apps
                     Custom = c.GetDetailString("custom") == "true",
                     BuyButtonText = c.GetDetailString("buyButtonText"),
                     Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
-                    PaymentMethods = c.GetDetailStringList("payment_methods")
+                    PaymentMethods = c.GetDetailStringList("payment_methods"),
+                    Hidden = c.GetDetailString("hidden") == "true"
                 })
                 .ToArray();
         }

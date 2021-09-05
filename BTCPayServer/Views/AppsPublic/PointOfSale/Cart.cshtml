@@ -216,6 +216,10 @@
                     var image = item.Image;
                     var description = item.Description;
 
+                    @if (item.Hidden) {
+                        continue;
+                    }
+
                     <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
                         @if (!string.IsNullOrWhiteSpace(image))
                         {

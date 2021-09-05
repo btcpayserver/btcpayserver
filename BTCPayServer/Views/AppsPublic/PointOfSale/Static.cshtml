@@ -26,6 +26,10 @@
                         : item.BuyButtonText)
                     .Replace("{0}",item.Price.Formatted)
                     .Replace("{Price}",item.Price.Formatted);
+                @if (item.Hidden) {
+                    continue;
+                }
+
                 <div class="card px-0" data-id="@x">
                     @if (!String.IsNullOrWhiteSpace(item.Image))
                     {

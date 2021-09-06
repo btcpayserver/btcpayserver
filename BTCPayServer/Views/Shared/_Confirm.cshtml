@@ -10,27 +10,25 @@
         const $target = event.relatedTarget
         const $form = document.getElementById('ConfirmForm')
         const $text = document.getElementById('ConfirmText')
+        const $title = document.getElementById('ConfirmTitle')
+        const $description = document.getElementById('ConfirmDescription')
+        const $input = document.getElementById('ConfirmInput')
+        const $inputText = document.getElementById('ConfirmInputText')
         const $continue = document.getElementById('ConfirmContinue')
-        const { title, description, text, confirm, confirmInput } = $target.dataset
+        const { title, description, confirm, confirmInput } = $target.dataset
         const action = $target.dataset.action || ($target.nodeName === 'A'
             ? $target.getAttribute('href')
             : $target.form.getAttribute('action'))
         
-        $form.setAttribute('action', action)
-        
-        if (title) document.getElementById('ConfirmTitle').textContent = title
+        if ($form) $form.setAttribute('action', action)
+        if (title) $title.textContent = title
+        if (description) $description.innerHTML = description
         if (confirm) $continue.textContent = confirm
-        if (description) {
-            document.getElementById('ConfirmDescription').innerHTML = description
-        }
-        if (text) {
-            $text.textContent = text
-        }
         if (confirmInput) {
             $text.removeAttribute('hidden')
             $continue.setAttribute('disabled', 'disabled')
-            document.getElementById('ConfirmInputText').textContent = confirmInput
-            document.getElementById('ConfirmInput').addEventListener('input', event => {
+            $inputText.textContent = confirmInput
+            $input.addEventListener('input', event => {
                 event.target.value.trim() === confirmInput
                     ? $continue.removeAttribute('disabled')
                     : $continue.setAttribute('disabled', 'disabled')

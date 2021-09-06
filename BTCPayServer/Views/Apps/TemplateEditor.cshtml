@@ -96,8 +96,8 @@
                                 <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
                             </div>
                             <div class="form-group d-flex align-items-center">
-                                <input type="checkbox" id="Hidden" class="btcpay-toggle me-2" v-model="editingItem.hidden" ref="txtHiddenText" />
-                                <label class="form-label mb-0">Hidden</label>
+                                <input type="checkbox" id="Unavailable" class="btcpay-toggle me-2" v-model="editingItem.unavailable" />
+                                <label class="form-label mb-0">Unavailable</label>
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
                         id = null, price = null, title = null, description = null, image = null,
                         custom = null, buyButtonText = null, inventory = null, paymentMethods = [],
-                        hidden = false;
+                        unavailable = false;
 
                     for (var kp in product) {
                         var productProperty = product[kp].trim();
@@ -217,8 +217,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (productProperty.indexOf('payment_methods:') !== -1) {
                             goingThroughMethods = true;
                         }
-                        if (productProperty.indexOf('hidden:') !== -1) {
-                            hidden = productProperty.replace('hidden:', '').trim() === "true";
+                        if (productProperty.indexOf('unavailable:') !== -1) {
+                            unavailable = productProperty.replace('unavailable:', '').trim() === "true";
                         }
                     }
             
@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods,
-                            hidden: hidden
+                            unavailable: unavailable
                         });
                     }                    
                 }
@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             buyButtonText = product.buyButtonText,
                             inventory = product.inventory,
                             paymentMethods = product.paymentMethods,
-                            hidden = product.hidden;
+                            unavailable = product.unavailable;
 
                         template += id + ':\n' +
                         '  price: ' + parseFloat(price).noExponents() + '\n' +
@@ -275,8 +275,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (buyButtonText != null && buyButtonText.length > 0) {
                             template += '  buyButtonText: ' + buyButtonText + '\n';
                         }
-                        if (hidden != null) {
-                            template += '  hidden: ' + hidden.toString() + '\n';
+                        if (unavailable != null) {
+                            template += '  unavailable: ' + unavailable.toString() + '\n';
                         }
                         if(paymentMethods != null && paymentMethods.length > 0){
                             template+= '  payment_methods:\n';
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: [], hidden: false};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: [], unavailable: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }
@@ -382,7 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             unEscape: function(item){
                 for(var k in item){
-                    if(k !== "paymentMethods" && k!=="id" && k !== "hidden"){
+                    if(k !== "paymentMethods" && k!=="id" && k !== "unavailable"){
                         item[k] = this.unEscapeKey(item[k]);
                     }
                 }

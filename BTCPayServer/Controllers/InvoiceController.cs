@@ -257,39 +257,48 @@ namespace BTCPayServer.Controllers
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
 
-            // This loop ends with .ToList so we are querying all payment methods at once
-            // instead of sequentially to improve response time
-            foreach (var o in store.GetSupportedPaymentMethods(_NetworkProvider)
-                                               .Where(s => !excludeFilter.Match(s.PaymentId) && _paymentMethodHandlerDictionary.Support(s.PaymentId))
-                                               .Select(c =>
-                                                (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
-                                                SupportedPaymentMethod: c,
-                                                Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
-                                                .Where(c => c.Network != null)
-                                                .Select(o =>
-                                                    (SupportedPaymentMethod: o.SupportedPaymentMethod,
-                                                    PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))
-                                                .ToList())
-            {
-                var paymentMethod = await o.PaymentMethod;
-                if (paymentMethod == null)
-                    continue;
-                supported.Add(o.SupportedPaymentMethod);
-                paymentMethods.Add(paymentMethod);
-            }
+            bool noNeedForMethods = entity.Type != InvoiceType.TopUp && entity.Price == 0m;
 
-            if (supported.Count == 0)
+            if (!noNeedForMethods)
             {
-                StringBuilder errors = new StringBuilder();
-                if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
-                    errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
-                foreach (var error in logs.ToList())
+
+                // This loop ends with .ToList so we are querying all payment methods at once
+                // instead of sequentially to improve response time
+                foreach (var o in store.GetSupportedPaymentMethods(_NetworkProvider)
+                    .Where(s => !excludeFilter.Match(s.PaymentId) &&
+                                _paymentMethodHandlerDictionary.Support(s.PaymentId))
+                    .Select(c =>
+                        (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
+                            SupportedPaymentMethod: c,
+                            Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
+                    .Where(c => c.Network != null)
+                    .Select(o =>
+                        (SupportedPaymentMethod: o.SupportedPaymentMethod,
+                            PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler,
+                                o.SupportedPaymentMethod, o.Network, entity, store, logs)))
+                    .ToList())
                 {
-                    errors.AppendLine(error.ToString());
+                    var paymentMethod = await o.PaymentMethod;
+                    if (paymentMethod == null)
+                        continue;
+                    supported.Add(o.SupportedPaymentMethod);
+                    paymentMethods.Add(paymentMethod);
                 }
-                throw new BitpayHttpException(400, errors.ToString());
-            }
 
+                if (supported.Count == 0)
+                {
+                    StringBuilder errors = new StringBuilder();
+                    if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
+                        errors.AppendLine(
+                            "Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
+                    foreach (var error in logs.ToList())
+                    {
+                        errors.AppendLine(error.ToString());
+                    }
+
+                    throw new BitpayHttpException(400, errors.ToString());
+                }
+            }
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             foreach (var app in await getAppsTaggingStore)

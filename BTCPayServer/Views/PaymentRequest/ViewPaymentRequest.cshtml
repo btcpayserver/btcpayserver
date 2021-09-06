@@ -126,7 +126,7 @@
                                     <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" data-test="pay-button">
                                         Pay Invoice
                                     </a>
-                                    if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
+                                    if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
                                     {
                                         <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-id="@Model.Id" class="mt-2 d-print-none">
                                             <button class="btn btn-outline-secondary w-100 text-nowrap" type="submit">Cancel Invoice</button>

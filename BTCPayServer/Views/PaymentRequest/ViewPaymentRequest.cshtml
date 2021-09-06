@@ -169,18 +169,20 @@
                                 </form>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading" data-test="pay-button">
+                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments) || !srvModel.allowCustomPaymentAmounts}" v-on:click="pay(null)" :disabled="loading" data-test="pay-button">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                     <span>Pay Invoice</span>
                                 </button>
-                                <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
-                                    <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
-                                    <span>Cancel Invoice</span>
-                                </button>
+                                @if (Model.AllowCustomPaymentAmounts) {
+                                    <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                        <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </span>
+                                        <span>Cancel Invoice</span>
+                                    </button>
+                                }
                             </template>
                         </template>
                         <template v-else>

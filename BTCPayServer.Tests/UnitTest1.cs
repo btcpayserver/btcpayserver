@@ -2904,6 +2904,21 @@ namespace BTCPayServer.Tests
                 });
                 Assert.Equal(50.51m, invoice5g.Amount);
                 Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
+                
+                var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+                {
+                    Amount = 0m,
+                    Currency = "USD" 
+                });
+                Assert.Equal(InvoiceStatus.New, zeroInvoice.Status);
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    zeroInvoice = await greenfield.GetInvoice(user.StoreId, zeroInvoice.Id);
+                    Assert.Equal(InvoiceStatus.Settled, zeroInvoice.Status);
+                });
+
+                var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(user.StoreId, zeroInvoice.Id);
+                Assert.Empty(zeroInvoicePM);
             }
         }
 

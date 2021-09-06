@@ -86,8 +86,24 @@ namespace BTCPayServer.HostedServices
             }
             var allPaymentMethods = invoice.GetPaymentMethods();
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting);
-            if (paymentMethod == null)
+            if (allPaymentMethods.Any() && paymentMethod == null)
                 return;
+            if (accounting is null && invoice.Price is 0m)
+            {
+                accounting = new PaymentMethodAccounting()
+                {
+                    Due = Money.Zero,
+                    Paid = Money.Zero,
+                    CryptoPaid = Money.Zero,
+                    DueUncapped = Money.Zero,
+                    NetworkFee = Money.Zero,
+                    TotalDue = Money.Zero,
+                    TxCount = 0,
+                    TxRequired = 0,
+                    MinimumTotalDue = Money.Zero,
+                    NetworkFeeAlreadyPaid = Money.Zero
+                };
+            }
             if (invoice.Status == InvoiceStatusLegacy.New || invoice.Status == InvoiceStatusLegacy.Expired)
             {
                 var isPaid = invoice.IsUnsetTopUp() ?
@@ -153,7 +169,9 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatusLegacy.Paid)
             {
-                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy));
+                var confirmedAccounting =
+                    paymentMethod?.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy)) ??
+                    accounting;
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
@@ -177,7 +195,8 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatusLegacy.Confirmed)
             {
-                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p));
+                var completedAccounting = paymentMethod?.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p)) ??
+                                          accounting;
                 if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Completed));

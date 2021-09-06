@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("~/api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKey(string id)
+        public async Task<IActionResult> DeleteAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))
@@ -44,12 +44,12 @@ namespace BTCPayServer.Controllers
                 DescriptionHtml = true,
                 Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
                 Action = "Delete",
-                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
+                ActionUrl = Url.ActionLink(nameof(DeleteAPIKeyPost), values: new { id })
             });
         }
 
         [HttpPost("~/api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKeyPost(string id)
+        public async Task<IActionResult> DeleteAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))

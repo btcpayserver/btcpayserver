@@ -979,13 +979,21 @@ namespace BTCPayServer.Controllers
             var data = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
             return View(data);
         }
-        
+
         [Route("server/theme")]
         [HttpPost]
         public async Task<IActionResult> Theme(ThemeSettings settings)
         {
-            await _SettingsRepository.UpdateSetting(settings);
-            TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
+            if (settings.CustomTheme && !Uri.IsWellFormedUriString(settings.CssUri, UriKind.RelativeOrAbsolute))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Please provide a non-empty theme URI";
+            }
+            else
+            {
+                await _SettingsRepository.UpdateSetting(settings);
+                TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
+            }
+
             return View(settings);
         }
 

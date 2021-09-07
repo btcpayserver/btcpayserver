@@ -52,7 +52,6 @@ namespace BTCPayServer.Controllers
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
             vm.Network = network;
-            vm.RootKeyPath = network.GetRootKeyPath();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
@@ -82,7 +81,6 @@ namespace BTCPayServer.Controllers
             }
 
             vm.Network = network;
-            vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
 
             var wallet = _WalletProvider.GetWallet(network);
@@ -214,7 +212,6 @@ namespace BTCPayServer.Controllers
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
             vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
             vm.IsTaprootActivated = TaprootActivated(vm.CryptoCode);
-            vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
 
             if (vm.Method == null)
@@ -260,7 +257,6 @@ namespace BTCPayServer.Controllers
                 SetupRequest = request,
                 Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
                 Network = network,
-                RootKeyPath = network.GetRootKeyPath(),
                 Source = isImport ? "SeedImported" : "NBXplorerGenerated",
                 IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
                 DerivationSchemeFormat = "BTCPay",
@@ -389,7 +385,6 @@ namespace BTCPayServer.Controllers
 
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
-            vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
             vm.Source = derivation.Source;
             vm.RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString();

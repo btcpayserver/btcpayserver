@@ -22,8 +22,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string RootFingerprint { get; set; }
         public bool Confirmation { get; set; }
 
-        public KeyPath RootKeyPath { get; set; }
-
         [Display(Name = "Wallet file")]
         public IFormFile WalletFile { get; set; }
         [Display(Name = "Wallet file content")]

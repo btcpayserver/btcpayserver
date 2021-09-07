@@ -70,40 +70,6 @@ namespace BTCPayServer
         public bool SupportPayJoin { get; set; } = false;
         public bool SupportLightning { get; set; } = true;
 
-        public KeyPath GetRootKeyPath(DerivationType type)
-        {
-            KeyPath baseKey;
-            if (!NBitcoinNetwork.Consensus.SupportSegwit)
-            {
-                baseKey = new KeyPath("44'");
-            }
-            else
-            {
-                switch (type)
-                {
-                    case DerivationType.Legacy:
-                        baseKey = new KeyPath("44'");
-                        break;
-                    case DerivationType.SegwitP2SH:
-                        baseKey = new KeyPath("49'");
-                        break;
-                    case DerivationType.Segwit:
-                        baseKey = new KeyPath("84'");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
-                }
-            }
-            return baseKey
-                .Derive(CoinType);
-        }
-
-        public KeyPath GetRootKeyPath()
-        {
-            return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
-                .Derive(CoinType);
-        }
-
         public override T ToObject<T>(string json)
         {
             return NBXplorerNetwork.Serializer.ToObject<T>(json);

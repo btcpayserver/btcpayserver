@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,12 +12,10 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
-using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -30,8 +29,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -223,16 +220,16 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("runid")]
         [AllowAnonymous]
-        public IActionResult SeeRunId(string expected = null)
+        public IActionResult SeeRunId(string? expected = null)
         {
             if (expected == RunId)
                 return Ok();
             return BadRequest();
         }
 
-        private async Task<IActionResult> RunSSH(MaintenanceViewModel vm, string command)
+        private async Task<IActionResult?> RunSSH(MaintenanceViewModel vm, string command)
         {
-            SshClient sshClient = null;
+            SshClient? sshClient = null;
 
             try
             {
@@ -410,7 +407,7 @@ namespace BTCPayServer.Controllers
             return apps;
         }
 
-        private static bool TryParseAsExternalService(TorService torService, out ExternalService externalService)
+        private static bool TryParseAsExternalService(TorService torService, out ExternalService? externalService)
         {
             externalService = null;
             if (torService.ServiceType == TorServiceType.P2P)
@@ -438,7 +435,7 @@ namespace BTCPayServer.Controllers
             return externalService != null;
         }
 
-        private ExternalService GetService(string serviceName, string cryptoCode)
+        private ExternalService? GetService(string serviceName, string cryptoCode)
         {
             var result = _externalServiceOptions.Value.ExternalServices.GetService(serviceName, cryptoCode);
             if (result != null)
@@ -666,7 +663,7 @@ namespace BTCPayServer.Controllers
             if (service == null)
                 return NotFound();
 
-            ExternalConnectionString connectionString = null;
+            ExternalConnectionString? connectionString = null;
             try
             {
                 connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
@@ -734,7 +731,7 @@ namespace BTCPayServer.Controllers
         }
         [Route("server/services/dynamic-dns")]
         [HttpPost]
-        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string command = null)
+        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string? command = null)
         {
             if (!ModelState.IsValid)
             {
@@ -773,7 +770,7 @@ namespace BTCPayServer.Controllers
         }
         [Route("server/services/dynamic-dns/{hostname}")]
         [HttpPost]
-        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string hostname, string command = null)
+        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string hostname, string? command = null)
         {
             if (!ModelState.IsValid)
             {
@@ -893,7 +890,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/services/ssh")]
-        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string command = null)
+        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string? command = null)
         {
             if (!await CanShowSSHService())
                 return NotFound();
@@ -904,7 +901,7 @@ namespace BTCPayServer.Controllers
                 newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
 
                 bool updated = false;
-                Exception exception = null;
+                Exception? exception = null;
                 // Let's try to just write the file
                 if (CanAccessAuthorizedKeyFile())
                 {
@@ -1059,7 +1056,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/logs/{file?}")]
-        public async Task<IActionResult> LogsView(string file = null, int offset = 0)
+        public async Task<IActionResult> LogsView(string? file = null, int offset = 0)
         {
             if (offset < 0)
             {
@@ -1084,6 +1081,7 @@ namespace BTCPayServer.Controllers
 
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_Options.LogFile);
                 var fileExtension = Path.GetExtension(_Options.LogFile) ?? string.Empty;
+                // We are checking if "di" is null above yet accessing GetFiles on it, this could lead to an exception?
                 var logFiles = di.GetFiles($"{fileNameWithoutExtension}*{fileExtension}");
                 vm.LogFileCount = logFiles.Length;
                 vm.LogFiles = logFiles

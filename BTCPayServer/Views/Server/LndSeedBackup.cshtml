@@ -14,14 +14,22 @@
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <a class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" href="#">See confidential seed information</a>
-            <div class="form-group @(Model.Removed ? "" : "collapse")">
-                <div class="input-group">
-                    <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
-                    <textarea asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="@(Model.Removed ? "1" : "3")"></textarea>
-                </div>
-            </div>
-            @if (!Model.Removed)
+            
+            @if (Model.Removed)
             {
+                <div class="alert alert-light d-flex align-items-center" role="alert">
+                    <vc:icon symbol="warning" />
+                    <span class="ms-3" id="Seed">@Model.Seed</span>
+                </div>
+            }
+            else
+            {
+                <div class="form-group @(Model.Removed ? "" : "collapse")">
+                    <div class="input-group">
+                        <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
+                        <textarea asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="3"></textarea>
+                    </div>
+                </div>
                 <div class="form-group collapse">
                     <div class="input-group">
                         <label asp-for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ms-2">Password</span></label>
@@ -30,7 +38,7 @@
                 </div>
                 <div class="form-group collapse">
                     <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
-                        <button id="delete" class="btn btn-primary" type="submit">Remove Seed from server</button>
+                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete LND seed from server</button>
                     </form>
                 </div>
             }
@@ -38,8 +46,18 @@
     </div>
 }
 
+@if (!Model.Removed)
+{
+    <partial name="_Confirm" model="@(new ConfirmModel("Delete LND seed", "This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup.", "Delete"))"/>
+}
+
 @section PageFootContent {
     <script>
+        const deleteButton = document.getElementById('delete')
+        deleteButton.addEventListener('click', event => {
+            event.preventDefault()
+        });
+        
         document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("details").addEventListener("click", function () {
                 document.querySelectorAll(".form-group.collapse").forEach(el => el.classList.remove("collapse"));

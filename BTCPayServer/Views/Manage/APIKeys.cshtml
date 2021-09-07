@@ -50,14 +50,14 @@
                         @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
                         {
                             <li>
-                                <code>@permission</code>
+                                <code class="text-break">@permission</code>
                             </li>
                         }
                     </ul>
                 }
             </td>
             <td class="text-end">
-                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
+                <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@(keyData.Label ?? keyData.Id)<strong> will immediately lose access." data-confirm-input="DELETE">Delete</a>
                 <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
             </td>
@@ -79,46 +79,47 @@
     Generate new key
 </a>
 
+<partial name="_Confirm" model="@(new ConfirmModel("Delete API key", "Any application using the API key will immediately lose access.", "Delete"))" />
+
+<partial name="ShowQR"/>
+
 @section PageHeadContent {
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
 
 @section PageFootContent {
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("[data-reveal-btn]").on("click", function (){
+                var $revealButton = $(this);
+                $revealButton.attr("hidden", "true");
 
-<bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        $("[data-reveal-btn]").on("click", function (){
-            var $revealButton = $(this);
-            $revealButton.attr("hidden", "true");
+                var $apiKeyContainer = $revealButton.next("[hidden]");
+                $apiKeyContainer.removeAttr("hidden");
 
-            var $apiKeyContainer = $revealButton.next("[hidden]");
-            $apiKeyContainer.removeAttr("hidden");
-
-            (function setupCopyToClipboardButton() {
-                var $clipboardBtn = $apiKeyContainer.children("[data-clipboard-confirm]");
-                var apiKey = $apiKeyContainer.children("[data-api-key]").text().trim();
-                $clipboardBtn.attr("data-clipboard", apiKey);
-                $clipboardBtn.click(window.copyToClipboard);
-            })();
+                (function setupCopyToClipboardButton() {
+                    var $clipboardBtn = $apiKeyContainer.children("[data-clipboard-confirm]");
+                    var apiKey = $apiKeyContainer.children("[data-api-key]").text().trim();
+                    $clipboardBtn.attr("data-clipboard", apiKey);
+                    $clipboardBtn.click(window.copyToClipboard);
+                })();
+            });
+            
+            var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
+                          {
+                              ApiKey = data.Id,
+                              Host = Context.Request.GetAbsoluteRoot()
+                          }));
+            var qrApp = initQRShow("API Key QR", "", "scan-qr-modal");
+            $("button[data-qr]").on("click", function (){
+                var data =  apiKeys[parseInt($(this).data("qr"))];
+                qrApp.data = JSON.stringify(data);
+                qrApp.currentMode = "static";
+                qrApp.allowedModes = ["static"];
+                $("#scan-qr-modal").modal("show");
+            });
         });
-        
-        var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
-                      {
-                          ApiKey = data.Id,
-                          Host = Context.Request.GetAbsoluteRoot()
-                      }));
-        var qrApp = initQRShow("API Key QR", "", "scan-qr-modal");
-        $("button[data-qr]").on("click", function (){
-            var data =  apiKeys[parseInt($(this).data("qr"))];
-            qrApp.data = JSON.stringify(data);
-            qrApp.currentMode = "static";
-            qrApp.allowedModes = ["static"];
-            $("#scan-qr-modal").modal("show");
-        });
-    });
-</script>
+    </script>
 }
-
-<partial name="ShowQR"/>
 

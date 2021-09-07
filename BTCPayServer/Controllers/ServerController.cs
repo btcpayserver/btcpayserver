@@ -546,20 +546,13 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
+        [HttpGet("server/services/{serviceName}/{cryptoCode}/removelndseed")]
         public IActionResult RemoveLndSeed(string serviceName, string cryptoCode)
         {
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete LND Seed",
-                Description = "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server, are you sure to continue?",
-                Action = "Delete"
-            });
+            return View("Confirm", new ConfirmModel("Delete LND seed", "This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup. Are you sure?", "Delete"));
         }
 
-        [HttpPost]
-        [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
+        [HttpPost("server/services/{serviceName}/{cryptoCode}/removelndseed")]
         public async Task<IActionResult> RemoveLndSeedPost(string serviceName, string cryptoCode)
         {
             var service = GetService(serviceName, cryptoCode);
@@ -819,23 +812,20 @@ namespace BTCPayServer.Controllers
             this.RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
-        [HttpGet]
-        [Route("server/services/dynamic-dns/{hostname}/delete")]
+        
+        [HttpGet("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsService(string hostname)
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>() ?? new DynamicDnsSettings();
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete the dynamic dns service for " + hostname,
-                Description = "BTCPayServer will stop updating this DNS record periodically",
-                Action = "Delete"
-            });
+            return View("Confirm",
+                new ConfirmModel("Delete dynamic DNS service",
+                    $"Deleting the dynamic DNS service for <strong>{hostname}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
         }
-        [HttpPost]
-        [Route("server/services/dynamic-dns/{hostname}/delete")]
+        
+        [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsServicePost(string hostname)
         {
             var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
@@ -845,11 +835,11 @@ namespace BTCPayServer.Controllers
             settings.Services.RemoveAt(i);
             await _SettingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Dynamic DNS service successfully removed";
-            this.RouteData.Values.Remove(nameof(hostname));
+            RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
 
-        [Route("server/services/ssh")]
+        [HttpGet("server/services/ssh")]
         public async Task<IActionResult> SSHService()
         {
             if (!await CanShowSSHService())
@@ -902,8 +892,7 @@ namespace BTCPayServer.Controllers
             return _Options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
         }
 
-        [HttpPost]
-        [Route("server/services/ssh")]
+        [HttpPost("server/services/ssh")]
         public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string command = null)
         {
             if (!await CanShowSSHService())
@@ -959,26 +948,22 @@ namespace BTCPayServer.Controllers
                 }
                 return RedirectToAction(nameof(SSHService));
             }
-            else if (command is "disable")
+            
+            if (command is "disable")
             {
                 return RedirectToAction(nameof(SSHServiceDisable));
             }
+            
             return NotFound();
         }
 
-        [Route("server/services/ssh/disable")]
+        [HttpGet("server/services/ssh/disable")]
         public IActionResult SSHServiceDisable()
         {
-            return View("Confirm", new ConfirmModel()
-            {
-                Action = "Disable",
-                Title = "Disable modification of SSH settings",
-                Description = "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.",
-                ButtonClass = "btn-danger"
-            });
+            return View("Confirm", new ConfirmModel("Disable modification of SSH settings", "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.", "Disable"));
         }
-        [Route("server/services/ssh/disable")]
-        [HttpPost]
+
+        [HttpPost("server/services/ssh/disable")]
         public async Task<IActionResult> SSHServiceDisablePost()
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();

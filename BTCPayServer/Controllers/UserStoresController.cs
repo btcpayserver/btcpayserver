@@ -61,23 +61,16 @@ namespace BTCPayServer.Controllers
             get; set;
         }
 
-        [HttpGet]
-        [Route("{storeId}/me/delete")]
+        [HttpGet("{storeId}/me/delete")]
         public IActionResult DeleteStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete store " + store.StoreName,
-                Description = "This store will still be accessible to users sharing it",
-                Action = "Delete"
-            });
+            return View("Confirm", new ConfirmModel($"Delete store {store.StoreName}", "This store will still be accessible to users sharing it", "Delete"));
         }
 
-        [HttpPost]
-        [Route("{storeId}/me/delete")]
+        [HttpPost("{storeId}/me/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();

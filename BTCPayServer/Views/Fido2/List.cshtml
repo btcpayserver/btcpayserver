@@ -13,10 +13,11 @@
     <tbody>
     @foreach (var device in Model.Credentials)
     {
+        var name = string.IsNullOrEmpty(device.Name) ? "Unnamed FIDO2 credential" : device.Name;
         <tr>
-            <td>@(string.IsNullOrEmpty(device.Name)? "Unnamed FIDO2 credential": device.Name)</td>
+            <td>@name</td>
             <td class="text-end">
-                <a asp-action="Remove" asp-route-id="@device.Id">Remove</a>
+                <a asp-action="Remove" asp-route-id="@device.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Your account will no longer have the credential <strong>@name</strong> as an option for multi-factor authentication." data-confirm-input="REMOVE">Remove</a>
             </td>
         </tr>
     }
@@ -44,3 +45,5 @@
         </div>
     </div>
 </form>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Remove FIDO2 credential", "Your account will no longer have the credential as an option for multi-factor authentication.", "Remove"))" />

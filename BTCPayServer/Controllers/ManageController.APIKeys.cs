@@ -30,26 +30,26 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet("api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKey(string id)
+        [HttpGet("~/api-keys/{id}/delete")]
+        public async Task<IActionResult> DeleteAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))
             {
                 return NotFound();
             }
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
-                Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
+                Title = "Delete API key",
                 DescriptionHtml = true,
-                Description = $"Any application using this API key will immediately lose access: <code>{key.Id}</code>",
+                Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
                 Action = "Delete",
-                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
+                ActionUrl = Url.ActionLink(nameof(DeleteAPIKeyPost), values: new { id })
             });
         }
 
-        [HttpPost("api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKeyPost(string id)
+        [HttpPost("~/api-keys/{id}/delete")]
+        public async Task<IActionResult> DeleteAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))

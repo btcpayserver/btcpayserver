@@ -62,20 +62,20 @@
                     <h5>Test results:</h5>
                     <table class="table table-hover table-responsive-md">
                         <tbody>
-                            @foreach (var result in Model.TestRateRules)
-                            {
-                                <tr>
-                                    @if (result.Error)
-                                    {
-                                        <th class="small"><span class="text-danger fa fa-times"></span> @result.CurrencyPair</th>
-                                    }
-                                    else
-                                    {
-                                        <th class="small"><span class="text-success fa fa-check"></span> @result.CurrencyPair</th>
-                                    }
-                                    <td class="small">@result.Rule</td>
-                                </tr>
-                            }
+                        @foreach (var result in Model.TestRateRules)
+                        {
+                            <tr>
+                                @if (result.Error)
+                                {
+                                    <th class="small"><span class="text-danger fa fa-times"></span> @result.CurrencyPair</th>
+                                }
+                                else
+                                {
+                                    <th class="small"><span class="text-success fa fa-check"></span> @result.CurrencyPair</th>
+                                }
+                                <td class="small">@result.Rule</td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -147,7 +147,7 @@
                     </p>
                 </div>
                 <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-off" name="command">Turn off advanced rate rule scripting</button>
+                    <button type="submit" class="btn btn-secondary" value="scripting-off" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Turn off advanced rate rule scripting</button>
                 </p>
             }
             else
@@ -161,7 +161,7 @@
                     </p>
                 </div>
                 <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-on" name="command">Turn on advanced rate rule scripting</button>
+                    <button type="submit" class="btn btn-secondary" value="scripting-on" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Turn on advanced rate rule scripting</button>
                 </p>
             }
             <div class="form-group">
@@ -191,9 +191,17 @@
     </div>
 </div>
 
+<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" />
+
 @section PageFootContent {
     <script>
-        var defaultScript = @Safe.Json(Model.DefaultScript);
+        const defaultScript = @Safe.Json(Model.DefaultScript);
+        
+        const commandButton = document.querySelector('[data-bs-target="#ConfirmModal"]')
+        commandButton.dataset.action = window.location.href + '/confirm?scripting=@(!Model.ShowScripting)'
+        commandButton.addEventListener('click', event => {
+            event.preventDefault()
+        });
     </script>
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

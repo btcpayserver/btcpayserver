@@ -5286,8 +5286,8 @@ fieldset:disabled .btn {
 }
 
 .modal.fade .modal-dialog {
-  transition: transform 0.3s ease-out;
-  transform: translate(0, -50px);
+  transition: transform 0.3s cubic-bezier(0.175, 0.855, 0.32, 1.275);
+  transform: translate(0, -0.5rem);
 }
 
 .modal.show .modal-dialog {
@@ -5346,7 +5346,7 @@ fieldset:disabled .btn {
 }
 
 .modal-backdrop.show {
-  opacity: 0.5;
+  opacity: 0.85;
 }
 
 .modal-header {
@@ -6081,7 +6081,7 @@ fieldset:disabled .btn {
 }
 
 .offcanvas-backdrop.show {
-  opacity: 0.5;
+  opacity: 0.85;
 }
 
 .offcanvas-header {

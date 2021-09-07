@@ -2,41 +2,23 @@
 
 @{
     ViewData["Title"] = Model.Title;
-    Layout = null;
+    Layout = "_LayoutSimple";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <partial name="LayoutHead" />
-</head>
-<body class="bg-light">
-    <div class="modal-dialog modal-dialog-centered min-vh-100">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title w-100 text-center">@Model.Title</h4>
-            </div>
+@section PageHeadContent {
+    <style>
+        body > .content-wrapper { display: flex; min-height: 100vh; }
+        .modal-dialog .btn-close { display: none; }
+    </style>
+}
 
-            <div class="modal-body text-center">
-                @if (Model.DescriptionHtml)
-                {
-                    @Safe.Raw(Model.Description)
-                }
-                else
-                {
-                    @Model.Description
-                }
-            </div>
+@section PageFootContent {
+    <script>
+        document.getElementById('ConfirmCancel').addEventListener('click', function () {
+            history.back();
+            return false;
+        })
+    </script>
+}
 
-            @if (!string.IsNullOrEmpty(Model.Action))
-            {
-                <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl" rel="noreferrer noopener">
-                    <button type="submit" class="btn @Model.ButtonClass xmx-2" id="continue" style="min-width:25%;">@Model.Action</button>
-                    <button type="submit" class="btn btn-secondary mx-2" onclick="history.back(); return false;" style="min-width:25%;">Go back</button>
-                </form>
-            }
-        </div>
-    </div>
-    <partial name="LayoutFoot" />
-</body>
-</html>
+<partial name="ConfirmModal" model="Model" />

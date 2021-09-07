@@ -398,6 +398,9 @@ namespace BTCPayServer.Controllers
             vm.Config = ProtectString(derivation.ToJson());
             vm.IsHotWallet = derivation.IsHotWallet;
 
+            ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
+            ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
+            
             return View(vm);
         }
 
@@ -411,20 +414,11 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            var walletType = derivation.IsHotWallet ? "hot" : "watch-only";
-            var additionalText = derivation.IsHotWallet
-                ? ""
-                : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
-            var description =
-                $"<p class=\"text-danger fw-bold\">Please note that this is a {walletType} wallet!</p>" +
-                $"<p class=\"text-danger fw-bold\">Do not replace the wallet if you have not backed it up{additionalText}.</p>" +
-                "<p class=\"text-start mb-0\">Replacing the wallet will erase the current wallet data from the server. " +
-                "The current wallet will be replaced once you finish the setup of the new wallet. If you cancel the setup, the current wallet will stay active  .</p>";
-
+            
             return View("Confirm", new ConfirmModel
             {
                 Title = $"Replace {network.CryptoCode} wallet",
-                Description = description,
+                Description = WalletReplaceWarning(derivation.IsHotWallet),
                 DescriptionHtml = true,
                 Action = "Setup new wallet"
             });
@@ -458,20 +452,11 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            var walletType = derivation.IsHotWallet ? "hot" : "watch-only";
-            var additionalText = derivation.IsHotWallet
-                ? ""
-                : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
-            var description =
-                $"<p class=\"text-danger fw-bold\">Please note that this is a {walletType} wallet!</p>" +
-                $"<p class=\"text-danger fw-bold\">Do not remove the wallet if you have not backed it up{additionalText}.</p>" +
-                "<p class=\"text-start mb-0\">Removing the wallet will erase the wallet data from the server. " +
-                $"The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.</p>";
 
             return View("Confirm", new ConfirmModel
             {
                 Title = $"Remove {network.CryptoCode} wallet",
-                Description = description,
+                Description = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode),
                 DescriptionHtml = true,
                 Action = "Remove"
             });
@@ -594,6 +579,31 @@ namespace BTCPayServer.Controllers
             {
                 return await stream.ReadToEndAsync();
             }
+        }
+
+        private string WalletWarning(bool isHotWallet, string info)
+        {
+            var walletType = isHotWallet ? "hot" : "watch-only";
+            var additionalText = isHotWallet
+                ? ""
+                : " or imported it into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
+            return
+                $"<p class=\"text-danger fw-bold\">Please note that this is a {walletType} wallet!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{additionalText}.</p>" +
+                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {info}</p>";
+        }
+        
+        private string WalletReplaceWarning(bool isHotWallet)
+        {
+            return WalletWarning(isHotWallet,
+                "The current wallet will be replaced once you finish the setup of the new wallet. " +
+                "If you cancel the setup, the current wallet will stay active.");
+        }
+        
+        private string WalletRemoveWarning(bool isHotWallet, string cryptoCode)
+        {
+            return WalletWarning(isHotWallet,
+                $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
         }
     }
 }

@@ -3,51 +3,78 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Dynamic DNS Settings");
 }
 
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
-
 <div class="row">
     <div class="col-md-8">
+        <div class="d-sm-flex align-items-center justify-content-between mb-3">
+            <h2 class="mb-0">
+                @ViewData["PageTitle"]
+                <small>
+                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </small>
+            </h2>
+            <form method="post" asp-action="DynamicDnsService">
+                <button id="AddDynamicDNS" class="btn btn-primary" type="submit"><span class="fa fa-plus"></span> Add service</button>
+            </form>
+        </div>
+
         <div class="form-group">
             <p>
-                <span>
-                    Dynamic DNS service allows you to have a stable DNS name pointing to your server, even if your IP address change regulary. <br />
-                    This is recommended if you are hosting BTCPayServer at home and wish to have a clearnet HTTPS address to access your server.
-                </span>
+                Dynamic DNS allows you to have a stable DNS name pointing to your server, even if your IP address changes regulary.
+                This is recommended if you are hosting BTCPay Server at home and wish to have a clearnet domain to access your server.
             </p>
-            <p>Note that you need to properly configure your NAT and BTCPayServer install to get HTTPS certificate. Check the documentation for <a href="https://docs.btcpayserver.org/DynamicDNS/" target="_blank" rel="noreferrer noopener">more information</a>.</p>
+            <p>
+                Note that you need to properly configure your NAT and BTCPay Server installation to get the HTTPS certificate. 
+                See the documentation for <a href="https://docs.btcpayserver.org/DynamicDNS/" target="_blank" rel="noreferrer noopener">more information</a>.
+            </p>
         </div>
-        <form method="post" asp-action="DynamicDnsService">
-            <button id="AddDynamicDNS" class="btn btn-primary" type="submit"><span class="fa fa-plus"></span> Add Dynamic DNS</button>
-        </form>
-        <table class="table table-hover table-responsive-md">
-            <thead>
+        
+        @if (Model.Any())
+        {
+            <table class="table table-sm table-responsive-md">
+                <thead>
                 <tr>
                     <th>Hostname</th>
                     <th>Last updated</th>
-                    <th style="text-align:center;">Enabled</th>
-                    <th style="text-align:right">Actions</th>
+                    <th class="text-center">Enabled</th>
+                    <th class="text-end">Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach (var service in Model)
                 {
                     <tr>
                         <td>@service.Settings.Hostname</td>
                         <td>@service.LastUpdated</td>
-                        <td style="text-align:center;">
-                                @if(service.Settings.Enabled)
-                                {
-                                    <span class="text-success fa fa-check"></span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fa fa-times"></span>
-                                }
+                        <td class="text-center">
+                            @if (service.Settings.Enabled)
+                            {
+                                <span class="text-success fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fa fa-times"></span>
+                            }
                         </td>
-                        <td  style="text-align:right"><a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a> <span> - </span> <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Remove</a></td>
+                        <td class="text-end">
+                            <a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a>
+                            <span> - </span>
+                            <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@service.Settings.Hostname</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="DELETE">Delete</a>
+                        </td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no dynamic DNS services yet.
+            </p>
+        }
     </div>
 </div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete dynamic DNS service", "Deleting the dynamic DNS service means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"))" />
+

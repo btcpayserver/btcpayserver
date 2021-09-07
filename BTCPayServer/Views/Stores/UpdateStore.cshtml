@@ -308,11 +308,13 @@
                 See more actions
             </button>
             <div id="danger-zone" class="collapse">
-                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
+                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Model.StoreName</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.">Delete this store</a>
             </div>
         }
     </div>
 </div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

@@ -1154,20 +1154,19 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Wallet settings updated";
                 return RedirectToAction(nameof(WalletSettings));
             }
-            else if (command == "prune")
+            else if (command == "clear")
             {
-                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
-                if (result.TotalPruned == 0)
+                if (Version.TryParse(_dashboard.Get(walletId.CryptoCode)?.Status?.Version ?? "0.0.0.0", out var v) &&
+                    v < new Version(2, 2, 4))
                 {
-                    TempData[WellKnownTempData.SuccessMessage] = $"The wallet is already pruned";
+                    TempData[WellKnownTempData.ErrorMessage] = $"This version of NBXplorer doesn't support this operation, please upgrade to 2.2.4 or above";
                 }
                 else
                 {
-                    TempData[WellKnownTempData.SuccessMessage] =
-                        $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
+                    await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                            .WipeAsync(derivationScheme.AccountDerivation, cancellationToken);
+                    TempData[WellKnownTempData.SuccessMessage] = $"The transactions have been wiped out, to restore your balance, rescan the wallet.";
                 }
-
                 return RedirectToAction(nameof(WalletSettings));
             }
             else if (command == "view-seed" && await CanUseHotWallet())

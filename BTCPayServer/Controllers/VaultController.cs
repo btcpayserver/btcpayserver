@@ -380,7 +380,7 @@ askdevice:
 
         private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)
         {
-            return (deviceEntry.Model == HardwareWalletModels.Trezor_T || deviceEntry.Model == HardwareWalletModels.Trezor_T_Simulator);
+            return deviceEntry.Model.Contains("Trezor_T", StringComparison.OrdinalIgnoreCase);
         }
 
         public StoreData CurrentStore

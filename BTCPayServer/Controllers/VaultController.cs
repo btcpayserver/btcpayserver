@@ -310,7 +310,7 @@ askdevice:
                                 device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, deviceEntry.Model, deviceEntry.Fingerprint);
                                 fingerprint = device.Fingerprint;
                                 JObject json = new JObject();
-                                json.Add("model", device.Model.ToString());
+                                json.Add("model", device.Model);
                                 json.Add("fingerprint", device.Fingerprint?.ToString());
                                 await websocketHelper.Send(json.ToString(), cancellationToken);
                                 break;

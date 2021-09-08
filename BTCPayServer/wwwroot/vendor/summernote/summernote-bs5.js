@@ -1,4 +1,4 @@
-    /*!
+/*!
  *
  * Super simple wysiwyg editor v0.8.18
  * https://summernote.org
@@ -5366,6 +5366,9 @@ var Editor_Editor = /*#__PURE__*/function () {
         // if url doesn't have any protocol and not even a relative or a label, use http:// as default
         linkUrl = /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/.test(linkUrl) ? linkUrl : _this.options.defaultProtocol + linkUrl;
       }
+      
+      linkUrl = linkUrl.replace(this.options.codeviewFilterRegex, '');
+      linkText = linkText.replace(this.options.codeviewFilterRegex, '');
 
       var anchors = [];
 

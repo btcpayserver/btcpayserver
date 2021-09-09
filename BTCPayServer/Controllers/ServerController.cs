@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -407,7 +408,7 @@ namespace BTCPayServer.Controllers
             return apps;
         }
 
-        private static bool TryParseAsExternalService(TorService torService, out ExternalService? externalService)
+        private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)
         {
             externalService = null;
             if (torService.ServiceType == TorServiceType.P2P)
@@ -1013,7 +1014,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (model.PasswordSet)
                     {
-                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                         model.Settings.Password = settings.Password;
                     }
                     if (!model.Settings.IsComplete())
@@ -1036,7 +1037,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "ResetPassword")
             {
-                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 settings.Password = null;
                 await _SettingsRepository.UpdateSetting(model.Settings);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
@@ -1044,7 +1045,7 @@ namespace BTCPayServer.Controllers
             }
             else // if(command == "Save")
             {
-                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 if (new EmailsViewModel(oldSettings).PasswordSet)
                 {
                     model.Settings.Password = oldSettings.Password;
@@ -1074,9 +1075,10 @@ namespace BTCPayServer.Controllers
             else
             {
                 var di = Directory.GetParent(_Options.LogFile);
-                if (di == null)
+                if (di is null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "Could not load log files";
+                    return View("Logs", vm);
                 }
 
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_Options.LogFile);

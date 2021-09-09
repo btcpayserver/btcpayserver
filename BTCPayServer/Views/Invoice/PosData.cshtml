@@ -1,41 +1,41 @@
 @model (Dictionary<string, object> Items, int Level)
 
-@functions{
-    async Task DisplayValue(object value)
-    {
-        if (value is string str && str.StartsWith("http"))
-        {
-            <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
-        }
-        else
-        {
-            @value
-        }
-    }
-}
-
 <table class="table table-hover table-responsive-md removetopborder">
     @foreach (var (key, value) in Model.Items)
     {
         <tr>
-            @if (value is string)
+            @if (value is string str)
             {
                 if (!string.IsNullOrEmpty(key))
                 {
                     <th class="w-150px">@key</th>
                 }
                 <td>
-                    @{ await DisplayValue(value); }
+                        @if (str.StartsWith("http"))
+                        {
+                        <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
+                        }
+                        else
+                        {
+                            @value
+                        }
                 </td>
             }
             else if (value is Dictionary<string, object>subItems)
             {
                 @* This is the array case *@
-                if (subItems.Count == 1 && subItems.First().Value is string)
+                if (subItems.Count == 1 && subItems.First().Value is string str2)
                 {
                     <th class="w-150px">@key</th>
                     <td>
-                        @{ await DisplayValue(subItems.First().Value); }
+                        @if (str2.StartsWith("http"))
+                        {
+                        <a href="@str2" target="_blank" rel="noreferrer noopener">@str2</a>
+                        }
+                        else
+                        {
+                            @subItems.First().Value
+                        }
                     </td>
                 }
                 else

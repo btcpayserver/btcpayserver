@@ -8,7 +8,8 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 
 # Bug fixes:
 
-* Use CSP to prevent future XSS attacks. (#2856, #2863) @NicolasDorier
+* Use CSP to prevent future XSS vulnerabilities. (#2856, #2863) @NicolasDorier
+* Fix XSS vulnerabilities in summernote, the rich text editor (#2859) @dennisreimann
 * Fix plugins page crashing @Kukks
 * Fix page crash of the perk editor in the crowdfund settings when the title is not set @dennisreimann
 * Do not generate payment methods when 0 amount invoice (#2776)

@@ -5,7 +5,10 @@
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
-    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant())).Select(plugin => (plugin, BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
+    var availableAndNotInstalled = Model.Available
+        .Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant()))
+        .OrderBy(plugin => plugin.Identifier)
+        .ToList();
 
     bool DependentOn(string plugin)
     {
@@ -236,16 +239,17 @@
 {
     <h2 class="mb-4">Available Plugins</h2>
     <div class="row mb-4">
-        @foreach (var pluginT in availableAndNotInstalled)
+        @foreach (var plugin in availableAndNotInstalled)
         {
-            var plugin = pluginT.Item1;
+            var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
+            
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
                             @plugin.Version
-                            @if (pluginT.Item2)
+                            @if (recommended)
                             {
                                 <div class="badge bg-light ms-2 text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }

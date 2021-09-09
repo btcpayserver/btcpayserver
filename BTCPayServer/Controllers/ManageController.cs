@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
@@ -29,12 +30,11 @@ namespace BTCPayServer.Controllers
         private readonly UrlEncoder _urlEncoder;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly APIKeyRepository _apiKeyRepository;
-        private readonly IAuthorizationService _authorizationService;
+        private readonly IAuthorizationService _authorizationService;        
+        private readonly Fido2Service _fido2Service;
         private readonly LinkGenerator _linkGenerator;
         readonly StoreRepository _StoreRepository;
-
-
-
+        
         public ManageController(
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,
@@ -47,6 +47,7 @@ namespace BTCPayServer.Controllers
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
+          Fido2Service fido2Service,
           LinkGenerator linkGenerator
           )
         {
@@ -58,6 +59,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
+            _fido2Service = fido2Service;
             _linkGenerator = linkGenerator;
             _StoreRepository = storeRepository;
         }

@@ -28,6 +28,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
@@ -3537,14 +3538,15 @@ namespace BTCPayServer.Tests
                         Password = user.RegisterDetails.Password
                     })).ActionName);
 
+                var listController = user.GetController<ManageController>();
                 var manageController = user.GetController<Fido2Controller>();
 
                 //by default no fido2 devices available
                 Assert.Empty(Assert
-                    .IsType<Fido2AuthenticationViewModel>(Assert
-                        .IsType<ViewResult>(await manageController.List()).Model).Credentials);
+                    .IsType<TwoFactorAuthenticationViewModel>(Assert
+                        .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
                 Assert.IsType<CredentialCreateOptions>(Assert
-                        .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel()
+                        .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel
                         {
                             Name = "label"
                         })).Model);
@@ -3572,8 +3574,8 @@ namespace BTCPayServer.Tests
 
                     Assert.NotNull(newDevice.Id);
                     Assert.NotEmpty(Assert
-                        .IsType<Fido2AuthenticationViewModel>(Assert
-                            .IsType<ViewResult>(await manageController.List()).Model).Credentials);
+                        .IsType<TwoFactorAuthenticationViewModel>(Assert
+                            .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
                 }
 
                 //check if we are showing the fido2 login screen now

@@ -3,7 +3,6 @@
     <a id="@ManageNavPages.Index.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-controller="Manage" asp-action="Index">Profile</a>
     <a id="@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)"  asp-controller="Manage" asp-action="ChangePassword">Password</a>
     <a id="@ManageNavPages.TwoFactorAuthentication.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)"  asp-controller="Manage" asp-action="TwoFactorAuthentication">Two-factor authentication</a>
-    <a id="@ManageNavPages.Fido2.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Fido2)" asp-action="List" asp-controller="Fido2">FIDO2 Authentication</a>
     <a id="@ManageNavPages.APIKeys.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.APIKeys)"  asp-controller="Manage"  asp-action="APIKeys">API Keys</a>
     <a id="@ManageNavPages.Notifications.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Notifications)"  asp-controller="Manage" asp-action="NotificationSettings">Notifications</a>
     <vc:ui-extension-point location="user-nav"/>

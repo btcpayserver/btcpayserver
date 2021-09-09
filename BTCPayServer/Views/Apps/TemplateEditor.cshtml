@@ -340,8 +340,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return this.errors.length === 0;
             },
             saveEditingItem: function(){
-                if(!this.editingItem.id){
-                    this.editingItem.id = this.editingItem.title.toLowerCase().trim();
+                const fallbackId = this.editingItem.title.toLowerCase().trim();
+                if(!this.editingItem.id && fallbackId){
+                    this.editingItem.id = fallbackId;
                     this.$nextTick(this.saveEditingItem.bind(this));
                     return;
                 }

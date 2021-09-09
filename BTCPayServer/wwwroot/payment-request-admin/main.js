@@ -1,3 +1,3 @@
 $(document).ready(function() {
-    $(".richtext").summernote(window.summernoteOptions || {});
+    $(".richtext").summernote(window.summernoteOptions());
 });

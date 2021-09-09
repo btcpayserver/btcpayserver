@@ -241,7 +241,6 @@ namespace BTCPayServer.Tests
         {
             var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
-            Assert.NotEmpty(links);
             foreach (var l in links)
             {
                 Logs.Tester.LogInformation($"Checking no error on {l}");

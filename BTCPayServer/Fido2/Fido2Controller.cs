@@ -12,7 +12,6 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Fido2
 {
-
     [Route("fido2")]
     [Authorize]
     public class Fido2Controller : Controller
@@ -29,7 +28,7 @@ namespace BTCPayServer.Fido2
         [HttpGet("{id}/delete")]
         public IActionResult Remove(string id)
         { 
-            return View("Confirm", new ConfirmModel("Are you sure you want to remove FIDO2 credential?", "Your account will no longer have this credential as an option for MFA.", "Remove"));
+            return View("Confirm", new ConfirmModel("Remove security device", "Your account will no longer have this security device as an option for two-factor authentication.", "Remove"));
         }
 
         [HttpPost("{id}/delete")]
@@ -40,7 +39,7 @@ namespace BTCPayServer.Fido2
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = "FIDO2 Credentials were removed successfully."
+                Html = "The security device was removed successfully."
             });
             
             return RedirectToList();
@@ -55,7 +54,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "FIDO2 Credentials could not be saved."
+                    Html = "The security device could not be registered."
                 });
                 
                 return RedirectToList();
@@ -74,7 +73,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = "FIDO2 Credentials were saved successfully."
+                    Html = "The security device was registered successfully."
                 });
             }
             else
@@ -82,7 +81,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "FIDO2 Credentials could not be saved."
+                    Html = "The security device could not be registered."
                 });
             }
 

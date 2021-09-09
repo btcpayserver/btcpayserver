@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.3
+
+This release fixes three XSS vulnerabilities. Those vulnerabilities only impacts shared BTCPay instances.
+Special thanks to Ajmal "@b3ef" Aboobacker and Abdul "@b1nslashsh" muhaimin for finding them who contacted us through @huntrdev.
+See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](https://www.huntr.dev/bounties/32e30ecf-31fa-45f6-8552-47250ef0e613/) and [3](https://huntr.dev/bounties/0fcdee5f-1f07-47ce-b650-ea8b4a7d35d8/).
+
+# Bug fixes:
+
+* Use CSP to prevent future XSS attacks. (#2856, #2863) @NicolasDorier
+* Fix plugins page crashing @Kukks
+* Fix page crash of the perk editor in the crowdfund settings when the title is not set @dennisreimann
+* Do not generate payment methods when 0 amount invoice (#2776)
+* When using the BTCPay Vault, some hardware wallet types were considered unknown @NicolasDorier
+
 ## 1.2.2
 
 # Bug fixes:

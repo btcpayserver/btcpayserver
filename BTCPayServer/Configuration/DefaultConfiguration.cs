@@ -28,6 +28,7 @@ namespace BTCPayServer.Configuration
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
             app.Option("--mysql", $"Connection string to a MySQL database", CommandOptionType.SingleValue);
+            app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
             app.Option("--sqlitefile", $"File name to an SQLite database file inside the data directory", CommandOptionType.SingleValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--bundlejscss", $"Bundle JavaScript and CSS files for better performance (default: true)", CommandOptionType.SingleValue);

@@ -75,8 +75,6 @@ namespace BTCPayServer.Security
         }
         public void Add(ConsentSecurityPolicy policy)
         {
-            if (_Policies.Any(p => p.Name == policy.Name && p.Value == policy.Name))
-                return;
             _Policies.Add(policy);
         }
 
@@ -94,20 +92,18 @@ namespace BTCPayServer.Security
                     value.Append(';');
                 }
                 HashSet<string> values = new HashSet<string>();
+                List<string> valuesList = new List<string>();
                 values.Add(group.Key);
+                valuesList.Add(group.Key);
                 foreach (var v in group)
                 {
-                    values.Add(v.Value);
+                    if (values.Add(v.Value))
+                        valuesList.Add(v.Value);
                 }
-                value.Append(String.Join(" ", values.OfType<object>().ToArray()));
+                value.Append(String.Join(" ", valuesList.OfType<object>().ToArray()));
                 firstGroup = false;
             }
             return value.ToString();
-        }
-
-        internal void Clear()
-        {
-            _Policies.Clear();
         }
     }
 }

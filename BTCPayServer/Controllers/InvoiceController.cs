@@ -32,7 +32,6 @@ namespace BTCPayServer.Controllers
     public partial class InvoiceController : Controller
     {
         readonly InvoiceRepository _InvoiceRepository;
-        readonly ContentSecurityPolicies _CSP;
         readonly RateFetcher _RateProvider;
         readonly StoreRepository _StoreRepository;
         readonly UserManager<ApplicationUser> _UserManager;
@@ -72,7 +71,6 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _paymentHostedService = paymentHostedService;
             WebhookNotificationManager = webhookNotificationManager;
-            _CSP = csp;
             _languageService = languageService;
         }
 

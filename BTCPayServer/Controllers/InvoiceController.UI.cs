@@ -448,20 +448,6 @@ namespace BTCPayServer.Controllers
 
             if (view == "modal")
                 model.IsModal = true;
-
-            _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
-            if (!string.IsNullOrEmpty(model.CustomCSSLink) &&
-                Uri.TryCreate(model.CustomCSSLink, UriKind.Absolute, out var uri))
-            {
-                _CSP.Clear();
-            }
-
-            if (!string.IsNullOrEmpty(model.CustomLogoLink) &&
-                Uri.TryCreate(model.CustomLogoLink, UriKind.Absolute, out uri))
-            {
-                _CSP.Clear();
-            }
-
             return View(nameof(Checkout), model);
         }
 

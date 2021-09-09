@@ -12,9 +12,12 @@
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject ISettingsRepository SettingsRepository
+@inject LinkGenerator linkGenerator
+
 @{
     var theme = await SettingsRepository.GetTheme();
 }
+
 <!DOCTYPE html>
 <html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
@@ -136,9 +139,19 @@
     }
 
     <partial name="LayoutFoot" />
-    
+
     @await RenderSectionAsync("PageFootContent", false)
     <partial name="LayoutPartials/SyncModal" />
+
+    @{
+        var notificationDisabled = (await SettingsRepository.GetPolicies()).DisableInstantNotifications;
+        if (!notificationDisabled)
+        {
+            var user = await UserManager.GetUserAsync(User);
+            notificationDisabled = user?.DisabledNotifications == "all";
+        }
+    }
+
     <script type="text/javascript">
         const expectedDomain = @Safe.Json(Env.ExpectedHost);
         const expectedProtocol = @Safe.Json(Env.ExpectedProtocol);
@@ -147,5 +160,38 @@
             document.getElementById("browserScheme").innerText = window.location.protocol.substr(0, window.location.protocol.length -1);
         }
     </script>
+    @if (!notificationDisabled)
+    {
+    <script>
+        var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+        if (supportsWebSockets) {
+
+            var loc = window.location, ws_uri;
+            if (loc.protocol === "https:") {
+                ws_uri = "wss:";
+            } else {
+                ws_uri = "ws:";
+            }
+            ws_uri += "//" + loc.host;
+            ws_uri += "@linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")";
+            var newDataEndpoint = "@linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
+
+            try {
+                socket = new WebSocket(ws_uri);
+                socket.onmessage = function (e) {
+                    $.get(newDataEndpoint, function (data) {
+                        $("#notifications-nav-item").replaceWith($(data));
+                    });
+                };
+                socket.onerror = function (e) {
+                    console.error("Error while connecting to websocket for notifications (callback)", e);
+                };
+            }
+            catch (e) {
+                console.error("Error while connecting to websocket for notifications", e);
+            }
+        }
+    </script>
+    }
 </body>
 </html>

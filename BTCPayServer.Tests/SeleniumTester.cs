@@ -38,6 +38,7 @@ namespace BTCPayServer.Tests
 
         public async Task StartAsync()
         {
+            Server.PayTester.NoCSP = true;
             await Server.StartAsync();
 
             var windowSize = (Width: 1200, Height: 1000);

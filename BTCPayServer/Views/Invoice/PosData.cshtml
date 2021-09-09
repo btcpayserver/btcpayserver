@@ -1,7 +1,7 @@
 @model (Dictionary<string, object> Items, int Level)
 
 @functions{
-    void DisplayValue(object value)
+    async Task DisplayValue(object value)
     {
         if (value is string str && str.StartsWith("http"))
         {
@@ -25,7 +25,7 @@
                     <th class="w-150px">@key</th>
                 }
                 <td>
-                    @{ DisplayValue(value); }
+                    @{ await DisplayValue(value); }
                 </td>
             }
             else if (value is Dictionary<string, object>subItems)
@@ -35,7 +35,7 @@
                 {
                     <th class="w-150px">@key</th>
                     <td>
-                        @{ DisplayValue(subItems.First().Value); }
+                        @{ await DisplayValue(subItems.First().Value); }
                     </td>
                 }
                 else

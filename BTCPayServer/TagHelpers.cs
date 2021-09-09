@@ -50,7 +50,7 @@ namespace BTCPayServer.TagHelpers
             _csp = csp;
         }
 
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             if (output.Attributes.ContainsName("src"))
                 return;
@@ -59,18 +59,9 @@ namespace BTCPayServer.TagHelpers
                 if (attr.Value?.ToString() != "text/javascript")
                     return;
             }
-            if (output.Attributes.ContainsName("csp-sha256"))
-            {
-                var sha = CSPEventTagHelper.GetSha256((await output.GetChildContentAsync(true)).GetContent());
-                _csp.Add("script-src", $"'sha256-{sha}'");
-                output.Attributes.RemoveAll("csp-sha256");
-            }
-            else
-            {
-                var nonce = RandomUtils.GetUInt256().ToString().Substring(0, 32);
-                output.Attributes.Add(new TagHelperAttribute("nonce", nonce));
-                _csp.Add("script-src", $"'nonce-{nonce}'");
-            }
+            var nonce = RandomUtils.GetUInt256().ToString().Substring(0, 32);
+            output.Attributes.Add(new TagHelperAttribute("nonce", nonce));
+            _csp.Add("script-src", $"'nonce-{nonce}'");
         }
     }
 

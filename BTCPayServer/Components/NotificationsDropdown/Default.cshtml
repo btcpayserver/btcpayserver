@@ -1,4 +1,3 @@
-@inject LinkGenerator linkGenerator
 @inject UserManager<ApplicationUser> UserManager
 @inject ISettingsRepository SettingsRepository
 @using BTCPayServer.HostedServices
@@ -55,48 +54,4 @@ else
             <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
         </a>
     </li>
-}
-@{
-    var disabled = (await SettingsRepository.GetPolicies()).DisableInstantNotifications;
-    if (!disabled)
-    {
-        var user = await UserManager.GetUserAsync(User);
-        disabled = user?.DisabledNotifications == "all";
-    }
-}
-@if (!disabled)
-{
-
-    <script type="text/javascript" csp-sha256>
-
-    var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
-
-    if (supportsWebSockets) {
-
-        var loc = window.location, ws_uri;
-        if (loc.protocol === "https:") {
-            ws_uri = "wss:";
-        } else {
-            ws_uri = "ws:";
-        }
-        ws_uri += "//" + loc.host;
-        ws_uri += "@linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")";
-        var newDataEndpoint = "@linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
-    
-        try {
-            socket = new WebSocket(ws_uri);
-            socket.onmessage = function (e) {
-                $.get(newDataEndpoint, function(data){
-                    $("#notifications-nav-item").replaceWith($(data));
-               });
-            };
-            socket.onerror = function (e) {
-                console.error("Error while connecting to websocket for notifications (callback)", e);
-            };
-        }
-        catch (e) {
-            console.error("Error while connecting to websocket for notifications", e);
-        }
-    }
-    </script>
 }

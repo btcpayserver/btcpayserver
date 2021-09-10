@@ -3243,6 +3243,8 @@ namespace BTCPayServer.Tests
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
                 Logs.Tester.LogInformation($"Testing {value.Key.ToString()}");
+                if (value.Key.ToString() == "BTX_USD") // Broken shitcoin
+                    continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
         }

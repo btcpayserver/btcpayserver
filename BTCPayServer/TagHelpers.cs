@@ -86,6 +86,7 @@ namespace BTCPayServer.TagHelpers
         }
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
+            bool cspAllow = output.Attributes.RemoveAll("csp-allow");
             foreach (var attr in output.Attributes)
             {
                 var n = attr.Name.ToLowerInvariant();
@@ -96,7 +97,7 @@ namespace BTCPayServer.TagHelpers
                 else if (n == "href")
                 {
                     var v = attr.Value.ToString();
-                    if (v.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+                    if (v.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase) && cspAllow)
                     {
                         Allow(v);
                     }

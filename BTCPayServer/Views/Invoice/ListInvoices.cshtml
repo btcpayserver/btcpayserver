@@ -333,7 +333,7 @@
                         </th>
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
-                            <a href="javascript:switchTimeFormat()">
+                            <a href="javascript:switchTimeFormat()" csp-allow>
                                 <span class="fa fa-clock-o" title="Switch date format"></span>
                             </a>
                         </th>
@@ -411,7 +411,7 @@
                                 {
                                     <span>
                                         <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')" csp-allow>[^]</a>
                                         @if (!invoice.CanMarkStatus)
                                         {
                                             <span>-</span>

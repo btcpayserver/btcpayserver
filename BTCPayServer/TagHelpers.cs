@@ -73,6 +73,7 @@ namespace BTCPayServer.TagHelpers
     [HtmlTargetElement(Attributes = "onchange")]
     [HtmlTargetElement(Attributes = "onsubmit")]
     [HtmlTargetElement(Attributes = "href")]
+    [HtmlTargetElement("template", Attributes = "id")]
     public class CSPEventTagHelper : TagHelper
     {
         public const string EventNames = "onclick,onkeypress,onchange,onsubmit";
@@ -84,7 +85,7 @@ namespace BTCPayServer.TagHelpers
         {
             _csp = csp;
         }
-        public override void Process(TagHelperContext context, TagHelperOutput output)
+        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
             bool cspAllow = output.Attributes.RemoveAll("csp-allow");
             foreach (var attr in output.Attributes)
@@ -102,6 +103,13 @@ namespace BTCPayServer.TagHelpers
                         Allow(v);
                     }
                 }
+            }
+
+            if (cspAllow && output.TagName == "template")
+            {
+                var childContent = await output.GetChildContentAsync();
+                var content = childContent.GetContent();
+                Allow(content);
             }
         }
 

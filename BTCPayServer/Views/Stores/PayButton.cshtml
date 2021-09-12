@@ -19,7 +19,7 @@
     <template id="template-get-scripts" csp-allow>
         if (!window.btcpay) {
             var script = document.createElement('script');
-            script.src='@(Model.UrlRoot)modal/btcpay.js';
+            script.src=@(Safe.Json(Model.UrlRoot + "modal/btcpay.js"));
             document.getElementsByTagName('head')[0].append(script);
         }
         function onBTCPayFormSubmit(event) {

@@ -42,32 +42,10 @@ function getStyles (styles) {
 }
 
 function getScripts(srvModel) {
-    return ""+
-        "<script>" +
-        "if(!window.btcpay){ " +
-        "   var head = document.getElementsByTagName('head')[0];" +
-        "   var script = document.createElement('script');" +
-        "   script.src='"+esc(srvModel.urlRoot)+"modal/btcpay.js';" +
-        "   script.type = 'text/javascript';" +
-        "   head.append(script);" +
-        "}" +
-        "function onBTCPayFormSubmit(event){" +
-        "    var xhttp = new XMLHttpRequest();" +
-        "    xhttp.onreadystatechange = function() {" +
-        "        if (this.readyState == 4 && this.status == 200) {" +
-        "            if(this.status == 200 && this.responseText){" +
-        "                var response = JSON.parse(this.responseText);" +
-        "                window.btcpay.showInvoice(response.invoiceId);" +
-        "            }" +
-        "        }" +
-        "    };" +
-        "    xhttp.open(\"POST\", event.target.getAttribute('action'), true);" +
-        "    xhttp.send(new FormData( event.target ));" +
-        "}" +       
-        "</script>";
+    if (!srvModel.useModal) return ''
+    const template = document.getElementById('template-get-scripts')
+    return template.innerHTML.replace(/&amp;/g, '&')
 }
-
-
 
 function inputChanges(event, buttonSize) {
     if (buttonSize !== null && buttonSize !== undefined) {
@@ -115,12 +93,10 @@ function inputChanges(event, buttonSize) {
     }
     
     var html =
-        //Scripts
-        (srvModel.useModal? getScripts(srvModel) :"") +
         // Styles
         getStyles('template-paybutton-styles') + (isSlider ? getStyles('template-slider-styles') : '') +
         // Form
-        '<form method="POST" '+ ( srvModel.useModal? ' onsubmit="onBTCPayFormSubmit(event);return false" ' : '' )+' action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
+        '<form method="POST"' + (srvModel.useModal ? ' onsubmit="onBTCPayFormSubmit(event);return false"' : '') + ' action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
             addInput("storeId", srvModel.storeId);
     
     if(app){
@@ -144,7 +120,6 @@ function inputChanges(event, buttonSize) {
 
         if (srvModel.checkoutQueryString) html += addInput("checkoutQueryString", srvModel.checkoutQueryString);
     }
-   
 
     // Fixed amount: Add price and currency as hidden inputs
     if (isFixedAmount) {
@@ -192,10 +167,21 @@ function inputChanges(event, buttonSize) {
             '</button>'
     }
     html += '</form>';
+    
+    // Scripts
+    var scripts = getScripts(srvModel);
+    var code = html + (scripts ? `\n<script>\n        ${scripts.trim()}\n</script>` : '')
 
-    $("#mainCode").text(html).html();
-    $("#preview").html(html);
-    var form = document.querySelector("#preview form");
+    $("#mainCode").text(code).html();
+    var preview = document.getElementById('preview');
+    preview.innerHTML = html;
+    if (scripts) {
+        // script needs to be inserted as node, otherwise it won't get executed
+        var script = document.createElement('script');
+        script.innerHTML = scripts
+        preview.appendChild(script)
+    }
+    var form = preview.querySelector("form");
     var url =  new URL(form.getAttribute("action"));
     var formData =   new FormData(form);
     formData.forEach((value, key) => {

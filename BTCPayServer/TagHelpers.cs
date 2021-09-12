@@ -72,7 +72,6 @@ namespace BTCPayServer.TagHelpers
     [HtmlTargetElement(Attributes = "onkeypress")]
     [HtmlTargetElement(Attributes = "onchange")]
     [HtmlTargetElement(Attributes = "onsubmit")]
-    [HtmlTargetElement(Attributes = "href")]
     public class CSPEventTagHelper : TagHelper
     {
         public const string EventNames = "onclick,onkeypress,onchange,onsubmit";
@@ -91,29 +90,55 @@ namespace BTCPayServer.TagHelpers
                 var n = attr.Name.ToLowerInvariant();
                 if (EventSet.Contains(n))
                 {
-                    Allow(attr.Value.ToString());
-                }
-                else if (n == "href")
-                {
-                    var v = attr.Value.ToString();
-                    if (v.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Allow(v);
-                    }
+                    _csp.AllowUnsafeHashes(attr.Value.ToString());
                 }
             }
         }
+    }
 
-        private void Allow(string v)
+
+    /// <summary>
+    /// Add sha256- to allow inline event handlers in CSP
+    /// </summary>
+    [HtmlTargetElement("template", Attributes = "csp-allow")]
+    public class CSPTemplate : TagHelper
+    {
+        private readonly ContentSecurityPolicies _csp;
+        public CSPTemplate(ContentSecurityPolicies csp)
         {
-            var sha = GetSha256(v);
-            _csp.Add("script-src", $"'unsafe-hashes'");
-            _csp.Add("script-src", $"'sha256-{sha}'");
+            _csp = csp;
         }
-
-        public static string GetSha256(string script)
+        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
-            return Convert.ToBase64String(Hashes.SHA256(Encoding.UTF8.GetBytes(script.Replace("\r\n", "\n", StringComparison.Ordinal))));
+            output.Attributes.RemoveAll("csp-allow");
+            var childContent = await output.GetChildContentAsync();
+            var content = childContent.GetContent();
+            _csp.AllowInline(content);
+        }
+    }
+
+    /// <summary>
+    /// Add sha256- to allow inline event handlers in a:href=javascript:
+    /// </summary>
+    [HtmlTargetElement("a", Attributes = "csp-allow")]
+    public class CSPA : TagHelper
+    {
+        private readonly ContentSecurityPolicies _csp;
+        public CSPA(ContentSecurityPolicies csp)
+        {
+            _csp = csp;
+        }
+        public override void Process(TagHelperContext context, TagHelperOutput output)
+        {
+            output.Attributes.RemoveAll("csp-allow");
+            if (output.Attributes.TryGetAttribute("href", out var attr))
+            {
+                var v = attr.Value.ToString();
+                if (v.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+                {
+                    _csp.AllowInline(v);
+                }
+            }
         }
     }
 }

@@ -170,7 +170,7 @@ function inputChanges(event, buttonSize) {
     
     // Scripts
     var scripts = getScripts(srvModel);
-    var code = html + (scripts ? `\n<script>\n    ${scripts.trim()}\n</script>` : '')
+    var code = html + (scripts ? `\n<script>\n        ${scripts.trim()}\n</script>` : '')
 
     $("#mainCode").text(code).html();
     var preview = document.getElementById('preview');

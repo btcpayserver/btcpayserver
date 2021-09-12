@@ -96,7 +96,7 @@ function inputChanges(event, buttonSize) {
         // Styles
         getStyles('template-paybutton-styles') + (isSlider ? getStyles('template-slider-styles') : '') +
         // Form
-        '<form method="POST" ' + (srvModel.useModal ? ' ' : '') +' onsubmit="onBTCPayFormSubmit(event);return false" action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
+        '<form method="POST"' + (srvModel.useModal ? ' onsubmit="onBTCPayFormSubmit(event);return false"' : '') + ' action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
             addInput("storeId", srvModel.storeId);
     
     if(app){

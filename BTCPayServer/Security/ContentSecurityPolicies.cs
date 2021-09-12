@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NBitcoin.Crypto;
 
 namespace BTCPayServer.Security
 {
@@ -69,6 +70,35 @@ namespace BTCPayServer.Security
         }
 
         readonly HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
+
+        /// <summary>
+        /// Allow a specific script as event handler
+        /// </summary>
+        /// <param name="script"></param>
+        public void AllowUnsafeHashes(string script)
+        {
+            if (script is null)
+                throw new ArgumentNullException(nameof(script));
+            var sha = GetSha256(script);
+            Add("script-src", $"'unsafe-hashes'");
+            Add("script-src", $"'sha256-{sha}'");
+        }
+        /// <summary>
+        /// Allow the injection of script tag with the following script
+        /// </summary>
+        /// <param name="script"></param>
+        public void AllowInline(string script)
+        {
+            if (script is null)
+                throw new ArgumentNullException(nameof(script));
+            var sha = GetSha256(script);
+            Add("script-src", $"'sha256-{sha}'");
+        }
+        static string GetSha256(string script)
+        {
+            return Convert.ToBase64String(Hashes.SHA256(Encoding.UTF8.GetBytes(script.Replace("\r\n", "\n", StringComparison.Ordinal))));
+        }
+
         public void Add(string name, string value)
         {
             Add(new ConsentSecurityPolicy(name, value));

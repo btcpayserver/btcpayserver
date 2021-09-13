@@ -55,7 +55,12 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception)
             {
-                return View(new ShowLightningNodeInfoViewModel { Available = false, CryptoCode = cryptoCode });
+                return View(new ShowLightningNodeInfoViewModel
+                {
+                    Available = false, 
+                    CryptoCode = cryptoCode,
+                    StoreName = store.StoreName
+                });
             }
         }
 

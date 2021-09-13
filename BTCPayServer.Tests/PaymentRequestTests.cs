@@ -189,10 +189,20 @@ namespace BTCPayServer.Tests
                 var response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
                     .RouteValues.First();
+                var invoiceId = response.Value.ToString();
+                await paymentRequestController.PayPaymentRequest(invoiceId, false);
+                Assert.IsType<BadRequestObjectResult>(await
+                    paymentRequestController.CancelUnpaidPendingInvoice(invoiceId, false));
+
+                request.AllowCustomPaymentAmounts = true;
+
+                response = Assert
+                    .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
+                    .RouteValues.First();
 
                 var paymentRequestId = response.Value.ToString();
 
-                var invoiceId = Assert
+                invoiceId = Assert
                     .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false))
                     .Value
                     .ToString();

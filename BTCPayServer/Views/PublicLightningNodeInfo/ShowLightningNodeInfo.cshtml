@@ -2,10 +2,16 @@
 @inject ISettingsRepository _settingsRepository
 
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Lightning
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
 @{
     Layout = null;
     var theme = await _settingsRepository.GetTheme();
+    var nodeInfoList = Model.NodeInfo.Select((value, i) => (value, i)).ToArray();
+    string NodeInfoId(NodeInfo nodeInfo)
+    {
+        return $"{nodeInfo.Host}-{nodeInfo.Port}";
+    }
 }
 <!DOCTYPE html>
 <html>
@@ -28,7 +34,7 @@
                 <div class="card border-0">
                     <div class="card-body p-4">
                         <h1 class="card-title text-center">@Model.StoreName</h1>
-                        <h2 class="card-subtitle text-center text-secondary mb-2">
+                        <h2 class="card-subtitle text-center text-secondary my-3">
                             <span>@Model.CryptoCode</span>
                             Lightning Node
                         </h2>
@@ -42,13 +48,31 @@
                         </h3>
                         @if (Model.Available)
                         {
-                            <div class="qr-container my-3">
-                                <img  alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage" />
-                                <vc:qr-code data="@Model.NodeInfo"> </vc:qr-code>
-                            </div>
-                            <div class="input-group  d-flex" data-clipboard="@Model.NodeInfo">
-                                <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.NodeInfo" id="peer-info"/>
-                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy node info</button>
+                            @if (Model.NodeInfo.Length > 1)
+                            {
+                                <ul class="nav nav-pills justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
+                                    @foreach (var (nodeInfo, index) in nodeInfoList)
+                                    {
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link w-100px @(index == 0 ? "active" : "")" id="nodeInfo-tab-@NodeInfoId(nodeInfo)" data-bs-toggle="pill" data-bs-target="#nodeInfo-@NodeInfoId(nodeInfo)" type="button" role="tab" aria-controls="nodeInfo-@NodeInfoId(nodeInfo)" aria-selected="true">@(nodeInfo.IsTor ? "Tor" : "Clearnet")</button>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            <div class="tab-content" id="nodeInfo-tabContent">
+                                @foreach (var (nodeInfo, index) in nodeInfoList)
+                                {
+                                    <div class="tab-pane fade @(index == 0 ? "show active" : "")" id="nodeInfo-@NodeInfoId(nodeInfo)" role="tabpanel" aria-labelledby="nodeInfo-tab-@NodeInfoId(nodeInfo)">
+                                        <div class="qr-container my-3">
+                                            <img alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage"/>
+                                            <vc:qr-code data="@nodeInfo.ToString()"/>
+                                        </div>
+                                        <div class="input-group" data-clipboard="@nodeInfo.ToString()">
+                                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@nodeInfo.ToString()" id="nodeInfo-addr-@NodeInfoId(nodeInfo)"/>
+                                            <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -56,6 +80,6 @@
             </div>
         </div>
     </div>
-    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
+    <partial name="LayoutFoot" />
 </body>
 </html>

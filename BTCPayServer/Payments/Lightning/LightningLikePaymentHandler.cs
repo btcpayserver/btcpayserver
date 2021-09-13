@@ -68,7 +68,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
+            var test = GetNodeInfo(supportedPaymentMethod, network);
             
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
@@ -118,7 +118,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
@@ -139,8 +139,9 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
                 }
-                var nodeInfo = info.NodeInfoList.FirstOrDefault(i => i.IsTor == preferOnion) ?? info.NodeInfoList.FirstOrDefault();
-                if (nodeInfo == null)
+
+                var nodeInfo = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray();
+                if (!nodeInfo.Any())
                 {
                     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
                 }

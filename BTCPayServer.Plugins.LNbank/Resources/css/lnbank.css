@@ -4,15 +4,6 @@ pre.connection-string {
     max-width: 445px;
 }
 
-pre.payment-request,
-pre.connection-string {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    border-radius: var(--btcpay-border-radius);
-    padding: var(--btcpay-space-s);
-    text-align: left !important;
-}
-
 main p {
     max-width: 40em;
 }

@@ -52,7 +52,7 @@
                 @await Component.InvokeAsync("QRCode", new { data = Model.Transaction.PaymentRequest })
             </div>
 
-            <pre class="payment-request"><code>@Model.Transaction.PaymentRequest</code></pre>
+            <pre class="payment-request text-wrap"><code>@Model.Transaction.PaymentRequest</code></pre>
 
             <script>
                 window.LNbankHubs = window.LNbankHubs || []

@@ -234,12 +234,12 @@ namespace BTCPayServer.Tests
 
                 invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
 
-                //a hack to generate invoices for the payment request is to manually create an invocie with an order id that matches:
+                //a hack to generate invoices for the payment request is to manually create an invoice with an order id that matches:
                 user.BitPay.CreateInvoice(new Invoice(1, "USD")
                 {
                     OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequestId)
                 });
-                //shouldnt crash
+                //shouldn't crash
                 await paymentRequestController.ViewPaymentRequest(paymentRequestId);
                 await paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId);
             }

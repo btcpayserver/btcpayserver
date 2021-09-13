@@ -311,7 +311,7 @@ namespace BTCPayServer.Services.Apps
             var serializer = new SerializerBuilder().Build();
             return serializer.Serialize(mappingNode);
         }
-        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
+        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency, bool filterUnavailable = false)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
@@ -341,6 +341,7 @@ namespace BTCPayServer.Services.Apps
                     PaymentMethods = c.GetDetailStringList("payment_methods"),
                     Unavailable = c.GetDetailString("unavailable") == "true"
                 })
+                .Where(c => filterUnavailable ? !c.Unavailable : true)
                 .ToArray();
         }
 

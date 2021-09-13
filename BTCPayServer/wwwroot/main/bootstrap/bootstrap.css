@@ -1,5 +1,5 @@
 /*!
- * Bootstrap v5.1.0 (https://getbootstrap.com/)
+ * Bootstrap v5.1.1 (https://getbootstrap.com/)
  * Copyright 2011-2021 The Bootstrap Authors
  * Copyright 2011-2021 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
@@ -24,7 +24,7 @@
 }
 
 :root {
-  font-size: var(--btcpay--root-font-size);
+  font-size: var(--btcpay-root-font-size);
 }
 
 body {
@@ -5346,7 +5346,7 @@ fieldset:disabled .btn {
 }
 
 .modal-backdrop.show {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .modal-header {
@@ -6081,7 +6081,7 @@ fieldset:disabled .btn {
 }
 
 .offcanvas-backdrop.show {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .offcanvas-header {
@@ -7560,7 +7560,7 @@ fieldset:disabled .btn {
 
 .text-body {
   --btcpay-text-opacity: 1;
-  color: rgba(var(--btcpay-body-rgb), var(--btcpay-text-opacity)) !important;
+  color: rgba(var(--btcpay-body-text-rgb), var(--btcpay-text-opacity)) !important;
 }
 
 .text-muted {
@@ -7651,7 +7651,7 @@ fieldset:disabled .btn {
 
 .bg-body {
   --btcpay-bg-opacity: 1;
-  background-color: rgba(var(--btcpay-body-rgb), var(--btcpay-bg-opacity)) !important;
+  background-color: rgba(var(--btcpay-body-bg-rgb), var(--btcpay-bg-opacity)) !important;
 }
 
 .bg-transparent {
@@ -9800,12 +9800,6 @@ fieldset:disabled .btn {
     display: none !important;
   }
 }
-/* Workaround until this is released > v5.1.0:
-   https://github.com/twbs/bootstrap/commit/f4fd27118fb2b384968068f66361f020a0996a1a */
-:root {
-  font-size: var(--btcpay-root-font-size);
-}
-
 html {
   position: relative;
   min-height: 100%;

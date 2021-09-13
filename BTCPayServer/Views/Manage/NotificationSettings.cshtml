@@ -24,7 +24,7 @@
                         var item = Model.DisabledNotifications[index];
                         <li class="list-group-item">
                             <input type="hidden"  asp-for="DisabledNotifications[index].Value"/> 
-                            <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="form-check-inline"/>
+                            <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="form-check-input form-check-inline"/>
                             <label class="mb-0 cursor-pointer" asp-for="DisabledNotifications[index].Selected">
                                 @item.Text
                             </label>

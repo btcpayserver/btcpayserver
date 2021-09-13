@@ -829,7 +829,12 @@ namespace BTCPayServer.Controllers
 
             if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
             {
-                ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id })}' class='alert-link'>set up your wallet</a> first",
+                    AllowDismiss = false
+                });
                 return View(model);
             }
 

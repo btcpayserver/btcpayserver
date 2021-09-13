@@ -290,7 +290,7 @@ namespace BTCPayServer.Services.Apps
                     itemNode.Add("image", new YamlScalarNode(item.Image));
                 }
                 itemNode.Add("custom", new YamlScalarNode(item.Custom.ToStringLowerInvariant()));
-                itemNode.Add("unavailable", new YamlScalarNode(item.Unavailable.ToStringLowerInvariant()));
+                itemNode.Add("disabled", new YamlScalarNode(item.Disabled.ToStringLowerInvariant()));
                 if (item.Inventory.HasValue)
                 {
                     itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
@@ -311,7 +311,7 @@ namespace BTCPayServer.Services.Apps
             var serializer = new SerializerBuilder().Build();
             return serializer.Serialize(mappingNode);
         }
-        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency, bool filterUnavailable = false)
+        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency, bool filterDisabled = false)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
@@ -339,9 +339,9 @@ namespace BTCPayServer.Services.Apps
                     BuyButtonText = c.GetDetailString("buyButtonText"),
                     Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
                     PaymentMethods = c.GetDetailStringList("payment_methods"),
-                    Unavailable = c.GetDetailString("unavailable") == "true"
+                    Disabled = c.GetDetailString("disabled") == "true"
                 })
-                .Where(c => filterUnavailable ? !c.Unavailable : true)
+                .Where(c => filterDisabled ? !c.Disabled : true)
                 .ToArray();
         }
 

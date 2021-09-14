@@ -72,10 +72,22 @@ hr.light {
 }
 
 /* Navigation bar */
-#mainNav {
-    background: var(--btcpay-header-bg);
+@media (max-width: 991px) {
+    .offcanvas-body {
+        color: var(--btcpay-body-text);
+        background: var(--btcpay-body-bg);
+    }
 }
 
+@media (max-width: 575px) {
+    .offcanvas-header,
+    .offcanvas-body {
+        padding-left: var(--btcpay-gutter-x, 0.75rem);
+        padding-right: var(--btcpay-gutter-x, 0.75rem);
+    }
+}
+
+.offcanvas-header,
 #mainNav {
     color: var(--btcpay-header-text);
     background: var(--btcpay-header-bg);

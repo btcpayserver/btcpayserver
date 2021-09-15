@@ -463,6 +463,10 @@
                     "enabled": {
                         "type": "boolean",
                         "description": "Whether the payment method is enabled"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method"
                     }
                 }
             },

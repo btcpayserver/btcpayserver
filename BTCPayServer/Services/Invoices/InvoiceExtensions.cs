@@ -6,7 +6,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
-using NBitcoin.Altcoins;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -39,7 +38,8 @@ namespace BTCPayServer.Services.Invoices
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
-                    logs.Write($"{paymentMethodId}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
+                    logs.Write($"{paymentMethodId}: Payment method unavailable ({ex.Message})",
+                        InvoiceEventData.EventSeverity.Error);
                 }
                 catch (Exception ex)
                 {
@@ -50,6 +50,7 @@ namespace BTCPayServer.Services.Invoices
                 eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
             }
         }
+
         public static async Task<PaymentEntity> AddPaymentAndSendEvents(this InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             InvoiceEntity invoiceEntity, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network,
@@ -59,19 +60,35 @@ namespace BTCPayServer.Services.Invoices
                 await invoiceRepository.AddPayment(invoiceEntity.Id, date, paymentData, network, accounted);
             if (paymentEntity != null)
             {
-                eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.ReceivedPayment) { Payment = paymentEntity });
+                eventAggregator.Publish(
+                    new InvoiceEvent(invoiceEntity, InvoiceEvent.ReceivedPayment) { Payment = paymentEntity });
             }
+
             if (paymentEntity != null && paymentData.PaymentConfirmed(paymentEntity, invoiceEntity.SpeedPolicy))
             {
                 eventAggregator.Publish(
                     new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = paymentEntity });
             }
-            
-            
 
             return paymentEntity;
         }
 
+        public static async Task UpdatePaymentsAndSendEvents(this InvoiceRepository invoiceRepository,
+            EventAggregator eventAggregator, List<PaymentEntity> entities, List<InvoiceEntity> invoices)
+        {
+            var updated = await invoiceRepository.UpdatePayments(entities);
 
+            foreach ((PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData, string
+                invoiceId) updatedItem in updated)
+            {
+                var invoice = invoices.First(entity => entity.Id == updatedItem.invoiceId);
+                if (!updatedItem.oldData.PaymentConfirmed(updatedItem.paymentEntity, invoice.SpeedPolicy) &&
+                    updatedItem.newData.PaymentConfirmed(updatedItem.paymentEntity, invoice.SpeedPolicy))
+                {
+                    eventAggregator.Publish(
+                        new InvoiceEvent(invoice, InvoiceEvent.PaymentSettled) { Payment = updatedItem.paymentEntity });
+                }
+            }
+        }
     }
 }

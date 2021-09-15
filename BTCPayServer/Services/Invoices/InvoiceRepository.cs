@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.OleDb;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -813,36 +814,32 @@ namespace BTCPayServer.Services.Invoices
             return alreadyExists ? null : entity;
         }
 
-        public async Task UpdatePayments(List<PaymentEntity> payments)
+        public async Task<List<(PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData, string invoiceId)>> UpdatePayments(List<PaymentEntity> payments)
         {
             if (payments.Count == 0)
-                return;
+                return new List<(PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData,
+                    string invoiceId)>();
             await using var context = _ContextFactory.CreateContext();
             var paymentsDict = payments
                 .Select(entity => (entity, entity.GetCryptoPaymentData()))
                 .ToDictionary(tuple => tuple.Item2.GetPaymentId());
             var paymentIds = paymentsDict.Keys.ToArray();
             var dbPayments = await context.Payments
-                .Include(data => data.InvoiceData)
+                // .Include(data => data.InvoiceData)
                 .Where(data => paymentIds.Contains(data.Id)).ToDictionaryAsync(data => data.Id);
-            var eventsToSend = new List<InvoiceEvent>();
+            var updated =
+                new List<(PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData, string
+                    invoiceId)>();
             foreach (KeyValuePair<string,(PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
             {
                 var dbPayment = dbPayments[payment.Key];
-                var invBlob = dbPayment.InvoiceData.GetBlob(_Networks);
-                var dbPaymentEntity = dbPayment.GetBlob(_Networks);
-                var wasConfirmed = dbPayment.GetBlob(_Networks).GetCryptoPaymentData()
-                    .PaymentConfirmed(dbPaymentEntity, invBlob.SpeedPolicy);
-                if (!wasConfirmed &&  payment.Value.Item2.PaymentConfirmed(payment.Value.entity, invBlob.SpeedPolicy))
-                {
-                    eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment.Value.entity });
-                }
+                updated.Add((payment.Value.entity, dbPayment.GetBlob(_Networks).GetCryptoPaymentData(), payment.Value.Item2, dbPayment.InvoiceDataId));
                
                 dbPayment.Accounted = payment.Value.entity.Accounted;
                 dbPayment.Blob = ToBytes(payment.Value.entity, payment.Value.entity.Network);
             }
             await context.SaveChangesAsync().ConfigureAwait(false);
-            eventsToSend.ForEach(_eventAggregator.Publish);
+            return updated;
         }
 
         private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)

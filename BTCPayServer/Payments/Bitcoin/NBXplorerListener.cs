@@ -341,7 +341,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 await _payJoinRepository.TryUnlock(payjoinInformation.ContributedOutPoints);
             }
 
-            await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
+            await _InvoiceRepository.UpdatePaymentsAndSendEvents(_Aggregator, updatedPaymentEntities, new List<InvoiceEntity>(){invoice});
             if (updatedPaymentEntities.Count != 0)
                 _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
             return invoice;

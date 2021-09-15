@@ -408,7 +408,7 @@ namespace BTCPayServer.HostedServices
             var updatedPaymentData = updateConfirmationCountIfNeeded.Where(a => a.Result != null).Select(a => a.Result).ToList();
             if (updatedPaymentData.Count > 0)
             {
-                await _InvoiceRepository.UpdatePayments(updatedPaymentData);
+                await _InvoiceRepository.UpdatePaymentsAndSendEvents(_EventAggregator, updatedPaymentData, new List<InvoiceEntity>(){invoice});
             }
 
             return extendInvoiceMonitoring;

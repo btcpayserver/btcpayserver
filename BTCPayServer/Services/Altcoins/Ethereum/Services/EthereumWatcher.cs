@@ -124,7 +124,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                     {
                         existingPayment.Accounted = false;
 
-                        await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
+                        await _invoiceRepository.UpdatePaymentsAndSendEvents(_eventAggregator,
+                            new List<PaymentEntity>() { existingPayment }, new List<InvoiceEntity>() { invoice });
                         if (response.Amount > 0)
                         {
                             var paymentData = new EthereumLikePaymentData()
@@ -161,7 +162,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                             cd.BlockNumber = (long?)response.BlockParameter.BlockNumber.Value;
 
                             existingPayment.SetCryptoPaymentData(cd);
-                            await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
+                            await _invoiceRepository.UpdatePaymentsAndSendEvents(_eventAggregator,
+                                new List<PaymentEntity>() { existingPayment }, new List<InvoiceEntity>() { invoice });
 
                             _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
                         }
@@ -181,8 +183,9 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                             }
 
                             existingPayment.SetCryptoPaymentData(cd);
-                            await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
 
+                            await _invoiceRepository.UpdatePaymentsAndSendEvents(_eventAggregator,
+                                new List<PaymentEntity>() { existingPayment }, new List<InvoiceEntity>() { invoice });
                             _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
                         }
                     }

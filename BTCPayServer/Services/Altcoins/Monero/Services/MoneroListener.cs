@@ -239,8 +239,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 }));
             }
 
-            transferProcessingTasks.Add(
-                _invoiceRepository.UpdatePayments(updatedPaymentEntities.Select(tuple => tuple.Item1).ToList()));
+            transferProcessingTasks.Add(_invoiceRepository.UpdatePaymentsAndSendEvents(_eventAggregator,
+                updatedPaymentEntities.Select(tuple => tuple.Item1).ToList(),
+                updatedPaymentEntities.Select(tuple => tuple.Item2).ToList()));
             await Task.WhenAll(transferProcessingTasks);
             foreach (var valueTuples in updatedPaymentEntities.GroupBy(entity => entity.Item2))
             {
@@ -300,7 +301,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
             if (paymentsToUpdate.Any())
             {
-                await _invoiceRepository.UpdatePayments(paymentsToUpdate.Select(tuple => tuple.Payment).ToList());
+                await _invoiceRepository.UpdatePaymentsAndSendEvents(_eventAggregator,paymentsToUpdate.Select(tuple => tuple.Payment).ToList(), paymentsToUpdate.Select(tuple=>tuple.invoice).ToList());
                 foreach (var valueTuples in paymentsToUpdate.GroupBy(entity => entity.invoice))
                 {
                     if (valueTuples.Any())

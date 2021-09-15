@@ -810,16 +810,7 @@ namespace BTCPayServer.Services.Invoices
             }
             catch (DbUpdateException) { alreadyExists = true; }
 
-            if (alreadyExists)
-            {
-                return null;
-            }
-
-            if (paymentData.PaymentConfirmed(entity, invoiceEntity.SpeedPolicy))
-            {
-                _eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = entity });
-            }
-            return entity;
+            return alreadyExists ? null : entity;
         }
 
         public async Task UpdatePayments(List<PaymentEntity> payments)

@@ -433,18 +433,17 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId)
         {
-            var payment = await invoiceRepository.AddPayment(invoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
+            var invoice = await invoiceRepository.GetInvoice(invoiceId);
+            if (invoice == null)
+            {
+                return false;
+            }
+            var payment = await invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable
             }, network, accounted: true);
-            if (payment != null)
-            {
-                var invoice = await invoiceRepository.GetInvoice(invoiceId);
-                if (invoice != null)
-                    _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
-            }
             return payment != null;
         }
 

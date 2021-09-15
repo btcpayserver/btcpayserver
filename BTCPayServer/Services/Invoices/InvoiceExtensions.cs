@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using NBitcoin.Altcoins;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -48,5 +50,28 @@ namespace BTCPayServer.Services.Invoices
                 eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
             }
         }
+        public static async Task<PaymentEntity> AddPaymentAndSendEvents(this InvoiceRepository invoiceRepository,
+            EventAggregator eventAggregator,
+            InvoiceEntity invoiceEntity, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network,
+            bool accounted = false)
+        {
+            var paymentEntity =
+                await invoiceRepository.AddPayment(invoiceEntity.Id, date, paymentData, network, accounted);
+            if (paymentEntity != null)
+            {
+                eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.ReceivedPayment) { Payment = paymentEntity });
+            }
+            if (paymentEntity != null && paymentData.PaymentConfirmed(paymentEntity, invoiceEntity.SpeedPolicy))
+            {
+                eventAggregator.Publish(
+                    new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = paymentEntity });
+            }
+            
+            
+
+            return paymentEntity;
+        }
+
+
     }
 }

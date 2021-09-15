@@ -113,9 +113,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                         AccountIndex = response.PaymentMethodDetails.Index,
                         XPub = response.PaymentMethodDetails.XPub
                     };
-                    var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
+                    _ = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
                         paymentData, network, true);
-                    if (payment != null) ReceivedPayment(invoice, payment);
                 }
                 else if (existingPayment != null)
                 {
@@ -148,9 +147,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                                 AccountIndex = cd.AccountIndex,
                                 XPub = cd.XPub
                             };
-                            var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
+                            _ = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
                                 paymentData, network, true);
-                            if (payment != null) ReceivedPayment(invoice, payment);
                         }
                     }
                     else if (response.Amount == cd.Amount)
@@ -321,12 +319,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             {
                 return "";            
             }
-        }
-
-        private void ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
-        {
-            _eventAggregator.Publish(
-                new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) {Payment = payment});
         }
 
         private async Task<long> GetBalance(EthereumBTCPayNetwork network, BlockParameter blockParameter,

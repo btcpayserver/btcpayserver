@@ -167,7 +167,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetAllBitcoinPaymentData(false).Any(c => c.GetPaymentId() == paymentData.GetPaymentId());
                                             if (!alreadyExist)
                                             {
-                                                var payment = await _InvoiceRepository.AddPayment(invoice.Id,
+                                                var payment = await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice,
                                                     DateTimeOffset.UtcNow, paymentData, network);
                                                 if (payment != null)
                                                     await ReceivedPayment(wallet, invoice, payment,
@@ -383,7 +383,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
                         transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath);
 
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
+                    var payment = await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
                     if (payment != null)
                     {
@@ -426,7 +426,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 invoice.SetPaymentMethod(paymentMethod);
             }
             wallet.InvalidateCache(strategy);
-            _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;
         }
         public async Task StopAsync(CancellationToken cancellationToken)

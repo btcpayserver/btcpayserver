@@ -487,13 +487,12 @@ namespace BTCPayServer.Payments.PayJoin
             };
             if (invoice != null)
             {
-                var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, originalPaymentData, network, true);
+                var payment = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow, originalPaymentData, network, true);
                 if (payment is null)
                 {
                     return UnprocessableEntity(CreatePayjoinError("already-paid",
                         $"The original transaction has already been accounted"));
                 }
-                _eventAggregator.Publish(new InvoiceEvent(invoice,InvoiceEvent.ReceivedPayment) { Payment = payment });
             }
 
            

@@ -84,7 +84,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.2.1
+    image: nicolasdorier/nbxplorer:2.2.7
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -349,7 +349,7 @@ services:
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid
-      image: btcpayserver/elements:0.18.1.7
+      image: btcpayserver/elements:0.18.1.12
       environment:
           ELEMENTS_CHAIN: elementsregtest
           ELEMENTS_EXTRA_ARGS: |

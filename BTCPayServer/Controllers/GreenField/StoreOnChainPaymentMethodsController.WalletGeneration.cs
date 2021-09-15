@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers.GreenField
             await _storeRepository.UpdateStore(store);
             var rawResult = GetExistingBtcLikePaymentMethod(cryptoCode, store);
             var result = new OnChainPaymentMethodDataWithSensitiveData(rawResult.CryptoCode, rawResult.DerivationScheme,
-                rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic());
+                rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic(), derivationSchemeSettings.PaymentId.ToStringNormalized());
             return Ok(result);
         }
         

@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers.GreenField
         public IActionResult GetProposedOnChainPaymentMethodPreview(
             string storeId,
             string cryptoCode,
-            [FromBody] OnChainPaymentMethodDataPreview paymentMethodData,
+            [FromBody] UpdateOnChainPaymentMethodRequest paymentMethodData,
             int offset = 0, int amount = 10)
         {
             if (!GetCryptoCodeWallet(cryptoCode, out var network, out BTCPayWallet _))

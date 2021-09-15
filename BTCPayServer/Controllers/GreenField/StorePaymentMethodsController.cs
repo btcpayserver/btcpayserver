@@ -38,6 +38,7 @@ namespace BTCPayServer.Controllers.GreenField
                     method => method.PaymentId.ToStringNormalized(),
                     method => new GenericPaymentMethodData()
                     {
+                        CryptoCode = method.PaymentId.CryptoCode,
                         Enabled = enabled.GetValueOrDefault(!excludedPaymentMethods.Match(method.PaymentId)),
                         Data = method.PaymentId.PaymentType.GetGreenfieldData(method)
                     }));

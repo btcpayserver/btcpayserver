@@ -45,7 +45,7 @@ namespace BTCPayServer.Client
         }
 
         public virtual async Task<OnChainPaymentMethodData> UpdateStoreOnChainPaymentMethod(string storeId,
-            string cryptoCode, OnChainPaymentMethodData paymentMethod,
+            string cryptoCode, UpdateOnChainPaymentMethodRequest paymentMethod,
             CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
@@ -56,7 +56,7 @@ namespace BTCPayServer.Client
 
         public virtual async Task<OnChainPaymentMethodPreviewResultData>
             PreviewProposedStoreOnChainPaymentMethodAddresses(
-                string storeId, string cryptoCode, OnChainPaymentMethodData paymentMethod, int offset = 0,
+                string storeId, string cryptoCode, UpdateOnChainPaymentMethodRequest paymentMethod, int offset = 0,
                 int amount = 10,
                 CancellationToken token = default)
         {

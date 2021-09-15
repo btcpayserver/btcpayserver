@@ -145,8 +145,10 @@ namespace BTCPayServer.Payments.Bitcoin
                                 if (evt.DerivationStrategy != null)
                                 {
                                     wallet.InvalidateCache(evt.DerivationStrategy);
-
-                                    foreach (var output in network.GetValidOutputs(evt))
+                                    var validOutputs = network.GetValidOutputs(evt).ToList();
+                                    if (!validOutputs.Any())
+                                        break;
+                                    foreach (var output in validOutputs)
                                     {
                                         var key = output.Item1.ScriptPubKey.Hash + "#" +
                                                   network.CryptoCode.ToUpperInvariant();

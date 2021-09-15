@@ -290,7 +290,10 @@ namespace BTCPayServer.Services.Invoices
                 JObject strategies = JObject.Parse(DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    var paymentMethodId = PaymentMethodId.Parse(strat.Name);
+                    if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
+                    {
+                        continue;
+                    }
                     var network = Networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {

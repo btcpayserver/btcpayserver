@@ -16,6 +16,11 @@
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
                     </small>
+                    Total Balance:
+                    @foreach(var balanceForACrypto in @Model.BalanceForCryptoCode)
+                    {
+                        <div>@(balanceForACrypto.Value.ShowMoney(balanceForACrypto.Key) + " - " + balanceForACrypto.Key.CryptoCode)</div>
+                    }
                 </h2>
             </div>
         </div>

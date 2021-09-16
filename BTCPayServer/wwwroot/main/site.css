@@ -72,13 +72,6 @@ hr.light {
 }
 
 /* Navigation bar */
-@media (max-width: 991px) {
-    .offcanvas-body {
-        color: var(--btcpay-body-text);
-        background: var(--btcpay-body-bg);
-    }
-}
-
 @media (max-width: 575px) {
     .offcanvas-header,
     .offcanvas-body {
@@ -87,7 +80,35 @@ hr.light {
     }
 }
 
-.offcanvas-header,
+@media (max-width: 991px) {
+    .offcanvas-header {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+}
+
+.offcanvas-fade {
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: none;
+}
+
+.offcanvas-fade .offcanvas-header {
+    background-color: var(--btcpay-header-bg);
+}
+
+.offcanvas-fade .offcanvas-body {
+    opacity: 0;
+    transition: opacity 0.15s linear, transform 0.15s linear;
+}
+
+.offcanvas-fade.show .offcanvas-body {
+    opacity: 1;
+    transform: translate(0, .5rem);
+}
+
 #mainNav {
     color: var(--btcpay-header-text);
     background: var(--btcpay-header-bg);

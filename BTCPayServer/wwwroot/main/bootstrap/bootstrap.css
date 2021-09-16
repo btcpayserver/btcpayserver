@@ -6073,7 +6073,7 @@ fieldset:disabled .btn {
   z-index: 1040;
   width: 100vw;
   height: 100vh;
-  background-color: var(--btcpay-black);
+  background-color: var(--btcpay-bg-tile);
 }
 
 .offcanvas-backdrop.fade {
@@ -6081,21 +6081,21 @@ fieldset:disabled .btn {
 }
 
 .offcanvas-backdrop.show {
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .offcanvas-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1rem;
+  padding: 0.5rem 0;
 }
 
 .offcanvas-header .btn-close {
-  padding: 0.5rem 0.5rem;
-  margin-top: -0.5rem;
-  margin-right: -0.5rem;
-  margin-bottom: -0.5rem;
+  padding: 0.25rem 0;
+  margin-top: -0.25rem;
+  margin-right: 0;
+  margin-bottom: -0.25rem;
 }
 
 .offcanvas-title {
@@ -6105,23 +6105,23 @@ fieldset:disabled .btn {
 
 .offcanvas-body {
   flex-grow: 1;
-  padding: 1rem 1rem;
+  padding: 0.5rem 0;
   overflow-y: auto;
 }
 
 .offcanvas-start {
   top: 0;
   left: 0;
-  width: 400px;
-  border-right: 1px solid var(--btcpay-body-border-medium);
+  width: 100vw;
+  border-right: 0 solid rgba(0, 0, 0, 0.2);
   transform: translateX(-100%);
 }
 
 .offcanvas-end {
   top: 0;
   right: 0;
-  width: 400px;
-  border-left: 1px solid var(--btcpay-body-border-medium);
+  width: 100vw;
+  border-left: 0 solid rgba(0, 0, 0, 0.2);
   transform: translateX(100%);
 }
 
@@ -6129,18 +6129,18 @@ fieldset:disabled .btn {
   top: 0;
   right: 0;
   left: 0;
-  height: 30vh;
+  height: auto;
   max-height: 100%;
-  border-bottom: 1px solid var(--btcpay-body-border-medium);
+  border-bottom: 0 solid rgba(0, 0, 0, 0.2);
   transform: translateY(-100%);
 }
 
 .offcanvas-bottom {
   right: 0;
   left: 0;
-  height: 30vh;
+  height: auto;
   max-height: 100%;
-  border-top: 1px solid var(--btcpay-body-border-medium);
+  border-top: 0 solid rgba(0, 0, 0, 0.2);
   transform: translateY(100%);
 }
 
@@ -9831,12 +9831,16 @@ code {
 
 pre {
   border-radius: var(--btcpay-border-radius);
+}
+
+pre,
+pre code {
   background: var(--btcpay-pre-bg);
 }
 
-pre code {
+pre.text-wrap,
+pre:not(.text-wrap) code {
   padding: var(--btcpay-space-m) !important;
-  background: var(--btcpay-pre-bg);
 }
 
 ol {

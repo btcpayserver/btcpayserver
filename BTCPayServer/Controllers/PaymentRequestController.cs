@@ -299,6 +299,10 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            if (!result.AllowCustomPaymentAmounts) {
+                return BadRequest("Not allowed to cancel this invoice");
+            }
+
             var invoices = result.Invoices.Where(requestInvoice =>
                 requestInvoice.State.Status == InvoiceStatusLegacy.New && !requestInvoice.Payments.Any());
 

@@ -126,7 +126,7 @@
                                     <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" data-test="pay-button">
                                         Pay Invoice
                                     </a>
-                                    if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
+                                    if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
                                     {
                                         <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-id="@Model.Id" class="mt-2 d-print-none">
                                             <button class="btn btn-outline-secondary w-100 text-nowrap" type="submit">Cancel Invoice</button>
@@ -169,18 +169,20 @@
                                 </form>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading" data-test="pay-button">
+                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments) || !srvModel.allowCustomPaymentAmounts}" v-on:click="pay(null)" :disabled="loading" data-test="pay-button">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                     <span>Pay Invoice</span>
                                 </button>
-                                <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
-                                    <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
-                                    <span>Cancel Invoice</span>
-                                </button>
+                                @if (Model.AllowCustomPaymentAmounts) {
+                                    <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                        <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </span>
+                                        <span>Cancel Invoice</span>
+                                    </button>
+                                }
                             </template>
                         </template>
                         <template v-else>

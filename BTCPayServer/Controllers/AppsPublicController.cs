@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
                     SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
-                Items = _AppService.Parse(settings.Template, settings.Currency, true),
+                Items = _AppService.GetPOSItems(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
-                var choices = _AppService.Parse(settings.Template, settings.Currency, true);
+                var choices = _AppService.GetPOSItems(settings.Template, settings.Currency);
                 choice = choices.FirstOrDefault(c => c.Id == choiceKey);
                 if (choice == null)
                     return NotFound();
@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
 
-                    var choices = _AppService.Parse(settings.Template, settings.Currency, true);
+                    var choices = _AppService.GetPOSItems(settings.Template, settings.Currency);
                     foreach (var cartItem in cartItems)
                     {
                         var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);
@@ -314,7 +314,7 @@ namespace BTCPayServer.Controllers
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
-                var choices = _AppService.Parse(settings.PerksTemplate, settings.TargetCurrency, true);
+                var choices = _AppService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
                 choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");

@@ -311,7 +311,7 @@ namespace BTCPayServer.Services.Apps
             var serializer = new SerializerBuilder().Build();
             return serializer.Serialize(mappingNode);
         }
-        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency, bool filterDisabled = false)
+        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
@@ -341,8 +341,12 @@ namespace BTCPayServer.Services.Apps
                     PaymentMethods = c.GetDetailStringList("payment_methods"),
                     Disabled = c.GetDetailString("disabled") == "true"
                 })
-                .Where(c => filterDisabled ? !c.Disabled : true)
                 .ToArray();
+        }
+
+        public ViewPointOfSaleViewModel.Item[] GetPOSItems(string template, string currency)
+        {
+            return Parse(template, currency).Where(c => !c.Disabled).ToArray();
         }
 
         public Contributions GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)

@@ -195,7 +195,25 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var parsedPermissions = Permission.ToPermissions(vm.Permissions?.Split(';')??Array.Empty<string>()).GroupBy(permission => permission.Policy);
+            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            var permissionsWithStoreIDs = new List<string>();
+            /**
+             * Go over each permission and associated store IDs and 
+             * join them so that permission for a specific store is parsed correctly
+             */
+            for (var i = 0; i < permissions.Length; i++) {
+                var currPerm = permissions[i];
+                var storeIds = vm.PermissionValues[i].SpecificStores.ToArray();
+                if (storeIds.Length > 0) {
+                    for (var x = 0; x < storeIds.Length; x++) {
+                        permissionsWithStoreIDs.Add($"{currPerm}:{storeIds[x]}");
+                    }
+                } else {
+                    permissionsWithStoreIDs.Add(currPerm);
+                }
+            }
+
+            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray()).GroupBy(permission => permission.Policy);
 
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
@@ -358,6 +376,11 @@ namespace BTCPayServer.Controllers
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
+                    // Make sure we don't keep specific store IDs if we switched back to "all stores" from "specific stores"
+                    if (permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
+                    {
+                        permissionValueItem.SpecificStores = new List<string>();
+                    }
 
                     if (permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific &&
                         !permissionValueItem.SpecificStores.Any() && viewModel.Stores.Any())

@@ -64,7 +64,7 @@
                             @if (Model.PermissionValues[i].StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
                             {
                                 <div class="list-group-item form-group">
-                                    <div class="form-check">
+                                    <div class="form-check d-flex">
                                         @if (Model.Strict || Model.PermissionValues[i].Forbidden)
                                         {
                                             <input id="@Model.PermissionValues[i].Permission" type="hidden" asp-for="PermissionValues[i].Value"/>
@@ -74,10 +74,10 @@
                                         {
                                             <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
                                         }
-                                        <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label">@Model.PermissionValues[i].Title</label>
+                                        <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label m-0 me-4 ms-2">@Model.PermissionValues[i].Title</label>
                                         @if (Model.SelectiveStores)
                                         {
-                                            <button type="submit" class="btn btn-link" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">select specific stores...</button>
+                                            <button type="submit" class="btn btn-link p-0 me-4" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">select specific stores...</button>
                                         }
 
                                         @if (Model.PermissionValues[i].Forbidden)

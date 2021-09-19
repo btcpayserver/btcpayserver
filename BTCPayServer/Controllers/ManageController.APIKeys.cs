@@ -228,6 +228,14 @@ namespace BTCPayServer.Controllers
                 }
                 else if (wanted?.Any() ?? false)
                 {
+                    var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                    var command = commandParts.Length > 1 ? commandParts[1] : null;
+                    var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
+                    // Don't want to accidentally change mode for the user if they are explicitly performing some action
+                    if (isPerformingAnAction) {
+                        continue;
+                    }
+
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {

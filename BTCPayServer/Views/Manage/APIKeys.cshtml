@@ -59,7 +59,7 @@
             <td class="text-end">
                 <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@(keyData.Label ?? keyData.Id)<strong> will immediately lose access." data-confirm-input="DELETE">Delete</a>
                 <span>-</span>
-                <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
+                <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index">Show QR</button>
             </td>
         </tr>
         index++;

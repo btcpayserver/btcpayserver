@@ -468,3 +468,8 @@ header.masthead .header-content .header-content-inner p {
         margin: 20px auto 0;
     }
 }
+
+.social-link {
+    height: 1rem;
+    padding: 0 0.5rem 0 1rem;
+}

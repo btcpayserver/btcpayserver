@@ -85,28 +85,28 @@ hr.light {
         padding-top: 0.75rem;
         padding-bottom: 0.75rem;
     }
-}
+    
+    .offcanvas-fade {
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        background: none;
+    }
 
-.offcanvas-fade {
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    background: none;
-}
+    .offcanvas-fade .offcanvas-header {
+        background-color: var(--btcpay-header-bg);
+    }
 
-.offcanvas-fade .offcanvas-header {
-    background-color: var(--btcpay-header-bg);
-}
+    .offcanvas-fade .offcanvas-body {
+        opacity: 0;
+        transition: opacity 0.15s linear, transform 0.15s linear;
+    }
 
-.offcanvas-fade .offcanvas-body {
-    opacity: 0;
-    transition: opacity 0.15s linear, transform 0.15s linear;
-}
-
-.offcanvas-fade.show .offcanvas-body {
-    opacity: 1;
-    transform: translate(0, .5rem);
+    .offcanvas-fade.show .offcanvas-body {
+        opacity: 1;
+        transform: translate(0, .5rem);
+    }
 }
 
 #mainNav {

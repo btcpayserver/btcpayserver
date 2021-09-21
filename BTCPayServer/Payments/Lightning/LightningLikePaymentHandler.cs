@@ -135,7 +135,8 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (Exception ex)
                 {
-                    throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
+                    throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" + 
+                                                                (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : "")));
                 }
 
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)

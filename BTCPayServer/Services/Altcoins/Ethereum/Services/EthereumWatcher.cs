@@ -114,7 +114,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                         XPub = response.PaymentMethodDetails.XPub
                     };
                     _ = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
-                        paymentData, network, true);
+                        paymentData, network, true, entity => Task.CompletedTask);
                 }
                 else if (existingPayment != null)
                 {
@@ -149,7 +149,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                                 XPub = cd.XPub
                             };
                             _ = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
-                                paymentData, network, true);
+                                paymentData, network, true, entity => Task.CompletedTask);
                         }
                     }
                     else if (response.Amount == cd.Amount)

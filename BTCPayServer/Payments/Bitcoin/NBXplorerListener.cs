@@ -167,11 +167,14 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetAllBitcoinPaymentData(false).Any(c => c.GetPaymentId() == paymentData.GetPaymentId());
                                             if (!alreadyExist)
                                             {
-                                                var payment = await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice,
-                                                    DateTimeOffset.UtcNow, paymentData, network);
-                                                if (payment != null)
-                                                    await ReceivedPayment(wallet, invoice, payment,
-                                                        evt.DerivationStrategy);
+                                               await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice,
+                                                    DateTimeOffset.UtcNow, paymentData, network, false, async (payment) =>
+                                                    {
+                                                        if (payment != null)
+                                                            await ReceivedPayment(wallet, invoice, payment,
+                                                                evt.DerivationStrategy);
+                                                    });
+                                                
                                             }
                                             else
                                             {
@@ -383,15 +386,17 @@ namespace BTCPayServer.Payments.Bitcoin
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
                         transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath);
 
-                    var payment = await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice, coin.Timestamp, paymentData, network).ConfigureAwait(false);
+                    await _InvoiceRepository.AddPaymentAndSendEvents(_Aggregator, invoice, coin.Timestamp, paymentData, network, false, async entity =>
+                        {
+                            if (entity != null)
+                            {
+                                invoice = await ReceivedPayment(wallet, invoice, entity, strategy);
+                                if (invoice != null)
+                                    totalPayment++;
+                            }
+                        }).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
-                    if (payment != null)
-                    {
-                        invoice = await ReceivedPayment(wallet, invoice, payment, strategy);
-                        if (invoice == null)
-                            continue;
-                        totalPayment++;
-                    }
+                    
                 }
             }
             return totalPayment;

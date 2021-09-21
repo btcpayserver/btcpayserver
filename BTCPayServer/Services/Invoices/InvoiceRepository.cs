@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data.OleDb;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NLog;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -814,11 +812,11 @@ namespace BTCPayServer.Services.Invoices
             return alreadyExists ? null : entity;
         }
 
-        public async Task<List<(PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData, string invoiceId)>> UpdatePayments(List<PaymentEntity> payments)
+        public async Task<List<InvoiceEvent>> UpdatePayments(List<PaymentEntity> payments, List<InvoiceEntity> invoices)
         {
+            var result = new List<InvoiceEvent>();
             if (payments.Count == 0)
-                return new List<(PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData,
-                    string invoiceId)>();
+                return result;
             await using var context = _ContextFactory.CreateContext();
             var paymentsDict = payments
                 .Select(entity => (entity, entity.GetCryptoPaymentData()))
@@ -839,7 +837,18 @@ namespace BTCPayServer.Services.Invoices
                 dbPayment.Blob = ToBytes(payment.Value.entity, payment.Value.entity.Network);
             }
             await context.SaveChangesAsync().ConfigureAwait(false);
-            return updated;
+            
+            foreach ((PaymentEntity paymentEntity, CryptoPaymentData oldData, CryptoPaymentData newData, string
+                invoiceId) updatedItem in updated)
+            {
+                var invoice = invoices.First(entity => entity.Id == updatedItem.invoiceId);
+                if (!updatedItem.oldData.PaymentConfirmed(updatedItem.paymentEntity, invoice.SpeedPolicy) &&
+                    updatedItem.newData.PaymentConfirmed(updatedItem.paymentEntity, invoice.SpeedPolicy))
+                {
+                    result.Add( new InvoiceEvent(invoice, InvoiceEvent.PaymentSettled) { Payment = updatedItem.paymentEntity });
+                }
+            }
+            return result;
         }
 
         private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)

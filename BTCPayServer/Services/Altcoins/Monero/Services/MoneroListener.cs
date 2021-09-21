@@ -338,10 +338,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             //if it doesnt, add it and assign a new monerolike address to the system if a balance is still due
             if (alreadyExistingPaymentThatMatches.Payment == null)
             {
-                var payment = await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
-                    paymentData, _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(cryptoCode), true);
-                if (payment != null)
-                    await ReceivedPayment(invoice, payment);
+                await _invoiceRepository.AddPaymentAndSendEvents(_eventAggregator, invoice, DateTimeOffset.UtcNow,
+                    paymentData, _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(cryptoCode), true, async entity =>
+                    {
+                        if (entity != null)
+                            await ReceivedPayment(invoice, entity);
+                    });
             }
             else
             {

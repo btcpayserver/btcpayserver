@@ -10,7 +10,7 @@
     var nodeInfoList = Model.NodeInfo.Select((value, i) => (value, i)).ToArray();
     string NodeInfoId(NodeInfo nodeInfo)
     {
-        return $"{nodeInfo.Host}-{nodeInfo.Port}";
+        return $"{nodeInfo.Host}-{nodeInfo.Port}".Replace(".", "-");
     }
 }
 <!DOCTYPE html>

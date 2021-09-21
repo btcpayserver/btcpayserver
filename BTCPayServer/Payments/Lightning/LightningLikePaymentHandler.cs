@@ -140,7 +140,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
 
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
-                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion).ToArray()
+                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
                 
                 if (!nodeInfo.Any())

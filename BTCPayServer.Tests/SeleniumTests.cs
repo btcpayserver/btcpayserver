@@ -461,7 +461,7 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
 
-                var client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+                var client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
                 await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
                 await client.CreateInvoiceAsync(new NBitpayClient.Invoice()
                 {
@@ -470,10 +470,10 @@ namespace BTCPayServer.Tests
                     FullNotifications = true
                 }, NBitpayClient.Facade.Merchant);
 
-                client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+                client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
 
                 var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
-                s.Driver.Navigate().GoToUrl(code.CreateLink(s.Server.PayTester.ServerUri));
+                s.Driver.Navigate().GoToUrl(code.CreateLink(s.ServerUri));
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
 
                 await client.CreateInvoiceAsync(new NBitpayClient.Invoice()

@@ -163,7 +163,7 @@ namespace BTCPayServer.Tests
                 var invoiceId = s.CreateInvoice(store.storeId, 0.001m, "BTC", "a@x.com");
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 s.Driver.Navigate()
-                    .GoToUrl(new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}"));
+                    .GoToUrl(new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}"));
                 TestUtils.Eventually(() =>
                 {
                     Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
@@ -184,7 +184,7 @@ namespace BTCPayServer.Tests
                 closebutton.Click();
                 s.Driver.AssertElementNotFound(By.Name("btcpay"));
                 Assert.Equal(s.Driver.Url,
-                    new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
+                    new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
         }
     }

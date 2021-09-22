@@ -124,8 +124,8 @@ namespace BTCPayServer.Tests
                 //redirect
                 //appidentifier
                 var appidentifier = "testapp";
-                var callbackUrl = tester.PayTester.ServerUri + "postredirect-callback-test";
-                var authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                var callbackUrl = s.ServerUri + "postredirect-callback-test";
+                var authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                     new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.Contains(appidentifier, s.Driver.PageSource);
@@ -143,7 +143,7 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken(accessToken, tester, user,
                     (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
-                authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                     new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true,  applicationDetails: (null, new Uri(callbackUrl))).ToString();
 
                 s.Driver.Navigate().GoToUrl(authUrl);
@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
                     (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
                 //let's test the app identifier system
-                authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                     new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri(callbackUrl))).ToString();
 
                 //if it's the same, go to the confirm page
@@ -173,7 +173,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(callbackUrl, s.Driver.Url);
                 
                 //same app but different redirect = nono
-                authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                     new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
                 
                 s.Driver.Navigate().GoToUrl(authUrl);

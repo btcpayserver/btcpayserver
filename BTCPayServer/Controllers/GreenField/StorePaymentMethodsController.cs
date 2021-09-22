@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers.GreenField
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods")]
         public ActionResult<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(
             string storeId,

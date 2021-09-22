@@ -224,8 +224,17 @@ function addInputPrice(name, price, widthInput, customFn, type, min, max, step) 
 }
 
 function addSelectCurrency(currency) {
+    // Remove all non-alphabet characters from input string and uppercase it for display
+    var safeCurrency = currency.replace(/[^a-z]/gi, '').toUpperCase();
+    var defaultCurrencies = ['USD', 'GBP', 'EUR', 'BTC'];
+    var options = defaultCurrencies.map(c => '      <option value="' + c + '"' + (c === safeCurrency ? ' selected' : '') + '>' + c + '</option>');
+    // If user provided a currency not in our default currencies list, add it to the top of the options as a selected option
+    if (defaultCurrencies.indexOf(safeCurrency) === -1) {
+        options.unshift('      <option value="' + safeCurrency + '" selected>' + safeCurrency + '</option>')
+    }
+
     return '    <select name="currency">\n' +
-        ['USD', 'GBP', 'EUR', 'BTC'].map(c => '      <option value="' + c + '"' + (c === currency ? ' selected' : '') + '>' + c + '</option>').join('\n') + '\n' +
+        options.join('\n') + '\n' +
     '    </select>\n'
 }
 

@@ -112,7 +112,7 @@ namespace BTCPayServer.Payments.Lightning
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id,
-                NodeInfo = nodeInfo.FirstOrDefault()?.ToString()
+                NodeInfo = nodeInfo.First().ToString()
             };
         }
 

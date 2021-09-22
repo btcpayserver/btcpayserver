@@ -53,11 +53,6 @@ namespace BTCPayServer.Tests
             var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
 
             var options = new ChromeOptions();
-            if (Server.PayTester.InContainer)
-            {
-                // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
-                options.AddArgument("no-sandbox");
-            }
             if (!runInBrowser)
             {
                 options.AddArguments("headless");
@@ -65,24 +60,39 @@ namespace BTCPayServer.Tests
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
             options.AddArgument("start-maximized");
-
-            var cds = ChromeDriverService.CreateDefaultService(chromeDriverPath);
-            cds.EnableVerboseLogging = true;
-            cds.Port = Utils.FreeTcpPort();
-            cds.HostName = "127.0.0.1";
-            cds.Start();
-            Driver = new ChromeDriver(cds, options,
-                // A bit less than test timeout
-                TimeSpan.FromSeconds(50));
+            if (Server.PayTester.InContainer)
+            {
+                Driver = new OpenQA.Selenium.Remote.RemoteWebDriver(new Uri("http://selenium:4444/wd/hub"), new RemoteSessionSettings(options));
+                var containerIp = File.ReadAllText("/etc/hosts").Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
+                    .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
+                Logs.Tester.LogInformation($"Selenium: Container's IP {containerIp}");
+                ServerUri = new Uri(Server.PayTester.ServerUri.AbsoluteUri.Replace($"http://{Server.PayTester.HostName}", $"http://{containerIp}", StringComparison.OrdinalIgnoreCase), UriKind.Absolute);
+            }
+            else
+            {
+                var cds = ChromeDriverService.CreateDefaultService(chromeDriverPath);
+                cds.EnableVerboseLogging = true;
+                cds.Port = Utils.FreeTcpPort();
+                cds.HostName = "127.0.0.1";
+                cds.Start();
+                Driver = new ChromeDriver(cds, options,
+                    // A bit less than test timeout
+                    TimeSpan.FromSeconds(50));
+                ServerUri = Server.PayTester.ServerUri;
+            }
             Driver.Manage().Window.Maximize();
 
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
-            Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
+            Logs.Tester.LogInformation($"Selenium: Browsing to {ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
             GoToRegister();
             Driver.AssertNoError();
         }
-
+        /// <summary>
+        /// Use this ServerUri when trying to browse with selenium
+        /// Because for some reason, the selenium container can't resolve the tests container domain name
+        /// </summary>
+        public Uri ServerUri;
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             var className = $"alert-{StatusMessageModel.ToString(severity)}";
@@ -94,7 +104,7 @@ namespace BTCPayServer.Tests
 
         public string Link(string relativeLink)
         {
-            return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
+            return ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
         }
 
         public void GoToRegister()
@@ -275,7 +285,7 @@ namespace BTCPayServer.Tests
 
         public void GoToHome()
         {
-            Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
+            Driver.Navigate().GoToUrl(ServerUri);
         }
 
         public void Logout()
@@ -329,7 +339,7 @@ namespace BTCPayServer.Tests
 
         public void GoToLogin()
         {
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "/login"));
+            Driver.Navigate().GoToUrl(new Uri(ServerUri, "/login"));
         }
 
         public string CreateInvoice(
@@ -412,7 +422,7 @@ namespace BTCPayServer.Tests
         public void GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
         {
             walletId ??= WalletId;
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}"));
+            Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {
                 Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
@@ -421,7 +431,7 @@ namespace BTCPayServer.Tests
 
         public void GoToUrl(string relativeUrl)
         {
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, relativeUrl));
+            Driver.Navigate().GoToUrl(new Uri(ServerUri, relativeUrl));
         }
 
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)

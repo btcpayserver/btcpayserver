@@ -32,6 +32,7 @@ services:
       - "80"
     links:
       - dev
+      - selenium
     extra_hosts: 
       - "tests:127.0.0.1"
     volumes:
@@ -80,6 +81,10 @@ services:
       - postgres
       - customer_lnd
       - merchant_lnd
+  selenium:
+    image: selenium/standalone-chrome:3
+    expose:
+      - "4444"
   nbxplorer:
     image: nicolasdorier/nbxplorer:2.2.7
     restart: unless-stopped

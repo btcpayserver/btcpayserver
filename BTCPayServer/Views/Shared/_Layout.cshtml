@@ -132,12 +132,20 @@
     {
         <footer class="footer">
             <div class="container">
-                <div class="float-start">
-                    <a href="https://github.com/btcpayserver/btcpayserver" target="_blank"  rel="noreferrer noopener"><img src="~/img/github.svg" alt="Github" class="social-logo social-link" asp-append-version="true">Github</a>
-                    <a href="https://chat.btcpayserver.org/" target="_blank"  rel="noreferrer noopener"><img src="~/img/mattermost.svg" alt="Mattermost" class="social-logo social-link" asp-append-version="true">Mattermost</a>
-                    <a href="https://twitter.com/BtcpayServer" target="_blank"  rel="noreferrer noopener"><img src="~/img/twitter.svg" alt="Twitter" class="social-logo social-link" asp-append-version="true">Twitter</a>                
+                <div class="d-flex flex-wrap justify-content-between">
+                    <div>
+                        <div>
+                            <a href="https://github.com/btcpayserver/btcpayserver" target="_blank"  rel="noreferrer noopener"><img src="~/img/github.svg" alt="Github" class="social-logo social-link" asp-append-version="true">Github</a>
+                        </div>
+                        <div>
+                            <a href="https://chat.btcpayserver.org/" target="_blank"  rel="noreferrer noopener"><img src="~/img/mattermost.svg" alt="Mattermost" class="social-logo social-link" asp-append-version="true">Mattermost</a>
+                        </div>
+                        <div>
+                            <a href="https://twitter.com/BtcpayServer" target="_blank"  rel="noreferrer noopener"><img src="~/img/twitter.svg" alt="Twitter" class="social-logo social-link" asp-append-version="true">Twitter</a>
+                        </div>                
+                    </div>
+                    <div class="p-2 align-self-center">@Env.ToString()</div>
                 </div>
-                <div class="text-end">@Env.ToString()</div>
             </div>
         </footer>
     }

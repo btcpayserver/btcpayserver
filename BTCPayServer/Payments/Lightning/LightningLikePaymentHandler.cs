@@ -68,6 +68,8 @@ namespace BTCPayServer.Payments.Lightning
             }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
+            var test = GetNodeInfo(supportedPaymentMethod, network, paymentMethod.PreferOnion);
+            
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
             try
@@ -106,7 +108,8 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
                 }
             }
-            var nodeInfo = await GetNodeInfo(supportedPaymentMethod, network, paymentMethod.PreferOnion);
+
+            var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
                 Activated = true,

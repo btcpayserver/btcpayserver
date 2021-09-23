@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BTCPayServer.Data
 {
@@ -11,23 +12,24 @@ namespace BTCPayServer.Data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            builder.UseNpgsql("User ID=postgres;Host=127.0.0.1;Port=39372;Database=designtimebtcpay");
 
-            builder.UseSqlite("Data Source=temp.db");
-
-            return new ApplicationDbContext(builder.Options, true);
+            return new ApplicationDbContext(builder.Options)
+            {
+                _designTime = true
+            };
         }
     }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        private readonly bool _designTime;
+        public  bool _designTime;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, bool designTime = false)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            _designTime = designTime;
+            _designTime = false;
         }
 
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
@@ -118,17 +120,48 @@ namespace BTCPayServer.Data
                 // This only supports millisecond precision, but should be sufficient for most use cases.
                 foreach (var entityType in builder.Model.GetEntityTypes())
                 {
-                    var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset));
+                    var properties = entityType.ClrType.GetProperties()
+                        .Where(p => p.PropertyType == typeof(DateTimeOffset));
                     foreach (var property in properties)
                     {
                         builder
                             .Entity(entityType.Name)
                             .Property(property.Name)
-                            .HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.DateTimeOffsetToBinaryConverter());
+                            .HasConversion(
+                                new Microsoft.EntityFrameworkCore.Storage.ValueConversion.
+                                    DateTimeOffsetToBinaryConverter());
                     }
+                }
+            }
+            else
+            {
+                foreach (var property in builder.Model.GetEntityTypes()
+                    .SelectMany(t => t.GetProperties())
+                    .Where(p => p.ClrType == typeof(DateTimeOffset)))
+                {
+                    property.SetValueConverter(
+                        new ValueConverter<DateTimeOffset, DateTime>(
+                            convertToProviderExpression: dateTimeOffset => dateTimeOffset.UtcDateTime,
+                            convertFromProviderExpression: dateTime => new DateTimeOffset(dateTime)
+                        ));
+                }
+
+                foreach (var property in builder.Model.GetEntityTypes()
+                    .SelectMany(t => t.GetProperties())
+                    .Where(p => p.ClrType == typeof(DateTimeOffset?)))
+                {
+                    property.SetValueConverter(
+                        new ValueConverter<DateTimeOffset?, DateTime?>(
+                            convertToProviderExpression: dateTimeOffset =>
+                                DateTime.SpecifyKind(dateTimeOffset.GetValueOrDefault().UtcDateTime,
+                                    DateTimeKind.Utc),
+                            convertFromProviderExpression: dateTime =>
+                                new DateTimeOffset(dateTime.GetValueOrDefault())
+                        ));
+
+                    //property.SetColumnType(nameof(Nullable<DateTime>));
                 }
             }
         }
     }
-
 }

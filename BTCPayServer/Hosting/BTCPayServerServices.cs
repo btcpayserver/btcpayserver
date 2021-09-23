@@ -36,6 +36,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BundlerMinifier.TagHelpers;
+using EFCoreSecondLevelCacheInterceptor;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -69,11 +70,18 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddEFSecondLevelCache(options =>
+                options
+                    .UseMemoryCacheProvider()
+                    .DisableLogging(false)
+                    .UseCacheKeyPrefix("EF_")
+                    .CacheAllQueries(CacheExpirationMode.Absolute, TimeSpan.FromMinutes(30)));
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
-            services.AddDbContext<ApplicationDbContext>((provider, o) =>
+            services.AddDbContextPool<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
+                o.AddInterceptors(provider.GetRequiredService<SecondLevelCacheInterceptor>());
             });
             services.AddHttpClient();
             services.AddHttpClient(nameof(ExplorerClientProvider), httpClient =>

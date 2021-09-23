@@ -68,7 +68,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
+            var test = GetNodeInfo(supportedPaymentMethod, network, paymentMethod.PreferOnion);
             
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
@@ -108,17 +108,18 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
                 }
             }
+
             var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id,
-                NodeInfo = nodeInfo.ToString()
+                NodeInfo = nodeInfo.First().ToString()
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, bool? preferOnion = null)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
@@ -137,10 +138,15 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (Exception ex)
                 {
-                    throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
+                    throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" + 
+                                                                (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
                 }
-                var nodeInfo = info.NodeInfoList.FirstOrDefault(i => i.IsTor == preferOnion) ?? info.NodeInfoList.FirstOrDefault();
-                if (nodeInfo == null)
+
+                var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
+                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
+                    : info.NodeInfoList.Select(i => i).ToArray();
+                
+                if (!nodeInfo.Any())
                 {
                     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
                 }

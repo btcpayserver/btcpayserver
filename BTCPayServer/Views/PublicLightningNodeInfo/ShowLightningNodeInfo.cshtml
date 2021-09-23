@@ -1,4 +1,4 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 
 @using BTCPayServer.Abstractions.Contracts
@@ -7,10 +7,6 @@
 @{
     Layout = null;
     var theme = await _settingsRepository.GetTheme();
-    string NodeInfoId(NodeInfo nodeInfo)
-    {
-        return $"{nodeInfo.Host}-{nodeInfo.Port}".Replace(".", "-");
-    }
 }
 <!DOCTYPE html>
 <html>
@@ -50,24 +46,26 @@
                             @if (Model.NodeInfo.Length > 1)
                             {
                                 <ul class="nav nav-pills justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
-                                    @foreach (var nodeInfo in Model.NodeInfo)
+                                    @for (int i = 0; i < Model.NodeInfo.Length; i++)
                                     {
+                                        var nodeInfo = Model.NodeInfo[i];
                                         <li class="nav-item" role="presentation">
-                                            <button class="nav-link w-100px @(nodeInfo == Model.NodeInfo.First() ? "active" : "")" id="nodeInfo-tab-@NodeInfoId(nodeInfo)" data-bs-toggle="pill" data-bs-target="#nodeInfo-@NodeInfoId(nodeInfo)" type="button" role="tab" aria-controls="nodeInfo-@NodeInfoId(nodeInfo)" aria-selected="true">@(nodeInfo.IsTor ? "Tor" : "Clearnet")</button>
+                                            <button class="nav-link w-100px @(i == 0 ? "active" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
                                         </li>
                                     }
                                 </ul>
                             }
                             <div class="tab-content" id="nodeInfo-tabContent">
-                                @foreach (var nodeInfo in Model.NodeInfo)
+                                @for (int i = 0; i < Model.NodeInfo.Length; i++)
                                 {
-                                    <div class="tab-pane fade @(nodeInfo == Model.NodeInfo.First() ? "show active" : "")" id="nodeInfo-@NodeInfoId(nodeInfo)" role="tabpanel" aria-labelledby="nodeInfo-tab-@NodeInfoId(nodeInfo)">
+                                    var nodeInfo = Model.NodeInfo[i];
+                                    <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@nodeInfo.Id" role="tabpanel" aria-labelledby="nodeInfo-tab-@nodeInfo.Id">
                                         <div class="qr-container my-3">
                                             <img alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage"/>
                                             <vc:qr-code data="@nodeInfo.ToString()"/>
                                         </div>
                                         <div class="input-group" data-clipboard="@nodeInfo.ToString()">
-                                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@nodeInfo.ToString()" id="nodeInfo-addr-@NodeInfoId(nodeInfo)"/>
+                                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@nodeInfo.ToString()" id="nodeInfo-addr-@nodeInfo.Id"/>
                                             <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
                                         </div>
                                     </div>

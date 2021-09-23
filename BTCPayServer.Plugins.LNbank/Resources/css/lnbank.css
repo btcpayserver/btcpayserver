@@ -1,7 +1,11 @@
 ﻿.qrcode,
-pre.payment-request,
 pre.connection-string {
     max-width: 445px;
+}
+
+.qrcode svg {
+    display: block;
+    width: 100%;
 }
 
 main p {

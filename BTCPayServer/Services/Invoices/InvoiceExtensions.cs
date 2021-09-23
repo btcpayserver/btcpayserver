@@ -11,10 +11,11 @@ namespace BTCPayServer.Services.Invoices
     public static class InvoiceExtensions
     {
 
-        public static async Task ActivateInvoicePaymentMethod(this InvoiceRepository invoiceRepository,
+        public static async Task<bool> ActivateInvoicePaymentMethod(this InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator, BTCPayNetworkProvider btcPayNetworkProvider, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             StoreData store,InvoiceEntity invoice, PaymentMethodId paymentMethodId)
         {
+            bool success = false;
             var eligibleMethodToActivate = invoice.GetPaymentMethod(paymentMethodId);
             if (!eligibleMethodToActivate.GetPaymentMethodDetails().Activated)
             {
@@ -34,6 +35,8 @@ namespace BTCPayServer.Services.Invoices
                     eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
                     await invoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, eligibleMethodToActivate);
                     eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
+                    eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
+                    success = true;
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
@@ -45,8 +48,8 @@ namespace BTCPayServer.Services.Invoices
                 }
 
                 await invoiceRepository.AddInvoiceLogs(invoice.Id, logs);
-                eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
             }
+            return success;
         }
     }
 }

@@ -517,9 +517,11 @@ namespace BTCPayServer.Controllers
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             if (!paymentMethodDetails.Activated)
             {
-                await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
-                    _paymentMethodHandlerDictionary, store, invoice, paymentMethod.GetId());
-                return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
+                if (await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
+                    _paymentMethodHandlerDictionary, store, invoice, paymentMethod.GetId()))
+                {
+                    return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
+                }
             }
             var dto = invoice.EntityToDTO();
             var storeBlob = store.GetStoreBlob();

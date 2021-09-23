@@ -130,21 +130,24 @@
 
     @if (User.Identity.IsAuthenticated)
     {
-        <footer class="footer">
+        <footer class="btcpay-footer">
             <div class="container">
-                <div class="d-flex flex-wrap justify-content-between">
-                    <div>
-                        <div>
-                            <a href="https://github.com/btcpayserver/btcpayserver" target="_blank"  rel="noreferrer noopener"><img src="~/img/github.svg" alt="Github" class="social-logo social-link" asp-append-version="true">Github</a>
-                        </div>
-                        <div>
-                            <a href="https://chat.btcpayserver.org/" target="_blank"  rel="noreferrer noopener"><img src="~/img/mattermost.svg" alt="Mattermost" class="social-logo social-link" asp-append-version="true">Mattermost</a>
-                        </div>
-                        <div>
-                            <a href="https://twitter.com/BtcpayServer" target="_blank"  rel="noreferrer noopener"><img src="~/img/twitter.svg" alt="Twitter" class="social-logo social-link" asp-append-version="true">Twitter</a>
-                        </div>                
+                <div class="d-flex flex-column justify-content-between flex-lg-row py-1">
+                    <div class="d-flex justify-content-center justify-content-lg-start mb-2 mb-lg-0">
+                        <a href="https://github.com/btcpayserver/btcpayserver" class="d-flex align-items-center me-4" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="github" />
+                            <span style="margin-left:.4rem">Github</span>
+                        </a>
+                        <a href="https://chat.btcpayserver.org/" class="d-flex align-items-center me-4" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="mattermost" />
+                            <span style="margin-left:.4rem">Mattermost</span>
+                        </a>
+                        <a href="https://twitter.com/BtcpayServer" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="twitter" />
+                            <span style="margin-left:.4rem">Twitter</span>
+                        </a>
                     </div>
-                    <div class="p-2 align-self-center">@Env.ToString()</div>
+                    <div class="text-center text-lg-start">@Env.ToString()</div>
                 </div>
             </div>
         </footer>

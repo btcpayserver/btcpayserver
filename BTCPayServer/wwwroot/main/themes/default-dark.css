@@ -84,7 +84,3 @@
   --btcpay-dark-shadow: rgba(211, 212, 213, 0.33);
   --btcpay-dark-rgb: 201, 209, 217;
 }
-
-.social-logo {
-  filter: contrast(0) brightness(200%);
-}

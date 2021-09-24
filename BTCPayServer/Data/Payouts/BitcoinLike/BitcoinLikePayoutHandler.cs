@@ -52,7 +52,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
     public bool CanHandle(PaymentMethodId paymentMethod)
     {
-        return paymentMethod.PaymentType == BitcoinPaymentType.Instance &&
+        return paymentMethod?.PaymentType == BitcoinPaymentType.Instance &&
                _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.ReadonlyWallet is false;
     }
 
@@ -89,6 +89,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         if (payout?.Proof is null)
             return null;
         var paymentMethodId = payout.GetPaymentMethodId();
+        if (paymentMethodId is null)
+        {
+            return null;
+        }
         var raw =  JObject.Parse(Encoding.UTF8.GetString(payout.Proof));
         if (raw.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType) &&
             proofType.Value<string>() == ManualPayoutProof.Type)
@@ -161,7 +165,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                             .Include(p => p.PullPaymentData.StoreData)
                             .Where(p => payoutIds.Contains(p.Id))
                             .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingPayment)
-                            .ToListAsync()).Where(data => CanHandle(PaymentMethodId.Parse(data.PaymentMethodId)))
+                            .ToListAsync()).Where(data =>
+                            PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) && 
+                            CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple=> tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
                     foreach (var valueTuple in payouts)
                     {
@@ -185,7 +191,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                             .Include(p => p.PullPaymentData.StoreData)
                             .Where(p => payoutIds.Contains(p.Id))
                             .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingPayment)
-                            .ToListAsync()).Where(data => CanHandle(PaymentMethodId.Parse(data.PaymentMethodId)))
+                            .ToListAsync()).Where(data => 
+                            PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) && 
+                            CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple=> tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);
                     foreach (var valueTuple in payouts)
                     {

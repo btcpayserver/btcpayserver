@@ -25,7 +25,8 @@ namespace BTCPayServer.Data
         public static PaymentMethodId[] GetEnabledPaymentIds(this StoreData storeData, BTCPayNetworkProvider networks)
         {
             var excludeFilter = storeData.GetStoreBlob().GetExcludedPaymentMethods();
-            var paymentMethodIds = storeData.GetSupportedPaymentMethods(networks).Select(p => p.PaymentId)
+            var paymentMethodIds = storeData.GetSupportedPaymentMethods(networks)
+                                .Select(p => p.PaymentId)
                                 .Where(a => !excludeFilter.Match(a))
                                 .OrderByDescending(a => a.CryptoCode == "BTC")
                                 .ThenBy(a => a.CryptoCode)

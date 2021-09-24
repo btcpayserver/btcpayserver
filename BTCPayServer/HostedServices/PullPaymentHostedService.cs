@@ -286,8 +286,13 @@ namespace BTCPayServer.HostedServices
                     req.Completion.SetResult(PayoutApproval.Result.OldRevision);
                     return;
                 }
+                if (!PaymentMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
+                {
+                    req.Completion.SetResult(PayoutApproval.Result.NotFound);
+                    return;
+                }
                 payout.State = PayoutState.AwaitingPayment;
-                var paymentMethod = PaymentMethodId.Parse(payout.PaymentMethodId);
+                
                 if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;

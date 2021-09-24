@@ -221,26 +221,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-9">
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group ms-2">
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                <div class="col-lg-9 mt-2 mb-5">
+                    <div class="d-grid gap-3 d-md-block">
+                        <button type="submit" class="btn btn-primary me-md-2" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group me-md-2">
+                            <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
                                target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
                         </div>
                         @if (Model.ModelWithMinimumData)
                         {
-                            <div class="btn-group ms-2">
-                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
-                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
+                            <div class="btn-group">
+                                <a class="btn btn-secondary flex-grow-1" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View Crowdfund</a>
+                                <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
                                    target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
                             </div>
                         }
-                        <div class="btn-group ms-2">
-                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
-                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
-                        </div>
                     </div>
                 </div>
             </div>

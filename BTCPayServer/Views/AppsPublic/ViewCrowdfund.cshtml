@@ -12,11 +12,15 @@
 <head>
     <partial name="LayoutHead" />
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
-    @if (Model.CustomCSSLink != null)
+    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
-    @if (!Context.Request.Query.ContainsKey("simple"))
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+    {
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
+    }
+    @if (!Model.SimpleDisplay)
     {
         <script>var srvModel = @Safe.Json(Model);</script>
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
@@ -24,35 +28,20 @@
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
         <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
-    }
 </head>
 <body>
     @if (!Model.Enabled) 
     {
-        <div class="alert alert-warning text-center mb-0" role="alert" style="border-radius:0;">
+        <div class="alert alert-warning text-center sticky-top mb-0" role="alert" style="border-radius:0;">
             This crowdfund page is not publically viewable!
         </div>
     }
-    @if (Context.Request.Query.ContainsKey("simple"))
+    @if (Model.AnimationsEnabled)
     {
-        <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model"/>
+        @* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled *@
+        <noscript><style>#fireworks { display:none; }</style></noscript>
+        <canvas id="fireworks"></canvas>
     }
-    else
-    {
-        <noscript>
-            <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model"/>
-        </noscript>
-        
-        if (Model.AnimationsEnabled)
-        {
-            @* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled *@
-            <noscript><style>#fireworks { display:none; }</style></noscript>
-            <canvas id="fireworks"></canvas>
-        }
-        <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model"/>
-    }
+    <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model"/>
 </body>
 </html>

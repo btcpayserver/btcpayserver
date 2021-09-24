@@ -1,15 +1,7 @@
-[v-cloak] > * {
-    display: none
-}
-
-[v-cloak]::before {
-    content: "loading…"
-}
-
 canvas#fireworks {
+    position: fixed;
     width: 100vw;
     height: 100vh;
-    position: fixed;
 }
 
 .perk-zoom {
@@ -55,7 +47,7 @@ canvas#fireworks {
     z-index: 1
 }
 
-.crowdfund-stats .col-sm:last-child{
+.crowdfund-stats .col-sm:last-child {
     border-right: none !important;
 }
 

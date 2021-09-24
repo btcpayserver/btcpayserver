@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -481,6 +482,15 @@ namespace BTCPayServer
             Logs.Configuration.LogInformation(
                 "Supported chains: " + String.Join(',', supportedChains.ToArray()));
             return result;
+        }
+        
+        public static PaymentMethodId[] ParsePaymentMethodIds(this string[] paymentMethods)
+        {
+            return paymentMethods.Select(s =>
+            {
+                PaymentMethodId.TryParse(s, out var parsed);
+                return parsed;
+            }).Where(id => id != null).ToArray();
         }
 
         public static DataDirectories Configure(this DataDirectories dataDirectories, IConfiguration configuration)

@@ -67,11 +67,11 @@
 
             <div class="card-body">
                 <div class="row py-2 text-center">
-                    <div class="col-sm border-right" id="raised-amount">
+                    <div class="col-sm border-end" id="raised-amount">
                         <h5>@(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency </h5>
                         <h5 class="text-muted">Raised</h5>
                     </div>
-                    <div class="col-sm border-right">
+                    <div class="col-sm border-end">
                         <h5>@(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h5>
                         <h5 class="text-muted">Of Goal</h5>
                     </div>

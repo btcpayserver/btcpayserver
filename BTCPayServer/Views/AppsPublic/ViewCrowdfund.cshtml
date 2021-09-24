@@ -1,4 +1,4 @@
-@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
@@ -32,7 +32,7 @@
 <body>
     @if (!Model.Enabled) 
     {
-        <div class="alert alert-warning text-center sticky-top mb-0" role="alert" style="border-radius:0;">
+        <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
             This crowdfund page is not publically viewable!
         </div>
     }

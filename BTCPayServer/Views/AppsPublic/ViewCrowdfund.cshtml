@@ -1,4 +1,4 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
@@ -38,9 +38,7 @@
     }
     @if (Model.AnimationsEnabled)
     {
-        @* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled *@
-        <noscript><style>#fireworks { display:none; }</style></noscript>
-        <canvas id="fireworks"></canvas>
+        <canvas id="fireworks" class="d-none"></canvas>
     }
     <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model"/>
 </body>

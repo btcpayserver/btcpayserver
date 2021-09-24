@@ -1,32 +1,24 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
 <html class="h-100">
 <head>
-    <title>@Model.Title</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <partial name="LayoutHead" />
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @if (!Context.Request.Query.ContainsKey("simple"))
     {
-        <script>
-            var srvModel = @Safe.Json(Model);
-        </script>
+        <script>var srvModel = @Safe.Json(Model);</script>
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
         <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
@@ -46,18 +38,12 @@
     {
         <noscript>
             <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
-
-            <style>
-                /* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled */
-                #fireworks,
-                #app {
-                    display:none;
-                }
-            </style>
         </noscript>
 
         if (Model.AnimationsEnabled)
         {
+            @* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled *@
+            <noscript><style>#fireworks { display:none; }</style></noscript>
             <canvas id="fireworks"></canvas>
         }
         <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model" />

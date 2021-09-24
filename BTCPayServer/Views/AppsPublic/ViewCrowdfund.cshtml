@@ -1,4 +1,4 @@
-@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
@@ -30,23 +30,29 @@
     }
 </head>
 <body>
+    @if (!Model.Enabled) 
+    {
+        <div class="alert alert-warning text-center mb-0" role="alert" style="border-radius:0;">
+            This crowdfund page is not publically viewable!
+        </div>
+    }
     @if (Context.Request.Query.ContainsKey("simple"))
     {
-        <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
+        <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model"/>
     }
     else
     {
         <noscript>
-            <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
+            <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model"/>
         </noscript>
-
+        
         if (Model.AnimationsEnabled)
         {
             @* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled *@
             <noscript><style>#fireworks { display:none; }</style></noscript>
             <canvas id="fireworks"></canvas>
         }
-        <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model" />
+        <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model"/>
     }
 </body>
 </html>

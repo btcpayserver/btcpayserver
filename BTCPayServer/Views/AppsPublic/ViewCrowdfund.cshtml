@@ -52,19 +52,19 @@
                     <h1 v-text="srvModel.title" class="my-3">@Model.Title</h1>
                     @if (!Model.Started && Model.StartDate.HasValue)
                     {
-                        <h6 class="text-muted fst-italic" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`starts in ${startDiff}`">
+                        <h6 class="text-muted fst-italic" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`starts in ${startDiff}`" data-test="time-state">
                             starts @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
                         </h6>
                     }
                     else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
                     {
-                        <h6 class="text-muted fst-italic" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`ends in ${endDiff}`">
+                        <h6 class="text-muted fst-italic" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`ends in ${endDiff}`" data-test="time-state">
                             ends @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
                         </h6>
                     }
                     else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
                     {
-                        <h6 class="text-muted fst-italic" v-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date">
+                        <h6 class="text-muted fst-italic" v-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" data-test="time-state">
                             currently active!
                         </h6>
                     }

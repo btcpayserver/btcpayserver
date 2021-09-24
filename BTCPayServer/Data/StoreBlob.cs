@@ -172,7 +172,9 @@ namespace BTCPayServer.Data
             if (ExcludedPaymentMethods == null || ExcludedPaymentMethods.Length == 0)
                 return PaymentFilter.Never();
 
-            return PaymentFilter.Any(ExcludedPaymentMethods.ParsePaymentMethodIds().Select(PaymentFilter.WhereIs).ToArray());
+            return PaymentFilter.Any(ExcludedPaymentMethods
+                                    .Select(PaymentMethodId.TryParse).Where(id => id != null)
+                                    .Select(PaymentFilter.WhereIs).ToArray());
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

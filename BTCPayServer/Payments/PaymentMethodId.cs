@@ -84,6 +84,11 @@ namespace BTCPayServer.Payments
             return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
         static char[] Separators = new[] { '_', '-' };
+        public static PaymentMethodId TryParse(string str)
+        {
+            TryParse(str, out var r);
+            return r;
+        }
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
         {
             str ??= "";

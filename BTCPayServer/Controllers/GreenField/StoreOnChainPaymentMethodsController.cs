@@ -57,7 +57,9 @@ namespace BTCPayServer.Controllers.GreenField
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
-                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId), strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath()))
+                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId),
+                        strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                        strategy.PaymentId.ToStringNormalized()))
                 .Where((result) => enabled is null || enabled == result.Enabled)
                 .ToList();
         }
@@ -144,7 +146,7 @@ namespace BTCPayServer.Controllers.GreenField
         public IActionResult GetProposedOnChainPaymentMethodPreview(
             string storeId,
             string cryptoCode,
-            [FromBody] OnChainPaymentMethodDataPreview paymentMethodData,
+            [FromBody] UpdateOnChainPaymentMethodRequest paymentMethodData,
             int offset = 0, int amount = 10)
         {
             if (!GetCryptoCodeWallet(cryptoCode, out var network, out BTCPayWallet _))
@@ -291,7 +293,8 @@ namespace BTCPayServer.Controllers.GreenField
                 ? null
                 : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.AccountDerivation.ToString(), !excluded, paymentMethod.Label,
-                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath());
+                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                    paymentMethod.PaymentId.ToStringNormalized());
         }
     }
 }

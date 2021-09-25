@@ -30,15 +30,18 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public bool Enabled { get; set; }
 
+        public string PaymentMethod { get; set; }
+
         public OnChainPaymentMethodData()
         {
             
         }
 
-        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled, string label, RootedKeyPath accountKeyPath) :
+        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled, string label, RootedKeyPath accountKeyPath, string paymentMethod) :
             base(cryptoCode, derivationScheme, label, accountKeyPath)
         {
             Enabled = enabled;
+            PaymentMethod = paymentMethod;
         }
     }
 }

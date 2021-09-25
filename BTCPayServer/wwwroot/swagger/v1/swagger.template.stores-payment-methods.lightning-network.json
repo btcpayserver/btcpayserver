@@ -271,6 +271,10 @@
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method"
                     }
                 }
             },

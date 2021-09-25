@@ -11,8 +11,8 @@ namespace BTCPayServer.Client.Models
         }
 
         public OnChainPaymentMethodDataWithSensitiveData(string cryptoCode, string derivationScheme, bool enabled,
-            string label, RootedKeyPath accountKeyPath, Mnemonic mnemonic) : base(cryptoCode, derivationScheme, enabled,
-            label, accountKeyPath)
+            string label, RootedKeyPath accountKeyPath, Mnemonic mnemonic, string paymentMethod) : base(cryptoCode, derivationScheme, enabled,
+            label, accountKeyPath, paymentMethod)
         {
             Mnemonic = mnemonic;
         }

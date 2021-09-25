@@ -16,11 +16,14 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        public LightningNetworkPaymentMethodData(string cryptoCode, string connectionString, bool enabled)
+        public LightningNetworkPaymentMethodData(string cryptoCode, string connectionString, bool enabled, string paymentMethod)
         {
             Enabled = enabled;
             CryptoCode = cryptoCode;
             ConnectionString = connectionString;
+            PaymentMethod = paymentMethod;
         }
+
+        public string PaymentMethod { get; set; }
     }
 }

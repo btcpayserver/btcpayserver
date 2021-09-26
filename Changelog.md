@@ -1,12 +1,23 @@
 # Changelog
 
+## 1.2.4
+
+Minor bug fixes release, update recommended for shared hosting.
+
+### Bug fixes
+
+* If `Only enable the payment method after user explicitly chooses it` is enabled for a store and a payment method is unavailable, the server could become unresponsive. @NicolasDorier
+* Authorize API key page was broken when trying to select specific stores (#2858) @ubolator
+* The /docs page was broken in 1.2.3 due to CSP @NicolasDorier
+* Fixing crashes happening when someone migrate from BTCPay Server altcoins edition back to bitcoin only @Kukks
+
 ## 1.2.3
 
 This release fixes three XSS vulnerabilities. Those vulnerabilities only impacts shared BTCPay instances.
 Special thanks to Ajmal "@b3ef" Aboobacker and Abdul "@b1nslashsh" muhaimin for finding them who contacted us through @huntrdev.
 See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](https://www.huntr.dev/bounties/32e30ecf-31fa-45f6-8552-47250ef0e613/) and [3](https://huntr.dev/bounties/0fcdee5f-1f07-47ce-b650-ea8b4a7d35d8/).
 
-# Bug fixes:
+### Bug fixes:
 
 * Use CSP to prevent future XSS vulnerabilities. (#2856, #2863) @NicolasDorier
 * Fix XSS vulnerabilities in summernote, the rich text editor (#2859) @dennisreimann

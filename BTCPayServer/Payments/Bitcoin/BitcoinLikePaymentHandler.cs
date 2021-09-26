@@ -11,6 +11,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -23,6 +24,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
+        private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
@@ -35,6 +37,13 @@ namespace BTCPayServer.Payments.Bitcoin
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
+
+            _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
+                .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
+                    network => Encoders.ASCII.EncodeData(
+                        network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false)
+                            .HumanReadablePart));
+            
         }
 
         class Prepare
@@ -54,34 +63,43 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = ((BitcoinLikeOnChainPaymentMethod) paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
-
             var lightningFallback = "";
-            if (storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (!String.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
-                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
+                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11
+                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
+                        .ToUpperInvariant();
             }
 
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21 + lightningFallback;
-            // We're trying to make as many characters uppercase to make QR smaller
-            // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
-            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
-                .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
-                + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
+            if (model.Activated)
+            {
+                model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
+                model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback
+                    .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                model.InvoiceBitcoinUrl = "";
+                model.InvoiceBitcoinUrlQR = "";
+            }
 
-            // Standard for uppercase Bech32 addresses in QR codes is still not implemented in all wallets
-            // When it is widely propagated consider uncommenting these lines
-            //if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
-            //{
-            //    model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
-            //        $"BITCOIN:{model.BtcAddress}", $"BITCOIN:{model.BtcAddress.ToUpperInvariant()}", 
-            //        StringComparison.OrdinalIgnoreCase
-            //    );
-            //}
+            // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
+            // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
+            //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
+            //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
+
+            // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
+            if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix,  StringComparison.OrdinalIgnoreCase))
+            {
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
+                    $"{network.UriScheme}:{model.BtcAddress}", $"{network.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
+                    StringComparison.OrdinalIgnoreCase
+                );
+            }
         }
-        //private static string[] bech32Prefixes = new[] { "bc1", "tb1", "bcrt1" };
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
@@ -137,12 +155,21 @@ namespace BTCPayServer.Payments.Bitcoin
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (preparePaymentObject is null)
+            {
+                return new BitcoinLikeOnChainPaymentMethod()
+                {
+                    Activated = false
+                };
+            }
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
-            Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod =
-                new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
+            var onchainMethod = new BitcoinLikeOnChainPaymentMethod();
             var blob = store.GetStoreBlob();
+            onchainMethod.Activated = true;
+            // TODO: this needs to be refactored to move this logic into BitcoinLikeOnChainPaymentMethod
+            // This is likely a constructor code
             onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
             switch (onchainMethod.NetworkFeeMode)
@@ -166,8 +193,8 @@ namespace BTCPayServer.Payments.Bitcoin
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
-                                           PayjoinClient.SupportedFormats.Contains(supportedPaymentMethod
-                                               .AccountDerivation.ScriptPubKeyType()) &&
+                                           supportedPaymentMethod
+                                               .AccountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
                                            network.SupportPayJoin;
             if (onchainMethod.PayjoinEnabled)
             {

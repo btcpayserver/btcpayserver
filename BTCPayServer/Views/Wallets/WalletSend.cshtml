@@ -1,9 +1,11 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Security.ContentSecurityPolicies csp
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send, $"Send {Model.CryptoCode}", Context.GetStoreData().StoreName);
+    csp.Add("worker-src", "blob:");
 }
 
 @section PageHeadContent

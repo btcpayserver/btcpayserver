@@ -92,6 +92,7 @@ namespace BTCPayServer.Payments.Bitcoin
             //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
 
             // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
+            // Not usable for for ChivoWallet yet, sadly... so just switching upper to lower, below.
             if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix,  StringComparison.OrdinalIgnoreCase))
             {
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(

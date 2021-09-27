@@ -1,12 +1,13 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject ISettingsRepository _settingsRepository
+@inject ISettingsRepository SettingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-}
+    var theme = await SettingsRepository.GetTheme();
+ }
 
 <!DOCTYPE html>
 <html class="h-100">
@@ -258,7 +259,10 @@
                 </div>
                 <div class="card-footer text-muted d-flex flex-wrap align-items-center">
                     <div class="me-3" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
-                    <vc:theme-switch css-class="text-muted me-3" responsive="none" />
+                    @if (!theme.CustomTheme)
+                    {
+                        <vc:theme-switch css-class="text-muted me-3" responsive="none" />
+                    }
                     <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.animationsEnabled || animation">
                         <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
                         <label class="form-check-label" for="cbAnime">Animations</label>

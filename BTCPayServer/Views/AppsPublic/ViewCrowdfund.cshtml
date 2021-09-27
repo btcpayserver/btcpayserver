@@ -1,66 +1,388 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
 <html class="h-100">
 <head>
-    <title>@Model.Title</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <partial name="LayoutHead" />
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
-    @if (Model.CustomCSSLink != null)
+    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
-    @if (!Context.Request.Query.ContainsKey("simple"))
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
-        <script>
-            var srvModel = @Safe.Json(Model);
-        </script>
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
+    }
+    @if (!Model.SimpleDisplay)
+    {
+        <script>var srvModel = @Safe.Json(Model);</script>
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
         <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
         <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
-    }
 </head>
 <body>
-    @if (Context.Request.Query.ContainsKey("simple"))
+    @if (!Model.Enabled) 
     {
-        <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
+        <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
+            This crowdfund page is not publically viewable!
+        </div>
     }
-    else
+    @if (Model.AnimationsEnabled)
     {
-        <noscript>
-            <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
-
-            <style>
-                /* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled */
-                #fireworks,
-                #app {
-                    display:none;
+        <canvas id="fireworks" class="d-none"></canvas>
+    }
+    <div class="container px-0 py-3" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
+        <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
+            <div class="card w-100 p-0 mx-0">
+                @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                {
+                    <img v-if="srvModel.mainImageUrl" src="@Model.MainImageUrl" :src="srvModel.mainImageUrl" alt="@Model.Title" :alt="srvModel.title" class="card-img-top" id="crowdfund-main-image" asp-append-version="true" />
                 }
-            </style>
-        </noscript>
-
-        if (Model.AnimationsEnabled)
-        {
-            <canvas id="fireworks"></canvas>
-        }
-        <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model" />
-    }
+                <div class="d-flex flex-column justify-content-between py-4 px-3 text-center" id="crowdfund-header-container">
+                    <h1 v-text="srvModel.title" class="my-3">@Model.Title</h1>
+                    @if (!Model.Started && Model.StartDate.HasValue)
+                    {
+                        <h6 class="text-muted fst-italic" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`starts in ${startDiff}`" data-test="time-state">
+                            starts @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
+                        </h6>
+                    }
+                    else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
+                    {
+                        <h6 class="text-muted fst-italic" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`ends in ${endDiff}`" data-test="time-state">
+                            ends @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
+                        </h6>
+                    }
+                    else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
+                    {
+                        <h6 class="text-muted fst-italic" v-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" data-test="time-state">
+                            currently active!
+                        </h6>
+                    }
+                    @if (Model.TargetAmount.HasValue)
+                    {
+                        <span v-if="srvModel.targetAmount" class="mt-3" id="crowdfund-header-target">
+                            <h3 class="d-inline-block">
+                                <span class="badge bg-info px-3" v-text="`${srvModel.targetAmount} ${targetCurrency}`">@Math.Round(Model.TargetAmount.GetValueOrDefault(0)) @Model.TargetCurrency</span>
+                            </h3>
+                            @if (Model.ResetEveryAmount > 0 && !Model.NeverReset)
+                            {
+                                <span v-if="srvModel.resetEvery !== 'Never'"
+                                      class="h5 ms-2"
+                                      v-b-tooltip
+                                      :title="'Goal resets every ' + srvModel.resetEveryAmount + ' ' + srvModel.resetEvery + ((srvModel.resetEveryAmount>1)?'s': '')">Dynamic</span>
+                            }
+                            @if (Model.EnforceTargetAmount)
+                            {
+                                <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2">
+                                    Hardcap Goal
+                                    <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span>
+                                </span>
+                            }
+                            else
+                            {
+                                <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2">
+                                    Softcap Goal
+                                    <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span>
+                                </span>
+                            }
+                        </span>
+                    }
+                </div>
+                
+                @if (Model.TargetAmount.HasValue)
+                {
+                    <div class="progress rounded-pill mx-3" v-if="srvModel.targetAmount" id="crowdfund-progress-bar">
+                        <div class="progress-bar bg-primary" 
+                             role="progressbar"
+                             style="width:@(Model.Info.ProgressPercentage + "%")"
+                             :aria-valuenow="srvModel.info.progressPercentage"
+                             v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
+                             aria-valuemin="0"
+                             id="crowdfund-progress-bar-confirmed-bar"
+                             v-b-tooltip 
+                             :title="parseFloat(srvModel.info.progressPercentage).toFixed(2) + '% contributions'"
+                             aria-valuemax="100">
+                        </div>
+                        <div class="progress-bar bg-warning" 
+                             role="progressbar"
+                             id="crowdfund-progress-bar-pending-bar"
+                             style="width:@(Model.Info.PendingProgressPercentage + "%")"
+                             :aria-valuenow="srvModel.info.pendingProgressPercentage"
+                             v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
+                             v-b-tooltip
+                             :title="parseFloat(srvModel.info.pendingProgressPercentage).toFixed(2) + '% contributions pending confirmation'"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                }
+    
+                <div class="card-body">
+                    <div class="row py-2 text-center crowdfund-stats">
+                        <div class="col-sm border-end p-3 text-center" id="crowdfund-body-raised-amount">
+                            <h3 v-text="`${raisedAmount} ${targetCurrency}`">@Math.Round(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency</h3>
+                            <h5 class="text-muted fst-italic mb-0">Raised</h5>
+                            <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0" class="only-for-js">
+                                <ul class="p-0 text-uppercase">
+                                    <li v-for="stat of paymentStats" class="list-unstyled">
+                                        {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value}}
+                                    </li>
+                                </ul>
+                            </b-tooltip>
+                        </div>
+                                        
+                        <div class="col-sm border-end p-3 text-center" id="crowdfund-body-goal-raised">
+                            <h3 v-text="`${percentageRaisedAmount}%`">@Math.Round(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h3>
+                            <h5 class="text-muted fst-italic mb-0">Of Goal</h5>
+                            <b-tooltip target="crowdfund-body-goal-raised" v-if="srvModel.resetEvery !== 'Never'" class="only-for-js">
+                                Goal resets every {{srvModel.resetEveryAmount}} {{srvModel.resetEvery}} {{srvModel.resetEveryAmount>1?'s': ''}}
+                            </b-tooltip>
+                        </div>
+                        
+                        <div class="col-sm border-end p-3 text-center" id="crowdfund-body-total-contributors">
+                            <h3 v-text="srvModel.info.totalContributors">@Model.Info.TotalContributors</h3>
+                            <h5 class="text-muted fst-italic mb-0">Contributors</h5>
+                        </div>
+                        @if (Model.StartDate.HasValue || Model.EndDate.HasValue)
+                        {  
+                            <div class="col-sm border-end p-3 text-center" id="crowdfund-body-campaign-dates">
+                                @if (!Model.Started && Model.StartDate.HasValue)
+                                {
+                                    <div v-if="startDiff">
+                                        <h3 v-text="startDiff">@TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)</h3>
+                                        <h5 class="text-muted fst-italic mb-0" v-text="'Left to start'">Start Date</h5>
+                                    </div>
+                                }
+                                else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
+                                {
+                                    <div v-if="!startDiff && endDiff">
+                                        <h3 v-text="endDiff">@TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)</h3>
+                                        <h5 class="text-muted fst-italic mb-0" v-text="'Left'">End Date</h5>
+                                    </div>
+                                }
+                                else if (Model.Ended)
+                                {
+                                    <div v-if="ended">
+                                        <h3 class="mb-0">Campaign not active</h3>
+                                    </div>
+                                }
+                                <b-tooltip v-if="startDate || endDate" target="crowdfund-body-campaign-dates" class="only-for-js">
+                                    <ul class="p-0">
+                                        @if (Model.StartDate.HasValue)
+                                        {
+                                            <li v-if="startDate" class="list-unstyled">
+                                                {{started? "Started" : "Starts"}} {{startDate}}
+                                            </li>
+                                        }
+                                        @if (Model.EndDate.HasValue)
+                                        {
+                                            <li v-if="endDate" class="list-unstyled">
+                                                {{ended? "Ended" : "Ends"}} {{endDate}}
+                                            </li>
+                                        }
+                                    </ul>
+                                </b-tooltip>
+                            </div>
+                        }
+                    </div>
+    
+                    <div class="card-title text-center" id="crowdfund-body-header">
+                        @if (!string.IsNullOrEmpty(Model.Tagline))
+                        {
+                            <h2 class="h3 my-4 fw-normal" v-if="srvModel.tagline" v-text="srvModel.tagline">@Model.Tagline</h2>
+                        }
+                        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary mb-4 py-2 px-5 only-for-js" v-on:click="contributeModalOpen = true">Contribute</button>
+                    </div>
+                    
+                    <hr class="w-100"/>
+                    
+                    <template v-if="srvModel.disqusEnabled && srvModel.disqusShortname">
+                        <b-tabs>
+                            <b-tab title="Details" active>
+                                <div class="row mt-3">
+                                    <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                                        <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
+                                            @Safe.Raw(Model.Description)
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
+                                        <contribute :target-currency="srvModel.targetCurrency"
+                                                    :display-perks-ranking="srvModel.displayPerksRanking"
+                                                    :active="active"
+                                                    :loading="loading"
+                                                    :in-modal="false"
+                                                    :perks="perks">
+                                        </contribute>
+                                    </div>
+                                </div>
+                            </b-tab>
+                            <b-tab title="Discussion">
+                                <div id="disqus_thread" class="mt-3"></div>
+                            </b-tab>
+                        </b-tabs>
+                    </template>
+                    <template v-else>
+                        <div class="row mt-2">
+                            <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                                <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
+                                    @Safe.Raw(Model.Description)
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
+                                <contribute :target-currency="srvModel.targetCurrency"
+                                            :loading="loading"
+                                            :display-perks-ranking="srvModel.displayPerksRanking"
+                                            :active="active"
+                                            :in-modal="false"
+                                            :perks="perks">
+                                </contribute>
+                            </div>
+                        </div>
+                    </template>
+                    <noscript>
+                        <div class="row">
+                            <div class="col-md-8 col-sm-12">
+                                <div class="card-text overflow-hidden">@Safe.Raw(Model.Description)</div>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <partial 
+                                    name="/Views/AppsPublic/Crowdfund/ContributeForm.cshtml"
+                                    model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })"></partial>
+                            </div>
+                        </div>
+                    </noscript>
+                </div>
+                <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
+                    <div class="align-self-end pe-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
+                    <div class="form-check mx-1 only-for-js" v-if="srvModel.animationsEnabled || animation">
+                        <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
+                        <label class="form-check-label" for="cbAnime">Animations</label>
+                    </div>
+                    <div class="form-check mx-1 only-for-js" v-if="srvModel.soundsEnabled|| sound">
+                        <input class="form-check-input" type="checkbox" id="cbSounds" v-model="sound">
+                        <label class="form-check-label" for="cbSounds">Sounds</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
+            <contribute v-if="contributeModalOpen"
+                        :target-currency="srvModel.targetCurrency"
+                        :active="active"
+                        :perks="srvModel.perks"
+                        :loading="loading"
+                        :in-modal="true">
+            </contribute>
+        </b-modal>
+    </div>
+    
+    <template id="perks-template">
+        <div class="perks-container">
+            <perk v-if="!perks || perks.length ===0" 
+                :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" 
+                :target-currency="targetCurrency" 
+                :active="active" 
+                :loading="loading"
+                :in-modal="inModal">
+            </perk>
+            <perk v-for="(perk, index) in perks"
+                :key="perk.id"
+                :perk="perk"  
+                :target-currency="targetCurrency" 
+                :active="active" 
+                :display-perks-ranking="displayPerksRanking" 
+                :index="index"
+                :loading="loading"
+                :in-modal="inModal">
+            </perk>
+        </div>
+    </template>
+    
+    <template id="perk-template"> 
+        <div class="card perk" v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded, 'mb-4':!inModal }" v-on:click="expand" :id="perk.id">
+            <span v-if="displayPerksRanking && perk.sold"
+                  class="btn btn-sm rounded-circle px-0 perk-badge"
+                  v-bind:class="{ 'btn-primary': index==0, 'btn-light': index!=0}">#{{index+1}}</span> 
+            <div class="perk-zoom" v-if="canExpand">
+                <div class="perk-zoom-bg"></div>
+                <div class="perk-zoom-text w-100 py-2 px-4 text-center text-primary fw-bold fs-3 lh-sm">
+                    Select this contribution perk
+                </div>
+            </div>
+            <form v-on:submit="onContributeFormSubmit">
+                <input type="hidden" :value="perk.id" id="choiceKey"/> 
+                <img v-if="perk.image && perk.image != 'null'" class="card-img-top" :src="perk.image" />
+                <div class="card-body">
+                    <div class="card-title d-flex justify-content-between">
+                        <span class="h5">{{perk.title? perk.title : perk.id}}</span>
+                        <span class="text-muted"> 
+                            <template v-if="perk.price.value">
+                                {{perk.price.value.noExponents()}}
+                                {{targetCurrency}}
+                                <template v-if="perk.custom">or more</template>
+                            </template>
+                            <template v-else-if="!perk.price.value && perk.custom">
+                                Any amount
+                            </template>
+                        </span>
+                    </div>
+                    <p class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
+                    
+                    <div class="input-group" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
+                        <input 
+                            :disabled="!active"
+                            :readonly="!perk.custom"
+                            class="form-control hide-number-spin" 
+                            type="number" 
+                            v-model="amount"
+                            :min="perk.price.value"  
+                            step="any"  
+                            placeholder="Contribution Amount"
+                            required>
+                        <span class="input-group-text">{{targetCurrency}}</span>
+                        <button
+                            class="btn btn-primary d-flex align-items-center"
+                            v-bind:class="{ 'btn-disabled': loading}"
+                            :disabled="!active || loading"
+                            type="submit">
+                            <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            {{perk.buyButtonText || 'Continue'}}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">
+                    <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
+                    <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
+                    <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold > 1 ? "s": ""}}</span>
+                </div>
+            </form>
+        </div> 
+    </template>
+    
+    <template id="contribute-template">
+        <div>
+            <h3 v-if="!inModal" class="mb-3">Contribute</h3>
+            <perks
+                :perks="perks"
+                :loading="loading"
+                :in-modal="inModal"
+                :display-perks-ranking="displayPerksRanking"
+                :target-currency="targetCurrency"
+                :active="active">
+            </perks>
+        </div>
+    </template>
 </body>
 </html>

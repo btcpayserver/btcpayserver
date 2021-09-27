@@ -9843,15 +9843,15 @@ pre:not(.text-wrap) code {
   padding: var(--btcpay-space-m) !important;
 }
 
-ol {
+ol:not([class]) {
   padding-left: 1.125em;
 }
 
-ul {
+ul:not([class]) {
   padding-left: 1em;
 }
 
-ul li {
+ul:not([class]) li {
   padding-top: .2em;
   padding-bottom: .2em;
 }

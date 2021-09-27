@@ -258,8 +258,8 @@ namespace BTCPayServer.Controllers
 
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
-            var appInfo = (ViewCrowdfundViewModel)(await _AppService.GetAppInfo(appId));
-            appInfo.HubPath = AppHub.GetHubPath(this.Request);
+            var appInfo = await GetAppInfo(appId);
+            
             if (settings.Enabled)
                 return View(appInfo);
             if (!isAdmin)
@@ -287,7 +287,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-
             var isAdmin = await _AppService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
 
             if (!settings.Enabled && !isAdmin)
@@ -295,8 +294,7 @@ namespace BTCPayServer.Controllers
                 return NotFound("Crowdfund is not currently active");
             }
 
-            var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);
-            info.HubPath = AppHub.GetHubPath(this.Request);
+            var info = await GetAppInfo(appId);
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
                  (settings.EndDate.HasValue && DateTime.Now > settings.EndDate) ||
@@ -379,9 +377,15 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest(e.Message);
             }
-
         }
 
+        private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
+        {
+            var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);
+            info.HubPath = AppHub.GetHubPath(Request);
+            info.SimpleDisplay = Request.Query.ContainsKey("simple");
+            return info;
+        }
 
         private string GetUserId()
         {

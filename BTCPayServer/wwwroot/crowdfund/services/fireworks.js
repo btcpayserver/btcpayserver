@@ -165,17 +165,20 @@ var resizeCanvas = function() {
     window.addEventListener("resize", resizeCanvas);
 })();
 
-window.fireworks = function(){
+window.fireworks = function(count = 0) {
+    const elem = document.getElementById("fireworks");
+    elem.classList.remove("d-none");
     var fauxClick = new Event("mousedown");
-    fauxClick.pageX = anime.random( 0, cW );
-    fauxClick.pageY = anime.random(0, cH );
-
+    fauxClick.pageX = anime.random(0, cW);
+    fauxClick.pageY = anime.random(0, cH);
+    
     var middleSpaceX = cW * 0.6;
     var middleSpaceY = cH * 0.6;
     var middleSpaceX1 = middleSpaceX /2;
     var middleSpaceX2 = middleSpaceX1 + middleSpaceX;
     var middleSpaceY1 = middleSpaceY /2;
     var middleSpaceY2 = middleSpaceY1 + middleSpaceY;
+    
     while(true){
         if(fauxClick.pageX > middleSpaceX1 && fauxClick.pageX < middleSpaceX2){
             fauxClick.pageX = anime.random( 0, cW );
@@ -187,6 +190,14 @@ window.fireworks = function(){
         }
         break;
     }
-    handleEvent(fauxClick)
+    handleEvent(fauxClick);
+    
+    setTimeout(function () { 
+       if (count < 5) {
+           fireworks(count + 1);
+       } else {
+           elem.classList.add("d-none");
+       }
+    }, 750);
 };
 });

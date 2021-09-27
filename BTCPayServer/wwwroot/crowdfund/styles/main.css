@@ -1,15 +1,7 @@
-[v-cloak] > * {
-    display: none
-}
-
-[v-cloak]::before {
-    content: "loading…"
-}
-
 canvas#fireworks {
+    position: fixed;
     width: 100vw;
     height: 100vh;
-    position: fixed;
 }
 
 .perk-zoom {
@@ -55,7 +47,7 @@ canvas#fireworks {
     z-index: 1
 }
 
-.crowdfund-stats .col-sm:last-child{
+.crowdfund-stats .col-sm:last-child {
     border-right: none !important;
 }
 
@@ -68,4 +60,27 @@ canvas#fireworks {
 .modal-body .perks-container .card:only-of-type {
     max-width: 320px;
     margin: auto;
+}
+
+/* Constrain image width in description */
+div#crowdfund-body-description img {
+    max-width: 100% !important;
+}
+
+/* HEADER: PROGRESS */
+div#crowdfund-progress-bar {
+    height: 2rem;
+}
+
+#crowdfund-body-header + hr {
+    height: 1px;
+    opacity: 1;
+    margin-top: 0;
+    background: var(--btcpay-body-border-medium);
+}
+
+/* PERKS: HOVER */
+.perks-container .perk-zoom-bg {
+    background-color: var(--btcpay-bg-tile) !important;
+    border-radius: .5rem;
 }

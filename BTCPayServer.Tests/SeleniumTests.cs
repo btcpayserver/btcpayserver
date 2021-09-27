@@ -552,7 +552,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
-                Assert.Equal("Currently Active!", s.Driver.FindElement(By.CssSelector(".h6.text-muted")).Text);
+                Assert.Equal("currently active!", s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
             }
         }
 

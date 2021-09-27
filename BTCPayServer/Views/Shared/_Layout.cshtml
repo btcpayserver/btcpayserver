@@ -80,7 +80,7 @@
                                 <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="Wallets">Wallets</a></li>
                                 <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Invoices">Invoices</a></li>
                                 <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="PaymentRequests">Payment Requests</a></li>
-                                <vc:ui-extension-point location="header-nav"/>
+                                <vc:ui-extension-point location="header-nav"  model="@Model"/>
                             </ul>
                             <ul class="navbar-nav">
                                 <li class="nav-item">
@@ -112,7 +112,7 @@
                                     <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
                                 }
                                 <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login">Log in</a></li>
-                                <vc:ui-extension-point location="header-nav"/>
+                                <vc:ui-extension-point location="header-nav"  model="@Model"/>
                             </ul>
                         }
                     </div>

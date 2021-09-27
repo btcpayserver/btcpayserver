@@ -15,9 +15,22 @@ namespace BTCPayServer.Components.UIExtensionPoint
             _uiExtensions = uiExtensions;
         }
 
-        public IViewComponentResult Invoke(string location)
+        public IViewComponentResult Invoke(string location, object model)
         {
-            return View(_uiExtensions.Where(extension => extension.Location.Equals(location, StringComparison.InvariantCultureIgnoreCase)).Select(extension => extension.Partial));
+            return View(new UiExtensionPointViewModel()
+            {
+                Partials = _uiExtensions
+                    .Where(extension =>
+                        extension.Location.Equals(location, StringComparison.InvariantCultureIgnoreCase))
+                    .Select(extension => extension.Partial).ToArray(),
+                Model = model
+            });
         }
+    }
+
+    public class UiExtensionPointViewModel
+    {
+        public string[] Partials { get; set; }
+        public object Model { get; set; }
     }
 }

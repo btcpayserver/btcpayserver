@@ -1,6 +1,6 @@
-@model IEnumerable<string> 
+@model BTCPayServer.Components.UIExtensionPoint.UiExtensionPointViewModel
 
-@foreach (var partial in Model)
+@foreach (var partial in Model.Partials)
 {
-    await Html.RenderPartialAsync(partial);
+    await Html.RenderPartialAsync(partial, Model.Model);
 }

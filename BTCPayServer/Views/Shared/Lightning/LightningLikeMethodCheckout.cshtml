@@ -58,7 +58,7 @@
                 </div>
             </nav>
         </div>
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-post-content"})
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-post-content", model = Model})
     </div>          
 </script>
 
@@ -70,7 +70,7 @@
         <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-post-tabs"})
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-post-tabs", model = Model})
     </div>
 </script>
 

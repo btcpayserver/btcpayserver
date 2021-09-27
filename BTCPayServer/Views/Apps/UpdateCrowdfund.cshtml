@@ -203,17 +203,17 @@
                                 <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
                                     <div class="accordion-body">
                                         <div class="form-group">
+                                            <label asp-for="MainImageUrl" class="form-label"></label>
+                                            <input asp-for="MainImageUrl" class="form-control" />
+                                            <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
                                             <label asp-for="CustomCSSLink" class="form-label"></label>
                                             <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
                                                 <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                             </a>
                                             <input asp-for="CustomCSSLink" class="form-control" />
                                             <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                        </div>
-                                        <div class="form-group">
-                                            <label asp-for="MainImageUrl" class="form-label"></label>
-                                            <input asp-for="MainImageUrl" class="form-control" />
-                                            <span asp-validation-for="MainImageUrl" class="text-danger"></span>
                                         </div>
                                         <div class="form-group mb-4">
                                             <label asp-for="EmbeddedCSS" class="form-label"></label>

@@ -2268,6 +2268,15 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void SetOrderIdMetadataDoesntConvertInOctal()
+        {
+            var m = new InvoiceMetadata();
+            m.OrderId = "000000161";
+            Assert.Equal("000000161", m.OrderId);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseCurrencyValue()
         {
             Assert.True(CurrencyValue.TryParse("1.50USD", out var result));
@@ -2901,11 +2910,12 @@ namespace BTCPayServer.Tests
                 {
                     Amount = 50.513m,
                     Currency = "USD",
-                    Metadata = new JObject() { new JProperty("taxIncluded", 50.516m) }
+                    Metadata = new JObject() { new JProperty("taxIncluded", 50.516m), new JProperty("orderId", "000000161") }
                 });
                 Assert.Equal(50.51m, invoice5g.Amount);
                 Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
-                
+                Assert.Equal("000000161", (string)invoice5g.Metadata["orderId"]);
+
                 var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
                 {
                     Amount = 0m,

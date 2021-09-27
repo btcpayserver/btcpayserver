@@ -146,6 +146,13 @@ namespace BTCPayServer.Services.Invoices
         public void SetMetadata<T>(string propName, T value)
         {
             JToken data;
+            if (typeof(T) == typeof(string) && value is string v)
+            {
+                data = new JValue(v);
+                AdditionalData ??= new Dictionary<string, JToken>();
+                AdditionalData.AddOrReplace(propName, data);
+                return;
+            }
             if (value is null)
             {
                 AdditionalData?.Remove(propName);

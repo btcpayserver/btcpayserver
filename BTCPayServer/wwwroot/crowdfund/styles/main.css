@@ -63,7 +63,10 @@ canvas#fireworks {
 }
 
 /* Constrain image width in description */
-div#crowdfund-body-description img {
+div#crowdfund-body-description img,
+div#crowdfund-body-description embed,
+div#crowdfund-body-description object,
+div#crowdfund-body-description iframe {
     max-width: 100% !important;
 }
 

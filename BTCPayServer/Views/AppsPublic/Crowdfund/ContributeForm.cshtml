@@ -6,65 +6,63 @@
         <div class="card mb-4 perk expanded" id="@item.Id">
             @if (Model.ViewCrowdfundViewModel.DisplayPerksRanking && Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
             {
-                <span  class="btn btn-sm rounded-circle px-0 btn-primary perk-badge">#@(Array.IndexOf(Model.ViewCrowdfundViewModel.Perks, item) + 1)</span>
+                <span class="btn btn-sm rounded-circle px-0 btn-primary perk-badge">#@(Array.IndexOf(Model.ViewCrowdfundViewModel.Perks, item) + 1)</span>
             }
             @if (!string.IsNullOrEmpty(item.Image))
             {
-                <img class="card-img-top" src="@item.Image" asp-append-version="true" />
+                <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true" />
             }
             <div class="card-body">
-                <div class="card-title d-flex justify-content-between">
-                    <label class="h5">
-
+                <div class="card-title d-flex align-items-center justify-content-between mb-1">
+                    <label class="h5 d-flex align-items-center">
                         @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended && (item.Price.Value > 0 || item.Custom))
                         {
-
-                            <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
+                            <input type="radio" asp-for="ChoiceKey" value="@item.Id" class="form-check-input mt-0 me-2"/>
                         }
                         @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
                     </label>
                     <span class="text-muted">
                         @if (item.Price.Value > 0)
                         {
-                            @item.Price.Value
+                            <span>@item.Price.Value</span>
+                            <span>@Model.ViewCrowdfundViewModel.TargetCurrency</span>
+
                             if (item.Custom)
                             {
-                                @Safe.Raw("or more");
+                                @Safe.Raw("or more")
                             }
                         }
                         else if (item.Custom)
                         {
-                            @Safe.Raw("Any amount");
+                            @Safe.Raw("Any amount")
                         }
-
                     </span>
                 </div>
                 <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
-
             </div>
             @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory.HasValue)
             {
                 <div class="card-footer d-flex justify-content-between">
-                        @switch (item.Inventory)
-                        {
-                            case null:
-                                <span></span>
-                                break;
-                            case int i when i <= 0:
-                                <span>Sold out</span>
-                                break;
-                            default:
-                                <span>@item.Inventory left</span>
-                                break;
-                        }
-                        @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
-                        {
-                            <span> @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
-                        }
-                        else
-                        {
+                    @switch (item.Inventory)
+                    {
+                        case null:
                             <span></span>
-                        }
+                            break;
+                        case int i when i <= 0:
+                            <span>Sold out</span>
+                            break;
+                        default:
+                            <span>@item.Inventory left</span>
+                            break;
+                    }
+                    @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+                    {
+                        <span>@Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
                 </div>
             }
         </div> 
@@ -72,16 +70,16 @@
     @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)
     {
         <div class="form-group">
-            <label asp-for="Email"></label>
+            <label asp-for="Email" class="form-label"></label>
             <input asp-for="Email" type="email" class="form-control"/>
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Amount"></label>
-        <div class="input-group mb-3">
-            <input asp-for="Amount" type="number" step="any" class="form-control"/>
-            <span class="input-group-text">@Model.ViewCrowdfundViewModel.TargetCurrency.ToUpperInvariant()</span>
-        </div>
+            <label asp-for="Amount" class="form-label"></label>
+            <div class="input-group mb-3">
+                <input asp-for="Amount" type="number" step="any" class="form-control"/>
+                <span class="input-group-text">@Model.ViewCrowdfundViewModel.TargetCurrency.ToUpperInvariant()</span>
+            </div>
             <span asp-validation-for="Amount" class="text-danger"></span>
         </div>
         <input type="hidden" asp-for="RedirectToCheckout"/>

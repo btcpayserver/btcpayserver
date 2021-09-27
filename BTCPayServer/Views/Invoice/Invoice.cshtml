@@ -11,6 +11,30 @@
     </style>
 }
 
+@section PageFootContent {
+    <script>
+        function changeInvoiceState(sender, invoiceId, newState) {
+            var pavpill = $("#pavpill_" + invoiceId);
+            var toggleButton = $(".dropdown-toggle");
+            toggleButton.attr("disabled", "disabled");
+
+            $.post(invoiceId + "/changestate/" + newState)
+                .done(function (data) {
+                    var alertClassModifier = {
+                        "complete (marked)": 'success',
+                        "invalid (marked)": 'danger'
+                    }[data.statusString];
+                    var statusHtml = "<span class='alert alert-" + alertClassModifier + " p-1'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    pavpill.replaceWith(statusHtml);
+                })
+                .fail(function () {
+                    toggleButton.removeAttr("disabled");
+                    alert("Invoice state update failed");
+                });
+        }
+    </script>
+}
+
 <section class="invoice-details">
     <div class="container">
     <partial name="_StatusMessage" />
@@ -19,7 +43,6 @@
             <h2 class="col-xs-12 col-lg-6 mb-4 mb-lg-0">@ViewData["Title"]</h2>
             <div class="col-xs-12 col-lg-6 mb-2 mb-lg-0 text-lg-end">
                 <div class="d-inline-flex">
-                    
                     @if (Model.ShowCheckout)
                     {
                         <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap ms-2" asp-route-invoiceId="@Model.Id">
@@ -92,7 +115,33 @@
                     </tr>
                     <tr>
                         <th>State</th>
-                        <td>@Model.State</td>
+                        <td>
+                            @if (Model.CanMarkStatus)
+                            {
+                                <div class="dropdown" id="pavpill_@Model.Id">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle p-1" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Model.State
+                                    </button>
+                                    <div class="dropdown-menu p-0" aria-labelledby="markStatusDropdownMenuButton">
+                                        @if (Model.CanMarkInvalid)
+                                        {
+                                            <a class="dropdown-item p-1" href="#" onclick="changeInvoiceState(this, '@Model.Id', 'invalid')">
+                                                Mark as invalid <span class="fa fa-times"></span>
+                                            </a>
+                                        }
+                                        @if (Model.CanMarkComplete)
+                                        {
+                                            <a class="dropdown-item p-1" href="#" onclick="changeInvoiceState(this, '@Model.Id', 'complete')">
+                                                Mark as complete <span class="fa fa-check-circle"></span>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            } 
+                            else {
+                                @Model.State
+                            }
+                        </td>
                     </tr>
                     <tr>
                         <th>Created date</th>

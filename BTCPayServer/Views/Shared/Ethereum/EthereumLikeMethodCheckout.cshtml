@@ -90,11 +90,6 @@
                     }
                     return r;
                 },
-                coinswitchAmountDue: function() {
-                    return this.srvModel.coinSwitchAmountMarkupPercentage
-                        ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
-                        : this.srvModel.btcDue;
-                },
                 scanDisplayQr: function() {
                     return this.srvModel.invoiceBitcoinUrlQR;
                 }

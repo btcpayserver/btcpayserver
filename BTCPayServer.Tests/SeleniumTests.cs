@@ -582,7 +582,7 @@ namespace BTCPayServer.Tests
                 s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
                 s.Driver.FindElement(By.Id("SaveButton")).Click();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-                Assert.Equal("Expired", s.Driver.FindElement(By.CssSelector("[data-test='status']")).Text);
+                Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
                 
                 // unexpire
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());

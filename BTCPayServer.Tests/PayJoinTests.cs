@@ -255,8 +255,8 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
                 s.Driver.SwitchTo().Alert().SendKeys(bip21);
                 s.Driver.SwitchTo().Alert().Accept();
-                s.Driver.FindElement(By.Id("Outputs_0__Amount")).Clear();
-                s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys("0.023");
+                s.Driver.FindElementUntilNotStaled(By.Id("Outputs_0__Amount")).Clear();
+                s.Driver.FindElementUntilNotStaled(By.Id("Outputs_0__Amount")).SendKeys("0.023");
 
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
 

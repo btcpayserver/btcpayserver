@@ -48,6 +48,20 @@ namespace BTCPayServer.Tests
             return Assert.IsType<T>(vr.Model);
         }
 
+        // Sometimes, selenium is flaky...
+        public static IWebElement FindElementUntilNotStaled(this IWebDriver driver, By by)
+        {
+            retry:
+            try
+            {
+                return driver.FindElement(by);
+            }
+            catch (StaleElementReferenceException)
+            {
+                goto retry;
+            }
+        }
+
         public static void AssertElementNotFound(this IWebDriver driver, By by)
         {
             DateTimeOffset now = DateTimeOffset.Now;

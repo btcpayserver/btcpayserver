@@ -337,6 +337,17 @@ h2 small .fa-question-circle-o {
     .toasted-container {
         display: none !important;
     }
+    #markStatusDropdownMenuButton {
+        border: 0;
+        background: transparent;
+        padding: 0 !important;
+        color: inherit;
+        font-weight:  var(--btcpay-font-weight-normal);
+        font-size: var(--btcpay-body-font-size);
+    }
+    #markStatusDropdownMenuButton::after {
+        content: none;
+    }
 }
 
 /* Richtext editor */

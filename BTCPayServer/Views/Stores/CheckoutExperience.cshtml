@@ -21,7 +21,7 @@
                 </div>
                 <div class="form-group mb-4">
                     <div class="form-label mb-1">Enable payment methods only when amount is …</div>
-                    <table class="table">
+                    <table class="table table-sm mt-0 mx-0">
                         @for (var index = 0; index < Model.PaymentMethodCriteria.Count; index++)
                         {
                             var criteria = Model.PaymentMethodCriteria[index];
@@ -43,7 +43,6 @@
                     </table>
                 </div>
             }
-            <h5 class="mb-3">General</h5>
             <div class="form-check my-1">
                 <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
                 <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
@@ -55,30 +54,6 @@
             <div class="form-check my-1">
                 <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
-            </div>
-            <div class="form-check my-1">
-                <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
-                <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                <p class="form-text text-muted mb-0">Fee will be shown for BTC and LTC onchain payments only.</p>
-            </div>
-            <div class="form-group mt-2 mb-4">
-                <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
-                <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch" min="1" />
-                <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
-            </div>
-            
-            <h5 class="mt-4 mb-3">Lightning</h5>
-            <div class="form-check my-1">
-                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
-                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-            </div>
-            <div class="form-check my-1">
-                <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
-                <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
-            </div>
-            <div class="form-check my-1">
-                <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
-                <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
             </div>
 
             <h4 class="mt-5 mb-3">Appearance</h4>

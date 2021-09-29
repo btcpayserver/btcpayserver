@@ -14,7 +14,6 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Balance { get; set; }
             public bool IsOwner { get; set; }
             public WalletId Id { get; set; }
-            public BTCPayNetwork Network { get; set; }
         }
 
         public Dictionary<BTCPayNetwork, IMoney> BalanceForCryptoCode { get; set; } = new Dictionary<BTCPayNetwork, IMoney>();

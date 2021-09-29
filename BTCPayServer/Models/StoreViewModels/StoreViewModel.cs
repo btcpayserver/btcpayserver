@@ -89,6 +89,8 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Enable Payjoin/P2EP")]
         public bool PayJoinEnabled { get; set; }
         public bool CanUsePayJoin { get; set; }
+        public bool IsOnchainSetup { get; set; }
+        public bool IsLightningSetup { get; set; }
 
         public bool HintWallet { get; set; }
         public bool HintLightning { get; set; }

@@ -578,6 +578,8 @@ namespace BTCPayServer.Controllers
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             vm.HintWallet = storeBlob.Hints.Wallet;
             vm.HintLightning = storeBlob.Hints.Lightning;
+            vm.IsOnchainSetup = vm.DerivationSchemes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Value));
+            vm.IsLightningSetup = vm.LightningNodes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Address));
 
             (bool canUseHotWallet, _) = await CanUseHotWallet();
             vm.CanUsePayJoin = canUseHotWallet && store

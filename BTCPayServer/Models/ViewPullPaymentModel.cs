@@ -74,7 +74,7 @@ namespace BTCPayServer.Models
         public bool IsPending { get; set; }
         public decimal AmountCollected { get; set; }
         public decimal AmountDue { get; set; }
-        public decimal? ClaimedAmount { get; set; }
+        public decimal ClaimedAmount { get; set; }
         public decimal MinimumClaim { get; set; }
         public string Destination { get; set; }
         public string AmountDueFormatted { get; set; }

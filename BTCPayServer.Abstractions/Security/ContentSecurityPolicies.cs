@@ -75,14 +75,21 @@ namespace BTCPayServer.Security
         /// Allow a specific script as event handler
         /// </summary>
         /// <param name="script"></param>
-        public void AllowUnsafeHashes(string script)
+        public void AllowUnsafeHashes(string script = null)
         {
-            if (script is null)
-                throw new ArgumentNullException(nameof(script));
-            var sha = GetSha256(script);
-            Add("script-src", $"'unsafe-hashes'");
-            Add("script-src", $"'sha256-{sha}'");
+            if (!allowUnsafeHashes)
+            {
+                Add("script-src", $"'unsafe-hashes'");
+                allowUnsafeHashes = true;
+            }
+            if (script != null)
+            {
+                var sha = GetSha256(script);
+                Add("script-src", $"'sha256-{sha}'");
+            }
         }
+
+        bool allowUnsafeHashes = false;
         /// <summary>
         /// Allow the injection of script tag with the following script
         /// </summary>

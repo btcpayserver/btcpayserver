@@ -136,7 +136,7 @@ namespace BTCPayServer.TagHelpers
                 var v = attr.Value.ToString();
                 if (v.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
                 {
-                    _csp.AllowInline(v);
+                    _csp.AllowUnsafeHashes(v);
                 }
             }
         }

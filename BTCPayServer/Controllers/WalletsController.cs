@@ -264,14 +264,10 @@ namespace BTCPayServer.Controllers
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
                 walletVm.StoreName = wallet.Store.StoreName;
 
-                if (wallets.BalanceForCryptoCode.ContainsKey(wallet.Network))
-                {
-                    wallets.BalanceForCryptoCode[wallet.Network] = wallets.BalanceForCryptoCode[wallet.Network].Add(await GetBalanceAsMoney(wallet.Wallet, wallet.DerivationStrategy));
-                }
-                else
-                {
-                    wallets.BalanceForCryptoCode[wallet.Network] = await GetBalanceAsMoney(wallet.Wallet, wallet.DerivationStrategy);
-                }
+                var money = await GetBalanceAsMoney(wallet.Wallet, wallet.DerivationStrategy);
+                wallets.BalanceForCryptoCode[wallet.Network] = wallets.BalanceForCryptoCode.ContainsKey(wallet.Network)
+                    ? wallets.BalanceForCryptoCode[wallet.Network].Add(money)
+                    : money;
             }
 
             return View(wallets);

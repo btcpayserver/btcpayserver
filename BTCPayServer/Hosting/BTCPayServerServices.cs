@@ -316,6 +316,10 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IPayoutHandler, BitcoinLikePayoutHandler>();
             services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
+            
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
+                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 

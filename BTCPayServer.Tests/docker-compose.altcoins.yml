@@ -225,7 +225,9 @@ services:
     links:
       - bitcoind
   postgres:
-    image:  postgres:9.6.5
+    image:  postgres:13.4
+    environment:
+        POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "39372:5432"
     expose:

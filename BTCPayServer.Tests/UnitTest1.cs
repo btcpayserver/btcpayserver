@@ -2365,12 +2365,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model
+                var vm = Assert.IsType<StoreViewModel>(Assert
+                    .IsType<ViewResult>(await user.GetController<StoresController>().UpdateStore()).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().CheckoutExperience(vm).Result
+                    user.GetController<StoresController>().UpdateStore(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls

@@ -259,7 +259,6 @@ namespace BTCPayServer.Controllers
                 {
                     walletVm.Balance = "";
                 }
-                walletVm.Network = wallet.Network;
                 walletVm.CryptoCode = wallet.Network.CryptoCode;
                 walletVm.StoreId = wallet.Store.Id;
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);

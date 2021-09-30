@@ -23,7 +23,7 @@
                         "complete (marked)": 'success',
                         "invalid (marked)": 'danger'
                     }[data.statusString];
-                    var statusHtml = "<span class='btn-sm alert alert-" + alertClassModifier + " p-1'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    var statusHtml = "<span class='fs-6 fw-normal badge bg-" + alertClassModifier + "'>" + data.statusString + " <span class='fa fa-check'></span></span>"
                     toggleButton.replaceWith(statusHtml);
                 })
                 .fail(function () {

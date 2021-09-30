@@ -130,16 +130,16 @@
                                     <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         @Model.State
                                     </button>
-                                    <div class="dropdown-menu p-0" aria-labelledby="markStatusDropdownMenuButton">
+                                    <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
                                         @if (Model.CanMarkInvalid)
                                         {
-                                            <a class="dropdown-item p-1" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
+                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
                                                 Mark as invalid <span class="fa fa-times"></span>
                                             </a>
                                         }
                                         @if (Model.CanMarkComplete)
                                         {
-                                            <a class="dropdown-item p-1" href="#" data-id="@Model.Id" data-status="complete" data-change-invoice-status-button>
+                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="complete" data-change-invoice-status-button>
                                                 Mark as complete <span class="fa fa-check-circle"></span>
                                             </a>
                                         }

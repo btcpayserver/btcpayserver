@@ -13,7 +13,7 @@
 
 @section PageFootContent {
     <script>
-        function changeInvoiceState(sender, invoiceId, newState) {
+        function changeInvoiceState(invoiceId, newState) {
             var pavpill = $("#pavpill_" + invoiceId);
             var toggleButton = $(".dropdown-toggle");
             toggleButton.attr("disabled", "disabled");
@@ -32,6 +32,15 @@
                     alert("Invoice state update failed");
                 });
         }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            $("[data-change-invoice-status-button]").click(function (e) {
+                var id = e.currentTarget.getAttribute('data-id');
+                var status = e.currentTarget.getAttribute('data-status');
+                
+                changeInvoiceState(id, status);
+            });
+        });
     </script>
 }
 
@@ -125,13 +134,13 @@
                                     <div class="dropdown-menu p-0" aria-labelledby="markStatusDropdownMenuButton">
                                         @if (Model.CanMarkInvalid)
                                         {
-                                            <a class="dropdown-item p-1" href="#" onclick="changeInvoiceState(this, '@Model.Id', 'invalid')">
+                                            <a class="dropdown-item p-1" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
                                                 Mark as invalid <span class="fa fa-times"></span>
                                             </a>
                                         }
                                         @if (Model.CanMarkComplete)
                                         {
-                                            <a class="dropdown-item p-1" href="#" onclick="changeInvoiceState(this, '@Model.Id', 'complete')">
+                                            <a class="dropdown-item p-1" href="#" data-id="@Model.Id" data-status="complete" data-change-invoice-status-button>
                                                 Mark as complete <span class="fa fa-check-circle"></span>
                                             </a>
                                         }

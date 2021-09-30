@@ -14,8 +14,7 @@
 @section PageFootContent {
     <script>
         function changeInvoiceState(invoiceId, newState) {
-            var pavpill = $("#pavpill_" + invoiceId);
-            var toggleButton = $(".dropdown-toggle");
+            var toggleButton = $("#markStatusDropdownMenuButton");
             toggleButton.attr("disabled", "disabled");
 
             $.post(invoiceId + "/changestate/" + newState)
@@ -24,8 +23,8 @@
                         "complete (marked)": 'success',
                         "invalid (marked)": 'danger'
                     }[data.statusString];
-                    var statusHtml = "<span class='alert alert-" + alertClassModifier + " p-1'>" + data.statusString + " <span class='fa fa-check'></span></span>";
-                    pavpill.replaceWith(statusHtml);
+                    var statusHtml = "<span class='btn-sm alert alert-" + alertClassModifier + " p-1'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    toggleButton.replaceWith(statusHtml);
                 })
                 .fail(function () {
                     toggleButton.removeAttr("disabled");
@@ -127,7 +126,7 @@
                         <td>
                             @if (Model.CanMarkStatus)
                             {
-                                <div class="dropdown" id="pavpill_@Model.Id">
+                                <div class="dropdown">
                                     <button class="btn btn-secondary btn-sm dropdown-toggle p-1" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         @Model.State
                                     </button>

@@ -218,6 +218,7 @@
                                     <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
                                         <contribute :target-currency="srvModel.targetCurrency"
                                                     :display-perks-ranking="srvModel.displayPerksRanking"
+                                                    :perks-value="srvModel.perksValue"
                                                     :active="active"
                                                     :loading="loading"
                                                     :in-modal="false"
@@ -242,6 +243,7 @@
                                 <contribute :target-currency="srvModel.targetCurrency"
                                             :loading="loading"
                                             :display-perks-ranking="srvModel.displayPerksRanking"
+                                            :perks-value="srvModel.perksValue"
                                             :active="active"
                                             :in-modal="false"
                                             :perks="perks">
@@ -301,6 +303,7 @@
                 :target-currency="targetCurrency" 
                 :active="active" 
                 :display-perks-ranking="displayPerksRanking" 
+                :perks-value="perksValue" 
                 :index="index"
                 :loading="loading"
                 :in-modal="inModal">
@@ -365,7 +368,8 @@
                 <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">
                     <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
                     <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
-                    <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold > 1 ? "s": ""}}</span>
+                    <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold === 1 ? "": "s"}}</span>
+                    <span v-if="perk.value">{{perk.value}} {{targetCurrency}} total</span>
                 </div>
             </form>
         </div> 
@@ -379,6 +383,7 @@
                 :loading="loading"
                 :in-modal="inModal"
                 :display-perks-ranking="displayPerksRanking"
+                :perks-value="perksValue"
                 :target-currency="targetCurrency"
                 :active="active">
             </perks>

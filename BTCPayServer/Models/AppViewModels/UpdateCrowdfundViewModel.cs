@@ -92,6 +92,9 @@ namespace BTCPayServer.Models.AppViewModels
         
         [Display(Name = "Display contribution ranking")]
         public bool DisplayPerksRanking { get; set; }
+        
+        [Display(Name = "Display contribution value")]
+        public bool DisplayPerksValue { get; set; }
 
         [Display(Name = "Sounds to play when a payment is made. One sound per line")]
         public string Sounds { get; set; }

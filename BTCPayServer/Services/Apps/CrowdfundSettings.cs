@@ -30,6 +30,7 @@ namespace BTCPayServer.Services.Apps
         [Obsolete("Use AppData.TagAllInvoices instead")]
         public bool UseAllStoreInvoices { get; set; }
         public bool DisplayPerksRanking { get; set; }
+        public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }
         public string[] AnimationColors { get; set; } = new string[]
         {

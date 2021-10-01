@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
                 AppId = appId,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
+                DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
                 Sounds = string.Join(Environment.NewLine, settings.Sounds),
                 AnimationColors = string.Join(Environment.NewLine, settings.AnimationColors)
@@ -142,6 +143,7 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
+                DisplayPerksValue = vm.DisplayPerksValue,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity,
                 Sounds = parsedSounds,

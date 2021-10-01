@@ -101,7 +101,16 @@ namespace BTCPayServer.Services.Apps
                 .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                 .GroupBy(entity => entity.Metadata.ItemCode)
                 .ToDictionary(entities => entities.Key, entities => entities.Count());
-
+            
+            Dictionary<string, decimal> perkValue = new Dictionary<string, decimal>();
+            if (settings.DisplayPerksValue)
+            {
+                perkValue = paidInvoices
+                    .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
+                    .GroupBy(entity => entity.Metadata.ItemCode)
+                    .ToDictionary(entities => entities.Key, entities => 
+                        entities.Sum(entity => entity.GetPayments(true).Sum(payment => payment.GetCryptoPaymentData().GetValue())));
+            }
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             if (settings.SortPerksByPopularity)
             {
@@ -139,6 +148,7 @@ namespace BTCPayServer.Services.Apps
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
+                PerkValue = perkValue,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,

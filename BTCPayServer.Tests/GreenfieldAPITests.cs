@@ -1953,6 +1953,7 @@ namespace BTCPayServer.Tests
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var viewerOnlyClient = await admin.CreateClient(Policies.CanViewStoreSettings);
             var store = await adminClient.GetStore(admin.StoreId);
 
             Assert.Empty(await adminClient.GetStorePaymentMethods(store.Id));
@@ -1985,6 +1986,29 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, methods.Count);
             VerifyLightning(methods);
             VerifyOnChain(methods);
+            
+            
+            methods = await viewerOnlyClient.GetStorePaymentMethods(store.Id);
+            
+            VerifyLightning(methods);
+
+            
+            
+           await  adminClient.UpdateStoreLightningNetworkPaymentMethod(store.Id, "BTC",
+                new UpdateLightningNetworkPaymentMethodRequest(
+                    tester.GetLightningConnectionString(LightningConnectionType.CLightning, true), true));
+            methods = await viewerOnlyClient.GetStorePaymentMethods(store.Id);
+            
+            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out var item));
+            var lightningNetworkPaymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
+            Assert.Equal("###", lightningNetworkPaymentMethodBaseData.ConnectionString);
+            
+            
+            methods = await adminClient.GetStorePaymentMethods(store.Id);
+            
+            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out item));
+            lightningNetworkPaymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
+            Assert.NotEqual("###", lightningNetworkPaymentMethodBaseData.ConnectionString);
             
 
         }

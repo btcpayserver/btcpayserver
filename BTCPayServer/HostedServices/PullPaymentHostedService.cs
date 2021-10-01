@@ -384,7 +384,6 @@ namespace BTCPayServer.HostedServices
                                   Entity = o,
                                   Blob = o.GetBlob(_jsonSerializerSettings)
                               });
-                var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
                 var limit = ppBlob.Limit;
                 var totalPayout = payouts.Select(p => p.Blob.Amount).Sum();
                 var claimed = req.ClaimRequest.Value is decimal v ? v : limit - totalPayout;

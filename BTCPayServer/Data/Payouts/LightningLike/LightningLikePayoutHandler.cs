@@ -8,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.PayJoin.Sender;
+using BTCPayServer.Validation;
 using LNURL;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -16,12 +17,17 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 {
     public class LightningLikePayoutHandler : IPayoutHandler
     {
-        public const string LightningLikePayoutHandlerOnionNamedClient = nameof(LightningLikePayoutHandlerOnionNamedClient);
-        public const string LightningLikePayoutHandlerClearnetNamedClient = nameof(LightningLikePayoutHandlerClearnetNamedClient);
+        public const string LightningLikePayoutHandlerOnionNamedClient =
+            nameof(LightningLikePayoutHandlerOnionNamedClient);
+
+        public const string LightningLikePayoutHandlerClearnetNamedClient =
+            nameof(LightningLikePayoutHandlerClearnetNamedClient);
+
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider, IHttpClientFactory httpClientFactory)
+        public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
+            IHttpClientFactory httpClientFactory)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _httpClientFactory = httpClientFactory;
@@ -40,7 +46,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public HttpClient CreateClient(Uri uri)
         {
-            return _httpClientFactory.CreateClient(uri.IsOnion() ? LightningLikePayoutHandlerOnionNamedClient : LightningLikePayoutHandlerClearnetNamedClient);
+            return _httpClientFactory.CreateClient(uri.IsOnion()
+                ? LightningLikePayoutHandlerOnionNamedClient
+                : LightningLikePayoutHandlerClearnetNamedClient);
         }
 
         public async Task<IClaimDestination> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
@@ -49,23 +57,31 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             try
             {
-               var lnurl = LNURL.LNURL.Parse(destination, out var lnurlTag);
-               if (lnurlTag is null)
-               {
-                   var info = (await LNURL.LNURL.FetchInformation(lnurl, "payRequest", CreateClient(lnurl))) as LNURLPayRequest;
-                   lnurlTag = info.Tag;
-               }
+                string lnurlTag = null;
+                var lnurl = EmailValidator.IsEmail(destination)
+                    ? LNURL.LNURL.ExtractUriFromInternetIdentifier(destination)
+                    : LNURL.LNURL.Parse(destination, out lnurlTag);
 
-               if (lnurlTag.Equals("payRequest"))
-               {
-                   return new LNURLPayClaimDestinaton(destination);
-               }
+                if (lnurlTag is null)
+                {
+                    var info = (LNURLPayRequest)(await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl)));
+                    lnurlTag = info.Tag;
+                }
+
+                if (lnurlTag.Equals("payRequest"))
+                {
+                    return new LNURLPayClaimDestinaton(destination);
+                }
             }
             catch (FormatException)
             {
             }
-            
-            var result = 
+            catch (HttpRequestException)
+            {
+                return null;
+            }
+
+            var result =
                 BOLT11PaymentRequest.TryParse(destination, out var invoice, network.NBitcoinNetwork)
                     ? new BoltInvoiceClaimDestination(destination, invoice)
                     : null;
@@ -111,7 +127,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds)
         {
-            return  Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout", "LightningLikePayout", new {cryptoCode =  paymentMethodId.CryptoCode, payoutIds}));
+            return Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout",
+                "LightningLikePayout", new { cryptoCode = paymentMethodId.CryptoCode, payoutIds }));
         }
     }
 }

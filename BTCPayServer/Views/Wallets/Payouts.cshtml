@@ -6,6 +6,7 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
+    
     var paymentMethods = PayoutHandlers.GetSupportedPaymentMethods();
     
     var stateActions = new List<(string Action, string Text)>();

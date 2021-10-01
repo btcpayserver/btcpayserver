@@ -121,9 +121,11 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            if (vm.ClaimedAmount == 0 && destination.Amount != null)
+
+            if (vm.ClaimedAmount == 0)
             {
-                vm.ClaimedAmount  = destination.Amount.Value;
+                ModelState.AddModelError(nameof(vm.ClaimedAmount),
+                    $"Amount is required");
             }
             else if (vm.ClaimedAmount != 0 && destination.Amount != null && vm.ClaimedAmount != destination.Amount)
             {

@@ -2,8 +2,6 @@
 {
     public class LNURLPayClaimDestinaton: ILightningLikeLikeClaimDestination
     {
-        private readonly string _lnurl;
-
         public LNURLPayClaimDestinaton(string lnurl)
         {
             LNURL = lnurl;

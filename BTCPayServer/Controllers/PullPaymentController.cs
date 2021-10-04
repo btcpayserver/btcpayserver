@@ -115,10 +115,10 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");   
                 return await ViewPullPayment(pullPaymentId);
             }
-            var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
-            if (destination is null)
+            var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination, true);
+            if (destination.destination is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination with selected payment method");
+                ModelState.AddModelError(nameof(vm.Destination), destination.error??"Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
 
@@ -127,10 +127,10 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.ClaimedAmount),
                     $"Amount is required");
             }
-            else if (vm.ClaimedAmount != 0 && destination.Amount != null && vm.ClaimedAmount != destination.Amount)
+            else if (vm.ClaimedAmount != 0 && destination.destination.Amount != null && vm.ClaimedAmount != destination.destination.Amount)
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount),
-                    $"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
+                    $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
             }
 
             if (!ModelState.IsValid)
@@ -140,7 +140,7 @@ namespace BTCPayServer.Controllers
 
             var result = await _pullPaymentHostedService.Claim(new ClaimRequest()
             {
-                Destination = destination,
+                Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = vm.ClaimedAmount,
                 PaymentMethodId = paymentMethodId

@@ -30,7 +30,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly IOptions<LightningNetworkOptions> _options;
-        private readonly IHttpClientFactory _httpClientFactory;
 
         public LightningLikePayoutController(ApplicationDbContextFactory applicationDbContextFactory,
             UserManager<ApplicationUser> userManager,
@@ -38,8 +37,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
             LightningClientFactoryService lightningClientFactoryService,
-            IOptions<LightningNetworkOptions> options,
-            IHttpClientFactory httpClientFactory)
+            IOptions<LightningNetworkOptions> options)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
             _userManager = userManager;
@@ -48,7 +46,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactoryService = lightningClientFactoryService;
             _options = options;
-            _httpClientFactory = httpClientFactory;
         }
 
         private async Task<List<PayoutData>> GetPayouts(ApplicationDbContext dbContext, PaymentMethodId pmi,
@@ -149,10 +146,10 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 foreach (var payoutData in payoutDatas)
                 {
                     var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
-                    var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination);
+                    var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination, false);
                     try
                     {
-                        switch (claim)
+                        switch (claim.destination)
                         {
                             case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
                                 var endpoint = LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out var tag);
@@ -206,7 +203,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 {
                                     PayoutId = payoutData.Id,
                                     Result = PayResult.Error,
-                                    Destination = blob.Destination
+                                    Destination = blob.Destination,
+                                    Message = claim.error
                                 });
                                 break;
                         }

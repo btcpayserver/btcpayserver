@@ -7,7 +7,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Validation;
 using LNURL;
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +50,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 : LightningLikePayoutHandlerClearnetNamedClient);
         }
 
-        public async Task<IClaimDestination> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
+        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, bool validate)
         {
             destination = destination.Trim();
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
@@ -68,9 +67,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     lnurlTag = info.Tag;
                 }
 
-                if (lnurlTag.Equals("payRequest"))
+                if (lnurlTag.Equals("payRequest", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return new LNURLPayClaimDestinaton(destination);
+                    return (new LNURLPayClaimDestinaton(destination), null);
                 }
             }
             catch (FormatException)
@@ -78,7 +77,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
             catch (HttpRequestException)
             {
-                return null;
+                return (null, "The LNURL / Lightning Address provided was not online.");
             }
 
             var result =
@@ -86,8 +85,19 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     ? new BoltInvoiceClaimDestination(destination, invoice)
                     : null;
 
-            if (result == null) return null;
-            return (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days < 30 ? null : result;
+            if (result == null) return (null, "A valid BOLT11 invoice (with 30+ day expiry) or LNURL Pay or Lightning address was not provided.");
+            if (validate && (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days < 30)
+            {
+                return (null,
+                    $"The BOLT11 invoice must have an expiry date of at least 30 days from submission (Provided was only {(invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days}).");
+            }
+            if (invoice.ExpiryDate.UtcDateTime < DateTime.UtcNow)
+            {
+                return (null,
+                    "The BOLT11 invoice submitted has expired.");
+            }
+
+            return (result, null);
         }
 
         public IPayoutProof ParseProof(PayoutData payout)

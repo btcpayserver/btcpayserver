@@ -5,12 +5,19 @@
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
+    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="GoBack">
         <vc:icon symbol="back" />
     </a>
     <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
         <vc:icon symbol="close" />
     </a>
+}
+
+@section PageFootContent
+{
+    <script>
+        delegate('click', '#GoBack', () => { history.back(); return false; })
+    </script>
 }
 
 <header class="text-center">

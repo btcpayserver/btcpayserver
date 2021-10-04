@@ -5,7 +5,7 @@
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" onclick="history.back();return false;">
+    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="GoBack">
         <vc:icon symbol="back" />
     </a>
     <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
@@ -43,6 +43,8 @@
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script>
+        delegate('click', '#GoBack', () => { history.back(); return false; })
+
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;

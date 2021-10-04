@@ -10,8 +10,7 @@ namespace BTCPayServer.Plugins.LNbank.Extensions
         public static void AddAppAuthentication(this IServiceCollection services)
         {
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddScheme<AuthenticationSchemeOptions, BTCPayAPIKeyAuthenticationHandler>(AuthenticationSchemes.ApiBTCPayAPIKey, o => {})
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>(AuthenticationSchemes.ApiBasic, o => {})
+                .AddScheme<AuthenticationSchemeOptions, BTCPayAPIKeyAuthenticationHandler>(AuthenticationSchemes.Api, o => {})
                 .AddCookie(options =>
                 {
                     // Forward API and Hub requests to API key scheme
@@ -19,15 +18,15 @@ namespace BTCPayServer.Plugins.LNbank.Extensions
                     {
                         string authHeader = ctx.Request.Headers["Authorization"];
                         bool isBearerAuth = authHeader != null && authHeader.StartsWith("Bearer ");
-                        bool isApiOrHub = ctx.Request.Path.StartsWithSegments("/api") || ctx.Request.Path.StartsWithSegments("/Hubs");
+                        bool isApiOrHub = ctx.Request.Path.StartsWithSegments("/Plugins/LNbank/api") || ctx.Request.Path.StartsWithSegments("/Plugins/LNbank/Hubs");
 
                         return isApiOrHub && isBearerAuth
-                            ? AuthenticationSchemes.ApiBTCPayAPIKey
+                            ? AuthenticationSchemes.Api
                             : null;
                     };
 
-                    options.LoginPath = "/Login";
-                    options.LogoutPath = "/Logout";
+                    options.LoginPath = "/login";
+                    options.LogoutPath = "/logout";
                     options.Cookie.Name = "LNbank";
                 });
         }

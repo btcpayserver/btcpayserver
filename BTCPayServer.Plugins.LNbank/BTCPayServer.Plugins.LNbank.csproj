@@ -13,24 +13,9 @@
     <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
     <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
     <EmbeddedResource Include="Resources\**" />
-    <EmbeddedResource Remove="Authentication\**" />
-    <EmbeddedResource Remove="Controllers\API\**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.4">
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Authentication\**" />
-    <Compile Remove="Controllers\API\**" />
-    <Compile Remove="Extensions\AuthenticationExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Authentication\**" />
-    <None Remove="Controllers\API\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="Authentication\**" />
-    <Content Remove="Controllers\API\**" />
   </ItemGroup>
 </Project>

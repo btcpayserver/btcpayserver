@@ -30,8 +30,12 @@ namespace BTCPayServer.Plugins.LNbank.Authentication
 
             try
             {
+                // TODO: Needs proper implementation
+                return AuthenticateResult.Fail("Authentication failed! Not implemented.");
+                /*
                 ApplicationUser user = await UserManager.FindUserByBtcPayApiKey(apiKey);
                 return await AuthenticateUser(user, AuthenticationSchemes.ApiBTCPayAPIKey);
+                */
             }
             catch (Exception exception)
             {

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Plugins.LNbank.Controllers.API
 {
     [ApiController]
-    [Route("~/api/[controller]")]
+    [Route("~/Plugins/LNbank/api/[controller]")]
     [Authorize(AuthenticationSchemes=AuthenticationSchemes.Api)]
     public abstract class BaseApiController : Controller
     {

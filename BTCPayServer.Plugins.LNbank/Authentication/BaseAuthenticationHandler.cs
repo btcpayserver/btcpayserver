@@ -29,15 +29,12 @@ namespace BTCPayServer.Plugins.LNbank.Authentication
         protected async Task<AuthenticateResult> AuthenticateUser(ApplicationUser user, string scheme)
         {
             
-            var roles = await UserManager.GetRolesAsync(user);
-            var isAdmin = roles.Contains(BTCPayServer.Roles.ServerAdmin, StringComparer.Ordinal);
-
+            var isAdmin = await UserManager.IsInRoleAsync(user, "ServerAdmin");
             var claims = new List<Claim>
             {
                 new Claim("UserId", user.Id),
                 new Claim("IsAdmin", isAdmin.ToString())
             };
-
             var claimsIdentity = new ClaimsIdentity(claims, scheme);
             var principal = new ClaimsPrincipal(claimsIdentity);
             var ticket = new AuthenticationTicket(principal, scheme);

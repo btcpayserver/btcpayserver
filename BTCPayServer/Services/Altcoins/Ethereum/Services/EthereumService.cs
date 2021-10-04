@@ -29,6 +29,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
         private readonly SettingsRepository _settingsRepository;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly IConfiguration _configuration;
+        private readonly PaymentService _paymentService;
         private readonly Dictionary<int, EthereumWatcher> _chainHostedServices = new Dictionary<int, EthereumWatcher>();
 
         private readonly Dictionary<int, CancellationTokenSource> _chainHostedServiceCancellationTokenSources =
@@ -41,7 +42,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             BTCPayNetworkProvider btcPayNetworkProvider,
             SettingsRepository settingsRepository,
             InvoiceRepository invoiceRepository,
-            IConfiguration configuration) : base(
+            IConfiguration configuration,
+            PaymentService paymentService) : base(
             eventAggregator)
         {
             _httpClientFactory = httpClientFactory;
@@ -51,6 +53,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             _settingsRepository = settingsRepository;
             _invoiceRepository = invoiceRepository;
             _configuration = configuration;
+            _paymentService = paymentService;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
@@ -186,7 +189,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 _chainHostedServiceCancellationTokenSources.AddOrReplace(ethereumLikeConfiguration.ChainId, cts);
                 _chainHostedServices.AddOrReplace(ethereumLikeConfiguration.ChainId,
                     new EthereumWatcher(ethereumLikeConfiguration.ChainId, ethereumLikeConfiguration,
-                        _btcPayNetworkProvider, _eventAggregator, _invoiceRepository));
+                        _btcPayNetworkProvider, _eventAggregator, _invoiceRepository, _paymentService));
                 await _chainHostedServices[ethereumLikeConfiguration.ChainId].StartAsync(CancellationTokenSource
                     .CreateLinkedTokenSource(cancellationToken, cts.Token).Token);
             }

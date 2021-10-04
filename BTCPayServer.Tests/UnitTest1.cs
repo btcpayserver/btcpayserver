@@ -3122,7 +3122,7 @@ namespace BTCPayServer.Tests
                         Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
                         Assert.NotNull(c.Payment);
                         Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
-                        Assert.True(c.Payment.Id.StartsWith(txId.ToString()));
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);
                         
                     });
                 user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
@@ -3132,8 +3132,7 @@ namespace BTCPayServer.Tests
                         Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
                         Assert.NotNull(c.Payment);
                         Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
-                        Assert.True(c.Payment.Id.StartsWith(txId.ToString()));
-                        
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);                        
                     });
             }
         }

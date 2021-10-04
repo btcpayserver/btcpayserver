@@ -159,16 +159,3 @@
         <vc:pager view-model="Model"/>
     </div>
 </form>
-
-@section PageFootContent {
-    <script>
-       
-        function selectAll(e, selector)
-        {
-            var items = document.getElementsByClassName("selection-item-"+ selector);
-            for (var i = 0; i < items.length; i++) {
-                items[i].checked = e.checked;
-            }
-        }
-    </script>
-}

@@ -1142,7 +1142,6 @@ namespace BTCPayServer.Tests
             
             
             //lightning tests
-            
             newStore = s.CreateNewStore();
             s.AddLightningNode("BTC");
            //Currently an onchain wallet is required to use the Lightning payouts feature..
@@ -1168,6 +1167,19 @@ namespace BTCPayServer.Tests
                 LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
                 $"LN payout test {DateTime.Now.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None)).BOLT11;
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
+            s.Driver.FindElement(By.Id("SelectedPaymentMethod")).Click();
+            s.Driver.FindElement(By.CssSelector($"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", PaymentTypes.LightningLike )}]")).Click();
+            
+            s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys(Keys.Enter);
+            //we do not allow short-life bolts.
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+
+            bolt = (await s.Server.MerchantLnd.Client.CreateInvoice(
+                LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
+                $"LN payout test {DateTime.Now.Ticks}",
+                TimeSpan.FromDays(31), CancellationToken.None)).BOLT11;
+            s.Driver.FindElement(By.Id("Destination")).Clear();
             s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
             s.Driver.FindElement(By.Id("SelectedPaymentMethod")).Click();
             s.Driver.FindElement(By.CssSelector($"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", PaymentTypes.LightningLike )}]")).Click();
@@ -1207,7 +1219,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
                 Assert.Contains(bolt, s.Driver.PageSource);
             }
-            
         }
 
         private static void CanBrowseContent(SeleniumTester s)

@@ -2001,14 +2001,14 @@ namespace BTCPayServer.Tests
             
             Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out var item));
             var lightningNetworkPaymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
-            Assert.Equal("###", lightningNetworkPaymentMethodBaseData.ConnectionString);
+            Assert.Equal("*NEED CanModifyStoreSettings PERMISSION TO VIEW*", lightningNetworkPaymentMethodBaseData.ConnectionString);
             
             
             methods = await adminClient.GetStorePaymentMethods(store.Id);
             
             Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out item));
             lightningNetworkPaymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
-            Assert.NotEqual("###", lightningNetworkPaymentMethodBaseData.ConnectionString);
+            Assert.NotEqual("*NEED CanModifyStoreSettings PERMISSION TO VIEW*", lightningNetworkPaymentMethodBaseData.ConnectionString);
             
 
         }

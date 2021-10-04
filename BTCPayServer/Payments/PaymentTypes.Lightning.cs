@@ -78,7 +78,7 @@ namespace BTCPayServer.Payments
                         canModifyStore
                             ? lightningSupportedPaymentMethod.GetDisplayableConnectionString()
                             :
-                            "###"
+                            "*NEED CanModifyStoreSettings PERMISSION TO VIEW*"
                 };
             return null;
         }

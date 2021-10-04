@@ -43,8 +43,7 @@ namespace BTCPayServer.Controllers
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
                 var nodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(Request.IsOnion(), paymentMethodDetails,
-                        network, new InvoiceLogs());
+                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs());
 
                 return View(new ShowLightningNodeInfoViewModel
                 {

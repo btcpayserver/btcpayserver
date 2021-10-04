@@ -78,10 +78,10 @@ namespace BTCPayServer.Payments.Lightning
             NodeInfo? nodeInfo = null;
             if (lnLightningSupportedPaymentMethod != null)
             {
-                nodeInfo = await _lightningLikePaymentHandler.GetNodeInfo( paymentMethod.PreferOnion, lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs);
+                nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
             }
             
-            return new LNURLPayPaymentMethodDetails()
+            return new LNURLPayPaymentMethodDetails
             {
                 Activated = true, 
                 LightningSupportedPaymentMethod = lnLightningSupportedPaymentMethod,

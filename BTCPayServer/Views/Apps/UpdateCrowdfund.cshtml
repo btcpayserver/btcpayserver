@@ -124,6 +124,11 @@
                         <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
                     </div>
                     <div class="form-check mb-3">
+                        <input asp-for="DisplayPerksValue" type="checkbox" class="form-check-input" />
+                        <label asp-for="DisplayPerksValue" class="form-check-label"></label>
+                        <span asp-validation-for="DisplayPerksValue" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
                         <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check-input" />
                         <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                         <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>

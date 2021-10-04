@@ -6,7 +6,7 @@ namespace BTCPayServer.Services.Apps
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; }
 
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -30,13 +30,14 @@ namespace BTCPayServer.Services.Apps
         [Obsolete("Use AppData.TagAllInvoices instead")]
         public bool UseAllStoreInvoices { get; set; }
         public bool DisplayPerksRanking { get; set; }
+        public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }
-        public string[] AnimationColors { get; set; } = new string[]
+        public string[] AnimationColors { get; set; } = 
         {
             "#FF6138", "#FFBE53", "#2980B9", "#282741"
         };
 
-        public string[] Sounds { get; set; } = new string[]
+        public string[] Sounds { get; set; } =
         {
             "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/dominating.wav",
             "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/doublekill.wav",

@@ -90,8 +90,9 @@
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
                 <p class="form-text text-muted">
                     Bundled Themes:
-                    <a href="#" onclick="return setTheme(1);">Legacy</a>
-                    | <a href="#" onclick="return setTheme(2);">Dark</a>
+                    <a href="#" class="setTheme" data-theme="default">Default</a> |
+                    <a href="#" class="setTheme" data-theme="dark">Dark</a> |
+                    <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
                 </p>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
@@ -100,17 +101,14 @@
 </div>
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <script type="text/javascript">
-        function setTheme(themeChoice) {
-            if (themeChoice === 1) { // reserving 0 for potential clear down the road
-                $('#CustomCSS').val('/checkout/css/themes/legacy.css');
-            } else if (themeChoice === 2) {
-                $('#CustomCSS').val('/checkout/css/themes/dark.css');
-            } else {
-                $('#CustomCSS').val('');
-            }
-            return false;
-        }
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        delegate('click', '.setTheme', e => {
+            e.preventDefault();
+            const { theme } = e.target.dataset;
+            document.getElementById('CustomCSS').value = ['dark', 'legacy'].includes(theme)
+                ? `/checkout/css/themes/${theme}.css`
+                : ''
+        });
     </script>
 }

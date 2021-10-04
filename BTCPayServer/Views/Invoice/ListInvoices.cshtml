@@ -75,9 +75,35 @@
 @section PageFootContent {
     @*Without async, somehow selenium do not manage to click on links in this page*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
-    
+
     @* Custom Range Modal *@
     <script>
+        delegate('click', '#selectAllCheckbox', e => {
+            document.querySelectorAll(".selector").forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        delegate('click', '#switchTimeFormat', switchTimeFormat)
+
+        delegate('click', '.changeInvoiceState', e => {
+            const { invoiceId, newState } = e.target.dataset
+            const pavpill = $("#pavpill_" + invoiceId);
+            const originalHtml = pavpill.html();
+            pavpill.html("<span class='fa fa-bitcoin fa-spin' style='margin-left:16px;'></span>");
+
+            $.post("invoices/" + invoiceId + "/changestate/" + newState)
+                .done(function (data) {
+                    const statusHtml = "<span class='badge badge-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    pavpill.replaceWith(statusHtml);
+                })
+                .fail(function (data) {
+                    pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
+                    alert("Invoice state update failed");
+                });
+        })
+
+
         $('#btnCustomRangeDate').on('click', function (sender) {
             var filterString = "";
 
@@ -104,36 +130,12 @@
                 $("#dtpStartDate").next().trigger("focus");
             }
         })
-        
-        function selectAll(e)
-        {
-            var items = document.getElementsByClassName("selector");
-            for (var i = 0; i < items.length; i++) {
-                items[i].checked = e.checked;
-            }
-        }
                         
         function getDateStringWithOffset(hoursDiff) {
             var datenow = new Date();
             var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
             var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
             return str;
-        }
-
-        function changeInvoiceState(sender, invoiceId, newState) {
-            var pavpill = $("#pavpill_" + invoiceId);
-            var originalHtml = pavpill.html();
-            pavpill.html("<span class='fa fa-bitcoin fa-spin' style='margin-left:16px;'></span>");
-
-            $.post("invoices/" + invoiceId + "/changestate/" + newState)
-                .done(function (data) {
-                    var statusHtml = "<span class='badge badge-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
-                    pavpill.replaceWith(statusHtml);
-                })
-                .fail(function (data) {
-                    pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
-                    alert("Invoice state update failed");
-                });
         }
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -329,11 +331,11 @@
                     <thead>
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
-                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" onclick="selectAll(this);"/>
+                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                         </th>
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
-                            <a href="javascript:switchTimeFormat()" csp-allow>
+                            <a id="switchTimeFormat" href="#">
                                 <span class="fa fa-clock-o" title="Switch date format"></span>
                             </a>
                         </th>
@@ -381,13 +383,13 @@
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
                                             {
-                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
+                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
                                                     Mark as invalid <span class="fa fa-times"></span>
                                                 </button>
                                             }
                                             @if (invoice.CanMarkComplete)
                                             {
-                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
+                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="complete">
                                                     Mark as complete <span class="fa fa-check-circle"></span>
                                                 </button>
                                             }

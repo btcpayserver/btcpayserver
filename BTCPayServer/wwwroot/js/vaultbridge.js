@@ -27,7 +27,10 @@ var vault = (function () {
                     var request = new XMLHttpRequest();
                     request.onreadystatechange = function () {
                         if (request.readyState == 4 && request.status == 200) {
-                            self.socket.send(request.responseText);
+                            if (self.socket.readyState == 1)
+                                self.socket.send(request.responseText);
+                            else
+                                self.onerror(vault.errors.socketError);
                         }
                         if (request.readyState == 4 && request.status == 0) {
                             self.onerror(vault.errors.notRunning);

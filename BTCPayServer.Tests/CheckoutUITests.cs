@@ -137,10 +137,10 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser(true);
                 var store = s.CreateNewStore();
                 s.AddLightningNode();
-                s.GoToStore(store.storeId);
+                s.GoToStore(store.storeId, StoreNavPages.Payment);
                 s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
                 s.Driver.FindElement(By.Id("Save")).Click();
-                Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+                Assert.Contains("Payment settings successfully updated", s.FindAlertMessage().Text);
                 
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);

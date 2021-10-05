@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
         {
             await RegisterAsync(isAdmin);
             await CreateStoreAsync();
-            var store = this.GetController<StoresController>();
+            var store = GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
@@ -127,19 +127,28 @@ namespace BTCPayServer.Tests
 
         public async Task SetNetworkFeeMode(NetworkFeeMode mode)
         {
-            await ModifyStore(store =>
+            await ModifyPayment(payment =>
             {
-                store.NetworkFeeMode = mode;
+                payment.NetworkFeeMode = mode;
             });
         }
 
-        public async Task ModifyStore(Action<StoreViewModel> modify)
+        public void ModifyStore(Action<StoreViewModel> modify)
         {
             var storeController = GetController<StoresController>();
-            var response = await storeController.UpdateStore();
+            var response = storeController.UpdateStore();
             StoreViewModel store = (StoreViewModel)((ViewResult)response).Model;
             modify(store);
-            storeController.UpdateStore(store).GetAwaiter().GetResult();
+            storeController.UpdateStore(store);
+        }
+
+        public async Task ModifyPayment(Action<PaymentViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            var response = await storeController.Payment();
+            PaymentViewModel payment = (PaymentViewModel)((ViewResult)response).Model;
+            modify(payment);
+            storeController.Payment(payment).GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
@@ -190,7 +199,7 @@ namespace BTCPayServer.Tests
 
         public Task EnablePayJoin()
         {
-            return ModifyStore(s => s.PayJoinEnabled = true);
+            return ModifyPayment(p => p.PayJoinEnabled = true);
         }
 
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }

@@ -818,11 +818,11 @@ namespace BTCPayServer.Tests
 
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
-                var response = await stores.UpdateStore();
-                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(response).Model);
+                var response = await stores.Payment();
+                var vm = Assert.IsType<PaymentViewModel>(Assert.IsType<ViewResult>(response).Model);
                 Assert.Equal(0.0, vm.PaymentTolerance);
                 vm.PaymentTolerance = 50.0;
-                Assert.IsType<RedirectToActionResult>(stores.UpdateStore(vm).Result);
+                Assert.IsType<RedirectToActionResult>(stores.Payment(vm).Result);
 
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
@@ -996,8 +996,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(4, tor.Services.Length);
             
         }
-
-
+        
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
@@ -1012,7 +1011,7 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
             await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyStore(model => model.SpeedPolicy = SpeedPolicy.HighSpeed);
+            await user.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
             await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
@@ -1065,7 +1064,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
-                var storeResponse = await storeController.UpdateStore();
+                var storeResponse = storeController.UpdateStore();
                 Assert.IsType<ViewResult>(storeResponse);
                 Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -1089,7 +1088,7 @@ namespace BTCPayServer.Tests
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
-                storeResponse = await storeController.UpdateStore();
+                storeResponse = storeController.UpdateStore();
                 var storeVm =
                     Assert.IsType<StoreViewModel>(Assert
                         .IsType<ViewResult>(storeResponse).Model);
@@ -1205,7 +1204,7 @@ namespace BTCPayServer.Tests
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
-                    await acc.ModifyStore(s => s.SpeedPolicy = SpeedPolicy.LowSpeed);
+                    await acc.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
                     var invoice = acc.BitPay.CreateInvoice(new Invoice
                     {
                         Price = 5.0m,
@@ -2032,7 +2031,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(404, (int)response.StatusCode);
 
-                await user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
+                await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
 
                 Logs.Tester.LogInformation("Bad store with anyone can create invoice = 403");
                 response = await tester.PayTester.HttpClient.SendAsync(
@@ -2448,12 +2447,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<StoreViewModel>(Assert
-                    .IsType<ViewResult>(await user.GetController<StoresController>().UpdateStore()).Model
+                var vm = Assert.IsType<PaymentViewModel>(Assert
+                    .IsType<ViewResult>(await user.GetController<StoresController>().Payment()).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().UpdateStore(vm).Result
+                    user.GetController<StoresController>().Payment(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls
@@ -2470,7 +2469,7 @@ namespace BTCPayServer.Tests
                 Assert.True($"bitcoin:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
 
                 // Fallback lightning invoice should be uppercase inside the QR code.
-                var lightningFallback = paymentMethodSecond.InvoiceBitcoinUrlQR.Split(new string[] { "&lightning=" }, StringSplitOptions.None)[1];
+                var lightningFallback = paymentMethodSecond.InvoiceBitcoinUrlQR.Split(new [] { "&lightning=" }, StringSplitOptions.None)[1];
                 Assert.True(lightningFallback.ToUpperInvariant() == lightningFallback);
             }
         }

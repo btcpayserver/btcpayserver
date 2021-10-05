@@ -165,7 +165,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                await user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
+                await user.SetNetworkFeeMode(NetworkFeeMode.Never);
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";

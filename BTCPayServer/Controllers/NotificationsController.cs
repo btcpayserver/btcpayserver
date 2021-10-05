@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -69,14 +70,15 @@ namespace BTCPayServer.Controllers
                     }
                 });
 
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(2000, cancellationToken);
-                }
+                await websocketHelper.NextMessageAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
                 // ignored
+            }
+            catch (WebSocketException)
+            {
+
             }
             finally
             {

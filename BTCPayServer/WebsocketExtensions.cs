@@ -23,10 +23,10 @@ wait:
             if (completed == waiting)
             {
                 await webSocket.SendAsync(Encoding.UTF8.GetBytes("ping"), WebSocketMessageType.Text, true, cancellationToken);
-                waiting = Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+                waiting = Task.Delay(TimeSpan.FromSeconds(25), cancellationToken);
                 goto wait;
             }
-            return receiving.Result;
+            return await receiving;
         }
     }
 }

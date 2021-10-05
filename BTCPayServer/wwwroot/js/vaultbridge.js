@@ -20,6 +20,8 @@ var vault = (function () {
         };
         this.socket.onmessage = function (event) {
             if (typeof event.data === "string") {
+                if (event.data === "ping")
+                    return;
                 var jsonObject = JSON.parse(event.data);
                 if (jsonObject.hasOwnProperty("params")) {
                     var request = new XMLHttpRequest();

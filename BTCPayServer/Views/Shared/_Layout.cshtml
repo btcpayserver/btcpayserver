@@ -207,6 +207,8 @@
             try {
                 socket = new WebSocket(ws_uri);
                 socket.onmessage = function (e) {
+                    if (e.data === "ping")
+                        return;
                     $.get(newDataEndpoint, function (data) {
                         $("#notifications-nav-item").replaceWith($(data));
                     });

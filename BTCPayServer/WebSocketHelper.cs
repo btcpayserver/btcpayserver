@@ -37,7 +37,7 @@ namespace BTCPayServer
             var newSize = _Buffer.Array.Length;
             while (true)
             {
-                var message = await Socket.ReceiveAsync(buffer, cancellation);
+                var message = await Socket.ReceiveAndPingAsync(buffer, cancellation);
                 if (message.MessageType == WebSocketMessageType.Close)
                 {
                     await CloseSocketAndThrow(WebSocketCloseStatus.NormalClosure, "Close message received from the peer", cancellation);

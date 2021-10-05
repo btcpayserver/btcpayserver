@@ -276,9 +276,12 @@
                     }
                     ws_uri += "//" + loc.host;
                     ws_uri += loc.pathname + "/status/ws?invoiceId=" + this.srvModel.invoiceId;
+
                     try {
                         socket = new WebSocket(ws_uri);
                         socket.onmessage = function (e) {
+                            if (e.data === "ping")
+                                return;
                             self.fetchData();
                         };
                         socket.onerror = function (e) {

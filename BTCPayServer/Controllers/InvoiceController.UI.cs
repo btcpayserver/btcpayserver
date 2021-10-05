@@ -654,7 +654,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice/{invoiceId}/status/ws")]
         [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
         [Route("invoice/status/ws")]
-        public async Task<IActionResult> GetStatusWebSocket(string invoiceId)
+        public async Task<IActionResult> GetStatusWebSocket(string invoiceId, CancellationToken cancellationToken)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
@@ -670,7 +670,7 @@ namespace BTCPayServer.Controllers
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
-                    var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
+                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer, default(CancellationToken));
                     if (message.MessageType == WebSocketMessageType.Close)
                         break;
                 }

@@ -63,15 +63,6 @@
         padding: .75rem 1rem;
         border-radius: 4px;
     }
-    .lnurl-setup {
-        display: none;
-    }
-    #LNURLEnabled:checked + * ,
-    #LNURLEnabled:checked + * + *,
-    #LNURLEnabled:checked + * + * + *,
-    #LNURLEnabled:checked + * + * + * + *{
-        display:  block;
-    }
 </style>
 }
 
@@ -187,26 +178,42 @@
             </div>
         </div>
     </div>
-
+    
     <div class="text-start">
-        <label asp-for="LNURLEnabled">Enable LNURL</label>
-        <input type="checkbox" asp-for="LNURLEnabled" class="btcpay-toggle ml-2"/>
-        <div class="form-group mt-4 lnurl-setup">
-            <label asp-for="LNURLBech32Mode">LNURL Classic Mode</label>
-            <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle ml-2"/>
-            <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
+        <div class="d-flex align-items-center">
+            <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
+            <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
         </div>
-        <div class="form-group mt-4 lnurl-setup">
-            <label asp-for="LNURLStandardInvoiceEnabled">LNURL enabled for standard invoices </label>
-            <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle ml-2"/>
-        </div>
-        <div class="form-group mt-4 lnurl-setup DisableBolt11PaymentMethod">
-            <label asp-for="DisableBolt11PaymentMethod" >Do not offer BOLT11 for standard invoices</label>
-            <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle ml-2"/>
-        </div>
-        <div class="form-group mt-4 lnurl-setup">
-            <label asp-for="LUD12Enabled" >Allow payee to pass a comment</label>
-            <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle ml-2"/>
+        <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
+            <h5 class="mb-1" style="padding-top:var(--btcpay-space-l)">LNURL settings</h5>
+            <div class="form-group">
+                <div class="d-flex align-items-center pt-3">
+                    <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-2"/>
+                    <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
+                    <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-2"/>
+                    <label asp-for="LNURLStandardInvoiceEnabled" class="form-label mb-0 me-1"></label>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">Required for Lightning Address, the pay button and apps.</p>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-2"/>
+                    <label asp-for="DisableBolt11PaymentMethod" class="form-label mb-0 me-1"></label>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">Performance: Turn it off if users should pay only via LNURL.</p>
+            </div>
+            <div class="form-group mb-0 pb-2">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-2"/>
+                    <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
+                </div>
+            </div>
         </div>
     </div>
 

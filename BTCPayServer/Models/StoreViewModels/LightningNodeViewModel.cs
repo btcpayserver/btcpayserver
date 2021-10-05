@@ -10,11 +10,22 @@ namespace BTCPayServer.Models.StoreViewModels
 
     public class LightningNodeViewModel
     {
+        [Display(Name = "Enable LNURL")]
         public bool LNURLEnabled { get; set; } = true;
+        
+        [Display(Name = "LNURL Classic Mode")]
         public bool LNURLBech32Mode { get; set; } = true;
-        public bool LNURLStandardInvoiceEnabled { get; set; } = false;
-        public bool LUD12Enabled { get; set; } = false;
+        
+        [Display(Name = "LNURL enabled for standard invoices")]
+        public bool LNURLStandardInvoiceEnabled { get; set; }
+        
+        [Display(Name = "Allow payee to pass a comment")]
+        public bool LUD12Enabled { get; set; }
+        
+        [Display(Name = "Do not offer BOLT11 for standard invoices")]
+        public bool DisableBolt11PaymentMethod { get; set; }
         public LightningNodeType LightningNodeType { get; set; }
+        
         [Display(Name = "Connection string")]
         public string ConnectionString { get; set; }
         public string CryptoCode { get; set; }
@@ -22,6 +33,5 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool SkipPortTest { get; set; }
         public bool Enabled { get; set; } = true;
         public string StoreId { get; set; }
-        public bool DisableBolt11PaymentMethod { get; set; }
     }
 }

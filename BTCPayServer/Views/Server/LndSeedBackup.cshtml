@@ -13,7 +13,7 @@
                 <p>The LND seed backup is useful to recover funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
-            <a class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" href="#">See confidential seed information</a>
+            <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>
             
             @if (Model.Removed)
             {
@@ -27,13 +27,13 @@
                 <div class="form-group @(Model.Removed ? "" : "collapse")">
                     <div class="input-group">
                         <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
-                        <textarea asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="3"></textarea>
+                        <textarea asp-for="Seed" class="form-control" readonly rows="3"></textarea>
                     </div>
                 </div>
                 <div class="form-group collapse">
                     <div class="input-group">
                         <label asp-for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ms-2">Password</span></label>
-                        <input asp-for="WalletPassword" onClick="this.select();" class="form-control" readonly />
+                        <input asp-for="WalletPassword" class="form-control" readonly />
                     </div>
                 </div>
                 <div class="form-group collapse">
@@ -53,16 +53,12 @@
 
 @section PageFootContent {
     <script>
-        const deleteButton = document.getElementById('delete')
-        deleteButton.addEventListener('click', event => {
-            event.preventDefault()
-        });
-        
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("details").addEventListener("click", function () {
-                document.querySelectorAll(".form-group.collapse").forEach(el => el.classList.remove("collapse"));
-                this.classList.add("collapse");
-            });
-        });
+        delegate('click', '#Seed', event => { event.target.select() })
+        delegate('click', '#WalletPassword', event => { event.target.select() })
+        delegate('click', '#delete', event => { event.preventDefault() })
+        delegate('click', '#details', event => {
+            document.querySelectorAll('.form-group.collapse').forEach(el => el.classList.remove('collapse'))
+            event.target.classList.add('collapse')
+        })
     </script>
 }

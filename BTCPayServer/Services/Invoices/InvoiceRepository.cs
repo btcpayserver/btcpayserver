@@ -29,21 +29,21 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
-        private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
-        private readonly BTCPayNetworkProvider _Networks;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
             BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
-            _ContextFactory = contextFactory;
-            _Networks = networks;
+            _applicationDbContextFactory = contextFactory;
+            _btcPayNetworkProvider = networks;
             _eventAggregator = eventAggregator;
         }
 
         public async Task<Data.WebhookDeliveryData> GetWebhookDelivery(string invoiceId, string deliveryId)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            using var ctx = _applicationDbContextFactory.CreateContext();
             return await ctx.InvoiceWebhookDeliveries
                 .Where(d => d.InvoiceId == invoiceId && d.DeliveryId == deliveryId)
                 .Select(d => d.Delivery)
@@ -54,7 +54,7 @@ namespace BTCPayServer.Services.Invoices
         {
             return new InvoiceEntity()
             {
-                Networks = _Networks,
+                Networks = _btcPayNetworkProvider,
                 Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow,
                 Metadata = new InvoiceMetadata()
@@ -64,7 +64,7 @@ namespace BTCPayServer.Services.Invoices
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
             Logs.PayServer.LogInformation($"Remove pending invoice {invoiceId}");
-            using (var ctx = _ContextFactory.CreateContext())
+            using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
                 try
@@ -78,7 +78,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<IEnumerable<InvoiceEntity>> GetInvoicesFromAddresses(string[] addresses)
         {
-            using (var db = _ContextFactory.CreateContext())
+            using (var db = _applicationDbContextFactory.CreateContext())
             {
                 return (await db.AddressInvoices
                     .Include(a => a.InvoiceData.Payments)
@@ -92,7 +92,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<string[]> GetPendingInvoices()
         {
-            using (var ctx = _ContextFactory.CreateContext())
+            using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 return await ctx.PendingInvoices.AsQueryable().Select(data => data.Id).ToArrayAsync();
             }
@@ -100,7 +100,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            using var ctx = _applicationDbContextFactory.CreateContext();
             return await ctx.InvoiceWebhookDeliveries
                 .Where(s => s.InvoiceId == invoiceId)
                 .Select(s => s.Delivery)
@@ -112,7 +112,7 @@ namespace BTCPayServer.Services.Invoices
         {
             if (storeId == null)
                 throw new ArgumentNullException(nameof(storeId));
-            using (var ctx = _ContextFactory.CreateContext())
+            using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();
             }
@@ -120,7 +120,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
         {
-            using (var ctx = _ContextFactory.CreateContext())
+            using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
@@ -136,11 +136,11 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task ExtendInvoiceMonitor(string invoiceId)
         {
-            using (var ctx = _ContextFactory.CreateContext())
+            using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
 
-                var invoice = invoiceData.GetBlob(_Networks);
+                var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
                 invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
                 invoiceData.Blob = ToBytes(invoice, null);
 
@@ -152,13 +152,13 @@ namespace BTCPayServer.Services.Invoices
         {
             var textSearch = new HashSet<string>();
             invoice = Clone(invoice);
-            invoice.Networks = _Networks;
+            invoice.Networks = _btcPayNetworkProvider;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
             invoice.Payments = new List<PaymentEntity>();
 #pragma warning restore CS0618
             invoice.StoreId = storeId;
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = new Data.InvoiceData()
                 {
@@ -229,12 +229,12 @@ namespace BTCPayServer.Services.Invoices
         {
             var temp = new InvoiceData();
             temp.Blob = ToBytes(invoice);
-            return temp.GetBlob(_Networks);
+            return temp.GetBlob(_btcPayNetworkProvider);
         }
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
         {
-            await using var context = _ContextFactory.CreateContext();
+            await using var context = _applicationDbContextFactory.CreateContext();
             foreach (var log in logs.ToList())
             {
                 await context.InvoiceEvents.AddAsync(new InvoiceEventData()
@@ -269,12 +269,12 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<bool> NewPaymentDetails(string invoiceId, IPaymentMethodDetails paymentMethodDetails, BTCPayNetworkBase network)
         {
-            await using var context = _ContextFactory.CreateContext();
+            await using var context = _applicationDbContextFactory.CreateContext();
             var invoice = (await context.Invoices.Where(i => i.Id == invoiceId).ToListAsync()).FirstOrDefault();
             if (invoice == null)
                 return false;
 
-            var invoiceEntity = invoice.GetBlob(_Networks);
+            var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
             var paymentMethod = invoiceEntity.GetPaymentMethod(network, paymentMethodDetails.GetPaymentType());
             if (paymentMethod == null)
                 return false;
@@ -313,13 +313,13 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoice = await context.Invoices.FindAsync(invoiceId);
                 if (invoice == null)
                     return;
                 var network = paymentMethod.Network;
-                var invoiceEntity = invoice.GetBlob(_Networks);
+                var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
                 var newDetails = paymentMethod.GetPaymentMethodDetails();
                 var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());
                 if (existing.GetPaymentMethodDetails().GetPaymentDestination() != newDetails.GetPaymentDestination() && newDetails.Activated)
@@ -346,7 +346,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
                 {
@@ -362,7 +362,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
         {
-            await using var context = _ContextFactory.CreateContext();
+            await using var context = _applicationDbContextFactory.CreateContext();
             await context.InvoiceEvents.AddAsync(new InvoiceEventData()
             {
                 Severity = severity,
@@ -396,7 +396,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UnaffectAddress(string invoiceId)
         {
-            await using var context = _ContextFactory.CreateContext();
+            await using var context = _applicationDbContextFactory.CreateContext();
             MarkUnassigned(invoiceId, context, null);
             try
             {
@@ -416,7 +416,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
@@ -430,12 +430,12 @@ namespace BTCPayServer.Services.Invoices
         {
             if (invoice.Type != InvoiceType.TopUp)
                 throw new ArgumentException("The invoice type should be TopUp to be able to update invoice price", nameof(invoice));
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
-                var blob = invoiceData.GetBlob(_Networks);
+                var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
                 blob.Price = invoice.Price;
                 AddToTextSearch(context, invoiceData, new[] { invoice.Price.ToString(CultureInfo.InvariantCulture) });
                 invoiceData.Blob = ToBytes(blob, null);
@@ -445,7 +445,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task MassArchive(string[] invoiceIds)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
                 if (items == null)
@@ -464,7 +464,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string storeId = null)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null || invoiceData.Archived == archived ||
@@ -477,14 +477,14 @@ namespace BTCPayServer.Services.Invoices
         }
         public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await GetInvoiceRaw(invoiceId, context);
                 if (invoiceData == null || (storeId != null &&
                                             !invoiceData.StoreDataId.Equals(storeId,
                                                 StringComparison.InvariantCultureIgnoreCase)))
                     return null;
-                var blob = invoiceData.GetBlob(_Networks);
+                var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
                 blob.Metadata = InvoiceMetadata.FromJObject(metadata);
                 invoiceData.Blob = ToBytes(blob);
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -493,7 +493,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await GetInvoiceRaw(invoiceId, context);
                 if (invoiceData == null)
@@ -538,7 +538,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var res = await GetInvoiceRaw(id, context, inludeAddressData);
                 return res == null ? null : ToEntity(res);
@@ -547,7 +547,7 @@ namespace BTCPayServer.Services.Invoices
         public async Task<InvoiceEntity[]> GetInvoices(string[] invoiceIds)
         {
             var invoiceIdSet = invoiceIds.ToHashSet();
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 IQueryable<Data.InvoiceData> query =
                     context
@@ -578,12 +578,12 @@ namespace BTCPayServer.Services.Invoices
 
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
-            var entity = invoice.GetBlob(_Networks);
+            var entity = invoice.GetBlob(_btcPayNetworkProvider);
             PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
-                var paymentEntity = p.GetBlob(_Networks);
+                var paymentEntity = p.GetBlob(_btcPayNetworkProvider);
                 if (paymentEntity is null)
                     return null;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
@@ -707,7 +707,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<int> GetInvoicesTotal(InvoiceQuery queryObject)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var query = GetInvoiceQuery(context, queryObject);
                 return await query.CountAsync();
@@ -716,7 +716,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var query = GetInvoiceQuery(context, queryObject);
                 query = query.Include(o => o.Payments);
@@ -752,89 +752,7 @@ namespace BTCPayServer.Services.Invoices
             return status;
         }
 
-        /// <summary>
-        /// Add a payment to an invoice
-        /// </summary>
-        /// <param name="invoiceId"></param>
-        /// <param name="date"></param>
-        /// <param name="paymentData"></param>
-        /// <param name="cryptoCode"></param>
-        /// <param name="accounted"></param>
-        /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
-        {
-            using (var context = _ContextFactory.CreateContext())
-            {
-                var invoice = context.Invoices.Find(invoiceId);
-                if (invoice == null)
-                    return null;
-                InvoiceEntity invoiceEntity = invoice.GetBlob(_Networks);
-                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
-                IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
-                PaymentEntity entity = new PaymentEntity
-                {
-                    Version = 1,
-#pragma warning disable CS0618
-                    CryptoCode = network.CryptoCode,
-#pragma warning restore CS0618
-                    ReceivedTime = date.UtcDateTime,
-                    Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                    Network = network
-                };
-                entity.SetCryptoPaymentData(paymentData);
-                //TODO: abstract
-                if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
-                    bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
-                    bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
-                {
-                    bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
-                    paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
-                    invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, network);
-                }
-                PaymentData data = new PaymentData
-                {
-                    Id = paymentData.GetPaymentId(),
-                    Blob = ToBytes(entity, entity.Network),
-                    InvoiceDataId = invoiceId,
-                    Accounted = accounted
-                };
-
-                await context.Payments.AddAsync(data);
-
-                AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
-                try
-                {
-                    await context.SaveChangesAsync().ConfigureAwait(false);
-                }
-                catch (DbUpdateException) { return null; } // Already exists
-                return entity;
-            }
-        }
-
-        public async Task UpdatePayments(List<PaymentEntity> payments)
-        {
-            if (payments.Count == 0)
-                return;
-            using (var context = _ContextFactory.CreateContext())
-            {
-                foreach (var payment in payments)
-                {
-                    var paymentData = payment.GetCryptoPaymentData();
-                    var data = new PaymentData();
-                    data.Id = paymentData.GetPaymentId();
-                    data.Accounted = payment.Accounted;
-                    data.Blob = ToBytes(payment, payment.Network);
-                    context.Attach(data);
-                    context.Entry(data).Property(o => o.Accounted).IsModified = true;
-                    context.Entry(data).Property(o => o.Blob).IsModified = true;
-                }
-                await context.SaveChangesAsync().ConfigureAwait(false);
-            }
-        }
-
-        private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
+        internal static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
             return ZipUtils.Zip(ToJsonString(obj, network));
         }

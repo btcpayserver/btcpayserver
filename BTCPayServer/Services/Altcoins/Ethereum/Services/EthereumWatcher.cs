@@ -24,6 +24,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
     {
         private readonly EventAggregator _eventAggregator;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly PaymentService _paymentService;
         private int ChainId { get; }
         private readonly HashSet<PaymentMethodId> PaymentMethods;
 
@@ -113,7 +114,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                         AccountIndex = response.PaymentMethodDetails.Index,
                         XPub = response.PaymentMethodDetails.XPub
                     };
-                    var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
+                    var payment = await _paymentService.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
                         paymentData, network, true);
                     if (payment != null) ReceivedPayment(invoice, payment);
                 }
@@ -125,7 +126,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                     {
                         existingPayment.Accounted = false;
 
-                        await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
+                        await _paymentService.UpdatePayments(new List<PaymentEntity>() {existingPayment});
                         if (response.Amount > 0)
                         {
                             var paymentData = new EthereumLikePaymentData()
@@ -148,7 +149,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                                 AccountIndex = cd.AccountIndex,
                                 XPub = cd.XPub
                             };
-                            var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
+                            var payment = await _paymentService.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
                                 paymentData, network, true);
                             if (payment != null) ReceivedPayment(invoice, payment);
                         }
@@ -163,7 +164,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                             cd.BlockNumber = (long?)response.BlockParameter.BlockNumber.Value;
 
                             existingPayment.SetCryptoPaymentData(cd);
-                            await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
+                            await _paymentService.UpdatePayments(new List<PaymentEntity>() {existingPayment});
 
                             _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
                         }
@@ -183,7 +184,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                             }
 
                             existingPayment.SetCryptoPaymentData(cd);
-                            await _invoiceRepository.UpdatePayments(new List<PaymentEntity>() {existingPayment});
+                            await _paymentService.UpdatePayments(new List<PaymentEntity>() {existingPayment});
 
                             _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
                         }
@@ -345,11 +346,12 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
         public EthereumWatcher(int chainId, EthereumLikeConfiguration config,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            EventAggregator eventAggregator, InvoiceRepository invoiceRepository) :
+            EventAggregator eventAggregator, InvoiceRepository invoiceRepository, PaymentService paymentService) :
             base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _invoiceRepository = invoiceRepository;
+            _paymentService = paymentService;
             ChainId = chainId;
             AuthenticationHeaderValue headerValue = null;
             if (!string.IsNullOrEmpty(config.Web3ProviderUsername))

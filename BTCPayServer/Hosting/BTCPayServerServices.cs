@@ -102,11 +102,8 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<MigrationStartupTask>();
             // 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
-            services.TryAddSingleton<InvoiceRepository>(o =>
-            {
-                var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
-            });
+            services.TryAddSingleton<InvoiceRepository>();
+            services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<WalletRepository>();

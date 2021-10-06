@@ -11,6 +11,38 @@
     </style>
 }
 
+@section PageFootContent {
+    <script>
+        function changeInvoiceState(invoiceId, newState) {
+            var toggleButton = $("#markStatusDropdownMenuButton");
+            toggleButton.attr("disabled", "disabled");
+
+            $.post(invoiceId + "/changestate/" + newState)
+                .done(function (data) {
+                    var alertClassModifier = {
+                        "complete (marked)": 'success',
+                        "invalid (marked)": 'danger'
+                    }[data.statusString];
+                    var statusHtml = "<span class='fs-6 fw-normal badge bg-" + alertClassModifier + "'>" + data.statusString + " <span class='fa fa-check'></span></span>"
+                    toggleButton.replaceWith(statusHtml);
+                })
+                .fail(function () {
+                    toggleButton.removeAttr("disabled");
+                    alert("Invoice state update failed");
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            $("[data-change-invoice-status-button]").click(function (e) {
+                var id = e.currentTarget.getAttribute('data-id');
+                var status = e.currentTarget.getAttribute('data-status');
+                
+                changeInvoiceState(id, status);
+            });
+        });
+    </script>
+}
+
 <section class="invoice-details">
     <div class="container">
     <partial name="_StatusMessage" />
@@ -19,7 +51,6 @@
             <h2 class="col-xs-12 col-lg-6 mb-4 mb-lg-0">@ViewData["Title"]</h2>
             <div class="col-xs-12 col-lg-6 mb-2 mb-lg-0 text-lg-end">
                 <div class="d-inline-flex">
-                    
                     @if (Model.ShowCheckout)
                     {
                         <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap ms-2" asp-route-invoiceId="@Model.Id">
@@ -92,7 +123,33 @@
                     </tr>
                     <tr>
                         <th>State</th>
-                        <td>@Model.State</td>
+                        <td>
+                            @if (Model.CanMarkStatus)
+                            {
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Model.State
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
+                                        @if (Model.CanMarkInvalid)
+                                        {
+                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
+                                                Mark as invalid <span class="fa fa-times"></span>
+                                            </a>
+                                        }
+                                        @if (Model.CanMarkComplete)
+                                        {
+                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="complete" data-change-invoice-status-button>
+                                                Mark as complete <span class="fa fa-check-circle"></span>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            } 
+                            else {
+                                @Model.State
+                            }
+                        </td>
                     </tr>
                     <tr>
                         <th>Created date</th>

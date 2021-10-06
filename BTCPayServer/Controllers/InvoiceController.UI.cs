@@ -13,16 +13,12 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.Filters;
-using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
@@ -104,6 +100,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            var invoiceState = invoice.GetInvoiceState();
             var model = new InvoiceDetailsModel()
             {
                 StoreId = store.Id,
@@ -111,7 +108,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
-                State = invoice.GetInvoiceState().ToString(),
+                State = invoiceState.ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
@@ -129,11 +126,13 @@ namespace BTCPayServer.Controllers
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
-                CanRefund = CanRefund(invoice.GetInvoiceState()),
+                CanRefund = CanRefund(invoiceState),
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
-                                    .ToList()
+                                    .ToList(),
+                CanMarkInvalid = invoiceState.CanMarkInvalid(),
+                CanMarkComplete = invoiceState.CanMarkComplete(),
             };
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
                 new InvoiceDetailsModel.AddressModel

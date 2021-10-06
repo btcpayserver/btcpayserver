@@ -58,7 +58,8 @@ canvas#fireworks {
 }
 
 .modal-body .perks-container .card:only-of-type {
-    max-width: 320px;
+    min-width: 240px;
+    max-width: 480px;
     margin: auto;
 }
 

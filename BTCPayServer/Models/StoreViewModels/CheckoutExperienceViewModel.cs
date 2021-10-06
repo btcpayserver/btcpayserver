@@ -53,7 +53,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
+        [Display(Name = "Tweak QR codes to be compatible with Chivo wallet")]
+        public bool ChivoMode { get; set; }
         public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
     }
 

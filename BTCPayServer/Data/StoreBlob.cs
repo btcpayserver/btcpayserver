@@ -39,6 +39,7 @@ namespace BTCPayServer.Data
         public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }
+        public bool ChivoMode { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]

@@ -98,6 +98,8 @@ namespace BTCPayServer.Payments.Bitcoin
                     $"{network.UriScheme}:{model.BtcAddress}", $"{network.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
                     StringComparison.OrdinalIgnoreCase
                 );
+                if (storeBlob.ChivoMode)
+                    model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR?.ToLowerInvariant();
             }
         }
 

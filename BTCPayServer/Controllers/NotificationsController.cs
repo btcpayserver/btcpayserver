@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             IEventAggregatorSubscription subscription = null;
             try
             {
-                subscription = _eventAggregator.Subscribe<UserNotificationsUpdatedEvent>(async evt =>
+                subscription = _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(async evt =>
                 {
                     if (evt.UserId == userId)
                     {

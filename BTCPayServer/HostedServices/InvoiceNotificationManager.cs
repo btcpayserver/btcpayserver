@@ -309,7 +309,7 @@ namespace BTCPayServer.HostedServices
         readonly CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
+            leases.Add(_EventAggregator.SubscribeAsync<InvoiceEvent>(async e =>
             {
                 if (e.EventCode == InvoiceEventCode.PaymentSettled)
                 {

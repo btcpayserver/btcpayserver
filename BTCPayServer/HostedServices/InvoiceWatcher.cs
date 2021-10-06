@@ -281,7 +281,7 @@ namespace BTCPayServer.HostedServices
             {
                 Watch(b.InvoiceId);
             }));
-            leases.Add(_eventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
+            leases.Add(_eventAggregator.SubscribeAsync<Events.InvoiceEvent>(async b =>
             {
                 if (InvoiceEventNotification.HandlesEvent(b.Name))
                 {

@@ -399,6 +399,7 @@ namespace BTCPayServer.Controllers
             }).ToList();
             
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
+            vm.ChivoMode = storeBlob.ChivoMode;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             vm.CustomCSS = storeBlob.CustomCSS;
@@ -475,6 +476,7 @@ namespace BTCPayServer.Controllers
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
+            blob.ChivoMode = model.ChivoMode;
 
             if (CurrentStore.SetStoreBlob(blob))
             {

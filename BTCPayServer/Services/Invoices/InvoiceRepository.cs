@@ -655,9 +655,9 @@ namespace BTCPayServer.Services.Invoices
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
                 var text = queryObject.TextSearch.Truncate(512);
-#pragma warning disable CA1307 // Specify StringComparison
+#pragma warning disable CA1310 // Specify StringComparison
                 query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(text)));
-#pragma warning restore CA1307 // Specify StringComparison
+#pragma warning restore CA1310 // Specify StringComparison
             }
 
             if (queryObject.StartDate != null)

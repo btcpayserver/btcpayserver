@@ -207,7 +207,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     Logs.PayServer.LogInformation($"Disconnected from WebSocket of NBXplorer ({network.CryptoCode})");
                     _SessionsByCryptoCode.TryRemove(network.CryptoCode, out WebsocketNotificationSession unused);
-                    if (_SessionsByCryptoCode.Count == 0 && _Cts.IsCancellationRequested)
+                    if (_SessionsByCryptoCode.IsEmpty && _Cts.IsCancellationRequested)
                     {
                         _RunningTask.TrySetResult(true);
                     }

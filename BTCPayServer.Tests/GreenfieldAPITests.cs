@@ -1156,10 +1156,16 @@ namespace BTCPayServer.Tests
                 //update
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
+               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
                 {
                     Status = InvoiceStatus.Settled
                 });
+                newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+                
+                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
+                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
@@ -1167,6 +1173,10 @@ namespace BTCPayServer.Tests
                     Status = InvoiceStatus.Invalid
                 });
 
+                newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+                
+                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
+                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
                 await AssertHttpError(403, async () =>
                 {
                     await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
@@ -1316,6 +1326,8 @@ namespace BTCPayServer.Tests
                         }
                     });
                 Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
+                
+                
             }
         }
 

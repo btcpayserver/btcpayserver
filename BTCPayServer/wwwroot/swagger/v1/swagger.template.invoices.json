@@ -799,15 +799,27 @@
                             },
                             "createdTime": {
                                 "description": "The creation time of the invoice",
-                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ]
                             },
                             "expirationTime": {
                                 "description": "The expiration time of the invoice",
-                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ]
                             },
                             "monitoringTime": {
                                 "description": "The monitoring time of the invoice",
-                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ]
                             },
                             "status": {
                                 "$ref": "#/components/schemas/InvoiceStatus",
@@ -816,6 +828,13 @@
                             "additionalStatus": {
                                 "$ref": "#/components/schemas/InvoiceAdditionalStatus",
                                 "description": "a secondary status of the invoice"
+                            },
+                            "availableStatusesForManualMarking": {
+                                "type": "array",
+                                "description": "The statuses the invoice can be manually marked as",
+                                "items": {
+                                    "$ref": "#/components/schemas/InvoiceStatus"
+                                }
                             }
                         }
                     }
@@ -1033,13 +1052,21 @@
                     "expirationMinutes": {
                         "nullable": true,
                         "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanMinutes" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanMinutes"
+                            }
+                        ]
                     },
                     "monitoringMinutes": {
                         "type": "number",
                         "nullable": true,
                         "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Defaults to the store's settings. (The default store settings is 1440, 1 day)",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanMinutes" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanMinutes"
+                            }
+                        ]
                     },
                     "paymentTolerance": {
                         "type": "number",
@@ -1153,7 +1180,11 @@
                     },
                     "receivedDate": {
                         "description": "The date the payment was recorded",
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "value": {
                         "type": "string",

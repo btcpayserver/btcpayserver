@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Globalization;
@@ -387,6 +388,17 @@ namespace BTCPayServer.Controllers.GreenField
         }
         private InvoiceData ToModel(InvoiceEntity entity)
         {
+            var statuses = new List<InvoiceStatus>();
+            var state = entity.GetInvoiceState();
+            if (state.CanMarkComplete())
+            {
+                statuses.Add(InvoiceStatus.Settled);
+            }
+
+            if (state.CanMarkInvalid())
+            {
+                statuses.Add(InvoiceStatus.Invalid);
+            }
             return new InvoiceData()
             {
                 StoreId = entity.StoreId,
@@ -401,6 +413,7 @@ namespace BTCPayServer.Controllers.GreenField
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Metadata = entity.Metadata.ToJObject(),
+                AvailableStatusesForManualMarking = statuses.ToArray(),
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()
                 {
                     Expiration = entity.ExpirationTime - entity.InvoiceTime,

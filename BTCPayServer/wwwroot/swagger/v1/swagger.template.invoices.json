@@ -1117,7 +1117,7 @@
                     "due": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The total amount left to be paid, converted to this payment method's currency"
+                        "description": "The total amount left to be paid, converted to this payment method's currency (can be negative if overpaid)"
                     },
                     "amount": {
                         "type": "string",

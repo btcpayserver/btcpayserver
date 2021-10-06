@@ -1209,6 +1209,8 @@ namespace BTCPayServer.Tests
                     var inv = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
                     await user.PayInvoice(inv.Id);
+                    Assert.True(inv.CanBeMarkedAsSettled);
+                    Assert.True(inv.CanBeMarkedAsInvalid);
                     await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
                     {
                         Status = marked
@@ -1216,6 +1218,8 @@ namespace BTCPayServer.Tests
                     var result = await client.GetInvoice(user.StoreId, inv.Id);
                     if (marked == InvoiceStatus.Settled)
                     {
+                        Assert.True(result.CanBeMarkedAsInvalid);
+                        Assert.False(result.CanBeMarkedAsSettled);
                         Assert.Equal(InvoiceStatus.Settled, result.Status);
                         user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                             o =>
@@ -1226,6 +1230,8 @@ namespace BTCPayServer.Tests
                     }
                     if (marked == InvoiceStatus.Invalid)
                     {
+                        Assert.False(result.CanBeMarkedAsInvalid);
+                        Assert.True(result.CanBeMarkedAsSettled);
                         Assert.Equal(InvoiceStatus.Invalid, result.Status);
                         var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
                             o =>

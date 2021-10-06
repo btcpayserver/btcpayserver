@@ -816,6 +816,16 @@
                             "additionalStatus": {
                                 "$ref": "#/components/schemas/InvoiceAdditionalStatus",
                                 "description": "a secondary status of the invoice"
+                            },
+                            "canBeMarkedAsInvalid": {
+                                "type": "boolean",
+                                "nullable": false,
+                                "description": "true if you can mark this invoice manually as invalid"
+                            },
+                            "canBeMarkedAsSettled": {
+                                "type": "boolean",
+                                "nullable": false,
+                                "description": "true if you can mark this invoice manually as settled"
                             }
                         }
                     }

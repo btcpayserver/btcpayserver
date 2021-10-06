@@ -60,6 +60,8 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset ExpirationTime { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset CreatedTime { get; set; }
+        public bool CanBeMarkedAsInvalid { get; set; }
+        public bool CanBeMarkedAsSettled { get; set; }
     }
     public enum InvoiceStatus
     {

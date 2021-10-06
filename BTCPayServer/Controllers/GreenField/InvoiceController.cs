@@ -413,7 +413,9 @@ namespace BTCPayServer.Controllers.GreenField
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RedirectURL = entity.RedirectURLTemplate
-                }
+                },
+                CanBeMarkedAsSettled = entity.GetInvoiceState().CanMarkComplete(),
+                CanBeMarkedAsInvalid = entity.GetInvoiceState().CanMarkInvalid()
             };
         }
     }

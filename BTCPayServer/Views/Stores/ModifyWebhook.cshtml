@@ -43,7 +43,7 @@
             
             <h4 class="mb-3">Events</h4>
             <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
-            <select asp-for="Everything" class="form-select w-auto mb-3" onchange="this.dataset.value=this.value">
+            <select asp-for="Everything" class="form-select w-auto mb-3">
                 <option value="true">Send me everything</option>
                 <option value="false">Send specific events</option>
             </select>
@@ -130,4 +130,9 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        delegate('change', '#Everything', function (e) {
+            e.target.dataset.value = e.target.value;
+        });
+    </script>
 }

@@ -1156,16 +1156,16 @@ namespace BTCPayServer.Tests
                 //update
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
-               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+               Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+               Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
                 {
                     Status = InvoiceStatus.Settled
                 });
                 newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
                 
-                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+                Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+                Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
@@ -1175,8 +1175,8 @@ namespace BTCPayServer.Tests
 
                 newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
                 
-                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+                Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+                Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 await AssertHttpError(403, async () =>
                 {
                     await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,

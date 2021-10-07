@@ -1,4 +1,4 @@
-﻿@model ListTransactionsViewModel
+@model ListTransactionsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
@@ -57,6 +57,15 @@
         left: -8px;
     }
 </style>
+@section PageFootContent {
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+
+    @* Custom Range Modal *@
+    <script>
+        delegate('click', '#switchTimeFormat', switchTimeFormat)
+    </script>
+}
 
 <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 <p>
@@ -89,7 +98,7 @@
                 <tr>
                     <th style="min-width: 90px;" class="col-md-auto">
                         Date
-                        <a href="javascript:switchTimeFormat()" csp-allow>
+                        <a id="switchTimeFormat" href="#">
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>

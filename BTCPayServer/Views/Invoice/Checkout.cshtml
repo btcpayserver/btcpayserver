@@ -84,16 +84,23 @@
 
                         <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
-                                onkeypress="if(event.keyCode==13){ $(this).click();}"
-                                onchange="changeLanguage($(this).val())"
                                 asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
 
                         <script>
-                            var languageSelectorPrettyDropdown;
                             $(function () {
                                 // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                                 $("#DefaultLang").val(startingLanguage);
-                                languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
+                                var languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
+
+                                languageSelectorPrettyDropdown.change(function() {
+                                    changeLanguage(languageSelectorPrettyDropdown.val());
+                                });
+
+                                languageSelectorPrettyDropdown.keypress(function(event) {
+                                    if (event.keyCode == 13) { 
+                                        languageSelectorPrettyDropdown.click();
+                                    }
+                                });
                             });
 
                             function initDropdown(selector) {

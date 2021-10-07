@@ -1,4 +1,4 @@
-﻿@using Newtonsoft.Json
+@using Newtonsoft.Json
 @using System.Text
 @using NBitcoin.DataEncoders
 @model WalletSettingsViewModel
@@ -71,6 +71,10 @@
                     </button>
                     <div class="dropdown-menu" aria-labelledby="OtherActionsDropdownToggle">
                         <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
+                        @if (User.IsInRole(Roles.ServerAdmin))
+                        {
+                            <button name="command" type="submit" class="dropdown-item" value="clear">Clear all transactions from history</button>
+                        }
                         @if (Model.NBXSeedAvailable)
                         {
                             <button name="command" type="submit" class="dropdown-item" value="view-seed">View seed</button>

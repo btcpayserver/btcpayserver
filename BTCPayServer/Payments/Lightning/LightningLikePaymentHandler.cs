@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +12,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Rating;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -51,9 +52,13 @@ namespace BTCPayServer.Payments.Lightning
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
-            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
+            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (paymentMethod.ParentEntity.Type == InvoiceType.TopUp) {
+                throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
+            }
+
             if (preparePaymentObject is null)
             {
                 return new LightningLikePaymentMethodDetails()
@@ -63,7 +68,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
+            var test = GetNodeInfo(supportedPaymentMethod, network, paymentMethod.PreferOnion);
             
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
@@ -80,7 +85,7 @@ namespace BTCPayServer.Payments.Lightning
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
-            LightningInvoice lightningInvoice = null;
+            LightningInvoice? lightningInvoice = null;
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
@@ -103,6 +108,7 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
                 }
             }
+
             var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
@@ -110,11 +116,11 @@ namespace BTCPayServer.Payments.Lightning
                 BOLT11 = lightningInvoice.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 InvoiceId = lightningInvoice.Id,
-                NodeInfo = nodeInfo.ToString()
+                NodeInfo = nodeInfo.First().ToString()
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, bool? preferOnion = null)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
@@ -133,10 +139,15 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (Exception ex)
                 {
-                    throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
+                    throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" + 
+                                                                (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
                 }
-                var nodeInfo = info.NodeInfoList.FirstOrDefault(i => i.IsTor == preferOnion) ?? info.NodeInfoList.FirstOrDefault();
-                if (nodeInfo == null)
+
+                var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
+                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
+                    : info.NodeInfoList.Select(i => i).ToArray();
+                
+                if (!nodeInfo.Any())
                 {
                     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
                 }
@@ -248,7 +259,7 @@ namespace BTCPayServer.Payments.Lightning
             return $"{network.DisplayName} (Lightning)";
         }
 
-        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, StoreData store,
+        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, Data.StoreData store,
             BTCPayNetworkBase network)
         {
             // pass a non null obj, so that if lazy payment feature is used, it has a marker to trigger activation

@@ -7,6 +7,7 @@
     var isHotWallet = method is WalletSetupMethod.HotWallet;
     var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
     var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
+    var isTaprootActivated = ViewData["IsTaprootActivated"] is true;
 }
 
 @if (!User.IsInRole(Roles.ServerAdmin))
@@ -14,8 +15,8 @@
     <div class="alert alert-warning">
         You are not an admin on this server. While you are able to import or generate a wallet via seed with
         your account, please understand that you are trusting the server admins not just with your
-        <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">privacy</a>
-        but also with <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#trust-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">trivial access to your funds.</a>
+        <a href="https://docs.btcpayserver.org/Deployment/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">privacy</a>
+        but also with <a href="https://docs.btcpayserver.org/Deployment/ThirdPartyHosting/#trust-concerns" target="_blank" class="alert-link" rel="noreferrer noopener">trivial access to your funds.</a>
         If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance.
     </div>
 }
@@ -33,9 +34,28 @@
     <div class="form-group">
         <label asp-for="ScriptPubKeyType" class="form-label">Address type</label>
         <select class="form-select w-auto" asp-for="ScriptPubKeyType">
-            <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
-            <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
-            <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            @if (ViewData["SupportSegwit"] is true)
+            {
+                <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended)</option>
+                <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
+                <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            }
+            else
+            {
+                <option value="@ScriptPubKeyType.Legacy">Legacy</option>
+            }
+
+            @if (ViewData["SupportTaproot"] is true)
+            {
+                @if (isTaprootActivated)
+                {
+                    <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (For advanced users)</option>
+                }
+                else
+                {
+                    <option value="@ScriptPubKeyType.TaprootBIP86" disabled>Taproot (Available from block 709632)</option>
+                }
+            }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>

@@ -47,7 +47,7 @@ namespace BTCPayServer.Client
 
         public virtual async Task<LightningNetworkPaymentMethodData> UpdateStoreLightningNetworkPaymentMethod(
             string storeId,
-            string cryptoCode, LightningNetworkPaymentMethodData paymentMethod,
+            string cryptoCode, UpdateLightningNetworkPaymentMethodRequest paymentMethod,
             CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
@@ -55,10 +55,5 @@ namespace BTCPayServer.Client
                     bodyPayload: paymentMethod, method: HttpMethod.Put), token);
             return await HandleResponse<LightningNetworkPaymentMethodData>(response);
         }
-
-        public virtual Task<LightningNetworkPaymentMethodData>
-            UpdateStoreLightningNetworkPaymentMethodToInternalNode(string storeId,
-                string cryptoCode, CancellationToken token = default) => UpdateStoreLightningNetworkPaymentMethod(
-            storeId, cryptoCode, new LightningNetworkPaymentMethodData(cryptoCode, "Internal Node", true), token);
     }
 }

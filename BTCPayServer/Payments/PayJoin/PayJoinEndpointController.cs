@@ -91,6 +91,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly BTCPayServerEnvironment _env;
         private readonly WalletReceiveService _walletReceiveService;
         private readonly StoreRepository _storeRepository;
+        private readonly PaymentService _paymentService;
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
@@ -101,7 +102,8 @@ namespace BTCPayServer.Payments.PayJoin
             DelayedTransactionBroadcaster broadcaster,
             BTCPayServerEnvironment env,
             WalletReceiveService walletReceiveService,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            PaymentService paymentService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
@@ -114,6 +116,7 @@ namespace BTCPayServer.Payments.PayJoin
             _env = env;
             _walletReceiveService = walletReceiveService;
             _storeRepository = storeRepository;
+            _paymentService = paymentService;
         }
 
         [HttpPost("")]
@@ -487,7 +490,7 @@ namespace BTCPayServer.Payments.PayJoin
             };
             if (invoice != null)
             {
-                var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, originalPaymentData, network, true);
+                var payment = await _paymentService.AddPayment(invoice.Id, DateTimeOffset.UtcNow, originalPaymentData, network, true);
                 if (payment is null)
                 {
                     return UnprocessableEntity(CreatePayjoinError("already-paid",

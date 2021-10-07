@@ -109,13 +109,13 @@ namespace BTCPayServer.Controllers
                     var handler = _ServiceProvider.GetRequiredService<LightningLikePaymentHandler>();
                     try
                     {
-                        var info = await handler.GetNodeInfo(Request.IsOnion(), paymentMethod, network);
+                        var info = await handler.GetNodeInfo(paymentMethod, network, Request.IsOnion());
                         if (!vm.SkipPortTest)
                         {
                             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                            await handler.TestConnection(info, cts.Token);
+                            await handler.TestConnection(info.First(), cts.Token);
                         }
-                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the Lightning node successful. Your node address: {info}";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the Lightning node successful. Your node address: {info.First()}";
                     }
                     catch (Exception ex)
                     {

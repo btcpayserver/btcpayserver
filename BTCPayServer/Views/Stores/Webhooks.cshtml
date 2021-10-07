@@ -15,13 +15,13 @@
 
 @if (Model.Webhooks.Any())
 {
-    <table class="table table-sm table-responsive-md">
+    <table class="table table-hover table-responsive-md">
         <thead>
-            <tr>
-                <th>Status</th>
-                <th>Url</th>
-                <th class="text-end">Actions</th>
-            </tr>
+        <tr>
+            <th>Status</th>
+            <th>Url</th>
+            <th class="text-end">Actions</th>
+        </tr>
         </thead>
         <tbody>
         @foreach (var wh in Model.Webhooks)
@@ -48,14 +48,16 @@
                 </td>
                 <td class="d-block text-break">@wh.Url</td>
                 <td class="text-end text-md-nowrap">
-                    <a asp-action="TestWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
-                    <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
-                    <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
+                    <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
+                    <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
+                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete</a>
                 </td>
             </tr>
         }
         </tbody>
     </table>
+    
+    <partial name="_Confirm" model="@(new ConfirmModel("Delete webhook", "This webhook will be removed from this store.", "Delete"))" />
 }
 else
 {
@@ -67,3 +69,4 @@ else
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }
+

@@ -6,6 +6,7 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class CreateTokenViewModel
     {
+        [Display(Name = "Public Key")]
         [PubKeyValidatorAttribute]
         public string PublicKey
         {

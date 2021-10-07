@@ -1,5 +1,4 @@
 using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace BTCPayServer.Data
 {

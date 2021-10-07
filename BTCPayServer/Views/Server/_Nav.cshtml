@@ -13,5 +13,5 @@
     <a asp-controller="Server" id="Server-@ServerNavPages.Logs" class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
     <a asp-controller="Server" id="Server-@ServerNavPages.Files" class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
     <a asp-controller="Server" id="Server-@ServerNavPages.Plugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" asp-action="ListPlugins">Plugins (experimental)</a>
-    <vc:ui-extension-point location="server-nav" />
+    <vc:ui-extension-point location="server-nav"  model="@Model"/>
 </nav>

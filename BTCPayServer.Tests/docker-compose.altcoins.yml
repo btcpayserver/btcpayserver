@@ -34,6 +34,7 @@ services:
       - "80"
     links:
       - dev
+      - selenium
     extra_hosts: 
       - "tests:127.0.0.1"
     volumes:
@@ -69,7 +70,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.21.1
+    image: btcpayserver/bitcoin:22.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -83,8 +84,12 @@ services:
       - postgres
       - customer_lnd
       - merchant_lnd
+  selenium:
+    image: selenium/standalone-chrome:3
+    expose:
+      - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.56
+    image: nicolasdorier/nbxplorer:2.2.7
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -118,7 +123,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.21.1
+    image: btcpayserver/bitcoin:22.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -146,7 +151,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.10.1-dev
+    image: btcpayserver/lightning:v0.10.1-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -195,7 +200,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.10.1-dev
+    image: btcpayserver/lightning:v0.10.1-1-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -220,7 +225,9 @@ services:
     links:
       - bitcoind
   postgres:
-    image:  postgres:9.6.5
+    image:  postgres:13.4
+    environment:
+        POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "39372:5432"
     expose:
@@ -349,7 +356,7 @@ services:
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid
-      image: btcpayserver/elements:0.18.1.7
+      image: btcpayserver/elements:0.18.1.12
       environment:
           ELEMENTS_CHAIN: elementsregtest
           ELEMENTS_EXTRA_ARGS: |

@@ -189,10 +189,20 @@ namespace BTCPayServer.Tests
                 var response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
                     .RouteValues.First();
+                var invoiceId = response.Value.ToString();
+                await paymentRequestController.PayPaymentRequest(invoiceId, false);
+                Assert.IsType<BadRequestObjectResult>(await
+                    paymentRequestController.CancelUnpaidPendingInvoice(invoiceId, false));
+
+                request.AllowCustomPaymentAmounts = true;
+
+                response = Assert
+                    .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
+                    .RouteValues.First();
 
                 var paymentRequestId = response.Value.ToString();
 
-                var invoiceId = Assert
+                invoiceId = Assert
                     .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false))
                     .Value
                     .ToString();
@@ -224,12 +234,12 @@ namespace BTCPayServer.Tests
 
                 invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
 
-                //a hack to generate invoices for the payment request is to manually create an invocie with an order id that matches:
+                //a hack to generate invoices for the payment request is to manually create an invoice with an order id that matches:
                 user.BitPay.CreateInvoice(new Invoice(1, "USD")
                 {
                     OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequestId)
                 });
-                //shouldnt crash
+                //shouldn't crash
                 await paymentRequestController.ViewPaymentRequest(paymentRequestId);
                 await paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId);
             }

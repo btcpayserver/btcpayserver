@@ -29,7 +29,7 @@
             <div class="col-lg-12">
                 @if (Model.Apps.Any())
                 {
-                    <table class="table table-sm table-responsive-md">
+                    <table class="table table-hover table-responsive-md">
                         <thead>
                         <tr>
                             <th>
@@ -97,7 +97,7 @@
                                     <a asp-action="@app.ViewAction" asp-controller="AppsPublic" asp-route-appId="@app.Id" target="_blank"
                                        title="View in New Window"><span class="fa fa-external-link"></span></a>
                                     <span> - </span>
-                                    <a asp-action="DeleteApp" asp-route-appId="@app.Id">Remove</a>
+                                    <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@app.AppName</strong> and its settings will be permanently deleted from your store <strong>@app.StoreName</strong>." data-confirm-input="DELETE">Delete</a>
                                 </td>
                             </tr>
                         }
@@ -114,3 +114,5 @@
         </div>
     </div>
 </section>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

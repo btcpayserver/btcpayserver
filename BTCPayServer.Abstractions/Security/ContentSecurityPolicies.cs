@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NBitcoin.Crypto;
 
 namespace BTCPayServer.Security
 {
@@ -9,6 +10,8 @@ namespace BTCPayServer.Security
     {
         public ConsentSecurityPolicy(string name, string value)
         {
+            if (value.Contains(';', StringComparison.OrdinalIgnoreCase))
+                throw new FormatException();
             _Value = value;
             _Name = name;
         }
@@ -67,10 +70,48 @@ namespace BTCPayServer.Security
         }
 
         readonly HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
+
+        /// <summary>
+        /// Allow a specific script as event handler
+        /// </summary>
+        /// <param name="script"></param>
+        public void AllowUnsafeHashes(string script = null)
+        {
+            if (!allowUnsafeHashes)
+            {
+                Add("script-src", $"'unsafe-hashes'");
+                allowUnsafeHashes = true;
+            }
+            if (script != null)
+            {
+                var sha = GetSha256(script);
+                Add("script-src", $"'sha256-{sha}'");
+            }
+        }
+
+        bool allowUnsafeHashes = false;
+        /// <summary>
+        /// Allow the injection of script tag with the following script
+        /// </summary>
+        /// <param name="script"></param>
+        public void AllowInline(string script)
+        {
+            if (script is null)
+                throw new ArgumentNullException(nameof(script));
+            var sha = GetSha256(script);
+            Add("script-src", $"'sha256-{sha}'");
+        }
+        static string GetSha256(string script)
+        {
+            return Convert.ToBase64String(Hashes.SHA256(Encoding.UTF8.GetBytes(script.Replace("\r\n", "\n", StringComparison.Ordinal))));
+        }
+
+        public void Add(string name, string value)
+        {
+            Add(new ConsentSecurityPolicy(name, value));
+        }
         public void Add(ConsentSecurityPolicy policy)
         {
-            if (_Policies.Any(p => p.Name == policy.Name && p.Value == policy.Name))
-                return;
             _Policies.Add(policy);
         }
 
@@ -87,34 +128,19 @@ namespace BTCPayServer.Security
                 {
                     value.Append(';');
                 }
-                List<string> values = new List<string>();
+                HashSet<string> values = new HashSet<string>();
+                List<string> valuesList = new List<string>();
                 values.Add(group.Key);
+                valuesList.Add(group.Key);
                 foreach (var v in group)
                 {
-                    values.Add(v.Value);
+                    if (values.Add(v.Value))
+                        valuesList.Add(v.Value);
                 }
-                foreach (var i in authorized)
-                {
-                    values.Add(i);
-                }
-                value.Append(String.Join(" ", values.OfType<object>().ToArray()));
+                value.Append(String.Join(" ", valuesList.OfType<object>().ToArray()));
                 firstGroup = false;
             }
             return value.ToString();
         }
-
-        internal void Clear()
-        {
-            authorized.Clear();
-            _Policies.Clear();
-        }
-
-        readonly HashSet<string> authorized = new HashSet<string>();
-        internal void AddAllAuthorized(string v)
-        {
-            authorized.Add(v);
-        }
-
-        public IEnumerable<string> Authorized => authorized;
     }
 }

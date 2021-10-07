@@ -85,7 +85,8 @@ namespace BTCPayServer.Tests
                 Assert.True(passEl.Displayed);
                 Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
                 s.Driver.FindElement(By.Id("delete")).Click();
-                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 s.FindAlertMessage();
                 seedEl = s.Driver.FindElement(By.Id("Seed"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
@@ -249,12 +250,14 @@ namespace BTCPayServer.Tests
 
                 // Let's try to disable it now
                 s.Driver.FindElement(By.Id("disable")).Click();
-                s.Driver.FindElement(By.Id("continue")).Click();
-                policies = await settings.GetSettingAsync<PoliciesSettings>();
-                Assert.True(policies.DisableSSHService);
-
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DISABLE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/ssh"));
                 Assert.True(s.Driver.PageSource.Contains("404 - Page not found", StringComparison.OrdinalIgnoreCase));
+                
+                policies = await settings.GetSettingAsync<PoliciesSettings>();
+                Assert.True(policies.DisableSSHService);
+                
                 policies.DisableSSHService = false;
                 await settings.UpdateSetting(policies);
             }
@@ -296,7 +299,7 @@ namespace BTCPayServer.Tests
                 {
                     // Cleanup old test run
                     s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
-                    s.Driver.FindElement(By.Id("continue")).Click();
+                    s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 }
                 s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
                 s.Driver.AssertNoError();
@@ -323,7 +326,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
                 Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
-                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 s.Driver.AssertNoError();
 
                 Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
@@ -427,8 +430,9 @@ namespace BTCPayServer.Tests
                 s.Logout();
                 s.LogIn(alice);
                 s.Driver.FindElement(By.Id("Stores")).Click();
-                s.Driver.FindElement(By.LinkText("Remove")).Click();
-                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.FindElement(By.LinkText("Delete")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 s.Driver.FindElement(By.Id("Stores")).Click();
                 s.Driver.Navigate().GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
@@ -457,7 +461,7 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
 
-                var client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+                var client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
                 await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
                 await client.CreateInvoiceAsync(new NBitpayClient.Invoice()
                 {
@@ -466,10 +470,10 @@ namespace BTCPayServer.Tests
                     FullNotifications = true
                 }, NBitpayClient.Facade.Merchant);
 
-                client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+                client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
 
                 var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
-                s.Driver.Navigate().GoToUrl(code.CreateLink(s.Server.PayTester.ServerUri));
+                s.Driver.Navigate().GoToUrl(code.CreateLink(s.ServerUri));
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
 
                 await client.CreateInvoiceAsync(new NBitpayClient.Invoice()
@@ -548,7 +552,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
-                Assert.Equal("Currently Active!", s.Driver.FindElement(By.CssSelector(".h6.text-muted")).Text);
+                Assert.Equal("currently active!", s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
             }
         }
 
@@ -571,6 +575,24 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Name("ViewAppButton")).Click();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
+                Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+                
+                // expire
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+                s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
+                s.Driver.FindElement(By.Id("SaveButton")).Click();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+                s.Driver.Navigate().Refresh();
+                Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
+                
+                // unexpire
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+                s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
+                s.Driver.FindElement(By.Id("SaveButton")).Click();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+                s.Driver.Navigate().Refresh();
+                s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
+                Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
             }
         }
 
@@ -658,7 +680,8 @@ namespace BTCPayServer.Tests
                 var deletes = s.Driver.FindElements(By.LinkText("Delete"));
                 Assert.Equal(2, deletes.Count);
                 deletes[0].Click();
-                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 deletes = s.Driver.FindElements(By.LinkText("Delete"));
                 Assert.Single(deletes);
                 s.FindAlertMessage();
@@ -745,7 +768,7 @@ namespace BTCPayServer.Tests
                 
                 s.Driver.ToggleCollapse("danger-zone");
                 s.Driver.FindElement(By.Id("delete-store")).Click();
-                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
                 s.FindAlertMessage();
             }
         }
@@ -872,12 +895,6 @@ namespace BTCPayServer.Tests
 
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
                 Assert.Contains("0.01000000", s.Driver.PageSource);
-                s.Driver.FindElement(By.CssSelector("button[value=analyze-psbt]")).Click();
-                Assert.EndsWith("psbt", s.Driver.Url);
-
-                s.Driver.FindElement(By.Id("OtherActionsDropdownToggle")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
-
                 Assert.EndsWith("psbt/ready", s.Driver.Url);
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);

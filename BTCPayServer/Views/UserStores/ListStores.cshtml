@@ -20,7 +20,7 @@
             <div class="col-lg-12">
                 @if (Model.Stores.Any())
                 {
-                    <table class="table table-sm">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>
@@ -76,7 +76,7 @@
                                         {
                                             <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
                                         }
-                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id">Remove</a>
+                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete</a>
                                     </td>
                                 </tr>
                             }
@@ -93,3 +93,5 @@
         </div>
     </div>
 </section>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />

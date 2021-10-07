@@ -2,6 +2,7 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
+            "wwwroot/main/bootstrap/bootstrap.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",
@@ -57,6 +58,7 @@
             "wwwroot/vendor/i18next/vue-i18next.js",
             "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js",
             "wwwroot/vendor/vex/js/vex.combined.min.js",
+            "wwwroot/main/utils.js",
             "wwwroot/checkout/**/*.js"
         ]
     },

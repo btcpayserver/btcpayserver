@@ -26,13 +26,12 @@
 
 @section PageFootContent {
     <script>
-        function selectAll(e, elementClass)
-        {
-            const items = document.getElementsByClassName("selection-item-"+elementClass);
-            for (let i = 0; i < items.length; i++) {
-                items[i].checked = e.checked;
-            }
-        }
+        delegate('click', '.selectAll', e => {
+            const { payoutState } = e.target.dataset;
+            document.querySelectorAll(`.selection-item-${payoutState}`).forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
     </script>
 }
 
@@ -73,11 +72,11 @@
         <div>
             @if (Model.Payouts.Any())
             {
-                <table class="table table-sm table-responsive-lg">
+                <table class="table table-hover table-responsive-lg">
                     <thead class="thead-inverse">
                     <tr>
                         <th>
-                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input" onclick="selectAll(this, '@Model.PayoutState.ToString()'); return true;"/>
+                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
                         </th>
                         <th style="min-width: 90px;" class="col-md-auto">
                             Date

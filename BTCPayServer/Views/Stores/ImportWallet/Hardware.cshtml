@@ -31,6 +31,10 @@
                     <option value="segwit">Segwit (Recommended, cheapest fee)</option>
                     <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
                     <option value="legacy">Legacy (Not recommended)</option>
+                    @if (ViewData["CanUseTaproot"] is true)
+                    {
+                        <option value="taproot">Taproot (ONLY FOR DEVELOPMENT)</option>
+                    }
                 </select>
             </div>
             <div class="form-group">

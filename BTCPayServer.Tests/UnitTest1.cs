@@ -28,6 +28,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
@@ -1020,16 +1021,16 @@ namespace BTCPayServer.Tests
             }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance );
             await tester.ExplorerNode.GenerateAsync(1);
             Invoice newInvoice = null;
-            await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             await TestUtils.EventuallyAsync(async () =>
             {
+                await Task.Delay(1000); // wait a bit for payment to process before fetching new invoice
                 newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
                 var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 Assert.NotEqual(newBolt11, oldBolt11);
                 Assert.Equal(newInvoice.BtcDue.GetValue(),
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-            });
+            }, 40000);
             
             Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
@@ -2267,6 +2268,15 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void SetOrderIdMetadataDoesntConvertInOctal()
+        {
+            var m = new InvoiceMetadata();
+            m.OrderId = "000000161";
+            Assert.Equal("000000161", m.OrderId);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseCurrencyValue()
         {
             Assert.True(CurrencyValue.TryParse("1.50USD", out var result));
@@ -2355,12 +2365,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model
+                var vm = Assert.IsType<StoreViewModel>(Assert
+                    .IsType<ViewResult>(await user.GetController<StoresController>().UpdateStore()).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().CheckoutExperience(vm).Result
+                    user.GetController<StoresController>().UpdateStore(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls
@@ -2900,10 +2910,26 @@ namespace BTCPayServer.Tests
                 {
                     Amount = 50.513m,
                     Currency = "USD",
-                    Metadata = new JObject() { new JProperty("taxIncluded", 50.516m) }
+                    Metadata = new JObject() { new JProperty("taxIncluded", 50.516m), new JProperty("orderId", "000000161") }
                 });
                 Assert.Equal(50.51m, invoice5g.Amount);
                 Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
+                Assert.Equal("000000161", (string)invoice5g.Metadata["orderId"]);
+
+                var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+                {
+                    Amount = 0m,
+                    Currency = "USD" 
+                });
+                Assert.Equal(InvoiceStatus.New, zeroInvoice.Status);
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    zeroInvoice = await greenfield.GetInvoice(user.StoreId, zeroInvoice.Id);
+                    Assert.Equal(InvoiceStatus.Settled, zeroInvoice.Status);
+                });
+
+                var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(user.StoreId, zeroInvoice.Id);
+                Assert.Empty(zeroInvoicePM);
             }
         }
 
@@ -3093,6 +3119,20 @@ namespace BTCPayServer.Tests
                     c =>
                     {
                         Assert.False(c.AfterExpiration);
+                        Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
+                        Assert.NotNull(c.Payment);
+                        Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);
+                        
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
+                    c =>
+                    {
+                        Assert.False(c.AfterExpiration);
+                        Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
+                        Assert.NotNull(c.Payment);
+                        Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);                        
                     });
             }
         }
@@ -3228,6 +3268,8 @@ namespace BTCPayServer.Tests
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
                 Logs.Tester.LogInformation($"Testing {value.Key.ToString()}");
+                if (value.Key.ToString() == "BTX_USD") // Broken shitcoin
+                    continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
         }
@@ -3520,14 +3562,15 @@ namespace BTCPayServer.Tests
                         Password = user.RegisterDetails.Password
                     })).ActionName);
 
+                var listController = user.GetController<ManageController>();
                 var manageController = user.GetController<Fido2Controller>();
 
                 //by default no fido2 devices available
                 Assert.Empty(Assert
-                    .IsType<Fido2AuthenticationViewModel>(Assert
-                        .IsType<ViewResult>(await manageController.List()).Model).Credentials);
+                    .IsType<TwoFactorAuthenticationViewModel>(Assert
+                        .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
                 Assert.IsType<CredentialCreateOptions>(Assert
-                        .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel()
+                        .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel
                         {
                             Name = "label"
                         })).Model);
@@ -3555,8 +3598,8 @@ namespace BTCPayServer.Tests
 
                     Assert.NotNull(newDevice.Id);
                     Assert.NotEmpty(Assert
-                        .IsType<Fido2AuthenticationViewModel>(Assert
-                            .IsType<ViewResult>(await manageController.List()).Model).Credentials);
+                        .IsType<TwoFactorAuthenticationViewModel>(Assert
+                            .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
                 }
 
                 //check if we are showing the fido2 login screen now

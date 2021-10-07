@@ -1,0 +1,39 @@
+﻿@model ConfirmModel
+
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title" id="ConfirmTitle">@Model.Title</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <vc:icon symbol="close" />
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div id="ConfirmDescription">
+                @if (Model.DescriptionHtml)
+                {
+                    @Safe.Raw(Model.Description)
+                }
+                else
+                {
+                    @Model.Description
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Action))
+        {
+            <form id="ConfirmForm" method="post" action="@Model.ActionUrl" rel="noreferrer noopener">
+                <div class="modal-body pt-0" id="ConfirmText" hidden>
+                    <label for="ConfirmInput" class="form-label">Confirm the action by typing <strong id="ConfirmInputText"></strong>:</label>
+                    <input id="ConfirmInput" class="form-control"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="ConfirmCancel">Cancel</button>
+                    <button type="submit" class="btn @Model.ButtonClass" id="ConfirmContinue">@Model.Action</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>

@@ -1,0 +1,41 @@
+@model ConfirmModel
+
+<div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <partial name="ConfirmModal" model="Model" />
+</div>
+
+<script>
+    const modal = document.getElementById('ConfirmModal')
+    modal.addEventListener('show.bs.modal', event => {
+        const $target = event.relatedTarget
+        const $form = document.getElementById('ConfirmForm')
+        const $text = document.getElementById('ConfirmText')
+        const $title = document.getElementById('ConfirmTitle')
+        const $description = document.getElementById('ConfirmDescription')
+        const $input = document.getElementById('ConfirmInput')
+        const $inputText = document.getElementById('ConfirmInputText')
+        const $continue = document.getElementById('ConfirmContinue')
+        const { title, description, confirm, confirmInput } = $target.dataset
+        const action = $target.dataset.action || ($target.nodeName === 'A'
+            ? $target.getAttribute('href')
+            : $target.form.getAttribute('action'))
+        
+        if ($form) $form.setAttribute('action', action)
+        if (title) $title.textContent = title
+        if (description) $description.innerHTML = description
+        if (confirm) $continue.textContent = confirm
+        if (confirmInput) {
+            $text.removeAttribute('hidden')
+            $continue.setAttribute('disabled', 'disabled')
+            $inputText.textContent = confirmInput
+            $input.addEventListener('input', event => {
+                event.target.value.trim() === confirmInput
+                    ? $continue.removeAttribute('disabled')
+                    : $continue.setAttribute('disabled', 'disabled')
+            })
+        } else {
+            $text.setAttribute('hidden', 'hidden')
+            $continue.removeAttribute('disabled')
+        }
+    });
+</script>

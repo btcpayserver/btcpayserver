@@ -50,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}": {
             "get": {
                 "tags": [
                     "Store Payment Methods (On Chain)"
@@ -136,7 +136,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OnChainPaymentMethodData"
+                                "$ref": "#/components/schemas/UpdateOnChainPaymentMethodRequest"
                             }
                         }
                     },
@@ -361,7 +361,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OnChainPaymentMethodData"
+                                "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
                             }
                         }
                     },
@@ -442,7 +442,7 @@
                     }
                 }
             },
-            "OnChainPaymentMethodData": {
+            "UpdateOnChainPaymentMethodRequest": {
                 "type": "object",
                 "additionalProperties": {
                     "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
@@ -451,7 +451,31 @@
                     "enabled": {
                         "type": "boolean",
                         "description": "Whether the payment method is enabled"
+                    }
+                }
+            },
+            "OnChainPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled"
                     },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method"
+                    }
+                }
+            },
+            "OnChainPaymentMethodDataPreview": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                },
+                "properties": {
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"

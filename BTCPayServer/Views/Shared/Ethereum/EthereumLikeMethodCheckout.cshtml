@@ -49,7 +49,7 @@
                 </div>
             </nav>
         </div>
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-ethereum-post-content"})
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-ethereum-post-content", model = Model})
     </div>          
 </script>
 
@@ -61,7 +61,7 @@
         <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>        
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-ethereum-post-tabs"})
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-ethereum-post-tabs", model = Model})
     </div>
 </script>
 
@@ -89,11 +89,6 @@
                         r = r.substring(0,r.length-1);
                     }
                     return r;
-                },
-                coinswitchAmountDue: function() {
-                    return this.srvModel.coinSwitchAmountMarkupPercentage
-                        ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
-                        : this.srvModel.btcDue;
                 },
                 scanDisplayQr: function() {
                     return this.srvModel.invoiceBitcoinUrlQR;

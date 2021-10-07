@@ -1,7 +1,9 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies csp 
 @model PayButtonViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().StoreName);
+    csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
 }
 
 @section PageHeadContent {
@@ -14,6 +16,24 @@
     <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
     <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
     <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
+    <template id="template-get-scripts" csp-allow>
+        if (!window.btcpay) {
+            var script = document.createElement('script');
+            script.src=@(Safe.Json(Model.UrlRoot + "modal/btcpay.js"));
+            document.getElementsByTagName('head')[0].append(script);
+        }
+        function onBTCPayFormSubmit(event) {
+            event.preventDefault();
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200 && this.responseText) {
+                    window.btcpay.showInvoice(JSON.parse(this.responseText).invoiceId);
+                }
+            };
+            xhttp.open('POST', event.target.getAttribute('action'), true);
+            xhttp.send(new FormData(event.target));
+        }
+    </template>
     <script>
         var srvModel = @Safe.Json(Model);
 

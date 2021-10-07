@@ -3,6 +3,14 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Dynamic DNS Service");
 }
 
+@section PageFootContent {
+    <script>
+        delegate('click', '.serviceSettings', e => {
+            document.getElementById('ServiceUrl').value = e.target.dataset.url;
+        });
+    </script>
+}
+
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div class="row">
@@ -21,7 +29,8 @@
                         Well-known Dynamic DNS providers are:
                         @for (int i = 0; i < Model.KnownServices.Length; i++)
                         {
-                            <a href="#" onclick="document.getElementById('ServiceUrl').value = '@Model.KnownServices[i].Url'; return false;">@Model.KnownServices[i].Name</a><span>@(i == Model.KnownServices.Length - 1 ? "" : ",")</span>
+                            <a href="#" class="serviceSettings" data-url="@Model.KnownServices[i].Url">@Model.KnownServices[i].Name</a>
+                            <span>@(i == Model.KnownServices.Length - 1 ? "" : ",")</span>
                         }
                     </p>
                 </div>

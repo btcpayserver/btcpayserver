@@ -30,26 +30,26 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet("api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKey(string id)
+        [HttpGet("~/api-keys/{id}/delete")]
+        public async Task<IActionResult> DeleteAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))
             {
                 return NotFound();
             }
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
-                Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
+                Title = "Delete API key",
                 DescriptionHtml = true,
-                Description = $"Any application using this API key will immediately lose access: <code>{key.Id}</code>",
+                Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
                 Action = "Delete",
-                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
+                ActionUrl = Url.ActionLink(nameof(DeleteAPIKeyPost), values: new { id })
             });
         }
 
-        [HttpPost("api-keys/{id}/delete")]
-        public async Task<IActionResult> RemoveAPIKeyPost(string id)
+        [HttpPost("~/api-keys/{id}/delete")]
+        public async Task<IActionResult> DeleteAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
             if (key == null || key.UserId != _userManager.GetUserId(User))
@@ -195,7 +195,25 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var parsedPermissions = Permission.ToPermissions(vm.Permissions?.Split(';')??Array.Empty<string>()).GroupBy(permission => permission.Policy);
+            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            var permissionsWithStoreIDs = new List<string>();
+            /**
+             * Go over each permission and associated store IDs and 
+             * join them so that permission for a specific store is parsed correctly
+             */
+            for (var i = 0; i < permissions.Length; i++) {
+                var currPerm = permissions[i];
+                var storeIds = vm.PermissionValues[i].SpecificStores.ToArray();
+                if (storeIds.Length > 0) {
+                    for (var x = 0; x < storeIds.Length; x++) {
+                        permissionsWithStoreIDs.Add($"{currPerm}:{storeIds[x]}");
+                    }
+                } else {
+                    permissionsWithStoreIDs.Add(currPerm);
+                }
+            }
+
+            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray()).GroupBy(permission => permission.Policy);
 
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
@@ -210,6 +228,14 @@ namespace BTCPayServer.Controllers
                 }
                 else if (wanted?.Any() ?? false)
                 {
+                    var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                    var command = commandParts.Length > 1 ? commandParts[1] : null;
+                    var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
+                    // Don't want to accidentally change mode for the user if they are explicitly performing some action
+                    if (isPerformingAnAction) {
+                        continue;
+                    }
+
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
@@ -358,6 +384,12 @@ namespace BTCPayServer.Controllers
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
+                    // Reset values for "all stores" option to their original values
+                    if (permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
+                    {
+                        permissionValueItem.SpecificStores = new List<string>();
+                        permissionValueItem.Value = true;
+                    }
 
                     if (permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific &&
                         !permissionValueItem.SpecificStores.Any() && viewModel.Stores.Any())
@@ -485,9 +517,9 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanCreateInvoice}:", ("Create an invoice", "The app will be able to create new invoices on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewInvoices, ("View invoices", "The app will be able to view invoices.")},
-                    {BTCPayServer.Client.Policies.CanModifyInvoices, ("View invoices", "The app will be able to modify and view invoices.")},
+                    {BTCPayServer.Client.Policies.CanModifyInvoices, ("Modify invoices", "The app will be able to modify and view invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanViewInvoices}:", ("View invoices", "The app will be able to view invoices on the selected stores.")},
-                    {$"{BTCPayServer.Client.Policies.CanModifyInvoices}:", ("View invoices", "The app will be able to modify and view invoices on the selected stores.")},
+                    {$"{BTCPayServer.Client.Policies.CanModifyInvoices}:", ("Modify invoices", "The app will be able to modify and view invoices on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanModifyPaymentRequests, ("Modify your payment requests", "The app will be able to view, modify, delete and create new payment requests on all your stores.")},
                     {$"{BTCPayServer.Client.Policies.CanModifyPaymentRequests}:", ("Manage selected stores' payment requests", "The app will be able to view, modify, delete and create new payment requests on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewPaymentRequests, ("View your payment requests", "The app will be able to view payment requests.")},

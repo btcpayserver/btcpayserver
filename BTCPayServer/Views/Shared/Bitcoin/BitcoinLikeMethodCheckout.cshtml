@@ -51,7 +51,7 @@
                     </div>
                 </nav>
             </div>
-            @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-content"})
+            @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-content", model = Model})
         </div>
         @if (Model.ShowRecommendedFee) {
             <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
@@ -69,7 +69,7 @@
         <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs"})
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs", model = Model})
     </div>
 </script>
 

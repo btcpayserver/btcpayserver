@@ -129,7 +129,7 @@
           slots = _ref.slots;
 
       var componentData = {
-        staticClass: 'close',
+        staticClass: 'btn-close',
         class: defineProperty({}, 'text-' + props.textVariant, props.textVariant),
         attrs: {
           type: 'button',
@@ -147,7 +147,7 @@
         }
         // Careful not to override the slot with innerHTML
       };if (!slots().default) {
-        componentData.domProps = { innerHTML: '&times;' };
+        componentData.domProps = { innerHTML: '<svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>' };
       }
       return h('button', mergeData(data, componentData), slots().default);
     }

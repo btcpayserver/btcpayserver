@@ -1,0 +1,62 @@
+@model WalletPSBTReadyViewModel
+
+@if (Model.CanCalculateBalance)
+{
+    <p class="lead text-center text-secondary">
+        This transaction will change your balance:
+        <br>
+        <span class="text-@(Model.Positive ? "success" : "danger")">@Model.BalanceChange</span>
+    </p>
+}
+
+<h4 class="mb-n3">Inputs</h4>
+<table class="table table-sm table-responsive-lg">
+    <thead class="thead-inverse">
+    <tr>
+        <th>Index</th>
+        <th class="text-end">Amount</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var input in Model.Inputs)
+    {
+        <tr>
+            @if (input.Error != null)
+            {
+                <td>
+                    @input.Index <span class="fa fa-exclamation-triangle text-danger" title="@input.Error"></span>
+                </td>
+            }
+            else
+            {
+                <td>@input.Index</td>
+            }
+            <td class="text-end text-@(input.Positive ? "success" : "danger")">@input.BalanceChange</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h4 class="mt-4 mb-n3">Outputs</h4>
+<table class="table table-sm table-responsive-lg">
+    <thead class="thead-inverse">
+    <tr>
+        <th>Destination</th>
+        <th class="text-end">Amount</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var destination in Model.Destinations)
+    {
+        <tr>
+            <td>@destination.Destination</td>
+            <td class="text-end text-@(destination.Positive ? "success" : "danger")">@destination.Balance</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@if (Model.FeeRate != null)
+{
+    <p class="text-muted text-end">Transaction fee rate: <b>@Model.FeeRate</b></p>
+}

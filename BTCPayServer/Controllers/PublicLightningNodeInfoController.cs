@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Stores;
@@ -40,14 +41,12 @@ namespace BTCPayServer.Controllers
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(Request.IsOnion(), paymentMethodDetails,
-                        network);
+                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network);
 
                 return View(new ShowLightningNodeInfoViewModel
                 {
                     Available = true,
-                    NodeInfo = nodeInfo.ToString(),
+                    NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray(),
                     CryptoCode = cryptoCode,
                     CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),
                     StoreName = store.StoreName
@@ -55,7 +54,12 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception)
             {
-                return View(new ShowLightningNodeInfoViewModel { Available = false, CryptoCode = cryptoCode });
+                return View(new ShowLightningNodeInfoViewModel
+                {
+                    Available = false, 
+                    CryptoCode = cryptoCode,
+                    StoreName = store.StoreName
+                });
             }
         }
 
@@ -78,9 +82,26 @@ namespace BTCPayServer.Controllers
         }
     }
 
+
     public class ShowLightningNodeInfoViewModel
     {
-        public string NodeInfo { get; set; }
+        public class NodeData
+        {
+            string _connection;
+            public NodeData(NodeInfo nodeInfo)
+            {
+                _connection = nodeInfo.ToString();
+                Id = $"{nodeInfo.Host}-{nodeInfo.Port}".Replace(".", "-", StringComparison.OrdinalIgnoreCase);
+                IsTor = nodeInfo.IsTor;
+            }
+            public string Id { get; }
+            public bool IsTor { get; }
+            public override string ToString()
+            {
+                return _connection;
+            }
+        }
+        public NodeData[] NodeInfo { get; set; }
         public bool Available { get; set; }
         public string CryptoCode { get; set; }
         public string CryptoImage { get; set; }

@@ -264,15 +264,12 @@ namespace BTCPayServer.Plugins
                     break;
                 
                 case "enable":
-                    if (Directory.Exists(dirName))
+                    if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
                     {
-                        if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
+                        var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
+                        if (disabled.Contains(command.extension))
                         {
-                            var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
-                            if (!disabled.Contains(command.extension))
-                            {
-                                File.WriteAllLines(Path.Combine(pluginsFolder, "disabled"), disabled.Where(s=> s!= command.extension));
-                            }
+                            File.WriteAllLines(Path.Combine(pluginsFolder, "disabled"), disabled.Where(s=> s!= command.extension));
                         }
                     }
 

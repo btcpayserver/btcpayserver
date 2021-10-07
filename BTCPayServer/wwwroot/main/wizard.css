@@ -1,5 +1,5 @@
 body {
-    color: var(--btcpay-wizard-color);
+    color: var(--btcpay-wizard-text);
     background-color: var(--btcpay-wizard-bg);
 }
 
@@ -26,7 +26,7 @@ body {
 
 #wizard-navbar a {
     position: relative;
-    color: var(--btcpay-body-color);
+    color: var(--btcpay-body-text);
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -54,7 +54,7 @@ body {
 }
 
 #wizard-navbar a:hover::after {
-    background-color: var(--btcpay-border-color-medium);
+    background-color: var(--btcpay-body-bg-hover);
 }
 
 #wizard-navbar a:active::after {
@@ -108,8 +108,5 @@ body {
 }
 
 .list-group-item .icon-caret-right {
-    flex: 0 0 24px;
-    height: 24px;
-    align-self: center;
     margin-right: 1.5rem;
 }

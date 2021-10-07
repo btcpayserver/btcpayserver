@@ -24,7 +24,6 @@ namespace BTCPayServer.Data
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(i => i.Fido2Credentials)
                 .HasForeignKey(i => i.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
-            
         }
 
         public ApplicationUser ApplicationUser { get; set; }

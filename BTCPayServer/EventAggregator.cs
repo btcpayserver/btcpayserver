@@ -145,6 +145,10 @@ namespace BTCPayServer
             return Subscribe(new Action<IEventAggregatorSubscription, T>((sub, t) => subscription(sub, t)));
         }
 
+        public IEventAggregatorSubscription SubscribeAsync<T>(Func<T, Task> subscription)
+        {
+            return Subscribe(new Action<IEventAggregatorSubscription, T>((sub, t) => _ = subscription(t)));
+        }
         public IEventAggregatorSubscription Subscribe<T>(Action<T> subscription)
         {
             return Subscribe(new Action<IEventAggregatorSubscription, T>((sub, t) => subscription(t)));

@@ -263,6 +263,11 @@ namespace BTCPayServer.Controllers
                 walletVm.StoreId = wallet.Store.Id;
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
                 walletVm.StoreName = wallet.Store.StoreName;
+
+                var money = await GetBalanceAsMoney(wallet.Wallet, wallet.DerivationStrategy);
+                wallets.BalanceForCryptoCode[wallet.Network] = wallets.BalanceForCryptoCode.ContainsKey(wallet.Network)
+                    ? wallets.BalanceForCryptoCode[wallet.Network].Add(money)
+                    : money;
             }
 
             return View(wallets);
@@ -721,13 +726,8 @@ namespace BTCPayServer.Controllers
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString()
             };
-                
-            var routeBack = new Dictionary<string, string>
-            {
-                {"action", nameof(WalletSend)}, {"walletId", walletId.ToString()}
-            };
 
-            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, routeBack);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, nameof(WalletSend));
             if (res != null)
             {
                 return res;
@@ -822,9 +822,10 @@ namespace BTCPayServer.Controllers
                 SigningContext = model.SigningContext
             });
         }
+        
         private IActionResult RedirectToWalletPSBTReady(WalletPSBTReadyViewModel vm)
         {
-            var redirectVm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBTReady),
@@ -948,7 +949,7 @@ namespace BTCPayServer.Controllers
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext.PSBT = psbt.ToBase64();
-            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
             {
                 SigningKey = signingKey.GetWif(network.NBitcoinNetwork).ToString(),
                 SigningKeyPath = rootedKeyPath?.ToString(),
@@ -1065,13 +1066,25 @@ namespace BTCPayServer.Controllers
             return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
-        private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
+        private static async Task<IMoney> GetBalanceAsMoney(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
         {
             using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             try
             {
                 var b = await wallet.GetBalance(derivationStrategy, cts.Token);
-                return (b.Available ?? b.Total).ShowMoney(wallet.Network);
+                return (b.Available ?? b.Total);
+            }
+            catch
+            {
+                return NBitcoin.Money.Zero;
+            }
+        }
+
+        private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
+        {
+            try
+            {
+                return (await GetBalanceAsMoney(wallet, derivationStrategy)).ShowMoney(wallet.Network);
             }
             catch
             {

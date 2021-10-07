@@ -58,7 +58,8 @@ namespace BTCPayServer.Controllers.GreenField
                         paymentMethod.PaymentId.CryptoCode,
                         paymentMethod.GetExternalLightningUrl()?.ToString() ??
                         paymentMethod.GetDisplayableConnectionString(),
-                        !excludedPaymentMethods.Match(paymentMethod.PaymentId)
+                        !excludedPaymentMethods.Match(paymentMethod.PaymentId),
+                        paymentMethod.PaymentId.ToStringNormalized()
                     )
                 )
                 .Where((result) => enabled is null || enabled == result.Enabled)
@@ -114,7 +115,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
         public async Task<IActionResult> UpdateLightningNetworkPaymentMethod(string storeId, string cryptoCode,
-            [FromBody] LightningNetworkPaymentMethodData paymentMethodData)
+            [FromBody] UpdateLightningNetworkPaymentMethodRequest request)
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
 
@@ -123,7 +124,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (string.IsNullOrEmpty(paymentMethodData.ConnectionString))
+            if (string.IsNullOrEmpty(request.ConnectionString))
             {
                 ModelState.AddModelError(nameof(LightningNetworkPaymentMethodData.ConnectionString),
                     "Missing connectionString");
@@ -133,13 +134,13 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
 
             LightningSupportedPaymentMethod? paymentMethod = null;
-            if (!string.IsNullOrEmpty(paymentMethodData!.ConnectionString))
+            if (!string.IsNullOrEmpty(request!.ConnectionString))
             {
-                if (paymentMethodData.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
+                if (request.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
                 {
                     if (!await CanUseInternalLightning())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
+                        ModelState.AddModelError(nameof(request.ConnectionString),
                             $"You are not authorized to use the internal lightning node");
                         return this.CreateValidationError(ModelState);
                     }
@@ -152,23 +153,23 @@ namespace BTCPayServer.Controllers.GreenField
                 }
                 else
                 {
-                    if (!LightningConnectionString.TryParse(paymentMethodData.ConnectionString, false,
+                    if (!LightningConnectionString.TryParse(request.ConnectionString, false,
                         out var connectionString, out var error))
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"Invalid URL ({error})");
+                        ModelState.AddModelError(nameof(request.ConnectionString), $"Invalid URL ({error})");
                         return this.CreateValidationError(ModelState);
                     }
 
                     if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
+                        ModelState.AddModelError(nameof(request.ConnectionString),
                             $"BTCPay does not support gRPC connections");
                         return this.CreateValidationError(ModelState);
                     }
 
                     if (!await CanManageServer() && !connectionString.IsSafe())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
+                        ModelState.AddModelError(nameof(request.ConnectionString),
                             $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                         return this.CreateValidationError(ModelState);
                     }
@@ -184,7 +185,7 @@ namespace BTCPayServer.Controllers.GreenField
             var store = Store;
             var storeBlob = store.GetStoreBlob();
             store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
-            storeBlob.SetExcluded(paymentMethodId, !paymentMethodData.Enabled);
+            storeBlob.SetExcluded(paymentMethodId, !request.Enabled);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
             return Ok(GetExistingLightningLikePaymentMethod(cryptoCode, store));
@@ -205,7 +206,8 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod is null
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.GetDisplayableConnectionString(), !excluded);
+                    paymentMethod.GetDisplayableConnectionString(), !excluded, 
+                    paymentMethod.PaymentId.ToStringNormalized());
         }
 
         private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)

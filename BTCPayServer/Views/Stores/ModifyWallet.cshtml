@@ -17,7 +17,7 @@
         <input asp-for="Config" type="hidden" />
         <input asp-for="DerivationScheme" type="hidden" />
 
-        <table class="table table-sm table-borderless table-responsive-md">
+        <table class="table table-hover table-borderless table-responsive-md">
             <tbody>
             <tr>
                 <th class="w-150px">Derivation Scheme</th>
@@ -47,9 +47,34 @@
     </form>
     <br>
     <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="mt-5">
-        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ChangeWalletLink" class="btn btn-secondary me-2">
+        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" 
+           id="ChangeWalletLink" 
+           class="btn btn-secondary me-2"
+           data-bs-toggle="modal" 
+           data-bs-target="#ConfirmModal" 
+           data-title="Replace @Model.CryptoCode wallet"
+           data-description="@ViewData["ReplaceDescription"]"
+           data-confirm="Setup new wallet"
+           data-confirm-input="REPLACE">
             Replace wallet
         </a>
-        <button type="submit" class="btn btn-danger" id="Delete">Remove wallet</button>
+        <button type="submit" class="btn btn-danger" id="Delete"
+                data-bs-toggle="modal" 
+                data-bs-target="#ConfirmModal" 
+                data-title="Remove @Model.CryptoCode wallet"
+                data-description="@ViewData["RemoveDescription"]"
+                data-confirm="Remove"
+                data-confirm-input="REMOVE">Remove wallet</button>
     </form>
 </div>
+
+<partial name="_Confirm" model="@(new ConfirmModel($"{Model.CryptoCode} wallet", "Change", "Update"))" />
+
+@section PageFootContent {
+    <script>
+        const deleteButton = document.getElementById('Delete')
+        deleteButton.addEventListener('click', event => {
+            event.preventDefault()
+        });
+    </script>
+}

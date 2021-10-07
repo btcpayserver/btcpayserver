@@ -53,49 +53,54 @@
             </script>
         }
         <div class="col-md-12">
-            <table class="table table-sm table-responsive-lg">
+            <table class="table table-hover table-responsive-lg">
                 <thead class="thead-inverse">
-                    <tr>
-                        <th scope="col">Start</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Refunded</th>
-                        <th scope="col" class="text-end">Actions</th>
-                    </tr>
+                <tr>
+                    <th scope="col">Start</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Refunded</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var pp in Model.PullPayments)
-                    {
-                        <tr>
-                            <td>@pp.StartDate.ToBrowserDate()</td>
-                            <td>@pp.Name</td>
-                            <td class="align-middle">
-                                <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
-                                    <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
-                                         aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
-                                    </div>
-                                    <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
-                                         aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
-                                    </div>
+                @foreach (var pp in Model.PullPayments)
+                {
+                    <tr>
+                        <td>@pp.StartDate.ToBrowserDate()</td>
+                        <td>@pp.Name</td>
+                        <td class="align-middle">
+                            <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
+                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
+                                     aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
                                 </div>
-                            </td>
-                            <td class="text-end">
-                                <a asp-action="ViewPullPayment"
-                                   asp-controller="PullPayment"
-                                   asp-route-pullPaymentId="@pp.Id">View</a> -
-                                <a class="pp-payout" asp-action="Payouts"
-                                   asp-route-walletId="@Context.GetRouteValue("walletId")"
-                                   asp-route-pullPaymentId="@pp.Id">Payouts</a> -
-                                <a asp-action="ArchivePullPayment"
-                                   asp-route-walletId="@Context.GetRouteValue("walletId")"
-                                   asp-route-pullPaymentId="@pp.Id">Archive</a>
-                            </td>
-                        </tr>
-                    }
+                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
+                                     aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="ViewPullPayment"
+                               asp-controller="PullPayment"
+                               asp-route-pullPaymentId="@pp.Id">View</a> -
+                            <a class="pp-payout" asp-action="Payouts"
+                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-pullPaymentId="@pp.Id">Payouts</a> -
+                            <a asp-action="ArchivePullPayment"
+                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-pullPaymentId="@pp.Id"
+                               data-bs-toggle="modal"
+                               data-bs-target="#ConfirmModal"
+                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">Archive</a>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
     </div>
     
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />
+
     @section PageFootContent {
         <script>
             var ppProgresses = document.getElementsByClassName("ppProgress");

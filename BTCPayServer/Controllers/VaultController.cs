@@ -222,7 +222,21 @@ namespace BTCPayServer.Controllers
                                     continue;
                                 }
 
-                                if (addressType == "segwit")
+                                if (!network.NBitcoinNetwork.Consensus.SupportTaproot && addressType == "taproot")
+                                {
+                                    await websocketHelper.Send("{ \"error\": \"taproot-notsupported\"}", cancellationToken);
+                                    continue;
+                                }
+                                if (addressType == "taproot")
+                                {
+                                    keyPath = new KeyPath("86'").Derive(network.CoinType).Derive(accountNumber, true);
+                                    xpub = await device.GetXPubAsync(keyPath);
+                                    strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    {
+                                        ScriptPubKeyType = ScriptPubKeyType.TaprootBIP86
+                                    });
+                                }
+                                else if (addressType == "segwit")
                                 {
                                     keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(accountNumber, true);
                                     xpub = await device.GetXPubAsync(keyPath);
@@ -296,7 +310,7 @@ askdevice:
                                 device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, deviceEntry.Model, deviceEntry.Fingerprint);
                                 fingerprint = device.Fingerprint;
                                 JObject json = new JObject();
-                                json.Add("model", device.Model.ToString());
+                                json.Add("model", device.Model);
                                 json.Add("fingerprint", device.Fingerprint?.ToString());
                                 await websocketHelper.Send(json.ToString(), cancellationToken);
                                 break;
@@ -337,6 +351,8 @@ askdevice:
         private ScriptPubKeyType GetScriptPubKeyType(RootedKeyPath keyPath)
         {
             var path = keyPath.KeyPath.ToString();
+            if (path.StartsWith("86'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.TaprootBIP86;
             if (path.StartsWith("84'", StringComparison.OrdinalIgnoreCase))
                 return ScriptPubKeyType.Segwit;
             if (path.StartsWith("49'", StringComparison.OrdinalIgnoreCase))
@@ -364,7 +380,7 @@ askdevice:
 
         private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)
         {
-            return (deviceEntry.Model == HardwareWalletModels.Trezor_T || deviceEntry.Model == HardwareWalletModels.Trezor_T_Simulator);
+            return deviceEntry.Model.Contains("Trezor_T", StringComparison.OrdinalIgnoreCase);
         }
 
         public StoreData CurrentStore

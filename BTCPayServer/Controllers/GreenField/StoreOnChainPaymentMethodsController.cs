@@ -57,7 +57,9 @@ namespace BTCPayServer.Controllers.GreenField
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
-                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId), strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath()))
+                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId),
+                        strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                        strategy.PaymentId.ToStringNormalized()))
                 .Where((result) => enabled is null || enabled == result.Enabled)
                 .ToList();
         }
@@ -144,7 +146,7 @@ namespace BTCPayServer.Controllers.GreenField
         public IActionResult GetProposedOnChainPaymentMethodPreview(
             string storeId,
             string cryptoCode,
-            [FromBody] OnChainPaymentMethodData paymentMethodData,
+            [FromBody] UpdateOnChainPaymentMethodRequest paymentMethodData,
             int offset = 0, int amount = 10)
         {
             if (!GetCryptoCodeWallet(cryptoCode, out var network, out BTCPayWallet _))
@@ -217,7 +219,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> UpdateOnChainPaymentMethod(
             string storeId,
             string cryptoCode,
-            [FromBody] OnChainPaymentMethodData paymentMethodData)
+            [FromBody] UpdateOnChainPaymentMethodRequest request)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
 
@@ -226,7 +228,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
+            if (string.IsNullOrEmpty(request?.DerivationScheme))
             {
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Missing derivationScheme");
@@ -239,12 +241,12 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var store = Store;
                 var storeBlob = store.GetStoreBlob();
-                var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
+                var strategy = DerivationSchemeSettings.Parse(request.DerivationScheme, network);
                 if (strategy != null)
                     await wallet.TrackAsync(strategy.AccountDerivation);
-                strategy.Label = paymentMethodData.Label;
+                strategy.Label = request.Label;
                 var signing = strategy.GetSigningAccountKeySettings();
-                if (paymentMethodData.AccountKeyPath is RootedKeyPath r)
+                if (request.AccountKeyPath is RootedKeyPath r)
                 {
                     signing.AccountKeyPath = r.KeyPath;
                     signing.RootFingerprint = r.MasterFingerprint;
@@ -256,7 +258,7 @@ namespace BTCPayServer.Controllers.GreenField
                 }
 
                 store.SetSupportedPaymentMethod(id, strategy);
-                storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
+                storeBlob.SetExcluded(id, !request.Enabled);
                 store.SetStoreBlob(storeBlob);
                 await _storeRepository.UpdateStore(store);
                 return Ok(GetExistingBtcLikePaymentMethod(cryptoCode, store));
@@ -291,7 +293,8 @@ namespace BTCPayServer.Controllers.GreenField
                 ? null
                 : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.AccountDerivation.ToString(), !excluded, paymentMethod.Label,
-                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath());
+                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath(),
+                    paymentMethod.PaymentId.ToStringNormalized());
         }
     }
 }

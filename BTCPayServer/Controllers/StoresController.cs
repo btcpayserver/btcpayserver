@@ -68,7 +68,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             AppService appService,
             WebhookNotificationManager webhookNotificationManager,
-            IDataProtectionProvider dataProtector)
+            IDataProtectionProvider dataProtector,
+            NBXplorerDashboard Dashboard)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -89,6 +90,7 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
+            _Dashboard = Dashboard;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
@@ -107,6 +109,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
+        private readonly NBXplorerDashboard _Dashboard;
 
         [TempData]
         public bool StoreNotConfigured
@@ -143,6 +146,18 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        public bool TaprootActivated(string crytoCode)
+        {
+            var network = (BTCPayNetwork)_NetworkProvider.GetNetwork(crytoCode);
+#pragma warning disable CS0618
+            if (!(network.IsBTC && network.NBitcoinNetwork.ChainName == ChainName.Mainnet))
+                // Consider it activated for everything that is not mainnet bitcoin
+                return true;
+#pragma warning restore CS0618
+            var status = _Dashboard.Get(crytoCode).Status;
+            return  status.ChainHeight >= 709632;
+        }
+
 
         [HttpPost]
         [Route("{storeId}/users")]
@@ -169,37 +184,28 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
                 return View(vm);
             }
-            TempData[WellKnownTempData.SuccessMessage] = "User added successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "User added successfully.";
             return RedirectToAction(nameof(StoreUsers));
         }
 
-        [HttpGet]
-        [Route("{storeId}/users/{userId}/delete")]
+        [HttpGet("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUser(string userId)
         {
-            StoreUsersViewModel vm = new StoreUsersViewModel();
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = $"Remove store user",
-                Description = $"Are you sure you want to remove store access for {user.Email}?",
-                Action = "Delete"
-            });
+            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{user.Email}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
         }
 
-        [HttpPost]
-        [Route("{storeId}/users/{userId}/delete")]
+        [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
             await _Repo.RemoveStoreUser(storeId, userId);
-            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully";
-            return RedirectToAction(nameof(StoreUsers), new { storeId = storeId, userId = userId });
+            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 
-        [HttpGet]
-        [Route("{storeId}/rates")]
+        [HttpGet("{storeId}/rates")]
         public IActionResult Rates()
         {
             var exchanges = GetSupportedExchanges();
@@ -216,8 +222,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/rates")]
+        [HttpPost("{storeId}/rates")]
         public async Task<IActionResult> Rates(RatesViewModel model, string command = null, string storeId = null, CancellationToken cancellationToken = default)
         {
             if (command == "scripting-on")
@@ -335,11 +340,10 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{storeId}/rates/confirm")]
+        [HttpGet("{storeId}/rates/confirm")]
         public IActionResult ShowRateRules(bool scripting)
         {
-            return View("Confirm", new ConfirmModel()
+            return View("Confirm", new ConfirmModel
             {
                 Action = "Continue",
                 Title = "Rate rule scripting",
@@ -350,8 +354,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("{storeId}/rates/confirm")]
+        [HttpPost("{storeId}/rates/confirm")]
         public async Task<IActionResult> ShowRateRulesPost(bool scripting)
         {
             var blob = CurrentStore.GetStoreBlob();
@@ -359,12 +362,11 @@ namespace BTCPayServer.Controllers
             blob.RateScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
             CurrentStore.SetStoreBlob(blob);
             await _Repo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting activated";
+            TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting " + (scripting ? "activated" : "deactivated");
             return RedirectToAction(nameof(Rates), new { storeId = CurrentStore.Id });
         }
 
-        [HttpGet]
-        [Route("{storeId}/checkout")]
+        [HttpGet("{storeId}/checkout")]
         public IActionResult CheckoutExperience()
         {
             var storeBlob = CurrentStore.GetStoreBlob();
@@ -395,20 +397,16 @@ namespace BTCPayServer.Controllers
                     };
                 }
             }).ToList();
+            
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
-            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
-            vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
-            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
-            vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
-            vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
-
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            
             return View(vm);
         }
 
@@ -428,8 +426,7 @@ namespace BTCPayServer.Controllers
             vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
-
-
+        
         [HttpPost]
         [Route("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutExperience(CheckoutExperienceViewModel model)
@@ -444,7 +441,7 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
-            model.PaymentMethodCriteria??= new List<PaymentMethodCriteriaViewModel>();
+            model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {
                 var methodCriterion = model.PaymentMethodCriteria[index];
@@ -457,7 +454,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -472,13 +469,7 @@ namespace BTCPayServer.Controllers
 
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
-            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
-            blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
-            blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             blob.RedirectAutomatically = model.RedirectAutomatically;
-            blob.ShowRecommendedFee = model.ShowRecommendedFee;
-            blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
-
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
@@ -550,7 +541,7 @@ namespace BTCPayServer.Controllers
                 }
             }
         }
-        
+
         [HttpGet("{storeId}")]
         public async Task<IActionResult> UpdateStore()
         {
@@ -575,16 +566,23 @@ namespace BTCPayServer.Controllers
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             vm.HintWallet = storeBlob.Hints.Wallet;
             vm.HintLightning = storeBlob.Hints.Lightning;
+            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
+            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
+            vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
+            vm.IsOnchainSetup = vm.DerivationSchemes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Value));
+            vm.IsLightningSetup = vm.LightningNodes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Address));
             
             (bool canUseHotWallet, _) = await CanUseHotWallet();
             vm.CanUsePayJoin = canUseHotWallet && store
                 .GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet);
-            
+
             return View(vm);
         }
-        
+
         [HttpPost("{storeId}")]
         public async Task<IActionResult> UpdateStore(StoreViewModel model, string command = null)
         {
@@ -612,6 +610,12 @@ namespace BTCPayServer.Controllers
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
             blob.PaymentTolerance = model.PaymentTolerance;
+            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
+            blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
+            blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            blob.ShowRecommendedFee = model.ShowRecommendedFee;
+            blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
+            
             var payjoinChanged = blob.PayJoinEnabled != model.PayJoinEnabled;
             blob.PayJoinEnabled = model.PayJoinEnabled;
             if (CurrentStore.SetStoreBlob(blob))
@@ -651,25 +655,17 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("{storeId}/delete")]
+        [HttpGet("{storeId}/delete")]
         public IActionResult DeleteStore(string storeId)
         {
-            return View("Confirm", new ConfirmModel()
-            {
-                Action = "Delete",
-                Title = "Delete this store",
-                Description = "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)",
-                ButtonClass = "btn-danger"
-            });
+            return View("Confirm", new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?", "Delete"));
         }
 
-        [HttpPost]
-        [Route("{storeId}/delete")]
+        [HttpPost("{storeId}/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             await _Repo.DeleteStore(CurrentStore.Id);
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted";
+            TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
             return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
         }
 
@@ -704,7 +700,7 @@ namespace BTCPayServer.Controllers
             {
                 // ignored
             }
-            
+
             return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
         }
 
@@ -729,32 +725,24 @@ namespace BTCPayServer.Controllers
                 model.EncodedApiKey = Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
             return View(model);
         }
-
-
-        [HttpGet]
-        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        
+        [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeToken(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Action = "Revoke",
-                Title = "Revoke the token",
-                Description = $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?",
-                ButtonClass = "btn-danger"
-            });
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{token.Label}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
-        [HttpPost]
-        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        
+        [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null ||
                 token.StoreId != CurrentStore.Id ||
                !await _TokenRepository.DeleteToken(tokenId))
-                TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token";
+                TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token.";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
             return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId });

@@ -202,7 +202,7 @@
                                     <div class="accordion-body">
                                         <div class="form-group">
                                             <label asp-for="CustomCSSLink" class="form-label"></label>
-                                            <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
+                                            <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
                                                 <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                             </a>
                                             <input asp-for="CustomCSSLink" class="form-control" />
@@ -218,21 +218,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
-                        <div class="btn-group ms-2">
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                </div>
+                <div class="col-lg-9 mt-2 mb-5">
+                    <div class="d-grid gap-3 d-md-block">
+                        <button type="submit" class="btn btn-primary me-md-2"  id="SaveSettings">Save Settings</button>
+                        <div class="btn-group me-md-2">
+                            <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
                                target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
                         </div>
-                        <div class="btn-group ms-2">
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
-                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
+                        <div class="btn-group">
+                            <a class="btn btn-secondary flex-grow-1" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View Point of Sale</a>
+                            <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
                                target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
-                        </div>
-                        <div class="btn-group ms-2">
-                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
-                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                         </div>
                     </div>
                 </div>
@@ -298,6 +296,10 @@
             <div class="form-group">
                 <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
                 <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input type="checkbox" class="btcpay-toggle me-2" value="{disabled}" />
+                <label class="form-label mb-0">Disabled</label>
             </div>
         </div>
     </script>

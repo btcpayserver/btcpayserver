@@ -42,6 +42,8 @@ namespace BTCPayServer.Client
         public virtual async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}"), token);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
             return await HandleResponse<WebhookDeliveryData>(response);
         }
         public virtual async Task<string> RedeliverWebhook(string storeId, string webhookId, string deliveryId, CancellationToken token = default)

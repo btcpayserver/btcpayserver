@@ -114,14 +114,8 @@ namespace BTCPayServer.Hosting
                 o.Filters.Add(new XXSSProtectionAttribute());
                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
                 o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
-                //o.Filters.Add(new ContentSecurityPolicyAttribute()
-                //{
-                //    FontSrc = "'self' https://fonts.gstatic.com/",
-                //    ImgSrc = "'self' data:",
-                //    DefaultSrc = "'none'",
-                //    StyleSrc = "'self' 'unsafe-inline'",
-                //    ScriptSrc = "'self' 'unsafe-inline'"
-                //});
+                if (!Configuration.GetOrDefault<bool>("nocsp", false))
+                    o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
         })
             .ConfigureApiBehaviorOptions(options =>
             {

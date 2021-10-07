@@ -66,12 +66,7 @@ namespace BTCPayServer.Controllers
             if (webhook is null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel
-            {
-                Title = $"Delete a webhook",
-                Description = "This webhook will be removed from this store, do you wish to continue?",
-                Action = "Delete"
-            });
+            return View("Confirm", new ConfirmModel("Delete webhook", "This webhook will be removed from this store. Are you sure?", "Delete"));
         }
 
         [HttpPost("{storeId}/webhooks/{webhookId}/remove")]

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -61,7 +62,7 @@ namespace BTCPayServer.Controllers
             IEventAggregatorSubscription subscription = null;
             try
             {
-                subscription = _eventAggregator.Subscribe<UserNotificationsUpdatedEvent>(async evt =>
+                subscription = _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(async evt =>
                 {
                     if (evt.UserId == userId)
                     {
@@ -69,14 +70,15 @@ namespace BTCPayServer.Controllers
                     }
                 });
 
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(2000, cancellationToken);
-                }
+                await websocketHelper.NextMessageAsync(cancellationToken);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // ignored
+            }
+            catch (WebSocketException)
+            {
+
             }
             finally
             {

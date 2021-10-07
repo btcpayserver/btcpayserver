@@ -98,6 +98,13 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    delegate('click', '.btcpay-theme-switch', function (e) {
+        e.preventDefault();
+        const current = document.documentElement.getAttribute(THEME_ATTR) || COLOR_MODES[0];
+        const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0];
+        setColorMode(mode);
+    })
 });
 
 function switchTimeFormat() {
@@ -109,3 +116,5 @@ function switchTimeFormat() {
         $(this).attr("data-switch", htmlVal);
     });
 }
+
+

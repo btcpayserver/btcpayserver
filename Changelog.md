@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.2.4
+
+Minor bug fixes release, update recommended for shared hosting.
+
+### Bug fixes
+
+* If `Only enable the payment method after user explicitly chooses it` is enabled for a store and a payment method is unavailable, the server could become unresponsive. @NicolasDorier
+* Authorize API key page was broken when trying to select specific stores (#2858) @ubolator
+* The /docs page was broken in 1.2.3 due to CSP @NicolasDorier
+* Fixing crashes happening when someone migrate from BTCPay Server altcoins edition back to bitcoin only @Kukks
+
+## 1.2.3
+
+This release fixes three XSS vulnerabilities. Those vulnerabilities only impacts shared BTCPay instances.
+Special thanks to Ajmal "@b3ef" Aboobacker and Abdul "@b1nslashsh" muhaimin for finding them who contacted us through @huntrdev.
+See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](https://www.huntr.dev/bounties/32e30ecf-31fa-45f6-8552-47250ef0e613/) and [3](https://huntr.dev/bounties/0fcdee5f-1f07-47ce-b650-ea8b4a7d35d8/).
+
+### Bug fixes:
+
+* Use CSP to prevent future XSS vulnerabilities. (#2856, #2863) @NicolasDorier
+* Fix XSS vulnerabilities in summernote, the rich text editor (#2859) @dennisreimann
+* The page could crash if the user clicks too many time on Notificate 'Mark as Seen' @NicolasDorier
+* Fix plugins page crashing @Kukks
+* Fix page crash of the perk editor in the crowdfund settings when the title is not set @dennisreimann
+* Do not generate payment methods when 0 amount invoice (#2776)
+* When using the BTCPay Vault, some hardware wallet types were considered unknown @NicolasDorier
+
+## 1.2.2
+
+# Bug fixes:
+
+* It was impossible to send from the wallet to more than two destinations (#2825) @NicolasDorier
+* Fix rounding issue in the invoice refund flow (#2778, #2810) @NicolasDorier
+* When cloning an expired payment request, the new payment request was also expired (#2820) @dennisreimann
+* Fix instructions to import a coldcard wallet via file upload (#2809) @mandelbit
+* Lightning payments should not be proposed for top-up invoices (#2772, #2780) @ubolator
+* Typo fixes (#2774) @jorisvial
+* Fix payjoin client to properly handle receiver using output substitution (#2677) @NicolasDorier
+* The checkout would crash for some client if automatic detection of language was checked, and the browser was not setting the accepted language @NicolasDorier
+
+## 1.2.1
+
+### Bug fixes:
+
+* Fix Display app on website root feature @NicolasDorier
+
 ## 1.2.0
 
 ### Improvements:

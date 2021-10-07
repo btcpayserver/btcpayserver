@@ -73,6 +73,8 @@ function showErrorAlert(message, error) {
         footermsg = 'exception:' + error.toString();
     }
     console.error(message, footermsg);
+    
+    document.getElementById("info-message").classList.add("d-none");
     document.getElementById("btn-retry").classList.remove("d-none");
     document.getElementById("error-message").textContent = message;
     for(let el of document.getElementsByClassName("fido-running")){

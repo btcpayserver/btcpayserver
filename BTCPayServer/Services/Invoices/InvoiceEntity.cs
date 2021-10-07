@@ -146,6 +146,13 @@ namespace BTCPayServer.Services.Invoices
         public void SetMetadata<T>(string propName, T value)
         {
             JToken data;
+            if (typeof(T) == typeof(string) && value is string v)
+            {
+                data = new JValue(v);
+                AdditionalData ??= new Dictionary<string, JToken>();
+                AdditionalData.AddOrReplace(propName, data);
+                return;
+            }
             if (value is null)
             {
                 AdditionalData?.Remove(propName);
@@ -250,6 +257,7 @@ namespace BTCPayServer.Services.Invoices
 
         public decimal Price { get; set; }
         public string Currency { get; set; }
+        public string DefaultPaymentMethod { get; set; }
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
@@ -289,7 +297,10 @@ namespace BTCPayServer.Services.Invoices
                 JObject strategies = JObject.Parse(DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    var paymentMethodId = PaymentMethodId.Parse(strat.Name);
+                    if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
+                    {
+                        continue;
+                    }
                     var network = Networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {

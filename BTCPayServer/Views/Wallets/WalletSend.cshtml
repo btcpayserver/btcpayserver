@@ -54,20 +54,6 @@
                 }
             </ul>
 
-            @if (Model.InputSelection)
-            {
-                <div class="form-group hide-when-js">
-                    <label asp-for="SelectedInputs" class="form-label"></label>
-                    <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
-                        @foreach (var input in Model.InputsAvailable)
-                        {
-                            <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
-                        }
-                    </select>
-                </div>
-                <partial name="CoinSelection" />
-            }
-
             @if (Model.Outputs.Count == 1)
             {
                 <div class="form-group">
@@ -79,7 +65,10 @@
                     <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="Outputs[0].Amount" class="form-label"></label>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label asp-for="Outputs[0].Amount" class="form-label"></label>
+                        <button type="submit" name="command" value="toggle-input-selection" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" id="toggleInputSelection"><span class="fa fa-@(Model.InputSelection ? "eye-slash" : "eye") "></span> @(Model.InputSelection ? "Hide" : "Show") coin selection</button>
+                    </div>
                     <div class="input-group">
                         <input asp-for="Outputs[0].Amount" type="number" step="any" min="0" asp-format="{0}" class="form-control output-amount hide-number-spin" />
                         <div class="input-group-text fiat-value" style="display:none;">
@@ -89,7 +78,7 @@
                         </div>
                     </div>
                     <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
-                    <p class="form-text text-secondary crypto-info">
+                    <p class="form-text text-secondary mb-0 crypto-info">
                         Your available balance is
                         <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                         @if (Model.ImmatureBalance > 0)
@@ -101,24 +90,14 @@
             }
             else
             {
-                <div class="list-group list-group-flush mt-n3 mb-4">
+                <div class="list-group list-group-flush mt-n3">
                     @for (var index = 0; index < Model.Outputs.Count; index++)
                     {
                         <div class="list-group-item transaction-output-form px-0 py-4">
                             <div class="row">
                                 <div class="col-sm-12 col-lg-10">
                                     <div class="form-group">
-                                        @if (index == Model.Outputs.Count - 1)
-                                        {
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
-                                                <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2"><span class="fa fa-plus"></span> Add another destination</button>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
-                                        }
+                                        <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
                                         <input asp-for="Outputs[index].DestinationAddress" class="form-control" autocomplete="off" />
                                         <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                                     </div>
@@ -162,7 +141,17 @@
                         </div>
                     }
                 </div>
+                <div class="d-grid gap-3 d-md-block">
+                    <button type="submit" name="command" value="add-output" class="btn btn-secondary me-md-2"><span class="fa fa-plus"></span> Add another destination</button>
+                    <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection"><span class="fa fa-@(Model.InputSelection ? "eye-slash" : "eye") "></span> @(Model.InputSelection ? "Hide" : "Show") coin selection</button>
+                </div>
             }
+        
+            @if (Model.InputSelection)
+            {
+                <partial name="CoinSelection" />
+            }
+        
             <div class="form-group my-4">
                 <label asp-for="FeeSatoshiPerByte" class="form-label"></label>
                 <input asp-for="FeeSatoshiPerByte" type="number" min="0" step="any" class="form-control" style="max-width:14ch;" />
@@ -200,7 +189,7 @@
             }
 
             <div class="my-4">
-                <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+                <button class="btn btn-link text-secondary p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                     Advanced settings
                 </button>
                 <div id="AdvancedSettings" class="collapse">
@@ -245,9 +234,6 @@
                                 <span asp-validation-for="PayJoinBIP21" class="text-danger"></span>
                             </div>
                         }
-                        <div class="form-group mt-4 mb-0">
-                            <button id="toggleInputSelection" type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary">Toggle coin selection</button>
-                        </div>
                     </div>
                 </div>
             </div>

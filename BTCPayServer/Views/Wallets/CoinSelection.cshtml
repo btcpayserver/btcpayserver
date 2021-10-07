@@ -1,9 +1,18 @@
 @model WalletSendModel
 
-<div id="coin-selection-app" v-cloak>
+<div class="form-group hide-when-js">
+    <label asp-for="SelectedInputs" class="form-label"></label>
+    <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
+        @foreach (var input in Model.InputsAvailable)
+        {
+            <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
+        }
+    </select>
+</div>
+<div id="coin-selection-app" class="only-for-js mt-3" v-cloak>
     <ul class="list-group mb-4">
         <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
-            <h3>Coin selection</h3>
+            <h5>Coin selection</h5>
             <span class="text-muted text-end">
                 <span>{{selectedItems.length}} selected</span>
                 <span v-show="selectedItems.length > 0">&nbsp;({{selectedAmount}} @Model.CryptoCode) </span><br/>

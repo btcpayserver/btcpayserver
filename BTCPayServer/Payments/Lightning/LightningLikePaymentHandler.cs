@@ -114,6 +114,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
+                PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = nodeInfo.First().ToString()
             };

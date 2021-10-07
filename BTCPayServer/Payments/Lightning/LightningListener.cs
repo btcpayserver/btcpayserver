@@ -344,7 +344,7 @@ namespace BTCPayServer.Payments.Lightning
         internal async Task<LightningInvoiceStatus?> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
         {
             var client = _lightningClientFactory.Create(ConnectionString, _network);
-            LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId);
+            LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId, cancellation);
             if (lightningInvoice?.Status is LightningInvoiceStatus.Paid &&
                 await AddPayment(lightningInvoice, listenedInvoice.InvoiceId))
             {
@@ -385,7 +385,9 @@ namespace BTCPayServer.Payments.Lightning
                         if (!_ListenedInvoices.TryGetValue(notification.Id, out var listenedInvoice))
                             continue;
                         if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
-                            notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
+                            (notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11 ||
+                             BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash ==
+                             listenedInvoice.PaymentMethodDetails.GetPaymentHash(_network.NBitcoinNetwork)))
                         {
                             if (notification.Status == LightningInvoiceStatus.Paid &&
                                 notification.PaidAt.HasValue && notification.Amount != null)

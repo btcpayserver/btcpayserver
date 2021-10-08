@@ -31,7 +31,7 @@
             v-bind:class="{ 'active': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
             <div class="d-flex justify-content-between align-items-center">
-                <input class="me-2 form-check-input flex-shrink-0"
+                <input class="mt-0 me-2 form-check-input flex-shrink-0"
                        type="checkbox"
                        v-bind:id="item.outpoint"
                        v-bind:value="item.outpoint"
@@ -49,9 +49,10 @@
                 <span class="text-muted text-nowrap ms-3">{{item.amount}} @Model.CryptoCode</span>
             </div>
             <div class="d-flex justify-content-between align-items-center" style="padding-left:1.35rem;">
-                <div v-if="item.labels.length || item.comment">
+                <div>
                     <span
                         class="badge rounded-pill px-2 mt-2 me-2"
+                        v-if="item.labels"
                         v-for="label of item.labels"
                         v-bind:style="{ 'background-color': label.color}"
                         key="label.text">
@@ -66,7 +67,7 @@
                         <span class="fa fa-info"></span>
                     </span>
                 </div>
-                <span v-bind:class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge">
+                <span v-bind:class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge mt-2">
                     {{item.confirmations}}<span class="ms-1 fa fa-cube"></span>
                 </span>
             </div>
@@ -92,7 +93,7 @@
             <template v-if="showSelectedOnly">Show all</template>
             <template v-else>Show selected only</template>
         </button>
-        <button type="button" :disabled="showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn btn-sm btn-secondary">
+        <button type="button" :disabled="showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn btn-sm btn-secondary" v-if="hasUnconfirmed">
             <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
             <template v-else>Hide unconfirmed coins</template>
         </button>
@@ -153,6 +154,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     result = this.currentItems.length;
                 }
                 return result;
+            },
+            hasUnconfirmed: function() {
+                return this.items.filter(i => !i.confirmations).length > 0;
             },
             filteredItems: function() {
                 var result = [];

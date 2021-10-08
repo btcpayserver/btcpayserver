@@ -245,7 +245,7 @@ namespace BTCPayServer.Controllers
         [HttpGet()]
         public IActionResult DeleteUser()
         {
-            return View("Confirm", new ConfirmModel("Delete user", "The user will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your user.", "Delete")
+            return View("Confirm", new ConfirmModel("Delete account", "Your account will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your account.", "Delete")
             {
                 ActionUrl = "DeleteUserPost"
             });
@@ -261,7 +261,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
-            TempData[WellKnownTempData.SuccessMessage] = "User successfully deleted.";
+            TempData[WellKnownTempData.SuccessMessage] = "Account successfully deleted.";
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(AccountController.Login), "Account");
         }

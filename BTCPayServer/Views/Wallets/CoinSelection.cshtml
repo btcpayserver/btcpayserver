@@ -1,6 +1,6 @@
 @model WalletSendModel
 
-<div class="form-group hide-when-js">
+<div class="form-group hide-when-js mt-4">
     <label asp-for="SelectedInputs" class="form-label"></label>
     <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
         @foreach (var input in Model.InputsAvailable)

@@ -50,25 +50,23 @@
             </div>
             <div class="d-flex justify-content-between align-items-center" style="padding-left:1.35rem;">
                 <div>
-                    <span
-                        class="badge rounded-pill px-2 mt-2 me-2"
-                        v-if="item.labels"
-                        v-for="label of item.labels"
-                        v-bind:style="{ 'background-color': label.color}"
-                        key="label.text">
-                        <span v-if="!label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
+                    <template v-if="item.labels">
+                        <a v-for="label of item.labels"
+                           key="label.text"
+                           :href="label.link || '#'"
+                           target="_blank"
+                           class="badge rounded-pill px-2 mt-2 me-2"
+                           data-bs-toggle="tooltip"
+                           v-tooltip="label.tooltip"
+                           v-bind:style="styles(label.color)">
                             {{label.text}}
-                        </span>
-                        <a :href="label.link" target="_blank" v-if="label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
-                            {{label.text}}
-                            <i class="fa fa-info-circle"></i>
                         </a>
-                    </span><span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill mt-2" style="min-width:2em">
+                    </template><span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill mt-2" style="min-width:2em">
                         <span class="fa fa-info"></span>
                     </span>
                 </div>
                 <span v-bind:class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge mt-2">
-                    {{item.confirmations}}<span class="ms-1 fa fa-cube"></span>
+                    {{item.confirmations}} <span class="fa fa-cube"></span>
                 </span>
             </div>
         </li>
@@ -239,6 +237,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 this.selectedInputs = res;
                 $(".crypto-balance-link").text(this.selectedAmount);
+            },
+            styles: function (bgColor) {
+                let color = 'inherit'
+                if (bgColor.slice(0, 1) === '#') {
+                    const hex = bgColor.slice(1);
+                    // Convert to RGB value
+                    const r = parseInt(hex.substr(0,2), 16);
+                    const g = parseInt(hex.substr(2,2), 16);
+                    const b = parseInt(hex.substr(4,2), 16);
+                    // Get YIQ ratio
+                    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                    // Check contrast
+                    color = (yiq >= 128) ? 'black' : 'white';
+                }
+                return { 'background-color': bgColor, color }
             }
         }
     });

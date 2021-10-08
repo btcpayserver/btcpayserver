@@ -211,7 +211,7 @@ namespace BTCPayServer.Tests
                 s.GoToProfile();
                 s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
                 s.Driver.FindElement(By.Id("delete-user")).Click();
-                s.Driver.FindElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
                 s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
                 
                 Assert.Contains("/login", s.Driver.Url);

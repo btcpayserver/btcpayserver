@@ -10231,6 +10231,7 @@ input[type=number].hide-number-spin {
   border-radius: calc(var(--toggle-height) / 2);
   background: var(--btcpay-neutral-500);
   font-size: 0;
+  cursor: pointer;
 }
 
 input.btcpay-toggle {

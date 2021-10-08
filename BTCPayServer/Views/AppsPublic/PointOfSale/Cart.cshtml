@@ -230,7 +230,17 @@
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 pb-3">
 
-                            <span class="text-muted small">@((item.BuyButtonText ?? Model.ButtonText).Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted))</span>
+                            <span class="text-muted small">
+                                @{
+                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Custom != "false" ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                                    if (item.Custom != "topup")
+                                    {
+                                        buttonText = buttonText.Replace("{0}",item.Price.Formatted)
+                                            ?.Replace("{Price}",item.Price.Formatted);
+                                    }
+                                }
+                                @Safe.Raw(buttonText)
+                            </span>
                              @if (item.Inventory.HasValue)
                              {
 

@@ -326,12 +326,12 @@
                     <div class="card-title d-flex justify-content-between">
                         <span class="h5">{{perk.title? perk.title : perk.id}}</span>
                         <span class="text-muted"> 
-                            <template v-if="perk.price.value">
+                            <template v-if="perk.price && perk.price.value">
                                 {{perk.price.value.noExponents()}}
                                 {{targetCurrency}}
-                                <template v-if="perk.custom">or more</template>
+                                <template v-if="perk.custom === 'true'">or more</template>
                             </template>
-                            <template v-else-if="!perk.price.value && perk.custom">
+                            <template v-else-if="perk.custom === 'topup' || (!perk.price.value && perk.custom === 'true')">
                                 Any amount
                             </template>
                         </span>
@@ -340,8 +340,9 @@
                     
                     <div class="input-group" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
                         <input 
+                            v-if="perk.custom !== 'topup'"
                             :disabled="!active"
-                            :readonly="!perk.custom"
+                            :readonly="perk.custom !== 'true'"
                             class="form-control hide-number-spin" 
                             type="number" 
                             v-model="amount"
@@ -349,7 +350,7 @@
                             step="any"  
                             placeholder="Contribution Amount"
                             required>
-                        <span class="input-group-text">{{targetCurrency}}</span>
+                        <span class="input-group-text" v-if="perk.custom !== 'topup'">{{targetCurrency}}</span>
                         <button
                             class="btn btn-primary d-flex align-items-center"
                             v-bind:class="{ 'btn-disabled': loading}"

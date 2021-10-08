@@ -19,26 +19,29 @@
             <div class="card-body">
                 <div class="card-title d-flex align-items-center justify-content-between mb-1">
                     <label class="h5 d-flex align-items-center">
-                        @if (vm.Started && !vm.Ended && (item.Price.Value > 0 || item.Custom))
+                        @if (vm.Started && !vm.Ended )
                         {
                             <input type="radio" asp-for="ChoiceKey" value="@item.Id" class="form-check-input mt-0 me-2"/>
                         }
                         @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
                     </label>
                     <span class="text-muted">
-                        @if (item.Price.Value > 0)
+                        @if (item.Price?.Value > 0)
                         {
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>
 
-                            if (item.Custom)
+                            if (item.Custom == "true")
                             {
                                 @Safe.Raw("or more")
                             }
                         }
-                        else if (item.Custom)
+                        else if (item.Custom == "topup" || item.Custom == "true" )
                         {
                             @Safe.Raw("Any amount")
+                        }else if (item.Custom == "false")
+                        {
+                            @Safe.Raw("Free")
                         }
                     </span>
                 </div>

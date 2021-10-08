@@ -632,9 +632,8 @@ namespace BTCPayServer.Tests
                 });
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
-                s.Driver.ToggleCollapse("AdvancedSettings");
                 s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
-                s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
+                s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();

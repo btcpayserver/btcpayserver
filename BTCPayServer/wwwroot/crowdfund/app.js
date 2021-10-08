@@ -38,7 +38,7 @@ addLoadEvent(function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.price.value || this.perk.custom) && (this.perk.inventory==null || this.perk.inventory > 0)
+                return !this.expanded && this.active && (this.perk.custom=="topup" || this.perk.price.value || this.perk.custom == "true") && (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {
@@ -58,18 +58,20 @@ addLoadEvent(function (ev) {
                 }
             },
             setAmount: function (amount) {
-                this.amount = (amount || 0).noExponents();
+                this.amount = this.perk.custom == "topup"? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
 
 
         },
         mounted: function () {
-            this.setAmount(this.perk.price.value);
+            this.setAmount(this.perk.price?.value);
         },
         watch: {
             perk: function (newValue, oldValue) {
-                if (newValue.price.value != oldValue.price.value) {
+                if(newValue.custom === "topup"){
+                    this.setAmount();
+                }else if (newValue.price.value != oldValue.price.value) {
                     this.setAmount(newValue.price.value);
                 }
             }

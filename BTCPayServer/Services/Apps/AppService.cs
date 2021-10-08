@@ -289,7 +289,8 @@ namespace BTCPayServer.Services.Apps
             {
                 var itemNode = new YamlMappingNode();
                 itemNode.Add("title", new YamlScalarNode(item.Title));
-                itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
+                if(item.Custom!= "topup")
+                    itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
                 if (!string.IsNullOrEmpty(item.Description))
                 {
                     itemNode.Add("description",  new YamlScalarNode(item.Description)
@@ -341,13 +342,16 @@ namespace BTCPayServer.Services.Apps
                     Id = c.Key,
                     Image = c.GetDetailString("image"),
                     Title = c.GetDetailString("title") ?? c.Key,
-                    Price = c.GetDetail("price")
-                             .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
-                             {
-                                 Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
-                                 Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
-                             }).Single(),
-                    Custom = c.GetDetailString("custom") == "true",
+                    Custom = c.GetDetailString("custom"),
+                    Price =
+                        c.GetDetailString("custom") == "topup"
+                            ? null
+                            : c.GetDetail("price")
+                                .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
+                                {
+                                    Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
+                                    Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
+                                }).Single(),
                     BuyButtonText = c.GetDetailString("buyButtonText"),
                     Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
                     PaymentMethods = c.GetDetailStringList("payment_methods"),

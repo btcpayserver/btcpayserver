@@ -206,6 +206,15 @@ namespace BTCPayServer.Tests
 
                 // We should be logged in now
                 s.Driver.FindElement(By.Id("mainNav"));
+                
+                //let's test delete user quickly while we're at it 
+                s.GoToProfile();
+                s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
+                s.Driver.FindElement(By.Id("delete-user")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+                
+                Assert.Contains("/login", s.Driver.Url);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
@@ -19,6 +20,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
+    
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("[controller]/[action]")]
     public partial class ManageController : Controller
@@ -33,6 +35,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;        
         private readonly Fido2Service _fido2Service;
         private readonly LinkGenerator _linkGenerator;
+        private readonly UserService _userService;
         readonly StoreRepository _StoreRepository;
         
         public ManageController(
@@ -41,14 +44,13 @@ namespace BTCPayServer.Controllers
           EmailSenderFactory emailSenderFactory,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
-          BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IWebHostEnvironment env,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
           Fido2Service fido2Service,
-          LinkGenerator linkGenerator
+          LinkGenerator linkGenerator,
+          UserService userService 
           )
         {
             _userManager = userManager;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _fido2Service = fido2Service;
             _linkGenerator = linkGenerator;
+            _userService = userService;
             _StoreRepository = storeRepository;
         }
 
@@ -237,6 +240,30 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "Your password has been set.";
 
             return RedirectToAction(nameof(SetPassword));
+        }
+        
+        [HttpGet()]
+        public IActionResult DeleteUser()
+        {
+            return View("Confirm", new ConfirmModel("Delete account", "Your account will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your account.", "Delete")
+            {
+                ActionUrl = "DeleteUserPost"
+            });
+        }
+
+        [HttpPost()]
+        public async Task<IActionResult> DeleteUserPost()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            await _userService.DeleteUserAndAssociatedData(user);
+            TempData[WellKnownTempData.SuccessMessage] = "Account successfully deleted.";
+            await _signInManager.SignOutAsync();
+            return RedirectToAction(nameof(AccountController.Login), "Account");
         }
 
 

@@ -36,8 +36,18 @@
         </div>
     </div>
     <button type="submit" id="save" class="btn btn-primary">Save</button>
+    <h4 class="mt-5 mb-3">Other actions</h4>
+    <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#danger-zone">
+        See more actions
+    </button>
+    <div id="danger-zone" class="collapse">
+        <a id="delete-user" class="btn btn-outline-danger mb-5" asp-action="DeleteUser" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete your user.</a>
+    </div>
 </form>
 
+<partial name="_Confirm"
+         model="@(new ConfirmModel("Delete user", "The user will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your user.", "Delete", actionUrl:"DeleteUserPost"))"/>
+
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

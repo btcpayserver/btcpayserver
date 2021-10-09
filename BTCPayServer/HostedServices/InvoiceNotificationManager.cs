@@ -121,7 +121,7 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (invoiceEvent.Name != InvoiceEvent.Expired && !String.IsNullOrEmpty(invoice.NotificationEmail))
+            if ((invoice.ExtendedNotifications || invoiceEvent.Name != InvoiceEvent.Expired) && !String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);

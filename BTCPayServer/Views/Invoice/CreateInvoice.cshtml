@@ -85,6 +85,11 @@
                         <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="NotificationEmail" class="form-label"></label>
+                        <input asp-for="NotificationEmail" class="form-control" />
+                        <span asp-validation-for="NotificationEmail" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
                         <a asp-action="ListInvoices" class="text-muted ms-3">Back to list</a>
                     </div>

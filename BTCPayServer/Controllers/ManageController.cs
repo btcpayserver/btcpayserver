@@ -241,15 +241,6 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(SetPassword));
         }
-        
-        [HttpGet()]
-        public IActionResult DeleteUser()
-        {
-            return View("Confirm", new ConfirmModel("Delete account", "Your account will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your account.", "Delete")
-            {
-                ActionUrl = "DeleteUserPost"
-            });
-        }
 
         [HttpPost()]
         public async Task<IActionResult> DeleteUserPost()
@@ -257,7 +248,7 @@ namespace BTCPayServer.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound();
             }
 
             await _userService.DeleteUserAndAssociatedData(user);

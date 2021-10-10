@@ -868,6 +868,8 @@ namespace BTCPayServer.Controllers
                         Enabled = true
                     }),
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
+                    NotificationEmail = model.NotificationEmail,
+                    ExtendedNotifications = model.NotificationEmail != null
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

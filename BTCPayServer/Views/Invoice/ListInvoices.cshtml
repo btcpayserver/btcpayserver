@@ -87,7 +87,7 @@
         delegate('click', '#switchTimeFormat', switchTimeFormat)
 
         delegate('click', '.changeInvoiceState', e => {
-            const { invoiceId, newState } = e.target.dataset
+            const { invoiceId, newState } = e.target.dataset;
             const pavpill = $("#pavpill_" + invoiceId);
             const originalHtml = pavpill.html();
             pavpill.html("<span class='fa fa-bitcoin fa-spin' style='margin-left:16px;'></span>");
@@ -102,7 +102,12 @@
                     alert("Invoice state update failed");
                 });
         })
-
+        
+        delegate('click', '.showInvoice', e => {
+            e.preventDefault();
+            const { invoiceId } = e.target.dataset;
+            btcpay.showInvoice(invoiceId);
+        })
 
         $('#btnCustomRangeDate').on('click', function (sender) {
             var filterString = "";
@@ -412,8 +417,8 @@
                                 @if (invoice.ShowCheckout)
                                 {
                                     <span>
-                                        <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')" csp-allow>[^]</a>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
                                         @if (!invoice.CanMarkStatus)
                                         {
                                             <span>-</span>

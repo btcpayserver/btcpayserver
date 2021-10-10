@@ -18,14 +18,17 @@
                     <p>Insert your security key into your computer's USB port. If it has a button, tap on it.</p>
                 </div>
                 <p id="error-message" class="d-none alert alert-danger"></p>
-                <a id="btn-retry" class="btn btn-secondary d-none" href="javascript:window.location.reload()" csp-allow>Retry</a>
+                <button id="btn-retry" class="btn btn-secondary d-none" type="button">Retry</button>
             </div>
         </div>
     </div>
 </section>
+
 <script>
+    document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
     // send to server for registering    
     window.makeAssertionOptions = @Safe.Json(Model.Data);
 </script>
-<script src="~/js/webauthn/helpers.js" ></script>
-<script src="~/js/webauthn/login.js" ></script>
+<script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
+<script src="~/js/webauthn/login.js" asp-append-version="true"></script>
+

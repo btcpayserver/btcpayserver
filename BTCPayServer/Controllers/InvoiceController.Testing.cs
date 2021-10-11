@@ -43,6 +43,10 @@ namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
+        public class FakePaymentRequest
+        {
+            public Decimal Amount { get; set; }
+        }
         [HttpPost]
         [Route("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
@@ -62,33 +66,30 @@ namespace BTCPayServer.Controllers
             
             var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
             var BtcAmount = request.Amount;
-
-            var FakePaymentResponse = new FakePaymentResponse();
-
             try
             {
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var rate = paymentMethod.Rate;
                 
-                FakePaymentResponse.Txid = cheater.CashCow.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
+                var txid = cheater.CashCow.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
                 
                 // TODO The value of totalDue is wrong. How can we get the real total due? invoice.Price is only correct if this is the 2nd payment, not for a 3rd or 4th payment. 
                 var totalDue = invoice.Price;
-                
-                FakePaymentResponse.AmountRemaining = (totalDue - (BtcAmount * rate)) / rate;
-                FakePaymentResponse.SuccessMessage = "Created transaction " + FakePaymentResponse.Txid;
+                return Ok(new
+                {
+                    Txid = txid,
+                    AmountRemaining = (totalDue - (BtcAmount * rate)) / rate,
+                    SuccessMessage = "Created transaction " + txid
+                });
             }
             catch (Exception e)
             {
-                FakePaymentResponse.ErrorMessage = e.Message;
-                FakePaymentResponse.AmountRemaining = invoice.Price;
+                return BadRequest(new
+                {
+                    ErrorMessage = e.Message,
+                    AmountRemaining = invoice.Price
+                });
             }
-
-            if (FakePaymentResponse.Txid != null)
-            {
-                return Ok(FakePaymentResponse);                
-            }
-            return BadRequest(FakePaymentResponse);
         }
 
         [HttpPost]

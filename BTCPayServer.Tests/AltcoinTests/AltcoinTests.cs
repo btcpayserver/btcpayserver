@@ -820,6 +820,51 @@ normal:
                     normalInvoice.CryptoInfo,
                     s => PaymentTypes.BTCLike.ToString() == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
                              s.CryptoCode));
+                
+                //test topup option
+                vmpos.Template = @"
+a:
+  price: 1000.0
+  title: good apple
+  
+b:
+  price: 10.0
+  custom: false
+c:
+  price: 1.02
+  custom: true
+d:
+  price: 1.02
+  price_type: fixed
+e:
+  price: 1.02
+  price_type: minimum
+f:
+  price_type: topup
+g:
+  custom: topup
+";
+                
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
+                    .IsType<ViewResult>(await apps.UpdatePointOfSale(appId)).Model);
+                Assert.DoesNotContain("custom", vmpos.Template);
+                var items = appService.Parse(vmpos.Template, vmpos.Currency);
+                Assert.Contains(items, item => item.Id == "a" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "b" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "c" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum);
+                Assert.Contains(items, item => item.Id == "d" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "e" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum);
+                Assert.Contains(items, item => item.Id == "f" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup);
+                Assert.Contains(items, item => item.Id == "g" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup);
+                
+                
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(appId, PosViewType.Static, null, null, null, null, null, "g").Result);
+                invoices = user.BitPay.GetInvoices();
+                var topupInvoice = invoices.Single(invoice => invoice.ItemCode == "g");
+                Assert.Equal(0, topupInvoice.Price);
+                Assert.Equal("new", topupInvoice.Status);
             }
         }
 

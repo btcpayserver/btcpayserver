@@ -1,3 +1,4 @@
+@using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 @{
     Layout = "_LayoutPos";
@@ -19,12 +20,9 @@
             @for (int x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
-                var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? (item.Custom == "true" || item.Custom == "topup") ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                if (item.Custom != "topup")
-                {
-                    buttonText = buttonText.Replace("{0}",item.Price.Formatted)
-                        ?.Replace("{Price}",item.Price.Formatted);
-                }
+                var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                buttonText = buttonText.Replace("{0}",item.Price.Formatted)
+                    ?.Replace("{Price}",item.Price.Formatted);
                 
                 <div class="card px-0" data-id="@x">
                     @if (!String.IsNullOrWhiteSpace(item.Image))
@@ -35,7 +33,7 @@
                     <div class="card-footer bg-transparent border-0 pb-3">
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
-                            @if (item.Custom == "true")
+                            @if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>

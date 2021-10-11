@@ -1,3 +1,4 @@
+@using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 @{
     Layout = "_LayoutPos";
@@ -232,8 +233,8 @@
 
                             <span class="text-muted small">
                                 @{
-                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? (item.Custom == "true" || item.Custom == "topup") ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                                    if (item.Custom != "topup")
+                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                                    if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                                     {
                                         buttonText = buttonText.Replace("{0}",item.Price.Formatted)
                                             ?.Replace("{Price}",item.Price.Formatted);

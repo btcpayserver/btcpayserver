@@ -1,3 +1,4 @@
+@using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
 @{ var vm = Model.ViewCrowdfundViewModel; }
@@ -26,20 +27,20 @@
                         @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
                     </label>
                     <span class="text-muted">
-                        @if (item.Price?.Value > 0)
+                        @if (item.Price.Value > 0)
                         {
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>
 
-                            if (item.Custom == "true")
+                            if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum)
                             {
                                 @Safe.Raw("or more")
                             }
                         }
-                        else if (item.Custom == "topup" || item.Custom == "true" )
+                        else if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed )
                         {
                             @Safe.Raw("Any amount")
-                        }else if (item.Custom == "false")
+                        }else if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)
                         {
                             @Safe.Raw("Free")
                         }
@@ -54,7 +55,7 @@
                     {
                         case null:
                             break;
-                        case int i when i <= 0:
+                        case var i when i <= 0:
                             <span>Sold out</span>
                             break;
                         default:

@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                if (choice.Custom == "topup")
+                if (choice.Price.Type ==  ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -323,7 +323,7 @@ namespace BTCPayServer.Controllers
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
 
-                if (choice.Custom == "topup")
+                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                 {
                     price = null;
                 }

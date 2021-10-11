@@ -96,25 +96,15 @@ namespace BTCPayServer.Controllers
         [CheatModeRoute]
         public async Task<IActionResult> TestExpireNow(string invoiceId, [FromServices] Cheater cheater)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            ExpireInvoiceResponse expireInvoiceResponse = new ExpireInvoiceResponse();
-            
-            // TODO complete this
             try
             {
                 await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now);
-                expireInvoiceResponse.SuccessMessage = "Invoice is now expired.";
+                return Ok(new { SuccessMessage = "Invoice is now expired." });
             }
             catch (Exception e)
             {
-                expireInvoiceResponse.ErrorMessage = e.Message;
+                return BadRequest(new { ErrorMessage = e.Message });
             }
-            
-            if (expireInvoiceResponse.ErrorMessage == null)
-            {
-                return Ok(expireInvoiceResponse);
-            }
-            return BadRequest(expireInvoiceResponse);
         }
     }
 }

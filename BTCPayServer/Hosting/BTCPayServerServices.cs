@@ -443,6 +443,7 @@ namespace BTCPayServer.Hosting
             if (configuration.GetOrDefault<bool>("cheatmode", false))
             {
                 services.AddSingleton<Cheater>();
+                services.AddSingleton<IHostedService, Cheater>(o => o.GetRequiredService<Cheater>());
             }
             return services;
         }

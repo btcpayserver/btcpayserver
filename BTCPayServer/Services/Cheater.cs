@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.RPC;
 
 namespace BTCPayServer.Services
 {
-    public class Cheater
+    public class Cheater : IHostedService
     {
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
 
@@ -34,6 +36,16 @@ namespace BTCPayServer.Services
                 // TODO change the expiry time. But how?
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
+        }
+
+        async Task IHostedService.StartAsync(CancellationToken cancellationToken)
+        {
+            await CashCow.ScanRPCCapabilitiesAsync();
+        }
+
+        Task IHostedService.StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }

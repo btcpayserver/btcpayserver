@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.custom=="topup" || this.perk.price.value || this.perk.custom == "true") && (this.perk.inventory==null || this.perk.inventory > 0)
+                return !this.expanded && this.active && (this.perk.custom !== "fixed" || this.perk.price.value) && (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {
@@ -45,14 +45,14 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             },
             setAmount: function (amount) {
-                this.amount = this.perk.custom == "topup"? null : (amount || 0).noExponents();
+                this.amount = this.perk.custom === "topup"? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
 
 
         },
         mounted: function () {
-            this.setAmount(this.perk.price?.value);
+            this.setAmount(this.perk.price.value);
         },
         watch: {
             perk: function (newValue, oldValue) {

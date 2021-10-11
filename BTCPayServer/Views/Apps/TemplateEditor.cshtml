@@ -64,7 +64,8 @@
                                     </select>
                                 </div>
                                 <div class="col-sm-3" v-show="editingItem.custom !== 'topup'">
-                                    <label class="form-label" data-required>Price</label>
+                                    
+                                    <label class="form-label">&nbsp</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"
@@ -121,8 +122,8 @@ document.addEventListener("DOMContentLoaded", function () {
             items: [],
             editingItem: null,
             customPriceOptions: [
-                { text: 'Fixed', value: false },
-                { text: 'Minimum', value: true },
+                { text: 'Fixed', value: "fixed" },
+                { text: 'Minimum', value: "minimum" },
                 { text: 'Topup', value: 'topup' },
             ],
             elementId: "@Model.templateId"
@@ -207,8 +208,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
                         }
-                        if (productProperty.indexOf('custom:') !== -1) {
-                            custom = productProperty.replace('custom:', '').trim();
+                        if (productProperty.indexOf('price_type:') !== -1) {
+                            custom = productProperty.replace('price_type:', '').trim();
                         }
                         if (productProperty.indexOf('buyButtonText:') !== -1) {
                             buyButtonText = productProperty.replace('buyButtonText:', '').trim();
@@ -232,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             price: price,
                             image: image || null,
                             description:  description || '',
-                            custom: custom === "topup"? "topup": custom === "true",
+                            custom: custom,
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods,
@@ -271,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             itemTemplate += '  inventory: ' + inventory + '\n';
                         }
                         if (custom != null) {
-                            itemTemplate += '  custom: ' + (custom === "topup"? '"topup"': custom) + '\n';
+                            itemTemplate += '  price_type: "' + custom + '" \n';
                         }
                         if (buyButtonText != null && buyButtonText.length > 0) {
                             itemTemplate += '  buyButtonText: ' + buyButtonText + '\n';
@@ -293,7 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: [], disabled: false};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: "fixed", inventory: null, paymentMethods: [], disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }

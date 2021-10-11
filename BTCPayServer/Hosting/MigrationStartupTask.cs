@@ -6,14 +6,18 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
 using BTCPayServer.Logging;
+using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
+using ExchangeSharp;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +35,7 @@ namespace BTCPayServer.Hosting
         private readonly StoreRepository _StoreRepository;
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly SettingsRepository _Settings;
+        private readonly AppService _appService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
@@ -41,12 +46,14 @@ namespace BTCPayServer.Hosting
             ApplicationDbContextFactory dbContextFactory,
             UserManager<ApplicationUser> userManager,
             IOptions<LightningNetworkOptions> lightningOptions,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            AppService appService)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
+            _appService = appService;
             _userManager = userManager;
             LightningOptions = lightningOptions;
         }
@@ -134,12 +141,54 @@ namespace BTCPayServer.Hosting
                     settings.MigrateHotwalletProperty = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateAppCustomOption)
+                {
+                    await MigrateAppCustomOption();
+                    settings.MigrateAppCustomOption = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateAppCustomOption()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var app in await ctx.Apps.AsQueryable().ToArrayAsync())
+            {
+                ViewPointOfSaleViewModel.Item[] items;
+                string newTemplate;
+                switch (app.AppType)
+                {
+                    case nameof(AppType.Crowdfund):
+                        var settings1 = app.GetSettings<CrowdfundSettings>();
+                        items = _appService.Parse(settings1.PerksTemplate, settings1.TargetCurrency);
+                        newTemplate = _appService.SerializeTemplate(items);
+                        if (settings1.PerksTemplate != newTemplate)
+                        {
+                            settings1.PerksTemplate = newTemplate;
+                            app.SetSettings(settings1);
+                        };
+                        break;
+                
+                    case nameof(AppType.PointOfSale):
+                        
+                        var settings2 = app.GetSettings<AppsController.PointOfSaleSettings>();
+                        items = _appService.Parse(settings2.Template, settings2.Currency);
+                        newTemplate = _appService.SerializeTemplate(items);
+                        if (settings2.Template != newTemplate)
+                        {
+                            settings2.Template = newTemplate;
+                            app.SetSettings(settings2);
+                        };
+                        break;
+                }
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateHotwalletProperty()

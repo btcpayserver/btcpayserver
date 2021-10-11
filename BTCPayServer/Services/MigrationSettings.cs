@@ -25,5 +25,6 @@ namespace BTCPayServer.Services
         
         // Done in DbMigrationsHostedService
         public int? MigratedInvoiceTextSearchPages { get; set; }
+        public bool MigrateAppCustomOption { get; set; }
     }
 }

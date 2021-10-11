@@ -1,19 +1,7 @@
 var app = null;
 
-function addLoadEvent(func) {
-    var oldonload = window.onload;
-    if (typeof window.onload != 'function') {
-        window.onload = func;
-    } else {
-        window.onload = function() {
-            if (oldonload) {
-                oldonload();
-            }
-            func();
-        }
-    }
-}
-addLoadEvent(function (ev) {
+
+document.addEventListener("DOMContentLoaded",function (ev) {
     app = new Vue({
         el: '#app',
         data: function(){

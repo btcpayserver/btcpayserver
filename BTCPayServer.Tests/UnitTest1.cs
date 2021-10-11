@@ -2489,16 +2489,17 @@ namespace BTCPayServer.Tests
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
                 var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
                     .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                Assert.Single(vm.PaymentMethodCriteria);
-                var criteria = vm.PaymentMethodCriteria.First();
-                Assert.Equal(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
+                var lightningPaymentMethod = new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString();
+                Assert.Equal(2, vm.PaymentMethodCriteria.Count);
+                var criteria = vm.PaymentMethodCriteria.FirstOrDefault(model => model.PaymentMethod == lightningPaymentMethod);
+                Assert.Equal(lightningPaymentMethod, criteria.PaymentMethod);
                 criteria.Value = "2 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
                 Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
                     .Result);
 
                 var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                    new Invoice
                     {
                         Price = 1.5m,
                         Currency = "USD",

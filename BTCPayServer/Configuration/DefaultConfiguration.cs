@@ -24,7 +24,6 @@ namespace BTCPayServer.Configuration
             app.Option("--testnet | -testnet", $"Use testnet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--regtest | -regtest", $"Use regtest (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--signet | -signet", $"Use signet (deprecated, use --network instead)", CommandOptionType.BoolValue);
-            app.Option("--allow-admin-registration", $"For debug only, will show a checkbox when a new user register to add himself as admin. (default: false)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
             app.Option("--mysql", $"Connection string to a MySQL database", CommandOptionType.SingleValue);
@@ -49,6 +48,7 @@ namespace BTCPayServer.Configuration
             app.Option("--plugin-remote", "Which github repository to fetch the available plugins list (default:btcpayserver/btcpayserver-plugins)", CommandOptionType.SingleValue);
             app.Option("--recommended-plugins", "Plugins which would be marked as recommended to be installed. Separated by newline or space", CommandOptionType.MultipleValue);
             app.Option("--xforwardedproto", "If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https)", CommandOptionType.SingleValue);
+            app.Option("--cheatmode", "Add elements in the UI to facilitate dev-time testing (Default false)", CommandOptionType.BoolValue);
             foreach (var network in provider.GetAll().OfType<BTCPayNetwork>())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();

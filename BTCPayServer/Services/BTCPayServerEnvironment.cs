@@ -2,9 +2,11 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 
 namespace BTCPayServer.Services
@@ -13,7 +15,7 @@ namespace BTCPayServer.Services
     {
         readonly IHttpContextAccessor httpContext;
         readonly TorServices torServices;
-        public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext, TorServices torServices)
+        public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext, TorServices torServices, BTCPayServerOptions opts)
         {
             this.httpContext = httpContext;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
@@ -31,6 +33,7 @@ namespace BTCPayServer.Services
             Environment = env;
             NetworkType = provider.NetworkType;
             this.torServices = torServices;
+            CheatMode = opts.CheatMode;
         }
         public IWebHostEnvironment Environment
         {
@@ -43,6 +46,7 @@ namespace BTCPayServer.Services
         public string OnionUrl => this.torServices.Services.Where(s => s.ServiceType == TorServiceType.BTCPayServer)
                                                            .Select(s => $"http://{s.OnionHost}").FirstOrDefault();
 
+        public bool CheatMode { get; set; }
         public ChainName NetworkType { get; set; }
         public string Version
         {

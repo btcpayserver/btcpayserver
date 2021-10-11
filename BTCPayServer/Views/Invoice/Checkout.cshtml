@@ -1,6 +1,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @using NBitcoin
 @model PaymentModel
@@ -39,6 +40,7 @@
             body {
                 background: rgba(25, 25, 25, 0.9);
             }
+
             .close-icon {
                 display: flex;
             }
@@ -95,12 +97,12 @@
                                 $("#DefaultLang").val(startingLanguage);
                                 var languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
 
-                                languageSelectorPrettyDropdown.change(function() {
+                                languageSelectorPrettyDropdown.change(function () {
                                     changeLanguage(languageSelectorPrettyDropdown.val());
                                 });
 
-                                languageSelectorPrettyDropdown.keypress(function(event) {
-                                    if (event.keyCode == 13) { 
+                                languageSelectorPrettyDropdown.keypress(function (event) {
+                                    if (event.keyCode == 13) {
                                         languageSelectorPrettyDropdown.click();
                                     }
                                 });
@@ -119,7 +121,7 @@
                     <div class="powered__by__btcpayserver">
                         Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
                     </div>
-                    @if (BTCPayNetworkProvider.NetworkType == ChainName.Regtest)
+                    @if (env.CheatMode)
                     {
                         <partial name="Checkout-Testing" />
                     }
@@ -240,7 +242,7 @@
             closePaymentMethodDialog: function(currencyId) {
                 vex.closeAll();
                 this.changeCurrency(currencyId);
-            },   
+            },
             changeCurrency: function (currency) {
                 if (currency !== null && this.srvModel.paymentMethodId !== currency) {
                     this.changingCurrencies = true;
@@ -248,7 +250,7 @@
                     this.fetchData();
                     this.closePaymentMethodDialog(null);
                 }
-            },     
+            },
             close: function(){
                 $("invoice").fadeOut(300, function () {
                     window.parent.postMessage("close", "*");
@@ -314,7 +316,7 @@
                         }
                         watcher();
                     }, 2000);
-                }            
+                }
                 watcher();
             },
             fetchData: function(){
@@ -346,7 +348,7 @@
                 this.endDate = newEnd;
                 // updating ui
                 this.srvModel = jsonData;
-                
+
                 eventBus.$emit("data-fetched", this.srvModel);
                 if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                     this.loading = true;
@@ -387,10 +389,10 @@
     });
     </script>
 
-@foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
-{
-    <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model"/>
-}
-@await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-end", model = Model})
+    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
+    {
+        <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model" />
+    }
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
 </body>
 </html>

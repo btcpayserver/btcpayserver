@@ -20,7 +20,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Plugins.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -38,6 +37,7 @@ using NBXplorer;
 using Newtonsoft.Json.Linq;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Controllers
 {
@@ -45,11 +45,9 @@ namespace BTCPayServer.Controllers
     {
         [HttpPost]
         [Route("i/{invoiceId}/test-payment")]
-        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request)
+        [CheatModeRoute]
+        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, [FromServices] Cheater cheater)
         {
-            if (_NetworkProvider.NetworkType != ChainName.Regtest) return Conflict();
-            
-            var credentialString = "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3";
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             
@@ -57,7 +55,6 @@ namespace BTCPayServer.Controllers
             //var network = invoice.Networks.GetNetwork(invoice.Currency);
             var cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var ExplorerNode = new RPCClient(RPCCredentialString.Parse(credentialString), network.NBitcoinNetwork);
             var paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
 
             //var network = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
@@ -73,7 +70,7 @@ namespace BTCPayServer.Controllers
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var rate = paymentMethod.Rate;
                 
-                FakePaymentResponse.Txid = ExplorerNode.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
+                FakePaymentResponse.Txid = cheater.CashCow.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
                 
                 // TODO The value of totalDue is wrong. How can we get the real total due? invoice.Price is only correct if this is the 2nd payment, not for a 3rd or 4th payment. 
                 var totalDue = invoice.Price;
@@ -96,17 +93,16 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("i/{invoiceId}/expire")]
-        public async Task<IActionResult> TestExpireNow(string invoiceId)
+        [CheatModeRoute]
+        public async Task<IActionResult> TestExpireNow(string invoiceId, [FromServices] Cheater cheater)
         {
-            if (_NetworkProvider.NetworkType != ChainName.Regtest) return Conflict();
-            
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             ExpireInvoiceResponse expireInvoiceResponse = new ExpireInvoiceResponse();
             
             // TODO complete this
             try
             {
-                await _InvoiceRepository.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now);
+                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now);
                 expireInvoiceResponse.SuccessMessage = "Invoice is now expired.";
             }
             catch (Exception e)

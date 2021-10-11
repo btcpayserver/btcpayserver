@@ -292,7 +292,7 @@ services:
 
   tor:
     restart: unless-stopped
-    image: btcpayserver/tor:0.4.1.5
+    image: btcpayserver/tor:0.4.6.5
     container_name: tor
     environment:
         TOR_PASSWORD: btcpayserver

@@ -782,6 +782,26 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanImportMnemonic()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                foreach (var isHotwallet in new[] { false, true })
+                {
+                    var (storeName, storeId) = s.CreateNewStore();
+                    s.GenerateWallet(privkeys: isHotwallet, seed: "melody lizard phrase voice unique car opinion merge degree evil swift cargo");
+                    s.GoToWallet(s.WalletId, WalletsNavPages.Settings);
+                    if (isHotwallet)
+                        Assert.Contains("View seed", s.Driver.PageSource);
+                    else
+                        Assert.DoesNotContain("View seed", s.Driver.PageSource);
+                }
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
             using (var s = SeleniumTester.Create())

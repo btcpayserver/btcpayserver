@@ -1025,6 +1025,38 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanOverpayInvoice()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                await user.RegisterDerivationSchemeAsync("BTC");
+                var client = await user.CreateClient();
+                var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+                var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+                var method = methods.First();
+                var amount = method.Amount;
+                Assert.Equal(amount, method.Due);
+#pragma warning disable CS0618 // Type or member is obsolete
+                var btc = tester.NetworkProvider.BTC.NBitcoinNetwork;
+#pragma warning restore CS0618 // Type or member is obsolete
+                await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(method.Destination, btc), Money.Coins(method.Due) + Money.Coins(1.0m));
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    invoice = await client.GetInvoice(user.StoreId, invoice.Id);
+                    Assert.True(invoice.Status == InvoiceStatus.Processing);
+                    methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+                    method = methods.First();
+                    Assert.Equal(amount, method.Amount);
+                    Assert.Equal(-1.0m, method.Due);
+                    Assert.Equal(amount + 1.0m, method.TotalPaid);
+                });
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
             using (var tester = ServerTester.Create())

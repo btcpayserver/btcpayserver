@@ -38,9 +38,10 @@ namespace BTCPayServer.Services
             }
         }
 
-        async Task IHostedService.StartAsync(CancellationToken cancellationToken)
+        Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
-            await CashCow.ScanRPCCapabilitiesAsync();
+            _ = CashCow.ScanRPCCapabilitiesAsync();
+            return Task.CompletedTask;
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

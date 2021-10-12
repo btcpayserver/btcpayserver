@@ -20,6 +20,7 @@ using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Views.Stores;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -301,7 +302,7 @@ namespace BTCPayServer.Tests
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                     s.GoToHome();
-                    s.GoToStore(receiver.storeId);
+                    s.GoToStore(receiver.storeId, StoreNavPages.Payment);
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                     var sender = s.CreateNewStore();

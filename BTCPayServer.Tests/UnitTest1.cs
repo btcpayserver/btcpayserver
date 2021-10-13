@@ -24,6 +24,7 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
@@ -1041,14 +1042,22 @@ namespace BTCPayServer.Tests
             Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed });
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
-            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
-            evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
+            Logs.Tester.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice ");
+            await Assert.ThrowsAsync<LightningRPCException>(async () =>
             {
                 await tester.SendLightningPaymentAsync(invoice);
-            }, evt => evt.InvoiceId == invoice.Id);
-            Assert.Equal(evt.InvoiceId, invoice.Id);
-            fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal(3, fetchedInvoice.Payments.Count);
+            });
+        
+            //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
+            // Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
+            // evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            // {
+            //     await tester.SendLightningPaymentAsync(invoice);
+            // }, evt => evt.InvoiceId == invoice.Id);
+            // Assert.Equal(evt.InvoiceId, invoice.Id);
+            // fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
+            // Assert.Equal(3, fetchedInvoice.Payments.Count);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

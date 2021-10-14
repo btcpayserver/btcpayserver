@@ -89,7 +89,7 @@
 
                         <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
-                                asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
+                                asp-items="@langService.GetLanguageSelectListItems()"></select>
 
                         <script>
                             $(function () {
@@ -110,10 +110,10 @@
 
                             function initDropdown(selector) {
                                 return $(selector).prettyDropdown({
-                                    classic: false,
+                                    classic: true,
                                     height: 32,
                                     reverse: true,
-                                    hoverIntent: 5000
+                                    hoverIntent: -1
                                 });
                             }
                         </script>
@@ -130,7 +130,7 @@
         </div>
     </invoice>
     <script>
-    var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
+    var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));
     var defaultLang = @Safe.Json(Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();

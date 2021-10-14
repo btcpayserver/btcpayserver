@@ -40,7 +40,7 @@
 .prettydropdown:not(.disabled) > ul.active {
     width: auto;
     max-height: 400px !important;
-    border-color: #1e90ff;
+    border-color: #51b13e;
     overflow-x: hidden;
     overflow-y: auto;
     z-index: 99;
@@ -84,7 +84,7 @@
     display: block;
 }
 .prettydropdown > ul.active > li:not(.label):hover, .prettydropdown > ul.active > li.hover:not(.label), .prettydropdown > ul.active > li:first-child:hover:after {
-    background: #1e90ff;
+    background: #51b13e;
     color: #fff;
 }
 .prettydropdown > ul.active > li.nohover {
@@ -95,7 +95,7 @@
     border-top-color: #fff !important;
 }
 .prettydropdown > ul.active > li.hover:after, .prettydropdown > ul.active > li.nohover:before {
-    border-top-color: #1e90ff !important;
+    border-top-color: #51b13e !important;
 }
 .prettydropdown.arrow > ul > li.selected:before, .prettydropdown.arrow > ul > li.selected:after {
     position: absolute;

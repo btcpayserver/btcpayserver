@@ -370,9 +370,8 @@ namespace BTCPayServer.Tests
             foreach (var match in regex.Matches(text).OfType<Match>())
             {
                 var url = match.Groups[1].Value;
-                if (urlBlacklist.Any(a => a.StartsWith(url.ToLowerInvariant())))
+                if (urlBlacklist.Any(a => url.StartsWith(a.ToLowerInvariant())))
                     continue;
-
                 checkLinks.Add(AssertLinkNotDead(httpClient, url, file));
             }
 

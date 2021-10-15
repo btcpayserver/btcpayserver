@@ -13,16 +13,12 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.Filters;
-using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
@@ -32,6 +28,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -104,6 +101,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            var invoiceState = invoice.GetInvoiceState();
             var model = new InvoiceDetailsModel()
             {
                 StoreId = store.Id,
@@ -111,7 +109,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
-                State = invoice.GetInvoiceState().ToString(),
+                State = invoiceState.ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
@@ -129,11 +127,13 @@ namespace BTCPayServer.Controllers
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
-                CanRefund = CanRefund(invoice.GetInvoiceState()),
+                CanRefund = CanRefund(invoiceState),
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
-                                    .ToList()
+                                    .ToList(),
+                CanMarkInvalid = invoiceState.CanMarkInvalid(),
+                CanMarkComplete = invoiceState.CanMarkComplete(),
             };
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
                 new InvoiceDetailsModel.AddressModel
@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
                                             .Include(i => i.CurrentRefund)
                                             .Include(i => i.CurrentRefund.PullPaymentData)
                                             .Where(i => i.Id == invoiceId)
-                                            .FirstOrDefaultAsync();
+                                            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (invoice is null)
                 return NotFound();
             if (invoice.CurrentRefund?.PullPaymentDataId is null && GetUserId() is null)
@@ -342,7 +342,7 @@ namespace BTCPayServer.Controllers
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Wallet > Manage > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            (await ctx.Invoices.FindAsync(invoice.Id)).CurrentRefundId = ppId;
+            (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken: cancellationToken)).CurrentRefundId = ppId;
             ctx.Refunds.Add(new RefundData()
             {
                 InvoiceDataId = invoice.Id,
@@ -449,7 +449,7 @@ namespace BTCPayServer.Controllers
                 model.IsModal = true;
             return View(nameof(Checkout), model);
         }
-
+        
         [HttpGet]
         [Route("invoice-noscript")]
         public async Task<IActionResult> CheckoutNoScript(string? invoiceId, string? id = null, string? paymentMethodId = null, [FromQuery] string? lang = null)
@@ -654,7 +654,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice/{invoiceId}/status/ws")]
         [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
         [Route("invoice/status/ws")]
-        public async Task<IActionResult> GetStatusWebSocket(string invoiceId)
+        public async Task<IActionResult> GetStatusWebSocket(string invoiceId, CancellationToken cancellationToken)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
@@ -665,12 +665,12 @@ namespace BTCPayServer.Controllers
             CompositeDisposable leases = new CompositeDisposable();
             try
             {
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceNewPaymentDetailsEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
+                leases.Add(_EventAggregator.SubscribeAsync<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.SubscribeAsync<Events.InvoiceNewPaymentDetailsEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.SubscribeAsync<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
-                    var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
+                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer, default(CancellationToken));
                     if (message.MessageType == WebSocketMessageType.Close)
                         break;
                 }
@@ -869,6 +869,8 @@ namespace BTCPayServer.Controllers
                         Enabled = true
                     }),
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
+                    NotificationEmail = model.NotificationEmail,
+                    ExtendedNotifications = model.NotificationEmail != null
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

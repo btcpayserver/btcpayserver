@@ -878,9 +878,9 @@ namespace BTCPayServer.Controllers.GreenField
             return Task.FromResult(GetFromActionResult<PermissionMetadata[]>(_homeController.Permissions()));
         }
 
-        public override Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId, bool? enabled = null, CancellationToken token = default)
+        public override async Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId, bool? enabled = null, CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult(_storePaymentMethodsController.GetStorePaymentMethods(storeId, enabled)));
+            return GetFromActionResult(await _storePaymentMethodsController.GetStorePaymentMethods(storeId, enabled));
         }
 
         public override async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId, string cryptoCode, GenerateOnChainWalletRequest request,

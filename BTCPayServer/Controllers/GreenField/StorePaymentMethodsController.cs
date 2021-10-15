@@ -1,10 +1,12 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -17,20 +19,24 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly IAuthorizationService _authorizationService;
 
-        public StorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider)
+        public StorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider, IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
+            _authorizationService = authorizationService;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods")]
-        public ActionResult<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(
+        public async Task<ActionResult<Dictionary<string, GenericPaymentMethodData>>> GetStorePaymentMethods(
             string storeId,
             [FromQuery] bool? enabled)
         {
             var storeBlob = Store.GetStoreBlob();
             var excludedPaymentMethods = storeBlob.GetExcludedPaymentMethods();
+            var canModifyStore = (await _authorizationService.AuthorizeAsync(User, null,
+                new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;;
             return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .Where(method =>
                     enabled is null || (enabled is false && excludedPaymentMethods.Match(method.PaymentId)))
@@ -40,7 +46,7 @@ namespace BTCPayServer.Controllers.GreenField
                     {
                         CryptoCode = method.PaymentId.CryptoCode,
                         Enabled = enabled.GetValueOrDefault(!excludedPaymentMethods.Match(method.PaymentId)),
-                        Data = method.PaymentId.PaymentType.GetGreenfieldData(method)
+                        Data = method.PaymentId.PaymentType.GetGreenfieldData(method, canModifyStore)
                     }));
         }
     }

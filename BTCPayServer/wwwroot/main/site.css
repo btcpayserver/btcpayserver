@@ -161,9 +161,18 @@ hr.light {
     border: 0;
 }
 
+.btcpay-theme-switch:not(.nav-link) {
+    display: inline-flex;
+    align-items: center;
+}
+
 .btcpay-theme-switch svg {
     height: 1rem;
     width: 1rem;
+}
+
+.btcpay-theme-switch svg[class="d-inline-block"] + span {
+    margin-left: var(--btcpay-space-xs);
 }
 
 .btcpay-theme-switch path {
@@ -336,6 +345,17 @@ h2 small .fa-question-circle-o {
     }
     .toasted-container {
         display: none !important;
+    }
+    #markStatusDropdownMenuButton {
+        border: 0;
+        background: transparent;
+        padding: 0 !important;
+        color: inherit;
+        font-weight:  var(--btcpay-font-weight-normal);
+        font-size: var(--btcpay-body-font-size);
+    }
+    #markStatusDropdownMenuButton::after {
+        content: none;
     }
 }
 

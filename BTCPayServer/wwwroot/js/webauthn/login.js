@@ -1,12 +1,9 @@
 
 if (detectFIDOSupport() && makeAssertionOptions){
-
     login(makeAssertionOptions);
 }
 
 async function login(makeAssertionOptions) {
-
-    console.log("Assertion Options Object", makeAssertionOptions);
     const challenge = makeAssertionOptions.challenge.replace(/-/g, "+").replace(/_/g, "/");
     makeAssertionOptions.challenge = Uint8Array.from(atob(challenge), c => c.charCodeAt(0));
 
@@ -15,9 +12,6 @@ async function login(makeAssertionOptions) {
         var fixedId = listItem.id.replace(/\_/g, "/").replace(/\-/g, "+");
         listItem.id = Uint8Array.from(atob(fixedId), c => c.charCodeAt(0));
     });
-
-    console.log("Assertion options", makeAssertionOptions);
-
 
     let credential;
     try {
@@ -40,7 +34,6 @@ async function login(makeAssertionOptions) {
  * @param {any} assertedCredential
  */
 async function verifyAssertionWithServer(assertedCredential) {
-
     // Move data into Arrays incase it is super long
     let authData = new Uint8Array(assertedCredential.response.authenticatorData);
     let clientDataJSON = new Uint8Array(assertedCredential.response.clientDataJSON);
@@ -57,7 +50,6 @@ async function verifyAssertionWithServer(assertedCredential) {
             signature: coerceToBase64Url(sig)
         }
     };
-    
 
     document.getElementById("Response").value = JSON.stringify(data);
     document.getElementById("fidoForm").submit();

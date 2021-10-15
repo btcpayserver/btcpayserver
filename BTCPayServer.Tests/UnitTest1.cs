@@ -363,15 +363,15 @@ namespace BTCPayServer.Tests
             {
                 "https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
+                "https://support.bitpay.com",
                 "https://www.pnxbet.com" //has geo blocking
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())
             {
                 var url = match.Groups[1].Value;
-                if (urlBlacklist.Any(a => a.StartsWith(url.ToLowerInvariant())))
+                if (urlBlacklist.Any(a => url.StartsWith(a.ToLowerInvariant())))
                     continue;
-
                 checkLinks.Add(AssertLinkNotDead(httpClient, url, file));
             }
 
@@ -2365,12 +2365,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model
+                var vm = Assert.IsType<StoreViewModel>(Assert
+                    .IsType<ViewResult>(await user.GetController<StoresController>().UpdateStore()).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().CheckoutExperience(vm).Result
+                    user.GetController<StoresController>().UpdateStore(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls
@@ -3119,6 +3119,20 @@ namespace BTCPayServer.Tests
                     c =>
                     {
                         Assert.False(c.AfterExpiration);
+                        Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
+                        Assert.NotNull(c.Payment);
+                        Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);
+                        
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
+                    c =>
+                    {
+                        Assert.False(c.AfterExpiration);
+                        Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(),c.PaymentMethod);
+                        Assert.NotNull(c.Payment);
+                        Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
+                        Assert.StartsWith(txId.ToString(), c.Payment.Id);                        
                     });
             }
         }
@@ -3177,6 +3191,7 @@ namespace BTCPayServer.Tests
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                              e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                              && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );

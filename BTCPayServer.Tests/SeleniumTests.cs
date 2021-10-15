@@ -206,6 +206,15 @@ namespace BTCPayServer.Tests
 
                 // We should be logged in now
                 s.Driver.FindElement(By.Id("mainNav"));
+                
+                //let's test delete user quickly while we're at it 
+                s.GoToProfile();
+                s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
+                s.Driver.FindElement(By.Id("delete-user")).Click();
+                s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+                
+                Assert.Contains("/login", s.Driver.Url);
             }
         }
 
@@ -632,9 +641,8 @@ namespace BTCPayServer.Tests
                 });
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
-                s.Driver.ToggleCollapse("AdvancedSettings");
                 s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
-                s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
+                s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
@@ -770,6 +778,26 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("delete-store")).Click();
                 s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
                 s.FindAlertMessage();
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanImportMnemonic()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                foreach (var isHotwallet in new[] { false, true })
+                {
+                    var (storeName, storeId) = s.CreateNewStore();
+                    s.GenerateWallet(privkeys: isHotwallet, seed: "melody lizard phrase voice unique car opinion merge degree evil swift cargo");
+                    s.GoToWallet(s.WalletId, WalletsNavPages.Settings);
+                    if (isHotwallet)
+                        Assert.Contains("View seed", s.Driver.PageSource);
+                    else
+                        Assert.DoesNotContain("View seed", s.Driver.PageSource);
+                }
             }
         }
 

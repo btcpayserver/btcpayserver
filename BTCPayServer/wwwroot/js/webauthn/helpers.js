@@ -74,7 +74,8 @@ function showErrorAlert(message, error) {
     }
     console.error(message, footermsg);
     
-    document.getElementById("info-message").classList.add("d-none");
+    const $info = document.getElementById("info-message");
+    if ($info) $info.classList.add("d-none");
     document.getElementById("btn-retry").classList.remove("d-none");
     document.getElementById("error-message").textContent = message;
     for(let el of document.getElementsByClassName("fido-running")){

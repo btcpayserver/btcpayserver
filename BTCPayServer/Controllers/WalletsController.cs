@@ -263,6 +263,11 @@ namespace BTCPayServer.Controllers
                 walletVm.StoreId = wallet.Store.Id;
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
                 walletVm.StoreName = wallet.Store.StoreName;
+
+                var money = await GetBalanceAsMoney(wallet.Wallet, wallet.DerivationStrategy);
+                wallets.BalanceForCryptoCode[wallet.Network] = wallets.BalanceForCryptoCode.ContainsKey(wallet.Network)
+                    ? wallets.BalanceForCryptoCode[wallet.Network].Add(money)
+                    : money;
             }
 
             return View(wallets);
@@ -1061,13 +1066,25 @@ namespace BTCPayServer.Controllers
             return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
-        private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
+        private static async Task<IMoney> GetBalanceAsMoney(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
         {
             using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             try
             {
                 var b = await wallet.GetBalance(derivationStrategy, cts.Token);
-                return (b.Available ?? b.Total).ShowMoney(wallet.Network);
+                return (b.Available ?? b.Total);
+            }
+            catch
+            {
+                return NBitcoin.Money.Zero;
+            }
+        }
+
+        private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
+        {
+            try
+            {
+                return (await GetBalanceAsMoney(wallet, derivationStrategy)).ShowMoney(wallet.Network);
             }
             catch
             {
@@ -1152,8 +1169,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "prune")
             {
-                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
+                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
                 if (result.TotalPruned == 0)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = $"The wallet is already pruned";
@@ -1164,6 +1180,21 @@ namespace BTCPayServer.Controllers
                         $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
                 }
 
+                return RedirectToAction(nameof(WalletSettings));
+            }
+            else if (command == "clear" && User.IsInRole(Roles.ServerAdmin))
+            {
+                if (Version.TryParse(_dashboard.Get(walletId.CryptoCode)?.Status?.Version ?? "0.0.0.0", out var v) &&
+                    v < new Version(2, 2, 4))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = $"This version of NBXplorer doesn't support this operation, please upgrade to 2.2.4 or above";
+                }
+                else
+                {
+                    await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                            .WipeAsync(derivationScheme.AccountDerivation, cancellationToken);
+                    TempData[WellKnownTempData.SuccessMessage] = $"The transactions have been wiped out, to restore your balance, rescan the wallet.";
+                }
                 return RedirectToAction(nameof(WalletSettings));
             }
             else if (command == "view-seed" && await CanUseHotWallet())

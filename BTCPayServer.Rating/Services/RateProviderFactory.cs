@@ -75,6 +75,7 @@ namespace BTCPayServer.Services.Rates
             yield return new AvailableRateProvider("bitbank", "Bitbank", "https://public.bitbank.cc/prices");
             yield return new AvailableRateProvider("bitflyer", "Bitflyer", "https://api.bitflyer.com/v1/ticker");
             yield return new AvailableRateProvider("bitpay", "Bitpay", "https://bitpay.com/rates");
+            yield return new AvailableRateProvider("ripio", "Ripio", "https://api.exchange.ripio.com/api/v1/rate/all/");
 
             yield return new AvailableRateProvider("polispay", "PolisPay", "https://obol.polispay.com/complex/btc/polis");
 
@@ -99,6 +100,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
+            Providers.Add("ripio", new RipioExchangeProvider(_httpClientFactory?.CreateClient("EXCHANGE_RIPIO")));
             Providers.Add("bitflyer", new BitflyerRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITFLYER")));
             Providers.Add("polispay", new PolisRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_POLIS")));
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));

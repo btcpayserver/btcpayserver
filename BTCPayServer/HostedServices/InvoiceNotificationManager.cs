@@ -121,7 +121,7 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (invoiceEvent.Name != InvoiceEvent.Expired && !String.IsNullOrEmpty(invoice.NotificationEmail))
+            if ((invoice.ExtendedNotifications || invoiceEvent.Name != InvoiceEvent.Expired) && !String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -309,8 +309,13 @@ namespace BTCPayServer.HostedServices
         readonly CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
+            leases.Add(_EventAggregator.SubscribeAsync<InvoiceEvent>(async e =>
             {
+                if (e.EventCode == InvoiceEventCode.PaymentSettled)
+                {
+                    //these are greenfield specific events
+                    return;
+                }
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;

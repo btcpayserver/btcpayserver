@@ -143,7 +143,7 @@
                     <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
                     <span asp-validation-for="Script" class="text-danger"></span>
                     <p>
-                        <button type="button" class="btn btn-link text-secondary px-0" onclick="document.getElementById('Script').value=defaultScript;return false;">Set to default settings</button>
+                        <button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults">Set to default settings</button>
                     </p>
                 </div>
                 <p>
@@ -195,12 +195,14 @@
 
 @section PageFootContent {
     <script>
-        const defaultScript = @Safe.Json(Model.DefaultScript);
-        
         const commandButton = document.querySelector('[data-bs-target="#ConfirmModal"]')
         commandButton.dataset.action = window.location.href + '/confirm?scripting=@(!Model.ShowScripting)'
         commandButton.addEventListener('click', event => {
             event.preventDefault()
+        });
+
+        delegate('click', '#ResetDefaults', () => {
+            document.getElementById('Script').value = @Safe.Json(Model.DefaultScript);
         });
     </script>
     <partial name="_ValidationScriptsPartial"/>

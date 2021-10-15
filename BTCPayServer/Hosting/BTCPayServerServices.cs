@@ -54,6 +54,7 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
+using NBitcoin.RPC;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Ethereum;
@@ -102,11 +103,8 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<MigrationStartupTask>();
             // 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
-            services.TryAddSingleton<InvoiceRepository>(o =>
-            {
-                var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
-            });
+            services.TryAddSingleton<InvoiceRepository>();
+            services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<WalletRepository>();
@@ -441,6 +439,12 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
             services.SkipModelValidation<RootedKeyPath>();
+
+            if (configuration.GetOrDefault<bool>("cheatmode", false))
+            {
+                services.AddSingleton<Cheater>();
+                services.AddSingleton<IHostedService, Cheater>(o => o.GetRequiredService<Cheater>());
+            }
             return services;
         }
 

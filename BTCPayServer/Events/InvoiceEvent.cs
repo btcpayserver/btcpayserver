@@ -7,6 +7,7 @@ namespace BTCPayServer.Events
     {
         Created = 1001,
         ReceivedPayment = 1002,
+        PaymentSettled = 1014,
         PaidInFull = 1003,
         Expired = 1004,
         Confirmed = 1005,
@@ -21,6 +22,7 @@ namespace BTCPayServer.Events
     {
         public const string Created = "invoice_created";
         public const string ReceivedPayment = "invoice_receivedPayment";
+        public const string PaymentSettled = "invoice_paymentSettled";
         public const string MarkedCompleted = "invoice_markedComplete";
         public const string MarkedInvalid = "invoice_markedInvalid";
         public const string Expired = "invoice_expired";
@@ -36,6 +38,7 @@ namespace BTCPayServer.Events
         {
             {Created, InvoiceEventCode.Created},
             {ReceivedPayment, InvoiceEventCode.ReceivedPayment},
+            {PaymentSettled, InvoiceEventCode.PaymentSettled},
             {PaidInFull, InvoiceEventCode.PaidInFull},
             {Expired, InvoiceEventCode.Expired},
             {Confirmed, InvoiceEventCode.Confirmed},

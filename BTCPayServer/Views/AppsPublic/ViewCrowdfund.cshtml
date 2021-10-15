@@ -1,12 +1,13 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject ISettingsRepository _settingsRepository
+@inject ISettingsRepository SettingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-}
+    var theme = await SettingsRepository.GetTheme();
+ }
 
 <!DOCTYPE html>
 <html class="h-100">
@@ -20,14 +21,6 @@
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
-    }
-    @if (!Model.SimpleDisplay)
-    {
-        <script>var srvModel = @Safe.Json(Model);</script>
-        <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
-        <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
-        @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
-        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
 </head>
 <body>
@@ -218,6 +211,7 @@
                                     <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
                                         <contribute :target-currency="srvModel.targetCurrency"
                                                     :display-perks-ranking="srvModel.displayPerksRanking"
+                                                    :perks-value="srvModel.perksValue"
                                                     :active="active"
                                                     :loading="loading"
                                                     :in-modal="false"
@@ -242,6 +236,7 @@
                                 <contribute :target-currency="srvModel.targetCurrency"
                                             :loading="loading"
                                             :display-perks-ranking="srvModel.displayPerksRanking"
+                                            :perks-value="srvModel.perksValue"
                                             :active="active"
                                             :in-modal="false"
                                             :perks="perks">
@@ -262,13 +257,17 @@
                         </div>
                     </noscript>
                 </div>
-                <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
-                    <div class="align-self-end pe-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
-                    <div class="form-check mx-1 only-for-js" v-if="srvModel.animationsEnabled || animation">
+                <div class="card-footer text-muted d-flex flex-wrap align-items-center">
+                    <div class="me-3" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
+                    @if (!theme.CustomTheme)
+                    {
+                        <vc:theme-switch css-class="text-muted me-3" responsive="none" />
+                    }
+                    <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.animationsEnabled || animation">
                         <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
                         <label class="form-check-label" for="cbAnime">Animations</label>
                     </div>
-                    <div class="form-check mx-1 only-for-js" v-if="srvModel.soundsEnabled|| sound">
+                    <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.soundsEnabled|| sound">
                         <input class="form-check-input" type="checkbox" id="cbSounds" v-model="sound">
                         <label class="form-check-label" for="cbSounds">Sounds</label>
                     </div>
@@ -301,6 +300,7 @@
                 :target-currency="targetCurrency" 
                 :active="active" 
                 :display-perks-ranking="displayPerksRanking" 
+                :perks-value="perksValue" 
                 :index="index"
                 :loading="loading"
                 :in-modal="inModal">
@@ -315,7 +315,7 @@
                   v-bind:class="{ 'btn-primary': index==0, 'btn-light': index!=0}">#{{index+1}}</span> 
             <div class="perk-zoom" v-if="canExpand">
                 <div class="perk-zoom-bg"></div>
-                <div class="perk-zoom-text w-100 py-2 px-4 text-center text-primary fw-bold fs-3 lh-sm">
+                <div class="perk-zoom-text w-100 py-2 px-4 text-center text-primary fw-semibold fs-5 lh-sm">
                     Select this contribution perk
                 </div>
             </div>
@@ -365,7 +365,8 @@
                 <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">
                     <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
                     <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
-                    <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold > 1 ? "s": ""}}</span>
+                    <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold === 1 ? "": "s"}}</span>
+                    <span v-if="perk.value">{{perk.value}} {{targetCurrency}} total</span>
                 </div>
             </form>
         </div> 
@@ -379,10 +380,21 @@
                 :loading="loading"
                 :in-modal="inModal"
                 :display-perks-ranking="displayPerksRanking"
+                :perks-value="perksValue"
                 :target-currency="targetCurrency"
                 :active="active">
             </perks>
         </div>
     </template>
+
+    @if (!Model.SimpleDisplay)
+    {
+        <script>var srvModel = @Safe.Json(Model);</script>
+        <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
+        <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
+        @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
+        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
+    }
+    <partial name="LayoutFoot" />
 </body>
 </html>

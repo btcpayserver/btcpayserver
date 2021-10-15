@@ -49,12 +49,14 @@ namespace BTCPayServer.Tests
         }
 
         // Sometimes, selenium is flaky...
-        public static IWebElement FindElementUntilNotStaled(this IWebDriver driver, By by)
+        public static IWebElement FindElementUntilNotStaled(this IWebDriver driver, By by, Action<IWebElement> act)
         {
             retry:
             try
             {
-                return driver.FindElement(by);
+                var el = driver.FindElement(by);
+                act(el);
+                return el;
             }
             catch (StaleElementReferenceException)
             {

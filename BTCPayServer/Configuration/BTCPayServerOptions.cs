@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -68,7 +69,6 @@ namespace BTCPayServer.Configuration
             
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
-            AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
 
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
             TorServices = conf.GetOrDefault<string>("torservices", null)
@@ -146,10 +146,14 @@ namespace BTCPayServer.Configuration
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
             PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r','\n','\t',' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
+            CheatMode = conf.GetOrDefault("cheatmode", false);
+            if (CheatMode && this.NetworkType == ChainName.Mainnet)
+                throw new ConfigException($"cheatmode can't be used on mainnet");
         }
 
         public string PluginRemote { get; set; }
         public string[] RecommendedPlugins { get; set; }
+        public bool CheatMode { get; set; }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {
@@ -193,7 +197,6 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
-        public bool AllowAdminRegistration { get; set; }
         public SSHSettings SSHSettings
         {
             get;

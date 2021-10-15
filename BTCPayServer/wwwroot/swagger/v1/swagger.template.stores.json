@@ -411,7 +411,7 @@
             },
             "NetworkFeeMode": {
                 "type": "string",
-                "description": "Check whether network fee should be added to the invoice if on-chain payment is used. ([More information](https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees))",
+                "description": "Check whether network fee should be added to the invoice if on-chain payment is used. ([More information](https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees))",
                 "x-enumNames": [
                     "MultiplePaymentsOnly",
                     "Always",

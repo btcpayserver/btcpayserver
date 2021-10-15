@@ -411,7 +411,6 @@ namespace BTCPayServer.Controllers
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
-            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
             return View();
         }
 
@@ -429,7 +428,6 @@ namespace BTCPayServer.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
-            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
@@ -441,7 +439,7 @@ namespace BTCPayServer.Controllers
                 if (result.Succeeded)
                 {
                     var admin = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                    if (admin.Count == 0 || (model.IsAdmin && _Options.AllowAdminRegistration))
+                    if (admin.Count == 0 || (model.IsAdmin && _Options.CheatMode))
                     {
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);

@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers
             foreach (var currencyCode in currencyCodes)
             {
                 if (!first)
-                    currencyPairsBuilder.Append(",");
+                    currencyPairsBuilder.Append(',');
                 first = false;
                 currencyPairsBuilder.Append($"{baseCrypto}_{currencyCode}");
             }

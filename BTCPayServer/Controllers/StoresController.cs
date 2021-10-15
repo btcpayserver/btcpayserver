@@ -366,8 +366,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Rates), new { storeId = CurrentStore.Id });
         }
 
-        [HttpGet]
-        [Route("{storeId}/checkout")]
+        [HttpGet("{storeId}/checkout")]
         public IActionResult CheckoutExperience()
         {
             var storeBlob = CurrentStore.GetStoreBlob();
@@ -398,20 +397,16 @@ namespace BTCPayServer.Controllers
                     };
                 }
             }).ToList();
+            
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
-            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
-            vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
-            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
-            vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
-            vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
-
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            
             return View(vm);
         }
 
@@ -431,8 +426,7 @@ namespace BTCPayServer.Controllers
             vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
-
-
+        
         [HttpPost]
         [Route("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutExperience(CheckoutExperienceViewModel model)
@@ -475,13 +469,7 @@ namespace BTCPayServer.Controllers
 
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
-            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
-            blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
-            blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             blob.RedirectAutomatically = model.RedirectAutomatically;
-            blob.ShowRecommendedFee = model.ShowRecommendedFee;
-            blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
-
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
@@ -578,7 +566,14 @@ namespace BTCPayServer.Controllers
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             vm.HintWallet = storeBlob.Hints.Wallet;
             vm.HintLightning = storeBlob.Hints.Lightning;
-
+            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
+            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
+            vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
+            vm.IsOnchainSetup = vm.DerivationSchemes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Value));
+            vm.IsLightningSetup = vm.LightningNodes.Any(scheme => !string.IsNullOrWhiteSpace(scheme.Address));
+            
             (bool canUseHotWallet, _) = await CanUseHotWallet();
             vm.CanUsePayJoin = canUseHotWallet && store
                 .GetSupportedPaymentMethods(_NetworkProvider)
@@ -615,6 +610,12 @@ namespace BTCPayServer.Controllers
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
             blob.PaymentTolerance = model.PaymentTolerance;
+            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
+            blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
+            blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            blob.ShowRecommendedFee = model.ShowRecommendedFee;
+            blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
+            
             var payjoinChanged = blob.PayJoinEnabled != model.PayJoinEnabled;
             blob.PayJoinEnabled = model.PayJoinEnabled;
             if (CurrentStore.SetStoreBlob(blob))

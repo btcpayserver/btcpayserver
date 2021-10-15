@@ -39,12 +39,12 @@
                                     <th width="30px" class="only-for-js">
                                         @if (Model.Total > 0)
                                         {
-                                            <input name="selectedItems" type="checkbox" class="form-check-input" onClick="selectAll(this);" />
+                                            <input name="selectedItems" id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                                         }
                                     </th>
                                     <th width="190px">
                                         Date
-                                        <a href="javascript:switchTimeFormat()" csp-allow>
+                                        <a href="#" id="switchTimeFormat">
                                             <span class="fa fa-clock-o" title="Switch date format"></span>
                                         </a>
                                     </th>
@@ -59,12 +59,12 @@
                                         <td class="only-for-js">
                                             <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@item.Id" />
                                         </td>
-                                        <td onclick="toggleRowCheckbox(this)">
+                                        <td class="toggleRowCheckbox">
                                             <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
                                                 @item.Created.ToBrowserDate()
                                             </span>
                                         </td>
-                                        <td onclick="toggleRowCheckbox(this)">
+                                        <td class="toggleRowCheckbox">
                                             @item.Body
                                         </td>
                                         <td class="text-end fw-normal">
@@ -73,7 +73,7 @@
                                                 <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
                                                 <span class="d-none d-md-inline-block"> - </span>
                                             }
-                                            <button onclick="return rowseen(this)" class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                            <button class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
                                                 <span>Mark&nbsp;</span><span class="seen-text"></span>
                                             </button>
                                         </td>
@@ -119,43 +119,47 @@
         font-weight: normal;
     }
 </style>
-<script type="text/javascript">
-    function rowseen(sender) {
-        var row = $(sender).parents(".notification-row").toggleClass("loading");
-        var guid =   row.data("guid");
-        var url = "@Url.Action("FlipRead", "Notifications", new {id = "placeholder"})".replace("placeholder", guid);
-        $.post(url, function (data) {
-            row.toggleClass("seen loading");
+
+@section PageFootContent {
+    <script type="text/javascript">
+        delegate('click', '#selectAllCheckbox', e => {
+            document.querySelectorAll('.notification-row .selector').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+            updateSelectors();
         });
-        return false;
-    }
 
-    function toggleRowCheckbox(sender){
-        var input  = $(sender).parents(".notification-row").find(".selector");
-        input.prop('checked', !input.prop("checked"));
-        updateSelectors();
-    }
+        delegate('click', '.toggleRowCheckbox', e => {
+            const input = $(e.target).parents(".notification-row").find(".selector");
+            input.prop('checked', !input.prop("checked"));
+            updateSelectors();
+        })
 
-    function selectAll(sender){
-        var inputs  = $(".notification-row").find(".selector");
-        inputs.each(function (index, input) {
-            $(input).prop("checked", !$(input).prop("checked"));
+        delegate('click', '#switchTimeFormat', switchTimeFormat)
+
+        delegate('click', '.btn-toggle-seen', e => {
+            const row = $(e.target).parents(".notification-row").toggleClass("loading");
+            const guid = row.data("guid");
+            const url = "@Url.Action("FlipRead", "Notifications", new { id = "placeholder" })".replace("placeholder", guid);
+            $.post(url, function (data) {
+                row.toggleClass("seen loading");
+            });
+            return false;
+        })
+
+        document.addEventListener("DOMContentLoaded", function () {
+            $(".selector").change(updateSelectors);
+            updateSelectors();
         });
-        updateSelectors();
-    }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        $(".selector").change(updateSelectors);
-        updateSelectors();
-    });
-
-    function updateSelectors() {
-        var count = $(".selector:checked").length;
-        if (count > 0) {
-            $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
-            $("#MassAction").show();
-        } else {
-            $("#MassAction").hide();
+        function updateSelectors() {
+            var count = $(".selector:checked").length;
+            if (count > 0) {
+                $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
+                $("#MassAction").show();
+            } else {
+                $("#MassAction").hide();
+            }
         }
-    }
-</script>
+    </script>
+}

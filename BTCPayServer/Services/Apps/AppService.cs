@@ -56,7 +56,8 @@ namespace BTCPayServer.Services.Apps
             }
             return null;
         }
-        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage = null)
+        
+        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : CrowdfundResetEvery.Never;
@@ -101,7 +102,16 @@ namespace BTCPayServer.Services.Apps
                 .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                 .GroupBy(entity => entity.Metadata.ItemCode)
                 .ToDictionary(entities => entities.Key, entities => entities.Count());
-
+            
+            Dictionary<string, decimal> perkValue = new Dictionary<string, decimal>();
+            if (settings.DisplayPerksValue)
+            {
+                perkValue = paidInvoices
+                    .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
+                    .GroupBy(entity => entity.Metadata.ItemCode)
+                    .ToDictionary(entities => entities.Key, entities => 
+                        entities.Sum(entity => entity.GetPayments(true).Sum(payment => payment.GetCryptoPaymentData().GetValue())));
+            }
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             if (settings.SortPerksByPopularity)
             {
@@ -114,7 +124,8 @@ namespace BTCPayServer.Services.Apps
                 newPerksOrder.AddRange(remainingPerks);
                 perks = newPerksOrder.ToArray();
             }
-            return new ViewCrowdfundViewModel()
+
+            return new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
@@ -139,6 +150,7 @@ namespace BTCPayServer.Services.Apps
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
+                PerkValue = perkValue,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
@@ -148,7 +160,7 @@ namespace BTCPayServer.Services.Apps
                     .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true))
                     .DistinctBy(data => data.Code)
                     .ToDictionary(data => data.Code, data => data),
-                Info = new ViewCrowdfundViewModel.CrowdfundInfo()
+                Info = new CrowdfundInfo
                 {
                     TotalContributors = paidInvoices.Length,
                     ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
@@ -176,7 +188,7 @@ namespace BTCPayServer.Services.Apps
             {
                 StoreId = new[] { appData.StoreData.Id },
                 OrderId = appData.TagAllInvoices ? null : new[] { GetCrowdfundOrderId(appData.Id) },
-                Status = new string[]{
+                Status = new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
@@ -206,7 +218,7 @@ namespace BTCPayServer.Services.Apps
             using (var ctx = _ContextFactory.CreateContext())
             {
                 ctx.Apps.Add(appData);
-                ctx.Entry<AppData>(appData).State = EntityState.Deleted;
+                ctx.Entry(appData).State = EntityState.Deleted;
                 return await ctx.SaveChangesAsync() == 1;
             }
         }
@@ -217,7 +229,7 @@ namespace BTCPayServer.Services.Apps
             {
                 return await ctx.UserStore
                     .Where(us =>
-                        ((allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId) &&
+                        (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
                         (storeId == null || us.StoreDataId == storeId))
                     .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
                         (us, app) =>
@@ -505,8 +517,8 @@ namespace BTCPayServer.Services.Apps
                 !posDataObj.TryGetValue("cart", out var cartObject))
                 return false;
             cartItems = cartObject.Select(token => (JObject)token)
-                .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture).ToString(),
-                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture));
+                .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture)?.ToString(),
+                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty, CultureInfo.InvariantCulture));
             return true;
         }
     }

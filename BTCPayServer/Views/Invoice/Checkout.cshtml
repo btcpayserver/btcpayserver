@@ -1,10 +1,14 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@using NBitcoin
 @model PaymentModel
 @{
     Layout = null;
 }
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,6 +40,7 @@
             body {
                 background: rgba(25, 25, 25, 0.9);
             }
+
             .close-icon {
                 display: flex;
             }
@@ -84,16 +89,23 @@
 
                         <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
-                                onkeypress="if(event.keyCode==13){ $(this).click();}"
-                                onchange="changeLanguage($(this).val())"
                                 asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
 
                         <script>
-                            var languageSelectorPrettyDropdown;
                             $(function () {
                                 // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                                 $("#DefaultLang").val(startingLanguage);
-                                languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
+                                var languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
+
+                                languageSelectorPrettyDropdown.change(function () {
+                                    changeLanguage(languageSelectorPrettyDropdown.val());
+                                });
+
+                                languageSelectorPrettyDropdown.keypress(function (event) {
+                                    if (event.keyCode == 13) {
+                                        languageSelectorPrettyDropdown.click();
+                                    }
+                                });
                             });
 
                             function initDropdown(selector) {
@@ -109,6 +121,10 @@
                     <div class="powered__by__btcpayserver">
                         Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
                     </div>
+                    @if (env.CheatMode)
+                    {
+                        <partial name="Checkout-Testing" />
+                    }
                 </div>
             </div>
         </div>
@@ -226,7 +242,7 @@
             closePaymentMethodDialog: function(currencyId) {
                 vex.closeAll();
                 this.changeCurrency(currencyId);
-            },   
+            },
             changeCurrency: function (currency) {
                 if (currency !== null && this.srvModel.paymentMethodId !== currency) {
                     this.changingCurrencies = true;
@@ -234,7 +250,7 @@
                     this.fetchData();
                     this.closePaymentMethodDialog(null);
                 }
-            },     
+            },
             close: function(){
                 $("invoice").fadeOut(300, function () {
                     window.parent.postMessage("close", "*");
@@ -276,9 +292,12 @@
                     }
                     ws_uri += "//" + loc.host;
                     ws_uri += loc.pathname + "/status/ws?invoiceId=" + this.srvModel.invoiceId;
+
                     try {
                         socket = new WebSocket(ws_uri);
                         socket.onmessage = function (e) {
+                            if (e.data === "ping")
+                                return;
                             self.fetchData();
                         };
                         socket.onerror = function (e) {
@@ -297,7 +316,7 @@
                         }
                         watcher();
                     }, 2000);
-                }            
+                }
                 watcher();
             },
             fetchData: function(){
@@ -329,7 +348,7 @@
                 this.endDate = newEnd;
                 // updating ui
                 this.srvModel = jsonData;
-                
+
                 eventBus.$emit("data-fetched", this.srvModel);
                 if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                     this.loading = true;
@@ -370,10 +389,10 @@
     });
     </script>
 
-@foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
-{
-    <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model"/>
-}
-@await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-end", model = Model})
+    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
+    {
+        <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model" />
+    }
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
 </body>
 </html>

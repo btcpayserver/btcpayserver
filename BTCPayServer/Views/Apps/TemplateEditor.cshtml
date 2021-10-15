@@ -57,7 +57,7 @@
                                     <label class="form-label" data-required>Title</label>
                                     <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle"/>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-3 px-0">
                                     <label class="form-label">Price</label>
                                     <select class="form-select" v-model="editingItem.custom">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
             customPriceOptions: [
                 { text: 'Fixed', value: "fixed" },
                 { text: 'Minimum', value: "minimum" },
-                { text: 'Topup', value: 'topup' },
+                { text: 'Custom', value: 'topup' },
             ],
             elementId: "@Model.templateId"
         },
@@ -210,6 +210,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                         if (productProperty.indexOf('price_type:') !== -1) {
                             custom = productProperty.replace('price_type:', '').trim();
+                        }else{
+                            custom = "fixed";
                         }
                         if (productProperty.indexOf('buyButtonText:') !== -1) {
                             buyButtonText = productProperty.replace('buyButtonText:', '').trim();

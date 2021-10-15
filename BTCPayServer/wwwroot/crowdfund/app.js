@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.custom !== "fixed" || this.perk.price.value) && (this.perk.inventory==null || this.perk.inventory > 0)
+                return !this.expanded && this.active && (this.perk.price.type !== 2 || this.perk.price.value) && (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             },
             setAmount: function (amount) {
-                this.amount = this.perk.custom === "topup"? null : (amount || 0).noExponents();
+                this.amount = this.perk.price.type === 0? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
 
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
         },
         watch: {
             perk: function (newValue, oldValue) {
-                if(newValue.custom === "topup"){
+                if(newValue.price.type ===0){
                     this.setAmount();
                 }else if (newValue.price.value != oldValue.price.value) {
                     this.setAmount(newValue.price.value);

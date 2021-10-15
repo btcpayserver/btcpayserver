@@ -363,6 +363,7 @@ namespace BTCPayServer.Tests
             {
                 "https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
+                "https://support.bitpay.com",
                 "https://www.pnxbet.com" //has geo blocking
             };
 
@@ -3191,6 +3192,7 @@ namespace BTCPayServer.Tests
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                              e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
                               e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                              && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );

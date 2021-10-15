@@ -353,7 +353,7 @@ namespace BTCPayServer.Controllers
                     return NotFound("Please provide an amount greater than 0");
                 }
 
-                price = null;
+                price = request.Amount;
             }
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >

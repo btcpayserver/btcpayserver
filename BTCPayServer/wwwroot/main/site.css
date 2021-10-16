@@ -29,7 +29,11 @@ hr.light {
 }
 
 .logo {
-    height: 2rem;
+    height: 3rem;
+}
+
+.navbar .logo {
+    height: 2em;
 }
 
 .logo-brand-text {

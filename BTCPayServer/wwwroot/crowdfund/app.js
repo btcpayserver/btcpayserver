@@ -1,20 +1,7 @@
 var app = null;
 var eventAggregator = new Vue();
 
-function addLoadEvent(func) {
-    var oldonload = window.onload;
-    if (typeof window.onload != 'function') {
-        window.onload = func;
-    } else {
-        window.onload = function() {
-            if (oldonload) {
-                oldonload();
-            }
-            func();
-        }
-    }
-}
-addLoadEvent(function (ev) {
+document.addEventListener("DOMContentLoaded",function (ev) {
     Vue.use(Toasted);
 
     Vue.component('contribute', {
@@ -38,7 +25,7 @@ addLoadEvent(function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.price.value || this.perk.custom) && (this.perk.inventory==null || this.perk.inventory > 0)
+                return !this.expanded && this.active && (this.perk.price.type !== 2 || this.perk.price.value) && (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {
@@ -58,7 +45,7 @@ addLoadEvent(function (ev) {
                 }
             },
             setAmount: function (amount) {
-                this.amount = (amount || 0).noExponents();
+                this.amount = this.perk.price.type === 0? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
 
@@ -69,7 +56,9 @@ addLoadEvent(function (ev) {
         },
         watch: {
             perk: function (newValue, oldValue) {
-                if (newValue.price.value != oldValue.price.value) {
+                if(newValue.price.type ===0){
+                    this.setAmount();
+                }else if (newValue.price.value != oldValue.price.value) {
                     this.setAmount(newValue.price.value);
                 }
             }

@@ -1,4 +1,4 @@
-﻿@model RegisterViewModel
+@model RegisterViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
     ViewData["Title"] = "Register";
@@ -51,7 +51,7 @@
                             <input asp-for="ConfirmPassword" class="form-control" required />
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
-                        @if (ViewData["AllowIsAdmin"] is true)
+                        @if (env.CheatMode)
                         {
                             <div class="form-group form-check">
                                 <input asp-for="IsAdmin" type="checkbox" class="form-check-input"/>

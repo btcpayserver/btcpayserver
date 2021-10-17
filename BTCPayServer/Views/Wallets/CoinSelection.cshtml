@@ -1,34 +1,41 @@
 @model WalletSendModel
 
-<div id="coin-selection-app" v-cloak>
-    <ul class="list-group mb-4">
-        <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
-            <h3>Coin selection</h3>
-            <span class="text-muted text-end">
-                <span>{{selectedItems.length}} selected</span>
-                <span v-show="selectedItems.length > 0">&nbsp;({{selectedAmount}} @Model.CryptoCode) </span><br/>
-                <span>{{items.length}} total UTXOs (@Model.CurrentBalance @Model.CryptoCode)</span>
-            </span>
-        </li>
-        <li class="list-group-item">
-            <div class="input-group">
-                <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
-                <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''" v-show="filter">
-                    <span class="fa fa-times"></span>
-                </button>
-            </div>
-        </li>
-        <li class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
+<div class="form-group hide-when-js mt-4">
+    <label asp-for="SelectedInputs" class="form-label"></label>
+    <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
+        @foreach (var input in Model.InputsAvailable)
+        {
+            <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
+        }
+    </select>
+</div>
+<div id="coin-selection-app" class="only-for-js mt-4" v-cloak>
+    <div class="d-sm-flex justify-content-between align-items-center">
+        <h5 class="mb-sm-0">Coin selection</h5>
+        <span class="text-muted text-end">
+            <span>{{selectedItems.length}} selected</span>
+            <span v-show="selectedItems.length > 0">({{selectedAmount}} @Model.CryptoCode)</span>
+            <span>/ {{items.length}} total (@Model.CurrentBalance&nbsp;@Model.CryptoCode)</span>
+        </span>
+    </div>
+    <div class="input-group my-3">
+        <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
+        <button type="button" class="btn btn-secondary" title="Clear" v-on:click="filter=''" :disabled="!filter">
+            <span class="fa fa-times"></span>
+        </button>
+    </div>
+    <ul class="list-group mb-3" v-show="filteredItems.length">
+        <li class="list-group-item cursor-pointer"
             v-for="item of filteredItems"
             :key="item.outpoint"
-            v-bind:class="{ 'list-group-item-secondary': item.selected }"
+            v-bind:class="{ 'active': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
-            <div class="d-flex justify-content-between align-items-center w-100">
-                <input class="me-2 form-check-input flex-shrink-0"
-                    type="checkbox"
-                    v-bind:id="item.outpoint"
-                    v-bind:value="item.outpoint"
-                    v-bind:checked="item.selected">
+            <div class="d-flex justify-content-between align-items-center">
+                <input class="mt-0 me-2 form-check-input flex-shrink-0"
+                       type="checkbox"
+                       v-bind:id="item.outpoint"
+                       v-bind:value="item.outpoint"
+                       v-bind:checked="item.selected">
                 <label
                     class="flex-1 d-inline-block text-truncate mb-0"
                     v-bind:for="item.outpoint">
@@ -39,60 +46,56 @@
                         {{item.outpoint}}
                     </a>
                 </label>
+                <span class="text-muted text-nowrap ms-3">{{item.amount}} @Model.CryptoCode</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center" style="padding-left:1.35rem;">
                 <div>
-                    
-                    <span v-bind:class="{' bg-success' : item.confirmations > 0, ' bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
-                        {{item.confirmations}}<span class="ms-1 fa fa-cube"></span>
-                    </span>
-                    
-                    <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="font-style: italic">i</span>
-                    <span
-                        v-if="item.labels"
-                        class="badge bg-primary rounded-pill ms-2"
-                        v-for="label of item.labels"
-                        v-bind:style="{ 'background-color': label.color}"
-                        key="label.text">
-
-                        <span v-if="!label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
+                    <template v-if="item.labels">
+                        <a v-for="label of item.labels"
+                           key="label.text"
+                           :href="label.link || '#'"
+                           target="_blank"
+                           class="badge rounded-pill px-2 mt-2 me-2"
+                           data-bs-toggle="tooltip"
+                           v-tooltip="label.tooltip"
+                           v-bind:style="styles(label.color)">
                             {{label.text}}
-                        </span>
-
-                        <a :href="label.link" target="_blank" v-if="label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
-                            {{label.text}}
-                            <i class="fa fa-info-circle"></i>
                         </a>
+                    </template><span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill mt-2" style="min-width:2em">
+                        <span class="fa fa-info"></span>
                     </span>
                 </div>
-                <span class="text-muted ms-2">{{item.amount}}</span>
-            </div>
-        </li>
-        <li class="list-group-item d-flex align-items-center justify-content-between">
-            <ul class="pagination float-start">
-                <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
-                    <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">
-                        Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
-                    </span>
-                </li>
-                <li class="page-item" v-bind:class="{'disabled' : pageEnd>= currentItems.length}">
-                    <a class="page-link" href="#" v-on:click="page = page +1">»</a>
-                </li>
-            </ul>
-
-            <div class="btn-group  btn-group-sm">
-                <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-sm btn-secondary" v-bind:class="{'disabled' : selectedInputs.length === 0}">
-                    <template v-if="showSelectedOnly">Show all</template>
-                    <template v-else>Show selected only</template>
-                </a>
-                <a href="#" v-show="!showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn  btn-sm  btn-secondary">
-                    <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
-                    <template v-else>Hide unconfirmed coins</template>
-                </a>
+                <span v-bind:class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge mt-2">
+                    {{item.confirmations}} <span class="fa fa-cube"></span>
+                </span>
             </div>
         </li>
     </ul>
+    
+    <ul class="pagination" v-show="currentItems.length > pageSize">
+        <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
+            <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link">
+                Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
+            </span>
+        </li>
+        <li class="page-item" v-bind:class="{'disabled' : pageEnd>= currentItems.length}">
+            <a class="page-link" href="#" v-on:click="page = page +1">»</a>
+        </li>
+    </ul>
+
+    <div class="btn-group btn-group-sm">
+        <button type="button" :disabled="selectedInputs.length === 0" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-sm btn-secondary">
+            <template v-if="showSelectedOnly">Show all</template>
+            <template v-else>Show selected only</template>
+        </button>
+        <button type="button" :disabled="showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn btn-sm btn-secondary" v-if="hasUnconfirmed">
+            <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
+            <template v-else>Hide unconfirmed coins</template>
+        </button>
+    </div>
 </div>
 
 <script>
@@ -141,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return this.showSelectedOnly ? this.selectedItems : this.items.filter(i=> (!this.showUnconfirmedOnly || i.confirmations ));
             },
             pageStart: function() {
-                return this.page == 0 ? 0 : this.page * this.pageSize;
+                return this.page === 0 ? 0 : this.page * this.pageSize;
             },
             pageEnd: function() {
                 var result = this.pageStart + this.pageSize;
@@ -149,6 +152,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     result = this.currentItems.length;
                 }
                 return result;
+            },
+            hasUnconfirmed: function() {
+                return this.items.filter(i => !i.confirmations).length > 0;
             },
             filteredItems: function() {
                 var result = [];
@@ -231,6 +237,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 this.selectedInputs = res;
                 $(".crypto-balance-link").text(this.selectedAmount);
+            },
+            styles: function (bgColor) {
+                let color = 'inherit'
+                if (bgColor.slice(0, 1) === '#') {
+                    const hex = bgColor.slice(1);
+                    // Convert to RGB value
+                    const r = parseInt(hex.substr(0,2), 16);
+                    const g = parseInt(hex.substr(2,2), 16);
+                    const b = parseInt(hex.substr(4,2), 16);
+                    // Get YIQ ratio
+                    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                    // Check contrast
+                    color = (yiq >= 128) ? 'black' : 'white';
+                }
+                return { 'background-color': bgColor, color }
             }
         }
     });

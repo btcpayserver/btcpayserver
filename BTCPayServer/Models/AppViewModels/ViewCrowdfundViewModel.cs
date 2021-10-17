@@ -83,7 +83,7 @@ namespace BTCPayServer.Models.AppViewModels
     public class ContributeToCrowdfund
     {
         public ViewCrowdfundViewModel ViewCrowdfundViewModel { get; set; }
-        [Required] public decimal Amount { get; set; }
+        [Required] public decimal? Amount { get; set; }
         public string Email { get; set; }
         public string ChoiceKey { get; set; }
         public bool RedirectToCheckout { get; set; }

@@ -112,7 +112,7 @@ Cart.prototype.getTotalProducts = function() {
             typeof this.content[key] != 'undefined' &&
             !this.content[key].disabled
         ) {
-            var price = this.toCents(this.content[key].price.value);
+            const price = this.toCents(this.content[key].price.value ||0);
             amount += (this.content[key].count * price);
         }
     }
@@ -439,7 +439,7 @@ Cart.prototype.listItems = function() {
                 'title': this.escape(item.title),
                 'count': this.escape(item.count),
                 'inventory': this.escape(item.inventory < 0? 99999: item.inventory),
-                'price': this.escape(item.price.formatted)
+                'price': this.escape(item.price.formatted || 0)
             });
             list.push($(tableTemplate));
         }

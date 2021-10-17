@@ -356,10 +356,10 @@ namespace BTCPayServer.Controllers.GreenField
                         PaymentMethod = method.GetId().ToStringNormalized(),
                         Destination = details.GetPaymentDestination(),
                         Rate = method.Rate,
-                        Due = accounting.Due.ToDecimal(MoneyUnit.BTC),
+                        Due = accounting.DueUncapped.ToDecimal(MoneyUnit.BTC),
                         TotalPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC),
                         PaymentMethodPaid = accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
-                        Amount = accounting.Due.ToDecimal(MoneyUnit.BTC),
+                        Amount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC),
                         NetworkFee = accounting.NetworkFee.ToDecimal(MoneyUnit.BTC),
                         PaymentLink =
                             method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,

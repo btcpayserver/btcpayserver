@@ -3,60 +3,73 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
 }
-<style type="text/css">
-    .smMaxWidth {
-        max-width: 200px;
-    }
 
-    @@media (min-width: 768px) {
+@section PageHeadContent {
+    <style>
         .smMaxWidth {
-            max-width: 400px;
+            max-width: 200px;
         }
-    }
 
-    .unconf > * {
-        opacity: 0.5;
-    }
+        @@media (min-width: 768px) {
+            .smMaxWidth {
+                max-width: 400px;
+            }
+        }
 
-    .switchTimeFormat {
-        display: block;
-        max-width: 150px;
-        width: 150px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
+        .unconf > * {
+            opacity: 0.5;
+        }
 
-    .badge-container:not(:last-child) {
-        margin-bottom: 4px;
-    }
+        .switchTimeFormat {
+            display: block;
+            max-width: 150px;
+            width: 150px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
 
-    .badge-container {
-        display: flex;
-        align-items: center;
-        flex-wrap: nowrap;
-    }
+        .badge-container:not(:last-child) {
+            margin-bottom: 4px;
+        }
 
-    .removeTransactionLabelForm {
-        display: inline;
-        position: absolute;
-        right: 4px;
-    }
+        .badge-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
 
-    .removeTransactionLabelForm button {
-        cursor: pointer;
-        display: inline;
-        padding: 0;
-        background-color: transparent;
-        border: 0;
-    }
+        .removeTransactionLabelForm {
+            display: inline;
+            position: absolute;
+            right: 4px;
+        }
 
-    .transaction-details-icon {
-        position: relative;
-        padding-left: 12px;
-        left: -8px;
-    }
-</style>
+        .removeTransactionLabelForm button {
+            cursor: pointer;
+            display: inline;
+            padding: 0;
+            background-color: transparent;
+            border: 0;
+        }
+
+        .transaction-details-icon {
+            position: relative;
+            padding-left: 12px;
+            left: -8px;
+        }
+    </style>
+}
+
+@section PageFootContent {
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+
+    @* Custom Range Modal *@
+    <script>
+        delegate('click', '#switchTimeFormat', switchTimeFormat)
+    </script>
+}
 
 <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 <p>
@@ -71,12 +84,11 @@
     {
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="d-flex flex-row align-items-start flex-wrap card card-body p-2">
+                <div class="d-flex flex-row align-items-center flex-wrap card card-body px-3 py-2">
                     <span class="me-2">Filter by label:</span>
                     @foreach (var label in Model.Labels)
                     {
-                        <a asp-route-labelFilter="@label.Text" class="badge me-2 my-1 position-relative text-white d-block"
-                           style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
+                        <a asp-route-labelFilter="@label.Text" class="badge me-2 my-1 position-relative text-white d-block" style="background-color: @label.Color;">@label.Text</a>
                     }
                 </div>
             </div>
@@ -89,7 +101,7 @@
                 <tr>
                     <th style="min-width: 90px;" class="col-md-auto">
                         Date
-                        <a href="javascript:switchTimeFormat()" csp-allow>
+                        <a id="switchTimeFormat" href="#">
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>

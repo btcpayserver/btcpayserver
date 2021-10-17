@@ -1,5 +1,7 @@
 @using BTCPayServer.BIP78.Sender
+@using NBitcoin
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 
 <script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
@@ -63,10 +65,10 @@
 
 <script type="text/x-template" id="bitcoin-method-checkout-header-template">
     <div class="payment-tabs">
-        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
+        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')" v-bind:class="{ 'active': currentTab == 'scan'}" >
             <span>{{$t("Scan")}}</span>
         </div>
-        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
+        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')" v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs", model = Model})
@@ -118,7 +120,6 @@
             }
         }
     });
-
     $(document).ready(function() {
         // Clipboard Copy
         var copySpan = new Clipboard('._copySpan', {

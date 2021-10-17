@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -448,7 +449,7 @@ namespace BTCPayServer.Controllers
                 model.IsModal = true;
             return View(nameof(Checkout), model);
         }
-
+        
         [HttpGet]
         [Route("invoice-noscript")]
         public async Task<IActionResult> CheckoutNoScript(string? invoiceId, string? id = null, string? paymentMethodId = null, [FromQuery] string? lang = null)
@@ -868,6 +869,8 @@ namespace BTCPayServer.Controllers
                         Enabled = true
                     }),
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
+                    NotificationEmail = model.NotificationEmail,
+                    ExtendedNotifications = model.NotificationEmail != null
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

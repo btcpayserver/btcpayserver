@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
 
                 await websocketHelper.NextMessageAsync(cancellationToken);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // ignored
             }

@@ -8,7 +8,7 @@ namespace BTCPayServer.Models
         
         public ConfirmModel() {}
 
-        public ConfirmModel(string title, string desc, string action = null, string buttonClass = ButtonClassDefault)
+        public ConfirmModel(string title, string desc, string action = null, string buttonClass = ButtonClassDefault, string actionUrl = null)
         {
             Title = title;
             Description = desc;
@@ -19,6 +19,8 @@ namespace BTCPayServer.Models
             {
                 DescriptionHtml = true;
             }
+
+            ActionUrl = actionUrl;
         }
 
         public string Title { get; set; }

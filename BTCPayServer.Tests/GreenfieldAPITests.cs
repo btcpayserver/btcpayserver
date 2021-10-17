@@ -1026,6 +1026,38 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanOverpayInvoice()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                await user.RegisterDerivationSchemeAsync("BTC");
+                var client = await user.CreateClient();
+                var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+                var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+                var method = methods.First();
+                var amount = method.Amount;
+                Assert.Equal(amount, method.Due);
+#pragma warning disable CS0618 // Type or member is obsolete
+                var btc = tester.NetworkProvider.BTC.NBitcoinNetwork;
+#pragma warning restore CS0618 // Type or member is obsolete
+                await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(method.Destination, btc), Money.Coins(method.Due) + Money.Coins(1.0m));
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    invoice = await client.GetInvoice(user.StoreId, invoice.Id);
+                    Assert.True(invoice.Status == InvoiceStatus.Processing);
+                    methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+                    method = methods.First();
+                    Assert.Equal(amount, method.Amount);
+                    Assert.Equal(-1.0m, method.Due);
+                    Assert.Equal(amount + 1.0m, method.TotalPaid);
+                });
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
             using (var tester = ServerTester.Create())
@@ -1156,16 +1188,16 @@ namespace BTCPayServer.Tests
                 //update
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
-               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-               Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+               Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+               Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
                 {
                     Status = InvoiceStatus.Settled
                 });
                 newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
                 
-                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+                Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+                Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
                 await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
@@ -1175,8 +1207,8 @@ namespace BTCPayServer.Tests
 
                 newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
                 
-                Assert.True( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Settled));
-                Assert.False( newInvoice.AvailableStatusesForManualMarking.Contains(InvoiceStatus.Invalid));
+                Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+                Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
                 await AssertHttpError(403, async () =>
                 {
                     await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
@@ -1327,7 +1359,39 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
                 
+                store = await client.GetStore(user.StoreId);
+                store.LazyPaymentMethods = false;
+                store = await client.UpdateStore(store.Id,
+                    JObject.FromObject(store).ToObject<UpdateStoreRequest>());
                 
+                
+                //let's see the overdue amount 
+                invoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Currency = "BTC",
+                        Amount = 0.0001m,
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                        {
+                            PaymentMethods = new[] { "BTC" },
+                            DefaultPaymentMethod = "BTC" 
+                        }
+                    });
+                var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+               Assert.Equal(0.0001m, pm.Due);
+               
+               await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+               {
+                   await tester.ExplorerNode.SendToAddressAsync(
+                       BitcoinAddress.Create(pm.Destination, tester.ExplorerClient.Network.NBitcoinNetwork),
+                       new Money(0.0002m, MoneyUnit.BTC));
+               });
+               await TestUtils.EventuallyAsync(async () =>
+               {
+                   var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+                   Assert.Single(pm.Payments);
+                   Assert.Equal(-0.0001m, pm.Due);
+               });
             }
         }
 

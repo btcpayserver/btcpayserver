@@ -289,7 +289,8 @@ namespace BTCPayServer.Services.Apps
             {
                 var itemNode = new YamlMappingNode();
                 itemNode.Add("title", new YamlScalarNode(item.Title));
-                itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
+                if(item.Price.Type!= ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                    itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
                 if (!string.IsNullOrEmpty(item.Description))
                 {
                     itemNode.Add("description",  new YamlScalarNode(item.Description)
@@ -301,7 +302,7 @@ namespace BTCPayServer.Services.Apps
                 {
                     itemNode.Add("image", new YamlScalarNode(item.Image));
                 }
-                itemNode.Add("custom", new YamlScalarNode(item.Custom.ToStringLowerInvariant()));
+                itemNode.Add("price_type", new YamlScalarNode(item.Price.Type.ToStringLowerInvariant()));
                 itemNode.Add("disabled", new YamlScalarNode(item.Disabled.ToStringLowerInvariant()));
                 if (item.Inventory.HasValue)
                 {
@@ -335,23 +336,50 @@ namespace BTCPayServer.Services.Apps
                 .Children
                 .Select(kv => new PosHolder(_HtmlSanitizer) { Key = _HtmlSanitizer.Sanitize((kv.Key as YamlScalarNode)?.Value), Value = kv.Value as YamlMappingNode })
                 .Where(kv => kv.Value != null)
-                .Select(c => new ViewPointOfSaleViewModel.Item()
+                .Select(c =>
                 {
-                    Description = c.GetDetailString("description"),
-                    Id = c.Key,
-                    Image = c.GetDetailString("image"),
-                    Title = c.GetDetailString("title") ?? c.Key,
-                    Price = c.GetDetail("price")
-                             .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
-                             {
-                                 Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
-                                 Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
-                             }).Single(),
-                    Custom = c.GetDetailString("custom") == "true",
-                    BuyButtonText = c.GetDetailString("buyButtonText"),
-                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
-                    PaymentMethods = c.GetDetailStringList("payment_methods"),
-                    Disabled = c.GetDetailString("disabled") == "true"
+                    ViewPointOfSaleViewModel.Item.ItemPrice price = new ViewPointOfSaleViewModel.Item.ItemPrice();
+                    var pValue = c.GetDetail("price")?.FirstOrDefault();
+
+                    switch (c.GetDetailString("custom")??c.GetDetailString("price_type")?.ToLowerInvariant())
+                    {
+                        case "topup":
+                        case null when pValue is null:
+                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup;
+                            break;
+                        case "true":
+                        case "minimum":
+                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum;
+                            if (pValue != null)
+                            {
+                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
+                                price.Formatted = Currencies.FormatCurrency(pValue.Value.Value, currency);
+                            }
+                            break;
+                        case "fixed":
+                        case "false":
+                        case null:
+                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
+                            price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
+                            price.Formatted = Currencies.FormatCurrency(pValue.Value.Value, currency);
+                            break;
+                    }
+
+                    return new ViewPointOfSaleViewModel.Item()
+                    {
+                        Description = c.GetDetailString("description"),
+                        Id = c.Key,
+                        Image = c.GetDetailString("image"),
+                        Title = c.GetDetailString("title") ?? c.Key,
+                        Price = price,
+                        BuyButtonText = c.GetDetailString("buyButtonText"),
+                        Inventory =
+                            string.IsNullOrEmpty(c.GetDetailString("inventory"))
+                                ? (int?)null
+                                : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
+                        PaymentMethods = c.GetDetailStringList("payment_methods"),
+                        Disabled = c.GetDetailString("disabled") == "true"
+                    };
                 })
                 .ToArray();
         }

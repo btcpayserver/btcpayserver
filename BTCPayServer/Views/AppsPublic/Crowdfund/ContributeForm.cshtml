@@ -1,3 +1,4 @@
+@using BTCPayServer.Models.AppViewModels
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
 @{ var vm = Model.ViewCrowdfundViewModel; }
@@ -19,7 +20,7 @@
             <div class="card-body">
                 <div class="card-title d-flex align-items-center justify-content-between mb-1">
                     <label class="h5 d-flex align-items-center">
-                        @if (vm.Started && !vm.Ended && (item.Price.Value > 0 || item.Custom))
+                        @if (vm.Started && !vm.Ended )
                         {
                             <input type="radio" asp-for="ChoiceKey" value="@item.Id" class="form-check-input mt-0 me-2"/>
                         }
@@ -31,14 +32,17 @@
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>
 
-                            if (item.Custom)
+                            if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum)
                             {
                                 @Safe.Raw("or more")
                             }
                         }
-                        else if (item.Custom)
+                        else if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed )
                         {
                             @Safe.Raw("Any amount")
+                        }else if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)
+                        {
+                            @Safe.Raw("Free")
                         }
                     </span>
                 </div>
@@ -51,7 +55,7 @@
                     {
                         case null:
                             break;
-                        case int i when i <= 0:
+                        case var i when i <= 0:
                             <span>Sold out</span>
                             break;
                         default:

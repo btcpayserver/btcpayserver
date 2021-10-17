@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
         [DomainMappingConstraint(AppType.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType viewType,
-                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount,
                                                         string email,
                                                         string orderId,
                                                         string notificationUrl,
@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId, viewType = viewType });
             }
             string title = null;
-            var price = 0.0m;
+            decimal? price = null;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(choiceKey))
@@ -146,9 +146,17 @@ namespace BTCPayServer.Controllers
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                price = choice.Price.Value;
-                if (amount > price)
-                    price = amount;
+                if (choice.Price.Type ==  ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                {
+                    price = null;
+                }
+                else
+                {
+                    price = choice.Price.Value;
+                    if (amount > price)
+                        price = amount;
+                }
+               
 
                 if (choice.Inventory.HasValue)
                 {
@@ -277,10 +285,7 @@ namespace BTCPayServer.Controllers
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-            if (request.Amount <= 0)
-            {
-                return NotFound("Please provide an amount greater than 0");
-            }
+           
             var app = await _AppService.GetApp(appId, AppType.Crowdfund, true);
 
             if (app == null)
@@ -307,7 +312,7 @@ namespace BTCPayServer.Controllers
 
             var store = await _AppService.GetStore(app);
             var title = settings.Title;
-            var price = request.Amount;
+            decimal? price = request.Amount;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
@@ -317,11 +322,17 @@ namespace BTCPayServer.Controllers
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
-                price = choice.Price.Value;
-                if (request.Amount > price)
-                    price = request.Amount;
 
-
+                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                {
+                    price = null;
+                }
+                else
+                {
+                    price = choice.Price.Value;
+                    if (request.Amount > price)
+                        price = request.Amount;
+                }
                 if (choice.Inventory.HasValue)
                 {
                     if (choice.Inventory <= 0)
@@ -329,13 +340,20 @@ namespace BTCPayServer.Controllers
                         return NotFound("Option was out of stock");
                     }
                 }
-
-
                 if (choice?.PaymentMethods?.Any() is true)
                 {
                     paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
                         s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
                 }
+            }
+            else
+            {
+                if (request.Amount < 0)
+                {
+                    return NotFound("Please provide an amount greater than 0");
+                }
+
+                price = request.Amount;
             }
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >

@@ -7,7 +7,7 @@
         {
             foreach (var error in errors.Errors)
             {
-                <br />
+                <br/>
                 <span class="text-danger">@error.ErrorMessage</span>
             }
         }
@@ -25,7 +25,7 @@
                     </div>
                 </div>
                 <div v-if="!items || items.length === 0" class="col-12 text-center">
-                    No items.<br />
+                    No items.<br/>
                     <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
                         Add your first item
                     </button>
@@ -46,7 +46,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
-                            <vc:icon symbol="close" />
+                            <vc:icon symbol="close"/>
                         </button>
                     </div>
                     <div class="modal-body" v-if="editingItem">
@@ -55,10 +55,17 @@
                             <div class="form-group row">
                                 <div class="col-sm-6">
                                     <label class="form-label" data-required>Title</label>
-                                    <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
+                                    <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle"/>
                                 </div>
-                                <div class="col-sm-3">
-                                    <label class="form-label" data-required>Price</label>
+                                <div class="col-sm-3 px-0">
+                                    <label class="form-label">Price</label>
+                                    <select class="form-select" v-model="editingItem.custom">
+                                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3" v-show="editingItem.custom !== 'topup'">
+                                    
+                                    <label class="form-label">&nbsp</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"
@@ -66,18 +73,13 @@
                                            min="0"
                                            type="number"
                                            required
-                                           v-model="editingItem.price" ref="txtPrice" />
+                                           v-model="editingItem.price" ref="txtPrice"/>
                                 </div>
-                                <div class="col-sm-3">
-                                    <label class="form-label">Custom price</label>
-                                    <select class="form-select" v-model="editingItem.custom">
-                                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
-                                    </select>
-                                </div>
+
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Image</label>
-                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage" />
+                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage"/>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description</label>
@@ -85,18 +87,18 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
-                                <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
+                                <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory"/>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Id (leave blank to generate from title)</label>
-                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
+                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Buy Button Text</label>
-                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
+                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
                             </div>
                             <div class="form-group d-flex align-items-center">
-                                <input type="checkbox" id="Disabled" class="btcpay-toggle me-2" v-model="editingItem.disabled" />
+                                <input type="checkbox" id="Disabled" class="btcpay-toggle me-2" v-model="editingItem.disabled"/>
                                 <label class="form-label mb-0">Disabled</label>
                             </div>
                         </div>
@@ -120,8 +122,9 @@ document.addEventListener("DOMContentLoaded", function () {
             items: [],
             editingItem: null,
             customPriceOptions: [
-                { text: 'No', value: false },
-                { text: 'Yes', value: true },
+                { text: 'Fixed', value: "fixed" },
+                { text: 'Minimum', value: "minimum" },
+                { text: 'Custom', value: 'topup' },
             ],
             elementId: "@Model.templateId"
         },
@@ -205,8 +208,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
                         }
-                        if (productProperty.indexOf('custom:') !== -1) {
-                            custom = productProperty.replace('custom:', '').trim();
+                        if (productProperty.indexOf('price_type:') !== -1) {
+                            custom = productProperty.replace('price_type:', '').trim();
+                        }else{
+                            custom = "fixed";
                         }
                         if (productProperty.indexOf('buyButtonText:') !== -1) {
                             buyButtonText = productProperty.replace('buyButtonText:', '').trim();
@@ -222,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }
             
-                    if (price != null || title != null) {
+                    if (title != null) {
                         // Add product to the list
                         result.push({
                             id: id,
@@ -230,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             price: price,
                             image: image || null,
                             description:  description || '',
-                            custom: custom === "true",
+                            custom: custom,
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods,
@@ -241,13 +246,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.items = result;
             },
             toYml: function(){
-                    var template = '';
+                    let template = '';
                     // Construct template from the product list
-                    for (var key in this.items) {
-                        var product = this.items[key],
+                    for (const key in this.items) {
+                        const product = this.items[key],
                             id = product.id,
                             title = product.title,
-                            price = product.price? product.price : 0,
+                            price = product.custom === 'topup'? null : product.price??0,
                             image = product.image,
                             description = product.description,
                             custom = product.custom,
@@ -255,43 +260,43 @@ document.addEventListener("DOMContentLoaded", function () {
                             inventory = product.inventory,
                             paymentMethods = product.paymentMethods,
                             disabled = product.disabled;
-
-                        template += id + ':\n' +
-                        '  price: ' + parseFloat(price).noExponents() + '\n' +
-                        '  title: ' + title + '\n';
+                        let itemTemplate = id+":\n";                        
+                       itemTemplate += ( product.custom === 'topup'? '' : ('  price: ' + parseFloat(price).noExponents() + '\n'));
+                        itemTemplate+= '  title: ' + title + '\n';
 
                         if (description) {
-                            template += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
+                            itemTemplate += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
                         }
                         if (image) {
-                            template += '  image: ' + image + '\n';
+                            itemTemplate += '  image: ' + image + '\n';
                         }
                         if (inventory) {
-                            template += '  inventory: ' + inventory + '\n';
+                            itemTemplate += '  inventory: ' + inventory + '\n';
                         }
                         if (custom != null) {
-                            template += '  custom: ' + custom + '\n';
+                            itemTemplate += '  price_type: "' + custom + '" \n';
                         }
                         if (buyButtonText != null && buyButtonText.length > 0) {
-                            template += '  buyButtonText: ' + buyButtonText + '\n';
+                            itemTemplate += '  buyButtonText: ' + buyButtonText + '\n';
                         }
                         if (disabled != null) {
-                            template += '  disabled: ' + disabled.toString() + '\n';
+                            itemTemplate += '  disabled: ' + disabled.toString() + '\n';
                         }
                         if(paymentMethods != null && paymentMethods.length > 0){
-                            template+= '  payment_methods:\n';
+                            itemTemplate+= '  payment_methods:\n';
                             for (var method of paymentMethods){
-                                template+= '    - '+method+'\n';
+                                itemTemplate+= '    - '+method+'\n';
                             }
                         }                       
-                        template += '\n';
+                        itemTemplate += '\n';
+                        template+=itemTemplate;
                     }
                     this.getInputElement().val(template);
             },
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: [], disabled: false};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: "fixed", inventory: null, paymentMethods: [], disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }
@@ -337,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.errors.push("Image cannot start with \"- \"");
                 }
                 
-                if (!this.$refs.txtPrice.checkValidity()) {
+                if (this.editingItem.custom !== "topup" && !this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }
                 if (!this.$refs.txtTitle.checkValidity()) {

@@ -258,7 +258,7 @@
                         <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
-                        <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0';">
+                        <select asp-for="SpeedPolicy" class="form-select w-auto">
                             <option value="0">Is unconfirmed</option>
                             <option value="1">Has at least 1 confirmation</option>
                             <option value="3">Has at least 2 confirmations</option>
@@ -351,4 +351,9 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        delegate('change', '#SpeedPolicy', e => {
+            document.getElementById('unconfirmed-warning').hidden = e.target.value !== '0';
+        });
+    </script>
 }

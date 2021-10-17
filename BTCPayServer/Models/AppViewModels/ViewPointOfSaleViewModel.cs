@@ -9,15 +9,22 @@ namespace BTCPayServer.Models.AppViewModels
         {
             public class ItemPrice
             {
+                public enum ItemPriceType
+                {
+                    Topup,
+                    Minimum,
+                    Fixed
+                }
+                
+                public ItemPriceType Type { get; set; }
                 public string Formatted { get; set; }
-                public decimal Value { get; set; }
+                public decimal? Value { get; set; }
             }
             public string Description { get; set; }
             public string Id { get; set; }
             public string Image { get; set; }
             public ItemPrice Price { get; set; }
             public string Title { get; set; }
-            public bool Custom { get; set; }
             public string BuyButtonText { get; set; }
             public int? Inventory { get; set; } = null;
             public string[] PaymentMethods { get; set; }

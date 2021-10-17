@@ -48,8 +48,6 @@
     margin-bottom: 1%;
 }
 
-/* This has a conflict in site.css
 .logo {
     height: 40px;
-    filter: contrast(0) brightness(200%);
-}*/
+}

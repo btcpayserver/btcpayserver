@@ -15,6 +15,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -27,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
@@ -876,7 +878,8 @@ namespace BTCPayServer.Controllers
             }
             catch (BitpayHttpException ex)
             {
-                ModelState.TryAddModelError(nameof(model.Currency), $"Error: {ex.Message}");
+                Logs.PayServer.LogError(ex, $"Invoice creation failed due to invalid currency {model.Currency}");
+                ModelState.TryAddModelError(nameof(model.Currency), "Please make sure you entered a valid currency symbol, a rate provider is configured in store settings, and your configured rate provider is both online and providing rates for your selected currency.");
                 return View(model);
             }
         }

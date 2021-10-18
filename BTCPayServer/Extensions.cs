@@ -152,6 +152,13 @@ namespace BTCPayServer
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
 
+#nullable enable
+        public static IPayoutHandler? FindPayoutHandler(this IEnumerable<IPayoutHandler> handlers, PaymentMethodId paymentMethodId)
+        {
+            return handlers.FirstOrDefault(h => h.CanHandle(paymentMethodId));
+        }
+#nullable restore
+
         public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
         {
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()

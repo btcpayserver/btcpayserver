@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Client.Models
+@using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
 @model PayoutsModel
 
@@ -10,7 +10,9 @@
     var paymentMethods = PayoutHandlers.GetSupportedPaymentMethods();
     
     var stateActions = new List<(string Action, string Text)>();
-    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(PaymentMethodId.Parse(Model.PaymentMethodId)));
+    var payoutHandler = PayoutHandlers.FindPayoutHandler(PaymentMethodId.Parse(Model.PaymentMethodId));
+    if (payoutHandler is null)
+        return;
     stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
     switch (Model.PayoutState)
     {

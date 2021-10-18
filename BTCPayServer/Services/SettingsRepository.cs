@@ -66,7 +66,7 @@ namespace BTCPayServer.Services
             return settings;
         }
 
-        private T Deserialize<T>(string value)
+        private T? Deserialize<T>(string value) where T : class
         {
             return JsonConvert.DeserializeObject<T>(value);
         }

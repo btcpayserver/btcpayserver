@@ -15,11 +15,11 @@
         {
             case "Completed":
             case "In Progress":
-                return "text-success";
+                return "bg-success";
             case "Cancelled":
-                return "text-danger";
+                return "bg-danger";
             default:
-                return "text-warning";
+                return "bg-warning";
         }
     }
 }
@@ -55,8 +55,12 @@
                     <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="w-100">
                         <div class="row align-items-center" style="width:calc(100% + 30px)">
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
-                                <input class="form-control form-control-lg font-monospace w-100" asp-for="Destination" placeholder="Enter destination address to claim funds …" required style="font-size:.9rem;height:42px;">
+                                <div class="input-group">
+                                    <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
+                                    <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                </div>
                             </div>
+
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
                                     <input type="number" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
@@ -147,6 +151,7 @@
                                         <thead>
                                         <tr class="table-borderless">
                                             <th class="fw-normal text-secondary" scope="col">Destination</th>
+                                            <th class="fw-normal text-secondary" scope="col">Method</th>
                                             <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
                                             <th class="fw-normal text-secondary text-end">Status</th>
                                         </tr>
@@ -158,15 +163,16 @@
                                                 <td class="text-break">
                                                     @invoice.Destination
                                                 </td>
-                                                <td class="text-end">@invoice.AmountFormatted</td>
+                                                <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
+                                                <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
                                                 <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
+                                                        <a class="transaction-link text-print-default badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
+                                                        <span class="text-print-default badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>
@@ -190,6 +196,7 @@
             </div>
         </footer>
     </div>
+    <partial name="LayoutFoot" />
     <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);

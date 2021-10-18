@@ -54,6 +54,7 @@
     <PackageReference Include="Fido2" Version="2.0.1" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.1" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
+    <PackageReference Include="LNURL" Version="0.0.7" />
     <PackageReference Include="McMaster.NETCore.Plugins.Mvc" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="3.3.2">
@@ -63,7 +64,7 @@
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.4" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.1.0" />

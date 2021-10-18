@@ -297,9 +297,8 @@ namespace BTCPayServer.HostedServices
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
                 var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
-                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
-
-                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest);
+                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, false);
+                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
@@ -384,7 +383,6 @@ namespace BTCPayServer.HostedServices
                                   Entity = o,
                                   Blob = o.GetBlob(_jsonSerializerSettings)
                               });
-                var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
                 var limit = ppBlob.Limit;
                 var totalPayout = payouts.Select(p => p.Blob.Amount).Sum();
                 var claimed = req.ClaimRequest.Value is decimal v ? v : limit - totalPayout;

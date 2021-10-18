@@ -18,5 +18,7 @@ namespace BTCPayServer.Data
         {
             return _bitcoinAddress.ToString();
         }
+
+        public decimal? Amount => null;
     }
 }

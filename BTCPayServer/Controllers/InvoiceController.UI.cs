@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("invoices/{invoiceId}/refund")]
         [AllowAnonymous]
-        public async Task<IActionResult> Refund(string invoiceId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Refund([FromServices]IEnumerable<IPayoutHandler> payoutHandlers, string invoiceId, CancellationToken cancellationToken)
         {
             using var ctx = _dbContextFactory.CreateContext();
             ctx.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
@@ -189,22 +189,16 @@ namespace BTCPayServer.Controllers
             else
             {
                 var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
-                var options = paymentMethods
-                    .Select(o => o.GetId())
-                    .Select(o => o.CryptoCode)
-                    .Where(o => _NetworkProvider.GetNetwork<BTCPayNetwork>(o) is BTCPayNetwork n && !n.ReadonlyWallet)
-                    .Distinct()
-                    .OrderBy(o => o)
-                    .Select(o => new PaymentMethodId(o, PaymentTypes.BTCLike))
-                    .ToList();
+                var pmis = paymentMethods.Select(method => method.GetId()).ToList();
+                var options = payoutHandlers.GetSupportedPaymentMethods(pmis);
                 var defaultRefund = invoice.Payments
                     .Select(p => p.GetBlob(_NetworkProvider))
                     .Select(p => p?.GetPaymentMethodId())
-                    .FirstOrDefault(p => p != null && p.PaymentType == BitcoinPaymentType.Instance);
+                    .FirstOrDefault(p => p != null && options.Contains(p));
                 // TODO: What if no option?
                 var refund = new RefundModel();
                 refund.Title = "Select a payment method";
-                refund.AvailablePaymentMethods = new SelectList(options, nameof(PaymentMethodId.CryptoCode), nameof(PaymentMethodId.CryptoCode));
+                refund.AvailablePaymentMethods = new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())));
                 refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? options.Select(o => o.CryptoCode).First();
 
                 // Nothing to select, skip to next
@@ -229,7 +223,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (!CanRefund(invoice.GetInvoiceState()))
                 return NotFound();
-            var paymentMethodId = new PaymentMethodId(model.SelectedPaymentMethod, PaymentTypes.BTCLike);
+            var paymentMethodId = PaymentMethodId.Parse(model.SelectedPaymentMethod);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paymentMethodDivisibility = _CurrencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
             RateRules rules;

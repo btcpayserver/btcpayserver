@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Extensions;
+using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Rates;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
@@ -18,6 +20,8 @@ namespace BTCPayServer.Models
         {
             Id = data.Id;
             var blob = data.GetBlob();
+            PaymentMethods = blob.SupportedPaymentMethods;
+            SelectedPaymentMethod = PaymentMethods.First().ToString();
             Archived = data.Archived;
             Title = blob.View.Title;
             Amount = blob.Limit;
@@ -58,6 +62,11 @@ namespace BTCPayServer.Models
                 ResetIn = resetIn.TimeString();
             }
         }
+
+        public string SelectedPaymentMethod { get; set; }
+
+        public PaymentMethodId[] PaymentMethods { get; set; }
+
         public string HubPath { get; set; }
         public string ResetIn { get; set; }
         public string Email { get; set; }
@@ -95,6 +104,7 @@ namespace BTCPayServer.Models
             public string Currency { get; set; }
             public string Link { get; set; }
             public string TransactionId { get; set; }
+            public PaymentMethodId PaymentMethod { get; set; }
         }
     }
 }

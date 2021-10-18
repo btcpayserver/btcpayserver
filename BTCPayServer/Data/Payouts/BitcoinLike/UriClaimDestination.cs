@@ -25,6 +25,7 @@ namespace BTCPayServer.Data
             return _bitcoinUrl.ToString();
         }
 
+        public string Id => Address.ToString();
         public decimal? Amount => _bitcoinUrl.Amount?.ToDecimal(MoneyUnit.BTC);
     }
 }

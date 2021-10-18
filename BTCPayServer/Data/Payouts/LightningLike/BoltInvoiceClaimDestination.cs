@@ -26,6 +26,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return _bolt11;
         }
 
+        public string Id => ToString();
         public decimal? Amount => _amount;
     }
 }

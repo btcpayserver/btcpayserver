@@ -195,7 +195,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                await TrypayBolt(client, blob, payoutData, payoutData.Destination);
+                                await TrypayBolt(client, blob, payoutData, item1.ToString());
 
                                 break;
                             default:

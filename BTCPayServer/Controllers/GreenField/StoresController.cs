@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
                 SpeedPolicy = data.SpeedPolicy,
-                DefaultPaymentMethod = data.GetDefaultPaymentId(_btcPayNetworkProvider)?.ToStringNormalized(),
+                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints

@@ -258,7 +258,13 @@ namespace BTCPayServer.Services.Invoices
         public decimal Price { get; set; }
         public string Currency { get; set; }
         public string DefaultPaymentMethod { get; set; }
-
+#nullable enable
+        public PaymentMethodId? GetDefaultPaymentMethod()
+        {
+            PaymentMethodId.TryParse(DefaultPaymentMethod, out var id);
+            return id;
+        }
+#nullable restore
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 

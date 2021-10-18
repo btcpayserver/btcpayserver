@@ -412,7 +412,10 @@ namespace BTCPayServer.Controllers
 
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
         {
-            var choices = storeData.GetEnabledPaymentIds(_NetworkProvider)
+            var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
+            var defaultPaymentId = storeData.GetDefaultPaymentId();
+            var defaultChoice = defaultPaymentId is PaymentMethodId ? defaultPaymentId.FindNearest(enabled) : null;
+            var choices = enabled
                 .Select(o =>
                     new CheckoutExperienceViewModel.Format()
                     {
@@ -420,9 +423,7 @@ namespace BTCPayServer.Controllers
                         Value = o.ToString(),
                         PaymentId = o
                     }).ToArray();
-
-            var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
-            var chosen = choices.FirstOrDefault(c => c.PaymentId == defaultPaymentId);
+            var chosen = defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
             vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
@@ -434,7 +435,7 @@ namespace BTCPayServer.Controllers
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
             var defaultPaymentMethodId = model.DefaultPaymentMethod == null ? null : PaymentMethodId.Parse(model.DefaultPaymentMethod);
-            if (CurrentStore.GetDefaultPaymentId(_NetworkProvider) != defaultPaymentMethodId)
+            if (CurrentStore.GetDefaultPaymentId() != defaultPaymentMethodId)
             {
                 needUpdate = true;
                 CurrentStore.SetDefaultPaymentId(defaultPaymentMethodId);

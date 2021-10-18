@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                            {
                                Entity = o,
                                Blob = o.GetBlob(_serializerSettings),
-                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o)
+                               ProofBlob = _payoutHandlers.FindPayoutHandler(o.GetPaymentMethodId())?.ParseProof(o)
                            });
             var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
@@ -109,7 +109,7 @@ namespace BTCPayServer.Controllers
             
             var paymentMethodId = ppBlob.SupportedPaymentMethods.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
             
-            var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FindPayoutHandler(paymentMethodId);
             if (payoutHandler is null)
             {
                 ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");   

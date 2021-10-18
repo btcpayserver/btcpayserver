@@ -104,7 +104,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public async Task<IActionResult> ProcessLightningPayout(string cryptoCode, string[] payoutIds)
         {
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(pmi));
+            var payoutHandler = _payoutHandlers.FindPayoutHandler(pmi);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
 

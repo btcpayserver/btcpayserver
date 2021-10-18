@@ -233,7 +233,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             }
             
-            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethodId);
             if (payoutHandler is null)
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");

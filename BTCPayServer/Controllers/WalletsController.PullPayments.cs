@@ -196,7 +196,7 @@ namespace BTCPayServer.Controllers
             var storeId = walletId.StoreId;
             var paymentMethodId = PaymentMethodId.Parse(vm.PaymentMethodId);
             var handler = _payoutHandlers
-                .FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+                .FindPayoutHandler(paymentMethodId);
             var commandState = Enum.Parse<PayoutState>(vm.Command.Split("-").First());
             var payoutIds = vm.GetSelectedPayouts(commandState);
             if (payoutIds.Length == 0)
@@ -429,7 +429,7 @@ namespace BTCPayServer.Controllers
                     Destination = payoutBlob.Destination
                 };
                 var handler = _payoutHandlers
-                    .FirstOrDefault(handler => handler.CanHandle(item.Payout.GetPaymentMethodId()));
+                    .FindPayoutHandler(item.Payout.GetPaymentMethodId());
                 var proofBlob = handler?.ParseProof(item.Payout);
                 m.ProofLink = proofBlob?.Link;
                 vm.Payouts.Add(m);

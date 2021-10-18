@@ -296,7 +296,9 @@ namespace BTCPayServer.HostedServices
                 if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
-                var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
+                var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
+                if (payoutHandler is null)
+                    throw new InvalidOperationException($"No payout handler for {paymentMethod}");
                 var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, false);
                 decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
@@ -369,7 +371,7 @@ namespace BTCPayServer.HostedServices
                 }
                 var ppBlob = pp.GetBlob();
                 var payoutHandler =
-                    _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(req.ClaimRequest.PaymentMethodId));
+                    _payoutHandlers.FindPayoutHandler(req.ClaimRequest.PaymentMethodId);
                 if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId) || payoutHandler is null)
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));

@@ -451,7 +451,7 @@ namespace BTCPayServer.Controllers
                     if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
                     {
                         model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value,
-                            $"{methodCriterion.PaymentMethod}: invalid format (1.0 USD)", this);
+                            $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
                     }
                 }
             }

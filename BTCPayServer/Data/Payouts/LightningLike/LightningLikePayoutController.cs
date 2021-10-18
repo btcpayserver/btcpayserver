@@ -116,6 +116,19 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
                 string destination)
             {
+                var bolt11PaymentRequest = BOLT11PaymentRequest.Parse(destination, network.NBitcoinNetwork);
+                var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+                if (boltAmount != payoutBlob.CryptoAmount)
+                {
+                    results.Add(new ResultVM()
+                    {
+                        PayoutId = payoutData.Id, 
+                        Result = PayResult.Error,
+                        Message = $"The BOLT11 invoice amount did not match the payout's amount ({boltAmount} instead of {payoutBlob.CryptoAmount})", 
+                        Destination = payoutBlob.Destination
+                    });
+                    return;
+                }
                 var result = await lightningClient.Pay(destination);
                 if (result.Result == PayResult.Ok)
                 {

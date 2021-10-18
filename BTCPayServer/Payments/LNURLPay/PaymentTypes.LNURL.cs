@@ -41,13 +41,14 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
-        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod)
+        public override object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod, bool canModifyStore)
         {
             if (supportedPaymentMethod is LNURLPaySupportedPaymentMethod lightningSupportedPaymentMethod)
                 return new LNURLPayPaymentMethodBaseData()
                 {
                     UseBech32Scheme = lightningSupportedPaymentMethod.UseBech32Scheme,
-                    EnableForStandardInvoices = lightningSupportedPaymentMethod.EnableForStandardInvoices
+                    EnableForStandardInvoices = lightningSupportedPaymentMethod.EnableForStandardInvoices,
+                    LUD12Enabled = lightningSupportedPaymentMethod.LUD12Enabled
                 };
             return null;
         }

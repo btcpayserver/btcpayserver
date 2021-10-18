@@ -424,7 +424,7 @@ namespace BTCPayServer.Payments.Lightning
 
         internal async Task<LightningInvoiceStatus?> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
         {
-            var client = _lightningClientFactory.Create(ConnectionString, network);
+            var client = _lightningClientFactory.Create(ConnectionString, _network);
             LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId, cancellation);
             if (lightningInvoice?.Status is LightningInvoiceStatus.Paid &&
                 await AddPayment(lightningInvoice, listenedInvoice.InvoiceId,listenedInvoice.PaymentMethod.GetId().PaymentType))
@@ -467,8 +467,8 @@ namespace BTCPayServer.Payments.Lightning
                             continue;
                         if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                             (notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11 ||
-                             BOLT11PaymentRequest.Parse(notification.BOLT11, network.NBitcoinNetwork).PaymentHash ==
-                             listenedInvoice.PaymentMethodDetails.GetPaymentHash(network.NBitcoinNetwork)))
+                             BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash ==
+                             listenedInvoice.PaymentMethodDetails.GetPaymentHash(_network.NBitcoinNetwork)))
                         {
                             if (notification.Status == LightningInvoiceStatus.Paid &&
                                 notification.PaidAt.HasValue && notification.Amount != null)
@@ -525,10 +525,10 @@ namespace BTCPayServer.Payments.Lightning
             var payment = await _paymentService.AddPayment(invoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.BOLT11,
-                PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, network.NBitcoinNetwork).PaymentHash,
+                PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash,
                 Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable,
                 PaymentType = paymentType.ToString()
-            }, network, accounted: true);
+            }, _network, accounted: true);
             if (payment != null)
             {
                 var invoice = await _invoiceRepository.GetInvoice(invoiceId);

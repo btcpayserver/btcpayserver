@@ -115,7 +115,7 @@ namespace BTCPayServer.Payments.Lightning
                 BOLT11 = lightningInvoice.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 InvoiceId = lightningInvoice.Id,
-                NodeInfo = (await nodeInfo).First()?.ToString()
+                NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
         }
 
@@ -148,10 +148,11 @@ namespace BTCPayServer.Payments.Lightning
                         ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                         : info.NodeInfoList.Select(i => i).ToArray();
                 
-                    if (!nodeInfo.Any())
-                    {
-                        throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
-                    }
+                    // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
+                    // if (!nodeInfo.Any())
+                    // {
+                    //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
+                    // }
 
                     var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                     if (blocksGap > 10)
@@ -167,7 +168,7 @@ namespace BTCPayServer.Payments.Lightning
                 invoiceLogs.Write($"NodeInfo failed to be fetched: {e.Message}", InvoiceEventData.EventSeverity.Error);
             }
 
-            return null;
+            return Array.Empty<NodeInfo>();
         }
 
         public ILightningClient CreateLightningClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)

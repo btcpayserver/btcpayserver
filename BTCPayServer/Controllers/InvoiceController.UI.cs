@@ -460,18 +460,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private PaymentMethodId GetDefaultInvoicePaymentId(
-            PaymentMethodId[] paymentMethodIds,
-            InvoiceEntity invoice
-        )
-        {
-            PaymentMethodId.TryParse(invoice.DefaultPaymentMethod, out var defaultPaymentId);
-
-            return paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
-                paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
-                paymentMethodIds.FirstOrDefault();
-        }
-
         private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -481,19 +469,35 @@ namespace BTCPayServer.Controllers
             bool isDefaultPaymentId = false;
             if (paymentMethodId is null)
             {
-                paymentMethodId = GetDefaultInvoicePaymentId(store.GetEnabledPaymentIds(_NetworkProvider), invoice) ?? store.GetDefaultPaymentId(_NetworkProvider);
+                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider) ?? Array.Empty<PaymentMethodId>();
+                PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
+                PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
+                if (invoicePaymentId is PaymentMethodId)
+                {
+                    if (enabledPaymentIds.Contains(invoicePaymentId))
+                        paymentMethodId = invoicePaymentId;
+                }
+                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                {
+                    if (enabledPaymentIds.Contains(storePaymentId))
+                        paymentMethodId = storePaymentId;
+                }
+                if (paymentMethodId is null && invoicePaymentId is PaymentMethodId)
+                {
+                    paymentMethodId = invoicePaymentId.FindNearest(enabledPaymentIds);
+                }
+                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                {
+                    paymentMethodId = storePaymentId.FindNearest(enabledPaymentIds);
+                }
+                if (paymentMethodId is null)
+                {
+                    paymentMethodId = enabledPaymentIds.First();
+                }
                 isDefaultPaymentId = true;
             }
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
-            if (network == null && isDefaultPaymentId)
-            {
-                //TODO: need to look into a better way for this as it does not scale
-                network = _NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
-                paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            }
-            if (invoice == null || network == null)
-                return null;
-            if (!invoice.Support(paymentMethodId))
+            if (network is null || !invoice.Support(paymentMethodId))
             {
                 if (!isDefaultPaymentId)
                     return null;

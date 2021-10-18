@@ -1,4 +1,7 @@
+#nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace BTCPayServer.Payments
 {
@@ -8,6 +11,13 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
+        public PaymentMethodId? FindNearest(PaymentMethodId[] others)
+        {
+            if (others is null)
+                throw new ArgumentNullException(nameof(others));
+            return others.FirstOrDefault(f => f == this) ??
+                   others.FirstOrDefault(f => f.CryptoCode == CryptoCode);
+        }
         public PaymentMethodId(string cryptoCode, PaymentType paymentType)
         {
             if (cryptoCode == null)
@@ -31,23 +41,22 @@ namespace BTCPayServer.Payments
         public PaymentType PaymentType { get; private set; }
 
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            PaymentMethodId item = obj as PaymentMethodId;
-            if (item == null)
-                return false;
-            return ToString().Equals(item.ToString(), StringComparison.InvariantCulture);
+            if (obj is PaymentMethodId id)
+                return ToString().Equals(id.ToString(), StringComparison.OrdinalIgnoreCase);
+            return false;
         }
-        public static bool operator ==(PaymentMethodId a, PaymentMethodId b)
+        public static bool operator ==(PaymentMethodId? a, PaymentMethodId? b)
         {
-            if (System.Object.ReferenceEquals(a, b))
+            if (a is null && b is null)
                 return true;
-            if (((object)a == null) || ((object)b == null))
-                return false;
-            return a.ToString() == b.ToString();
+            if (a is PaymentMethodId ai && b is PaymentMethodId bi)
+                return ai.Equals(bi);
+            return false;
         }
 
-        public static bool operator !=(PaymentMethodId a, PaymentMethodId b)
+        public static bool operator !=(PaymentMethodId? a, PaymentMethodId? b)
         {
             return !(a == b);
         }
@@ -84,12 +93,12 @@ namespace BTCPayServer.Payments
             return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
         static char[] Separators = new[] { '_', '-' };
-        public static PaymentMethodId TryParse(string str)
+        public static PaymentMethodId? TryParse(string? str)
         {
             TryParse(str, out var r);
             return r;
         }
-        public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
+        public static bool TryParse(string? str, [MaybeNullWhen(false)] out PaymentMethodId paymentMethodId)
         {
             str ??= "";
             paymentMethodId = null;

@@ -819,7 +819,7 @@ namespace BTCPayServer.Tests
 
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
-                var response = await stores.Payment();
+                var response = stores.Payment();
                 var vm = Assert.IsType<PaymentViewModel>(Assert.IsType<ViewResult>(response).Model);
                 Assert.Equal(0.0, vm.PaymentTolerance);
                 vm.PaymentTolerance = 50.0;
@@ -1011,8 +1011,8 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync(true);
             await user.RegisterDerivationSchemeAsync("BTC");
             await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
-            await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
+            user.SetNetworkFeeMode(NetworkFeeMode.Never);
+            await user.ModifyWalletSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
             await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
@@ -1073,7 +1073,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
-                var storeResponse = storeController.UpdateStore();
+                var storeResponse = storeController.Payment();
                 Assert.IsType<ViewResult>(storeResponse);
                 Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -1097,9 +1097,9 @@ namespace BTCPayServer.Tests
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
-                storeResponse = storeController.UpdateStore();
+                storeResponse = storeController.Payment();
                 var storeVm =
-                    Assert.IsType<StoreViewModel>(Assert
+                    Assert.IsType<PaymentViewModel>(Assert
                         .IsType<ViewResult>(storeResponse).Model);
                 Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }
@@ -1213,7 +1213,7 @@ namespace BTCPayServer.Tests
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
-                    await acc.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
+                    await acc.ModifyWalletSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
                     var invoice = acc.BitPay.CreateInvoice(new Invoice
                     {
                         Price = 5.0m,
@@ -1630,7 +1630,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                await user.SetNetworkFeeMode(NetworkFeeMode.Always);
+                user.SetNetworkFeeMode(NetworkFeeMode.Always);
                 var invoice =
                     user.BitPay.CreateInvoice(new Invoice() { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
@@ -1732,10 +1732,9 @@ namespace BTCPayServer.Tests
                     Assert.False(i.GetPayments(false).First().Accounted);
                 });
 
-                Logs.Tester.LogInformation(
-                    $"Let's test if we can RBF a normal payment without adding fees to the invoice");
-                await user.SetNetworkFeeMode(NetworkFeeMode.MultiplePaymentsOnly);
-                invoice = user.BitPay.CreateInvoice(new Invoice() { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
+                Logs.Tester.LogInformation("Let's test if we can RBF a normal payment without adding fees to the invoice");
+                user.SetNetworkFeeMode(NetworkFeeMode.MultiplePaymentsOnly);
+                invoice = user.BitPay.CreateInvoice(new Invoice { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
                 payment1 = invoice.BtcDue;
                 tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
                 {
@@ -2040,7 +2039,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(404, (int)response.StatusCode);
 
-                await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
+                user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
 
                 Logs.Tester.LogInformation("Bad store with anyone can create invoice = 403");
                 response = await tester.PayTester.HttpClient.SendAsync(
@@ -2126,8 +2125,8 @@ namespace BTCPayServer.Tests
                 rng = new Random(seed);
                 Logs.Tester.LogInformation("Seed: " + seed);
                 foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
-                {
-                    await user.SetNetworkFeeMode(networkFeeMode);
+                { 
+                    user.SetNetworkFeeMode(networkFeeMode);
                     await AssertTopUpBtcPrice(tester, user, Money.Coins(1.0m), 5000.0m, networkFeeMode);
                     await AssertTopUpBtcPrice(tester, user, Money.Coins(1.23456789m), 5000.0m * 1.23456789m, networkFeeMode);
                     // Check if there is no strange roundup issues
@@ -2433,12 +2432,13 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+                var cryptoCode = "BTC";
+                await user.GrantAccessAsync(true);
+                user.RegisterDerivationScheme(cryptoCode, ScriptPubKeyType.Segwit);
+                user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
 
                 var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                    new Invoice
                     {
                         Price = 5.5m,
                         Currency = "USD",
@@ -2456,12 +2456,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<PaymentViewModel>(Assert
-                    .IsType<ViewResult>(await user.GetController<StoresController>().Payment()).Model
+                var vm = Assert.IsType<LightningSettingsViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().Payment(vm).Result
+                    user.GetController<StoresController>().LightningSettings(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls
@@ -2735,9 +2735,9 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                await user.SetNetworkFeeMode(NetworkFeeMode.Always);
+                user.SetNetworkFeeMode(NetworkFeeMode.Always);
                 var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                    new Invoice
                     {
                         Price = 10,
                         Currency = "USD",
@@ -2811,9 +2811,9 @@ namespace BTCPayServer.Tests
                 foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
                 {
                     Logs.Tester.LogInformation($"Trying with {nameof(networkFeeMode)}={networkFeeMode}");
-                    await user.SetNetworkFeeMode(networkFeeMode);
+                    user.SetNetworkFeeMode(networkFeeMode);
                     var invoice = user.BitPay.CreateInvoice(
-                        new Invoice()
+                        new Invoice
                         {
                             Price = 10,
                             Currency = "USD",
@@ -2898,9 +2898,9 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                await user.SetNetworkFeeMode(NetworkFeeMode.Always);
+                user.SetNetworkFeeMode(NetworkFeeMode.Always);
                 var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                    new Invoice
                     {
                         Price = 500,
                         Currency = "USD",

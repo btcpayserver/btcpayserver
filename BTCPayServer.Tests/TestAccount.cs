@@ -125,9 +125,9 @@ namespace BTCPayServer.Tests
             CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public async Task SetNetworkFeeMode(NetworkFeeMode mode)
+        public void SetNetworkFeeMode(NetworkFeeMode mode)
         {
-            await ModifyPayment(payment =>
+            ModifyPayment(payment =>
             {
                 payment.NetworkFeeMode = mode;
             });
@@ -140,6 +140,15 @@ namespace BTCPayServer.Tests
             PaymentViewModel payment = (PaymentViewModel)((ViewResult)response).Model;
             modify(payment);
             await storeController.Payment(payment);
+        }
+        
+        public async Task ModifyWalletSettings(Action<WalletSettingsViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            var response = await storeController.WalletSettings(StoreId, "BTC");
+            WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
+            modify(walletSettings);
+            storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
@@ -154,8 +163,8 @@ namespace BTCPayServer.Tests
             {
                 await RegisterAsync();
             }
-            var store = this.GetController<UserStoresController>();
-            await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
+            var store = GetController<UserStoresController>();
+            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
         }
@@ -188,19 +197,11 @@ namespace BTCPayServer.Tests
             return new WalletId(StoreId, cryptoCode);
         }
 
-        public Task EnablePayJoin()
-        {
-            return ModifyPayment(p => p.PayJoinEnabled = true);
-        }
-
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }
 
         public DerivationStrategyBase DerivationScheme
         {
-            get
-            {
-                return GenerateWalletResponseV.DerivationScheme;
-            }
+            get => GenerateWalletResponseV.DerivationScheme;
         }
 
         private async Task RegisterAsync(bool isAdmin = false)

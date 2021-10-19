@@ -3,7 +3,7 @@
 
 ### Improvements:
 
-* Variuous bootstrap related updates (#2785 #2841 #2870 #2893 #2915 #2932 #2957) @dennisreimann @dstrukt @bolatovumar 
+* Various Bootstrap related updates (#2785 #2841 #2870 #2893 #2915 #2932 #2957) @dennisreimann @dstrukt @bolatovumar 
 * Various GreenField API improvements (#2817 #2880 #2905 #2934) @bolatovumar @kukks @woutersamaey
 * PSBT UI improvements (#2713) @dennisreimann 
 * Revamp Theme system (#2794 #2927) @dennisreimann @dstrukt
@@ -24,7 +24,7 @@
 ### New features:
 
 * Taproot support (#2830 #2837) @sageprogrammer @nicolasdorier
-* Able to specify default payment method through UI and Greenfield API (#2815 #2986) @bolatovumar @NicolasDorier
+* Specify default payment method through UI and Greenfield API (#2815 #2986) @bolatovumar @NicolasDorier
 * Disallow cancelling payment request when "Allow payee to create invoices in their own denomination" is not enabled (#2843) @bolatovumar
 * Support custom currencies for Pay button generator (#2896) @bolatovumar
 * Show total balance on List Wallets (#2882) @maxdignan  @dennisreimann

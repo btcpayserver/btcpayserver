@@ -29,10 +29,10 @@
     <EmbeddedResource Include="bundleconfig.json" />
   </ItemGroup>
   <ItemGroup Condition="'$(Altcoins)' == 'true'">
-    <PackageReference Include="Nethereum.ABI" Version="3.8.0" />
-    <PackageReference Include="Nethereum.HdWallet" Version="3.8.0" />
-    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.8.0" />
-    <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
+    <PackageReference Include="Nethereum.ABI" Version="4.1.0" />
+    <PackageReference Include="Nethereum.HdWallet" Version="4.1.0" />
+    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="4.1.0" />
+    <PackageReference Include="Nethereum.Web3" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">

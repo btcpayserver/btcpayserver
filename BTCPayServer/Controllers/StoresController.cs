@@ -555,6 +555,7 @@ namespace BTCPayServer.Controllers
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
+            vm.DefaultCurrency = storeBlob.DefaultCurrency;
             vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
             vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
             vm.SpeedPolicy = store.SpeedPolicy;
@@ -605,6 +606,7 @@ namespace BTCPayServer.Controllers
             }
 
             var blob = CurrentStore.GetStoreBlob();
+            blob.DefaultCurrency = model.DefaultCurrency;
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeMode = model.NetworkFeeMode;
             blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);

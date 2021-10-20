@@ -2297,6 +2297,47 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseDefaultCurrency()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess(true);
+                user.RegisterDerivationScheme("BTC");
+                await user.ModifyStore(s =>
+                {
+                    Assert.Equal("USD", s.DefaultCurrency);
+                    s.DefaultCurrency = "EUR";
+                });
+                var client = await user.CreateClient();
+
+                // with greenfield
+                var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest());
+                Assert.Equal("EUR", invoice.Currency);
+                Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+                // with bitpay api
+                var invoice2 = await user.BitPay.CreateInvoiceAsync(new Invoice());
+                Assert.Equal("EUR", invoice2.Currency);
+
+                // via UI
+                var controller = user.GetController<InvoiceController>();
+                var model = await controller.CreateInvoice();
+                (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
+                invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
+                Assert.Equal("EUR", invoice.Currency);
+                Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+                // Check that the SendWallet use the default currency
+                var walletController = user.GetController<WalletsController>();
+                var walletSend = await walletController.WalletSend(new WalletId(user.StoreId, "BTC")).AssertViewModelAsync<WalletSendModel>();
+                Assert.Equal("EUR", walletSend.Fiat);
+            }
+        }
+
+        [Fact]
         [Trait("Lightning", "Lightning")]
         public async Task CanSetPaymentMethodLimits()
         {
@@ -3226,16 +3267,22 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "AGM") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 AGM
                 }
+                else if (result.ExpectedName == "ripio")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "ARS") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 ARS
+                }
                 else
                 {
                     // This check if the currency pair is using right currency pair
                     Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
-                             && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
+                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
+                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );
                 }
                 // We are not showing a directly implemented exchange as directly implemented in the UI

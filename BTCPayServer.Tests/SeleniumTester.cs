@@ -21,6 +21,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Extensions;
 using Xunit;
+using OpenQA.Selenium.Support.UI;
 
 namespace BTCPayServer.Tests
 {
@@ -352,7 +353,7 @@ namespace BTCPayServer.Tests
             decimal? amount = 100, 
             string currency = "USD", 
             string refundEmail = "",
-            string defaultPaymentMethod = "BTC"
+            string defaultPaymentMethod = null
         )
         {
             GoToInvoices();
@@ -364,7 +365,8 @@ namespace BTCPayServer.Tests
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
-            Driver.FindElement(By.Name("DefaultPaymentMethod")).SendKeys(defaultPaymentMethod);
+            if (defaultPaymentMethod is string)
+                new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage();

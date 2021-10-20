@@ -82,7 +82,7 @@
                     <div class="form-group">
                         <label asp-for="DefaultPaymentMethod" class="form-label"></label>
                         <select asp-for="DefaultPaymentMethod" asp-items="Model.AvailablePaymentMethods" class="form-select">
-                            <option selected>Store Default</option>
+                            <option value="" selected>Store's default settings</option>
                         </select>
                         <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
                     </div>

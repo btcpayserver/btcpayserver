@@ -389,7 +389,7 @@ namespace BTCPayServer.Controllers
         {
             var vm = this.ParseListQuery(new PayoutsModel
             {
-                PaymentMethodId = paymentMethodId,
+                PaymentMethodId = paymentMethodId?? _payoutHandlers.GetSupportedPaymentMethods().First().ToString(),
                 PullPaymentId = pullPaymentId, 
                 PayoutState =  payoutState,
                 Skip = skip,
@@ -403,6 +403,7 @@ namespace BTCPayServer.Controllers
                 payoutRequest = payoutRequest.Where(p => p.PullPaymentDataId == vm.PullPaymentId);
                 vm.PullPaymentName = (await ctx.PullPayments.FindAsync(pullPaymentId)).GetBlob().Name; 
             }
+            
             if (vm.PaymentMethodId != null)
             {
                 var pmiStr = vm.PaymentMethodId;

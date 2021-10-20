@@ -83,10 +83,10 @@
                                asp-controller="PullPayment"
                                asp-route-pullPaymentId="@pp.Id">View</a> -
                             <a class="pp-payout" asp-action="Payouts"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id">Payouts</a> -
                             <a asp-action="ArchivePullPayment"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"
                                data-bs-target="#ConfirmModal"

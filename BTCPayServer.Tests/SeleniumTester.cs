@@ -313,7 +313,8 @@ namespace BTCPayServer.Tests
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)
         {
-            Driver.FindElement(By.Id("Stores")).Click();
+            GoToHome(); 
+            Driver.WaitForAndClick(By.Id("Stores"));
             Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
 
             if (storeNavPage != StoreNavPages.Index)

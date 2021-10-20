@@ -19,19 +19,20 @@
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
-        switch (Model.PayoutState)
-        {
-            case PayoutState.AwaitingApproval:
-                stateActions.Add(("approve", "Approve selected payouts"));
-                stateActions.Add(("approve-pay", "Approve & Send selected payouts"));
-                stateActions.Add(("cancel", "Cancel selected payouts"));
-                break;
-            case PayoutState.AwaitingPayment:
-                stateActions.Add(("pay", "Send selected payouts"));
-                stateActions.Add(("cancel", "Cancel selected payouts"));
-                stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
-                break;
-        }
+        
+    }
+    switch (Model.PayoutState)
+    {
+        case PayoutState.AwaitingApproval:
+            stateActions.Add(("approve", "Approve selected payouts"));
+            stateActions.Add(("approve-pay", "Approve & Send selected payouts"));
+            stateActions.Add(("cancel", "Cancel selected payouts"));
+            break;
+        case PayoutState.AwaitingPayment:
+            stateActions.Add(("pay", "Send selected payouts"));
+            stateActions.Add(("cancel", "Cancel selected payouts"));
+            stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
+            break;
     }
     
 }

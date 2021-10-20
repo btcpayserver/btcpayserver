@@ -50,6 +50,10 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
+        [Display(Name = "Default currency")]
+        [MaxLength(10)]
+        public string DefaultCurrency { get; set; }
+
         [Display(Name = "Allow anyone to create invoice")]
         public bool AnyoneCanCreateInvoice { get; set; }
 

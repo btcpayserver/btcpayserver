@@ -748,11 +748,6 @@
             },
             "InvoiceDataBase": {
                 "properties": {
-                    "currency": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "The currency the invoice will use"
-                    },
                     "metadata": {
                         "$ref": "#/components/schemas/InvoiceMetadata"
                     },
@@ -787,7 +782,13 @@
                             "amount": {
                                 "type": "string",
                                 "format": "decimal",
-                                "description": "The amount of the invoice"
+                                "description": "The amount of the invoice",
+                                "example": "5.00"
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "The currency of the invoice",
+                                "example": "USD"
                             },
                             "type": {
                                 "$ref": "#/components/schemas/InvoiceType",
@@ -1000,7 +1001,14 @@
                                 "type": "string",
                                 "format": "decimal",
                                 "nullable": true,
-                                "description": "The amount of the invoice. If null or unspecified, the invoice will be a top-up invoice. (ie. The invoice will consider any payment as a full payment)"
+                                "description": "The amount of the invoice. If null or unspecified, the invoice will be a top-up invoice. (ie. The invoice will consider any payment as a full payment)",
+                                "example": "5.00"
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "The currency of the invoice (if null, empty or unspecified, the currency will be the store's settings default)'",
+                                "nullable": true,
+                                "example": "USD"
                             },
                             "additionalSearchTerms": {
                                 "type": "array",

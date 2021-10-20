@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers
             var storeData = store.GetStoreBlob();
             var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
-            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
+            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, storeData.DefaultCurrency);
             double.TryParse(defaultAmount, out var amount);
             var model = new WalletSendModel()
             {
@@ -1038,19 +1038,6 @@ namespace BTCPayServer.Controllers
 
             }
             return RedirectToAction();
-        }
-
-        private string GetCurrencyCode(string defaultLang)
-        {
-            if (defaultLang == null)
-                return null;
-            try
-            {
-                var ri = new RegionInfo(defaultLang);
-                return ri.ISOCurrencySymbol;
-            }
-            catch (ArgumentException) { }
-            return null;
         }
 
         public StoreData CurrentStore

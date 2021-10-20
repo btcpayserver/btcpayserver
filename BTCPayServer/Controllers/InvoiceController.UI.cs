@@ -685,6 +685,8 @@ namespace BTCPayServer.Controllers
         }
 
         readonly ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
+        public string CreatedInvoiceId;
+
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {
             if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)
@@ -874,6 +876,7 @@ namespace BTCPayServer.Controllers
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
+                CreatedInvoiceId = result.Data.Id;
                 return RedirectToAction(nameof(ListInvoices));
             }
             catch (BitpayHttpException ex)

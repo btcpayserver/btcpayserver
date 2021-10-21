@@ -46,7 +46,7 @@
   <ItemGroup>
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.12" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.13" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
@@ -54,7 +54,7 @@
     <PackageReference Include="Fido2" Version="2.0.1" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.1" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
-    <PackageReference Include="LNURL" Version="0.0.7" />
+    <PackageReference Include="LNURL" Version="0.0.8" />
     <PackageReference Include="McMaster.NETCore.Plugins.Mvc" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="3.3.2">

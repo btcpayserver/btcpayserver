@@ -36,6 +36,8 @@ namespace BTCPayServer.Hosting
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly SettingsRepository _Settings;
         private readonly AppService _appService;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
@@ -47,13 +49,17 @@ namespace BTCPayServer.Hosting
             UserManager<ApplicationUser> userManager,
             IOptions<LightningNetworkOptions> lightningOptions,
             SettingsRepository settingsRepository,
-            AppService appService)
+            AppService appService, 
+            IEnumerable<IPayoutHandler> payoutHandlers,
+            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
             _appService = appService;
+            _payoutHandlers = payoutHandlers;
+            _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _userManager = userManager;
             LightningOptions = lightningOptions;
         }
@@ -147,12 +153,40 @@ namespace BTCPayServer.Hosting
                     settings.MigrateAppCustomOption = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigratePayoutDestinationId)
+                {
+                    await MigratePayoutDestinationId();
+                    settings.MigratePayoutDestinationId = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+        
+        private async Task MigratePayoutDestinationId()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var payoutData in await ctx.Payouts.AsQueryable().ToArrayAsync())
+            {
+                    var pmi = payoutData.GetPaymentMethodId();
+                    if (pmi is null)
+                    {
+                        continue;
+                    }
+                    var handler = _payoutHandlers
+                        .FindPayoutHandler(pmi);
+                    if (handler is null)
+                    {
+                        continue;
+                    }
+                    var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, false);
+                    payoutData.Destination = claim.destination?.Id;
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateAppCustomOption()

@@ -6,26 +6,22 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 {
     public class BoltInvoiceClaimDestination : ILightningLikeLikeClaimDestination
     {
-        private readonly string _bolt11;
-        private readonly decimal _amount;
-
-        public BoltInvoiceClaimDestination(string bolt11, Network network)
+        public BoltInvoiceClaimDestination(string bolt11, BOLT11PaymentRequest paymentRequest)
         {
-            _bolt11 = bolt11 ?? throw new ArgumentNullException(nameof(bolt11));
-            _amount = BOLT11PaymentRequest.Parse(bolt11, network).MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-        }
-
-        public BoltInvoiceClaimDestination(string bolt11, BOLT11PaymentRequest invoice)
-        {
-            _bolt11 = bolt11 ?? throw new ArgumentNullException(nameof(bolt11));
-            _amount = invoice?.MinimumAmount.ToDecimal(LightMoneyUnit.BTC) ?? throw new ArgumentNullException(nameof(invoice));
+            Bolt11 = bolt11 ?? throw new ArgumentNullException(nameof(bolt11));
+            PaymentRequest = paymentRequest;
+            PaymentHash = paymentRequest.Hash;
+            Amount = paymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
         }
 
         public override string ToString()
         {
-            return _bolt11;
+            return Bolt11;
         }
-
-        public decimal? Amount => _amount;
+        public string Bolt11 { get; }
+        public BOLT11PaymentRequest PaymentRequest { get; }
+        public uint256 PaymentHash { get; }
+        public string Id => PaymentHash.ToString();
+        public decimal? Amount { get; }
     }
 }

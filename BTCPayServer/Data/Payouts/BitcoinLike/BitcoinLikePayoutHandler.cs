@@ -70,11 +70,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         destination = destination.Trim();
         try
         {
-            // This doesn't work properly, (payouts are not detected), we can reactivate later when we fix the bug https://github.com/btcpayserver/btcpayserver/issues/2765
-            //if (destination.StartsWith($"{network.UriScheme}:", StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return Task.FromResult<IClaimDestination>(new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)));
-            //}
+            if (destination.StartsWith($"{network.UriScheme}:", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<(IClaimDestination, string)>((new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)), null));
+            }
 
             return Task.FromResult<(IClaimDestination, string)>((new AddressClaimDestination(BitcoinAddress.Create(destination, network.NBitcoinNetwork)), null));
         }
@@ -248,7 +247,17 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             var blob = payout.GetBlob(_jsonSerializerSettings);
             if (payout.GetPaymentMethodId() != paymentMethodId)
                 continue;
-            bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)).ToString());          
+            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination, false);
+            switch (claim.destination)
+            {
+                case UriClaimDestination uriClaimDestination:
+                    uriClaimDestination.BitcoinUrl.Amount = new Money(blob.CryptoAmount.Value, MoneyUnit.BTC);
+                    bip21.Add(uriClaimDestination.ToString());
+                    break;
+                case AddressClaimDestination addressClaimDestination:
+                    bip21.Add(network.GenerateBIP21(addressClaimDestination.Address.ToString(), new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)).ToString());
+                    break;
+            }      
         }
         if(bip21.Any())
             return  new RedirectToActionResult("WalletSend", "Wallets", new {walletId = new WalletId(storeId, paymentMethodId.CryptoCode).ToString(), bip21});
@@ -289,7 +298,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     {
                         payout.State = PayoutState.Completed;
                         proof.TransactionId = tx.TransactionHash;
-                        payout.Destination = null;
                         break;
                     }
                     else

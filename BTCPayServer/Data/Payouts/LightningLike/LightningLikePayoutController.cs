@@ -113,10 +113,21 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
 
             //we group per store and init the transfers by each
-            async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
-                string destination)
+            async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest)
             {
-                var result = await lightningClient.Pay(destination);
+                var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+                if (boltAmount != payoutBlob.CryptoAmount)
+                {
+                    results.Add(new ResultVM()
+                    {
+                        PayoutId = payoutData.Id, 
+                        Result = PayResult.Error,
+                        Message = $"The BOLT11 invoice amount did not match the payout's amount ({boltAmount} instead of {payoutBlob.CryptoAmount})", 
+                        Destination = payoutBlob.Destination
+                    });
+                    return;
+                }
+                var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
                 if (result.Result == PayResult.Ok)
                 {
                     results.Add(new ResultVM()
@@ -176,9 +187,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     {
                                         var lnurlPayRequestCallbackResponse =
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
-
-
-                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.Pr);
+                                        
+                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork));
                                     }
                                     catch (LNUrlException e)
                                     {
@@ -195,7 +205,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                await TrypayBolt(client, blob, payoutData, payoutData.Destination);
+                                await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
 
                                 break;
                             default:

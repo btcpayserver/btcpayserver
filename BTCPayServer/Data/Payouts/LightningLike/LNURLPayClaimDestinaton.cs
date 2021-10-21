@@ -7,6 +7,7 @@
             LNURL = lnurl;
         }
 
+        public string Id => null; //lnurls are reusable
         public decimal? Amount { get; } = null;
         public string LNURL { get; set; }
 

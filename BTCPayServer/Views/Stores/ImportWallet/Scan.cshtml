@@ -69,7 +69,7 @@
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
-        window.addEventListener("load", async () => {
+        document.addEventListener("DOMContentLoaded", function () {
             initCameraScanningApp("Scan wallet QR", data => {
                 document.getElementById("WalletFileContent").value = data;
                 document.getElementById("qr-import-form").submit();

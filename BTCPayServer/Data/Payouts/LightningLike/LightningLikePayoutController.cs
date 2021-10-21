@@ -114,9 +114,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
             //we group per store and init the transfers by each
             async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
-                string destination)
+                string destination, BOLT11PaymentRequest bolt11PaymentRequest)
             {
-                var bolt11PaymentRequest = BOLT11PaymentRequest.Parse(destination, network.NBitcoinNetwork);
                 var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
                 if (boltAmount != payoutBlob.CryptoAmount)
                 {
@@ -191,7 +190,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
 
 
-                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.Pr);
+                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.Pr, BOLT11PaymentRequest.Parse(lnurlPayRequestCallbackResponse.Pr, network.NBitcoinNetwork));
                                     }
                                     catch (LNUrlException e)
                                     {
@@ -208,7 +207,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                await TrypayBolt(client, blob, payoutData, item1.ToString());
+                                await TrypayBolt(client, blob, payoutData, item1.Bolt11, item1.PaymentRequest);
 
                                 break;
                             default:

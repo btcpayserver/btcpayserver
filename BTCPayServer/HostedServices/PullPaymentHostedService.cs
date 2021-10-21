@@ -381,7 +381,7 @@ namespace BTCPayServer.HostedServices
                 if (req.ClaimRequest.Destination.Id != null)
                 {
                     if (await ctx.Payouts.AnyAsync(data =>
-                        data.DestinationId.Equals(req.ClaimRequest.Destination.Id) &&
+                        data.Destination.Equals(req.ClaimRequest.Destination.Id) &&
                         data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
                         ))
                     {
@@ -414,7 +414,7 @@ namespace BTCPayServer.HostedServices
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PaymentMethodId = req.ClaimRequest.PaymentMethodId.ToString(),
-                    DestinationId = req.ClaimRequest.Destination.Id
+                    Destination = req.ClaimRequest.Destination.Id
                 };
                 if (claimed < ppBlob.MinimumClaim || claimed == 0.0m)
                 {

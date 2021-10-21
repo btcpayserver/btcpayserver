@@ -362,10 +362,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 .Where(p => p.State == PayoutState.AwaitingPayment)
                 .Where(p => p.PaymentMethodId == paymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
-                .Where(p => destination.Equals(p.DestinationId))
+                .Where(p => destination.Equals(p.Destination))
 #pragma warning restore CA1307 // Specify StringComparison
                 .ToListAsync();
-            var payoutByDestination = payouts.ToDictionary(p => p.DestinationId);
+            var payoutByDestination = payouts.ToDictionary(p => p.Destination);
 
             if (!payoutByDestination.TryGetValue(destination, out var payout))
                 return;

@@ -22,8 +22,7 @@ namespace BTCPayServer.Data
         public string PaymentMethodId { get; set; }
         public byte[] Blob { get; set; }
         public byte[] Proof { get; set; }
-        [Column("Destination")]
-        public string? DestinationId { get; set; }
+        public string? Destination { get; set; }
 
 
         internal static void OnModelCreating(ModelBuilder builder)
@@ -37,7 +36,7 @@ namespace BTCPayServer.Data
             builder.Entity<PayoutData>()
                 .HasIndex(o => o.State);
             builder.Entity<PayoutData>()
-                .HasIndex(x => new {x.DestinationId, x.State});
+                .HasIndex(x => new { DestinationId = x.Destination, x.State});
         }
 
         // utility methods

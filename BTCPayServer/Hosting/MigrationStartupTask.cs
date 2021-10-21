@@ -184,7 +184,7 @@ namespace BTCPayServer.Hosting
                         continue;
                     }
                     var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, false);
-                    payoutData.DestinationId = claim.destination?.Id;
+                    payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();
         }

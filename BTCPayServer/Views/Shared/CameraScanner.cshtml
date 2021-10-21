@@ -45,10 +45,10 @@
             <div v-if="errorMessage" class="alert alert-danger" role="alert">
                 {{errorMessage}}
             </div>
-            <div class="text-break font-monospace">
+            <div v-if="qrData" class="font-monospace mt-3" style="overflow:hidden;text-overflow:ellipsis;">
                 {{qrData}}
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
                 <button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
                 <button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>

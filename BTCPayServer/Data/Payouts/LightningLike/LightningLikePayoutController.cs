@@ -187,9 +187,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     {
                                         var lnurlPayRequestCallbackResponse =
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
-
-
-                                        await TrypayBolt(client, blob, payoutData, BOLT11PaymentRequest.Parse(lnurlPayRequestCallbackResponse.Pr, network.NBitcoinNetwork));
+                                        
+                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork));
                                     }
                                     catch (LNUrlException e)
                                     {

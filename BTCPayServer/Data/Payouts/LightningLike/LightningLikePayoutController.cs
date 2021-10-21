@@ -113,8 +113,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
 
             //we group per store and init the transfers by each
-            async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
-                string destination, BOLT11PaymentRequest bolt11PaymentRequest)
+            async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest)
             {
                 var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
                 if (boltAmount != payoutBlob.CryptoAmount)
@@ -128,7 +127,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     });
                     return;
                 }
-                var result = await lightningClient.Pay(destination);
+                var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
                 if (result.Result == PayResult.Ok)
                 {
                     results.Add(new ResultVM()
@@ -190,7 +189,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
 
 
-                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.Pr, BOLT11PaymentRequest.Parse(lnurlPayRequestCallbackResponse.Pr, network.NBitcoinNetwork));
+                                        await TrypayBolt(client, blob, payoutData, BOLT11PaymentRequest.Parse(lnurlPayRequestCallbackResponse.Pr, network.NBitcoinNetwork));
                                     }
                                     catch (LNUrlException e)
                                     {
@@ -207,7 +206,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                await TrypayBolt(client, blob, payoutData, item1.Bolt11, item1.PaymentRequest);
+                                await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
 
                                 break;
                             default:

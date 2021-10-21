@@ -21,7 +21,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public string Bolt11 { get; }
         public BOLT11PaymentRequest PaymentRequest { get; }
         public uint256 PaymentHash { get; }
-        public string Id => ToString();
+        public string Id => PaymentHash.ToString();
         public decimal? Amount { get; }
     }
 }

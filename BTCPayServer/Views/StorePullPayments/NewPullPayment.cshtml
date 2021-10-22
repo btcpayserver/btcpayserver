@@ -1,7 +1,10 @@
-﻿@model NewPullPaymentModel
+﻿@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "New pull payment", Context.GetStoreData().StoreName);
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "New pull payment", Context.GetStoreData().StoreName);
 }
 
 <style type="text/css">

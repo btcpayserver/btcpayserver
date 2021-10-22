@@ -1,7 +1,10 @@
-﻿@model PullPaymentsModel
+﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -21,12 +24,9 @@
             </a>
         </small>
     </h4>
-    @if (Model.HasDerivationSchemeSettings)
-    {
-        <a asp-action="NewPullPayment" asp-route-walletId="@Context.GetRouteValue("walletId")" class="btn btn-primary" role="button" id="NewPullPayment">
-            <span class="fa fa-plus"></span> Create a new pull payment
-        </a>
-    }
+    <a asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
+        <span class="fa fa-plus"></span> Create a new pull payment
+    </a>
 </div>
 
 @if (Model.PullPayments.Any())
@@ -83,10 +83,10 @@
                                asp-controller="PullPayment"
                                asp-route-pullPaymentId="@pp.Id">View</a> -
                             <a class="pp-payout" asp-action="Payouts"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id">Payouts</a> -
                             <a asp-action="ArchivePullPayment"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"
                                data-bs-target="#ConfirmModal"

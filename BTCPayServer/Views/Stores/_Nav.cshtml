@@ -7,5 +7,7 @@
     <a id="@(nameof(StoreNavPages.PayButton))" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Pay Button</a>
     <a id="@(nameof(StoreNavPages.Integrations))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Integrations)" asp-controller="Stores" asp-action="Integrations" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Integrations</a>
     <a id="@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Webhooks)" asp-controller="Stores" asp-action="Webhooks" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Webhooks</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" asp-action="PullPayments" asp-controller="StorePullPayments" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="PullPayments">Pull payments</a>
+        <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" asp-action="Payouts" asp-controller="StorePullPayments" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="Payouts">Payouts</a>
     <vc:ui-extension-point location="store-nav" model="@Model" />
 </nav>

@@ -21,6 +21,15 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="Views\StorePullPayments\NewPullPayment.cshtml">
+      <Pack>false</Pack>
+    </Content>
+    <Content Update="Views\StorePullPayments\PullPayments.cshtml">
+      <Pack>false</Pack>
+    </Content>
+    <Content Update="Views\StorePullPayments\Payouts.cshtml">
+      <Pack>false</Pack>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />
@@ -197,12 +206,6 @@
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Wallets\NewPullPayment.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
-	  <Content Update="Views\Wallets\Payouts.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
 	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
@@ -216,9 +219,6 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletSendVault.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
-	  <Content Update="Views\Wallets\PullPayments.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">

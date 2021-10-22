@@ -131,31 +131,48 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("")]
-        public async Task<IActionResult> PullPayments(string storeId)
+        public async Task<IActionResult> PullPayments(string storeId, int skip = 0, int count = 50, 
+            string sortOrder = "desc")
         {
-            using var ctx = this._dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
             var now = DateTimeOffset.UtcNow;
-            var pps = await ctx.PullPayments.Where(p => p.StoreId == storeId && !p.Archived)
-                                      .OrderByDescending(p => p.StartDate)
-                                      .Select(o => new
-                                      {
-                                          PullPayment = o,
-                                          Awaiting = o.Payouts
-                                                        .Where(p => p.State == PayoutState.AwaitingPayment || p.State == PayoutState.AwaitingApproval),
-                                          Completed = o.Payouts
-                                                        .Where(p => p.State == PayoutState.Completed || p.State == PayoutState.InProgress)
-                                      })
-                                      .ToListAsync();
+            var ppsQuery = ctx.PullPayments
+                .Include(data => data.Payouts)
+                .Where(p => p.StoreId == storeId && !p.Archived);
 
-            var vm = new PullPaymentsModel();
 
-            foreach (var o in pps)
+            if (sortOrder != null)
             {
-                var pp = o.PullPayment;
-                var totalCompleted = o.Completed.Where(o => o.IsInPeriod(pp, now))
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData["NextStartSortOrder"] = "asc";
+                        ppsQuery = ppsQuery.OrderByDescending(p => p.StartDate);
+                        break;
+                    case "asc":
+                        ppsQuery = ppsQuery.OrderBy(p => p.StartDate);
+                        ViewData["NextStartSortOrder"] = "desc";
+                        break;
+                }
+            }
+
+            var vm = this.ParseListQuery(new PullPaymentsModel()
+            {
+                Skip = skip, Count = count, Total = await ppsQuery.CountAsync()
+            });
+            var pps = (await ppsQuery
+                    .Skip(vm.Skip)
+                    .Take(vm.Count)
+                    .ToListAsync()
+                );
+            foreach (var pp in pps)
+            {
+                var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed || 
+                                                            p.State == PayoutState.InProgress) &&  p.IsInPeriod(pp, now))
                                                 .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum();
-                var totalAwaiting = o.Awaiting.Where(o => o.IsInPeriod(pp, now))
-                                              .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum();
+                var totalAwaiting = pp.Payouts.Where(p => (p.State == PayoutState.AwaitingPayment ||
+                                                           p.State == PayoutState.AwaitingApproval) &&
+                                                          p.IsInPeriod(pp, now)).Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum();;
                 var ppBlob = pp.GetBlob();
                 var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
                 var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);

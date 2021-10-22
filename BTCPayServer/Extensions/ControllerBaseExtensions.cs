@@ -23,7 +23,9 @@ namespace BTCPayServer
             else if (model is UsersViewModel)
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.UsersQuery));
             else if (model is PayoutsModel)
-                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.UsersQuery));
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PayoutsQuery));
+            else if (model is PullPaymentsModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PullPaymentsQuery));
             else
                 throw new Exception("Unsupported BasePagingViewModel for cookie user preferences saving");
 
@@ -82,6 +84,7 @@ namespace BTCPayServer
             public ListQueryDataHolder PaymentRequestsQuery { get; set; }
             public ListQueryDataHolder UsersQuery { get; set; }
             public ListQueryDataHolder PayoutsQuery { get; set; }
+            public ListQueryDataHolder PullPaymentsQuery { get; set; }
         }
 
         class ListQueryDataHolder

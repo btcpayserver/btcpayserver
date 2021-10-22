@@ -20,6 +20,8 @@
 * Coin selection improvements (#2956) @dennisreimann
 * Add Passport hardware wallet option to the wallet import screens (#2962) @BitcoinQnA
 * Improve language dropdown UX (#2972 #2976) @dennisreimann @satwo
+* Add paging to pull payments list page (#2997) @kukks
+* Pull payments & Payouts moved to store from wallet pages (#2987) @kukks
 
 ### New features:
 
@@ -27,7 +29,7 @@
 * Specify default payment method through UI and Greenfield API (#2815 #2986) @bolatovumar @NicolasDorier
 * Disallow cancelling payment request when "Allow payee to create invoices in their own denomination" is not enabled (#2843) @bolatovumar
 * Support custom currencies for Pay button generator (#2896) @bolatovumar
-* Show total balance on List Wallets (#2882) @maxdignan  @dennisreimann
+* Show total balance on wallets list (#2882) @maxdignan @dennisreimann
 * Greenfield: Payment Settled Webhook event (#2944) @kukks
 * Add ability to set invoice status from details page (#2923) @bolatovumar
 * Replace pruning wallet by wipe transactions (#2857) @NicolasDorier
@@ -55,6 +57,7 @@
 * Fix bug: Importing seed with Is hot wallet checked was not working (#2966) @NicolasDorier
 * fix pos app logo (#2977) @satwo
 * Fix cryptic error message issue (#2978) @Bananenbieger123
+* Fix BIP21 pull payment support (#2985) @kukks
 
 ## 1.2.4
 

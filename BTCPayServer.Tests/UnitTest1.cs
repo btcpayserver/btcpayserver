@@ -2314,7 +2314,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
-                await user.ModifyStore(s =>
+                await user.ModifyPayment(s =>
                 {
                     Assert.Equal("USD", s.DefaultCurrency);
                     s.DefaultCurrency = "EUR";
@@ -2365,7 +2365,7 @@ namespace BTCPayServer.Tests
                 // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
                 var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
                     .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                Assert.Equal(2, vm.PaymentMethodCriteria.Count);
+                Assert.Equal(3, vm.PaymentMethodCriteria.Count);
                 var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
                 Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "5 USD";

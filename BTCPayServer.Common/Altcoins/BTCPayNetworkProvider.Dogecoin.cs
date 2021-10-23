@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Dogecoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://dogechain.info/tx/{0}" : "https://dogechain.info/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "dogecoin",
                 DefaultRateRules = new[]
                 {
                                 "DOGE_X = DOGE_BTC * BTC_X",

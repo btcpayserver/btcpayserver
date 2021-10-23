@@ -685,7 +685,7 @@ namespace BTCPayServer.Controllers
         }
 
         readonly ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
-        public string CreatedInvoiceId;
+        public string? CreatedInvoiceId;
 
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {

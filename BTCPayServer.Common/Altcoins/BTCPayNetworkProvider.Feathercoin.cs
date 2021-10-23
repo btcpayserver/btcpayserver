@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Feathercoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.feathercoin.com/tx/{0}" : "https://explorer.feathercoin.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "feathercoin",
                 DefaultRateRules = new[]
                 {
                                 "FTC_X = FTC_BTC * BTC_X",

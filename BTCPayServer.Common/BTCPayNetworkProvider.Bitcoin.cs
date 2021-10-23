@@ -17,7 +17,6 @@ namespace BTCPayServer
                                     NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/tx/{0}"
                                     : "https://blockstream.info/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bitcoin",
                 CryptoImagePath = "imlegacy/bitcoin.svg",
                 LightningImagePath = "imlegacy/bitcoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

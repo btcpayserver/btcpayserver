@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Viacoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.viacoin.org/tx/{0}" : "https://explorer.viacoin.org/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "viacoin",
                 DefaultRateRules = new[]
                 {
                                 "VIA_X = VIA_BTC * BTC_X",

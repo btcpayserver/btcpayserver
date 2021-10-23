@@ -15,7 +15,6 @@ namespace BTCPayServer
                     ? "https://chainz.cryptoid.info/grs/tx.dws?{0}.htm"
                     : "https://chainz.cryptoid.info/grs-test/tx.dws?{0}.htm",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "groestlcoin",
                 DefaultRateRules = new[]
                 {
                     "GRS_X = GRS_BTC * BTC_X",

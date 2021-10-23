@@ -13,7 +13,6 @@ namespace BTCPayServer
                 DisplayName = "BGold",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://btgexplorer.com/tx/{0}" : "https://testnet.btgexplorer.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bitcoingold",
                 DefaultRateRules = new[]
                 {
                     "BTG_X = BTG_BTC * BTC_X",

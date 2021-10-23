@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Polis",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockbook.polispay.org/tx/{0}" : "https://blockbook.polispay.org/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "polis",
                 DefaultRateRules = new[]
                 {
                                 "POLIS_X = POLIS_BTC * BTC_X",

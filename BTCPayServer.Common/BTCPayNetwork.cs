@@ -66,7 +66,6 @@ namespace BTCPayServer
         public virtual bool ReadonlyWallet { get; set; } = false;
         public virtual bool VaultSupported { get; set; } = false;
         public int MaxTrackedConfirmation { get; set; } = 6;
-        public string UriScheme { get; set; }
         public bool SupportPayJoin { get; set; } = false;
         public bool SupportLightning { get; set; } = true;
 
@@ -90,7 +89,7 @@ namespace BTCPayServer
 
         public virtual PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            var builder = new PaymentUrlBuilder(UriScheme);
+            var builder = new PaymentUrlBuilder(this.NBitcoinNetwork.UriScheme);
             builder.Host = cryptoInfoAddress;
             if (cryptoInfoDue != null && cryptoInfoDue != Money.Zero)
             {

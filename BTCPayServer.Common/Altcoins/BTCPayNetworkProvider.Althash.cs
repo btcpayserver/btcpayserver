@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Althash",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.htmlcoin.com/api/tx/{0}" : "https://explorer.htmlcoin.com/api/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "htmlcoin",
                 DefaultRateRules = new[]
                 {
                                 "HTML_X = HTML_USD",

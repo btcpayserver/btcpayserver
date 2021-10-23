@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Monacoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://mona.insight.monaco-ex.org/insight/tx/{0}" : "https://testnet-mona.insight.monaco-ex.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "monacoin",
                 DefaultRateRules = new[]
                 {
                                 "MONA_X = MONA_BTC * BTC_X",

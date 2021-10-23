@@ -16,7 +16,6 @@ namespace BTCPayServer
                     ? "https://insight.dash.org/insight/tx/{0}"
                     : "https://testnet-insight.dashevo.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "dash",
                 DefaultRateRules = new[]
                     {
                         "DASH_X = DASH_BTC * BTC_X",

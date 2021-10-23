@@ -22,7 +22,9 @@ namespace BTCPayServer.Data
         public string PaymentMethodId { get; set; }
         public byte[] Blob { get; set; }
         public byte[] Proof { get; set; }
+#nullable enable
         public string? Destination { get; set; }
+#nullable restore
 
 
         internal static void OnModelCreating(ModelBuilder builder)

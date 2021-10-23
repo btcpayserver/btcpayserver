@@ -70,7 +70,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         destination = destination.Trim();
         try
         {
-            if (destination.StartsWith($"{network.UriScheme}:", StringComparison.OrdinalIgnoreCase))
+            if (destination.StartsWith($"{network.NBitcoinNetwork.UriScheme}:", StringComparison.OrdinalIgnoreCase))
             {
                 return Task.FromResult<(IClaimDestination, string)>((new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)), null));
             }

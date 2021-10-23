@@ -2298,18 +2298,67 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async Task CanSetPaymentMethodLimits()
+        public async Task CanUseDefaultCurrency()
         {
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
+                await user.ModifyStore(s =>
+                {
+                    Assert.Equal("USD", s.DefaultCurrency);
+                    s.DefaultCurrency = "EUR";
+                });
+                var client = await user.CreateClient();
+
+                // with greenfield
+                var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest());
+                Assert.Equal("EUR", invoice.Currency);
+                Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+                // with bitpay api
+                var invoice2 = await user.BitPay.CreateInvoiceAsync(new Invoice());
+                Assert.Equal("EUR", invoice2.Currency);
+
+                // via UI
+                var controller = user.GetController<InvoiceController>();
+                var model = await controller.CreateInvoice();
+                (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
+                invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
+                Assert.Equal("EUR", invoice.Currency);
+                Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+                // Check that the SendWallet use the default currency
+                var walletController = user.GetController<WalletsController>();
+                var walletSend = await walletController.WalletSend(new WalletId(user.StoreId, "BTC")).AssertViewModelAsync<WalletSendModel>();
+                Assert.Equal("EUR", walletSend.Fiat);
+            }
+        }
+
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanSetPaymentMethodLimits()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.ActivateLightning();
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess(true);
+                user.RegisterDerivationScheme("BTC");
+                await user.RegisterLightningNodeAsync("BTC");
+
+
+                var lnMethod = new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToString();
+                var btcMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToString();
+
+                // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
                 var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
                     .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                Assert.Single(vm.PaymentMethodCriteria);
-                var criteria = vm.PaymentMethodCriteria.First();
+                Assert.Equal(2, vm.PaymentMethodCriteria.Count);
+                var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
                 Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "5 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
@@ -2319,7 +2368,7 @@ namespace BTCPayServer.Tests
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
                     {
-                        Price = 5.5m,
+                        Price = 4.5m,
                         Currency = "USD",
                         PosData = "posData",
                         OrderId = "orderId",
@@ -2328,7 +2377,41 @@ namespace BTCPayServer.Tests
                     }, Facade.Merchant);
 
                 Assert.Single(invoice.CryptoInfo);
-                Assert.Equal(PaymentTypes.BTCLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+                Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+
+                // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
+                // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
+                // payment method should be LN.
+                vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
+                vm.DefaultPaymentMethod = lnMethod;
+                criteria = vm.PaymentMethodCriteria.First();
+                criteria.Value = "150 USD";
+                criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
+                criteria = vm.PaymentMethodCriteria.Skip(1).First();
+                criteria.Value = "5 USD";
+                criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                    .Result);
+                invoice = user.BitPay.CreateInvoice(
+                   new Invoice()
+                   {
+                       Price = 50m,
+                       Currency = "USD",
+                       PosData = "posData",
+                       OrderId = "orderId",
+                       ItemDesc = "Some description",
+                       FullNotifications = true
+                   }, Facade.Merchant);
+                var checkout = (await user.GetController<InvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+                Assert.Equal(lnMethod, checkout.PaymentMethodId);
+
+                // If we change store's default, it should change the checkout's default
+                vm.DefaultPaymentMethod = btcMethod;
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                    .Result);
+                checkout = (await user.GetController<InvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+                Assert.Equal(btcMethod, checkout.PaymentMethodId);
             }
         }
 
@@ -3184,16 +3267,22 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "AGM") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 AGM
                 }
+                else if (result.ExpectedName == "ripio")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "ARS") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 ARS
+                }
                 else
                 {
                     // This check if the currency pair is using right currency pair
                     Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
-                             && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
+                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
+                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );
                 }
                 // We are not showing a directly implemented exchange as directly implemented in the UI

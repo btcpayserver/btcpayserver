@@ -1,14 +1,26 @@
-﻿@using BTCPayServer.Client.Models
-@model PayoutsModel
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Payments
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
-
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
+    
+    var paymentMethods = PayoutHandlers.GetSupportedPaymentMethods();
+    
     var stateActions = new List<(string Action, string Text)>();
-    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(Model.PaymentMethodId));
-    stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
+    if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
+    {
+        var payoutHandler = PayoutHandlers.FindPayoutHandler(paymentMethodId);
+        if (payoutHandler is null)
+            return;
+        stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
+        
+    }
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
@@ -22,6 +34,7 @@
             stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
             break;
     }
+    
 }
 
 @section PageFootContent {
@@ -42,14 +55,37 @@
 
     <div class="row">
         <div class="col-auto">
-            <ul class="nav nav-pills">
-                @foreach (var state in Model.PayoutStateCount)
+            <ul class="nav nav-pills  bg-tile mb-2" style="border-radius:4px; border: 1px solid var(--btcpay-body-border-medium)">
+                @foreach (var state in paymentMethods)
                 {
                     <li class="nav-item py-0">
-                        <a id="@state.Key-view" asp-action="Payouts" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-payoutState="@state.Key" asp-route-pullPaymentId="@Model.PullPaymentId" class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                        <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
+                           asp-route-payoutState="@Model.PayoutState"
+                           asp-route-paymentMethodId="@state.ToString()"
+                           asp-route-pullPaymentId="@Model.PullPaymentId"
+                           class="nav-link me-1 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                           id="@state.ToString()-view"
+                           role="tab">
+                            @state.ToPrettyString()
+                        </a>
                     </li>
                 }
             </ul>
+            <ul class="nav nav-pills  bg-tile" style="border: 1px solid var(--btcpay-body-border-medium)">
+                @foreach (var state in Model.PayoutStateCount)
+                {
+                    <li class="nav-item py-0">
+                        <a id="@state.Key-view" 
+                           asp-action="Payouts" 
+                           asp-route-storeId="@Context.GetRouteValue("storeId")" 
+                           asp-route-payoutState="@state.Key" 
+                           asp-route-pullPaymentId="@Model.PullPaymentId" 
+                           asp-route-paymentMethodId="@Model.PaymentMethodId"
+                           class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                    </li>
+                }
+            </ul>
+           
         </div>
         @if (Model.Payouts.Any() && stateActions.Any())
         {
@@ -69,7 +105,6 @@
 
     <div class="row">
 
-        <div>
             @if (Model.Payouts.Any())
             {
                 <table class="table table-hover table-responsive-lg">
@@ -107,8 +142,8 @@
                             <td class="mw-100">
                                 <span>@pp.PullPaymentName</span>
                             </td>
-                            <td>
-                                <span>@pp.Destination</span>
+                            <td  title="@pp.Destination">
+                                <span class="text-break">@pp.Destination</span>
                             </td>
                             <td class="text-end">
                                 <span>@pp.Amount</span>
@@ -131,7 +166,6 @@
             {
                 <p class="mb-0 py-4" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
             }
-        </div>
         <vc:pager view-model="Model"/>
     </div>
 </form>

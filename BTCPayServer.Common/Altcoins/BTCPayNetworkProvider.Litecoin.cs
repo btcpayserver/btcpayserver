@@ -17,7 +17,6 @@ namespace BTCPayServer
                     ? "https://live.blockcypher.com/ltc/tx/{0}/"
                     : "http://explorer.litecointools.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "litecoin",
                 DefaultRateRules = new[]
                 {
                     "LTC_X = LTC_BTC * BTC_X",

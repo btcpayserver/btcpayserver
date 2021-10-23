@@ -296,10 +296,11 @@ namespace BTCPayServer.HostedServices
                 if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
-                var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
-                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
-
-                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest);
+                var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
+                if (payoutHandler is null)
+                    throw new InvalidOperationException($"No payout handler for {paymentMethod}");
+                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, false);
+                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
@@ -370,12 +371,26 @@ namespace BTCPayServer.HostedServices
                 }
                 var ppBlob = pp.GetBlob();
                 var payoutHandler =
-                    _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(req.ClaimRequest.PaymentMethodId));
+                    _payoutHandlers.FindPayoutHandler(req.ClaimRequest.PaymentMethodId);
                 if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId) || payoutHandler is null)
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
                     return;
                 }
+
+                if (req.ClaimRequest.Destination.Id != null)
+                {
+                    if (await ctx.Payouts.AnyAsync(data =>
+                        data.Destination.Equals(req.ClaimRequest.Destination.Id) &&
+                        data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
+                        ))
+                    {
+                        
+                        req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Duplicate));
+                        return;
+                    }
+                }
+
                 var payouts = (await ctx.Payouts.GetPayoutInPeriod(pp, now)
                                                 .Where(p => p.State != PayoutState.Cancelled)
                                                 .ToListAsync())
@@ -384,7 +399,6 @@ namespace BTCPayServer.HostedServices
                                   Entity = o,
                                   Blob = o.GetBlob(_jsonSerializerSettings)
                               });
-                var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
                 var limit = ppBlob.Limit;
                 var totalPayout = payouts.Select(p => p.Blob.Amount).Sum();
                 var claimed = req.ClaimRequest.Value is decimal v ? v : limit - totalPayout;
@@ -400,7 +414,7 @@ namespace BTCPayServer.HostedServices
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PaymentMethodId = req.ClaimRequest.PaymentMethodId.ToString(),
-                    Destination = req.ClaimRequest.Destination.ToString()
+                    Destination = req.ClaimRequest.Destination.Id
                 };
                 if (claimed < ppBlob.MinimumClaim || claimed == 0.0m)
                 {
@@ -463,7 +477,6 @@ namespace BTCPayServer.HostedServices
                 {
                     if (payout.State != PayoutState.Completed && payout.State != PayoutState.InProgress)
                         payout.State = PayoutState.Cancelled;
-                    payout.Destination = null;
                 }
                 await ctx.SaveChangesAsync();
                 cancel.Completion.TrySetResult(true);

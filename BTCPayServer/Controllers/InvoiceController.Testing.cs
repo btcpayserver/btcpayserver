@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
             //var network = invoice.Networks.GetNetwork(invoice.Currency);
             var cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
+            var paymentMethodId = store.GetDefaultPaymentId();
 
             //var network = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();

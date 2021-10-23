@@ -1,3 +1,8 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies csp
+@{
+    csp.Add("worker-src", "blob:");
+}
+
 <template id="camera-qr-scanner-wrap">
 	<div v-if="modalId" :id="modalId" class="modal fade" data-bs-backdrop="static">
 		<div class="modal-dialog" role="document">
@@ -40,10 +45,10 @@
             <div v-if="errorMessage" class="alert alert-danger" role="alert">
                 {{errorMessage}}
             </div>
-            <div class="text-break font-monospace">
+            <div v-if="qrData" class="font-monospace mt-3" style="overflow:hidden;text-overflow:ellipsis;">
                 {{qrData}}
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
                 <button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
                 <button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
@@ -167,18 +172,21 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 			logErrors(promise) {
 				promise.catch(console.error)
 			},
-			paint(location, ctx) {
-				ctx.fillStyle = '#137547';
-				[
-					location.topLeftFinderPattern,
-					location.topRightFinderPattern,
-					location.bottomLeftFinderPattern
-				].forEach(({ x, y }) => {
-					ctx.fillRect(x - 5, y - 5, 10, 10);
-				})
+			paint(detectedCodes, ctx) {
+				for (const detectedCode of detectedCodes) {
+                    const [ firstPoint, ...otherPoints ] = detectedCode.cornerPoints
+                    ctx.strokeStyle = "#51b13e";
+                    ctx.beginPath();
+                    ctx.moveTo(firstPoint.x, firstPoint.y);
+                    for (const { x, y } of otherPoints) {
+                      ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(firstPoint.x, firstPoint.y);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
 			},
 			onInit(promise) {
-		        
 				promise.then(() => {
 					this.errorMessage = null;
 					if (app.cameras.length === 1)

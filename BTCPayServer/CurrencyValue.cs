@@ -17,7 +17,7 @@ namespace BTCPayServer
             }
             var match = _Regex.Match(str);
             if (!match.Success ||
-                !decimal.TryParse(match.Groups[1].Value, out var v))
+                !decimal.TryParse(match.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
                 return false;
 
             var currency = match.Groups[match.Groups.Count - 1].Value.ToUpperInvariant();

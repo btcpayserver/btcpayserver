@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -19,9 +20,11 @@ namespace BTCPayServer.Data
         [MaxLength(20)]
         [Required]
         public string PaymentMethodId { get; set; }
-        public string Destination { get; set; }
         public byte[] Blob { get; set; }
         public byte[] Proof { get; set; }
+#nullable enable
+        public string? Destination { get; set; }
+#nullable restore
 
 
         internal static void OnModelCreating(ModelBuilder builder)
@@ -29,15 +32,13 @@ namespace BTCPayServer.Data
             builder.Entity<PayoutData>()
                 .HasOne(o => o.PullPaymentData)
                 .WithMany(o => o.Payouts).OnDelete(DeleteBehavior.Cascade);
-
             builder.Entity<PayoutData>()
                 .Property(o => o.State)
                 .HasConversion<string>();
             builder.Entity<PayoutData>()
-                .HasIndex(o => o.Destination)
-                .IsUnique();
-            builder.Entity<PayoutData>()
                 .HasIndex(o => o.State);
+            builder.Entity<PayoutData>()
+                .HasIndex(x => new { DestinationId = x.Destination, x.State});
         }
 
         // utility methods

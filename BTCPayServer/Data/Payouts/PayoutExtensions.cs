@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,6 +50,13 @@ namespace BTCPayServer.Data
             {
                 data.Proof = bytes;
             }
+        }
+
+        public static IEnumerable<PaymentMethodId> GetSupportedPaymentMethods(
+            this IEnumerable<IPayoutHandler> payoutHandlers, List<PaymentMethodId> paymentMethodIds = null)
+        {
+            return payoutHandlers.SelectMany(handler => handler.GetSupportedPaymentMethods())
+                .Where(id => paymentMethodIds is null || paymentMethodIds.Contains(id));
         }
     }
 }

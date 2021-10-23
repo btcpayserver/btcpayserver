@@ -15,6 +15,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -27,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
@@ -164,7 +166,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("invoices/{invoiceId}/refund")]
         [AllowAnonymous]
-        public async Task<IActionResult> Refund(string invoiceId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Refund([FromServices]IEnumerable<IPayoutHandler> payoutHandlers, string invoiceId, CancellationToken cancellationToken)
         {
             using var ctx = _dbContextFactory.CreateContext();
             ctx.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
@@ -189,22 +191,16 @@ namespace BTCPayServer.Controllers
             else
             {
                 var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
-                var options = paymentMethods
-                    .Select(o => o.GetId())
-                    .Select(o => o.CryptoCode)
-                    .Where(o => _NetworkProvider.GetNetwork<BTCPayNetwork>(o) is BTCPayNetwork n && !n.ReadonlyWallet)
-                    .Distinct()
-                    .OrderBy(o => o)
-                    .Select(o => new PaymentMethodId(o, PaymentTypes.BTCLike))
-                    .ToList();
+                var pmis = paymentMethods.Select(method => method.GetId()).ToList();
+                var options = payoutHandlers.GetSupportedPaymentMethods(pmis);
                 var defaultRefund = invoice.Payments
                     .Select(p => p.GetBlob(_NetworkProvider))
                     .Select(p => p?.GetPaymentMethodId())
-                    .FirstOrDefault(p => p != null && p.PaymentType == BitcoinPaymentType.Instance);
+                    .FirstOrDefault(p => p != null && options.Contains(p));
                 // TODO: What if no option?
                 var refund = new RefundModel();
                 refund.Title = "Select a payment method";
-                refund.AvailablePaymentMethods = new SelectList(options, nameof(PaymentMethodId.CryptoCode), nameof(PaymentMethodId.CryptoCode));
+                refund.AvailablePaymentMethods = new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())), "Value", "Text");
                 refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? options.Select(o => o.CryptoCode).First();
 
                 // Nothing to select, skip to next
@@ -229,7 +225,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (!CanRefund(invoice.GetInvoiceState()))
                 return NotFound();
-            var paymentMethodId = new PaymentMethodId(model.SelectedPaymentMethod, PaymentTypes.BTCLike);
+            var paymentMethodId = PaymentMethodId.Parse(model.SelectedPaymentMethod);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paymentMethodDivisibility = _CurrencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
             RateRules rules;
@@ -466,18 +462,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private PaymentMethodId GetDefaultInvoicePaymentId(
-            PaymentMethodId[] paymentMethodIds,
-            InvoiceEntity invoice
-        )
-        {
-            PaymentMethodId.TryParse(invoice.DefaultPaymentMethod, out var defaultPaymentId);
-
-            return paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
-                paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
-                paymentMethodIds.FirstOrDefault();
-        }
-
         private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -487,19 +471,35 @@ namespace BTCPayServer.Controllers
             bool isDefaultPaymentId = false;
             if (paymentMethodId is null)
             {
-                paymentMethodId = GetDefaultInvoicePaymentId(store.GetEnabledPaymentIds(_NetworkProvider), invoice) ?? store.GetDefaultPaymentId(_NetworkProvider);
+                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider) ?? Array.Empty<PaymentMethodId>();
+                PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
+                PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
+                if (invoicePaymentId is PaymentMethodId)
+                {
+                    if (enabledPaymentIds.Contains(invoicePaymentId))
+                        paymentMethodId = invoicePaymentId;
+                }
+                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                {
+                    if (enabledPaymentIds.Contains(storePaymentId))
+                        paymentMethodId = storePaymentId;
+                }
+                if (paymentMethodId is null && invoicePaymentId is PaymentMethodId)
+                {
+                    paymentMethodId = invoicePaymentId.FindNearest(enabledPaymentIds);
+                }
+                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                {
+                    paymentMethodId = storePaymentId.FindNearest(enabledPaymentIds);
+                }
+                if (paymentMethodId is null)
+                {
+                    paymentMethodId = enabledPaymentIds.First();
+                }
                 isDefaultPaymentId = true;
             }
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
-            if (network == null && isDefaultPaymentId)
-            {
-                //TODO: need to look into a better way for this as it does not scale
-                network = _NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
-                paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            }
-            if (invoice == null || network == null)
-                return null;
-            if (!invoice.Support(paymentMethodId))
+            if (network is null || !invoice.Support(paymentMethodId))
             {
                 if (!isDefaultPaymentId)
                     return null;
@@ -685,6 +685,8 @@ namespace BTCPayServer.Controllers
         }
 
         readonly ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
+        public string? CreatedInvoiceId;
+
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {
             if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)
@@ -874,11 +876,13 @@ namespace BTCPayServer.Controllers
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
+                CreatedInvoiceId = result.Data.Id;
                 return RedirectToAction(nameof(ListInvoices));
             }
             catch (BitpayHttpException ex)
             {
-                ModelState.TryAddModelError(nameof(model.Currency), $"Error: {ex.Message}");
+                Logs.PayServer.LogError(ex, $"Invoice creation failed due to invalid currency {model.Currency}");
+                ModelState.TryAddModelError(nameof(model.Currency), "Please make sure you entered a valid currency symbol, a rate provider is configured in store settings, and your configured rate provider is both online and providing rates for your selected currency.");
                 return View(model);
             }
         }

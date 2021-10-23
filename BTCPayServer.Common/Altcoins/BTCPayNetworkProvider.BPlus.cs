@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "BPlus",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://chainz.cryptoid.info/xbc/tx.dws?{0}" : "https://chainz.cryptoid.info/xbc/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bplus-fix-it",
                 DefaultRateRules = new[]
                 {
                     "XBC_X = XBC_BTC * BTC_X",

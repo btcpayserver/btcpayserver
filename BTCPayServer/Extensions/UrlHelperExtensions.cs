@@ -63,12 +63,13 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
-        public static string PayoutLink(this LinkGenerator urlHelper, string walletId,string pullPaymentId, string scheme, HostString host, string pathbase)
+        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId,string pullPaymentId, string scheme, HostString host, string pathbase)
         {
+            WalletId.TryParse(walletIdOrStoreId, out var wallet);
             return urlHelper.GetUriByAction(
-                action: nameof(WalletsController.Payouts),
-                controller: "Wallets",
-                values: new {walletId, pullPaymentId},
+                action: nameof(StorePullPaymentsController.Payouts),
+                controller: "StorePullPayments",
+                values: new {storeId= wallet?.StoreId?? walletIdOrStoreId , pullPaymentId},
                 scheme, host, pathbase);
         }
     }

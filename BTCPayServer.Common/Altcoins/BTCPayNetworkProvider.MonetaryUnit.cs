@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "MonetaryUnit",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}" : "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "monetaryunit",
                 DefaultRateRules = new[]
                 {
                                 "MUE_X = MUE_BTC * BTC_X",

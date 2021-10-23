@@ -413,7 +413,10 @@ namespace BTCPayServer.Controllers
 
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
         {
-            var choices = storeData.GetEnabledPaymentIds(_NetworkProvider)
+            var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
+            var defaultPaymentId = storeData.GetDefaultPaymentId();
+            var defaultChoice = defaultPaymentId is PaymentMethodId ? defaultPaymentId.FindNearest(enabled) : null;
+            var choices = enabled
                 .Select(o =>
                     new CheckoutExperienceViewModel.Format()
                     {
@@ -421,9 +424,7 @@ namespace BTCPayServer.Controllers
                         Value = o.ToString(),
                         PaymentId = o
                     }).ToArray();
-
-            var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
-            var chosen = choices.FirstOrDefault(c => c.PaymentId == defaultPaymentId);
+            var chosen = defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
             vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
@@ -435,7 +436,7 @@ namespace BTCPayServer.Controllers
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
             var defaultPaymentMethodId = model.DefaultPaymentMethod == null ? null : PaymentMethodId.Parse(model.DefaultPaymentMethod);
-            if (CurrentStore.GetDefaultPaymentId(_NetworkProvider) != defaultPaymentMethodId)
+            if (CurrentStore.GetDefaultPaymentId() != defaultPaymentMethodId)
             {
                 needUpdate = true;
                 CurrentStore.SetDefaultPaymentId(defaultPaymentMethodId);
@@ -451,7 +452,7 @@ namespace BTCPayServer.Controllers
                     if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
                     {
                         model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value,
-                            $"{methodCriterion.PaymentMethod}: invalid format (1.0 USD)", this);
+                            $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
                     }
                 }
             }
@@ -556,6 +557,7 @@ namespace BTCPayServer.Controllers
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
+            vm.DefaultCurrency = storeBlob.DefaultCurrency;
             vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
             vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
             vm.SpeedPolicy = store.SpeedPolicy;
@@ -606,6 +608,7 @@ namespace BTCPayServer.Controllers
             }
 
             var blob = CurrentStore.GetStoreBlob();
+            blob.DefaultCurrency = model.DefaultCurrency;
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeMode = model.NetworkFeeMode;
             blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);

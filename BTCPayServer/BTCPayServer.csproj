@@ -21,6 +21,15 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="Views\StorePullPayments\NewPullPayment.cshtml">
+      <Pack>false</Pack>
+    </Content>
+    <Content Update="Views\StorePullPayments\PullPayments.cshtml">
+      <Pack>false</Pack>
+    </Content>
+    <Content Update="Views\StorePullPayments\Payouts.cshtml">
+      <Pack>false</Pack>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />
@@ -29,10 +38,10 @@
     <EmbeddedResource Include="bundleconfig.json" />
   </ItemGroup>
   <ItemGroup Condition="'$(Altcoins)' == 'true'">
-    <PackageReference Include="Nethereum.ABI" Version="3.8.0" />
-    <PackageReference Include="Nethereum.HdWallet" Version="3.8.0" />
-    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.8.0" />
-    <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
+    <PackageReference Include="Nethereum.ABI" Version="4.1.0" />
+    <PackageReference Include="Nethereum.HdWallet" Version="4.1.0" />
+    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="4.1.0" />
+    <PackageReference Include="Nethereum.Web3" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
@@ -46,7 +55,7 @@
   <ItemGroup>
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.12" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.13" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
@@ -54,6 +63,7 @@
     <PackageReference Include="Fido2" Version="2.0.1" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.1" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
+    <PackageReference Include="LNURL" Version="0.0.8" />
     <PackageReference Include="McMaster.NETCore.Plugins.Mvc" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="3.3.2">
@@ -63,7 +73,7 @@
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.4" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.1.0" />
@@ -196,12 +206,6 @@
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Wallets\NewPullPayment.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
-	  <Content Update="Views\Wallets\Payouts.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
 	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
@@ -215,9 +219,6 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletSendVault.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
-	  <Content Update="Views\Wallets\PullPayments.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">

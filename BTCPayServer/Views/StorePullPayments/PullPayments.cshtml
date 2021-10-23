@@ -1,7 +1,30 @@
-﻿@model PullPaymentsModel
+﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
+    var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
+    String startDateSortOrder = null;
+    switch (nextStartDateSortOrder)
+    {
+        case "asc":
+            startDateSortOrder = "desc";
+            break;
+        case "desc":
+            startDateSortOrder = "asc";
+            break;
+    }
+
+    var sortIconClass = "fa-sort";
+    if (startDateSortOrder != null)
+    {
+        sortIconClass = $"fa-sort-alpha-{startDateSortOrder}";
+    }
+
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
 }
 
 @section PageHeadContent {
@@ -21,12 +44,9 @@
             </a>
         </small>
     </h4>
-    @if (Model.HasDerivationSchemeSettings)
-    {
-        <a asp-action="NewPullPayment" asp-route-walletId="@Context.GetRouteValue("walletId")" class="btn btn-primary" role="button" id="NewPullPayment">
-            <span class="fa fa-plus"></span> Create a new pull payment
-        </a>
-    }
+    <a asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
+        <span class="fa fa-plus"></span> Create a new pull payment
+    </a>
 </div>
 
 @if (Model.PullPayments.Any())
@@ -56,7 +76,16 @@
             <table class="table table-hover table-responsive-lg">
                 <thead class="thead-inverse">
                 <tr>
-                    <th scope="col">Start</th>
+                    <th scope="col">
+                        <a
+                            asp-action="PullPayments"
+                            asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
+                            class="text-nowrap"
+                            title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
+                            Start
+                            <span class="fa @(sortIconClass)"></span>
+                        </a>
+                    </th>
                     <th scope="col">Name</th>
                     <th scope="col">Refunded</th>
                     <th scope="col" class="text-end">Actions</th>
@@ -81,28 +110,36 @@
                         <td class="text-end">
                             <a asp-action="ViewPullPayment"
                                asp-controller="PullPayment"
-                               asp-route-pullPaymentId="@pp.Id">View</a> -
+                               asp-route-pullPaymentId="@pp.Id">
+                                View
+                            </a> -
                             <a class="pp-payout" asp-action="Payouts"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
-                               asp-route-pullPaymentId="@pp.Id">Payouts</a> -
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
+                               asp-route-pullPaymentId="@pp.Id">
+                                Payouts
+                            </a> -
                             <a asp-action="ArchivePullPayment"
-                               asp-route-walletId="@Context.GetRouteValue("walletId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"
                                data-bs-target="#ConfirmModal"
-                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">Archive</a>
+                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
+                                Archive
+                            </a>
                         </td>
                     </tr>
                 }
                 </tbody>
             </table>
-        </div>
-    </div>
-    
-    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />
 
-    @section PageFootContent {
-        <script>
+        </div>
+        <vc:pager view-model="Model"/>
+    </div>
+
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))"/>
+
+@section PageFootContent {
+    <script>
             var ppProgresses = document.getElementsByClassName("ppProgress");
             for (var i = 0; i < ppProgresses.length; i++) {
                 var pp = ppProgresses[i];
@@ -111,7 +148,7 @@
                 pp.setAttribute("title", template.innerHTML);
             }
         </script>
-    }
+}
 }
 else
 {

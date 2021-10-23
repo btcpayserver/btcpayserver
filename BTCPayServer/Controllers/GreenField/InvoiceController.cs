@@ -163,11 +163,6 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
             }
-
-            if (string.IsNullOrEmpty(request.Currency))
-            {
-                ModelState.AddModelError(nameof(request.Currency), "Currency is required");
-            }
             request.Checkout = request.Checkout ?? new CreateInvoiceRequest.CheckoutOptions();
             if (request.Checkout.PaymentMethods?.Any() is true)
             {

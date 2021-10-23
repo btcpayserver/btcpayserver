@@ -105,6 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymnetMethodId);
+
             ToModel(request, store, defaultPaymnetMethodId);
             await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
@@ -119,7 +120,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
                 SpeedPolicy = data.SpeedPolicy,
-                DefaultPaymentMethod = data.GetDefaultPaymentId(_btcPayNetworkProvider)?.ToStringNormalized(),
+                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
@@ -150,7 +151,6 @@ namespace BTCPayServer.Controllers.GreenField
         private static void ToModel(StoreBaseData restModel, Data.StoreData model, PaymentMethodId defaultPaymentMethod)
         {
             var blob = model.GetStoreBlob();
-
             model.StoreName = restModel.Name;
             model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
@@ -163,6 +163,7 @@ namespace BTCPayServer.Controllers.GreenField
             //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
+            blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;

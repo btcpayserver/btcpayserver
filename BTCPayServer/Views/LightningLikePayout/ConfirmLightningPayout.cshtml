@@ -1,0 +1,52 @@
+@model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.LightningLikePayoutController.ConfirmVM>
+@{
+    Layout = "../Shared/_Layout.cshtml";
+    ViewData["Title"] = "Confirm Lightning Payout";
+    var cryptoCode = Context.GetRouteValue("cryptoCode");
+}
+<section>
+    <div class="container">
+
+        <h2 class="mb-4">@ViewData["Title"]</h2>
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="list-group">
+                    @foreach (var item in Model)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div data-bs-toggle="tooltip" class="text-break" title="@item.Destination">@item.Destination</div>
+
+                            <span class="text-capitalize badge bg-secondary">@item.Amount @cryptoCode</span>
+                        </li>
+
+                        <form method="post" class="list-group-item justify-content-center" id="pay-invoices-form">
+                            <button type="submit" class="btn btn-primary xmx-2" style="min-width:25%;" id="Pay">Pay</button>
+                            <button type="button" class="btn btn-secondary mx-2" onclick="history.back(); return false;" style="min-width:25%;">Go back</button>
+                        </form>
+                    }
+
+                </ul>
+            </div>
+        </div>
+    </div>
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("#pay-invoices-form").on("submit", function() {
+                $(this).find("input[type='submit']").prop('disabled', true);
+            });
+
+            $("#pay-invoices-form input").on("input", function () {
+                // Give it a timeout to make sure all form validation has completed by the time we run our callback
+                setTimeout(function() {
+                    var validationErrors = $('.field-validation-error');
+                    if (validationErrors.length === 0) {
+                        $("input[type='submit']#Create").removeAttr('disabled');
+                    }
+                }, 100);
+            });
+        });
+    </script>
+}
+</section>

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class PullPaymentsModel
+    public class PullPaymentsModel: BasePagingViewModel
     {
         public class PullPaymentModel
         {
@@ -28,8 +29,6 @@ namespace BTCPayServer.Models.WalletViewModels
         }
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
-
-        public bool HasDerivationSchemeSettings { get; set; }
     }
 
     public class NewPullPaymentModel
@@ -49,5 +48,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public string CustomCSSLink { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
+
+        public IEnumerable<string> PaymentMethods { get; set; }
+        public IEnumerable<SelectListItem> PaymentMethodItems { get; set; }
     }
 }

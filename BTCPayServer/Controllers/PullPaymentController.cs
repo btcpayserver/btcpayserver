@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                            {
                                Entity = o,
                                Blob = o.GetBlob(_serializerSettings),
-                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o)
+                               ProofBlob = _payoutHandlers.FindPayoutHandler(o.GetPaymentMethodId())?.ParseProof(o)
                            });
             var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
@@ -85,6 +85,7 @@ namespace BTCPayServer.Controllers
                               Currency = blob.Currency,
                               Status = entity.Entity.State,
                               Destination = entity.Blob.Destination,
+                              PaymentMethod = PaymentMethodId.Parse(entity.Entity.PaymentMethodId),
                               Link = entity.ProofBlob?.Link,
                               TransactionId = entity.ProofBlob?.Id
                           }).ToList()
@@ -105,14 +106,31 @@ namespace BTCPayServer.Controllers
             }
             
             var ppBlob = pp.GetBlob();
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(ppBlob.SupportedPaymentMethods.Single().CryptoCode);
             
-            var paymentMethodId = ppBlob.SupportedPaymentMethods.Single();
-            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
-            IClaimDestination destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
-            if (destination is null)
+            var paymentMethodId = ppBlob.SupportedPaymentMethods.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
+            
+            var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FindPayoutHandler(paymentMethodId);
+            if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination");
+                ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");   
+                return await ViewPullPayment(pullPaymentId);
+            }
+            var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination, true);
+            if (destination.destination is null)
+            {
+                ModelState.AddModelError(nameof(vm.Destination), destination.error??"Invalid destination with selected payment method");
+                return await ViewPullPayment(pullPaymentId);
+            }
+
+            if (vm.ClaimedAmount == 0)
+            {
+                ModelState.AddModelError(nameof(vm.ClaimedAmount),
+                    $"Amount is required");
+            }
+            else if (vm.ClaimedAmount != 0 && destination.destination.Amount != null && vm.ClaimedAmount != destination.destination.Amount)
+            {
+                ModelState.AddModelError(nameof(vm.ClaimedAmount),
+                    $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
             }
 
             if (!ModelState.IsValid)
@@ -122,10 +140,10 @@ namespace BTCPayServer.Controllers
 
             var result = await _pullPaymentHostedService.Claim(new ClaimRequest()
             {
-                Destination = destination,
+                Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = vm.ClaimedAmount,
-                PaymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike)
+                PaymentMethodId = paymentMethodId
             });
 
             if (result.Result != ClaimRequest.ClaimResult.Ok)
@@ -149,13 +167,6 @@ namespace BTCPayServer.Controllers
                 });
             }
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId = pullPaymentId });
-        }
-
-        string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            if (txId is null)
-                return string.Empty;
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
     }
 }

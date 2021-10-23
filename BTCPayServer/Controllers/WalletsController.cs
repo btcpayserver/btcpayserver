@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers
             var storeData = store.GetStoreBlob();
             var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
-            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
+            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, storeData.DefaultCurrency);
             double.TryParse(defaultAmount, out var amount);
             var model = new WalletSendModel()
             {
@@ -753,11 +753,6 @@ namespace BTCPayServer.Controllers
             vm.Outputs ??= new List<WalletSendModel.TransactionOutput>();
             try
             {
-                if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    bip21 = $"bitcoin{bip21.Substring(network.UriScheme.Length)}";
-                }
-
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
 
                 vm.Outputs.Add(new WalletSendModel.TransactionOutput()
@@ -1040,19 +1035,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction();
         }
 
-        private string GetCurrencyCode(string defaultLang)
-        {
-            if (defaultLang == null)
-                return null;
-            try
-            {
-                var ri = new RegionInfo(defaultLang);
-                return ri.ISOCurrencySymbol;
-            }
-            catch (ArgumentException) { }
-            return null;
-        }
-
         public StoreData CurrentStore
         {
             get
@@ -1109,7 +1091,7 @@ namespace BTCPayServer.Controllers
             var vm = new WalletSettingsViewModel()
             {
                 StoreName = store.StoreName,
-                UriScheme = derivationSchemeSettings.Network.UriScheme,
+                UriScheme = derivationSchemeSettings.Network.NBitcoinNetwork.UriScheme,
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,

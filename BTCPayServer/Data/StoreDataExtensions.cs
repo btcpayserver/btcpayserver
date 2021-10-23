@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +13,10 @@ namespace BTCPayServer.Data
     public static class StoreDataExtensions
     {
 #pragma warning disable CS0618
-        public static PaymentMethodId GetDefaultPaymentId(this StoreData storeData, BTCPayNetworkProvider networks)
+        public static PaymentMethodId? GetDefaultPaymentId(this StoreData storeData)
         {
-            PaymentMethodId[] paymentMethodIds = storeData.GetEnabledPaymentIds(networks);
             PaymentMethodId.TryParse(storeData.DefaultCrypto, out var defaultPaymentId);
-            var chosen = paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
-                         paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
-                         paymentMethodIds.FirstOrDefault();
-            return chosen;
+            return defaultPaymentId;
         }
 
         public static PaymentMethodId[] GetEnabledPaymentIds(this StoreData storeData, BTCPayNetworkProvider networks)
@@ -104,7 +101,7 @@ namespace BTCPayServer.Data
         /// </summary>
         /// <param name="paymentMethodId">The paymentMethodId</param>
         /// <param name="supportedPaymentMethod">The payment method, or null to remove</param>
-        public static void SetSupportedPaymentMethod(this StoreData storeData, PaymentMethodId paymentMethodId, ISupportedPaymentMethod supportedPaymentMethod)
+        public static void SetSupportedPaymentMethod(this StoreData storeData, PaymentMethodId? paymentMethodId, ISupportedPaymentMethod? supportedPaymentMethod)
         {
             if (supportedPaymentMethod != null && paymentMethodId != null && paymentMethodId != supportedPaymentMethod.PaymentId)
             {

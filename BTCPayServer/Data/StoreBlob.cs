@@ -40,6 +40,20 @@ namespace BTCPayServer.Data
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }
         public bool ChivoMode { get; set; }
+        string _DefaultCurrency;
+        public string DefaultCurrency 
+        { 
+            get 
+            { 
+                return string.IsNullOrEmpty(_DefaultCurrency) ? "USD" : _DefaultCurrency;
+            } 
+            set
+            {
+                _DefaultCurrency = value;
+                if (!string.IsNullOrEmpty(_DefaultCurrency))
+                    _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant();
+            }
+        }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]
@@ -83,7 +97,7 @@ namespace BTCPayServer.Data
         public string CustomCSS { get; set; }
         public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
-        
+
         public bool AutoDetectLanguage { get; set; }
 
         public bool RateScripting { get; set; }
@@ -159,7 +173,7 @@ namespace BTCPayServer.Data
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
-        
+
         public class StoreHints
         {
             public bool Wallet { get; set; }

@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "BitCore",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.bitcore.cc/tx/{0}" : "https://explorer.bitcore.cc/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bitcore",
                 DefaultRateRules = new[]
                 {
                                 "BTX_X = BTX_BTC * BTC_X",

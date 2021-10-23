@@ -16,10 +16,12 @@ using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using Microsoft.EntityFrameworkCore.Internal;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Extensions;
 using Xunit;
+using OpenQA.Selenium.Support.UI;
 
 namespace BTCPayServer.Tests
 {
@@ -95,8 +97,12 @@ namespace BTCPayServer.Tests
         public Uri ServerUri;
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
-            var className = $"alert-{StatusMessageModel.ToString(severity)}";
-            var el = Driver.FindElement(By.ClassName(className)) ?? Driver.WaitForElement(By.ClassName(className));
+            return FindAlertMessage(new[] {severity});
+        }
+        internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
+        {
+            var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
+            var el = Driver.FindElement(By.CssSelector(className)) ?? Driver.WaitForElement(By.CssSelector(className));
             if (el is null)
                 throw new NoSuchElementException($"Unable to find {className}");
             return el;
@@ -307,7 +313,8 @@ namespace BTCPayServer.Tests
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)
         {
-            Driver.FindElement(By.Id("Stores")).Click();
+            GoToHome(); 
+            Driver.WaitForAndClick(By.Id("Stores"));
             Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
 
             if (storeNavPage != StoreNavPages.Index)
@@ -347,7 +354,7 @@ namespace BTCPayServer.Tests
             decimal? amount = 100, 
             string currency = "USD", 
             string refundEmail = "",
-            string defaultPaymentMethod = "BTC"
+            string defaultPaymentMethod = null
         )
         {
             GoToInvoices();
@@ -359,7 +366,8 @@ namespace BTCPayServer.Tests
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
-            Driver.FindElement(By.Name("DefaultPaymentMethod")).SendKeys(defaultPaymentMethod);
+            if (defaultPaymentMethod is string)
+                new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage();

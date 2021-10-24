@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LNURLPay/{cryptoCode}")]
-        public ActionResult<LNURLPayPaymentMethodData> GetLNURLPayPaymentMethod(string storeId, string cryptoCode)
+        public IActionResult GetLNURLPayPaymentMethod(string storeId, string cryptoCode)
         {
             if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
             {
@@ -85,7 +85,7 @@ namespace BTCPayServer.Controllers.GreenField
             var method = GetExistingLNURLPayPaymentMethod(cryptoCode);
             if (method is null)
             {
-                return NotFound();
+                return this.CreateAPIError(404, "paymentmethod-not-found", "The LNURL Payment Method isn't activated");
             }
 
             return Ok(method);
@@ -175,20 +175,6 @@ namespace BTCPayServer.Controllers.GreenField
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             network = network?.SupportLightning is true ? network : null;
             return network != null;
-        }
-
-        private async Task<bool> CanUseInternalLightning()
-        {
-            return (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll ||
-                   (await _authorizationService.AuthorizeAsync(User, null,
-                       new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
-        }
-
-        private async Task<bool> CanManageServer()
-        {
-            return
-                (await _authorizationService.AuthorizeAsync(User, null,
-                    new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
         }
     }
 }

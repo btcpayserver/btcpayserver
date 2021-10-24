@@ -764,7 +764,7 @@ namespace BTCPayServer.Controllers.GreenField
         public override Task<LNURLPayPaymentMethodData> GetStoreLNURLPayPaymentMethod(
             string storeId, string cryptoCode, CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult(
+            return Task.FromResult(GetFromActionResult<LNURLPayPaymentMethodData>(
                 _storeLnurlPayPaymentMethodsController.GetLNURLPayPaymentMethod(storeId, cryptoCode)));
         }
 

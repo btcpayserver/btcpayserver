@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
     public class LightningNodeViewModel
     {
         [Display(Name = "Enable LNURL")]
-        public bool LNURLEnabled { get; set; } = true;
+        public bool LNURLEnabled { get; set; }
         
         [Display(Name = "LNURL Classic Mode")]
         public bool LNURLBech32Mode { get; set; } = true;

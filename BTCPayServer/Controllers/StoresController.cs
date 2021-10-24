@@ -372,7 +372,11 @@ namespace BTCPayServer.Controllers
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
             SetCryptoCurrencies(vm, CurrentStore);
-            vm.PaymentMethodCriteria = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider).Select(method =>
+            vm.PaymentMethodCriteria = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
+                                    .Where(s => !storeBlob.GetExcludedPaymentMethods().Match(s.PaymentId))
+                                    .Where(s => _NetworkProvider.GetNetwork(s.PaymentId.CryptoCode) != null)
+                                    .Where(s => s.PaymentId.PaymentType != PaymentTypes.LNURLPay)
+                                    .Select(method =>
             {
                 var existing =
                     storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
@@ -461,13 +465,36 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            blob.PaymentMethodCriteria = model.PaymentMethodCriteria
-                .Where(viewModel => !string.IsNullOrEmpty(viewModel.Value)).Select(viewModel =>
+            // Payment criteria for Off-Chain should also affect LNUrl
+            foreach (var newCriteria in model.PaymentMethodCriteria.ToList())
+            {
+                var paymentMethodId = PaymentMethodId.Parse(newCriteria.PaymentMethod);
+                if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
+                    model.PaymentMethodCriteria.Add(new PaymentMethodCriteriaViewModel()
+                    {
+                        PaymentMethod = new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay).ToString(),
+                        Type = newCriteria.Type,
+                        Value = newCriteria.Value
+                    });
+                // Should not be able to set LNUrlPay criteria directly in UI
+                if (paymentMethodId.PaymentType == PaymentTypes.LNURLPay)
+                    model.PaymentMethodCriteria.Remove(newCriteria);
+            }
+            blob.PaymentMethodCriteria ??= new List<PaymentMethodCriteria>();
+            foreach (var newCriteria in model.PaymentMethodCriteria)
+            {
+                var paymentMethodId = PaymentMethodId.Parse(newCriteria.PaymentMethod);
+                var existingCriteria = blob.PaymentMethodCriteria.FirstOrDefault(c => c.PaymentMethod == paymentMethodId);
+                if (existingCriteria != null)
+                    blob.PaymentMethodCriteria.Remove(existingCriteria);
+                CurrencyValue.TryParse(newCriteria.Value, out var cv);
+                blob.PaymentMethodCriteria.Add(new PaymentMethodCriteria()
                 {
-                    CurrencyValue.TryParse(viewModel.Value, out var cv);
-                    return new PaymentMethodCriteria() { Above = viewModel.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan, Value = cv, PaymentMethod = PaymentMethodId.Parse(viewModel.PaymentMethod) };
-                }).ToList();
-
+                    Above = newCriteria.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan,
+                    Value = cv,
+                    PaymentMethod = paymentMethodId
+                });
+            }
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;

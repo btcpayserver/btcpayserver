@@ -2496,12 +2496,9 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                var lightningPaymentMethod = new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString();
-                Assert.Equal(2, vm.PaymentMethodCriteria.Count);
-                var criteria = vm.PaymentMethodCriteria.FirstOrDefault(model => model.PaymentMethod == lightningPaymentMethod);
-                Assert.Equal(lightningPaymentMethod, criteria.PaymentMethod);
+                var vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                var criteria = Assert.Single(vm.PaymentMethodCriteria);
+                Assert.Equal(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "2 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
                 Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
@@ -2511,15 +2508,39 @@ namespace BTCPayServer.Tests
                     new Invoice
                     {
                         Price = 1.5m,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        ItemDesc = "Some description",
-                        FullNotifications = true
+                        Currency = "USD"
                     }, Facade.Merchant);
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+
+                // Activating LNUrl, we should still have only 1 payment criteria that can be set.
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge, setViewModel: vm =>
+                {
+                    vm.LNURLEnabled = true;
+                    vm.LNURLStandardInvoiceEnabled = true;
+                });
+                vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                criteria = Assert.Single(vm.PaymentMethodCriteria);
+                Assert.Equal(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm).Result);
+
+                // However, creating an invoice should show LNURL
+                invoice = user.BitPay.CreateInvoice(
+                    new Invoice
+                    {
+                        Price = 1.5m,
+                        Currency = "USD"
+                    }, Facade.Merchant);
+                Assert.Equal(2, invoice.CryptoInfo.Length);
+
+                // Make sure this throw: Since BOLT11 and LN Url share the same criteria, there should be no payment method available
+                Assert.Throws<BitPayException>(() => user.BitPay.CreateInvoice(
+                    new Invoice
+                    {
+                        Price = 2.5m,
+                        Currency = "USD"
+                    }, Facade.Merchant));
             }
         }
 

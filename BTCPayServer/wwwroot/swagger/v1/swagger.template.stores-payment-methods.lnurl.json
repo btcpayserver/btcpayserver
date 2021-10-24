@@ -50,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}": {
+        "/api/v1/stores/{storeId}/payment-methods/LNURL/{cryptoCode}": {
             "get": {
                 "tags": [
                     "Store Payment Methods (LNURL Pay)"

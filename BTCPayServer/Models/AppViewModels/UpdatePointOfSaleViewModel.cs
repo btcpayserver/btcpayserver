@@ -90,5 +90,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
+        public bool RequiresRefundEmail { get; set; } = false;
     }
 }

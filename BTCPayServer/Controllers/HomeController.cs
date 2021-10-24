@@ -92,10 +92,7 @@ namespace BTCPayServer.Controllers
             {
                 await using var stream = fi.CreateReadStream();
                 using var reader = new StreamReader(fi.CreateReadStream());
-                json.Merge(JObject.Parse(await reader.ReadToEndAsync()), new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union // Prevent duplicates
-                });
+                json.Merge(JObject.Parse(await reader.ReadToEndAsync()));
             }
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));

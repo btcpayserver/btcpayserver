@@ -90,10 +90,10 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             tipClicked: function(percentage) {
                 this.payTotalNumeric -= this.tipTotalNumeric;
                 this.tipTotalNumeric = parseFloat((this.payTotalNumeric * (percentage / 100)).toFixed(this.srvModel.currencyInfo.divisibility));
-                this.payTotalNumeric += this.tipTotalNumeric;
+                this.payTotalNumeric = parseFloat((this.payTotalNumeric + this.tipTotalNumeric).toFixed(this.srvModel.currencyInfo.divisibility));
 
                 this.payTotal = this.payTotalNumeric.toString(10);
-                this.tipTotal = this.tipTotalNumeric === 0 ? null : this.tipTotalNumeric.toString(10);
+                this.tipTotal = this.tipTotalNumeric === 0 ? null : this.tipTotalNumeric.toFixed(this.srvModel.currencyInfo.divisibility);
             },
             removeTip: function() {
                 this.payTotalNumeric -= this.tipTotalNumeric;

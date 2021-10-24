@@ -151,6 +151,7 @@ namespace BTCPayServer.Controllers
             }
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
+            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
 

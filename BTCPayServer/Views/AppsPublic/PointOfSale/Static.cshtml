@@ -37,12 +37,14 @@
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>
+                                        <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                         @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Value, item.Price.Value);}
                                     </form>
                                 }
                                 else
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
+                                        <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                         <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
                                             @Safe.Raw(buttonText)
                                         </button>
@@ -94,6 +96,7 @@
     {
         <div class="input-group">
             <span class="input-group-text">@Model.CurrencySymbol</span>
+            <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
             <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue">
                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
         </div>

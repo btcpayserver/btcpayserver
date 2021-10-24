@@ -563,7 +563,7 @@ namespace BTCPayServer.Controllers
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
                 CustomerEmail = invoice.RefundMail,
-                RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,

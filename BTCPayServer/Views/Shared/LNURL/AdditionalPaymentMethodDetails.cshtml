@@ -1,0 +1,12 @@
+﻿@model BTCPayServer.Payments.LNURLPayPaymentMethodDetails
+
+@if (!string.IsNullOrEmpty(Model.ProvidedComment))
+{
+    
+<tr>
+    <td colspan="100% bg-tile">
+
+        LNURL Comment: @Model.ProvidedComment
+    </td>
+</tr>
+}

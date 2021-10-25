@@ -52,10 +52,9 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "End date")]
         public DateTime? EndDate { get; set; }
 
-        [Required]
         [MaxLength(5)]
         [Display(Name = "Primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
-        public string TargetCurrency { get; set; } = "BTC";
+        public string TargetCurrency { get; set; }
 
         [Display(Name = "Set a target amount")]
         [Range(0, double.PositiveInfinity)]

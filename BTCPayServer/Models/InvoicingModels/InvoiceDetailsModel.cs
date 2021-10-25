@@ -30,6 +30,7 @@ namespace BTCPayServer.Models.InvoicingModels
     {
         public string Crypto { get; set; }
         public string BOLT11 { get; set; }
+        public PaymentType Type { get; set; }
     }
 
     public class InvoiceDetailsModel
@@ -45,6 +46,8 @@ namespace BTCPayServer.Models.InvoicingModels
             public string Overpaid { get; set; }
             [JsonIgnore]
             public PaymentMethodId PaymentMethodId { get; set; }
+
+            public PaymentMethod PaymentMethodRaw { get; set; }
         }
         public class AddressModel
         {

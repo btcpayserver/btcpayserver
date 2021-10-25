@@ -377,7 +377,7 @@ namespace BTCPayServer.Controllers
                     ExtendedNotifications = true,
                     SupportedTransactionCurrencies = paymentMethods,
                     RedirectURL = request.RedirectUrl ??
-                                     new Uri(new Uri(new Uri(HttpContext.Request.GetAbsoluteRoot()), _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
+                                     HttpContext.Request.GetAbsoluteUri($"/apps/{appId}/crowdfund")
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken: cancellationToken);

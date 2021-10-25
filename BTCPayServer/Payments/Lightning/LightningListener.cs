@@ -104,21 +104,42 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
         }
+
+        private string GetCacheKey(string invoiceId)
+        {
+            return $"{nameof(GetListenedInvoices)}-{invoiceId}";
+        }
         private Task<List<ListenedInvoice>> GetListenedInvoices(string invoiceId)
         {
-            return _memoryCache.GetOrCreateAsync($"{nameof(GetListenedInvoices)}-{invoiceId}", async (cacheEntry) =>
+            return _memoryCache.GetOrCreateAsync( GetCacheKey(invoiceId), async (cacheEntry) =>
             {
                 var listenedInvoices = new List<ListenedInvoice>();
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
                 foreach (var paymentMethod in invoice.GetPaymentMethods()
-                                                              .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
+                                                              .Where(c => new []{PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(c.GetId().PaymentType)))
                 {
-                    var lightningMethod = paymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
-                    if (lightningMethod == null || !lightningMethod.Activated)
-                        continue;
-                    var lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
-                                              .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
-                    if (lightningSupportedMethod == null)
+                    LightningLikePaymentMethodDetails lightningMethod;
+                    LightningSupportedPaymentMethod lightningSupportedMethod;
+                    switch (paymentMethod.GetPaymentMethodDetails())
+                    {
+                        case LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails:
+
+                            lightningMethod = lnurlPayPaymentMethodDetails;
+                            
+                            lightningSupportedMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod;
+                            
+                            break;
+                        case LightningLikePaymentMethodDetails { Activated: true } lightningLikePaymentMethodDetails:
+                            lightningMethod = lightningLikePaymentMethodDetails;
+                            lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
+                                .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
+
+                            break;
+                        default:
+                            continue;
+                    }
+
+                   if (lightningSupportedMethod == null || string.IsNullOrEmpty(lightningMethod.InvoiceId))
                         continue;
                     var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
 
@@ -164,7 +185,6 @@ namespace BTCPayServer.Payments.Lightning
                 if (inv.State.Status == InvoiceStatusLegacy.New &&
                     inv.State.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
-                    
                     var invoice = await _InvoiceRepository.GetInvoice(inv.InvoiceId);
                     await CreateNewLNInvoiceForBTCPayInvoice(invoice);
                 }
@@ -174,6 +194,15 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (inv.PaymentMethodId.PaymentType == LightningPaymentType.Instance)
                 {
+                    _memoryCache.Remove(GetCacheKey(inv.InvoiceId));
+                    _CheckInvoices.Writer.TryWrite(inv.InvoiceId);
+                }
+            }));
+            leases.Add(_Aggregator.Subscribe<Events.InvoiceNewPaymentDetailsEvent>(inv =>
+            {
+                if (inv.PaymentMethodId.PaymentType == LNURLPayPaymentType.Instance)
+                {
+                    _memoryCache.Remove(GetCacheKey(inv.InvoiceId));
                     _CheckInvoices.Writer.TryWrite(inv.InvoiceId);
                 }
             }));
@@ -196,7 +225,7 @@ namespace BTCPayServer.Payments.Lightning
         private async Task CreateNewLNInvoiceForBTCPayInvoice(InvoiceEntity invoice)
         {
             var paymentMethods = invoice.GetPaymentMethods()
-                .Where(method => method.GetId().PaymentType == PaymentTypes.LightningLike)
+                .Where(method => new []{PaymentTypes.LightningLike, LNURLPayPaymentType.Instance}.Contains(method.GetId().PaymentType))
                 .ToArray();
             var store = await _storeRepository.FindStore(invoice.StoreId);
             if (paymentMethods.Any())
@@ -209,8 +238,60 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     try
                     {
-                        var supportedMethod = invoice
+                        var oldDetails = (LightningLikePaymentMethodDetails) paymentMethod.GetPaymentMethodDetails();
+                        if (!oldDetails.Activated)
+                        {
+                            continue;
+                        }
+
+                        
+                        if (oldDetails is LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails && !string.IsNullOrEmpty(lnurlPayPaymentMethodDetails.BOLT11))
+                        {
+                            try
+                            {
+                                var client = _lightningLikePaymentHandler.CreateLightningClient(lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod,
+                                    (BTCPayNetwork)paymentMethod.Network);
+                                await client.CancelInvoice(oldDetails.InvoiceId);
+                            }
+                            catch
+                            {
+                                //not a fully supported option
+                            }
+
+                            lnurlPayPaymentMethodDetails = new LNURLPayPaymentMethodDetails()
+                            {
+                                Activated = lnurlPayPaymentMethodDetails.Activated,
+                                Bech32Mode = lnurlPayPaymentMethodDetails.Bech32Mode,
+                                InvoiceId = null,
+                                NodeInfo = lnurlPayPaymentMethodDetails.NodeInfo,
+                                GeneratedBoltAmount = null,
+                                BOLT11 = null,
+                                LightningSupportedPaymentMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod,
+                                BTCPayInvoiceId = lnurlPayPaymentMethodDetails.BTCPayInvoiceId
+                            };
+                            await _InvoiceRepository.NewPaymentDetails(invoice.Id, lnurlPayPaymentMethodDetails,
+                                paymentMethod.Network);
+                            
+                            _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
+                                lnurlPayPaymentMethodDetails, paymentMethod.GetId()));
+                            
+                            continue;
+                        }
+
+                        LightningSupportedPaymentMethod supportedMethod = invoice
                             .GetSupportedPaymentMethod<LightningSupportedPaymentMethod>(paymentMethod.GetId()).First();
+
+                        try
+                        {
+                            var client = _lightningLikePaymentHandler.CreateLightningClient(supportedMethod,
+                                (BTCPayNetwork)paymentMethod.Network);
+                            await client.CancelInvoice(oldDetails.InvoiceId);
+                        }
+                        catch
+                        {
+                            //not a fully supported option
+                        }
+
                         var prepObj =
                             _lightningLikePaymentHandler.PreparePayment(supportedMethod, store, paymentMethod.Network);
                         var newPaymentMethodDetails =
@@ -346,7 +427,7 @@ namespace BTCPayServer.Payments.Lightning
             var client = _lightningClientFactory.Create(ConnectionString, _network);
             LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId, cancellation);
             if (lightningInvoice?.Status is LightningInvoiceStatus.Paid &&
-                await AddPayment(lightningInvoice, listenedInvoice.InvoiceId))
+                await AddPayment(lightningInvoice, listenedInvoice.InvoiceId,listenedInvoice.PaymentMethod.GetId().PaymentType))
             {
                 Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via polling on {listenedInvoice.InvoiceId}");
             }
@@ -392,7 +473,7 @@ namespace BTCPayServer.Payments.Lightning
                             if (notification.Status == LightningInvoiceStatus.Paid &&
                                 notification.PaidAt.HasValue && notification.Amount != null)
                             {
-                                if (await AddPayment(notification, listenedInvoice.InvoiceId))
+                                if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.GetId().PaymentType))
                                 {
                                     Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via notification ({listenedInvoice.InvoiceId})");
                                 }
@@ -439,13 +520,14 @@ namespace BTCPayServer.Payments.Lightning
         bool _ErrorAlreadyLogged = false;
         readonly ConcurrentDictionary<string, ListenedInvoice> _ListenedInvoices = new ConcurrentDictionary<string, ListenedInvoice>();
 
-        public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId)
+        public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId, PaymentType paymentType)
         {
             var payment = await _paymentService.AddPayment(invoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash,
-                Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable
+                Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable,
+                PaymentType = paymentType.ToString()
             }, _network, accounted: true);
             if (payment != null)
             {

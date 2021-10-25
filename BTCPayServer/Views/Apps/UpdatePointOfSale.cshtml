@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Apps
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
@@ -22,8 +22,8 @@
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="form-label" data-required></label>
-                        <input asp-for="Currency" class="form-control" required />
+                        <label asp-for="Currency" class="form-label"></label>
+                        <input asp-for="Currency" class="form-control" placeholder="Use store's default settings" />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                 </div>
@@ -52,51 +52,57 @@
                             <span class="text-secondary">Choose the point of sale style for your customers.</span>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="button-price-text">
                         <label asp-for="ButtonText" class="form-label" data-required></label>
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
-                    <h4 class="mt-5 mb-4">Discounts</h4>
-                    <div class="form-check mb-4">
-                        <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
-                        <label asp-for="ShowDiscount" class="form-check-label"></label>
-                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
-                        <div class="mt-2">
-                            <span class="text-secondary">Not recommended for customer self-checkout.</span>
+                    <section id="discounts" class="p-0">
+                        <h4 class="mt-5 mb-4">Discounts</h4>
+                        <div class="form-check mb-4">
+                            <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
+                            <label asp-for="ShowDiscount" class="form-check-label"></label>
+                            <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+                            <div class="mt-2">
+                                <span class="text-secondary">Not recommended for customer self-checkout.</span>
+                            </div>
                         </div>
-                    </div>
-                    <h4 class="mt-5 mb-4">Custom Payments</h4>
-                    <div class="form-group mb-4 d-flex align-items-center">
-                        <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
-                        <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
-                        <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
-                    </div>
-                    <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
-                        <div class="form-group mb-0 pb-3">
-                            <label asp-for="CustomButtonText" class="form-label" data-required></label>
-                            <input asp-for="CustomButtonText" class="form-control" required />
-                            <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                    </section>
+                    <section id="custom-payments" class="p-0">
+                        <h4 class="mt-5 mb-4">Custom Payments</h4>
+                        <div class="form-group mb-4 d-flex align-items-center">
+                            <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
+                            <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
+                            <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                         </div>
-                    </div>
-                    <h4 class="mt-5 mb-4">Tips</h4>
-                    <div class="form-group mb-4 d-flex align-items-center">
-                        <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
-                        <label asp-for="EnableTips" class="form-label mb-0"></label>
-                        <span asp-validation-for="EnableTips" class="text-danger"></span>
-                    </div>
-                    <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
-                        <div class="form-group">
-                            <label asp-for="CustomTipText" class="form-label" data-required></label>
-                            <input asp-for="CustomTipText" class="form-control" required />
-                            <span asp-validation-for="CustomTipText" class="text-danger"></span>
+                        <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
+                            <div class="form-group mb-0 pb-3">
+                                <label asp-for="CustomButtonText" class="form-label" data-required></label>
+                                <input asp-for="CustomButtonText" class="form-control" required />
+                                <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                            </div>
                         </div>
-                        <div class="form-group mb-0 pb-3">
-                            <label asp-for="CustomTipPercentages" class="form-label"></label>
-                            <input asp-for="CustomTipPercentages" class="form-control" />
-                            <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                    </section>
+                    <section id="tips" class="p-0">
+                        <h4 class="mt-5 mb-4">Tips</h4>
+                        <div class="form-group mb-4 d-flex align-items-center">
+                            <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                            <label asp-for="EnableTips" class="form-label mb-0"></label>
+                            <span asp-validation-for="EnableTips" class="text-danger"></span>
                         </div>
-                    </div>
+                        <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
+                            <div class="form-group">
+                                <label asp-for="CustomTipText" class="form-label" data-required></label>
+                                <input asp-for="CustomTipText" class="form-control" required />
+                                <span asp-validation-for="CustomTipText" class="text-danger"></span>
+                            </div>
+                            <div class="form-group mb-0 pb-3">
+                                <label asp-for="CustomTipPercentages" class="form-label"></label>
+                                <input asp-for="CustomTipPercentages" class="form-control" />
+                                <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </section>
                 </div>
                 <div class="col-lg-9">
                     <h4 class="mt-5 mb-4">Additional Options</h4>
@@ -302,6 +308,103 @@
                 <label class="form-label mb-0">Disabled</label>
             </div>
         </div>
+    </script>
+    <script>
+        var posStyleSelector = document.getElementById('DefaultView');
+        posStyleSelector.addEventListener('change', function(e) {
+            handleStyleSelected(e.target.value);
+        });
+
+        function handleStyleSelected(style) {
+            switch (style) {
+                case '0': // Item list only
+                    hideDiscountsSection();
+                    hideButtonPriceTextSection();
+                    showCustomPaymentAmountSection();
+                    hideTipsSection();
+                    break;
+                case '1': // Item list and cart
+                    showDiscountsSection();
+                    showButtonPriceTextSection();
+                    showCustomPaymentAmountSection();
+                    showTipsSection();
+                    break;
+                case '2': // Keypad only
+                    hideDiscountsSection();
+                    hideButtonPriceTextSection();
+                    hideCustomPaymentAmountSection();
+                    showTipsSection();
+                    break;
+            }
+        }
+
+        /** Show/hide discounts section */
+
+        var discountsSection = document.getElementById('discounts');
+
+        function hideDiscountsSection() {
+            hideElement(discountsSection);
+        }
+
+        function showDiscountsSection() {
+            showElement(discountsSection);
+        }
+
+        /***************************************/
+
+        /** Show/hide button text section */
+
+        var buttonPriceTextSection = document.getElementById('button-price-text');
+
+        function hideButtonPriceTextSection() {
+            hideElement(buttonPriceTextSection);
+        }
+
+        function showButtonPriceTextSection() {
+            showElement(buttonPriceTextSection);
+        }
+
+        /***************************************/
+
+        /** Show/hide custom payments amount seciton */
+
+        var customPaymentAmountSection = document.getElementById('custom-payments');
+
+        function hideCustomPaymentAmountSection() {
+           hideElement(customPaymentAmountSection);
+        }
+
+        function showCustomPaymentAmountSection() {
+            showElement(customPaymentAmountSection);
+        }
+
+        /***************************************/
+
+        /** Show/hide tips seciton */
+
+        var tipsSection = document.getElementById('tips');
+
+        function hideTipsSection() {
+           hideElement(tipsSection);
+        }
+
+        function showTipsSection() {
+            showElement(tipsSection);
+        }
+
+        /***************************************/
+
+        function hideElement(el) {
+            el.setAttribute('hidden', true);
+        }
+
+        function showElement(el) {
+            el.removeAttribute('hidden');
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            handleStyleSelected(posStyleSelector.value);
+        });
     </script>
 
     <bundle name="wwwroot/bundles/pos-admin-bundle.min.js" asp-append-version="true"></bundle>

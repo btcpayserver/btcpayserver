@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -139,6 +140,27 @@ namespace BTCPayServer.TagHelpers
                     _csp.AllowUnsafeHashes(v);
                 }
             }
+        }
+    }
+
+    // Make sure that <svg><use href=/ are correctly working if rootpath is present
+    [HtmlTargetElement("use", Attributes = "href")]
+    public class SVGUse : TagHelper
+    {
+        private string _RootPath;
+
+        public SVGUse(BTCPayServerOptions opts)
+        {
+            _RootPath = opts.RootPath;
+        }
+        public override void Process(TagHelperContext context, TagHelperOutput output)
+        {
+            if (string.IsNullOrEmpty(_RootPath) || _RootPath == "/")
+                return;
+            var attr = output.Attributes["href"];
+            if (!attr.Value.ToString().StartsWith("/", StringComparison.OrdinalIgnoreCase))
+                return;
+            output.Attributes.SetAttribute("href", $"{_RootPath}{attr.Value}");
         }
     }
 }

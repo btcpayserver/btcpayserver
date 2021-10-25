@@ -753,11 +753,6 @@ namespace BTCPayServer.Controllers
             vm.Outputs ??= new List<WalletSendModel.TransactionOutput>();
             try
             {
-                if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    bip21 = $"bitcoin{bip21.Substring(network.UriScheme.Length)}";
-                }
-
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
 
                 vm.Outputs.Add(new WalletSendModel.TransactionOutput()
@@ -1096,7 +1091,7 @@ namespace BTCPayServer.Controllers
             var vm = new WalletSettingsViewModel()
             {
                 StoreName = store.StoreName,
-                UriScheme = derivationSchemeSettings.Network.UriScheme,
+                UriScheme = derivationSchemeSettings.Network.NBitcoinNetwork.UriScheme,
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,

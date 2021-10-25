@@ -313,10 +313,13 @@ namespace BTCPayServer.Controllers.GreenField
                 var address = string.Empty; 
                 try
                 {
-                    destination.Destination = destination.Destination.Replace(network.UriScheme+":", "bitcoin:", StringComparison.InvariantCultureIgnoreCase);
                     bip21 = new BitcoinUrlBuilder(destination.Destination, network.NBitcoinNetwork);
                     amount ??= bip21.Amount.GetValue(network);
-                    address = bip21.Address.ToString();
+                    if (bip21.Address is null)
+                        request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
+                            "This BIP21 destination is missing a bitcoin address", this);
+                    else
+                        address = bip21.Address.ToString();
                     if (destination.SubtractFromAmount)
                     {
                         request.AddModelError(transactionRequest => transactionRequest.Destinations[index],

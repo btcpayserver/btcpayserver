@@ -14,7 +14,6 @@ namespace BTCPayServer
                 DisplayName = "Ufo",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://chainz.cryptoid.info/ufo/tx.dws?{0}" : "https://chainz.cryptoid.info/ufo/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "ufo",
                 DefaultRateRules = new[]
                 {
                                 "UFO_X = UFO_BTC * BTC_X",

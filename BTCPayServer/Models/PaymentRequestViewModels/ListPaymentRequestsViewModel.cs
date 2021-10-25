@@ -61,7 +61,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [Required] public string Title { get; set; }
         public string Description { get; set; }
 
+        [Display(Name = "Store")]
         public SelectList Stores { get; set; }
+        
         [EmailAddress]
         public string Email { get; set; }
 

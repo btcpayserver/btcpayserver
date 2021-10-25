@@ -15,7 +15,6 @@ namespace BTCPayServer
                     ? "https://chainz.cryptoid.info/agm/tx.dws?{0}"
                     : "https://chainz.cryptoid.info/agm-test/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "argoneum",
                 DefaultRateRules = new[]
                     {
                         "AGM_X = AGM_BTC * BTC_X",

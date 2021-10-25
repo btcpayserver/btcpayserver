@@ -24,7 +24,6 @@ namespace BTCPayServer
                 },
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "liquidnetwork",
                 CryptoImagePath = "imlegacy/liquid.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),

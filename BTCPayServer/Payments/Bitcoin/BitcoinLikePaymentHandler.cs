@@ -95,7 +95,7 @@ namespace BTCPayServer.Payments.Bitcoin
             if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix,  StringComparison.OrdinalIgnoreCase))
             {
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
-                    $"{network.UriScheme}:{model.BtcAddress}", $"{network.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
+                    $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress}", $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
                     StringComparison.OrdinalIgnoreCase
                 );
             }

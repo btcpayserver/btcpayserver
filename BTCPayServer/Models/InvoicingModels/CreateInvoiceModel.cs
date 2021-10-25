@@ -63,6 +63,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
+        [DisplayName("Store")]
         public SelectList Stores
         {
             get; set;

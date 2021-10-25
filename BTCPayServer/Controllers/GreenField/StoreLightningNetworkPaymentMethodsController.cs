@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         public static LightningNetworkPaymentMethodData? GetExistingLightningLikePaymentMethod(BTCPayNetworkProvider btcPayNetworkProvider, string cryptoCode,
-            StoreData? store)
+            StoreData store)
         {
 
             var storeBlob = store.GetStoreBlob();

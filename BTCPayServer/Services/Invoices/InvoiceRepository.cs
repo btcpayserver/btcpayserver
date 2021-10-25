@@ -536,11 +536,11 @@ namespace BTCPayServer.Services.Invoices
             return true;
         }
 
-        public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
+        public async Task<InvoiceEntity> GetInvoice(string id, bool includeAddressData = false)
         {
             using (var context = _applicationDbContextFactory.CreateContext())
             {
-                var res = await GetInvoiceRaw(id, context, inludeAddressData);
+                var res = await GetInvoiceRaw(id, context, includeAddressData);
                 return res == null ? null : ToEntity(res);
             }            
         }
@@ -559,13 +559,13 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private async Task<InvoiceData> GetInvoiceRaw(string id, ApplicationDbContext dbContext, bool inludeAddressData = false)
+        private async Task<InvoiceData> GetInvoiceRaw(string id, ApplicationDbContext dbContext, bool includeAddressData = false)
         {
             IQueryable<Data.InvoiceData> query =
                     dbContext
                     .Invoices
                     .Include(o => o.Payments);
-            if (inludeAddressData)
+            if (includeAddressData)
                 query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
             query = query.Where(i => i.Id == id);
 

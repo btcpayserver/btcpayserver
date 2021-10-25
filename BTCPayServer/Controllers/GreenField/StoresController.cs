@@ -83,8 +83,8 @@ namespace BTCPayServer.Controllers.GreenField
 
             var store = new Data.StoreData();
             
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymnetMethodId);
-            ToModel(request, store, defaultPaymnetMethodId);
+            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
+            ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
             return Ok(FromModel(store));
         }
@@ -104,9 +104,9 @@ namespace BTCPayServer.Controllers.GreenField
                 return validationResult;
             }
 
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymnetMethodId);
+            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
 
-            ToModel(request, store, defaultPaymnetMethodId);
+            ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
         }
@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             if (!string.IsNullOrEmpty(request.DefaultPaymentMethod) &&
-                !PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymnetMethodId))
+                !PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.Name), "DefaultPaymentMethod is invalid");
             }

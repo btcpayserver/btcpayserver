@@ -24,6 +24,7 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
@@ -818,11 +819,11 @@ namespace BTCPayServer.Tests
 
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
-                var response = await stores.UpdateStore();
-                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(response).Model);
+                var response = await stores.Payment();
+                var vm = Assert.IsType<PaymentViewModel>(Assert.IsType<ViewResult>(response).Model);
                 Assert.Equal(0.0, vm.PaymentTolerance);
                 vm.PaymentTolerance = 50.0;
-                Assert.IsType<RedirectToActionResult>(stores.UpdateStore(vm).Result);
+                Assert.IsType<RedirectToActionResult>(stores.Payment(vm).Result);
 
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
@@ -996,8 +997,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(4, tor.Services.Length);
             
         }
-
-
+        
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
@@ -1012,7 +1012,7 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
             await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyStore(model => model.SpeedPolicy = SpeedPolicy.HighSpeed);
+            await user.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
             await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
@@ -1042,14 +1042,22 @@ namespace BTCPayServer.Tests
             Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed });
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
-            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
-            evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
+            Logs.Tester.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice ");
+            await Assert.ThrowsAsync<LightningRPCException>(async () =>
             {
                 await tester.SendLightningPaymentAsync(invoice);
-            }, evt => evt.InvoiceId == invoice.Id);
-            Assert.Equal(evt.InvoiceId, invoice.Id);
-            fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal(3, fetchedInvoice.Payments.Count);
+            });
+        
+            //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
+            // Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
+            // evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            // {
+            //     await tester.SendLightningPaymentAsync(invoice);
+            // }, evt => evt.InvoiceId == invoice.Id);
+            // Assert.Equal(evt.InvoiceId, invoice.Id);
+            // fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
+            // Assert.Equal(3, fetchedInvoice.Payments.Count);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -1065,7 +1073,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
-                var storeResponse = await storeController.UpdateStore();
+                var storeResponse = storeController.UpdateStore();
                 Assert.IsType<ViewResult>(storeResponse);
                 Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -1089,7 +1097,7 @@ namespace BTCPayServer.Tests
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
-                storeResponse = await storeController.UpdateStore();
+                storeResponse = storeController.UpdateStore();
                 var storeVm =
                     Assert.IsType<StoreViewModel>(Assert
                         .IsType<ViewResult>(storeResponse).Model);
@@ -1205,7 +1213,7 @@ namespace BTCPayServer.Tests
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
-                    await acc.ModifyStore(s => s.SpeedPolicy = SpeedPolicy.LowSpeed);
+                    await acc.ModifyPayment(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
                     var invoice = acc.BitPay.CreateInvoice(new Invoice
                     {
                         Price = 5.0m,
@@ -2032,7 +2040,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(404, (int)response.StatusCode);
 
-                await user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
+                await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
 
                 Logs.Tester.LogInformation("Bad store with anyone can create invoice = 403");
                 response = await tester.PayTester.HttpClient.SendAsync(
@@ -2306,7 +2314,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
-                await user.ModifyStore(s =>
+                await user.ModifyPayment(s =>
                 {
                     Assert.Equal("USD", s.DefaultCurrency);
                     s.DefaultCurrency = "EUR";
@@ -2357,7 +2365,7 @@ namespace BTCPayServer.Tests
                 // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
                 var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
                     .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                Assert.Equal(2, vm.PaymentMethodCriteria.Count);
+                Assert.Equal(3, vm.PaymentMethodCriteria.Count);
                 var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
                 Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "5 USD";
@@ -2448,12 +2456,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
 
                 // enable unified QR code in settings
-                var vm = Assert.IsType<StoreViewModel>(Assert
-                    .IsType<ViewResult>(await user.GetController<StoresController>().UpdateStore()).Model
+                var vm = Assert.IsType<PaymentViewModel>(Assert
+                    .IsType<ViewResult>(await user.GetController<StoresController>().Payment()).Model
                 );
                 vm.OnChainWithLnInvoiceFallback = true;
                 Assert.IsType<RedirectToActionResult>(
-                    user.GetController<StoresController>().UpdateStore(vm).Result
+                    user.GetController<StoresController>().Payment(vm).Result
                 );
 
                 // validate that QR code now has both onchain and offchain payment urls
@@ -2470,7 +2478,7 @@ namespace BTCPayServer.Tests
                 Assert.True($"bitcoin:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
 
                 // Fallback lightning invoice should be uppercase inside the QR code.
-                var lightningFallback = paymentMethodSecond.InvoiceBitcoinUrlQR.Split(new string[] { "&lightning=" }, StringSplitOptions.None)[1];
+                var lightningFallback = paymentMethodSecond.InvoiceBitcoinUrlQR.Split(new [] { "&lightning=" }, StringSplitOptions.None)[1];
                 Assert.True(lightningFallback.ToUpperInvariant() == lightningFallback);
             }
         }
@@ -2488,10 +2496,8 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
-                Assert.Single(vm.PaymentMethodCriteria);
-                var criteria = vm.PaymentMethodCriteria.First();
+                var vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                var criteria = Assert.Single(vm.PaymentMethodCriteria);
                 Assert.Equal(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "2 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
@@ -2499,18 +2505,42 @@ namespace BTCPayServer.Tests
                     .Result);
 
                 var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                    new Invoice
                     {
                         Price = 1.5m,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        ItemDesc = "Some description",
-                        FullNotifications = true
+                        Currency = "USD"
                     }, Facade.Merchant);
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+
+                // Activating LNUrl, we should still have only 1 payment criteria that can be set.
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge, setViewModel: vm =>
+                {
+                    vm.LNURLEnabled = true;
+                    vm.LNURLStandardInvoiceEnabled = true;
+                });
+                vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                criteria = Assert.Single(vm.PaymentMethodCriteria);
+                Assert.Equal(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm).Result);
+
+                // However, creating an invoice should show LNURL
+                invoice = user.BitPay.CreateInvoice(
+                    new Invoice
+                    {
+                        Price = 1.5m,
+                        Currency = "USD"
+                    }, Facade.Merchant);
+                Assert.Equal(2, invoice.CryptoInfo.Length);
+
+                // Make sure this throw: Since BOLT11 and LN Url share the same criteria, there should be no payment method available
+                Assert.Throws<BitPayException>(() => user.BitPay.CreateInvoice(
+                    new Invoice
+                    {
+                        Price = 2.5m,
+                        Currency = "USD"
+                    }, Facade.Merchant));
             }
         }
 

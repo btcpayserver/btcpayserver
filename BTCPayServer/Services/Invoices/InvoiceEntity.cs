@@ -19,7 +19,15 @@ using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Services.Invoices
 {
-
+    public class InvoiceCryptoInfo : NBitpayClient.InvoiceCryptoInfo
+    {
+        [JsonProperty("paymentUrls")]
+        public new InvoicePaymentUrls PaymentUrls { get; set; }
+        public class InvoicePaymentUrls : NBitpayClient.InvoicePaymentUrls
+        {
+            [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
+        }
+    }
     public class InvoiceMetadata
     {
         public static readonly JsonSerializer MetadataSerializer;
@@ -443,19 +451,19 @@ namespace BTCPayServer.Services.Invoices
                 Flags = new Flags() { Refundable = Refundable },
                 PaymentSubtotals = new Dictionary<string, decimal>(),
                 PaymentTotals = new Dictionary<string, decimal>(),
-                SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
+                SupportedTransactionCurrencies = new Dictionary<string, NBitpayClient.InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
-                PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
+                PaymentCodes = new Dictionary<string, InvoiceCryptoInfo.InvoicePaymentUrls>(),
                 ExchangeRates = new Dictionary<string, Dictionary<string, decimal>>()
             };
 
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
-            dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
+            dto.CryptoInfo = new List<InvoiceCryptoInfo>();
             dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
             foreach (var info in this.GetPaymentMethods())
             {
                 var accounting = info.Calculate();
-                var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
+                var cryptoInfo = new InvoiceCryptoInfo();
                 var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
                 var cryptoCode = info.GetId().CryptoCode;
                 var details = info.GetPaymentMethodDetails();
@@ -500,39 +508,31 @@ namespace BTCPayServer.Services.Invoices
                 }).ToList();
 
 
-                if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.LightningLike)
+                if (details?.Activated is true)
                 {
-                    cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
+
+                    paymentId.PaymentType.PopulateCryptoInfo(info, cryptoInfo, ServerUrl);
+                    if (paymentId.PaymentType == PaymentTypes.BTCLike)
                     {
-                        BOLT11 = paymentId.PaymentType.GetPaymentLink(info.Network, details, cryptoInfo.Due,
-                            ServerUrl)
-                    };
-                }
-                else if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.BTCLike)
-                {
-                    var minerInfo = new MinerFeeInfo();
-                    minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
-                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)details).FeeRate
-                        .GetFee(1).Satoshi;
-                    dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
-                    cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
-                    {
-                        BIP21 = paymentId.PaymentType.GetPaymentLink(info.Network, details, cryptoInfo.Due,
-                            ServerUrl)
-                    };
+                        var minerInfo = new MinerFeeInfo();
+                        minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
+                        minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)details).FeeRate
+                            .GetFee(1).Satoshi;
+                        dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
 
 #pragma warning disable 618
-                    if (info.CryptoCode == "BTC")
-                    {
-                        dto.BTCPrice = cryptoInfo.Price;
-                        dto.Rate = cryptoInfo.Rate;
-                        dto.ExRates = cryptoInfo.ExRates;
-                        dto.BitcoinAddress = cryptoInfo.Address;
-                        dto.BTCPaid = cryptoInfo.Paid;
-                        dto.BTCDue = cryptoInfo.Due;
-                        dto.PaymentUrls = cryptoInfo.PaymentUrls;
-                    }
+                        if (info.CryptoCode == "BTC")
+                        {
+                            dto.BTCPrice = cryptoInfo.Price;
+                            dto.Rate = cryptoInfo.Rate;
+                            dto.ExRates = cryptoInfo.ExRates;
+                            dto.BitcoinAddress = cryptoInfo.Address;
+                            dto.BTCPaid = cryptoInfo.Paid;
+                            dto.BTCDue = cryptoInfo.Due;
+                            dto.PaymentUrls = cryptoInfo.PaymentUrls;
+                        }
 #pragma warning restore 618
+                    }
                 }
 
                 dto.CryptoInfo.Add(cryptoInfo);

@@ -26,7 +26,6 @@ namespace BTCPayServer.Data
         public string? Destination { get; set; }
 #nullable restore
 
-
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<PayoutData>()

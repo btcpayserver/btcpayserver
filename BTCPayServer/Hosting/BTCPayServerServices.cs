@@ -5,6 +5,7 @@ using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Common;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
@@ -329,6 +330,8 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<LightningLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
+            services.AddSingleton<LNURLPayPaymentHandler>();
+            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LNURLPayPaymentHandler>());
             services.AddSingleton<IHostedService, LightningListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();

@@ -1,0 +1,291 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payment-methods/LNURL": {
+            "get": {
+                "tags": [
+                    "Store Payment Methods (LNURL)"
+                ],
+                "summary": "Get store LNURL payment methods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "description": "View information about the stores' configured LNURL payment methods",
+                "operationId": "StoreLNURLPayPaymentMethods_GetLNURLPayPaymentMethods",
+                "responses": {
+                    "200": {
+                        "description": "list of payment methods",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LNURLPayPaymentMethodDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/LNURL/{cryptoCode}": {
+            "get": {
+                "tags": [
+                    "Store Payment Methods (LNURL Pay)"
+                ],
+                "summary": "Get store LNURL Pay payment method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified payment method",
+                "operationId": "StoreLNURLPayPaymentMethods_GetLNURLPayPaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": "specified payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LNURLPayPaymentMethodData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Store Payment Methods (LNURL Pay)"
+                ],
+                "summary": "Update store LNURL Pay payment method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Update the specified store's payment method",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LNURLPayPaymentMethodData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "StoreLNURLPayPaymentMethods_UpdateLNURLPayPaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": "updated specified payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LNURLPayPaymentMethodData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Payment Methods (LNURL Pay)"
+                ],
+                "summary": "Remove store LNURL Pay payment method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Removes the specified store payment method.",
+                "responses": {
+                    "200": {
+                        "description": "The payment method has been removed"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when removing the payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to remove the specified payment method"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/payment-method"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "LNURLPayPaymentMethodDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/LNURLPayPaymentMethodData"
+                }
+            },
+            "LNURLPayPaymentMethodBaseData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "useBech32Scheme": {
+                        "type": "boolean",
+                        "description": "Whether to use [LUD-01](https://github.com/fiatjaf/lnurl-rfc/blob/luds/01.md)'s bech32 format or to use [LUD-17](https://github.com/fiatjaf/lnurl-rfc/blob/luds/17.md) url formatting. "
+                    },
+                    "enableForStandardInvoices": {
+                        "type": "boolean",
+                        "description": "Whether to allow this payment method to also be used for standard invoices and not just topup invoices."
+                    },
+                    "lud12Enabled": {
+                        "type": "boolean",
+                        "description": "Allow comments to be passed on via lnurl."
+                    }
+                }
+            },
+            "LNURLPayPaymentMethodData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/LNURLPayPaymentMethodBaseData"
+                },
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled. Note that this can only enabled when a Lightning Network payment method is available and enabled"
+                    },
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "Crypto code of the payment method"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Store Payment Methods (LNURL Pay)"
+        }
+    ]
+}

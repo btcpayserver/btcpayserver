@@ -68,7 +68,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(supportedPaymentMethod, network, paymentMethod.PreferOnion);
+            var nodeInfo = GetNodeInfo(supportedPaymentMethod, network, logs, paymentMethod.PreferOnion);
             
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
@@ -109,56 +109,80 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
 
-            var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 InvoiceId = lightningInvoice.Id,
-                NodeInfo = nodeInfo.First().ToString()
+                NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
         }
 
-        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, bool? preferOnion = null)
+        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceLogs invoiceLogs, bool? preferOnion = null)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
 
-            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
+            try
             {
-                var client = supportedPaymentMethod.CreateLightningClient(network, Options.Value, _lightningClientFactory);
-                LightningNodeInformation info;
-                try
+                using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
                 {
-                    info = await client.GetInfo(cts.Token);
-                }
-                catch (OperationCanceledException) when (cts.IsCancellationRequested)
-                {
-                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
-                }
-                catch (Exception ex)
-                {
-                    throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" + 
-                                                                (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
-                }
+                    var client = CreateLightningClient(supportedPaymentMethod, network);
+                    LightningNodeInformation info;
+                    try
+                    {
+                        info = await client.GetInfo(cts.Token);
+                    }
+                    catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                    {
+                        throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" + 
+                                                                    (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
+                    }
 
-                var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
-                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
-                    : info.NodeInfoList.Select(i => i).ToArray();
+                    var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
+                        ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
+                        : info.NodeInfoList.Select(i => i).ToArray();
                 
-                if (!nodeInfo.Any())
-                {
-                    throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
-                }
+                    // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
+                    // if (!nodeInfo.Any())
+                    // {
+                    //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
+                    // }
 
-                var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
-                if (blocksGap > 10)
-                {
-                    throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
-                }
+                    var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
+                    if (blocksGap > 10)
+                    {
+                        throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
+                    }
 
-                return nodeInfo;
+                    return nodeInfo;
+                }
+            }
+            catch(Exception e)
+            {
+                invoiceLogs.Write($"NodeInfo failed to be fetched: {e.Message}", InvoiceEventData.EventSeverity.Error);
+            }
+
+            return Array.Empty<NodeInfo>();
+        }
+
+        public ILightningClient CreateLightningClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        {
+            var external = supportedPaymentMethod.GetExternalLightningUrl();
+            if (external != null)
+            {
+                return _lightningClientFactory.Create(external, network);
+            }
+            else
+            {
+                if (!Options.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
+                    throw new PaymentMethodUnavailableException("No internal node configured");
+                return _lightningClientFactory.Create(connectionString, network);
             }
         }
 

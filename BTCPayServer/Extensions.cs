@@ -35,6 +35,7 @@ using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
+using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
 {

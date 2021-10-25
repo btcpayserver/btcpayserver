@@ -7,7 +7,7 @@
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
     <div class="d-flex mt-4 mb-5">
-        <vc:icon symbol="warning" />
+        <vc:icon symbol="warning"/>
         <p class="text-secondary text-start mb-0">
             Please understand that the Lightning Network is still under active development and considered experimental.
             Before you proceed, take time to familiarize yourself with the risks.
@@ -178,11 +178,50 @@
             </div>
         </div>
     </div>
+    
+    <div class="text-start">
+        <div class="d-flex align-items-center">
+            <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
+            <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
+        </div>
+        <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
+            <h5 class="mb-1" style="padding-top:var(--btcpay-space-l)">LNURL settings</h5>
+            <div class="form-group">
+                <div class="d-flex align-items-center pt-3">
+                    <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-2"/>
+                    <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
+                    <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-2"/>
+                    <label asp-for="LNURLStandardInvoiceEnabled" class="form-label mb-0 me-1"></label>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">Required for Lightning Address, the pay button and apps.</p>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-2"/>
+                    <label asp-for="DisableBolt11PaymentMethod" class="form-label mb-0 me-1"></label>
+                </div>
+                <p class="form-text text-muted mb-0 ms-5">Performance: Turn it off if users should pay only via LNURL.</p>
+            </div>
+            <div class="form-group mb-0 pb-2">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-2"/>
+                    <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="text-start mt-4">
         <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

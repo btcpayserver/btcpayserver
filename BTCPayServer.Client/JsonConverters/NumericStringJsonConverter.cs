@@ -22,13 +22,17 @@ namespace BTCPayServer.JsonConverters
             switch (token.Type)
             {
                 case JTokenType.Float:
+                    if (objectType == typeof(decimal) || objectType == typeof(decimal?))
+                        return token.Value<decimal>();
+                    if (objectType == typeof(double) || objectType == typeof(double?))
+                        return token.Value<double>();
+                    throw new JsonSerializationException("Unexpected object type: " + objectType);
                 case JTokenType.Integer:
                 case JTokenType.String:
                     if (objectType == typeof(decimal) || objectType == typeof(decimal?) )
                         return decimal.Parse(token.ToString(), CultureInfo.InvariantCulture);
                     if (objectType == typeof(double) || objectType == typeof(double?))
                         return double.Parse(token.ToString(), CultureInfo.InvariantCulture);
-
                     throw new JsonSerializationException("Unexpected object type: " + objectType);
                 case JTokenType.Null when objectType == typeof(decimal?) || objectType == typeof(double?):
                     return null;

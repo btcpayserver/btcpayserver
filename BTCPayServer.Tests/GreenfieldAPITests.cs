@@ -1979,10 +1979,13 @@ namespace BTCPayServer.Tests
 
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Theory(Timeout = TestTimeout)]
+        [InlineData("DE-de")]
+        [InlineData("")]
         [Trait("Fast", "Fast")]
-        public void NumericJsonConverterTests()
+        public void NumericJsonConverterTests(string culture)
         {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
             JsonReader Get(string val)
             {
                 return new JsonTextReader(new StringReader(val));

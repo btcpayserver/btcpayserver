@@ -290,9 +290,10 @@ namespace BTCPayServer.Tests
 
                 foreach (var format in new []{ScriptPubKeyType.Segwit, ScriptPubKeyType.SegwitP2SH})
                 {
+                    var cryptoCode = "BTC";
                     var receiver = s.CreateNewStore();
-                    var receiverSeed = s.GenerateWallet("BTC", "", true, true, format);
-                    var receiverWalletId = new WalletId(receiver.storeId, "BTC");
+                    var receiverSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                    var receiverWalletId = new WalletId(receiver.storeId, cryptoCode);
 
                     //payjoin is enabled by default.
                     var invoiceId = s.CreateInvoice(receiver.storeName);
@@ -302,12 +303,13 @@ namespace BTCPayServer.Tests
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                     s.GoToHome();
-                    s.GoToStore(receiver.storeId, StoreNavPages.Payment);
+                    s.GoToStore(receiver.storeId);
+                    s.Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                     var sender = s.CreateNewStore();
-                    var senderSeed = s.GenerateWallet("BTC", "", true, true, format);
-                    var senderWalletId = new WalletId(sender.storeId, "BTC");
+                    var senderSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                    var senderWalletId = new WalletId(sender.storeId, cryptoCode);
                     await s.Server.ExplorerNode.GenerateAsync(1);
                     await s.FundStoreWallet(senderWalletId);
 

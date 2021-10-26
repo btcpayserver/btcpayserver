@@ -125,9 +125,9 @@ namespace BTCPayServer.Tests
             CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public void SetNetworkFeeMode(NetworkFeeMode mode)
+        public async Task SetNetworkFeeMode(NetworkFeeMode mode)
         {
-            ModifyPayment(payment =>
+            await ModifyPayment(payment =>
             {
                 payment.NetworkFeeMode = mode;
             });
@@ -136,7 +136,7 @@ namespace BTCPayServer.Tests
         public async Task ModifyPayment(Action<PaymentViewModel> modify)
         {
             var storeController = GetController<StoresController>();
-            var response = await storeController.Payment();
+            var response = storeController.Payment();
             PaymentViewModel payment = (PaymentViewModel)((ViewResult)response).Model;
             modify(payment);
             await storeController.Payment(payment);

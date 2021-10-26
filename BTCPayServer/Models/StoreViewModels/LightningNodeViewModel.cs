@@ -21,6 +21,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string ConnectionString { get; set; }
         
         [Display(Name = "Enable LNURL")]
-        public bool LNURLEnabled { get; set; } = true;
+        public bool LNURLEnabled { get; set; }
     }
 }

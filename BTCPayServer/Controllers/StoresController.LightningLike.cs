@@ -60,8 +60,7 @@ namespace BTCPayServer.Controllers
                 }
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode,
-                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
+                    CryptoCode = paymentMethodId.CryptoCode
                 };
                 paymentMethod.SetInternalNode();
             }
@@ -90,8 +89,7 @@ namespace BTCPayServer.Controllers
 
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode,
-                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
+                    CryptoCode = paymentMethodId.CryptoCode
                 };
                 paymentMethod.SetLightningUrl(connectionString);
             }
@@ -172,6 +170,8 @@ namespace BTCPayServer.Controllers
                 vm.LNURLBech32Mode = lnurl.UseBech32Scheme;
                 vm.LNURLStandardInvoiceEnabled = lnurl.EnableForStandardInvoices;
                 vm.LUD12Enabled = lnurl.LUD12Enabled;
+                vm.DisableBolt11PaymentMethod =
+                    vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod;
             }
             else
             {
@@ -203,8 +203,17 @@ namespace BTCPayServer.Controllers
             blob.LightningAmountInSatoshi = vm.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = vm.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = vm.OnChainWithLnInvoiceFallback;
-            
+            var disableBolt11PaymentMethod =
+                vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod;
             blob.SetExcluded(lnurl, !vm.LNURLEnabled);
+            var pmi = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike);
+            var lnMethod = store.GetSupportedPaymentMethods(_NetworkProvider).OfType<LightningSupportedPaymentMethod>()
+                .Single(method => method.PaymentId == pmi);
+            if (lnMethod.DisableBOLT11PaymentOption != disableBolt11PaymentMethod)
+            {
+                lnMethod.DisableBOLT11PaymentOption = disableBolt11PaymentMethod;
+                store.SetSupportedPaymentMethod(lnMethod);
+            }
             store.SetSupportedPaymentMethod(new LNURLPaySupportedPaymentMethod
             {
                 CryptoCode = vm.CryptoCode,

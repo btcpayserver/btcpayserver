@@ -181,7 +181,6 @@ namespace BTCPayServer
             Func<(string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
-            currencyCode ??= cryptoCode;
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
@@ -194,6 +193,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
+            currencyCode ??= store.GetStoreBlob().DefaultCurrency ?? cryptoCode;
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var lnpmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var methods = store.GetSupportedPaymentMethods(_btcPayNetworkProvider);
@@ -433,17 +433,6 @@ namespace BTCPayServer
         [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
         public async Task<IActionResult> EditLightningAddress(string storeId)
         {
-            var store = Request.HttpContext.GetStoreData();
-            var storeBlob = store.GetStoreBlob();
-            if (!storeBlob.AnyoneCanInvoice)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "You must enable \"Allow anyone to create invoice\" for lightning addresses to work."
-                });
-            }
-
             if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
                 return View(new EditLightningAddressVM
@@ -475,6 +464,7 @@ namespace BTCPayServer
         public async Task<IActionResult> EditLightningAddress(string storeId, [FromForm] EditLightningAddressVM vm,
             string command)
         {
+            vm.Items ??= new List<EditLightningAddressVM.EditLightningAddressItem>();
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
                 ModelState.Clear();

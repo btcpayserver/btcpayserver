@@ -200,7 +200,8 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                vm.LNURLEnabled = !lnSet;
+                //disable by default for now
+                //vm.LNURLEnabled = !lnSet;
                 vm.DisableBolt11PaymentMethod = false;
             }
         }

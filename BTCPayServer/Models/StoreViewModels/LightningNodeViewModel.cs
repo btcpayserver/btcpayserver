@@ -15,9 +15,9 @@ namespace BTCPayServer.Models.StoreViewModels
         
         [Display(Name = "LNURL Classic Mode")]
         public bool LNURLBech32Mode { get; set; } = true;
-        
+
         [Display(Name = "LNURL enabled for standard invoices")]
-        public bool LNURLStandardInvoiceEnabled { get; set; }
+        public bool LNURLStandardInvoiceEnabled { get; set; } = true;
         
         [Display(Name = "Allow payee to pass a comment")]
         public bool LUD12Enabled { get; set; }

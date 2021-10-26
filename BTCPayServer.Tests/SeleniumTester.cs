@@ -132,15 +132,17 @@ namespace BTCPayServer.Tests
             return usr;
         }
 
-        public (string storeName, string storeId) CreateNewStore()
+        public (string storeName, string storeId) CreateNewStore(bool keepId = true)
         {
             Driver.WaitForElement(By.Id("Stores")).Click();
             Driver.WaitForElement(By.Id("CreateStore")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
-            StoreId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            return (name, StoreId);
+            var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
+            if (keepId)
+                StoreId = storeId;
+            return (name, storeId);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
@@ -213,7 +215,7 @@ namespace BTCPayServer.Tests
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
+        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null, Action beforeEnable = null, bool test = true)
         {
             Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
 
@@ -236,13 +238,20 @@ namespace BTCPayServer.Tests
             else
             {
                 Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
+                Driver.FindElement(By.Id("ConnectionString")).Clear();
                 Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
-
-                Driver.FindElement(By.Id("test")).Click();
-                Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
+                if (test)
+                {
+                    Driver.FindElement(By.Id("test")).Click();
+                    Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
+                }
             }
+            beforeEnable?.Invoke();
 
             Driver.FindElement(By.Id("save")).Click();
+            //soemtimes selenium slows down and misses a beat
+            if(FindAlertMessage().Text == "Connection to the Lightning node successful.")
+                Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
@@ -354,7 +363,8 @@ namespace BTCPayServer.Tests
             decimal? amount = 100, 
             string currency = "USD", 
             string refundEmail = "",
-            string defaultPaymentMethod = null
+            string defaultPaymentMethod = null,
+            StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
             GoToInvoices();
@@ -370,9 +380,8 @@ namespace BTCPayServer.Tests
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             Driver.FindElement(By.Id("Create")).Click();
 
-            var statusElement = FindAlertMessage();
-            var id = statusElement.Text.Split(" ")[1];
-            return id;
+            var statusElement = FindAlertMessage(expectedSeverity);
+            return expectedSeverity == StatusMessageModel.StatusSeverity.Success ? statusElement.Text.Split(" ")[1] : null;
         }
 
         public async Task FundStoreWallet(WalletId walletId = null, int coins = 1, decimal denomination = 1m)

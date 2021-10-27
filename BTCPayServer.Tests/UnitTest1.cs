@@ -3273,6 +3273,12 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "ARS") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 ARS
                 }
+                else if (result.ExpectedName == "cryptomarket")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "CLP") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CLP
+                }
                 else
                 {
                     // This check if the currency pair is using right currency pair

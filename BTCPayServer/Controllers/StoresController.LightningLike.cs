@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             
-            var lnurl = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LNURLPay);
+            var needUpdate = false;
             var blob = store.GetStoreBlob();
             blob.LightningDescriptionTemplate = vm.LightningDescriptionTemplate ?? string.Empty;
             blob.LightningAmountInSatoshi = vm.LightningAmountInSatoshi;
@@ -205,15 +205,23 @@ namespace BTCPayServer.Controllers
             blob.OnChainWithLnInvoiceFallback = vm.OnChainWithLnInvoiceFallback;
             var disableBolt11PaymentMethod =
                 vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod;
-            blob.SetExcluded(lnurl, !vm.LNURLEnabled);
-            var pmi = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike);
-            var lnMethod = store.GetSupportedPaymentMethods(_NetworkProvider).OfType<LightningSupportedPaymentMethod>()
-                .Single(method => method.PaymentId == pmi);
-            if (lnMethod.DisableBOLT11PaymentOption != disableBolt11PaymentMethod)
+            var lnurlId = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LNURLPay);
+            blob.SetExcluded(lnurlId, !vm.LNURLEnabled);
+            var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
+            var lnurl = GetExistingLNURLSupportedPaymentMethod(vm.CryptoCode, store);
+            if (lightning.DisableBOLT11PaymentOption != disableBolt11PaymentMethod)
             {
-                lnMethod.DisableBOLT11PaymentOption = disableBolt11PaymentMethod;
-                store.SetSupportedPaymentMethod(lnMethod);
+                lightning.DisableBOLT11PaymentOption = disableBolt11PaymentMethod;
+                store.SetSupportedPaymentMethod(lightning);
             }
+            
+            if (lnurl.EnableForStandardInvoices != vm.LNURLStandardInvoiceEnabled || 
+                lnurl.UseBech32Scheme != vm.LNURLBech32Mode || 
+                lnurl.LUD12Enabled != vm.LUD12Enabled)
+            {
+                needUpdate = true;
+            }
+            
             store.SetSupportedPaymentMethod(new LNURLPaySupportedPaymentMethod
             {
                 CryptoCode = vm.CryptoCode,
@@ -223,6 +231,11 @@ namespace BTCPayServer.Controllers
             });
             
             if (store.SetStoreBlob(blob))
+            {
+                needUpdate = true;
+            }
+            
+            if (needUpdate)
             {
                 await _Repo.UpdateStore(store);
 

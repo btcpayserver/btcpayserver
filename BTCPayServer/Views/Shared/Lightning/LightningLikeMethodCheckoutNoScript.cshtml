@@ -5,5 +5,8 @@
     <p>
         <a href="@Model.InvoiceBitcoinUrl" style="word-break: break-word;" rel="noreferrer noopener">@Model.InvoiceBitcoinUrl</a>
     </p>
-    <p>Peer Info: <b>@Model.PeerInfo</b></p>
+    @if (!string.IsNullOrEmpty(Model.PeerInfo))
+    {
+        <p>Peer Info: <b>@Model.PeerInfo</b></p>
+    }
 </div>

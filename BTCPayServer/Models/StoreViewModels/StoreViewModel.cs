@@ -8,130 +8,24 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
-        public class DerivationScheme
-        {
-            public string Crypto { get; set; }
-            public string Value { get; set; }
-            public WalletId WalletId { get; set; }
-            public bool WalletSupported { get; set; }
-            public bool Enabled { get; set; }
-            public bool Collapsed { get; set; }
-        }
-
-        public class AdditionalPaymentMethod
-        {
-            public string Provider { get; set; }
-            public bool Enabled { get; set; }
-            public string Action { get; set; }
-        }
-        public StoreViewModel()
-        {
-
-        }
-
+        public List<StoreDerivationScheme> DerivationSchemes { get; set; }
+        public List<StoreLightningNode> LightningNodes { get; set; }
+        public bool HintWallet { get; set; }
+        public bool HintLightning { get; set; }
         public bool CanDelete { get; set; }
+        
         [Display(Name = "Store ID")]
         public string Id { get; set; }
+        
         [Display(Name = "Store Name")]
         [Required]
         [MaxLength(50)]
         [MinLength(1)]
-        public string StoreName
-        {
-            get; set;
-        }
+        public string StoreName { get; set; }
 
         [Uri]
         [Display(Name = "Store Website")]
         [MaxLength(500)]
-        public string StoreWebsite
-        {
-            get;
-            set;
-        }
-
-        [Display(Name = "Default currency")]
-        [MaxLength(10)]
-        public string DefaultCurrency { get; set; }
-
-        [Display(Name = "Allow anyone to create invoice")]
-        public bool AnyoneCanCreateInvoice { get; set; }
-
-        public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
-
-        [Display(Name = "Invoice expires if the full amount has not been paid after …")]
-        [Range(1, 60 * 24 * 24)]
-        public int InvoiceExpiration
-        {
-            get;
-            set;
-        }
-
-        [Display(Name = "Payment invalid if transactions fails to confirm … after invoice expiration")]
-        [Range(10, 60 * 24 * 24)]
-        public int MonitoringExpiration
-        {
-            get;
-            set;
-        }
-
-        [Display(Name = "Consider the invoice confirmed when the payment transaction …")]
-        public SpeedPolicy SpeedPolicy
-        {
-            get; set;
-        }
-
-        [Display(Name = "Add additional fee (network fee) to invoice …")]
-        public NetworkFeeMode NetworkFeeMode
-        {
-            get; set;
-        }
-
-        [Display(Name = "Description template of the lightning invoice")]
-        public string LightningDescriptionTemplate { get; set; }
-
-        [Display(Name = "Enable Payjoin/P2EP")]
-        public bool PayJoinEnabled { get; set; }
-        public bool CanUsePayJoin { get; set; }
-        public bool IsOnchainSetup { get; set; }
-        public bool IsLightningSetup { get; set; }
-
-        public bool HintWallet { get; set; }
-        public bool HintLightning { get; set; }
-
-        [Display(Name = "Show recommended fee")]
-        public bool ShowRecommendedFee { get; set; }
-
-        [Display(Name = "Recommended fee confirmation target blocks")]
-        [Range(1, double.PositiveInfinity)]
-        public int RecommendedFeeBlockTarget { get; set; }
-
-        [Display(Name = "Display Lightning payment amounts in Satoshis")]
-        public bool LightningAmountInSatoshi { get; set; }
-
-        [Display(Name = "Add hop hints for private channels to the Lightning invoice")]
-        public bool LightningPrivateRouteHints { get; set; }
-
-        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
-        public bool OnChainWithLnInvoiceFallback { get; set; }
-
-        public class LightningNode
-        {
-            public string CryptoCode { get; set; }
-            public string Address { get; set; }
-            public bool Enabled { get; set; }
-        }
-        public List<LightningNode> LightningNodes
-        {
-            get; set;
-        } = new List<LightningNode>();
-
-        [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
-        [Range(0, 100)]
-        public double PaymentTolerance
-        {
-            get;
-            set;
-        }
+        public string StoreWebsite { get; set; }
     }
 }

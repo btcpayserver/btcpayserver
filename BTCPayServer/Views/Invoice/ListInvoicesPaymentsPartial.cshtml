@@ -30,9 +30,9 @@
                     <td>@payment.PaymentMethod</td>
                     @if (Model.ShowAddress)
                     {
-                    <td title="@payment.Address">
-                        <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
-                    </td>
+                        <td title="@payment.Address">
+                            <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
+                        </td>
                     }
                     <td class="text-end">@payment.Rate</td>
                     <td class="text-end">@payment.Paid</td>
@@ -42,6 +42,12 @@
                         <td class="text-end">@payment.Overpaid</td>
                     }
                 </tr>
+                var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();
+                var name = details.GetAdditionalDataPartialName();
+                if (!string.IsNullOrEmpty(name))
+                {
+                    <partial name="@name" model="@details" />
+                }
             }
             </tbody>
         </table>

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -48,7 +49,6 @@ namespace BTCPayServer.Controllers
             }
 
             var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
-            var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
 
             LightningSupportedPaymentMethod paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
@@ -60,7 +60,8 @@ namespace BTCPayServer.Controllers
                 }
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode
+                    CryptoCode = paymentMethodId.CryptoCode,
+                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
                 };
                 paymentMethod.SetInternalNode();
             }
@@ -89,9 +90,11 @@ namespace BTCPayServer.Controllers
 
                 paymentMethod = new LightningSupportedPaymentMethod
                 {
-                    CryptoCode = paymentMethodId.CryptoCode
+                    CryptoCode = paymentMethodId.CryptoCode,
+                    DisableBOLT11PaymentOption = vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod
                 };
                 paymentMethod.SetLightningUrl(connectionString);
+                
             }
 
             switch (command)
@@ -99,8 +102,22 @@ namespace BTCPayServer.Controllers
                 case "save":
                     var storeBlob = store.GetStoreBlob();
                     storeBlob.Hints.Lightning = false;
+
+                    var lnurl = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LNURLPay);
+                    storeBlob.SetExcluded(lnurl, !vm.LNURLEnabled);
+                    store.SetSupportedPaymentMethod(new LNURLPaySupportedPaymentMethod()
+                    {
+                        CryptoCode = vm.CryptoCode, 
+                        EnableForStandardInvoices = vm.LNURLStandardInvoiceEnabled,
+                        UseBech32Scheme = vm.LNURLBech32Mode,
+                        LUD12Enabled = vm.LUD12Enabled
+                    });
+                    
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
+
+                    
+                    
                     await _Repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node updated.";
                     return RedirectToAction(nameof(UpdateStore), new { storeId });
@@ -109,7 +126,7 @@ namespace BTCPayServer.Controllers
                     var handler = _ServiceProvider.GetRequiredService<LightningLikePaymentHandler>();
                     try
                     {
-                        var info = await handler.GetNodeInfo(paymentMethod, network, Request.IsOnion());
+                        var info = await handler.GetNodeInfo(paymentMethod, network, new InvoiceLogs(), Request.IsOnion());
                         if (!vm.SkipPortTest)
                         {
                             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
@@ -163,14 +180,33 @@ namespace BTCPayServer.Controllers
         {
             vm.CanUseInternalNode = await CanUseInternalLightning();
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
-            if (lightning != null)
+
+            var lnSet = lightning != null;
+            if (lnSet)
             {
                 vm.LightningNodeType = lightning.IsInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
+                
+                vm.DisableBolt11PaymentMethod = lightning.DisableBOLT11PaymentOption;
             }
             else
             {
                 vm.LightningNodeType = vm.CanUseInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
+            }
+
+            var lnurl = GetExistingLNURLSupportedPaymentMethod(vm.CryptoCode, store);
+            if (lnurl != null)
+            {
+                vm.LNURLEnabled = !store.GetStoreBlob().GetExcludedPaymentMethods().Match(lnurl.PaymentId);
+                vm.LNURLBech32Mode = lnurl.UseBech32Scheme;
+                vm.LNURLStandardInvoiceEnabled = lnurl.EnableForStandardInvoices;
+                vm.LUD12Enabled = lnurl.LUD12Enabled;
+            }
+            else
+            {
+                //disable by default for now
+                //vm.LNURLEnabled = !lnSet;
+                vm.DisableBolt11PaymentMethod = false;
             }
         }
 
@@ -179,6 +215,14 @@ namespace BTCPayServer.Controllers
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
+        }
+        private LNURLPaySupportedPaymentMethod GetExistingLNURLSupportedPaymentMethod(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<LNURLPaySupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }

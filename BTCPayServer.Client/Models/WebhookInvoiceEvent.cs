@@ -73,6 +73,7 @@ namespace BTCPayServer.Client.Models
         public bool AfterExpiration { get; set; }
         public string PaymentMethod { get; set; }
         public InvoicePaymentMethodDataModel.Payment Payment { get; set; }
+        public bool OverPaid { get; set; }
     }
 
     public class WebhookInvoicePaymentSettledEvent : WebhookInvoiceReceivedPaymentEvent

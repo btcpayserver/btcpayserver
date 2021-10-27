@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
         {
             await RegisterAsync(isAdmin);
             await CreateStoreAsync();
-            var store = this.GetController<StoresController>();
+            var store = GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
@@ -127,19 +127,19 @@ namespace BTCPayServer.Tests
 
         public async Task SetNetworkFeeMode(NetworkFeeMode mode)
         {
-            await ModifyStore(store =>
+            await ModifyPayment(payment =>
             {
-                store.NetworkFeeMode = mode;
+                payment.NetworkFeeMode = mode;
             });
         }
 
-        public async Task ModifyStore(Action<StoreViewModel> modify)
+        public async Task ModifyPayment(Action<PaymentViewModel> modify)
         {
             var storeController = GetController<StoresController>();
-            var response = await storeController.UpdateStore();
-            StoreViewModel store = (StoreViewModel)((ViewResult)response).Model;
-            modify(store);
-            storeController.UpdateStore(store).GetAwaiter().GetResult();
+            var response = await storeController.Payment();
+            PaymentViewModel payment = (PaymentViewModel)((ViewResult)response).Model;
+            modify(payment);
+            await storeController.Payment(payment);
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
@@ -190,7 +190,7 @@ namespace BTCPayServer.Tests
 
         public Task EnablePayJoin()
         {
-            return ModifyStore(s => s.PayJoinEnabled = true);
+            return ModifyPayment(p => p.PayJoinEnabled = true);
         }
 
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }
@@ -240,23 +240,26 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true)
+        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true, Action<LightningNodeViewModel> setViewModel = null)
         {
-            RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
+            RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant, setViewModel: setViewModel).GetAwaiter().GetResult();
         }
-        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null)
+        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null, Action<LightningNodeViewModel> setViewModel = null)
         {
-            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
+            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId, setViewModel);
         }
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null, Action<LightningNodeViewModel> setViewModel = null)
         {
             var storeController = GetController<StoresController>();
 
             var connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
             var nodeType = connectionString == LightningSupportedPaymentMethod.InternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
 
+            var vm = new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true };
+            if (setViewModel != null)
+                setViewModel(vm);
             await storeController.SetupLightningNode(storeId ?? StoreId,
-                new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true }, "save", cryptoCode);
+                vm, "save", cryptoCode);
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

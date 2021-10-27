@@ -1,16 +1,17 @@
 using System;
+using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
             EmailSenderFactory emailSenderFactory,
+            Services.Stores.StoreRepository storeRepository,
             AppService AppService)
         {
             _UserManager = userManager;
@@ -37,6 +39,7 @@ namespace BTCPayServer.Controllers
             _NetworkProvider = networkProvider;
             _currencies = currencies;
             _emailSenderFactory = emailSenderFactory;
+            _storeRepository = storeRepository;
             _AppService = AppService;
         }
 
@@ -46,6 +49,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly StoreRepository _storeRepository;
         private readonly AppService _AppService;
 
         public string CreatedAppId { get; set; }
@@ -162,6 +166,22 @@ namespace BTCPayServer.Controllers
                 Name = vm.Name,
                 AppType = appType.ToString()
             };
+
+            var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);
+            switch (appType)
+            {
+                case AppType.Crowdfund:
+                    var emptyCrowdfund = new CrowdfundSettings();
+                    emptyCrowdfund.TargetCurrency = defaultCurrency;
+                    appData.SetSettings(emptyCrowdfund);
+                    break;
+                case AppType.PointOfSale:
+                    var empty = new PointOfSaleSettings();
+                    empty.Currency = defaultCurrency;
+                    appData.SetSettings(empty);
+                    break;
+            }
+
             await _AppService.UpdateOrCreateApp(appData);
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
@@ -175,6 +195,15 @@ namespace BTCPayServer.Controllers
                 default:
                     return RedirectToAction(nameof(ListApps));
             }
+        }
+
+        async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
+        {
+            if (String.IsNullOrWhiteSpace(currency))
+            {
+                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+            }
+            return currency.Trim().ToUpperInvariant();
         }
 
         [HttpGet("{appId}/delete")]

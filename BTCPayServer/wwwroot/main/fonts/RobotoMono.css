@@ -4,6 +4,6 @@
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url('/fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff2') format('woff2'),
-         url('/fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff') format('woff');
+    src: url('../../fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff2') format('woff2'),
+         url('../../fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff') format('woff');
 }

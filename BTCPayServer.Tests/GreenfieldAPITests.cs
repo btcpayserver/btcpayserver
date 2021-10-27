@@ -1981,10 +1981,13 @@ namespace BTCPayServer.Tests
 
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Theory(Timeout = TestTimeout)]
+        [InlineData("DE-de")]
+        [InlineData("")]
         [Trait("Fast", "Fast")]
-        public void NumericJsonConverterTests()
+        public void NumericJsonConverterTests(string culture)
         {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
             JsonReader Get(string val)
             {
                 return new JsonTextReader(new StringReader(val));
@@ -2044,7 +2047,7 @@ namespace BTCPayServer.Tests
             void VerifyLightning(Dictionary<string, GenericPaymentMethodData> dictionary)
             {
                 Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out var item));
-                var lightningNetworkPaymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
+                var lightningNetworkPaymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
                 Assert.Equal("Internal Node", lightningNetworkPaymentMethodBaseData.ConnectionString);
             }
 
@@ -2059,7 +2062,7 @@ namespace BTCPayServer.Tests
             void VerifyOnChain(Dictionary<string, GenericPaymentMethodData> dictionary)
             {
                 Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(), out var item));
-                var paymentMethodBaseData =Assert.IsType<JObject>(item.Data).ToObject<OnChainPaymentMethodBaseData>();
+                var paymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<OnChainPaymentMethodBaseData>();
                 Assert.Equal(randK, paymentMethodBaseData.DerivationScheme);
             }
             
@@ -2093,6 +2096,5 @@ namespace BTCPayServer.Tests
             
 
         }
-
     }
 }

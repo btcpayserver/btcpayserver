@@ -17,6 +17,8 @@ namespace BTCPayServer.Payments.Lightning
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? LightningConnectionString { get; set; }
 
+        public bool DisableBOLT11PaymentOption { get; set; } = false;
+
         public LightningConnectionString? GetExternalLightningUrl()
         {
 #pragma warning disable CS0618 // Type or member is obsolete

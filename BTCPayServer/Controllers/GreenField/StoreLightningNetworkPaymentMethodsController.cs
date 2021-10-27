@@ -59,7 +59,8 @@ namespace BTCPayServer.Controllers.GreenField
                         paymentMethod.GetExternalLightningUrl()?.ToString() ??
                         paymentMethod.GetDisplayableConnectionString(),
                         !excludedPaymentMethods.Match(paymentMethod.PaymentId),
-                        paymentMethod.PaymentId.ToStringNormalized()
+                        paymentMethod.PaymentId.ToStringNormalized(),
+                        paymentMethod.DisableBOLT11PaymentOption
                     )
                 )
                 .Where((result) => enabled is null || enabled == result.Enabled)
@@ -84,7 +85,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            var method = GetExistingLightningLikePaymentMethod(cryptoCode);
+            var method = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, Store);
             if (method is null)
             {
                 return NotFound();
@@ -97,8 +98,7 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
         public async Task<IActionResult> RemoveLightningNetworkPaymentMethod(
             string storeId,
-            string cryptoCode,
-            int offset = 0, int amount = 10)
+            string cryptoCode)
         {
             if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
             {
@@ -188,17 +188,17 @@ namespace BTCPayServer.Controllers.GreenField
             storeBlob.SetExcluded(paymentMethodId, !request.Enabled);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
-            return Ok(GetExistingLightningLikePaymentMethod(cryptoCode, store));
+            return Ok(GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store));
         }
 
-        private LightningNetworkPaymentMethodData? GetExistingLightningLikePaymentMethod(string cryptoCode,
-            StoreData? store = null)
+        public static LightningNetworkPaymentMethodData? GetExistingLightningLikePaymentMethod(BTCPayNetworkProvider btcPayNetworkProvider, string cryptoCode,
+            StoreData store)
         {
-            store ??= Store;
+
             var storeBlob = store.GetStoreBlob();
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var paymentMethod = store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .GetSupportedPaymentMethods(btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(method => method.PaymentId == id);
 
@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers.GreenField
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.GetDisplayableConnectionString(), !excluded, 
-                    paymentMethod.PaymentId.ToStringNormalized());
+                    paymentMethod.PaymentId.ToStringNormalized(), paymentMethod.DisableBOLT11PaymentOption);
         }
 
         private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)

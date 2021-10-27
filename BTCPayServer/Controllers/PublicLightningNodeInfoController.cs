@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Stores;
@@ -41,7 +42,8 @@ namespace BTCPayServer.Controllers
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network);
+                var nodeInfo =
+                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs());
 
                 return View(new ShowLightningNodeInfoViewModel
                 {

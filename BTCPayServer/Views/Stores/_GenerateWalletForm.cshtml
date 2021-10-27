@@ -103,12 +103,7 @@
                 {
                     <div class="form-group mb-5">
                         <label asp-for="AccountNumber" class="form-label">Account</label>
-                        <select asp-for="AccountNumber" class="form-select w-auto">
-                            @for (var i = 0; i < 20; i++)
-                            {
-                                <option value="@i">@i</option>
-                            }
-                        </select>
+                        <input asp-for="AccountNumber" class="form-control" style="max-width:10ch" min="0" step="1">
                         <span asp-validation-for="AccountNumber" class="text-danger"></span>
                     </div>
                 }

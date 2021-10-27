@@ -3,7 +3,7 @@
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 
 @{
-    var offchainPayments = Model.Where(entity => entity.GetPaymentMethodId()?.PaymentType == LightningPaymentType.Instance).Select(payment =>
+    var offchainPayments = Model.Where(entity => entity.GetPaymentMethodId()?.PaymentType == LightningPaymentType.Instance || entity.GetPaymentMethodId()?.PaymentType == LNURLPayPaymentType.Instance).Select(payment =>
     {
         var offChainPaymentData = payment.GetCryptoPaymentData() as LightningLikePaymentData;
         if (offChainPaymentData is null)
@@ -13,7 +13,8 @@
         return new OffChainPaymentViewModel()
         {
             Crypto = payment.Network.CryptoCode,
-            BOLT11 = offChainPaymentData.BOLT11
+            BOLT11 = offChainPaymentData.BOLT11,
+            Type = payment.GetCryptoPaymentData().GetPaymentType()
         };
     }).Where(model => model != null);
 }
@@ -28,6 +29,7 @@
                 <thead class="thead-inverse">
                     <tr>
                         <th class="w-150px">Crypto</th>
+                        <th class="w-150px">Type</th>
                         <th>BOLT11</th>
                     </tr>
                 </thead>
@@ -36,6 +38,7 @@
                     {
                         <tr>
                             <td>@payment.Crypto</td>
+                            <td>@payment.Type.ToPrettyString()</td>
                             <td><div class="wraptextAuto">@payment.BOLT11</div></td>
                         </tr>
                     }

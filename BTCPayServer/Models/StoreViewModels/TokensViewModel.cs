@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
+        [Display(Name = "Store")]
         public SelectList Stores
         {
             get; set;

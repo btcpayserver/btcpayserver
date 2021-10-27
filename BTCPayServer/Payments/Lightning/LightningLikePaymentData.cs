@@ -16,6 +16,7 @@ namespace BTCPayServer.Payments.Lightning
         public string BOLT11 { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 PaymentHash { get; set; }
+        public string PaymentType { get; set; }
 
         public string GetDestination()
         {
@@ -33,7 +34,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public PaymentType GetPaymentType()
         {
-            return PaymentTypes.LightningLike;
+            return string.IsNullOrEmpty(PaymentType) ? PaymentTypes.LightningLike : PaymentTypes.Parse(PaymentType);
         }
 
         public string[] GetSearchTerms()

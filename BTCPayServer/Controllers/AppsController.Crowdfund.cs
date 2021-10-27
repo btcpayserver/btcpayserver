@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
+                AppName = app.Name,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -121,6 +122,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
+            app.Name = vm.AppName;
             var newSettings = new CrowdfundSettings()
             {
                 Title = vm.Title,

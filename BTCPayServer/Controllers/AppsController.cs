@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers
             var appData = new AppData
             {
                 StoreDataId = selectedStore,
-                Name = vm.Name,
+                Name = vm.AppName,
                 AppType = appType.ToString()
             };
 

@@ -103,6 +103,7 @@ namespace BTCPayServer.Controllers
                 Id = appId,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
+                AppName = app.Name,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -187,6 +188,8 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
+
+            app.Name = vm.AppName;
             app.SetSettings(new PointOfSaleSettings
             {
                 Title = vm.Title,

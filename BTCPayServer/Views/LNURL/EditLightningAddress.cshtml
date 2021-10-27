@@ -21,7 +21,8 @@
 <form asp-action="EditLightningAddress" method="post">
     
      @{
-         var show = !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
+         
+         var show = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
      }
     
     <div class="row collapse @(show? "show": "")" id="AddAddress">
@@ -29,7 +30,7 @@
             <label asp-for="Add.Username" class="form-label"></label>
             <div class="input-group">
                 <input asp-for="Add.Username" class="form-control"/>
-                <span class="input-group-text" id="basic-addon2"></span>
+                <span class="input-group-text" >@@@Context.Request.Host.ToUriComponent()@Context.Request.PathBase</span>
             </div>
             <span asp-validation-for="Add.Username" class="text-danger"></span>
         </div>

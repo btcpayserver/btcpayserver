@@ -216,10 +216,9 @@ namespace BTCPayServer.HostedServices
                 case InvoiceEventCode.Created:
                     return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
                 case InvoiceEventCode.Expired:
-                case InvoiceEventCode.ExpiredPaidPartial:
                     return new WebhookInvoiceExpiredEvent(WebhookEventType.InvoiceExpired)
                     {
-                        PartiallyPaid = eventCode == InvoiceEventCode.ExpiredPaidPartial
+                        PartiallyPaid = invoiceEvent.PaidPartial
                     };
                 case InvoiceEventCode.FailedToConfirm:
                 case InvoiceEventCode.MarkedInvalid:

@@ -83,9 +83,10 @@ namespace BTCPayServer.HostedServices
                 context.MarkDirty();
                 context.UnaffectAddresses();
                 invoice.Status = InvoiceStatusLegacy.Expired;
-                context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired));
+                var paidPartial = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial;
+                context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired) { PaidPartial = paidPartial });
                 if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
-                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.ExpiredPaidPartial));
+                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.ExpiredPaidPartial) { PaidPartial = paidPartial });
             }
             var allPaymentMethods = invoice.GetPaymentMethods();
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting);

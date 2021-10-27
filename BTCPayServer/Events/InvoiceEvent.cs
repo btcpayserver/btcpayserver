@@ -62,6 +62,10 @@ namespace BTCPayServer.Events
         public string Name { get; set; }
 
         public PaymentEntity Payment { get; set; }
+        /// <summary>
+        /// Only set for Expired event
+        /// </summary>
+        public bool PaidPartial { get; internal set; }
 
         public override string ToString()
         {

@@ -1094,6 +1094,11 @@
                         "nullable": true,
                         "description": "When the customer has paid the invoice, and a `redirectURL` is set, the checkout is redirected to `redirectURL` automatically if `redirectAutomatically` is true. Defaults to the store's settings. (The default store settings is false)"
                     },
+                    "requiresRefundEmail": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Invoice will require user to provide a refund email if this option is set to `true`. Has no effect if `buyerEmail` metadata is set as there is no email to collect in this case."
+                    },
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,

@@ -378,6 +378,7 @@ namespace BTCPayServer.Services.Invoices
         }
 #pragma warning restore CS0618
         public bool Refundable { get; set; }
+        public bool? RequiresRefundEmail { get; set; } = null;
         public string RefundMail { get; set; }
         [JsonProperty("redirectURL")]
         public string RedirectURLTemplate { get; set; }

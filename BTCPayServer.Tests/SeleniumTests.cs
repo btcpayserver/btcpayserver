@@ -1344,7 +1344,7 @@ namespace BTCPayServer.Tests
                 s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
                 s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             }, false);
-            s.CreateInvoice(store.storeName, 0.0000001m, "BTC","",null, StatusMessageModel.StatusSeverity.Error);
+            s.CreateInvoice(store.storeName, 0.0000001m, "BTC","",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
 
             
             i = s.CreateInvoice(store.storeName, null, "BTC");

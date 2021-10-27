@@ -56,6 +56,7 @@ namespace BTCPayServer.Controllers
                 ShowCustomAmount = true;
                 ShowDiscount = true;
                 EnableTips = true;
+                RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
@@ -65,6 +66,7 @@ namespace BTCPayServer.Controllers
             public bool ShowCustomAmount { get; set; }
             public bool ShowDiscount { get; set; }
             public bool EnableTips { get; set; }
+            public RequiresRefundEmail RequiresRefundEmail { get; set; }
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
@@ -118,7 +120,8 @@ namespace BTCPayServer.Controllers
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
                 SearchTerm = $"storeid:{app.StoreDataId}",
-                RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : ""
+                RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
+                RequiresRefundEmail = settings.RequiresRefundEmail
             };
             if (HttpContext?.Request != null)
             {
@@ -202,7 +205,8 @@ namespace BTCPayServer.Controllers
                 RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
-                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
+                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
+                RequiresRefundEmail = vm.RequiresRefundEmail,
             });
             await _AppService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";

@@ -64,5 +64,6 @@ namespace BTCPayServer.Models.AppViewModels
         public string Description { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
+        public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
     }
 }

@@ -1,4 +1,5 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
+@using BTCPayServer.Services.Apps
 @{
     ViewData.SetActivePageAndTitle(InvoiceNavPages.Create, "Create an invoice");
 }
@@ -63,6 +64,11 @@
                         <label asp-for="BuyerEmail" class="form-label"></label>
                         <input asp-for="BuyerEmail" class="form-control" />
                         <span asp-validation-for="BuyerEmail" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
+                        <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="NotificationUrl" class="form-label"></label>

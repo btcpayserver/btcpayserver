@@ -1094,11 +1094,13 @@ namespace BTCPayServer.Tests
                         Metadata = JObject.Parse("{\"itemCode\": \"testitem\", \"orderId\": \"testOrder\"}"),
                         Checkout = new CreateInvoiceRequest.CheckoutOptions()
                         {
-                            RedirectAutomatically = true
+                            RedirectAutomatically = true,
+                            RequiresRefundEmail = true
                         },
                         AdditionalSearchTerms = new string[] { "Banana" }
                     });
                 Assert.True(newInvoice.Checkout.RedirectAutomatically);
+                Assert.True(newInvoice.Checkout.RequiresRefundEmail);
                 Assert.Equal(user.StoreId, newInvoice.StoreId);
                 //list 
                 var invoices = await viewOnly.GetInvoices(user.StoreId);

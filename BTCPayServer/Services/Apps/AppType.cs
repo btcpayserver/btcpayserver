@@ -18,4 +18,14 @@ namespace BTCPayServer.Services.Apps
         [Display(Name = "Keypad only")]
         Light
     }
+
+    public enum RequiresRefundEmail
+    {
+        [Display(Name = "Inherit from store settings")]
+        InheritFromStore,
+        [Display(Name = "On")]
+        On,
+        [Display(Name = "Off")]
+        Off
+    }
 }

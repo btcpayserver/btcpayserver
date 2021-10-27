@@ -101,7 +101,8 @@ namespace BTCPayServer.Controllers
                 CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
                 Description = settings.Description,
-                EmbeddedCSS = settings.EmbeddedCSS
+                EmbeddedCSS = settings.EmbeddedCSS,
+                RequiresRefundEmail = settings.RequiresRefundEmail
             });
         }
 
@@ -120,7 +121,9 @@ namespace BTCPayServer.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
-                                                        string posData = null, CancellationToken cancellationToken = default)
+                                                        string posData = null, 
+                                                        RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
+                                                        CancellationToken cancellationToken = default)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
@@ -226,6 +229,9 @@ namespace BTCPayServer.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
+                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore 
+                        ? store.GetStoreBlob().RequiresRefundEmail
+                        : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string>() { AppService.GetAppInternalTag(appId) },
                     cancellationToken);

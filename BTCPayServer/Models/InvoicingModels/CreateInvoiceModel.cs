@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -84,6 +85,12 @@ namespace BTCPayServer.Models.InvoicingModels
         [EmailAddress]
         [DisplayName("Notification Email")]
         public string NotificationEmail
+        {
+            get; set;
+        }
+
+        [Display(Name = "Require Refund Email")]
+        public RequiresRefundEmail RequiresRefundEmail
         {
             get; set;
         }

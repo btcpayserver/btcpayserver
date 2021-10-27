@@ -57,6 +57,11 @@
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
+                    <div class="form-group">
+                        <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select" required></select>
+                        <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                    </div>
                     <section id="discounts" class="p-0">
                         <h4 class="mt-5 mb-4">Discounts</h4>
                         <div class="form-check mb-4">

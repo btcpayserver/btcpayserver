@@ -18,8 +18,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -564,7 +563,7 @@ namespace BTCPayServer.Controllers
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
                 CustomerEmail = invoice.RefundMail,
-                RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
@@ -873,7 +872,10 @@ namespace BTCPayServer.Controllers
                     }),
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
                     NotificationEmail = model.NotificationEmail,
-                    ExtendedNotifications = model.NotificationEmail != null
+                    ExtendedNotifications = model.NotificationEmail != null,
+                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore 
+                        ? store.GetStoreBlob().RequiresRefundEmail
+                        : model.RequiresRefundEmail == RequiresRefundEmail.On
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

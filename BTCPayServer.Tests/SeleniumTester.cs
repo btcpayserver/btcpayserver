@@ -354,7 +354,8 @@ namespace BTCPayServer.Tests
             decimal? amount = 100, 
             string currency = "USD", 
             string refundEmail = "",
-            string defaultPaymentMethod = null
+            string defaultPaymentMethod = null,
+            bool? requiresRefundEmail = null
         )
         {
             GoToInvoices();
@@ -368,6 +369,8 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
             if (defaultPaymentMethod is string)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
+            if (requiresRefundEmail is bool)
+                new SelectElement(Driver.FindElement(By.Name("RequiresRefundEmail"))).SelectByValue(requiresRefundEmail == true ? "1" : "2");
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage();

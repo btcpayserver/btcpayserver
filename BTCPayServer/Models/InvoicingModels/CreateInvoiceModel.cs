@@ -88,7 +88,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Display(Name = "Requires refund email")]
+        [Display(Name = "Require Refund Email")]
         public RequiresRefundEmailType RequiresRefundEmail
         {
             get; set;

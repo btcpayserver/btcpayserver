@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
@@ -67,6 +65,68 @@ namespace BTCPayServer.Tests
                 }
                 catch { }
 
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+                s.Driver.Navigate().Refresh();
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanHandleRefundEmailForm2()
+        {
+
+            using (var s = SeleniumTester.Create())
+            {
+                // Prepare user account and store
+                await s.StartAsync();
+                s.GoToRegister();
+                s.RegisterNewUser();
+                var store = s.CreateNewStore();
+                s.AddDerivationScheme("BTC");
+
+                // Now create an invoice that requires a refund email
+                var invoice = s.CreateInvoice(store.storeName, 100, "USD", "", null, true);
+                s.GoToInvoiceCheckout(invoice);
+
+                var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
+                Assert.True(emailInput.Displayed);
+
+                emailInput.SendKeys("a@g.com");
+
+                var actionButton = s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"));
+                actionButton.Click();
+                try // Sometimes the click only take the focus, without actually really clicking on it...
+                {
+                    actionButton.Click();
+                }
+                catch { }
+
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+                s.Driver.Navigate().Refresh();
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+
+                s.GoToHome();
+
+                // Now create an invoice that doesn't require a refund email
+                s.CreateInvoice(store.storeName, 100, "USD", "", null, false);
+                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.Navigate().Back();
+                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
+                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+                s.Driver.Navigate().Refresh();
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+
+                s.GoToHome();
+
+                // Now create an invoice that requires refund email but already has one set, email input shouldn't show up
+                s.CreateInvoice(store.storeName, 100, "USD", "a@g.com", null, true);
+                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.Navigate().Back();
+                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
+                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.Driver.Navigate().Refresh();
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));

@@ -69,7 +69,7 @@
                     <h4 class="mt-5 mb-4">Checkout options</h4>
                     <div class="form-group">
                         <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmailType>()" class="form-select" required></select>
+                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select" required></select>
                         <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
                     </div>
                     <h4 class="mt-5 mb-4">Custom Payments</h4>

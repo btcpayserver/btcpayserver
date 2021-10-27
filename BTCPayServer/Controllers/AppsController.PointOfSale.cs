@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
                 ShowCustomAmount = true;
                 ShowDiscount = true;
                 EnableTips = true;
-                RequiresRefundEmail = RequiresRefundEmailType.InheritFromStore;
+                RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
             public bool ShowCustomAmount { get; set; }
             public bool ShowDiscount { get; set; }
             public bool EnableTips { get; set; }
-            public RequiresRefundEmailType RequiresRefundEmail { get; set; }
+            public RequiresRefundEmail RequiresRefundEmail { get; set; }
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;

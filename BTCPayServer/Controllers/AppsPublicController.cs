@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
                                                         string redirectUrl,
                                                         string choiceKey,
                                                         string posData = null, 
-                                                        RequiresRefundEmailType requiresRefundEmail = RequiresRefundEmailType.InheritFromStore,
+                                                        RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
@@ -229,9 +229,9 @@ namespace BTCPayServer.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
-                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmailType.InheritFromStore 
+                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore 
                         ? store.GetStoreBlob().RequiresRefundEmail
-                        : requiresRefundEmail == RequiresRefundEmailType.On,
+                        : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string>() { AppService.GetAppInternalTag(appId) },
                     cancellationToken);

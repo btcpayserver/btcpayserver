@@ -91,6 +91,6 @@ namespace BTCPayServer.Models.AppViewModels
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
         [Display(Name = "Require refund email on checkout")]
-        public RequiresRefundEmailType RequiresRefundEmail { get; set; } = RequiresRefundEmailType.InheritFromStore;
+        public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
     }
 }

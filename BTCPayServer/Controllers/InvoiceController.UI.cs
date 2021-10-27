@@ -872,9 +872,9 @@ namespace BTCPayServer.Controllers
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
                     NotificationEmail = model.NotificationEmail,
                     ExtendedNotifications = model.NotificationEmail != null,
-                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmailType.InheritFromStore 
+                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore 
                         ? store.GetStoreBlob().RequiresRefundEmail
-                        : model.RequiresRefundEmail == RequiresRefundEmailType.On
+                        : model.RequiresRefundEmail == RequiresRefundEmail.On
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

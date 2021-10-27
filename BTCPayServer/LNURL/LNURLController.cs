@@ -26,6 +26,7 @@ using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json;
@@ -103,7 +104,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item[] items = { };
+            ViewPointOfSaleViewModel.Item[] items = null;
             string currencyCode = null;
             switch (app.AppType)
             {
@@ -142,6 +143,7 @@ namespace BTCPayServer
                 public string Username { get; set; }
             }
 
+            public EditLightningAddressItem Add { get; set; }
             public List<EditLightningAddressItem> Items { get; set; }
         }
 
@@ -363,7 +365,7 @@ namespace BTCPayServer
                             });
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         return BadRequest(new LNUrlStatusResponse
                         {
@@ -431,7 +433,7 @@ namespace BTCPayServer
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
-        public async Task<IActionResult> EditLightningAddress(string storeId)
+        public IActionResult EditLightningAddress(string storeId)
         {
             if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
@@ -464,63 +466,54 @@ namespace BTCPayServer
         public async Task<IActionResult> EditLightningAddress(string storeId, [FromForm] EditLightningAddressVM vm,
             string command)
         {
-            vm.Items ??= new List<EditLightningAddressVM.EditLightningAddressItem>();
+            if (command == "add")
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View(vm);
+                }
+
+                if (_lightningAddressSettings.Items.ContainsKey(vm.Add.Username.ToLowerInvariant()))
+                {
+                    vm.AddModelError(addressVm => addressVm.Add.Username, "Username is already taken", this);
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return View(vm);
+                }
+
+                _lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var ids);
+                ids = ids.Concat(new[] { vm.Add.Username.ToLowerInvariant() }).ToArray();
+                _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
+                _lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
+                await _settingsRepository.UpdateSetting(_lightningAddressSettings);
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "Lightning address added successfully."
+                });
+
+                return RedirectToAction("EditLightningAddress");
+            }
+
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                ModelState.Clear();
                 var index = int.Parse(
                     command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
                     CultureInfo.InvariantCulture);
-                vm.Items.RemoveAt(index);
-                return View(vm);
-            }
-
-            if (command == "add")
-            {
-                vm.Items.Add(new EditLightningAddressVM.EditLightningAddressItem());
-                return View(vm);
-            }
-
-            if (vm.Items?.Any() is true)
-            {
-                for (var i = 0; i < vm.Items.Count; i++)
+                if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
                 {
-                    if (vm.Items[i].Username is null)
+                    var addressToRemove = addresses[index];
+                    addresses = addresses.Where(s => s != addressToRemove).ToArray();
+                    _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, addresses);
+                    _lightningAddressSettings.Items.TryRemove(addressToRemove, out _);
+                    await _settingsRepository.UpdateSetting(_lightningAddressSettings);
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-                        continue;
-                    }
-
-                    if (_lightningAddressSettings.Items.TryGetValue(vm.Items[i].Username.ToLowerInvariant(),
-                        out var existing) && existing.StoreId != storeId)
-                    {
-                        ModelState.AddModelError(dictionary => vm.Items[i].Username, "Username is already taken", this);
-                    }
+                        Message = $"Lightning address {addressToRemove} removed successfully."
+                    });
                 }
             }
-
-            if (!ModelState.IsValid)
-            {
-                return View(vm);
-            }
-
-            if (command == "save")
-            {
-                var ids = vm.Items.Select(item => item.Username.ToLowerInvariant()).ToArray();
-                _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
-                foreach (var lightningAddressItem in vm.Items)
-                {
-                    lightningAddressItem.StoreId = storeId;
-                    lightningAddressItem.CryptoCode = "BTC";
-                    _lightningAddressSettings.Items.AddOrReplace(lightningAddressItem.Username.ToLowerInvariant(),
-                        lightningAddressItem);
-                }
-            }
-
-            await _settingsRepository.UpdateSetting(_lightningAddressSettings);
-            TempData.SetStatusMessageModel(new StatusMessageModel
-            {
-                Message = "Saved Lightning addresses successfully."
-            });
 
             return RedirectToAction("EditLightningAddress");
         }

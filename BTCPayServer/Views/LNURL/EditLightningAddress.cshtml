@@ -6,71 +6,110 @@
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().StoreName);
 }
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
+<a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary mb-2" role="button">
+    <span class="fa fa-plus"></span>
+    Add Address
+</a>
+<style>
+        .settings-holder span:not(:last-child):after{
+            content: " / ";
+        }
+    </style>
+
 <form asp-action="EditLightningAddress" method="post">
-    <h2 class="mb-4">@ViewData["PageTitle"]</h2>
-
-    <div class="row">
-        <div class="list-group list-group-flush mb-2">
-            @for (var index = 0; index < Model.Items.Count; index++)
-            {
-                var advanced = !string.IsNullOrEmpty(Model.Items[index].CurrencyCode) || Model.Items[index].Min != null || Model.Items[index].Max != null;
-                
-                <div class="list-group-item  pt-3 bg-tile">
-                    <div class="row">
-                        <div class="col-12 col-lg-10">
-                            <div class="form-group">
-                                <label asp-for="Items[index].Username" class="form-label"></label>
-                                <div class="input-group">
-                                    <input asp-for="Items[index].Username" class="form-control"/>
-                                <span class="input-group-text" id="basic-addon2">@@@this.Context.Request.Host.ToUriComponent()@Context.Request.PathBase</span>
-                            </div>
-                                <span asp-validation-for="Items[index].Username" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                
-                            <button type="button"  class="btn btn-link my-0 py-0" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings@(index)">Toggle Advanced settings</button>
-                          </div>
-                        <div class="collapse @(advanced ? "show" : "")" id="AdvancedSettings@(index)">
-
-                            <div class="form-group">
-                                <label asp-for="Items[index].CurrencyCode" class="form-label">Invoice currency</label>
-                                <input asp-for="Items[index].CurrencyCode" class="form-control"/>
-                                <span asp-validation-for="Items[index].CurrencyCode" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <span class="input-group-text">min/max (sats)</span>
-                                    <input type="number" min="1" asp-for="Items[index].Min" class="form-control">
-                                    <input type="number" min="1" asp-for="Items[index].Max" class="form-control">
-                                </div>
-                                <span asp-validation-for="Items[index].Min" class="text-danger"></span>
-                                <span asp-validation-for="Items[index].Max" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-lg-2 pull-right">
-                        <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
-                                class="d-block d-lg-none d-xl-none btn btn-danger mb-2">
-                            Remove
-                        </button>
-                        <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
-                                class="d-none d-lg-block btn btn-outline-danger text-decoration-none h-100 align-middle border-0 fs-4">
-                            <span class="fa fa-times"></span>
-                        </button>
-                    </div>
+    
+     @{
+         var show = !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
+     }
+    
+    <div class="row collapse @(show? "show": "")" id="AddAddress">
+        <div class="form-group">
+            <label asp-for="Add.Username" class="form-label"></label>
+            <div class="input-group">
+                <input asp-for="Add.Username" class="form-control"/>
+                <span class="input-group-text" id="basic-addon2"></span>
+            </div>
+            <span asp-validation-for="Add.Username" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+    
+            <a class="mb-2" role="button" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings"><span class="fa fa-cogs">&nbsp</span>Advanced settings</a>
+        </div>
+        <div class="collapse " id="AdvancedSettings">
+    
+            <div class="form-group">
+                <label asp-for="Add.CurrencyCode" class="form-label">Invoice currency</label>
+                <input asp-for="Add.CurrencyCode" class="form-control"/>
+                <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">min/max (sats)</span>
+                    <input type="number" min="1" asp-for="Add.Min" class="form-control">
+                    <input type="number" min="1" asp-for="Add.Max" class="form-control">
                 </div>
-                </div>
-            }
+                <span asp-validation-for="Add.Min" class="text-danger"></span>
+                <span asp-validation-for="Add.Max" class="text-danger"></span>
+            </div>
+        </div>
+    
+        <div class="form-group">
+    
+            <button type="submit" name="command" value="add" class="btn btn-primary btn-sm ms-2">Save</button>
         </div>
     </div>
-    <div class="row">
-        <div class="btn-group">
+    
+    
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                Address
+            </th>
+            <th>Settings</th>
+            <th class="text-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (var index = 0; index < Model.Items.Count; index++)
+        {
+            <input asp-for="Items[index].CurrencyCode" type="hidden"/>
+            <input asp-for="Items[index].Min" type="hidden"/>
+            <input asp-for="Items[index].Max" type="hidden"/>
+            <input asp-for="Items[index].Username" type="hidden"/>
+            var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}{Context.Request.PathBase}";
+            <tr>
+                <td>
+                    <div class="input-group" data-clipboard="@address">
+                        <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@address"/>
+                        <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
+                    </div>
 
-            <button type="submit" name="command" value="add" class="btn btn-secondary btn-sm ms-2">Add address</button>
-
-            <button type="submit" name="command" value="save" class="btn btn-secondary btn-sm ms-2">Save</button>
-
-        </div>
-    </div>
+                </td>
+                <td class="settings-holder">
+                    @if (Model.Items[index].Min.HasValue)
+                    {
+                        <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>
+                    }
+                    @if (Model.Items[index].Max.HasValue)
+                    {
+                        <span> @Safe.Raw($"{Model.Items[index].Max} max sats")</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
+                    {
+                        <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
+                            class="btn btn-link px-0">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </form>

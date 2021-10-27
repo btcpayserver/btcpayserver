@@ -18,8 +18,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -872,7 +871,10 @@ namespace BTCPayServer.Controllers
                     }),
                     DefaultPaymentMethod = model.DefaultPaymentMethod,
                     NotificationEmail = model.NotificationEmail,
-                    ExtendedNotifications = model.NotificationEmail != null
+                    ExtendedNotifications = model.NotificationEmail != null,
+                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmailType.InheritFromStore 
+                        ? store.GetStoreBlob().RequiresRefundEmail
+                        : model.RequiresRefundEmail == RequiresRefundEmailType.On
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

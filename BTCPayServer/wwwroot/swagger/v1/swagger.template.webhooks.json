@@ -674,6 +674,16 @@
                                 "nullable": false
                             }
                         }
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "overPaid": {
+                                "type": "boolean",
+                                "description": "Whether this invoice has received more money than expected",
+                                "nullable": false
+                            }
+                        }
                     }
                 ]
             },

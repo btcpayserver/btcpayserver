@@ -163,6 +163,11 @@ namespace BTCPayServer
 
             public ConcurrentDictionary<string, string[]> StoreToItemMap { get; set; } =
                 new ConcurrentDictionary<string, string[]>();
+
+            public override string ToString()
+            {
+                return null;
+            }
         }
 
         [HttpGet("~/.well-known/lnurlp/{username}")]
@@ -435,6 +440,16 @@ namespace BTCPayServer
         [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
         public IActionResult EditLightningAddress(string storeId)
         {
+            if (ControllerContext.HttpContext.GetStoreData().GetEnabledPaymentIds(_btcPayNetworkProvider).All(id => id.PaymentType != LNURLPayPaymentType.Instance))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "LNURL is required for lightning addresses but has not yet been enabled.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("Payment", "Stores", new { storeId });
+            }
+            
             if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
                 return View(new EditLightningAddressVM
@@ -455,7 +470,6 @@ namespace BTCPayServer
             {
                 Items = new List<EditLightningAddressVM.EditLightningAddressItem>
                 {
-                    new EditLightningAddressVM.EditLightningAddressItem()
                 }
             });
         }
@@ -483,9 +497,22 @@ namespace BTCPayServer
                     return View(vm);
                 }
 
-                _lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var ids);
-                ids = ids.Concat(new[] { vm.Add.Username.ToLowerInvariant() }).ToArray();
+                if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var ids))
+                {
+                    ids = ids.Concat(new[] { vm.Add.Username.ToLowerInvariant() }).ToArray();
+                }
+                else
+                {
+                    ids = new[] { vm.Add.Username.ToLowerInvariant() };
+                }
+             
                 _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
+                vm.Add.StoreId = storeId;
+                vm.Add.CryptoCode = ControllerContext.HttpContext.GetStoreData()
+                    .GetEnabledPaymentIds(_btcPayNetworkProvider)
+                    .OrderBy(id => id.CryptoCode == "BTC")
+                    .First()
+                    .CryptoCode;
                 _lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
                 await _settingsRepository.UpdateSetting(_lightningAddressSettings);
                 TempData.SetStatusMessageModel(new StatusMessageModel

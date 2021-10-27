@@ -127,6 +127,7 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
+            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter? excludeFilter = null;
@@ -179,6 +180,7 @@ namespace BTCPayServer.Controllers
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
+            entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
@@ -189,6 +191,7 @@ namespace BTCPayServer.Controllers
             }
             entity.PaymentTolerance = invoice.Checkout.PaymentTolerance ?? storeBlob.PaymentTolerance;
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
+            entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken);

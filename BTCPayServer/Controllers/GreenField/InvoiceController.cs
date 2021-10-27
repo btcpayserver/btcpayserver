@@ -420,6 +420,7 @@ namespace BTCPayServer.Controllers.GreenField
                     SpeedPolicy = entity.SpeedPolicy,
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
+                    RequiresRefundEmail = entity.RequiresRefundEmail,
                     RedirectURL = entity.RedirectURLTemplate
                 }
             };

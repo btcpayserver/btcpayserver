@@ -173,7 +173,9 @@ namespace BTCPayServer
         [HttpGet("~/.well-known/lnurlp/{username}")]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
-            if (!_lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
+            var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                                           new LightningAddressSettings();
+            if (!lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
             {
                 return NotFound();
             }
@@ -449,18 +451,19 @@ namespace BTCPayServer
                 });
                 return RedirectToAction("Payment", "Stores", new { storeId });
             }
-            
-            if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
+            var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                                           new LightningAddressSettings();
+            if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
                 return View(new EditLightningAddressVM
                 {
                     Items = addresses.Select(s => new EditLightningAddressVM.EditLightningAddressItem
                     {
-                        Max = _lightningAddressSettings.Items[s].Max,
-                        Min = _lightningAddressSettings.Items[s].Min,
-                        CurrencyCode = _lightningAddressSettings.Items[s].CurrencyCode,
-                        CryptoCode = _lightningAddressSettings.Items[s].CryptoCode,
-                        StoreId = _lightningAddressSettings.Items[s].StoreId,
+                        Max = lightningAddressSettings.Items[s].Max,
+                        Min = lightningAddressSettings.Items[s].Min,
+                        CurrencyCode = lightningAddressSettings.Items[s].CurrencyCode,
+                        CryptoCode = lightningAddressSettings.Items[s].CryptoCode,
+                        StoreId = lightningAddressSettings.Items[s].StoreId,
                         Username = s,
                     }).ToList()
                 });
@@ -486,8 +489,9 @@ namespace BTCPayServer
                 {
                     return View(vm);
                 }
-
-                if (_lightningAddressSettings.Items.ContainsKey(vm.Add.Username.ToLowerInvariant()))
+                var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                                               new LightningAddressSettings();
+                if (lightningAddressSettings.Items.ContainsKey(vm.Add.Username.ToLowerInvariant()))
                 {
                     vm.AddModelError(addressVm => addressVm.Add.Username, "Username is already taken", this);
                 }
@@ -497,7 +501,7 @@ namespace BTCPayServer
                     return View(vm);
                 }
 
-                if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var ids))
+                if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var ids))
                 {
                     ids = ids.Concat(new[] { vm.Add.Username.ToLowerInvariant() }).ToArray();
                 }
@@ -506,15 +510,15 @@ namespace BTCPayServer
                     ids = new[] { vm.Add.Username.ToLowerInvariant() };
                 }
              
-                _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
+                lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
                 vm.Add.StoreId = storeId;
                 vm.Add.CryptoCode = ControllerContext.HttpContext.GetStoreData()
                     .GetEnabledPaymentIds(_btcPayNetworkProvider)
                     .OrderBy(id => id.CryptoCode == "BTC")
                     .First()
                     .CryptoCode;
-                _lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
-                await _settingsRepository.UpdateSetting(_lightningAddressSettings);
+                lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
+                await _settingsRepository.UpdateSetting(lightningAddressSettings);
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Message = "Lightning address added successfully."
@@ -525,16 +529,18 @@ namespace BTCPayServer
 
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
+                var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                                               new LightningAddressSettings();
                 var index = int.Parse(
                     command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
                     CultureInfo.InvariantCulture);
-                if (_lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
+                if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
                 {
                     var addressToRemove = addresses[index];
                     addresses = addresses.Where(s => s != addressToRemove).ToArray();
-                    _lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, addresses);
-                    _lightningAddressSettings.Items.TryRemove(addressToRemove, out _);
-                    await _settingsRepository.UpdateSetting(_lightningAddressSettings);
+                    lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, addresses);
+                    lightningAddressSettings.Items.TryRemove(addressToRemove, out _);
+                    await _settingsRepository.UpdateSetting(lightningAddressSettings);
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Message = $"Lightning address {addressToRemove} removed successfully."

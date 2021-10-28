@@ -1325,7 +1325,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(s.StoreId);
             s.AddLightningNode("BTC", LightningConnectionType.CLightning, () =>
             {
-                
+                s.Driver.ToggleCollapse("LNURLSettings");
                 s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
             }, false);
             i = s.CreateInvoice(store.storeName, 0.000001m, "BTC" );
@@ -1341,6 +1341,7 @@ namespace BTCPayServer.Tests
             s.AddLightningNode("BTC", LightningConnectionType.CLightning, () =>
             {
                 
+                s.Driver.ToggleCollapse("LNURLSettings");
                 s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
                 s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             }, false);
@@ -1361,6 +1362,8 @@ namespace BTCPayServer.Tests
             s.AddLightningNode("BTC", LightningConnectionType.LndREST, () =>
             {
                 s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
+                
+                s.Driver.ToggleCollapse("LNURLSettings");
                 s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             }, false);
             var invForPP = s.CreateInvoice(newStore.storeName, 0.0000001m, "BTC");

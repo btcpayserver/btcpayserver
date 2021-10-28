@@ -82,54 +82,63 @@
         </div>
     </div>
     
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th>Address</th>
-            <th>Settings</th>
-            <th class="text-end">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        @for (var index = 0; index < Model.Items.Count; index++)
-        {
-            <input asp-for="Items[index].CurrencyCode" type="hidden"/>
-            <input asp-for="Items[index].Min" type="hidden"/>
-            <input asp-for="Items[index].Max" type="hidden"/>
-            <input asp-for="Items[index].Username" type="hidden"/>
-            var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}{Context.Request.PathBase}";
+    @if (Model.Items.Any())
+    {
+        <table class="table table-hover">
+            <thead>
             <tr>
-                <td>
-                    <div class="input-group" data-clipboard="@address">
-                        <input type="text" class="form-control copy-cursor lightning-address-value"  readonly="readonly" value="@address"/>
-                        <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
-                    </div>
-
-                </td>
-                <td class="settings-holder align-middle">
-                    @if (Model.Items[index].Min.HasValue)
-                    {
-                        <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>
-                    }
-                    @if (Model.Items[index].Max.HasValue)
-                    {
-                        <span> @Safe.Raw($"{Model.Items[index].Max} max sats")</span>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
-                    {
-                        <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
-                    }
-                </td>
-                <td class="text-end">
-                    <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
-                            class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@address</strong> will be removed." data-confirm-input="REMOVE">
-                        Remove
-                    </button>
-                </td>
+                <th>Address</th>
+                <th>Settings</th>
+                <th class="text-end">Actions</th>
             </tr>
-        }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            @for (var index = 0; index < Model.Items.Count; index++)
+            {
+                <input asp-for="Items[index].CurrencyCode" type="hidden"/>
+                <input asp-for="Items[index].Min" type="hidden"/>
+                <input asp-for="Items[index].Max" type="hidden"/>
+                <input asp-for="Items[index].Username" type="hidden"/>
+                var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}{Context.Request.PathBase}";
+                <tr>
+                    <td>
+                        <div class="input-group" data-clipboard="@address">
+                            <input type="text" class="form-control copy-cursor lightning-address-value"  readonly="readonly" value="@address"/>
+                            <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
+                        </div>
+
+                    </td>
+                    <td class="settings-holder align-middle">
+                        @if (Model.Items[index].Min.HasValue)
+                        {
+                            <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>
+                        }
+                        @if (Model.Items[index].Max.HasValue)
+                        {
+                            <span> @Safe.Raw($"{Model.Items[index].Max} max sats")</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
+                        {
+                            <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
+                                class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@address</strong> will be removed." data-confirm-input="REMOVE">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no Lightning Addresses yet.
+        </p>
+    }
 </form>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))" />

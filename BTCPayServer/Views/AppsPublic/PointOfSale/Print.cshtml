@@ -62,7 +62,7 @@
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
                                 <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()"></vc:qr-code>
 
-                                <a href="@lnUrl" class="btn btn-secondary d-print-none w-100 mt-2 lnurl" data-choice="@item.Id">
+                                <a href="@lnUrl" class="btn btn-secondary d-print-none w-100 mt-2 lnurl" data-choice="@item.Id" rel="noreferrer noopener">
                                     Open in wallet
                                 </a>
                             }

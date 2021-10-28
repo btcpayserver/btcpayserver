@@ -1,6 +1,4 @@
-@using BTCPayServer.Services
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
-
 <script type="text/x-template" id="lightning-method-checkout-template">
     <div>
         <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
@@ -10,8 +8,8 @@
                     <button 
                             v-on:click="toggleLightningData('bolt11')" 
                             v-bind:class="{ active: currentLightningDisplay === 'bolt11' }"
-                            v-bind:title="$t('BOLT 11 Invoice')">
-                            {{$t("BOLT 11 Invoice")}}
+                            v-bind:title="$t(srvModel.paymentMethodId.endsWith('LNURLPAY')? 'LNURL': 'BOLT 11 Invoice')">  
+                            {{$t(srvModel.paymentMethodId.endsWith('LNURLPAY')? "LNURL": "BOLT 11 Invoice")}}
                     </button>
                     <button 
                         v-on:click="toggleLightningData('node')" 
@@ -43,7 +41,7 @@
             </div>
             <nav  class="copyBox">
                 <div class="copySectionBox bottomBorder">
-                    <label>{{$t("BOLT 11 Invoice")}}</label>
+                    <label>{{$t(srvModel.paymentMethodId.endsWith('LNURLPAY')? "LNURL": "BOLT 11 Invoice")}}</label>
                     <div class="inputWithIcon _copyInput">
                         <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
                         <img v-bind:src="srvModel.cryptoImage"/>

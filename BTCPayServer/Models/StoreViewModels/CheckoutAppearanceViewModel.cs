@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
-    public class CheckoutExperienceViewModel
+    public class CheckoutAppearanceViewModel
     {
         public class Format
         {

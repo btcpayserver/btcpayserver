@@ -77,10 +77,10 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(response);
 
                 // Get enabled state from overview action
-                PaymentViewModel paymentModel;
-                response = controller.Payment();
-                paymentModel = (PaymentViewModel)Assert.IsType<ViewResult>(response).Model;
-                var lnNode = paymentModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
+                PaymentMethodsViewModel paymentMethodsModel;
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                var lnNode = paymentMethodsModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
                 Assert.NotNull(lnNode);
                 Assert.False(lnNode.Enabled);
 
@@ -90,18 +90,18 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewResult>(response);
 
                 // Get enabled state from overview action
-                response = controller.Payment();
-                paymentModel = (PaymentViewModel)Assert.IsType<ViewResult>(response).Model;
-                var derivationScheme = paymentModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                var derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);
                 Assert.True(derivationScheme.Enabled);
 
                 // Disable wallet
                 response = controller.SetWalletEnabled(storeId, cryptoCode, false).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.Payment();
-                paymentModel = (PaymentViewModel)Assert.IsType<ViewResult>(response).Model;
-                derivationScheme = paymentModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);
                 Assert.False(derivationScheme.Enabled);
 

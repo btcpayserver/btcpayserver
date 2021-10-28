@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers
 
                     await _Repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node updated.";
-                    return RedirectToAction(nameof(Payment), new { storeId });
+                    return RedirectToAction(nameof(PaymentMethods), new { storeId });
 
                 case "test":
                     var handler = _ServiceProvider.GetRequiredService<LightningLikePaymentHandler>();
@@ -242,7 +242,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning settings successfully updated";
             }
 
-            return RedirectToAction(nameof(Payment), new { vm.StoreId });
+            return RedirectToAction(nameof(PaymentMethods), new { vm.StoreId });
         }
 
         [HttpPost("{storeId}/lightning/{cryptoCode}/status")]
@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers
             await _Repo.UpdateStore(store);
             TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning payments are now {(enabled ? "enabled" : "disabled")} for this store.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         private async Task<bool> CanUseInternalLightning()

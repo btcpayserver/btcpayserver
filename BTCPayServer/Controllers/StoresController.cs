@@ -367,10 +367,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/checkout")]
-        public IActionResult CheckoutExperience()
+        public IActionResult CheckoutAppearance()
         {
             var storeBlob = CurrentStore.GetStoreBlob();
-            var vm = new CheckoutExperienceViewModel();
+            var vm = new CheckoutAppearanceViewModel();
             SetCryptoCurrencies(vm, CurrentStore);
             vm.PaymentMethodCriteria = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
                                     .Where(s => !storeBlob.GetExcludedPaymentMethods().Match(s.PaymentId))
@@ -414,14 +414,14 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
+        void SetCryptoCurrencies(CheckoutAppearanceViewModel vm, Data.StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             var defaultPaymentId = storeData.GetDefaultPaymentId();
             var defaultChoice = defaultPaymentId is PaymentMethodId ? defaultPaymentId.FindNearest(enabled) : null;
             var choices = enabled
                 .Select(o =>
-                    new CheckoutExperienceViewModel.Format()
+                    new CheckoutAppearanceViewModel.Format()
                     {
                         Name = o.ToPrettyString(),
                         Value = o.ToString(),
@@ -434,7 +434,7 @@ namespace BTCPayServer.Controllers
         
         [HttpPost]
         [Route("{storeId}/checkout")]
-        public async Task<IActionResult> CheckoutExperience(CheckoutExperienceViewModel model)
+        public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
         {
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
@@ -514,7 +514,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
             }
 
-            return RedirectToAction(nameof(CheckoutExperience), new
+            return RedirectToAction(nameof(CheckoutAppearance), new
             {
                 storeId = CurrentStore.Id
             });
@@ -579,14 +579,14 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}")]
-        public IActionResult Payment()
+        public IActionResult PaymentMethods()
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
-            var vm = new PaymentViewModel
+            var vm = new PaymentMethodsViewModel
             {
                 Id = store.Id,
                 HintWallet = storeBlob.Hints.Wallet,
@@ -608,7 +608,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}")]
-        public async Task<IActionResult> Payment(PaymentViewModel model, string command = null)
+        public async Task<IActionResult> PaymentMethods(PaymentMethodsViewModel model, string command = null)
         {
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
@@ -630,7 +630,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
             }
 
-            return RedirectToAction(nameof(Payment), new
+            return RedirectToAction(nameof(PaymentMethods), new
             {
                 storeId = CurrentStore.Id
             });

@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
-                return RedirectToAction(nameof(Payment), new { storeId = vm.StoreId });
+                return RedirectToAction(nameof(PaymentMethods), new { storeId = vm.StoreId });
             }
             return ConfirmAddresses(vm, strategy);
         }
@@ -363,7 +363,7 @@ namespace BTCPayServer.Controllers
 
             TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
@@ -559,7 +559,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"{network.CryptoCode} on-chain payments are now {(enabled ? "enabled" : "disabled")} for this store.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
@@ -586,7 +586,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"On-Chain payment for {network.CryptoCode} has been removed.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)

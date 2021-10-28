@@ -1340,7 +1340,7 @@ namespace BTCPayServer.Tests
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();*/
             
-            s.CreateInvoice(store.storeName, 0.0000001m, cryptoCode,"",null, StatusMessageModel.StatusSeverity.Error);
+            s.CreateInvoice(store.storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
 
             i = s.CreateInvoice(store.storeName, null, cryptoCode);
             s.GoToInvoiceCheckout(i);

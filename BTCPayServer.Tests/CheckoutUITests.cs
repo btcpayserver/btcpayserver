@@ -32,7 +32,7 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
-                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.GoToStore(store.storeId, StoreNavPages.CheckoutAppearance);
                 s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
                 s.Driver.FindElement(By.Name("command")).Click();
 

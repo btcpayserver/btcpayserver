@@ -138,7 +138,7 @@ namespace BTCPayServer.Tests
             Driver.WaitForElement(By.Id("Create")).Click();
             Driver.FindElement(By.Id(StoreNavPages.GeneralSettings.ToString())).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id(StoreNavPages.Payment.ToString())).Click();
+            Driver.FindElement(By.Id(StoreNavPages.PaymentMethods.ToString())).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -319,13 +319,13 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Stores")).Click();
         }
 
-        public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Payment)
+        public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
             GoToHome(); 
             Driver.WaitForAndClick(By.Id("Stores"));
             Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
 
-            if (storeNavPage != StoreNavPages.Payment)
+            if (storeNavPage != StoreNavPages.PaymentMethods)
             {
                 Driver.FindElement(By.Id(storeNavPage.ToString())).Click();
             }

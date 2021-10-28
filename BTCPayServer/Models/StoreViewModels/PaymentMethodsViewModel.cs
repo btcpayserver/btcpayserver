@@ -4,7 +4,7 @@ using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
-    public class PaymentViewModel
+    public class PaymentMethodsViewModel
     {
         public string Id { get; set; }
         public List<StoreDerivationScheme> DerivationSchemes { get; set; }

@@ -819,11 +819,11 @@ namespace BTCPayServer.Tests
 
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
-                var response = stores.Payment();
-                var vm = Assert.IsType<PaymentViewModel>(Assert.IsType<ViewResult>(response).Model);
+                var response = stores.PaymentMethods();
+                var vm = Assert.IsType<PaymentMethodsViewModel>(Assert.IsType<ViewResult>(response).Model);
                 Assert.Equal(0.0, vm.PaymentTolerance);
                 vm.PaymentTolerance = 50.0;
-                Assert.IsType<RedirectToActionResult>(stores.Payment(vm).Result);
+                Assert.IsType<RedirectToActionResult>(stores.PaymentMethods(vm).Result);
 
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
@@ -1073,7 +1073,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
-                var storeResponse = storeController.Payment();
+                var storeResponse = storeController.PaymentMethods();
                 Assert.IsType<ViewResult>(storeResponse);
                 Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -1097,9 +1097,9 @@ namespace BTCPayServer.Tests
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
-                storeResponse = storeController.Payment();
+                storeResponse = storeController.PaymentMethods();
                 var storeVm =
-                    Assert.IsType<PaymentViewModel>(Assert
+                    Assert.IsType<PaymentMethodsViewModel>(Assert
                         .IsType<ViewResult>(storeResponse).Model);
                 Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }
@@ -2362,14 +2362,14 @@ namespace BTCPayServer.Tests
                 var btcMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToString();
 
                 // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
+                var vm = Assert.IsType<CheckoutAppearanceViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutAppearance()).Model);
                 Assert.Equal(2, vm.PaymentMethodCriteria.Count);
                 var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
                 Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "5 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutAppearance(vm)
                     .Result);
 
                 var invoice = user.BitPay.CreateInvoice(
@@ -2389,8 +2389,8 @@ namespace BTCPayServer.Tests
                 // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
                 // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
                 // payment method should be LN.
-                vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
+                vm = Assert.IsType<CheckoutAppearanceViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutAppearance()).Model);
                 vm.DefaultPaymentMethod = lnMethod;
                 criteria = vm.PaymentMethodCriteria.First();
                 criteria.Value = "150 USD";
@@ -2398,7 +2398,7 @@ namespace BTCPayServer.Tests
                 criteria = vm.PaymentMethodCriteria.Skip(1).First();
                 criteria.Value = "5 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutAppearance(vm)
                     .Result);
                 invoice = user.BitPay.CreateInvoice(
                    new Invoice()
@@ -2415,7 +2415,7 @@ namespace BTCPayServer.Tests
 
                 // If we change store's default, it should change the checkout's default
                 vm.DefaultPaymentMethod = btcMethod;
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutAppearance(vm)
                     .Result);
                 checkout = (await user.GetController<InvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
                 Assert.Equal(btcMethod, checkout.PaymentMethodId);
@@ -2497,12 +2497,12 @@ namespace BTCPayServer.Tests
                 var cryptoCode = "BTC";
                 user.GrantAccess(true);
                 user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
-                var vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                var vm = user.GetController<StoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
                 var criteria = Assert.Single(vm.PaymentMethodCriteria);
                 Assert.Equal(new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
                 criteria.Value = "2 USD";
                 criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm)
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutAppearance(vm)
                     .Result);
 
                 var invoice = user.BitPay.CreateInvoice(
@@ -2523,10 +2523,10 @@ namespace BTCPayServer.Tests
                 var lnSettingsVm = await user.GetController<StoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModelAsync<LightningSettingsViewModel>();
                 lnSettingsVm.LNURLStandardInvoiceEnabled = true;
                 Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().LightningSettings(lnSettingsVm).Result);
-                vm = user.GetController<StoresController>().CheckoutExperience().AssertViewModel<CheckoutExperienceViewModel>();
+                vm = user.GetController<StoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
                 criteria = Assert.Single(vm.PaymentMethodCriteria);
                 Assert.Equal(new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm).Result);
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutAppearance(vm).Result);
 
                 // However, creating an invoice should show LNURL
                 invoice = user.BitPay.CreateInvoice(

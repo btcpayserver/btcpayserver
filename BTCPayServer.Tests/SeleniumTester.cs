@@ -316,7 +316,10 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
         }
-
+        public void GoToApps()
+        {
+            Driver.FindElement(By.Id("Apps")).Click();
+        }
         public void GoToStores()
         {
             Driver.FindElement(By.Id("Stores")).Click();

@@ -241,15 +241,15 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true, Action<LightningNodeViewModel> setViewModel = null)
+        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true)
         {
-            RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant, setViewModel: setViewModel).GetAwaiter().GetResult();
+            RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
-        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null, Action<LightningNodeViewModel> setViewModel = null)
+        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null)
         {
-            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId, setViewModel);
+            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
         }
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null, Action<LightningNodeViewModel> setViewModel = null)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = GetController<StoresController>();
 
@@ -257,8 +257,6 @@ namespace BTCPayServer.Tests
             var nodeType = connectionString == LightningSupportedPaymentMethod.InternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
 
             var vm = new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true };
-            if (setViewModel != null)
-                setViewModel(vm);
             await storeController.SetupLightningNode(storeId ?? StoreId,
                 vm, "save", cryptoCode);
             if (storeController.ModelState.ErrorCount != 0)

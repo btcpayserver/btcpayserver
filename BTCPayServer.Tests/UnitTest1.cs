@@ -51,8 +51,6 @@ using ExchangeSharp;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -2516,11 +2514,9 @@ namespace BTCPayServer.Tests
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
 
                 // Activating LNUrl, we should still have only 1 payment criteria that can be set.
-                user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge, setViewModel: vm =>
-                {
-                    vm.LNURLEnabled = true;
-                });
+                user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
                 var lnSettingsVm = await user.GetController<StoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModelAsync<LightningSettingsViewModel>();
+                lnSettingsVm.LNURLEnabled = true;
                 lnSettingsVm.LNURLStandardInvoiceEnabled = true;
                 Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().LightningSettings(lnSettingsVm).Result);
                 vm = user.GetController<StoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();

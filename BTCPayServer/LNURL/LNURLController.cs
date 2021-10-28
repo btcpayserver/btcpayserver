@@ -152,9 +152,16 @@ namespace BTCPayServer
             public class LightningAddressItem
             {
                 public string StoreId { get; set; }
+                [Display(Name = "Invoice currency")]
                 public string CurrencyCode { get; set; }
                 public string CryptoCode { get; set; }
+                
+                [Display(Name = "Min sats")]
+                [Range(1, double.PositiveInfinity)]
                 public decimal? Min { get; set; }
+                
+                [Display(Name = "Max sats")]
+                [Range(1, double.PositiveInfinity)]
                 public decimal? Max { get; set; }
             }
 
@@ -521,6 +528,7 @@ namespace BTCPayServer
                 await _settingsRepository.UpdateSetting(lightningAddressSettings);
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
+                    Severity = StatusMessageModel.StatusSeverity.Success,
                     Message = "Lightning address added successfully."
                 });
 

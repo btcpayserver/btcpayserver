@@ -6,27 +6,31 @@
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().StoreName);
 }
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary mb-2" role="button">
-    <span class="fa fa-plus"></span>
-    Add Address
-</a>
-<style>
+@section PageHeadContent {
+    <style>
         .settings-holder span:not(:last-child):after{
             content: " / ";
         }
     </style>
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-3 mb-sm-0">@ViewData["PageTitle"]</h2>
+    <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
+        <span class="fa fa-plus"></span>
+        Add Address
+    </a>
+</div>
 
 <form asp-action="EditLightningAddress" method="post">
-    
-     @{
-         
-         var show = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
+    @{
+        var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
+        var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || Model.Add?.Min != null || Model.Add?.Max != null;
      }
     
-    <div class="row collapse @(show? "show": "")" id="AddAddress">
-        <div class="form-group">
+    <div class="row collapse @(showAddForm ? "show": "")" id="AddAddress">
+        <div class="form-group pt-3">
             <label asp-for="Add.Username" class="form-label"></label>
             <div class="input-group">
                 <input asp-for="Add.Username" class="form-control"/>
@@ -34,41 +38,42 @@
             </div>
             <span asp-validation-for="Add.Username" class="text-danger"></span>
         </div>
-        <div class="form-group">
-    
-            <a class="mb-2" role="button" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings"><span class="fa fa-cogs">&nbsp</span>Advanced settings</a>
-        </div>
-        <div class="collapse " id="AdvancedSettings">
-    
-            <div class="form-group">
-                <label asp-for="Add.CurrencyCode" class="form-label">Invoice currency</label>
-                <input asp-for="Add.CurrencyCode" class="form-control"/>
-                <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <div class="input-group">
-                    <span class="input-group-text">min/max (sats)</span>
-                    <input type="number" min="1" asp-for="Add.Min" class="form-control">
-                    <input type="number" min="1" asp-for="Add.Max" class="form-control">
+        <a class="mb-3" role="button" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings">Advanced settings</a>
+        <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
+            <div class="row">
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.CurrencyCode" class="form-label"></label>
+                        <input asp-for="Add.CurrencyCode" class="form-control" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
+                    </div>
                 </div>
-                <span asp-validation-for="Add.Min" class="text-danger"></span>
-                <span asp-validation-for="Add.Max" class="text-danger"></span>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.Min" class="form-label"></label>
+                        <input asp-for="Add.Min" class="form-control" type="number" min="1" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.Min" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.Max" class="form-label"></label>
+                        <input asp-for="Add.Max" class="form-control" type="number" min="1" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.Max" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
         </div>
     
         <div class="form-group">
-    
-            <button type="submit" name="command" value="add" class="btn btn-primary btn-sm ms-2">Save</button>
+            <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
         </div>
     </div>
-    
     
     <table class="table table-hover">
         <thead>
         <tr>
-            <th>
-                Address
-            </th>
+            <th>Address</th>
             <th>Settings</th>
             <th class="text-end">Actions</th>
         </tr>
@@ -89,7 +94,7 @@
                     </div>
 
                 </td>
-                <td class="settings-holder">
+                <td class="settings-holder align-middle">
                     @if (Model.Items[index].Min.HasValue)
                     {
                         <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>

@@ -144,7 +144,7 @@ namespace BTCPayServer
             }
 
             public EditLightningAddressItem Add { get; set; }
-            public List<EditLightningAddressItem> Items { get; set; }
+            public List<EditLightningAddressItem> Items { get; set; } = new List<EditLightningAddressItem>();
         }
 
         public class LightningAddressSettings

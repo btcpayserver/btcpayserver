@@ -1416,7 +1416,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(s.StoreId);
             s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
             s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), true);
+            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
@@ -1424,7 +1424,7 @@ namespace BTCPayServer.Tests
             // Ensure the toggles are set correctly
             s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
             Assert.True(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
-            Assert.True(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
             s.CreateInvoice(store.storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
 

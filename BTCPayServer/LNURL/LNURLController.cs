@@ -173,7 +173,7 @@ namespace BTCPayServer
         [HttpGet("~/.well-known/lnurlp/{username}")]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
-            var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
                                            new LightningAddressSettings();
             if (!lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
             {
@@ -440,7 +440,7 @@ namespace BTCPayServer
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
-        public IActionResult EditLightningAddress(string storeId)
+        public async Task<IActionResult> EditLightningAddress(string storeId)
         {
             if (ControllerContext.HttpContext.GetStoreData().GetEnabledPaymentIds(_btcPayNetworkProvider).All(id => id.PaymentType != LNURLPayPaymentType.Instance))
             {
@@ -451,7 +451,7 @@ namespace BTCPayServer
                 });
                 return RedirectToAction("Payment", "Stores", new { storeId });
             }
-            var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>()  ??
                                            new LightningAddressSettings();
             if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
@@ -489,7 +489,7 @@ namespace BTCPayServer
                 {
                     return View(vm);
                 }
-                var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
                                                new LightningAddressSettings();
                 if (lightningAddressSettings.Items.ContainsKey(vm.Add.Username.ToLowerInvariant()))
                 {
@@ -529,7 +529,7 @@ namespace BTCPayServer
 
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                var lightningAddressSettings = _settingsRepository.GetSettingAsync<LightningAddressSettings>().Result ??
+                var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
                                                new LightningAddressSettings();
                 var index = int.Parse(
                     command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),

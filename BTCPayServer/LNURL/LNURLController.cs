@@ -478,9 +478,7 @@ namespace BTCPayServer
 
             return View(new EditLightningAddressVM
             {
-                Items = new List<EditLightningAddressVM.EditLightningAddressItem>
-                {
-                }
+                Items = new List<EditLightningAddressVM.EditLightningAddressItem>()
             });
         }
 
@@ -551,6 +549,7 @@ namespace BTCPayServer
                     await _settingsRepository.UpdateSetting(lightningAddressSettings);
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
+                        Severity = StatusMessageModel.StatusSeverity.Success,
                         Message = $"Lightning address {addressToRemove} removed successfully."
                     });
                 }

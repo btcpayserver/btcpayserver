@@ -15,6 +15,18 @@
     </style>
 }
 
+@section PageFootContent {
+    <script>
+        delegate('click', '.remove', event => { 
+            event.preventDefault() 
+            const { name, value } = event.target
+            const confirmButton = document.getElementById('ConfirmContinue')
+            confirmButton.setAttribute('name', name)
+            confirmButton.setAttribute('value', value)
+        })
+    </script>
+}
+
 <div class="d-sm-flex align-items-center justify-content-between mb-2">
     <h2 class="mb-3 mb-sm-0">@ViewData["PageTitle"]</h2>
     <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
@@ -110,7 +122,7 @@
                 </td>
                 <td class="text-end">
                     <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
-                            class="btn btn-link px-0">
+                            class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@address</strong> will be removed." data-confirm-input="REMOVE">
                         Remove
                     </button>
                 </td>
@@ -119,3 +131,5 @@
         </tbody>
     </table>
 </form>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))" />

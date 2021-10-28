@@ -1224,7 +1224,6 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSPrint()
         {
-
             using var s = SeleniumTester.Create();
             s.Server.ActivateLightning();
             await s.StartAsync();
@@ -1235,10 +1234,9 @@ namespace BTCPayServer.Tests
             var store = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
             s.GoToStore(store.storeId);
-            s.AddLightningNode("BTC", LightningConnectionType.CLightning, () =>
-            {
-                s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            }, false);
+            s.AddLightningNode("BTC", LightningConnectionType.CLightning, false);
+            s.Driver.FindElement(By.Id($"Modify-LightningBTC")).Click();
+            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.GoToApps();
             s.Driver.FindElement(By.Id("CreateNewApp")).Click();
             s.Driver.FindElement(By.Id("SelectedAppType")).Click();

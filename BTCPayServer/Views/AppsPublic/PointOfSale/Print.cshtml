@@ -45,10 +45,26 @@
                 <div class="card px-0" data-id="@x">
                     @if (!String.IsNullOrWhiteSpace(item.Image))
                     {
-                        <img class="card-img-top" src="@item.Image" alt="Card image cap" asp-append-version="true">
+                        <img class="card-img-top" src="@item.Image" asp-append-version="true">
                     }
                     @{CardBody(item.Title, item.Description);}
                     <div class="card-footer bg-transparent border-0 pb-3">
+                        <div class="w-100 pt-2 text-center text-muted">
+                            @switch (item.Price.Type)
+                            {
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup:
+                                    <span>Any amount</span>
+                                    break;
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum:
+                                    <span>@item.Price.Formatted minimum</span>
+                                    break;
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed:
+                                    @item.Price.Formatted
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                        </div>
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
                             if (supported != null)

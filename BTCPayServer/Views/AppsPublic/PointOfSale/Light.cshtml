@@ -3,6 +3,8 @@
     Layout = "_LayoutPos";
 }
 
+<partial name="_StatusMessage" />
+
 @if (Context.Request.Query.ContainsKey("simple"))
 {
     <partial name="/Views/AppsPublic/PointOfSale/MinimalLight.cshtml" model="Model" />

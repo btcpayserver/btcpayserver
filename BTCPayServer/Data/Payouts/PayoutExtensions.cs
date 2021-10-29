@@ -56,7 +56,9 @@ namespace BTCPayServer.Data
             this IEnumerable<IPayoutHandler> payoutHandlers, List<PaymentMethodId> paymentMethodIds = null)
         {
             return payoutHandlers.SelectMany(handler => handler.GetSupportedPaymentMethods())
-                .Where(id => paymentMethodIds is null || paymentMethodIds.Contains(id));
+                .Where(id => paymentMethodIds is null || paymentMethodIds.Contains(id) || 
+                             //TODO: Handle this condition in a cleaner way
+                             (id.PaymentType == LightningPaymentType.Instance && paymentMethodIds.Contains(new PaymentMethodId(id.CryptoCode, PaymentTypes.LNURLPay))));
         }
     }
 }

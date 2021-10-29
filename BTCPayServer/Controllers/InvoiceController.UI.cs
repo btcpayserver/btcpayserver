@@ -199,8 +199,9 @@ namespace BTCPayServer.Controllers
                 // TODO: What if no option?
                 var refund = new RefundModel();
                 refund.Title = "Select a payment method";
-                refund.AvailablePaymentMethods = new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())), "Value", "Text");
-                refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? invoice.GetBlob(_NetworkProvider).GetPaymentMethods().First().GetId().ToString();
+                refund.AvailablePaymentMethods = 
+                    new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())), "Value", "Text");
+                refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? options.First().ToString();
 
                 // Nothing to select, skip to next
                 if (refund.AvailablePaymentMethods.Count() == 1)

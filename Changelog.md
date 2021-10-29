@@ -1,8 +1,85 @@
 # Changelog
+## 1.3.0
+
+### Improvements:
+
+* Various Bootstrap related updates (#2785 #2841 #2870 #2893 #2915 #2932 #2957) @dennisreimann @dstrukt @bolatovumar 
+* Various GreenField API improvements (#2817 #2880 #2905 #2934) @bolatovumar @kukks @woutersamaey
+* PSBT UI improvements (#2713) @dennisreimann 
+* Revamp Theme system (#2794 #2927) @dennisreimann @dstrukt
+* Revamp confirmation modals (#2614) @dennisreimann @dstrukt
+* Unify Fido2 authentication under two-factor tab (#2866) @dennisreimann
+* Remove slack link (#2887) @dstrukt
+* Improve warning when creating invoice without wallet (#2844) @bolatovumar
+* Improve public LN node info (#2876) @dennisreimann
+* Adds social links to footer @1nF0rmed 
+* Switch to offcanvas navigation system @dennisreimann
+* Crowdfund public UI re-design (#2918 #2926 #2938) @dennisreimann
+* Remove Coinswitch entirely @kukks 
+* Improve display and structure of payment related configuration (#2945) @dennisreimann
+* Coin selection improvements (#2956) @dennisreimann
+* Add Passport hardware wallet option to the wallet import screens (#2962) @BitcoinQnA
+* Improve language dropdown UX (#2972 #2976) @dennisreimann @satwo
+* Add paging to pull payments list page (#2997) @kukks
+* Pull payments & Payouts moved to store from wallet pages (#2987) @kukks
+* Add number formatting in crowdfund app @bolatovumar
+* Improve the language dropdown of the checkout (#2971) @satwo
+* Validation of payment method criteria fails silently in keypad-only PoS (#2991) @satwo
+
+### New features:
+
+* Taproot support (#2830 #2837) @sageprogrammer @nicolasdorier
+* Specify default payment method through UI and Greenfield API (#2815 #2986) @bolatovumar @NicolasDorier
+* Disallow cancelling payment request when "Allow payee to create invoices in their own denomination" is not enabled (#2843) @bolatovumar
+* Support custom currencies for Pay button generator (#2896) @bolatovumar
+* Show total balance on wallets list (#2882) @maxdignan @dennisreimann
+* Greenfield: Payment Settled Webhook event (#2944) @kukks
+* Add ability to set invoice status from details page (#2923) @bolatovumar
+* Add ability to accept tips in POS terminal (#2983) @bolatovumar
+* Add ability to wipe all the transactions of a wallet for admins (#2857) @NicolasDorier
+* Allow User to delete own account (#2949)  @kukks
+* Allow email notifications when creating invoices from Web UI (#2959) @sipsorcery
+* Dev Cheat mode (#2672 #2965) @NicolasDorier @woutersamaey
+* Add support for CryptoMarket exchange rates (more accurate rates for Chilean Pesos, Brazilian Reals and Argentine Peso) @bolatovumar
+* Add support for rpio exchange rate (close #2960) @NicolasDorier
+* Greenfield: Provide negative undue when overpaid. (#2936) @kukks
+* Support topup invoices in apps (#2958) @kukks
+* Support Lightning in Pull Payments. (#2958) @kukks
+* Support LNURL and Lightning address in Pull Payments (#2958) @kukks
+* Add boolean overPaid to the invoice settled webhook @NicolasDorier
+* Ability to display and update the appname in crowdfund and PoS @satwo
+* Add ability to require refund email from app level @bolatovumar
+* Azerbaijan support for the checkout (Orkhan Guliyev)
+
+### Bug fixes:
+
+* Fix Summernote editor (#2829) @dennisreimann 
+* Fix topup invoices not created when payment method criteria specified (#2847) @bolatovumar 
+* Check for empty theme URI before saving theme settings (#2851) @bolatovumar 
+* Signing a transaction with too many inputs (around 500), should not timeout @nicolasdorier
+* Fix Vault issues: If signing took more than one minute, the connection to HWI would drop @nicolasdorier
+* Fix CSP issues (#2872 #2946 #2954) @nicolasdorier @dennisreimann  @bolatovumar 
+* Fix issues with Authorization Request page (#2894) @bolatovumar
+* Do not activate payment methods for non-new invoices @nicolasdorier
+* Fix camera not working on wallet send (Fix #2922) @nicolasdorier
+* Properly handle InvoiceMetadata string properties (Fix #2906) @NicolasDorier
+* fix: Plugins disabled message never dissappers even after re-enabling it. @kukks
+* Fix: Impossible to see relative time of transaction in wallet list @NicolasDorier
+* Fix bug: Importing seed with Is hot wallet checked was not working (#2966) @NicolasDorier
+* fix pos app logo (#2977) @satwo
+* Fix cryptic error message issue (#2978) @Bananenbieger123
+* Fix BIP21 pull payment support (#2985) @kukks
+* Fix: favicon wasn't shown if using rootpath @NicolasDorier
+* Fix: The redirect url of crowdfund invoices wasn't set correctly if rootpath is used @NicolasDorier
+* Fix: Many SVG assets were not showing properly if rootpath is used @NicolasDorier
+* Fix: Fonts and Home background not loading properly when using rootpath @NicolasDorier
+* If the local culture of the server was not english, numeric values greenfield were not properly interpreted @NicolasDorier
+* Default payment method settings was not working properly @satwo @NicolasDorier
+ * Fix scanning of animated QR codes (#3003) @dennisreimann
 
 ## 1.2.4
 
-Minor bug fixes release, update recommended for shared hosting.
+Minor bug fixes release, update recommended for shared hosting. (#2851)
 
 ### Bug fixes
 

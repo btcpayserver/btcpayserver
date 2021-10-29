@@ -24,6 +24,7 @@
 * Pull payments & Payouts moved to store from wallet pages (#2987) @kukks
 * Add number formatting in crowdfund app @bolatovumar
 * Improve the language dropdown of the checkout (#2971) @satwo
+* Validation of payment method criteria fails silently in keypad-only PoS (#2991) @satwo
 
 ### New features:
 

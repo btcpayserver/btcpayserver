@@ -35,7 +35,7 @@
 * Greenfield: Payment Settled Webhook event (#2944) @kukks
 * Add ability to set invoice status from details page (#2923) @bolatovumar
 * Add ability to accept tips in POS terminal (#2983) @bolatovumar
-* Replace pruning wallet by wipe transactions (#2857) @NicolasDorier
+* Add ability to wipe all the transactions of a wallet for admins (#2857) @NicolasDorier
 * Allow User to delete own account (#2949)  @kukks
 * Allow email notifications when creating invoices from Web UI (#2959) @sipsorcery
 * Dev Cheat mode (#2672 #2965) @NicolasDorier @woutersamaey

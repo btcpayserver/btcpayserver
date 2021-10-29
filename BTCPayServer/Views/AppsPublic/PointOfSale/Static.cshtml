@@ -33,12 +33,12 @@
                     <div class="card-footer bg-transparent border-0 pb-3">
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
-                            @if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)
+                            @if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>
                                         <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-                                        @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Value, item.Price.Value);}
+                                        @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
                                     </form>
                                 }
                                 else
@@ -78,7 +78,7 @@
                     @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
                     <div class="card-footer bg-transparent border-0 pb-3">
                         <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                            @{PayFormInputContent(Model.CustomButtonText);}
+                            @{PayFormInputContent(Model.CustomButtonText, ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum);}
                         </form>
                         @if (anyInventoryItems)
                         {
@@ -92,12 +92,12 @@
 </div>
 
 @functions {
-    private void PayFormInputContent(string buttonText, decimal? minPriceValue = null, decimal? priceValue = null)
+    private void PayFormInputContent(string buttonText,ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType itemPriceType, decimal? minPriceValue = null, decimal? priceValue = null)
     {
         <div class="input-group">
             <span class="input-group-text">@Model.CurrencySymbol</span>
             <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-            <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue">
+            <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue" readonly="@(itemPriceType == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)">
                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
         </div>
     }

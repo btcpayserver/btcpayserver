@@ -1292,7 +1292,7 @@ namespace BTCPayServer.Tests
                 var choice = webElement.GetAttribute("data-choice");
                 var lnurl = webElement.GetAttribute("href");
                 var parsed = LNURL.LNURL.Parse(lnurl, out _);
-                Assert.True(parsed.ToString().EndsWith(choice));
+                Assert.EndsWith(choice, parsed.ToString());
                 Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
             }
 

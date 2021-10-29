@@ -73,6 +73,7 @@
 * Fix: Fonts and Home background not loading properly when using rootpath @NicolasDorier
 * If the local culture of the server was not english, numeric values greenfield were not properly interpreted @NicolasDorier
 * Default payment method settings was not working properly @satwo @NicolasDorier
+ * Fix scanning of animated QR codes (#3003) @dennisreimann
 
 ## 1.2.4
 

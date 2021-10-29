@@ -3,7 +3,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Import {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"Import {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {

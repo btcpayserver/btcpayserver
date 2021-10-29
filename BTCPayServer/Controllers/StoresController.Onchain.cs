@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
-                return RedirectToAction(nameof(UpdateStore), new { storeId = vm.StoreId });
+                return RedirectToAction(nameof(PaymentMethods), new { storeId = vm.StoreId });
             }
             return ConfirmAddresses(vm, strategy);
         }
@@ -363,40 +363,111 @@ namespace BTCPayServer.Controllers
 
             TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
-            return RedirectToAction(nameof(UpdateStore), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
-        [HttpGet("{storeId}/onchain/{cryptoCode}/modify")]
-        public async Task<IActionResult> ModifyWallet(WalletSetupViewModel vm)
+        [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
+        public async Task<IActionResult> WalletSettings(string storeId, string cryptoCode)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
             }
 
-            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
             if (derivation == null)
             {
                 return NotFound();
             }
+            
+            var storeBlob = store.GetStoreBlob();
+            (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
 
-            var (hotWallet, rpcImport) = await CanUseHotWallet();
-
-            vm.CanUseHotWallet = hotWallet;
-            vm.CanUseRPCImport = rpcImport;
-            vm.Network = network;
-            vm.Source = derivation.Source;
-            vm.RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString();
-            vm.DerivationScheme = derivation.AccountDerivation.ToString();
-            vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
-            vm.Config = ProtectString(derivation.ToJson());
-            vm.IsHotWallet = derivation.IsHotWallet;
+            var vm = new WalletSettingsViewModel
+                {
+                    StoreId = storeId,
+                    CryptoCode = cryptoCode,
+                    Network = network,
+                    Source = derivation.Source,
+                    RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString(),
+                    DerivationScheme = derivation.AccountDerivation.ToString(),
+                    KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString(),
+                    Config = ProtectString(derivation.ToJson()),
+                    IsHotWallet = derivation.IsHotWallet,
+                    PayJoinEnabled = storeBlob.PayJoinEnabled,
+                    MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
+                    SpeedPolicy = store.SpeedPolicy,
+                    ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+                    RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+                    CanUseHotWallet = canUseHotWallet, 
+                    CanUseRPCImport = rpcImport, 
+                    CanUsePayJoin = canUseHotWallet && store
+                        .GetSupportedPaymentMethods(_NetworkProvider)
+                        .OfType<DerivationSchemeSettings>()
+                        .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet)
+                };
 
             ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
             ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
             
             return View(vm);
+        }
+        
+        [HttpPost("{storeId}/onchain/{cryptoCode}/settings")]
+        public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
+        {
+            bool needUpdate = false;
+            if (CurrentStore.SpeedPolicy != vm.SpeedPolicy)
+            {
+                needUpdate = true;
+                CurrentStore.SpeedPolicy = vm.SpeedPolicy;
+            }
+
+            var blob = CurrentStore.GetStoreBlob();
+            
+            blob.MonitoringExpiration = TimeSpan.FromMinutes(vm.MonitoringExpiration);
+            blob.ShowRecommendedFee = vm.ShowRecommendedFee;
+            blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
+            
+            var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
+            blob.PayJoinEnabled = vm.PayJoinEnabled;
+            if (CurrentStore.SetStoreBlob(blob))
+            {
+                needUpdate = true;
+            }
+
+            if (needUpdate)
+            {
+                await _Repo.UpdateStore(CurrentStore);
+
+                TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
+
+                if (payjoinChanged && blob.PayJoinEnabled)
+                {
+                    var problematicPayjoinEnabledMethods = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
+                        .OfType<DerivationSchemeSettings>()
+                        .Where(settings => settings.Network.SupportPayJoin && !settings.IsHotWallet)
+                        .Select(settings => settings.PaymentId.CryptoCode)
+                        .ToArray();
+
+                    if (problematicPayjoinEnabledMethods.Any())
+                    {
+                        TempData.Remove(WellKnownTempData.SuccessMessage);
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Warning,
+                            Html = $"The payment settings were updated successfully. However, payjoin will not work for {string.Join(", ", problematicPayjoinEnabledMethods)} until you configure them to be a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
+                        });
+                    }
+                }
+            }
+
+            return RedirectToAction(nameof(WalletSettings), new
+            {
+                storeId = vm.StoreId,
+                cryptoCode = vm.CryptoCode
+            });
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
@@ -488,7 +559,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"{network.CryptoCode} on-chain payments are now {(enabled ? "enabled" : "disabled")} for this store.";
 
-            return RedirectToAction(nameof(UpdateStore), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
@@ -515,7 +586,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"On-Chain payment for {network.CryptoCode} has been removed.";
 
-            return RedirectToAction(nameof(UpdateStore), new { storeId });
+            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)

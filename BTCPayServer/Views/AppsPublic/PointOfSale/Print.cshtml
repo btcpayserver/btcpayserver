@@ -1,0 +1,122 @@
+@using BTCPayServer.Models.AppViewModels
+@using BTCPayServer.Payments.Lightning
+@using LNURL
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
+
+@{
+    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+    Layout = "_LayoutPos";
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
+    var supported = Model.Store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
+    if (supported != null && !Model.Store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+    {
+        supported = null;
+    }
+    
+    
+}
+@if (supported is null)
+{
+    <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
+        LNURL is not enabled on your store, which this print feature relies on.
+    </div>
+}
+<div class="container d-flex h-100">
+    <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100 m-auto">
+        <partial name="_StatusMessage" />
+
+        <h1 class="mb-4">@Model.Title</h1>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="row">
+                <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
+            </div>
+        }
+        <div class="card-deck my-3 mx-auto">
+            @for (int x = 0; x < Model.Items.Length; x++)
+            {
+                var item = Model.Items[x];
+                var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                buttonText = buttonText.Replace("{0}",item.Price.Formatted)
+                    ?.Replace("{Price}",item.Price.Formatted);
+                
+                <div class="card px-0" data-id="@x">
+                    @if (!String.IsNullOrWhiteSpace(item.Image))
+                    {
+                        <img class="card-img-top" src="@item.Image" asp-append-version="true">
+                    }
+                    @{CardBody(item.Title, item.Description);}
+                    <div class="card-footer bg-transparent border-0 pb-3">
+                        <div class="w-100 pt-2 text-center text-muted">
+                            @switch (item.Price.Type)
+                            {
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup:
+                                    <span>Any amount</span>
+                                    break;
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum:
+                                    <span>@item.Price.Formatted minimum</span>
+                                    break;
+                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed:
+                                    @item.Price.Formatted
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                        </div>
+                        @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
+                        {
+                            if (supported != null)
+                            {
+                                var lnurlEndpoint = new Uri(Url.Action("GetLNURLForApp", "LNURL", new
+                                {
+                                    cryptoCode = supported.CryptoCode,
+                                    appid = Model.AppId,
+                                    ItemCode = item.Id
+                                }, Context.Request.Scheme, Context.Request.Host.ToString()));
+                                var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
+                                <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()"></vc:qr-code>
+
+                                <a href="@lnUrl" class="btn btn-secondary d-print-none w-100 mt-2 lnurl" data-choice="@item.Id" rel="noreferrer noopener">
+                                    Open in wallet
+                                </a>
+                            }
+                        }
+                        @if (item.Inventory.HasValue)
+                        {
+
+                            <div class="w-100 pt-2 text-center text-muted">
+                                @if (item.Inventory > 0)
+                                {
+                                    <span>@item.Inventory left</span>
+                                }
+                                else
+                                {
+                                    <span>Sold out</span>
+                                }
+                            </div>
+                        }
+                        else if (anyInventoryItems)
+                        {
+                            <div class="w-100 pt-2">&nbsp;</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private void CardBody(string title, string description)
+    {
+        <div class="card-body my-auto pb-0">
+            <h5 class="card-title">@title</h5>
+            @if (!String.IsNullOrWhiteSpace(description))
+            {
+                <p class="card-text">@Safe.Raw(description)</p>
+            }
+        </div>
+    }
+}

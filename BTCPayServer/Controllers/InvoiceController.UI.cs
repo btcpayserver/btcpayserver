@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = store.Id,
                 StoreName = store.StoreName,
-                StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
+                StoreLink = Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
                 State = invoiceState.ToString(),
@@ -847,7 +847,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id })}' class='alert-link'>set up your wallet</a> first",
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id })}' class='alert-link'>set up your wallet</a> first",
                     AllowDismiss = false
                 });
                 return View(model);

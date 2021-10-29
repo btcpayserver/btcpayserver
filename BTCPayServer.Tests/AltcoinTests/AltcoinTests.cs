@@ -26,6 +26,7 @@ using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
+using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettingsViewModel;
 
 namespace BTCPayServer.Tests
 {
@@ -76,10 +77,10 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(response);
 
                 // Get enabled state from overview action
-                StoreViewModel storeModel;
-                response = controller.UpdateStore();
-                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
-                var lnNode = storeModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
+                PaymentMethodsViewModel paymentMethodsModel;
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                var lnNode = paymentMethodsModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
                 Assert.NotNull(lnNode);
                 Assert.False(lnNode.Enabled);
 
@@ -89,18 +90,18 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewResult>(response);
 
                 // Get enabled state from overview action
-                response = controller.UpdateStore();
-                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
-                var derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                var derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);
                 Assert.True(derivationScheme.Enabled);
 
                 // Disable wallet
                 response = controller.SetWalletEnabled(storeId, cryptoCode, false).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.UpdateStore();
-                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
-                derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                response = controller.PaymentMethods();
+                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
+                derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
                 Assert.NotNull(derivationScheme);
                 Assert.False(derivationScheme.Enabled);
 
@@ -138,9 +139,9 @@ namespace BTCPayServer.Tests
                 Assert.True(setupVm.Confirmation);
                 response = await controller.UpdateWallet(setupVm);
                 Assert.IsType<RedirectToActionResult>(response);
-                response = await controller.ModifyWallet(new WalletSetupViewModel { StoreId = storeId, CryptoCode = cryptoCode });
-                setupVm = (WalletSetupViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.Equal("CoboVault", setupVm.Source);
+                response = await controller.WalletSettings(storeId, cryptoCode);
+                var settingsVm = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.Equal("CoboVault", settingsVm.Source);
 
                 // wasabi wallet file
                 content = "{\r\n  \"EncryptedSecret\": \"6PYWBQ1zsukowsnTNA57UUx791aBuJusm7E4egXUmF5WGw3tcdG3cmTL57\",\r\n  \"ChainCode\": \"waSIVbn8HaoovoQg/0t8IS1+ZCxGsJRGFT21i06nWnc=\",\r\n  \"MasterFingerprint\": \"7a7563b5\",\r\n  \"ExtPubKey\": \"xpub6CEqRFZ7yZxCFXuEWZBAdnC8bdvu9SRHevaoU2SsW9ZmKhrCShmbpGZWwaR15hdLURf8hg47g4TpPGaqEU8hw5LEJCE35AUhne67XNyFGBk\",\r\n  \"PasswordVerified\": false,\r\n  \"MinGapLimit\": 21,\r\n  \"AccountKeyPath\": \"84'/0'/0'\",\r\n  \"BlockchainState\": {\r\n    \"Network\": \"RegTest\",\r\n    \"Height\": \"0\"\r\n  },\r\n  \"HdPubKeys\": []\r\n}";
@@ -149,9 +150,9 @@ namespace BTCPayServer.Tests
                 Assert.True(setupVm.Confirmation);
                 response = await controller.UpdateWallet(setupVm);
                 Assert.IsType<RedirectToActionResult>(response);
-                response = await controller.ModifyWallet(new WalletSetupViewModel { StoreId = storeId, CryptoCode = cryptoCode });
-                setupVm = (WalletSetupViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.Equal("WasabiFile", setupVm.Source);
+                response = await controller.WalletSettings(storeId, cryptoCode);
+                settingsVm = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.Equal("WasabiFile", settingsVm.Source);
 
                 // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
                 content = "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
@@ -166,9 +167,9 @@ namespace BTCPayServer.Tests
                 Assert.True(setupVm.Confirmation);
                 response = await controller.UpdateWallet(setupVm);
                 Assert.IsType<RedirectToActionResult>(response);
-                response = await controller.ModifyWallet(new WalletSetupViewModel { StoreId = storeId, CryptoCode = cryptoCode });
-                setupVm = (WalletSetupViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.Equal("ElectrumFile", setupVm.Source);
+                response = await controller.WalletSettings(storeId, cryptoCode);
+                settingsVm = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.Equal("ElectrumFile", settingsVm.Source);
 
                 // Now let's check that no data has been lost in the process
                 var store = tester.PayTester.StoreRepository.FindStore(storeId).GetAwaiter().GetResult();

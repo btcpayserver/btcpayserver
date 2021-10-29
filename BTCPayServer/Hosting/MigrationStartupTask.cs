@@ -192,7 +192,7 @@ namespace BTCPayServer.Hosting
         private async Task MigrateAppCustomOption()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            foreach (var app in await ctx.Apps.AsQueryable().ToArrayAsync())
+            foreach (var app in await ctx.Apps.Include(data => data.StoreData).AsQueryable().ToArrayAsync())
             {
                 ViewPointOfSaleViewModel.Item[] items;
                 string newTemplate;
@@ -200,6 +200,11 @@ namespace BTCPayServer.Hosting
                 {
                     case nameof(AppType.Crowdfund):
                         var settings1 = app.GetSettings<CrowdfundSettings>();
+                        if (string.IsNullOrEmpty(settings1.TargetCurrency))
+                        {
+                            settings1.TargetCurrency = app.StoreData.GetStoreBlob().DefaultCurrency;
+                            app.SetSettings(settings1);
+                        }
                         items = _appService.Parse(settings1.PerksTemplate, settings1.TargetCurrency);
                         newTemplate = _appService.SerializeTemplate(items);
                         if (settings1.PerksTemplate != newTemplate)
@@ -212,6 +217,11 @@ namespace BTCPayServer.Hosting
                     case nameof(AppType.PointOfSale):
                         
                         var settings2 = app.GetSettings<AppsController.PointOfSaleSettings>();
+                        if (string.IsNullOrEmpty(settings2.Currency))
+                        {
+                            settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;
+                            app.SetSettings(settings2);
+                        }
                         items = _appService.Parse(settings2.Template, settings2.Currency);
                         newTemplate = _appService.SerializeTemplate(items);
                         if (settings2.Template != newTemplate)

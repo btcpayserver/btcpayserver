@@ -3,11 +3,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
@@ -16,10 +16,8 @@ using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
-using Microsoft.EntityFrameworkCore.Internal;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using OpenQA.Selenium.Support.UI;
 
@@ -90,6 +88,7 @@ namespace BTCPayServer.Tests
             GoToRegister();
             Driver.AssertNoError();
         }
+        
         /// <summary>
         /// Use this ServerUri when trying to browse with selenium
         /// Because for some reason, the selenium container can't resolve the tests container domain name
@@ -139,7 +138,9 @@ namespace BTCPayServer.Tests
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
+            Driver.FindElement(By.Id($"Nav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
+            Driver.FindElement(By.Id($"Nav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -215,9 +216,14 @@ namespace BTCPayServer.Tests
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null, Action beforeEnable = null, bool test = true)
+        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null, bool test = true)
         {
             Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+
+            if (Driver.PageSource.Contains("id=\"SetupLightningNodeLink\""))
+            {
+                Driver.FindElement(By.Id($"SetupLightningNodeLink")).Click();
+            }
 
             var connectionString = connectionType switch
             {
@@ -246,12 +252,8 @@ namespace BTCPayServer.Tests
                     Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
                 }
             }
-            beforeEnable?.Invoke();
 
             Driver.FindElement(By.Id("save")).Click();
-            //soemtimes selenium slows down and misses a beat
-            if(FindAlertMessage().Text == "Connection to the Lightning node successful.")
-                Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
@@ -314,21 +316,24 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
         }
-
+        public void GoToApps()
+        {
+            Driver.FindElement(By.Id("Apps")).Click();
+        }
         public void GoToStores()
         {
             Driver.FindElement(By.Id("Stores")).Click();
         }
 
-        public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)
+        public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
             GoToHome(); 
             Driver.WaitForAndClick(By.Id("Stores"));
             Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
 
-            if (storeNavPage != StoreNavPages.Index)
+            if (storeNavPage != StoreNavPages.PaymentMethods)
             {
-                Driver.FindElement(By.Id(storeNavPage.ToString())).Click();
+                Driver.FindElement(By.Id($"Nav-{storeNavPage.ToString()}")).Click();
             }
         }
 

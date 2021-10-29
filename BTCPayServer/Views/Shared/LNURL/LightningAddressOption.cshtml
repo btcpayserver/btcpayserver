@@ -1,0 +1,33 @@
+@using BTCPayServer.Payments.Lightning
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@{
+    var store = Context.GetStoreData();
+    var possible = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().Any(type => type.CryptoCode == "BTC");
+}
+<li class="list-group-item bg-tile" id="lightning-address-option">
+    <div class="d-flex align-items-center">
+        <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
+            <strong class="me-3">
+                Lightning Address
+                <a href="https://lightningaddress.com/" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                </a>
+            </strong>
+        </span>
+        <span class="d-flex align-items-center fw-semibold">
+            @if (possible)
+            {
+                <a id="lightning-address-setup-link" class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                    Setup
+                </a>
+            }
+            else
+            {
+                <span class="d-flex align-items-center text-danger">
+                    <span class="me-2 btcpay-status btcpay-status--disabled"></span>
+                    You need LNURL configured first.
+                </span>
+            }
+        </span>
+    </div>
+</li>

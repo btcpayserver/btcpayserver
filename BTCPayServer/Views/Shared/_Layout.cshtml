@@ -20,6 +20,8 @@
 
 @functions {
     // The .NET function for inserting classes requires this to be async
+    // ReSharper disable once CSharpWarnings::CS1998
+#pragma warning disable CS1998
     private async Task Logo(string classes = "")
     {
         <a href="~/" class="navbar-brand py-2 js-scroll-trigger @classes">
@@ -30,6 +32,7 @@
             }
         </a>
     }
+#pragma warning restore CS1998
 }
 
 <!DOCTYPE html>

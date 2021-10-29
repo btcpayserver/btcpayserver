@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
-            return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
+            return RedirectToAction(nameof(StoresController.PaymentMethods), "Stores", new
             {
                 storeId = store.Id
             });

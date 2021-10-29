@@ -78,7 +78,7 @@
                                 <td>
                                     @if (app.IsOwner)
                                     {
-                                        <span><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@app.StoreId">@app.StoreName</a></span>
+                                        <span><a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@app.StoreId">@app.StoreName</a></span>
                                     }
                                     else
                                     {

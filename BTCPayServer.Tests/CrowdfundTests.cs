@@ -163,7 +163,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 await user.SetNetworkFeeMode(NetworkFeeMode.Never);
                 var apps = user.GetController<AppsController>();

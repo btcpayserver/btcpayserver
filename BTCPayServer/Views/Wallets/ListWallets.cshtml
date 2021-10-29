@@ -46,7 +46,7 @@
                                 <tr>
                                     @if (wallet.IsOwner)
                                     {
-                                        <td><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
+                                        <td><a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
                                     }
                                     else
                                     {

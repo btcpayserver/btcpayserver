@@ -131,7 +131,14 @@ namespace BTCPayServer.Tests
             var element = driver.FindElement(selector);
             if ((value && !element.Selected) || (!value && element.Selected))
             {
-                driver.WaitForAndClick(selector);
+                try
+                {
+                    driver.WaitForAndClick(selector);
+                }
+                catch (ElementClickInterceptedException)
+                {
+                    element.SendKeys(" ");
+                }
             }
 
             if (value != element.Selected)

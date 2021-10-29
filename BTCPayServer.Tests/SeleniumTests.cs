@@ -1218,7 +1218,50 @@ namespace BTCPayServer.Tests
                 Assert.Contains(bolt, s.Driver.PageSource);
             }
         }
-        
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePOSPrint()
+        {
+            using var s = SeleniumTester.Create();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+
+            await s.Server.EnsureChannelsSetup();
+
+            s.RegisterNewUser(true);
+            var store = s.CreateNewStore();
+            var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
+            s.GoToStore(store.storeId);
+            s.AddLightningNode("BTC", LightningConnectionType.CLightning, false);
+            s.Driver.FindElement(By.Id($"Modify-LightningBTC")).Click();
+            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
+            s.GoToApps();
+            s.Driver.FindElement(By.Id("CreateNewApp")).Click();
+            s.Driver.FindElement(By.Id("SelectedAppType")).Click();
+            s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.Driver.FindElement(By.Id("DefaultView")).Click();
+            s.Driver.FindElement(By.CssSelector("option[value='3']")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            var btns = s.Driver.FindElements(By.ClassName("lnurl"));
+            foreach (IWebElement webElement in btns)
+            {
+                var choice = webElement.GetAttribute("data-choice");
+                var lnurl = webElement.GetAttribute("href");
+                var parsed = LNURL.LNURL.Parse(lnurl, out _);
+                Assert.True(parsed.ToString().EndsWith(choice));
+                Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
+            }
+
+        }
+
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]

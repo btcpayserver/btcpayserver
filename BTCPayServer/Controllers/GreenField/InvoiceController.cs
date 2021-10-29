@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromQuery] 
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
             DateTimeOffset? endDate = null,
-            string textSearch = null,
+            [FromQuery] string textSearch = null,
             [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();

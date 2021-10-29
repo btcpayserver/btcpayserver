@@ -211,7 +211,7 @@ namespace BTCPayServer.Controllers
             }
             
             var lnurl = GetExistingLNURLSupportedPaymentMethod(vm.CryptoCode, store);
-            if (lnurl != null && (
+            if (lnurl is null || (
                 lnurl.EnableForStandardInvoices != vm.LNURLStandardInvoiceEnabled || 
                 lnurl.UseBech32Scheme != vm.LNURLBech32Mode || 
                 lnurl.LUD12Enabled != vm.LUD12Enabled))

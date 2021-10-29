@@ -63,6 +63,12 @@ namespace BTCPayServer.Controllers
                 })
                 .ToListAsync();
             model.Total = await usersQuery.CountAsync();
+
+            foreach (UsersViewModel.UserViewModel uvm in model.Users)
+            {
+                var userId = await _UserManager.FindByIdAsync(uvm.Id);
+                uvm.IsAdmin = await _userService.IsAdminUser(userId);;
+            }
              
             return View(model);
         }

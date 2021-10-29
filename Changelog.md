@@ -22,6 +22,8 @@
 * Improve language dropdown UX (#2972 #2976) @dennisreimann @satwo
 * Add paging to pull payments list page (#2997) @kukks
 * Pull payments & Payouts moved to store from wallet pages (#2987) @kukks
+* Add number formatting in crowdfund app @bolatovumar
+* Improve the language dropdown of the checkout (#2971) @satwo
 
 ### New features:
 
@@ -36,17 +38,23 @@
 * Allow User to delete own account (#2949)  @kukks
 * Allow email notifications when creating invoices from Web UI (#2959) @sipsorcery
 * Dev Cheat mode (#2672 #2965) @NicolasDorier @woutersamaey
+* Add support for CryptoMarket exchange rates (more accurate rates for Chilean Pesos, Brazilian Reals and Argentine Peso) @bolatovumar
 * Add support for rpio exchange rate (close #2960) @NicolasDorier
 * Greenfield: Provide negative undue when overpaid. (#2936) @kukks
 * Support topup invoices in apps (#2958) @kukks
 * Support Lightning in Pull Payments. (#2958) @kukks
 * Support LNURL and Lightning address in Pull Payments (#2958) @kukks
+* Add boolean overPaid to the invoice settled webhook @NicolasDorier
+* Ability to display and update the appname in crowdfund and PoS @satwo
+* Add ability to require refund email from app level @bolatovumar
+
 ### Bug fixes:
 
 * Fix Summernote editor (#2829) @dennisreimann 
 * Fix topup invoices not created when payment method criteria specified (#2847) @bolatovumar 
 * Check for empty theme URI before saving theme settings (#2851) @bolatovumar 
-* Fix HWI issues (Vault) @nicolasdorier
+* Signing a transaction with too many inputs (around 500), should not timeout @nicolasdorier
+* Fix Vault issues: If signing took more than one minute, the connection to HWI would drop @nicolasdorier
 * Fix CSP issues (#2872 #2946 #2954) @nicolasdorier @dennisreimann  @bolatovumar 
 * Fix issues with Authorization Request page (#2894) @bolatovumar
 * Do not activate payment methods for non-new invoices @nicolasdorier
@@ -58,6 +66,12 @@
 * fix pos app logo (#2977) @satwo
 * Fix cryptic error message issue (#2978) @Bananenbieger123
 * Fix BIP21 pull payment support (#2985) @kukks
+* Fix: favicon wasn't shown if using rootpath @NicolasDorier
+* Fix: The redirect url of crowdfund invoices wasn't set correctly if rootpath is used @NicolasDorier
+* Fix: Many SVG assets were not showing properly if rootpath is used @NicolasDorier
+* Fix: Fonts and Home background not loading properly when using rootpath @NicolasDorier
+* If the local culture of the server was not english, numeric values greenfield were not properly interpreted @NicolasDorier
+* Default payment method settings was not working properly @satwo @NicolasDorier
 
 ## 1.2.4
 

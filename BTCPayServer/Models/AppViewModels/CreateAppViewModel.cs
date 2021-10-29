@@ -21,7 +21,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         [MaxLength(50)]
         [MinLength(1)]
-        public string Name { get; set; }
+        public string AppName { get; set; }
 
         [Display(Name = "Store")]
         public string SelectedStore { get; set; }

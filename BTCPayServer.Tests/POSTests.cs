@@ -29,7 +29,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
-                vm.Name = "test";
+                vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
                 Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
                 var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model)

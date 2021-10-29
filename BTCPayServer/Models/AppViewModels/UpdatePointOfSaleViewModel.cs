@@ -10,9 +10,16 @@ namespace BTCPayServer.Models.AppViewModels
     {
         public string StoreId { get; set; }
         public string StoreName { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        [MinLength(1)]
+        [Display(Name = "App Name")]
+        public string AppName { get; set; }
 
         [Required]
         [MaxLength(30)]
+        [Display(Name = "Display Title")]
         public string Title { get; set; }
         [MaxLength(5)]
         public string Currency { get; set; }

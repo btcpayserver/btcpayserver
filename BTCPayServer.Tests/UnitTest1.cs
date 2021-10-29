@@ -2944,8 +2944,8 @@ namespace BTCPayServer.Tests
                 var apps2 = user2.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 Assert.NotNull(vm.SelectedAppType);
-                Assert.Null(vm.Name);
-                vm.Name = "test";
+                Assert.Null(vm.AppName);
+                vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
                 var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
                 Assert.Equal(nameof(apps.UpdatePointOfSale), redirectToAction.ActionName);

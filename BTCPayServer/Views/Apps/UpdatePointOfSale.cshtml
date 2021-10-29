@@ -1,4 +1,4 @@
-@using BTCPayServer.Services.Apps
+﻿@using BTCPayServer.Services.Apps
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
@@ -8,14 +8,19 @@
     <div class="container">
         <partial name="_StatusMessage" />
 
-        <h2 class="mb-4">@ViewData["PageTitle"]</h2>
+    <h2 class="mb-4">@ViewData["PageTitle"] - @Model.AppName</h2>
 
-        <form method="post">
+    <form method="post">
             <input type="hidden" asp-for="StoreId" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="row">
                 <div class="col-lg-6">
+                    <div class="form-group">
+                        <label asp-for="AppName" class="form-label" data-required></label>
+                        <input asp-for="AppName" class="form-control" required />
+                        <span asp-validation-for="AppName" class="text-danger"></span>
+                    </div>
                     <div class="form-group">
                         <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />

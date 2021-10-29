@@ -187,6 +187,9 @@ namespace BTCPayServer
                     Checkout = new InvoiceDataBase.CheckoutOptions
                     {
                         PaymentMethods = new[] { pmi.ToStringNormalized() },
+                        Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
+                            ? blob.InvoiceExpiration
+                            : TimeSpan.FromMinutes(2)
                     },
                     Currency = currencyCode,
                     Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,

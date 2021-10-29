@@ -75,7 +75,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             catch (FormatException)
             {
             }
-            catch (HttpRequestException)
+            catch
             {
                 return (null, "The LNURL / Lightning Address provided was not online.");
             }

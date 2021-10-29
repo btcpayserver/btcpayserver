@@ -252,7 +252,7 @@ namespace BTCPayServer
                     },
                     Currency = currencyCode,
                     Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
-                }, store, Request.GetAbsoluteUri(""), additionalTags);
+                }, store, Request.GetAbsoluteRoot(), additionalTags);
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);

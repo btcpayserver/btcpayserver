@@ -236,7 +236,14 @@ namespace BTCPayServer.Controllers
                 case RefundSteps.SelectPaymentMethod:
                     model.RefundStep = RefundSteps.SelectRate;
                     model.Title = "What to refund?";
-                    var paymentMethod = invoice.GetPaymentMethods()[paymentMethodId];
+                    var pms = invoice.GetPaymentMethods();
+                    var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
+                    
+                    //TODO: Make this clean
+                    if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
+                    {
+                        paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
+                    }
                     var cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
                     var paidCurrency =
                         Math.Round(cryptoPaid * paymentMethod.Rate,
@@ -335,7 +342,7 @@ namespace BTCPayServer.Controllers
             var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Wallet > Manage > Payouts.",
+                Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken: cancellationToken)).CurrentRefundId = ppId;

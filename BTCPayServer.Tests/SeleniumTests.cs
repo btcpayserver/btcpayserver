@@ -1509,12 +1509,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("lightning-address-option"))
                 .FindElement(By.ClassName("btcpay-status--disabled"));
 
-            s.GoToStore(s.StoreId, StoreNavPages.Index);
-            s.AddLightningNode("BTC", LightningConnectionType.LndREST, () =>
-            {
-                s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            }, false);
+            s.GoToStore(s.StoreId, StoreNavPages.PaymentMethods);
+            s.AddLightningNode("BTC", LightningConnectionType.LndREST, false);
 
+            s.Driver.FindElement(By.Id($"Modify-LightningBTC")).Click();
+            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
+            s.Driver.WaitForAndClick(By.Id("save"));
+            Assert.Contains($"BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
+            
             s.GoToStore(s.StoreId, StoreNavPages.Integrations);
             s.Driver.FindElement(By.Id("lightning-address-option"))
                 .FindElement(By.Id("lightning-address-setup-link")).Click();
@@ -1523,7 +1525,7 @@ namespace BTCPayServer.Tests
             var lnaddress1 = Guid.NewGuid().ToString();
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress1);
             s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
 
             s.Driver.ToggleCollapse("AddAddress");
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress1);
@@ -1539,7 +1541,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Add_Min")).SendKeys("2");
             s.Driver.FindElement(By.Id("Add_Max")).SendKeys("10");
             s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
 
             var addresses = s.Driver.FindElements(By.ClassName("lightning-address-value"));
             Assert.Equal(2, addresses.Count);

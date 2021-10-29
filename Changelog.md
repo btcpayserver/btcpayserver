@@ -47,6 +47,7 @@
 * Add boolean overPaid to the invoice settled webhook @NicolasDorier
 * Ability to display and update the appname in crowdfund and PoS @satwo
 * Add ability to require refund email from app level @bolatovumar
+* Azerbaijan support for the checkout (Orkhan Guliyev)
 
 ### Bug fixes:
 

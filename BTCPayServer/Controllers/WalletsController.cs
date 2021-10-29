@@ -32,6 +32,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
+using WalletSettingsViewModel = BTCPayServer.Models.WalletViewModels.WalletSettingsViewModel;
 
 namespace BTCPayServer.Controllers
 {

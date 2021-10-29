@@ -201,7 +201,7 @@ namespace BTCPayServer.Tests
                         var receiverUser = tester.NewAccount();
                         receiverUser.GrantAccess(true);
                         receiverUser.RegisterDerivationScheme("BTC", receiverAddressType, true);
-                        await receiverUser.EnablePayJoin();
+                        await receiverUser.ModifyWalletSettings(p => p.PayJoinEnabled = true);
                         var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
                         string errorCode = receiverAddressType == senderAddressType ? null : "unavailable|any UTXO available";
@@ -290,9 +290,10 @@ namespace BTCPayServer.Tests
 
                 foreach (var format in new []{ScriptPubKeyType.Segwit, ScriptPubKeyType.SegwitP2SH})
                 {
+                    var cryptoCode = "BTC";
                     var receiver = s.CreateNewStore();
-                    var receiverSeed = s.GenerateWallet("BTC", "", true, true, format);
-                    var receiverWalletId = new WalletId(receiver.storeId, "BTC");
+                    var receiverSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                    var receiverWalletId = new WalletId(receiver.storeId, cryptoCode);
 
                     //payjoin is enabled by default.
                     var invoiceId = s.CreateInvoice(receiver.storeName);
@@ -302,12 +303,13 @@ namespace BTCPayServer.Tests
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                     s.GoToHome();
-                    s.GoToStore(receiver.storeId, StoreNavPages.Payment);
+                    s.GoToStore(receiver.storeId);
+                    s.Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                     var sender = s.CreateNewStore();
-                    var senderSeed = s.GenerateWallet("BTC", "", true, true, format);
-                    var senderWalletId = new WalletId(sender.storeId, "BTC");
+                    var senderSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                    var senderWalletId = new WalletId(sender.storeId, cryptoCode);
                     await s.Server.ExplorerNode.GenerateAsync(1);
                     await s.FundStoreWallet(senderWalletId);
 
@@ -571,7 +573,7 @@ namespace BTCPayServer.Tests
                 address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
                 tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
                 await notifications.NextEventAsync();
-                await bob.ModifyPayment(p => p.PayJoinEnabled = true);
+                await bob.ModifyWalletSettings(p => p.PayJoinEnabled = true);
                 var invoice = bob.BitPay.CreateInvoice(
                     new Invoice { Price = 0.1m, Currency = "BTC", FullNotifications = true });
                 var invoiceBIP21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
@@ -660,7 +662,7 @@ namespace BTCPayServer.Tests
                 var receiverUser = tester.NewAccount();
                 receiverUser.GrantAccess(true);
                 receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
-                await receiverUser.EnablePayJoin();
+                await receiverUser.ModifyWalletSettings(p => p.PayJoinEnabled = true);
                 var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
                 string lastInvoiceId = null;
 
@@ -857,7 +859,7 @@ retry:
                 receiverUser.GrantAccess(true);
                 receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
-                await receiverUser.EnablePayJoin();
+                await receiverUser.ModifyWalletSettings(p => p.PayJoinEnabled = true);
                 // payjoin is enabled, with a segwit wallet, and the keys are available in nbxplorer
                 invoice = receiverUser.BitPay.CreateInvoice(
                     new Invoice() { Price = 0.02m, Currency = "BTC", FullNotifications = true });

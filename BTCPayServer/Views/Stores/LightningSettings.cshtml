@@ -1,0 +1,104 @@
+@model LightningSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().StoreName);
+}
+
+<div class="row">
+    <div class="col-lg-10 col-xl-9">
+        <div class="mb-5">
+            <h4 class="mb-3">@ViewData["Title"]</h4>
+            <table class="table table-borderless table-responsive-md">
+                <tbody>
+                <tr>
+                    <th class="w-150px">Node Type</th>
+                    <td class="text-break">
+                        <span class="me-3">@Model.LightningNodeType</span>
+                        <a asp-controller="Stores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink" class="text-secondary">
+                            Change connection
+                        </a>
+                    </td>
+                </tr>
+                @if (Model.LightningNodeType != LightningNodeType.Internal)
+                {
+                    <tr>
+                        <th>Connection String</th>
+                        <td>@Model.ConnectionString</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            
+            <form method="post" class="mt-n2 text-center">
+                <div class="text-start">
+                    <h4 class="mt-5 mb-3">Payment</h4>
+                    <div class="form-check my-1">
+                        <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
+                        <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+                    </div>
+                    <div class="form-check my-1">
+                        <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
+                        <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
+                    </div>
+                    <div class="form-check my-1">
+                        <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
+                        <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label asp-for="LightningDescriptionTemplate" class="form-label"></label>
+                        <input asp-for="LightningDescriptionTemplate" class="form-control"/>
+                        <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
+                        <p class="form-text text-muted">
+                            Available placeholders:
+                            <code>{StoreName} {ItemDescription} {OrderId}</code>
+                        </p>
+                    </div>
+                    
+                    <h4 class="mt-5 mb-3">LNURL</h4>
+                    <div class="d-flex align-items-center">
+                        <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
+                        <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
+                    </div>
+                    <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
+                        <div class="form-group">
+                            <div class="d-flex align-items-center pt-4">
+                                <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-2"/>
+                                <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
+                                <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
+                            </div>
+                            <p class="form-text text-muted mb-0 ms-5">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
+                        </div>
+                        <div class="form-group">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-2"/>
+                                <label asp-for="LNURLStandardInvoiceEnabled" class="form-label mb-0 me-1"></label>
+                            </div>
+                            <p class="form-text text-muted mb-0 ms-5">Required for Lightning Address, the pay button and apps.</p>
+                        </div>
+                        <div class="form-group">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-2"/>
+                                <label asp-for="DisableBolt11PaymentMethod" class="form-label mb-0 me-1"></label>
+                            </div>
+                            <p class="form-text text-muted mb-0 ms-5">Performance: Turn it off if users should pay only via LNURL.</p>
+                        </div>
+                        <div class="form-group mb-0 pb-2">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-2"/>
+                                <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-start mt-4">
+                    <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+}

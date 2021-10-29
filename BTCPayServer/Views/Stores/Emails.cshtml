@@ -1,7 +1,7 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Email Settings", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.GeneralSettings, "Email Settings", Context.GetStoreData().StoreName);
 }
 
 <partial name="EmailsBody" model="Model" />

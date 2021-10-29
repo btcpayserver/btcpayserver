@@ -1,0 +1,71 @@
+@model GeneralSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.GeneralSettings, "General Settings", Context.GetStoreData().StoreName);
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
+        <form method="post">
+            <h4 class="mb-3">General</h4>
+            <div class="form-group">
+                <label asp-for="Id" class="form-label"></label>
+                <input asp-for="Id" readonly class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="StoreName" class="form-label"></label>
+                <input asp-for="StoreName" class="form-control" />
+                <span asp-validation-for="StoreName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StoreWebsite" class="form-label"></label>
+                <input asp-for="StoreWebsite" class="form-control" />
+                <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+            </div>
+            
+            <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save Store Settings</button>
+        </form>
+
+        <h4 class="mt-5 mb-3">Services</h4>
+        <div class="table-responsive-md">
+            <table class="table table-hover mt-1 mb-5">
+                <thead>
+                <tr>
+                    <th>Service</th>
+                    <th class="text-end w-100px">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        Email
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Emails" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                            Setup
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.CanDelete)
+        {
+            <h4 class="mt-5 mb-3">Other actions</h4>
+            <div id="danger-zone">
+                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Model.StoreName</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.">Delete this store</a>
+            </div>
+        }
+    </div>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -5,7 +5,6 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -32,7 +31,7 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
-                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.GoToStore(store.storeId, StoreNavPages.CheckoutAppearance);
                 s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
                 s.Driver.FindElement(By.Name("command")).Click();
 
@@ -195,14 +194,15 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser(true);
-                var store = s.CreateNewStore();
+                (string storeName, string storeId) = s.CreateNewStore();
                 s.AddLightningNode();
-                s.GoToStore(store.storeId, StoreNavPages.Payment);
+                s.GoToStore(storeId);
+                s.Driver.FindElement(By.Id("Modify-LightningBTC")).Click();
                 s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
-                s.Driver.FindElement(By.Id("Save")).Click();
-                Assert.Contains("Payment settings successfully updated", s.FindAlertMessage().Text);
+                s.Driver.FindElement(By.Id("save")).Click();
+                Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
                 
-                var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
+                var invoiceId = s.CreateInvoice(storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
             }

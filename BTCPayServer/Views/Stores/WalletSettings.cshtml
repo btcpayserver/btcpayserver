@@ -1,0 +1,124 @@
+@model WalletSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().StoreName);
+}
+<div class="row">
+    <div class="col-lg-10 col-xl-9">
+        <div class="mb-5">
+            <h4 class="mb-3">@ViewData["Title"]</h4>
+            <table class="table table-borderless table-responsive-md">
+                <tbody>
+                <tr>
+                    <th>Type</th>
+                    <td class="d-flex flex-wrap align-items-center">
+                        <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
+                        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" 
+                           id="ChangeWalletLink" 
+                           class="text-secondary me-3"
+                           data-bs-toggle="modal" 
+                           data-bs-target="#ConfirmModal" 
+                           data-title="Replace @Model.CryptoCode wallet"
+                           data-description="@ViewData["ReplaceDescription"]"
+                           data-confirm="Setup new wallet"
+                           data-confirm-input="REPLACE">
+                            Replace wallet
+                        </a>
+                        <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
+                            <button type="submit" class="btn btn-link text-secondary text-start p-0" id="Delete"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#ConfirmModal" 
+                                data-title="Remove @Model.CryptoCode wallet"
+                                data-description="@ViewData["RemoveDescription"]"
+                                data-confirm="Remove"
+                                data-confirm-input="REMOVE">Remove wallet</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="w-150px">Derivation Scheme</th>
+                    <td class="text-break">@Model.DerivationScheme</td>
+                </tr>
+                <tr>
+                    <th>Root Fingerprint</th>
+                    <td>@Model.RootFingerprint</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.KeyPath))
+                {
+                    <tr>
+                        <th>KeyPath</th>
+                        <td>@Model.KeyPath</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            
+            <h4 class="mt-5 mb-3">Payment</h4>
+            <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+                @if (Model.CanUsePayJoin)
+                {
+                    <div class="form-group">
+                        <div class="d-flex align-items-center">
+                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-2"/>
+                            <label asp-for="PayJoinEnabled" class="form-label mb-0 me-1"></label>
+                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener">
+                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                            </a>
+                        </div>
+                        <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                    </div>
+                }
+                <div class="form-group">
+                    <label asp-for="MonitoringExpiration" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <div class="input-group">
+                        <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
+                        <span class="input-group-text">minutes</span>
+                    </div>
+                    <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="SpeedPolicy" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0';">
+                        <option value="0">Is unconfirmed</option>
+                        <option value="1">Has at least 1 confirmation</option>
+                        <option value="3">Has at least 2 confirmations</option>
+                        <option value="2">Has at least 6 confirmations</option>
+                    </select>
+                    <div class="alert alert-warning my-2" hidden="@(Model.SpeedPolicy != 0)" id="unconfirmed-warning" role="alert">
+                        Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
+                    </div>
+                    <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
+                </div>
+                <div class="form-check my-1">
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
+                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                    <p class="form-text text-muted mb-0">Fee will be shown for BTC and LTC onchain payments only.</p>
+                </div>
+                <div class="form-group mt-2 mb-4">
+                    <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
+                    <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch" min="1" />
+                    <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
+                </div>
+                <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel($"{Model.CryptoCode} wallet", "Change", "Update"))" />
+
+@section PageFootContent {
+    <script>
+        const deleteButton = document.getElementById('Delete')
+        deleteButton.addEventListener('click', event => {
+            event.preventDefault()
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial"/>
+}

@@ -1277,7 +1277,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateNewApp")).Click();
             s.Driver.FindElement(By.Id("SelectedAppType")).Click();
             s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
-            s.Driver.FindElement(By.Id("Name")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.Id("DefaultView")).Click();
@@ -1423,7 +1423,10 @@ namespace BTCPayServer.Tests
             
             // Ensure the toggles are set correctly
             s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Assert.True(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
+
+            //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
+            // checkboxes is not good choice here, in next release we should have multi choice instead
+            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
             s.CreateInvoice(store.storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);

@@ -27,6 +27,15 @@
     </script>
 }
 
+@if (Context.Request.PathBase.ToString() != string.Empty)
+{
+<div class="alert alert-warning" role="alert">
+    Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br /><br />
+    This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br /><br />
+    If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.
+</div>
+}
+
 <div class="d-sm-flex align-items-center justify-content-between mb-2">
     <h2 class="mb-3 mb-sm-0">@ViewData["PageTitle"]</h2>
     <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
@@ -99,7 +108,7 @@
                 <input asp-for="Items[index].Min" type="hidden"/>
                 <input asp-for="Items[index].Max" type="hidden"/>
                 <input asp-for="Items[index].Username" type="hidden"/>
-                var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}{Context.Request.PathBase}";
+                var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
                 <tr>
                     <td>
                         <div class="input-group" data-clipboard="@address">

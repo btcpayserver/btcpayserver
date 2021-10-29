@@ -21,6 +21,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
@@ -456,7 +457,7 @@ namespace BTCPayServer
                     Message = "LNURL is required for lightning addresses but has not yet been enabled.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction("Payment", "Stores", new { storeId });
+                return RedirectToAction("PaymentMethods", "Stores", new { storeId });
             }
             var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>()  ??
                                            new LightningAddressSettings();
@@ -486,10 +487,14 @@ namespace BTCPayServer
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("~/stores/{storeId}/integrations/lightning-address")]
         public async Task<IActionResult> EditLightningAddress(string storeId, [FromForm] EditLightningAddressVM vm,
-            string command)
+            string command, [FromServices] CurrencyNameTable currencyNameTable)
         {
             if (command == "add")
             {
+                if (!string.IsNullOrEmpty(vm.Add.CurrencyCode) && currencyNameTable.GetCurrencyData(vm.Add.CurrencyCode, false) is null)
+                {
+                    vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, "Currency is invalid", this);
+                }
                 if (!ModelState.IsValid)
                 {
                     return View(vm);

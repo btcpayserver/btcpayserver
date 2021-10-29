@@ -70,7 +70,7 @@
                 <div class="col-12 col-sm-auto">
                     <div class="form-group">
                         <label asp-for="Add.Max" class="form-label"></label>
-                        <input asp-for="Add.Max" class="form-control" type="number" min="1" style="max-width:16ch;"/>
+                        <input asp-for="Add.Max" class="form-control" type="number" min="1" max="@int.MaxValue" style="max-width:16ch;"/>
                         <span asp-validation-for="Add.Max" class="text-danger"></span>
                     </div>
                 </div>

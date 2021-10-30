@@ -102,6 +102,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
             return await ctx.InvoiceWebhookDeliveries
+                .Include(s => s.Delivery).ThenInclude(s => s.Webhook)
                 .Where(s => s.InvoiceId == invoiceId)
                 .Select(s => s.Delivery)
                 .OrderByDescending(s => s.Timestamp)

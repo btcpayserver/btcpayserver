@@ -338,9 +338,14 @@
                                     </a>
                                     <span class="text-light mx-2">|</span>
                                     <span class="small text-muted">@delivery.Type</span>
+                                    <span class="text-light mx-2">|</span>
                                 </span>
                                 </span>
                                 <span class="d-flex align-items-center">
+                                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                        <span class="small text-truncate d-inline-block" style="max-width: 250px;">@delivery.PayloadUrl</span>
+                                    </span>
+                                    <span class="text-light mx-2">|</span>
                                     <strong class="d-flex align-items-center text-muted small">
                                         @delivery.Time.ToBrowserDate()
                                     </strong>

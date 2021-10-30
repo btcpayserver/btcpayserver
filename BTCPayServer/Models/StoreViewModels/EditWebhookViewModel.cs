@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.StoreViewModels
             Time = s.Timestamp;
             Type = blob.ReadRequestAs<WebhookEvent>().Type;
             WebhookId = s.Id;
+            PayloadUrl = s.Webhook?.GetBlob().Url;
         }
         public string Id { get; set; }
         public DateTimeOffset Time { get; set; }
@@ -31,6 +32,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string WebhookId { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
+        public string PayloadUrl { get; set; }
     }
     public class EditWebhookViewModel
     {

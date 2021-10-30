@@ -1,4 +1,12 @@
 # Changelog
+
+## 1.3.1
+
+### Bug fixes:
+
+* Fix: The checkout page would reload the page when changing payment method, causing annoying an annoying flickering @NicolasDorier
+* Fix: When browsing to BTCPay with explicit paymentMethodId such as `https://btcpay.../i/{invoiceId}/{paymentMethodId}`, it was impossible to switch to any other payment method @NicolasDorier
+
 ## 1.3.0
 
 ### Improvements:

@@ -644,12 +644,14 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("i/{invoiceId}/status")]
-        [Route("i/{invoiceId}/{paymentMethodId}/status")]
+        [Route("i/{invoiceId}/{implicitPaymentMethodId}/status")]
         [Route("invoice/{invoiceId}/status")]
-        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/{invoiceId}/{implicitPaymentMethodId}/status")]
         [Route("invoice/status")]
-        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, [FromQuery] string? lang = null)
+        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, string? implicitPaymentMethodId = null, [FromQuery] string? lang = null)
         {
+            if (string.IsNullOrEmpty(paymentMethodId))
+                paymentMethodId = implicitPaymentMethodId;
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();

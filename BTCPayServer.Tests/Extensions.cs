@@ -119,10 +119,19 @@ namespace BTCPayServer.Tests
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
             wait.UntilJsIsReady();
 
-            var el = driver.FindElement(selector);
-            wait.Until(d => el.Displayed && el.Enabled);
-            el.Click();
-
+            int retriesLeft = 4;
+            retry:
+            try
+            {
+                var el = driver.FindElement(selector);
+                wait.Until(d => el.Displayed && el.Enabled);
+                el.Click();
+            }
+            catch (ElementClickInterceptedException) when (retriesLeft > 0)
+            {
+                retriesLeft--;
+                goto retry;
+            }
             wait.UntilJsIsReady();
         }
 

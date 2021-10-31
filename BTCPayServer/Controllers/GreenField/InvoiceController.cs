@@ -412,6 +412,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
+                Archived = entity.Archived,
                 Metadata = entity.Metadata.ToJObject(),
                 AvailableStatusesForManualMarking = statuses.ToArray(),
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()

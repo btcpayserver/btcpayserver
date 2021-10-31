@@ -63,6 +63,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset CreatedTime { get; set; }
         [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
+        public bool Archived { get; set; }
     }
     public enum InvoiceStatus
     {

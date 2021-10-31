@@ -17,6 +17,8 @@ namespace BTCPayServer.Client
             DateTimeOffset? endDate = null,
             string textSearch = null,
             bool includeArchived = false,
+            int? skip = null,
+            int? take = null,
             CancellationToken token = default)
         {
             Dictionary<string, object> queryPayload = new Dictionary<string, object>();
@@ -34,6 +36,14 @@ namespace BTCPayServer.Client
                 queryPayload.Add(nameof(textSearch), textSearch);
             if (status != null)
                 queryPayload.Add(nameof(status), status.Select(s=> s.ToString().ToLower()).ToArray());
+
+            if(skip != null) {
+                queryPayload.Add(nameof(skip), skip);
+            }
+
+             if(take != null) {
+                queryPayload.Add(nameof(take), take);
+            }
             
             var response =
                 await _httpClient.SendAsync(

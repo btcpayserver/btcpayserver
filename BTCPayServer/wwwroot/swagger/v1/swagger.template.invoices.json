@@ -58,6 +58,26 @@
                         "required": false,
                         "description": "End date of the period to retrieve invoices",
                         "$ref": "#/components/schemas/UnixTimestamp"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records to skip",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "take",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records returned in response",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
                     }
                 ],
                 "description": "View information about the existing invoices",

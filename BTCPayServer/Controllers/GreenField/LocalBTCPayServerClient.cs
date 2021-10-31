@@ -823,12 +823,16 @@ namespace BTCPayServer.Controllers.GreenField
             DateTimeOffset? endDate = null,
             string textSearch = null,
             bool includeArchived = false,
-            CancellationToken token = default)
+            int? skip = null,
+            int? take = null,
+            CancellationToken token = default
+            
+            )
         {
             return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await _greenFieldInvoiceController.GetInvoices(storeId, orderId,
                     status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
-                    endDate, textSearch, includeArchived));
+                    endDate, textSearch, includeArchived,skip,take));
         }
 
         public override async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,

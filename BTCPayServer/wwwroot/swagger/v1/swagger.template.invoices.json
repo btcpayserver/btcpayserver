@@ -75,7 +75,7 @@
                         "required": false,
                         "description": "Number of records returned in response",
                         "schema": {
-                            "nullable": false,
+                            "nullable": true,
                             "type": "number"
                         }
                     }

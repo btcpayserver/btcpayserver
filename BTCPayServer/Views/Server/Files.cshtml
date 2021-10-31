@@ -29,8 +29,10 @@ else
     @if (Model.StorageConfigured)
     {
         <form asp-action="CreateFiles" method="post" enctype="multipart/form-data">
-            <input multiple type="file" class="form-control mb-3" name="files" id="files" required>
-            <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload files</button>
+            <div class="d-sm-flex">
+                <input multiple type="file" class="form-control mb-3" name="files" id="files" required>
+                <button class="btn btn-primary mb-3 ms-sm-3" role="button">Upload</button>
+            </div>
         </form>
     }
 

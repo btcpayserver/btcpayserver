@@ -11,10 +11,6 @@
             <h4 class="mb-3">Domain name</h4>
             <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/Deployment/ChangeDomain/" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
 
-    
-
-
-
             <div class="d-flex">
                 <div class="">
                     <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
@@ -24,7 +20,6 @@
                     Confirm
                 </button>
             </div>
-
 
             <h4 class="mt-5 mb-3">Update</h4>
             <p class="text-secondary">Update to the latest version of BTCPay Server.</p>

@@ -536,3 +536,15 @@ header.masthead .header-content .header-content-inner p {
     height: 1rem;
     padding: 0 0.5rem 0 1rem;
 }
+
+
+@media print {
+    @page {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    body {
+        padding-top: 72px;
+        padding-bottom: 72px ;
+    }
+}

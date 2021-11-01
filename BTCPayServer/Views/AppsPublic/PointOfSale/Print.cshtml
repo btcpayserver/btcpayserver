@@ -15,22 +15,32 @@
         supported = null;
     }
     
-    
 }
 @if (supported is null)
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
         LNURL is not enabled on your store, which this print feature relies on.
+        <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@Model.Store.Id" class="btn btn-link p-0">
+            Enable LNURL
+        </a>
     </div>
 }
+
+@if (supported != null)
+{
+    <button type="button" class="btn btn-primary d-print-none" onclick="window.print()">
+        <i class="fa fa-print"></i>&nbsp;Print
+    </button>
+}
+
 <div class="container d-flex h-100">
     <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100 m-auto">
         <partial name="_StatusMessage" />
 
-        <h1 class="mb-4">@Model.Title</h1>
+        <h1 class="mb-4 d-print-none">@Model.Title</h1>
         @if (!string.IsNullOrEmpty(Model.Description))
         {
-            <div class="row">
+            <div class="row d-print-none">
                 <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
             </div>
         }
@@ -77,7 +87,7 @@
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
                                 <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()"></vc:qr-code>
-
+                                
                                 <a href="@lnUrl" class="btn btn-secondary d-print-none w-100 mt-2 lnurl" data-choice="@item.Id" rel="noreferrer noopener">
                                     Open in wallet
                                 </a>
@@ -86,7 +96,7 @@
                         @if (item.Inventory.HasValue)
                         {
 
-                            <div class="w-100 pt-2 text-center text-muted">
+                            <div class="w-100 pt-2 text-center text-muted d-print-none">
                                 @if (item.Inventory > 0)
                                 {
                                     <span>@item.Inventory left</span>

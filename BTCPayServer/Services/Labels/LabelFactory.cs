@@ -73,7 +73,7 @@ namespace BTCPayServer.Services.Labels
                             : _linkGenerator.AppLink(refLabel.Reference, request.Scheme, request.Host, request.PathBase);
                         break;
                     case "pj-exposed":
-                        coloredLabel.Tooltip = $"This utxo was exposed through a payjoin proposal for an invoice {refInLabel}";
+                        coloredLabel.Tooltip = $"This UTXO was exposed through a PayJoin proposal for an invoice {refInLabel}";
                         coloredLabel.Link = string.IsNullOrEmpty(refLabel.Reference)
                             ? null
                             : _linkGenerator.InvoiceLink(refLabel.Reference, request.Scheme, request.Host, request.PathBase);

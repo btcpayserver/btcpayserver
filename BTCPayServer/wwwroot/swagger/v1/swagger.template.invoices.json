@@ -856,6 +856,10 @@
                                 "items": {
                                     "$ref": "#/components/schemas/InvoiceStatus"
                                 }
+                            },
+                            "archived": {
+                                "type": "boolean",
+                                "description": "true if the invoice is archived"
                             }
                         }
                     }

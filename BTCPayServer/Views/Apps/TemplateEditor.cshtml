@@ -210,8 +210,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                         if (productProperty.indexOf('price_type:') !== -1) {
                             custom = productProperty.replace('price_type:', '').trim();
-                        }else{
-                            custom = "fixed";
                         }
                         if (productProperty.indexOf('buyButtonText:') !== -1) {
                             buyButtonText = productProperty.replace('buyButtonText:', '').trim();
@@ -235,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             price: price,
                             image: image || null,
                             description:  description || '',
-                            custom: custom,
+                            custom: custom || "fixed",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods,

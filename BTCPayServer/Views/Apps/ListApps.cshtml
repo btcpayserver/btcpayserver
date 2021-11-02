@@ -5,6 +5,7 @@
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
     var appNameSortOrder = (string)ViewData["AppNameSortOrder"];
     var appTypeSortOrder = (string)ViewData["AppTypeSortOrder"];
+    var viewStyleSortOrder = (string)ViewData["ViewStyleSortOrder"];
     var sortByDesc = "Sort by descending...";
     var sortByAsc = "Sort by ascending...";
 }
@@ -68,6 +69,18 @@
                                     <span class="fa @(appTypeSortOrder == "asc" ? "fa-sort-alpha-desc" : appTypeSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
                             </th>
+                            <th>
+                                <a
+                                    asp-action="ListApps"
+                                    asp-route-sortOrder="@(viewStyleSortOrder ?? "asc")"
+                                    asp-route-sortOrderColumn="ViewStyle"
+                                    class="text-nowrap"
+                                    title="@(viewStyleSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                                >
+                                    View Style
+                                    <span class="fa @(viewStyleSortOrder == "asc" ? "fa-sort-alpha-desc" : viewStyleSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                                </a>
+                            </th>
                             <th style="text-align:right">Actions</th>
                         </tr>
                         </thead>
@@ -87,6 +100,7 @@
                                 </td>
                                 <td>@app.AppName</td>
                                 <td>@typeof(AppType).DisplayName(app.AppType)</td>
+                                <td>@app.ViewStyle</td>
                                 <td style="text-align:right">
                                     @if (app.IsOwner)
                                     {

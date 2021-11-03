@@ -73,8 +73,6 @@ namespace BTCPayServer.Controllers
                                 return app.StoreName;
                             case nameof(app.AppType):
                                 return app.AppType;
-                            case nameof(app.ViewStyle):
-                                return app.ViewStyle;
                             default:
                                 return app.Id;
                         }

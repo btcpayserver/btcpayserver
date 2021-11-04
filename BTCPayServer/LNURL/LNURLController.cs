@@ -200,7 +200,7 @@ namespace BTCPayServer
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
-                return NotFound("This network does not support lightning");
+                return NotFound("This network does not support Lightning");
             }
 
             var store = await _storeRepository.FindStore(storeId);

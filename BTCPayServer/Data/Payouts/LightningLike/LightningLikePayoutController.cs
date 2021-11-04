@@ -4,11 +4,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +32,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly IOptions<LightningNetworkOptions> _options;
+        private readonly IAuthorizationService _authorizationService;
 
         public LightningLikePayoutController(ApplicationDbContextFactory applicationDbContextFactory,
             UserManager<ApplicationUser> userManager,
@@ -37,7 +40,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
             LightningClientFactoryService lightningClientFactoryService,
-            IOptions<LightningNetworkOptions> options)
+            IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
             _userManager = userManager;
@@ -46,6 +49,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactoryService = lightningClientFactoryService;
             _options = options;
+            _authorizationService = authorizationService;
         }
 
         private async Task<List<PayoutData>> GetPayouts(ApplicationDbContext dbContext, PaymentMethodId pmi,
@@ -145,12 +149,34 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 }
             }
 
+            var authorizedForInternalNode = (await  _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
             foreach (var payoutDatas in payouts)
             {
                 var store = payoutDatas.First().PullPaymentData.StoreData;
+                
                 var lightningSupportedPaymentMethod = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                     .OfType<LightningSupportedPaymentMethod>()
                     .FirstOrDefault(method => method.PaymentId == pmi);
+
+                if (lightningSupportedPaymentMethod.IsInternalNode && !authorizedForInternalNode)
+                {
+                    foreach (PayoutData payoutData in payoutDatas)
+                    {
+                        
+                        var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
+                        results.Add(new ResultVM()
+                        {
+                            PayoutId = payoutData.Id,
+                            Result = PayResult.Error,
+                            Destination = blob.Destination,
+                            Message =
+                                $"You are currently using the internal lightning node for this payout's store but you are not a server admin."
+                        });
+                    }
+
+                    continue;
+                }
+                
                 var client =
                     lightningSupportedPaymentMethod.CreateLightningClient(network, _options.Value,
                         _lightningClientFactoryService);

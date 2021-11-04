@@ -60,12 +60,12 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("new")]
-        public IActionResult NewPullPayment(string storeId)
+        public async Task<IActionResult> NewPullPayment(string storeId)
         {
             if (CurrentStore is  null)
                 return NotFound();
-            var storeMethods = CurrentStore.GetSupportedPaymentMethods(_btcPayNetworkProvider).Select(method => method.PaymentId).ToList();
-            var paymentMethodOptions = _payoutHandlers.GetSupportedPaymentMethods(storeMethods);
+
+            var paymentMethodOptions = await _payoutHandlers.GetSupportedPaymentMethods(CurrentStore);
             return View(new NewPullPaymentModel
             {
                 Name = "",
@@ -82,8 +82,7 @@ namespace BTCPayServer.Controllers
             if (CurrentStore is  null)
                 return NotFound();
 
-            var storeMethods = CurrentStore.GetSupportedPaymentMethods(_btcPayNetworkProvider).Select(method => method.PaymentId).ToList();
-            var paymentMethodOptions = _payoutHandlers.GetSupportedPaymentMethods(storeMethods);
+            var paymentMethodOptions = await _payoutHandlers.GetSupportedPaymentMethods(CurrentStore);
             model.PaymentMethodItems =
                 paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true));
             model.Name ??= string.Empty;
@@ -230,6 +229,8 @@ namespace BTCPayServer.Controllers
         {
             if (vm is null)
                 return NotFound();
+            
+            vm.PaymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData());
             var paymentMethodId = PaymentMethodId.Parse(vm.PaymentMethodId);
             var handler = _payoutHandlers
                 .FindPayoutHandler(paymentMethodId);
@@ -404,9 +405,11 @@ namespace BTCPayServer.Controllers
             string storeId, string pullPaymentId, string paymentMethodId, PayoutState payoutState,
             int skip = 0, int count = 50)
         {
+            var paymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData());
             var vm = this.ParseListQuery(new PayoutsModel
             {
-                PaymentMethodId = paymentMethodId?? _payoutHandlers.GetSupportedPaymentMethods().First().ToString(),
+                PaymentMethods = paymentMethods,
+                PaymentMethodId = paymentMethodId??paymentMethods.First().ToString(),
                 PullPaymentId = pullPaymentId, 
                 PayoutState =  payoutState,
                 Skip = skip,

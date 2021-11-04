@@ -52,13 +52,11 @@ namespace BTCPayServer.Data
             }
         }
 
-        public static IEnumerable<PaymentMethodId> GetSupportedPaymentMethods(
-            this IEnumerable<IPayoutHandler> payoutHandlers, List<PaymentMethodId> paymentMethodIds = null)
+        public static async Task<List<PaymentMethodId>> GetSupportedPaymentMethods(
+            this IEnumerable<IPayoutHandler> payoutHandlers, StoreData storeData)
         {
-            return payoutHandlers.SelectMany(handler => handler.GetSupportedPaymentMethods())
-                .Where(id => paymentMethodIds is null || paymentMethodIds.Contains(id) || 
-                             //TODO: Handle this condition in a cleaner way
-                             (id.PaymentType == LightningPaymentType.Instance && paymentMethodIds.Contains(new PaymentMethodId(id.CryptoCode, PaymentTypes.LNURLPay))));
+            return (await Task.WhenAll(payoutHandlers.Select(handler => handler.GetSupportedPaymentMethods(storeData)))).SelectMany(ids => ids).ToList();
+               
         }
     }
 }

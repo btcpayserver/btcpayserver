@@ -21,14 +21,18 @@ namespace BTCPayServer.Data
 
         public static PaymentMethodId[] GetEnabledPaymentIds(this StoreData storeData, BTCPayNetworkProvider networks)
         {
+            return GetEnabledPaymentMethods(storeData, networks).Select(method => method.PaymentId).ToArray();
+        }
+        
+        public static ISupportedPaymentMethod[] GetEnabledPaymentMethods(this StoreData storeData, BTCPayNetworkProvider networks)
+        {
             var excludeFilter = storeData.GetStoreBlob().GetExcludedPaymentMethods();
             var paymentMethodIds = storeData.GetSupportedPaymentMethods(networks)
-                                .Select(p => p.PaymentId)
-                                .Where(a => !excludeFilter.Match(a))
-                                .OrderByDescending(a => a.CryptoCode == "BTC")
-                                .ThenBy(a => a.CryptoCode)
-                                .ThenBy(a => a.PaymentType == PaymentTypes.LightningLike ? 1 : 0)
-                                .ToArray();
+                .Where(a => !excludeFilter.Match(a.PaymentId))
+                .OrderByDescending(a => a.PaymentId.CryptoCode == "BTC")
+                .ThenBy(a => a.PaymentId.CryptoCode)
+                .ThenBy(a => a.PaymentId.PaymentType == PaymentTypes.LightningLike ? 1 : 0)
+                .ToArray();
             return paymentMethodIds;
         }
 

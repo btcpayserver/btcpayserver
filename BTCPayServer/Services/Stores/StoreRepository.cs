@@ -37,22 +37,21 @@ namespace BTCPayServer.Services.Stores
         {
             if (userId == null)
                 throw new ArgumentNullException(nameof(userId));
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return (await ctx
+            await using var ctx = _ContextFactory.CreateContext();
+            return (await ctx
                     .UserStore
                     .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
+                    .Include(store => store.StoreData.UserStores)
                     .Select(us => new
                     {
                         Store = us.StoreData,
                         Role = us.Role
                     }).ToArrayAsync())
-                    .Select(us =>
-                    {
-                        us.Store.Role = us.Role;
-                        return us.Store;
-                    }).FirstOrDefault();
-            }
+                .Select(us =>
+                {
+                    us.Store.Role = us.Role;
+                    return us.Store;
+                }).FirstOrDefault();
         }
 
         public class StoreUser

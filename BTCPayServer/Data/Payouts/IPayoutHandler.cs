@@ -7,6 +7,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using Microsoft.AspNetCore.Mvc;
+using StoreData = BTCPayServer.Data.StoreData;
 
 public interface IPayoutHandler
 {
@@ -22,6 +23,6 @@ public interface IPayoutHandler
     Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethod, IClaimDestination claimDestination);
     Dictionary<PayoutState, List<(string Action, string Text)>> GetPayoutSpecificActions();
     Task<StatusMessageModel> DoSpecificAction(string action, string[] payoutIds, string storeId);
-    IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+    Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData);
     Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds);
 }

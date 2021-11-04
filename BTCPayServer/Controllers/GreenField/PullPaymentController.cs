@@ -106,7 +106,7 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentMethodId.TryParse(s, out var pmi);
                     return pmi;
                 }).ToArray();
-               var supported = _payoutHandlers.GetSupportedPaymentMethods().ToArray();
+               var supported = (await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData())).ToArray();
                for (int i = 0; i < paymentMethods.Length; i++)
                {
                    if (!supported.Contains(paymentMethods[i]))

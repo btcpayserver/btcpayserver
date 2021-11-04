@@ -10,8 +10,6 @@
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
     
-    var paymentMethods = PayoutHandlers.GetSupportedPaymentMethods();
-    
     var stateActions = new List<(string Action, string Text)>();
     if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
     {
@@ -56,7 +54,7 @@
     <div class="row">
         <div class="col-auto">
             <ul class="nav nav-pills  bg-tile mb-2" style="border-radius:4px; border: 1px solid var(--btcpay-body-border-medium)">
-                @foreach (var state in paymentMethods)
+                @foreach (var state in Model.PaymentMethods)
                 {
                     <li class="nav-item py-0">
                         <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"

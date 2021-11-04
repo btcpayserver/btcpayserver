@@ -25,6 +25,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 using PayoutData = BTCPayServer.Data.PayoutData;
+using StoreData = BTCPayServer.Data.StoreData;
 
 public class BitcoinLikePayoutHandler : IPayoutHandler
 {
@@ -215,11 +216,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         return null;
     }
 
-    public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
+    public Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData)
     {
-        return _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
-            .Where(network => network.ReadonlyWallet is false)
-            .Select(network => new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance));
+        return Task.FromResult(storeData.GetEnabledPaymentIds(_btcPayNetworkProvider)
+            .Where(id => id.PaymentType == BitcoinPaymentType.Instance));
     }
 
     public async Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId ,string[] payoutIds)

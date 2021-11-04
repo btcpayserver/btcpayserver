@@ -33,6 +33,11 @@ namespace BTCPayServer.Services
             _fileService = fileService;
             _storeRepository = storeRepository;
         }
+        
+        public async Task<bool> IsAdminUser(string userId) 
+        {
+            return IsRoleAdmin(await _userManager.GetRolesAsync(new ApplicationUser(){Id = userId}));
+        }
 
         public async Task<bool> IsAdminUser(ApplicationUser user) 
         {

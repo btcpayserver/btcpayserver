@@ -7,8 +7,11 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
 using BTCPayServer.Validation;
 using LNURL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 
@@ -24,12 +27,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly UserService _userService;
+        private readonly IAuthorizationService _authorizationService;
 
         public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory, UserService userService, IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _httpClientFactory = httpClientFactory;
+            _userService = userService;
+            _authorizationService = authorizationService;
         }
 
         public bool CanHandle(PaymentMethodId paymentMethod)
@@ -129,10 +136,28 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return Task.FromResult<StatusMessageModel>(null);
         }
 
-        public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
+        public async Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData)
         {
-            return _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>().Where(network => network.SupportLightning)
-                .Select(network => new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));
+            var result = new List<PaymentMethodId>();
+            var methods =  storeData.GetEnabledPaymentMethods(_btcPayNetworkProvider).Where(id => id.PaymentId.PaymentType == LightningPaymentType.Instance).OfType<LightningSupportedPaymentMethod>();
+            foreach (LightningSupportedPaymentMethod supportedPaymentMethod in methods)
+            {
+                if (!supportedPaymentMethod.IsInternalNode)
+                {
+                    result.Add(supportedPaymentMethod.PaymentId);
+                    continue;
+                }
+
+                foreach (UserStore storeDataUserStore in storeData.UserStores)
+                {
+                    if (!await _userService.IsAdminUser(storeDataUserStore.ApplicationUserId)) continue;
+                    result.Add(supportedPaymentMethod.PaymentId);
+                    break;
+                }
+                
+            }
+
+            return result;
         }
 
         public Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds)

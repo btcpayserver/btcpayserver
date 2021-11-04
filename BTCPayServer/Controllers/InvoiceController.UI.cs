@@ -167,13 +167,15 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Refund([FromServices]IEnumerable<IPayoutHandler> payoutHandlers, string invoiceId, CancellationToken cancellationToken)
         {
-            using var ctx = _dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
             ctx.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
             var invoice = await ctx.Invoices.Include(i => i.Payments)
                                             .Include(i => i.CurrentRefund)
+                                            .Include(i => i.StoreData)
+                                            .ThenInclude(data => data.UserStores)
                                             .Include(i => i.CurrentRefund.PullPaymentData)
                                             .Where(i => i.Id == invoiceId)
-                                            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+                                            .FirstOrDefaultAsync(cancellationToken);
             if (invoice is null)
                 return NotFound();
             if (invoice.CurrentRefund?.PullPaymentDataId is null && GetUserId() is null)
@@ -191,7 +193,17 @@ namespace BTCPayServer.Controllers
             {
                 var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
                 var pmis = paymentMethods.Select(method => method.GetId()).ToList();
-                var options = payoutHandlers.GetSupportedPaymentMethods(pmis);
+                var options = (await payoutHandlers.GetSupportedPaymentMethods(invoice.StoreData)).Where(id => pmis.Contains(id)).ToList();
+                if (!options.Any())
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "There were no payment methods available to provide refunds with for this invoice."
+                    });
+                    return RedirectToAction(nameof(Invoice), new { invoiceId });
+                }
+                
                 var defaultRefund = invoice.Payments
                     .Select(p => p.GetBlob(_NetworkProvider))
                     .Select(p => p?.GetPaymentMethodId())

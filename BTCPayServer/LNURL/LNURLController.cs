@@ -218,7 +218,7 @@ namespace BTCPayServer
             var lnMethod = methods.FirstOrDefault(method => method.PaymentId == lnpmi);
             if (lnUrlMethod is null || lnMethod is null)
             {
-                return NotFound("LNUrl or Lightning payment method not found");
+                return NotFound("LNURL or Lightning payment method not found");
             }
 
             var blob = store.GetStoreBlob();

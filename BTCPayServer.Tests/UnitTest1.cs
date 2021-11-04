@@ -389,6 +389,11 @@ namespace BTCPayServer.Tests
                 request.Headers.TryAddWithoutValidation("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
                 var response = await httpClient.SendAsync(request);
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable) // Temporary issue
+                {
+                    Logs.Tester.LogInformation($"Unavailable: {url} ({file})");
+                    return;
+                }
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 if (uri.Fragment.Length != 0)
                 {

@@ -1,0 +1,57 @@
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Services.Altcoins.Zcash.UI.UIZcashLikeStoreController.ZcashLikePaymentMethodListViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Zcash Settings");
+    ViewData["NavPartialName"] = "../UIStores/_Nav";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <table class="table table-hover table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Crypto</th>
+                    <th>Account Index</th>
+                    <th class="text-center">Enabled</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.CryptoCode</td>
+                        <td>@item.AccountIndex</td>
+                        <td class="text-center">
+                            @if (item.Enabled)
+                            {
+                                <span class="text-success fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fa fa-times"></span>
+                            }
+                        </td>
+                        <td class="text-right">
+                            <a id="Modify" asp-action="GetStoreZcashLikePaymentMethod"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
+                               asp-route-cryptoCode="@item.CryptoCode">
+                                Modify
+                            </a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section PageFootContent {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

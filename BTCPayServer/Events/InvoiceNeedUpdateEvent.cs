@@ -15,7 +15,7 @@ namespace BTCPayServer.Events
 
         public override string ToString()
         {
-            return string.Empty;
+            return $"Invoice {InvoiceId} needs update";
         }
     }
 }

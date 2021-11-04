@@ -5,7 +5,7 @@ namespace BTCPayServer.Events
         public T Settings { get; set; }
         public override string ToString()
         {
-            return Settings?.ToString() ?? string.Empty;
+            return $"Settings {typeof(T).Name} changed";
         }
     }
 }

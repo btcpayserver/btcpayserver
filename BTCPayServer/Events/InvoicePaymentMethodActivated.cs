@@ -18,7 +18,7 @@ namespace BTCPayServer.Events
 
         public override string ToString()
         {
-            return string.Empty;
+            return $"Invoice payment method activated for invoice {InvoiceId} ({PaymentMethodId.ToPrettyString()})";
         }
     }
 }

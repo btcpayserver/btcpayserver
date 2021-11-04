@@ -7,7 +7,7 @@ namespace BTCPayServer.Events
         public WalletId WalletId { get; set; }
         public override string ToString()
         {
-            return String.Empty;
+            return $"Wallet {WalletId} changed";
         }
     }
 }

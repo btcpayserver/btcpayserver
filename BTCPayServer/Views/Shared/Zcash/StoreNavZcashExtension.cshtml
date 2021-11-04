@@ -1,0 +1,12 @@
+@using BTCPayServer.Services.Altcoins.Zcash.Configuration
+@using BTCPayServer.Services.Altcoins.Zcash.UI
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject ZcashLikeConfiguration ZcashLikeConfiguration;
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isZcash = controller.Equals(nameof(ZcashLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
+}
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && ZcashLikeConfiguration.ZcashLikeConfigurationItems.Any())
+{
+    <a class="nav-link @(isZcash ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreZcashLikePaymentMethods" asp-controller="ZcashLikeStore">Zcash</a>
+}

@@ -39,8 +39,10 @@
     <Content Remove="Services\Altcoins\**\*" />
     <Content Remove="Views\EthereumLikeStore\**\*" />
     <Content Remove="Views\MoneroLikeStore\**\*" />
+    <Content Remove="Views\ZcashLikeStore\**\*" />
     <Content Remove="Views\Shared\Ethereum\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
+    <Content Remove="Views\Shared\Zcash\**\*" />
   </ItemGroup>
 
   <ItemGroup>

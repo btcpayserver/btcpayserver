@@ -83,18 +83,19 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc,eth",
+        "BTCPAY_CHAINS": "zec",
         "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;",
-        "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",
-        "BTCPAY_SSHPASSWORD": "opD3i2282D",
         "BTCPAY_DEBUGLOG": "debug.log",
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
-        "BTCPAY_CHEATMODE": "true"
-      },
+        "BTCPAY_CHEATMODE": "true",
+        "BTCPAY_ZEC_DAEMON_URI": "http://mini:18081",
+        "BTCPAY_ZEC_WALLET_DAEMON_URI": "http://mini:18082",
+        "BTCPAY_ZEC_WALLET_DAEMON_WALLETDIR": "/home/hanh/.bitmonero"
+        },
       "applicationUrl": "https://localhost:14142/"
     }
   }

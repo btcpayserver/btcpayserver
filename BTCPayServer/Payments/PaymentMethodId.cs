@@ -75,6 +75,8 @@ namespace BTCPayServer.Payments
 #if ALTCOINS
             if (CryptoCode == "XMR" && PaymentType == PaymentTypes.MoneroLike)
                 return CryptoCode;
+            if (CryptoCode == "ZEC" && PaymentType == PaymentTypes.ZcashLike)
+                return CryptoCode;
 #endif
             return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
         }
@@ -100,6 +102,8 @@ namespace BTCPayServer.Payments
 #if ALTCOINS
             if (parts[0].ToUpperInvariant() == "XMR")
                 type = PaymentTypes.MoneroLike;
+            if (parts[0].ToUpperInvariant() == "ZEC")
+                type = PaymentTypes.ZcashLike;
 #endif
             if (parts.Length == 2)
             {

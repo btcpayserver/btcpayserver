@@ -59,6 +59,7 @@ using NBitcoin.RPC;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Ethereum;
+using BTCPayServer.Services.Altcoins.Zcash;
 #endif
 namespace BTCPayServer.Hosting
 {
@@ -89,6 +90,7 @@ namespace BTCPayServer.Hosting
 #if ALTCOINS
             services.AddMoneroLike();
             services.AddEthereumLike();
+            services.AddZcashLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());

@@ -906,8 +906,11 @@ namespace BTCPayServer.Controllers
             }
             catch (BitpayHttpException ex)
             {
-                Logs.PayServer.LogError(ex, $"Invoice creation failed due to invalid currency {model.Currency}");
-                ModelState.TryAddModelError(nameof(model.Currency), "Please make sure you entered a valid currency symbol, a rate provider is configured in store settings, and your configured rate provider is both online and providing rates for your selected currency.");
+                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = ex.Message
+                });
                 return View(model);
             }
         }

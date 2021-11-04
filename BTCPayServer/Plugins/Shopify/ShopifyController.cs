@@ -193,7 +193,7 @@ namespace BTCPayServer.Plugins.Shopify
                         Currency = order.Currency,
                         Metadata = new JObject {["orderId"] = invoiceOrderId}
                     }, store,
-                    Request.GetAbsoluteUri(""), new List<string>() {invoiceOrderId});
+                    Request.GetAbsoluteRoot(), new List<string>() {invoiceOrderId});
 
                 return Ok(new {invoiceId = invoice.Id, status = invoice.Status.ToString().ToLowerInvariant()});
             }

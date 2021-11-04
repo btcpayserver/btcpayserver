@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers.GreenField
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,
-                    Request.GetAbsoluteUri(""));
+                    Request.GetAbsoluteRoot());
                 return Ok(ToModel(invoice));
             }
             catch (BitpayHttpException e)

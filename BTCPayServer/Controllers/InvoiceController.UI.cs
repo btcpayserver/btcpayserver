@@ -514,7 +514,9 @@ namespace BTCPayServer.Controllers
                 }
                 if (paymentMethodId is null)
                 {
-                    paymentMethodId = enabledPaymentIds.First();
+                    paymentMethodId = enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.BTCLike) ??
+                                      enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
+                                      enabledPaymentIds.First();
                 }
                 isDefaultPaymentId = true;
             }

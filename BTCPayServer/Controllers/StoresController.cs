@@ -419,6 +419,12 @@ namespace BTCPayServer.Controllers
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             var defaultPaymentId = storeData.GetDefaultPaymentId();
             var defaultChoice = defaultPaymentId is PaymentMethodId ? defaultPaymentId.FindNearest(enabled) : null;
+            if (defaultChoice is null)
+            {
+                defaultChoice = enabled.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.BTCLike) ??
+                                enabled.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
+                                enabled.FirstOrDefault();
+            }
             var choices = enabled
                 .Select(o =>
                     new CheckoutAppearanceViewModel.Format()

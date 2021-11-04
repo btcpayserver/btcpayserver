@@ -28,7 +28,7 @@
   </ItemGroup>
     <ItemGroup>
       <PackageReference Include="NBitcoin" Version="6.0.15" />
-      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.2.6" />
+      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.2.7" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
   <ItemGroup>

@@ -224,7 +224,7 @@ namespace BTCPayServer
             var blob = store.GetStoreBlob();
             if (blob.GetExcludedPaymentMethods().Match(pmi) || blob.GetExcludedPaymentMethods().Match(lnpmi))
             {
-                return NotFound("LNUrl or Lightning payment method disabled");
+                return NotFound("LNURL or Lightning payment method disabled");
             }
 
             (string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =

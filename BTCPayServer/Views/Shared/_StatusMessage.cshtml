@@ -1,4 +1,4 @@
-﻿@{
+@{
     var parsedModel = TempData.GetStatusMessageModel();
 }
 
@@ -13,7 +13,7 @@
         }
         @if (!string.IsNullOrEmpty(parsedModel.Message))
         {
-            @parsedModel.Message
+            <span style="white-space: pre-wrap;">@parsedModel.Message</span>
         }
         @if (!string.IsNullOrEmpty(parsedModel.Html))
         {

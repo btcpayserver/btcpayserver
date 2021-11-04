@@ -409,6 +409,11 @@ namespace BTCPayServer.Controllers
                             return null;
                         }
                     }
+                    else
+                    {
+                        var suffix = currentRateToCrypto?.EvaluatedRule is string s ? $" ({s})" : string.Empty;
+                        logs.Write($"{logPrefix} This payment method should be created only if the amount of this invoice is in proper range. However, we are unable to fetch the rate of those limits. {suffix}", InvoiceEventData.EventSeverity.Warning);
+                    }
                 }
 
 #pragma warning disable CS0618

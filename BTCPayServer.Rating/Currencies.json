@@ -1260,6 +1260,20 @@
       "crypto":true
    },
    {
+      "name":"YEC",
+      "code":"YEC",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
+      "name":"ZEC",
+      "code":"ZEC",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
       "name":"POLIS",
       "code":"POLIS",
       "divisibility":8,

@@ -385,6 +385,7 @@ services:
           - "19444:19444"
       volumes:
           - "elementsd_liquid_datadir:/data"
+
 volumes:
     sshd_datadir:
     bitcoin_datadir:

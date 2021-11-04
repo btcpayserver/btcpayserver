@@ -4,6 +4,11 @@
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 
+<style>
+    .card-deck { display: unset; }
+    .card { page-break-inside: avoid; width: 300px; margin: 0 1em 1em 0; float: left; }
+</style>
+
 @{
     Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
     var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
@@ -55,7 +60,7 @@
                 <div class="card px-0" data-id="@x">
                     @if (!String.IsNullOrWhiteSpace(item.Image))
                     {
-                        <img class="card-img-top" src="@item.Image" asp-append-version="true">
+                        <img class="card-img-top d-print-none" src="@item.Image" asp-append-version="true">
                     }
                     @{CardBody(item.Title, item.Description);}
                     <div class="card-footer bg-transparent border-0 pb-3">
@@ -125,7 +130,7 @@
             <h5 class="card-title">@title</h5>
             @if (!String.IsNullOrWhiteSpace(description))
             {
-                <p class="card-text">@Safe.Raw(description)</p>
+                <p class="card-text d-print-none">@Safe.Raw(description)</p>
             }
         </div>
     }

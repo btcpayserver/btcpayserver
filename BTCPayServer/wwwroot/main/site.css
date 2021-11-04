@@ -537,7 +537,9 @@ header.masthead .header-content .header-content-inner p {
     padding: 0 0.5rem 0 1rem;
 }
 
-
+/* This hides unwanted metadata such as url, date, etc from appearing on a printed page. 
+The purpose is to clean the Print view of a PoS app, but it may cut off the headers and footers
+if someone tries to print a different page in BTCPay Server. */
 @media print {
     @page {
         margin-top: 0;

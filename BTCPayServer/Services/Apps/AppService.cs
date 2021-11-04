@@ -80,7 +80,6 @@ namespace BTCPayServer.Services.Apps
                             nextResetDate = lastResetDate.Value.AddDays(settings.ResetEveryAmount);
                             break;
                         case CrowdfundResetEvery.Month:
-
                             nextResetDate = lastResetDate.Value.AddMonths(settings.ResetEveryAmount);
                             break;
                         case CrowdfundResetEvery.Year:
@@ -107,10 +106,16 @@ namespace BTCPayServer.Services.Apps
             if (settings.DisplayPerksValue)
             {
                 perkValue = paidInvoices
-                    .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
+                    .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                     .GroupBy(entity => entity.Metadata.ItemCode)
                     .ToDictionary(entities => entities.Key, entities => 
-                        entities.Sum(entity => entity.GetPayments(true).Sum(payment => payment.GetCryptoPaymentData().GetValue())));
+                        entities.Sum(entity => entity.GetPayments(true).Sum(pay =>
+                        {
+                            var paymentMethodId = pay.GetPaymentMethodId();
+                            var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                            var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
+                            return rate * value;
+                        })));
             }
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             if (settings.SortPerksByPopularity)
@@ -419,7 +424,7 @@ namespace BTCPayServer.Services.Apps
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
                         p.Status == InvoiceStatusLegacy.Invalid)
                         return new[] { contribution };
-
+                    
 
                     // Else, we just sum the payments
                     return payments

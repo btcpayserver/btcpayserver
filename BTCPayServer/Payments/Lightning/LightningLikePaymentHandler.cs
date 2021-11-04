@@ -122,7 +122,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceLogs invoiceLogs, bool? preferOnion = null)
+        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceLogs invoiceLogs, bool? preferOnion = null, bool throws=false)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
@@ -166,7 +166,7 @@ namespace BTCPayServer.Payments.Lightning
                     return nodeInfo;
                 }
             }
-            catch(Exception e)
+            catch(Exception e) when (!throws)
             {
                 invoiceLogs.Write($"NodeInfo failed to be fetched: {e.Message}", InvoiceEventData.EventSeverity.Error);
             }

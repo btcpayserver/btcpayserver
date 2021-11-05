@@ -229,7 +229,7 @@ handshake:
                         }
                         _ = Relay(socksSocket, clientSocket, cancellationToken);
                     }
-                    catch (SocksException e) when (e.SocksErrorCode == SocksErrorCode.HostUnreachable || e.SocksErrorCode == SocksErrorCode.HostUnreachable)
+                    catch (SocksException e) when (e.SocksErrorCode == SocksErrorCode.NetworkUnreachable || e.SocksErrorCode == SocksErrorCode.HostUnreachable)
                     {
                         await SendAsync(clientSocket, $"{httpVersion} 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n", cancellationToken);
                         goto done;

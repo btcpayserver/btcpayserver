@@ -1357,15 +1357,25 @@ namespace BTCPayServer.Tests
                 response.EnsureSuccessStatusCode();
                 AssertConnectionDropped();
 
-                Logs.Tester.LogInformation("Querying an onin address which can't be found should send http 500");
+                Logs.Tester.LogInformation("Querying an onion address which can't be found should send http 500");
                 response = await client.GetAsync("http://dwoduwoi.onion/");
                 Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
                 AssertConnectionDropped();
 
                 Logs.Tester.LogInformation("Querying valid onion but unreachable should send error 502");
-                response = await client.GetAsync("http://fastrcl5totos3vekjbqcmgpnias5qytxnaj7gpxtxhubdcnfrkapqad.onion/");
-                Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
-                AssertConnectionDropped();
+                using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+                {
+                    try
+                    {
+                        response = await client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/", cts.Token);
+                        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+                        AssertConnectionDropped();
+                    }
+                    catch when (cts.Token.IsCancellationRequested)
+                    {
+                        Logs.Tester.LogInformation("Skipping this test, it timed out");
+                    }
+                }
             }
         }
 

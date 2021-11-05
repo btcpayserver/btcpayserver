@@ -1,8 +1,14 @@
 # Changelog
 
+## 1.3.3
+
+### Bug fixes:
+
+* LNAddress wasn't working if the store supported an altcoin @NicolasDorier
+
 ## 1.3.2
 
-This feature include a critical security patch. The vulnerability impacts owner of shared instances which share their internal lightning nodes. Credits to @yk to have noticed us.
+This feature include a critical security patch. The vulnerability impacts owner of shared instances which share their internal lightning nodes. Credits to @yilakb to have noticed us.
 
 ### New Features:
 
@@ -13,7 +19,6 @@ This feature include a critical security patch. The vulnerability impacts owner 
 
 * Crowdfunding topup invoice doesn't work when there isn't a perk added (#3048 #3064) @satwo
 * Crowdfund: Fix perk value display (#3060) @dennisreimann
-* LNAddress wasn't working if the store supported an altcoin @NicolasDorier
 * Lightning address payment would fail if millisatoshi is not 0 mod 1000 on LND (#3056) @NicolasDorier
 * The Test Connection feature during lightning setup was hidding cause of failure @NicolasDorier
 * Creating a new invoice in payment request with LNURL activated would crash @NicolasDorier

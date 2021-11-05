@@ -1508,13 +1508,19 @@ namespace BTCPayServer.Tests
             //ln address tests
             var store = s.CreateNewStore();
             s.GoToStore(s.StoreId, StoreNavPages.Integrations);
-            //ensure ln address is not available as lnurl is not configured
+            //ensure ln address is not available as Lightning is not enable
             s.Driver.FindElement(By.Id("lightning-address-option"))
-                .FindElement(By.ClassName("btcpay-status--disabled"));
+                .FindElement(By.LinkText("You need to setup Lightning first"));
 
             s.GoToStore(s.StoreId, StoreNavPages.PaymentMethods);
             s.AddLightningNode("BTC", LightningConnectionType.LndREST, false);
 
+            s.GoToStore(s.StoreId, StoreNavPages.Integrations);
+            //ensure ln address is not available as lnurl is not configured
+            s.Driver.FindElement(By.Id("lightning-address-option"))
+                .FindElement(By.LinkText("You need LNURL configured first"));
+            
+            s.GoToStore(s.StoreId, StoreNavPages.PaymentMethods);
             s.Driver.FindElement(By.Id($"Modify-LightningBTC")).Click();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.Driver.WaitForAndClick(By.Id("save"));

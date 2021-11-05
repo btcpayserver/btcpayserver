@@ -28,7 +28,6 @@ namespace BTCPayServer.Plugins.LNbank
                 factory.ConfigureBuilder(o);
             });
             services.AddAppServices();
-            services.AddAppAuthorization();
         }
 
         public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)

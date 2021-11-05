@@ -114,6 +114,11 @@ namespace BTCPayServer.Tests
             return el;
         }
 
+        public static void ScrollTo(this IWebDriver driver, By selector)
+        {
+            var element = driver.FindElement(selector);
+            driver.ExecuteJavaScript("arguments[0].scrollIntoView();", element);
+        }
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
@@ -125,6 +130,7 @@ namespace BTCPayServer.Tests
             {
                 var el = driver.FindElement(selector);
                 wait.Until(d => el.Displayed && el.Enabled);
+                driver.ScrollTo(selector);
                 el.Click();
             }
             catch (ElementClickInterceptedException) when (retriesLeft > 0)

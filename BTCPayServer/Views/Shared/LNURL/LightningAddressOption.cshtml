@@ -1,35 +1,9 @@
 @using BTCPayServer.Payments.Lightning
-@using BTCPayServer.Payments
-@using NBitcoin
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @{
     var store = Context.GetStoreData();
-    var lightningByCryptoCode = store
-            .GetSupportedPaymentMethods(BTCPayNetworkProvider)
-            .OfType<LightningSupportedPaymentMethod>()
-            .Where(method => method.PaymentId.PaymentType == LightningPaymentType.Instance)
-            .ToDictionary(c => c.CryptoCode.ToUpperInvariant());
-    var excludeFilters = store.GetStoreBlob().GetExcludedPaymentMethods();
-
-    var isLightningEnabled = false;
-    var isLNUrlEnabled = false;
-    
-    var paymentMethods = store.GetSupportedPaymentMethods(BTCPayNetworkProvider);
-    foreach (var paymentMethod in paymentMethods)
-    {
-        var paymentMethodId = paymentMethod.PaymentId;
-        switch (paymentMethodId.PaymentType)
-        {
-            case LNURLPayPaymentType lnurlPayPaymentType:
-                isLNUrlEnabled = !excludeFilters.Match(paymentMethodId);
-                break;
-            case LightningPaymentType _:
-                var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);
-                isLightningEnabled = !excludeFilters.Match(paymentMethodId) && lightning != null;
-                break;
-        }
-    }
-
+    var isLightningEnabled = store.IsLightningEnabled(BTCPayNetworkProvider);
+    var isLNUrlEnabled = store.IsLNUrlEnabled(BTCPayNetworkProvider);
     var possible =
         isLightningEnabled &&
         isLNUrlEnabled &&

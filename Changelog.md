@@ -5,6 +5,7 @@
 ### Bug fixes:
 
 * LNAddress wasn't working if the store supported an altcoin @NicolasDorier
+* Fix maintainance view @dennisreimann
 
 ## 1.3.2
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -155,7 +155,6 @@ namespace BTCPayServer
                 public string StoreId { get; set; }
                 [Display(Name = "Invoice currency")]
                 public string CurrencyCode { get; set; }
-                public string CryptoCode { get; set; }
                 
                 [Display(Name = "Min sats")]
                 [Range(1, double.PositiveInfinity)]
@@ -185,10 +184,10 @@ namespace BTCPayServer
                                            new LightningAddressSettings();
             if (!lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
             {
-                return NotFound();
+                return NotFound("Unknown username");
             }
 
-            return await GetLNURL(item.CryptoCode, item.StoreId, item.CurrencyCode, item.Min, item.Max,
+            return await GetLNURL("BTC", item.StoreId, item.CurrencyCode, item.Min, item.Max,
                 () => (username, null, null, true));
         }
 
@@ -201,13 +200,13 @@ namespace BTCPayServer
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
-                return NotFound();
+                return NotFound("This network does not support Lightning");
             }
 
             var store = await _storeRepository.FindStore(storeId);
             if (store is null)
             {
-                return NotFound();
+                return NotFound("Store not found");
             }
 
             currencyCode ??= store.GetStoreBlob().DefaultCurrency ?? cryptoCode;
@@ -219,13 +218,13 @@ namespace BTCPayServer
             var lnMethod = methods.FirstOrDefault(method => method.PaymentId == lnpmi);
             if (lnUrlMethod is null || lnMethod is null)
             {
-                return NotFound();
+                return NotFound("LNURL or Lightning payment method not found");
             }
 
             var blob = store.GetStoreBlob();
             if (blob.GetExcludedPaymentMethods().Match(pmi) || blob.GetExcludedPaymentMethods().Match(lnpmi))
             {
-                return NotFound();
+                return NotFound("LNURL or Lightning payment method disabled");
             }
 
             (string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
@@ -470,7 +469,6 @@ namespace BTCPayServer
                         Max = lightningAddressSettings.Items[s].Max,
                         Min = lightningAddressSettings.Items[s].Min,
                         CurrencyCode = lightningAddressSettings.Items[s].CurrencyCode,
-                        CryptoCode = lightningAddressSettings.Items[s].CryptoCode,
                         StoreId = lightningAddressSettings.Items[s].StoreId,
                         Username = s,
                     }).ToList()
@@ -522,11 +520,6 @@ namespace BTCPayServer
              
                 lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
                 vm.Add.StoreId = storeId;
-                vm.Add.CryptoCode = ControllerContext.HttpContext.GetStoreData()
-                    .GetEnabledPaymentIds(_btcPayNetworkProvider)
-                    .OrderBy(id => id.CryptoCode == "BTC")
-                    .First()
-                    .CryptoCode;
                 lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
                 await _settingsRepository.UpdateSetting(lightningAddressSettings);
                 TempData.SetStatusMessageModel(new StatusMessageModel

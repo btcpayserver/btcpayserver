@@ -612,12 +612,12 @@ namespace BTCPayServer.Controllers.GreenField
         {
             HandleActionResult(await _apiKeysController.RevokeKey(apikey));
         }
-
-        public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,
-            CancellationToken token = default)
+        
+        public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, 
+            int? skip = null, int? take = null, CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<NotificationData>>(
-                await _notificationsController.GetNotifications(seen));
+                await _notificationsController.GetNotifications(seen, skip, take));
         }
 
         public override async Task<NotificationData> GetNotification(string notificationId,

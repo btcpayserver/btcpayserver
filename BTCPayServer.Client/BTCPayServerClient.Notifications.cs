@@ -9,13 +9,22 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,
-            CancellationToken token = default)
+        public virtual async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, int? skip = null, 
+            int? take = null, CancellationToken token = default)
         {
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/users/me/notifications",
-                        seen != null ? new Dictionary<string, object>() {{nameof(seen), seen}} : null), token);
+            Dictionary<string, object> queryPayload = new Dictionary<string, object>();
+            
+            if (seen != null)
+                queryPayload.Add(nameof(seen), seen);
+            if (skip != null)
+                queryPayload.Add(nameof(skip), skip);
+            if (take != null)
+                queryPayload.Add(nameof(take), take);
+
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/users/me/notifications",
+                    queryPayload), token);
+
             return await HandleResponse<IEnumerable<NotificationData>>(response);
         }
 

@@ -215,6 +215,17 @@ namespace BTCPayServer.Tests
                 IsAdmin = isAdmin
             };
             await account.Register(RegisterDetails);
+
+            //this addresses an obscure issue where LockSubscription is unintentionally set to "true",
+            //resulting in a large number of tests failing.  
+            if (account.RegisteredUserId == null) 
+            {
+                var settings = parent.PayTester.GetService<SettingsRepository>();
+                var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+                policies.LockSubscription = false;
+                await account.Register(RegisterDetails);
+            }
+
             UserId = account.RegisteredUserId;
             IsAdmin = account.RegisteredAdmin;
         }

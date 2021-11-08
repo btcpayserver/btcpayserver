@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -82,8 +83,8 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
-            bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
+        public async Task<IActionResult> AuthorizeAPIKey(string[]? permissions, string? applicationName = null, Uri? redirect = null,
+            bool strict = true, bool selectiveStores = false, string? applicationIdentifier = null)
         {
             if (!_btcPayServerEnvironment.IsSecure)
             {
@@ -195,7 +196,7 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            var permissions = !String.IsNullOrEmpty(vm.Permissions) ? vm.Permissions.Split(';') : Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
             /**
              * Go over each permission and associated store IDs and 
@@ -240,12 +241,12 @@ namespace BTCPayServer.Controllers
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
-                        permissionValue.SpecificStores = wanted.Select(permission => permission.Scope).ToList();
+                        permissionValue.SpecificStores = wanted.Select(permission => permission.Scope).ToList<string?>();
                     }
                     else
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.AllStores;
-                        permissionValue.SpecificStores = new List<string>();
+                        permissionValue.SpecificStores = new List<string?>();
                         permissionValue.Value = true;
                     }
                 }
@@ -361,7 +362,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("APIKeys");
         }
 
-        private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
+        private IActionResult? HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
             {
@@ -387,7 +388,7 @@ namespace BTCPayServer.Controllers
                     // Reset values for "all stores" option to their original values
                     if (permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
                     {
-                        permissionValueItem.SpecificStores = new List<string>();
+                        permissionValueItem.SpecificStores = new List<string?>();
                         permissionValueItem.Value = true;
                     }
 
@@ -414,7 +415,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, (string appIdentifier, string appAuthority) app = default)
+        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, (string? appIdentifier, string? appAuthority) app = default)
         {
             var key = new APIKeyData()
             {
@@ -462,15 +463,17 @@ namespace BTCPayServer.Controllers
             viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
                 .Succeeded;
-            viewModel.PermissionValues ??= Policies.AllPolicies
-                .Where(p => AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(p))
-                .Select(s => new AddApiKeyViewModel.PermissionValueItem()
-                {
-                    Permission = s,
-                    Value = false,
-                    Forbidden = Policies.IsServerPolicy(s) && !isAdmin
-                }).ToList();
-
+            if (!viewModel.PermissionValues.Any())
+            {
+                viewModel.PermissionValues = Policies.AllPolicies
+                    .Where(p => AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(p))
+                    .Select(s => new AddApiKeyViewModel.PermissionValueItem()
+                    {
+                        Permission = s,
+                        Value = false,
+                        Forbidden = Policies.IsServerPolicy(s) && !isAdmin
+                    }).ToList();
+            }
 
             if (!isAdmin)
             {
@@ -485,10 +488,10 @@ namespace BTCPayServer.Controllers
 
         public class AddApiKeyViewModel
         {
-            public string Label { get; set; }
-            public StoreData[] Stores { get; set; }
-            public string Command { get; set; }
-            public List<PermissionValueItem> PermissionValues { get; set; }
+            public string? Label { get; set; }
+            public StoreData[]? Stores { get; set; }
+            public string Command { get; set; } = String.Empty;
+            public List<PermissionValueItem> PermissionValues { get; set; } = new List<PermissionValueItem>();
 
             public enum ApiKeyStoreMode
             {
@@ -530,6 +533,7 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanCreateLightningInvoiceInStore, ("Create invoices the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to all your stores to create BOLT11 invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanUseLightningNodeInStore}:", ("Use the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanCreateLightningInvoiceInStore}:", ("Create invoices the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices.")},
+                    {"PermissionNotSet", ("No access to anything", "This permission does not give access to do anything.")},
                 };
                 public string Title
                 {
@@ -545,29 +549,29 @@ namespace BTCPayServer.Controllers
                         return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific ? ":" : "")}"].Description;
                     }
                 }
-                public string Permission { get; set; }
+                public string Permission { get; set; } = "PermissionNotSet";
                 public bool Value { get; set; }
                 public bool Forbidden { get; set; }
 
                 public ApiKeyStoreMode StoreMode { get; set; } = ApiKeyStoreMode.AllStores;
-                public List<string> SpecificStores { get; set; } = new List<string>();
+                public List<string?> SpecificStores { get; set; } = new List<string?>();
             }
         }
 
         public class AuthorizeApiKeysViewModel : AddApiKeyViewModel
         {
-            public string ApplicationName { get; set; }
-            public string ApplicationIdentifier { get; set; }
-            public Uri RedirectUrl { get; set; }
+            public string? ApplicationName { get; set; }
+            public string? ApplicationIdentifier { get; set; }
+            public Uri? RedirectUrl { get; set; }
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
-            public string Permissions { get; set; }
-            public string ApiKey { get; set; }
+            public string? Permissions { get; set; }
+            public string ApiKey { get; set; } = String.Empty;
         }
 
         public class ApiKeysViewModel
         {
-            public List<APIKeyData> ApiKeyDatas { get; set; }
+            public List<APIKeyData> ApiKeyDatas { get; set; } = new List<APIKeyData>();
         }
     }
 }

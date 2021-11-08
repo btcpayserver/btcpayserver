@@ -1577,7 +1577,7 @@ progress {
 }
 
 .table > :not(:first-child) {
-  border-top: 2px solid currentColor;
+  border-top: 2px solid var(--btcpay-body-border-medium);
 }
 
 .caption-top {
@@ -9989,6 +9989,11 @@ textarea.w-auto {
 .row .table {
   width: calc(100% + 1rem);
   margin: 1.5rem -.5rem;
+}
+
+/* Fix table group border width */
+.table > :not(:first-child) {
+  border-top-width: 1px;
 }
 
 /* custom utility classes */

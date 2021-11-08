@@ -70,6 +70,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="NBitcoin" Version="6.0.17" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.4" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />

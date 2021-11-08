@@ -62,8 +62,8 @@
     @foreach (var user in Model.Users)
     {
         <tr>
-            <td>
-                @user.Email
+            <td class="d-flex align-items-center">
+                <span class="me-2">@user.Email</span>
                 @if (user.IsAdmin)
                 {
                     <span class="badge bg-info">Admin</span>

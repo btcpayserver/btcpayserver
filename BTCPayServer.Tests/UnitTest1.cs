@@ -336,7 +336,10 @@ namespace BTCPayServer.Tests
                         !Policies.IsStorePolicy(pair.Key) && !Policies.IsServerPolicy(pair.Key));
 
                 description = description.Replace("#OTHERPERMISSIONS#",
-                        string.Join("\n", otherPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
+                        string.Join("\n", otherPolicies
+                            // Exclude the "PermissionNotSet" because it's not a real policy but it exists so that we have a fake fallback policy
+                            .Where(pair => pair.Key != "PermissionNotSet")
+                            .Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
                     .Replace("#SERVERPERMISSIONS#",
                         string.Join("\n", serverPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
                     .Replace("#STOREPERMISSIONS#",

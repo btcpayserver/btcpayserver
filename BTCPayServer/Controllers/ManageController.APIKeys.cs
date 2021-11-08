@@ -297,7 +297,7 @@ namespace BTCPayServer.Controllers
                 case "authorize":
                 case "confirm":
                     var key = command == "authorize"
-                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl.AbsoluteUri))
+                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.AbsoluteUri))
                         : await _apiKeyRepository.GetKey(viewModel.ApiKey);
     
                     if (viewModel.RedirectUrl != null)

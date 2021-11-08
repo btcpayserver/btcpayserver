@@ -9,7 +9,10 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
-    
+    Model.PaginationQuery ??= new Dictionary<string, object>();
+    Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
+    Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
+    Model.PaginationQuery.Add("payoutState", Model.PayoutState);
     var stateActions = new List<(string Action, string Text)>();
     if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
     {

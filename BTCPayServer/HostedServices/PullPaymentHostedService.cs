@@ -391,6 +391,14 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
+                if (req.ClaimRequest.Value <
+                    await payoutHandler.GetMinimumPayoutAmount(req.ClaimRequest.PaymentMethodId,
+                        req.ClaimRequest.Destination))
+                {
+                    req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
+                    return;
+                }
+
                 var payouts = (await ctx.Payouts.GetPayoutInPeriod(pp, now)
                                                 .Where(p => p.State != PayoutState.Cancelled)
                                                 .ToListAsync())

@@ -142,6 +142,7 @@
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
+	  <Folder Include="wwwroot\vendor\ur-registry" />
 	  <Folder Include="wwwroot\vendor\vue-qrcode-reader" />
 	</ItemGroup>
 

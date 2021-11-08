@@ -1,5 +1,5 @@
 /*!
- * Bootstrap v5.1.1 (https://getbootstrap.com/)
+ * Bootstrap v5.1.3 (https://getbootstrap.com/)
  * Copyright 2011-2021 The Bootstrap Authors
  * Copyright 2011-2021 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
@@ -643,9 +643,9 @@ progress {
   --btcpay-gutter-y: 0;
   display: flex;
   flex-wrap: wrap;
-  margin-top: calc(var(--btcpay-gutter-y) * -1);
-  margin-right: calc(var(--btcpay-gutter-x) * -.5);
-  margin-left: calc(var(--btcpay-gutter-x) * -.5);
+  margin-top: calc(-1 * var(--btcpay-gutter-y));
+  margin-right: calc(-.5 * var(--btcpay-gutter-x));
+  margin-left: calc(-.5 * var(--btcpay-gutter-x));
 }
 
 .row > * {
@@ -1576,8 +1576,8 @@ progress {
   vertical-align: bottom;
 }
 
-.table > :not(:last-child) > :last-child > * {
-  border-bottom-color: var(--btcpay-body-border-medium);
+.table > :not(:first-child) {
+  border-top: 2px solid currentColor;
 }
 
 .caption-top {
@@ -1600,7 +1600,11 @@ progress {
   border-bottom-width: 0;
 }
 
-.table-striped > tbody > tr:nth-of-type(odd) {
+.table-borderless > :not(:first-child) {
+  border-top-width: 0;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
   --btcpay-table-accent-bg: var(--btcpay-table-striped-bg);
   color: var(--btcpay-table-striped-color);
 }
@@ -1610,7 +1614,7 @@ progress {
   color: var(--btcpay-table-active-color);
 }
 
-.table-hover > tbody > tr:hover {
+.table-hover > tbody > tr:hover > * {
   --btcpay-table-accent-bg: var(--btcpay-table-hover-bg);
   color: var(--btcpay-table-hover-color);
 }
@@ -2045,6 +2049,7 @@ textarea.form-control-lg {
   padding-bottom: 0.5rem;
   padding-left: 0.75rem;
   font-size: 0.75rem;
+  border-radius: 0.2rem;
 }
 
 .form-select-lg {
@@ -2052,6 +2057,7 @@ textarea.form-control-lg {
   padding-bottom: 1rem;
   padding-left: 1.25rem;
   font-size: 1rem;
+  border-radius: 0.3rem;
 }
 
 .form-check {

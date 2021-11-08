@@ -661,6 +661,26 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public async Task CheckJsContent()
+        {
+            // This test verify that no malicious js is added in the minified files.
+            // We should extend the tests to other js files, but we can do as we go...
+
+            using HttpClient client = new HttpClient();
+            var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js");
+            var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            var expected = await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync();
+            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+        }
+        string GetFileContent(params string[] path)
+        {
+            var l = path.ToList();
+            l.Insert(0, TestUtils.TryGetSolutionDirectoryInfo().FullName);
+            return File.ReadAllText(Path.Combine(l.ToArray()));
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseLegacyLabels()
         {
             static void AssertContainsRawLabel(WalletTransactionInfo info)

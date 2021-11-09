@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.4
+
+### Bug fixes:
+
+* Fix: Do not crash when redirect url is not provided to Authorize page @Kukks
+* Fix: Disabling lightning should also disable LNURL @Kukks
+* Fix: Paging in payouts did not take additional parameters in consideration @Kukks
+* Fix: Payout actions button was misaligned @Kukks
+* Fix: Amount validation for payout creation min amount was missing @Kukks
+
+### Improvements:
+
+* Point of Sale Print view improvements (#3050) @satwo
+* Upgrade to Bootstrap 5.1.3 @dennisreimann
+* Updates display names (#3036) @dstrukt
+
 ## 1.3.3
 
 ### Bug fixes:

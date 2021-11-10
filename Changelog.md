@@ -12,7 +12,7 @@
 
 ### Improvements:
 
-* Point of Sale Print view improvements (#3050) @satwo
+* Point of Sale Print view improvements (#3050) @satwo @dennisreimann
 * Upgrade to Bootstrap 5.1.3 @dennisreimann
 * Updates display names (#3036) @dstrukt
 

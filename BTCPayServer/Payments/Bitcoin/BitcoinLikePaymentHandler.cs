@@ -198,8 +198,7 @@ namespace BTCPayServer.Payments.Bitcoin
             
             if (amount < dust)
             {
-                throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable " +
-                                                "an off-chain (Lightning) payment method");
+                throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
             }
 
             onchainMethod.DepositAddress = reserved.Address.ToString();

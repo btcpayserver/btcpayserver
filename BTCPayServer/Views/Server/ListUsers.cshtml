@@ -62,7 +62,13 @@
     @foreach (var user in Model.Users)
     {
         <tr>
-            <td>@user.Email</td>
+            <td class="d-flex align-items-center">
+                <span class="me-2">@user.Email</span>
+                @if (user.IsAdmin)
+                {
+                    <span class="badge bg-info">Admin</span>
+                }
+            </td>
             <td>@user.Created?.ToBrowserDate()</td>
             <td class="text-center">
                 @if (user.Verified)

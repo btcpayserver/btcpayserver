@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
@@ -335,7 +337,7 @@ namespace BTCPayServer.Controllers
                     IsStored = request.SavePrivateKeys,
                     ReturnUrl = Url.Action(nameof(GenerateWalletConfirm), new { storeId, cryptoCode })
                 };
-                if (this._BTCPayEnv.IsDeveloping)
+                if (_BTCPayEnv.IsDeveloping)
                 {
                     GenerateWalletResponse = response;
                 }
@@ -380,33 +382,52 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             var storeBlob = store.GetStoreBlob();
             (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
+            var client = _ExplorerProvider.GetExplorerClient(network);
 
             var vm = new WalletSettingsViewModel
-                {
-                    StoreId = storeId,
-                    CryptoCode = cryptoCode,
-                    Network = network,
-                    Source = derivation.Source,
-                    RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString(),
-                    DerivationScheme = derivation.AccountDerivation.ToString(),
-                    KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString(),
-                    Config = ProtectString(derivation.ToJson()),
-                    IsHotWallet = derivation.IsHotWallet,
-                    PayJoinEnabled = storeBlob.PayJoinEnabled,
-                    MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
-                    SpeedPolicy = store.SpeedPolicy,
-                    ShowRecommendedFee = storeBlob.ShowRecommendedFee,
-                    RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
-                    CanUseHotWallet = canUseHotWallet, 
-                    CanUseRPCImport = rpcImport, 
-                    CanUsePayJoin = canUseHotWallet && store
-                        .GetSupportedPaymentMethods(_NetworkProvider)
-                        .OfType<DerivationSchemeSettings>()
-                        .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet)
-                };
+            {
+                StoreId = storeId,
+                CryptoCode = cryptoCode,
+                WalletId = new WalletId(storeId, cryptoCode),
+                Network = network,
+                IsHotWallet = derivation.IsHotWallet,
+                Source = derivation.Source,
+                RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString(),
+                DerivationScheme = derivation.AccountDerivation.ToString(),
+                DerivationSchemeInput = derivation.AccountOriginal,
+                KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString(),
+                UriScheme = derivation.Network.NBitcoinNetwork.UriScheme,
+                Label = derivation.Label,
+                SelectedSigningKey = derivation.SigningKey.ToString(),
+                NBXSeedAvailable = derivation.IsHotWallet && 
+                                   canUseHotWallet &&
+                                   !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
+                                       WellknownMetadataKeys.MasterHDKey)),
+                AccountKeys = derivation.AccountKeySettings
+                    .Select(e => new WalletSettingsAccountKeyViewModel
+                    {
+                        AccountKey = e.AccountKey.ToString(),
+                        MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
+                        AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                    }).ToList(),
+                Config = ProtectString(derivation.ToJson()),
+                PayJoinEnabled = storeBlob.PayJoinEnabled,
+                MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
+                SpeedPolicy = store.SpeedPolicy,
+                ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+                RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+                CanUseHotWallet = canUseHotWallet, 
+                CanUseRPCImport = rpcImport, 
+                CanUsePayJoin = canUseHotWallet && store
+                    .GetSupportedPaymentMethods(_NetworkProvider)
+                    .OfType<DerivationSchemeSettings>()
+                    .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet),
+                StoreName = store.StoreName,
+                
+            };
 
             ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
             ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
@@ -414,38 +435,140 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
         
-        [HttpPost("{storeId}/onchain/{cryptoCode}/settings")]
+        [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
         public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
         {
-            bool needUpdate = false;
-            if (CurrentStore.SpeedPolicy != vm.SpeedPolicy)
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            if (checkResult != null)
             {
-                needUpdate = true;
-                CurrentStore.SpeedPolicy = vm.SpeedPolicy;
+                return checkResult;
             }
 
-            var blob = CurrentStore.GetStoreBlob();
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
             
+            bool needUpdate = false;
+            string errorMessage = null;
+            if (derivation.Label != vm.Label)
+            {
+                needUpdate = true;
+                derivation.Label = vm.Label;
+            }
+            
+            var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
+                ? null
+                : new BitcoinExtPubKey(vm.SelectedSigningKey, derivation.Network.NBitcoinNetwork);
+            if (derivation.SigningKey != signingKey && signingKey != null)
+            {
+                needUpdate = true;
+                derivation.SigningKey = signingKey;
+            }
+            
+            for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
+            {
+                KeyPath accountKeyPath = null;
+                HDFingerprint? rootFingerprint = null;
+
+                try
+                {
+                    accountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath)
+                        ? null
+                        : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
+                
+                    if (accountKeyPath != null && derivation.AccountKeySettings[i].AccountKeyPath != accountKeyPath)
+                    {
+                        needUpdate = true;
+                        derivation.AccountKeySettings[i].AccountKeyPath = accountKeyPath;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"{ex.Message}: {vm.AccountKeys[i].AccountKeyPath}";
+                }
+
+                try
+                {
+                    rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
+                        ? (HDFingerprint?)null
+                        : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
+                
+                    if (rootFingerprint != null && derivation.AccountKeySettings[i].RootFingerprint != rootFingerprint)
+                    {
+                        needUpdate = true;
+                        derivation.AccountKeySettings[i].RootFingerprint = rootFingerprint;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"{ex.Message}: {vm.AccountKeys[i].MasterFingerprint}";
+                }
+            }
+
+            if (needUpdate)
+            {
+                store.SetSupportedPaymentMethod(derivation);
+                
+                await _Repo.UpdateStore(store);
+
+                if (string.IsNullOrEmpty(errorMessage))
+                {
+                    TempData[WellKnownTempData.SuccessMessage] = "Wallet settings successfully updated";
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = errorMessage;
+                }
+            }
+
+            return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
+        }
+        
+        [HttpPost("{storeId}/onchain/{cryptoCode}/settings/payment")]
+        public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
+        {
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            if (checkResult != null)
+            {
+                return checkResult;
+            }
+
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+            
+            bool needUpdate = false;
+            if (store.SpeedPolicy != vm.SpeedPolicy)
+            {
+                needUpdate = true;
+                store.SpeedPolicy = vm.SpeedPolicy;
+            }
+
+            var blob = store.GetStoreBlob();
+            var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
             blob.MonitoringExpiration = TimeSpan.FromMinutes(vm.MonitoringExpiration);
             blob.ShowRecommendedFee = vm.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
-            
-            var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
             blob.PayJoinEnabled = vm.PayJoinEnabled;
-            if (CurrentStore.SetStoreBlob(blob))
+            
+            if (store.SetStoreBlob(blob))
             {
                 needUpdate = true;
             }
 
             if (needUpdate)
             {
-                await _Repo.UpdateStore(CurrentStore);
+                await _Repo.UpdateStore(store);
 
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
 
                 if (payjoinChanged && blob.PayJoinEnabled)
                 {
-                    var problematicPayjoinEnabledMethods = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
+                    var problematicPayjoinEnabledMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                         .OfType<DerivationSchemeSettings>()
                         .Where(settings => settings.Network.SupportPayJoin && !settings.IsHotWallet)
                         .Select(settings => settings.PaymentId.CryptoCode)
@@ -457,17 +580,59 @@ namespace BTCPayServer.Controllers
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
                             Severity = StatusMessageModel.StatusSeverity.Warning,
-                            Html = $"The payment settings were updated successfully. However, payjoin will not work for {string.Join(", ", problematicPayjoinEnabledMethods)} until you configure them to be a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
+                            Html = $"The payment settings were updated successfully. However, PayJoin will not work for {string.Join(", ", problematicPayjoinEnabledMethods)} until you configure them to be a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
                         });
                     }
                 }
             }
-
-            return RedirectToAction(nameof(WalletSettings), new
+            
+            return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
+        }
+        
+        [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
+        public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
+        {
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            if (checkResult != null)
             {
-                storeId = vm.StoreId,
-                cryptoCode = vm.CryptoCode
+                return checkResult;
+            }
+
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+            
+            (bool canUseHotWallet, bool _) = await CanUseHotWallet();
+            if (!canUseHotWallet)
+            {
+                return NotFound();
+            }
+            
+            var client = _ExplorerProvider.GetExplorerClient(network);
+            if (await GetSeed(client, derivation) != null)
+            {
+                var mnemonic = await client.GetMetadataAsync<string>(derivation.AccountDerivation,
+                    WellknownMetadataKeys.Mnemonic, cancellationToken);
+                var recoveryVm = new RecoverySeedBackupViewModel
+                {
+                    CryptoCode = cryptoCode,
+                    Mnemonic = mnemonic,
+                    IsStored = true,
+                    RequireConfirm = false,
+                    ReturnUrl = Url.Action(nameof(WalletSettings), new { storeId, cryptoCode })
+                };
+                return this.RedirectToRecoverySeedBackup(recoveryVm);
+            }
+            
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = "The seed was not found"
             });
+
+            return RedirectToAction(nameof(WalletSettings));
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
@@ -631,6 +796,13 @@ namespace BTCPayServer.Controllers
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
+        }
+        
+        private async Task<string> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
+        {
+            return derivation.IsHotWallet &&
+                   await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is string seed &&
+                   !string.IsNullOrEmpty(seed) ? seed : null;
         }
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()

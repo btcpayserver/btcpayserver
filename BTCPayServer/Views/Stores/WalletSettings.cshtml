@@ -1,60 +1,125 @@
+@using NBitcoin.DataEncoders
+@using Newtonsoft.Json
+@using System.Text
 @model WalletSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().StoreName);
 }
+
+@section PageHeadContent {
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
+
 <div class="row">
     <div class="col-lg-10 col-xl-9">
         <div class="mb-5">
             <h4 class="mb-3">@ViewData["Title"]</h4>
-            <table class="table table-borderless table-responsive-md">
-                <tbody>
-                <tr>
-                    <th>Type</th>
-                    <td class="d-flex flex-wrap align-items-center">
-                        <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
-                        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" 
-                           id="ChangeWalletLink" 
-                           class="text-secondary me-3"
-                           data-bs-toggle="modal" 
-                           data-bs-target="#ConfirmModal" 
-                           data-title="Replace @Model.CryptoCode wallet"
-                           data-description="@ViewData["ReplaceDescription"]"
-                           data-confirm="Setup new wallet"
-                           data-confirm-input="REPLACE">
-                            Replace wallet
-                        </a>
-                        <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
-                            <button type="submit" class="btn btn-link text-secondary text-start p-0" id="Delete"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#ConfirmModal" 
+            <div class="mb-3 d-flex align-items-center">
+                <span class="me-2">Type:</span>
+                <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
+                
+                <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle py-1 px-3" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+                            @if (Model.NBXSeedAvailable)
+                            {
+                                <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed">View seed</a>
+                            }
+                            @if (Model.UriScheme == "bitcoin")
+                            {
+                                <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "Wallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden>Register wallet for payment links</button>
+                            }
+                            <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                               id="ChangeWalletLink"
+                               class="dropdown-item"
+                               data-bs-toggle="modal"
+                               data-bs-target="#ConfirmModal"
+                               data-title="Replace @Model.CryptoCode wallet"
+                               data-description="@ViewData["ReplaceDescription"]"
+                               data-confirm="Setup new wallet"
+                               data-confirm-input="REPLACE">
+                                Replace wallet
+                            </a>
+                            <button type="submit"
+                                id="Delete"
+                                class="dropdown-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#ConfirmModal"
                                 data-title="Remove @Model.CryptoCode wallet"
                                 data-description="@ViewData["RemoveDescription"]"
                                 data-confirm="Remove"
                                 data-confirm-input="REMOVE">Remove wallet</button>
-                        </form>
-                    </td>
-                </tr>
-                <tr>
-                    <th class="w-150px">Derivation Scheme</th>
-                    <td class="text-break">@Model.DerivationScheme</td>
-                </tr>
-                <tr>
-                    <th>Root Fingerprint</th>
-                    <td>@Model.RootFingerprint</td>
-                </tr>
-                @if (!string.IsNullOrEmpty(Model.KeyPath))
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+                <div class="form-group">
+                    <label asp-for="Label" class="form-label"></label>
+                    <input asp-for="Label" class="form-control" style="max-width:24em;" />
+                    <span asp-validation-for="Label" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="DerivationScheme" class="form-label"></label>
+                    <div class="input-group" data-clipboard="@Model.DerivationScheme">
+                        <input asp-for="DerivationScheme" class="form-control" style="cursor:copy" readonly />
+                        <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
                 {
-                    <tr>
-                        <th>KeyPath</th>
-                        <td>@Model.KeyPath</td>
-                    </tr>
+                    <div class="form-group">
+                        <label asp-for="DerivationSchemeInput" class="form-label"></label>
+                        <div class="input-group" data-clipboard="@Model.DerivationSchemeInput">
+                            <input asp-for="DerivationSchemeInput" class="form-control" style="cursor:copy" readonly/>
+                            <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                        </div>
+                    </div>
                 }
-                </tbody>
-            </table>
+                @for (var i = 0; i < Model.AccountKeys.Count; i++)
+                {
+                    <h5 class="mt-5">Account key @i</h5>
+                    <div class="form-group">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
+                            <button type="button" class="d-inline-block ms-2 btn text-secondary btn-link p-0 mb-2" data-account-key="@i" title="">
+                                <span class="fa fa-qrcode"></span> Show export QR
+                            </button>
+                        </div>
+                        <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
+                            <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" style="cursor:copy" readonly/>
+                            <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-auto">
+                            <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
+                            <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;" />
+                        </div>
+                        <div class="form-group col-auto">
+                            <label asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-label"></label>
+                            <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
+                        </div>
+                    </div>
+                    @if (Model.IsMultiSig)
+                    {
+                        <div class="form-check">
+                            <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
+                            <label asp-for="SelectedSigningKey" class="form-check-label"></label>
+                        </div>
+                    }
+                }
+                <button type="submit" class="btn btn-primary" id="SaveWalletSettings">Save Wallet Settings</button>
+            </form>
             
             <h4 class="mt-5 mb-3">Payment</h4>
-            <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+            <form method="post" asp-action="UpdatePaymentSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
                 @if (Model.CanUsePayJoin)
                 {
                     <div class="form-group">
@@ -102,23 +167,39 @@
                 </div>
                 <div class="form-group mt-2 mb-4">
                     <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
-                    <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch" min="1" />
+                    <input asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="width:8ch" />
                     <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
+                <button type="submit" class="btn btn-primary" id="SavePaymentSettings">Save Payment Settings</button>
             </form>
         </div>
     </div>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel($"{Model.CryptoCode} wallet", "Change", "Update"))" />
+<partial name="ShowQR"/>
 
 @section PageFootContent {
     <script>
-        const deleteButton = document.getElementById('Delete')
-        deleteButton.addEventListener('click', event => {
-            event.preventDefault()
-        });
+        const wallets = @Safe.Json(Model.AccountKeys.Select(model => Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))))
+        const qrApp = initQRShow("Wallet QR", "", "scan-qr-modal")
+        
+        delegate('click', '#Delete', event => { event.preventDefault() })
+        
+        delegate('click', 'button[data-account-key]', event => {
+            const { accountKey } = event.target.dataset
+            qrApp.data = wallets[parseInt(accountKey)]
+            $("#scan-qr-modal").modal("show")
+        })
+        
+        if (navigator.registerProtocolHandler) {
+            document.getElementById('RegisterWallet').removeAttribute('hidden');
+            delegate('click', '#RegisterWallet', event => {
+               const { store, scheme, url } = event.target.dataset
+               const uri = decodeURIComponent(url)
+               navigator.registerProtocolHandler(scheme, uri, `BTCPay Wallet: ${store}`)
+            })
+        } 
     </script>
     <partial name="_ValidationScriptsPartial"/>
 }

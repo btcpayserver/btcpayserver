@@ -150,6 +150,15 @@ namespace BTCPayServer.Tests
             modify(walletSettings);
             storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
+        
+        public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            var response = await storeController.WalletSettings(StoreId, "BTC");
+            WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
+            modify(walletSettings);
+            storeController.UpdatePaymentSettings(walletSettings).GetAwaiter().GetResult();
+        }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {

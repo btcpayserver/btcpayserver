@@ -12,7 +12,6 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -25,14 +24,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.PayJoin;
-using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
-using WalletSettingsViewModel = BTCPayServer.Models.WalletViewModels.WalletSettingsViewModel;
 
 namespace BTCPayServer.Controllers
 {
@@ -41,10 +39,12 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class WalletsController : Controller
     {
-        public StoreRepository Repository { get; }
-        public WalletRepository WalletRepository { get; }
-        public BTCPayNetworkProvider NetworkProvider { get; }
-        public ExplorerClientProvider ExplorerClientProvider { get; }
+        private StoreRepository Repository { get; }
+        private WalletRepository WalletRepository { get; }
+        private BTCPayNetworkProvider NetworkProvider { get; }
+        private ExplorerClientProvider ExplorerClientProvider { get; }
+
+        public RateFetcher RateFetcher { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JsonSerializerSettings _serializerSettings;
@@ -62,8 +62,6 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
-
-        public RateFetcher RateFetcher { get; }
 
         readonly CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
@@ -86,7 +84,7 @@ namespace BTCPayServer.Controllers
                                  LabelFactory labelFactory,
                                  ApplicationDbContextFactory dbContextFactory,
                                  BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
-                                 HostedServices.PullPaymentHostedService pullPaymentService,
+                                 PullPaymentHostedService pullPaymentService,
                                  IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _currencyTable = currencyTable;
@@ -114,7 +112,7 @@ namespace BTCPayServer.Controllers
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
-        readonly string[] LabelColorScheme = new string[]
+        readonly string[] LabelColorScheme = 
         {
             "#fbca04",
             "#0e8a16",
@@ -274,9 +272,8 @@ namespace BTCPayServer.Controllers
             return View(wallets);
         }
 
-        [HttpGet]
-        [Route("{walletId}")]
-        [Route("{walletId}/transactions")]
+        [HttpGet("{walletId}")]
+        [HttpGet("{walletId}/transactions")]
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, 
@@ -359,8 +356,7 @@ namespace BTCPayServer.Controllers
             return $"{walletId}:{txId}";
         }
 
-        [HttpGet]
-        [Route("{walletId}/receive")]
+        [HttpGet("{walletId}/receive")]
         public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
@@ -854,7 +850,7 @@ namespace BTCPayServer.Controllers
 
         private IActionResult RedirectToWalletPSBT(WalletPSBTViewModel vm)
         {
-            var redirectVm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBT),
@@ -871,7 +867,7 @@ namespace BTCPayServer.Controllers
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, SigningContextModel signingContext)
         {
-            return View(nameof(SignWithSeed), new SignWithSeedViewModel()
+            return View(nameof(SignWithSeed), new SignWithSeedViewModel
             {
                 SigningContext = signingContext,
             });
@@ -970,8 +966,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
-        [HttpGet]
-        [Route("{walletId}/rescan")]
+        [HttpGet("{walletId}/rescan")]
         public async Task<IActionResult> WalletRescan(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
@@ -1012,8 +1007,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("{walletId}/rescan")]
+        [HttpPost("{walletId}/rescan")]
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletRescan(
             [ModelBinder(typeof(WalletIdModelBinder))]
@@ -1036,12 +1030,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction();
         }
 
-        public StoreData CurrentStore
+        private StoreData CurrentStore
         {
-            get
-            {
-                return HttpContext.GetStoreData();
-            }
+            get => HttpContext.GetStoreData();
         }
 
         internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
@@ -1055,11 +1046,11 @@ namespace BTCPayServer.Controllers
             try
             {
                 var b = await wallet.GetBalance(derivationStrategy, cts.Token);
-                return (b.Available ?? b.Total);
+                return b.Available ?? b.Total;
             }
             catch
             {
-                return NBitcoin.Money.Zero;
+                return Money.Zero;
             }
         }
 
@@ -1079,138 +1070,51 @@ namespace BTCPayServer.Controllers
         {
             return _userManager.GetUserId(User);
         }
-
-        [Route("{walletId}/settings")]
-        public async Task<IActionResult> WalletSettings(
-             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId)
-        {
-            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
-            if (derivationSchemeSettings == null || derivationSchemeSettings.Network.ReadonlyWallet)
-                return NotFound();
-            var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-            var vm = new WalletSettingsViewModel()
-            {
-                StoreName = store.StoreName,
-                UriScheme = derivationSchemeSettings.Network.NBitcoinNetwork.UriScheme,
-                Label = derivationSchemeSettings.Label,
-                DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
-                DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
-                SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString(),
-                NBXSeedAvailable = derivationSchemeSettings.IsHotWallet && 
-                                   await CanUseHotWallet() &&
-                                   !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                        WellknownMetadataKeys.MasterHDKey))
-            };
-            vm.AccountKeys = derivationSchemeSettings.AccountKeySettings
-                            .Select(e => new WalletSettingsAccountKeyViewModel()
-                            {
-                                AccountKey = e.AccountKey.ToString(),
-                                MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
-                                AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
-                            }).ToList();
-            return View(vm);
-        }
-
-        [Route("{walletId}/settings")]
-        [HttpPost]
-        public async Task<IActionResult> WalletSettings(
+        
+        [HttpPost("{walletId}/actions")]
+        public async Task<IActionResult> WalletActions(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletSettingsViewModel vm, string command = "save",
+            WalletId walletId, string command,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-                return View(vm);
             var derivationScheme = GetDerivationSchemeSettings(walletId);
             if (derivationScheme == null || derivationScheme.Network.ReadonlyWallet)
                 return NotFound();
 
-            if (command == "save")
+            switch (command)
             {
-                derivationScheme.Label = vm.Label;
-                derivationScheme.SigningKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
-                    ? null
-                    : new BitcoinExtPubKey(vm.SelectedSigningKey, derivationScheme.Network.NBitcoinNetwork);
-                for (int i = 0; i < derivationScheme.AccountKeySettings.Length; i++)
+                case "prune":
                 {
-                    derivationScheme.AccountKeySettings[i].AccountKeyPath =
-                        string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath)
-                            ? null
-                            : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
-                    derivationScheme.AccountKeySettings[i].RootFingerprint =
-                        string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
-                            ? (HDFingerprint?)null
-                            : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
-                }
+                    var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
+                    if (result.TotalPruned == 0)
+                    {
+                        TempData[WellKnownTempData.SuccessMessage] = "The wallet is already pruned";
+                    }
+                    else
+                    {
+                        TempData[WellKnownTempData.SuccessMessage] =
+                            $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
+                    }
 
-                var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-                store.SetSupportedPaymentMethod(derivationScheme);
-                await Repository.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = "Wallet settings updated";
-                return RedirectToAction(nameof(WalletSettings));
-            }
-            else if (command == "prune")
-            {
-                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
-                if (result.TotalPruned == 0)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = $"The wallet is already pruned";
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId });
                 }
-                else
+                case "clear" when User.IsInRole(Roles.ServerAdmin):
                 {
-                    TempData[WellKnownTempData.SuccessMessage] =
-                        $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
-                }
-
-                return RedirectToAction(nameof(WalletSettings));
-            }
-            else if (command == "clear" && User.IsInRole(Roles.ServerAdmin))
-            {
-                if (Version.TryParse(_dashboard.Get(walletId.CryptoCode)?.Status?.Version ?? "0.0.0.0", out var v) &&
-                    v < new Version(2, 2, 4))
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = $"This version of NBXplorer doesn't support this operation, please upgrade to 2.2.4 or above";
-                }
-                else
-                {
-                    await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                    if (Version.TryParse(_dashboard.Get(walletId.CryptoCode)?.Status?.Version ?? "0.0.0.0", out var v) &&
+                        v < new Version(2, 2, 4))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "This version of NBXplorer doesn't support this operation, please upgrade to 2.2.4 or above";
+                    }
+                    else
+                    {
+                        await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                             .WipeAsync(derivationScheme.AccountDerivation, cancellationToken);
-                    TempData[WellKnownTempData.SuccessMessage] = $"The transactions have been wiped out, to restore your balance, rescan the wallet.";
+                        TempData[WellKnownTempData.SuccessMessage] = "The transactions have been wiped out, to restore your balance, rescan the wallet.";
+                    }
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId });
                 }
-                return RedirectToAction(nameof(WalletSettings));
-            }
-            else if (command == "view-seed" && await CanUseHotWallet())
-            {
-                if (await GetSeed(walletId, derivationScheme.Network) != null)
-                {
-                    var mnemonic = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                        WellknownMetadataKeys.Mnemonic, cancellationToken);
-                    var recoveryVm = new RecoverySeedBackupViewModel()
-                    {
-                        CryptoCode = walletId.CryptoCode,
-                        Mnemonic = mnemonic,
-                        IsStored = true,
-                        RequireConfirm = false,
-                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
-                    };
-                    return this.RedirectToRecoverySeedBackup(recoveryVm);
-                }
-                else
-                {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "The seed was not found"
-                    });
-                }
-
-                return RedirectToAction(nameof(WalletSettings));
-            }
-            else
-            {
-                return NotFound();
+                default:
+                    return NotFound();
             }
         }
 
@@ -1229,11 +1133,6 @@ namespace BTCPayServer.Controllers
         public string CryptoCode { get; set; }
         public string Address { get; set; }
         public string PaymentLink { get; set; }
-    }
-
-
-    public class GetInfoResult
-    {
     }
 
     public class SendToAddressResult

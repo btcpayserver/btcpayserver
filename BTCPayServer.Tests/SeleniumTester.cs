@@ -154,7 +154,8 @@ namespace BTCPayServer.Tests
             // Replace previous wallet case
             if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {
-                Driver.FindElement(By.Id("ChangeWalletLink")).Click();
+                Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+                Driver.WaitForElement(By.Id("ChangeWalletLink")).Click();
                 Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("REPLACE");
                 Driver.FindElement(By.Id("ConfirmContinue")).Click();
             }
@@ -335,6 +336,18 @@ namespace BTCPayServer.Tests
             {
                 Driver.FindElement(By.Id($"Nav-{storeNavPage.ToString()}")).Click();
             }
+        }
+
+        public void GoToWalletSettings(string storeId, string cryptoCode = "BTC")
+        {
+            GoToStore(storeId);
+            Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+        }
+
+        public void GoToLightningSettings(string storeId, string cryptoCode = "BTC")
+        {
+            GoToStore(storeId);
+            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
         }
 
         public void GoToInvoiceCheckout(string invoiceId)

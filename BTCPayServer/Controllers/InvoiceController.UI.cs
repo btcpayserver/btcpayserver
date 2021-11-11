@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
-                State = invoiceState.ToString(),
+                State = invoiceState.Status.ToModernStatus().ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList(),
                 CanMarkInvalid = invoiceState.CanMarkInvalid(),
-                CanMarkComplete = invoiceState.CanMarkComplete(),
+                CanMarkSettled = invoiceState.CanMarkComplete(),
             };
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
                 new InvoiceDetailsModel.AddressModel
@@ -602,7 +602,7 @@ namespace BTCPayServer.Controllers
                 },
                 BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
-                Status = invoice.StatusString,
+                Status = invoice.StatusString, //invoice.Status.ToModernStatus().ToString(),
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
@@ -763,7 +763,7 @@ namespace BTCPayServer.Controllers
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
                     CanMarkInvalid = state.CanMarkInvalid(),
-                    CanMarkComplete = state.CanMarkComplete(),
+                    CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),
                 });
             }
@@ -936,10 +936,10 @@ namespace BTCPayServer.Controllers
                 await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Invalid);
                 model.StatusString = new InvoiceState("invalid", "marked").ToString();
             }
-            else if (newState == "complete")
+            else if (newState == "settled")
             {
                 await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Settled);
-                model.StatusString = new InvoiceState("complete", "marked").ToString();
+                model.StatusString = new InvoiceState("settled", "marked").ToString();
             }
 
             return Json(model);

@@ -129,8 +129,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Archived { get; set; }
         public bool CanRefund { get; set; }
         public bool ShowCheckout { get; set; }
-        public bool CanMarkComplete { get; set; }
+        public bool CanMarkSettled { get; set; }
         public bool CanMarkInvalid { get; set; }
-        public bool CanMarkStatus => CanMarkComplete || CanMarkInvalid;
+        public bool CanMarkStatus => CanMarkSettled || CanMarkInvalid;
     }
 }

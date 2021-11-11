@@ -20,9 +20,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
 
         public InvoiceState Status { get; set; }
-        public bool CanMarkComplete { get; set; }
+        public bool CanMarkSettled { get; set; }
         public bool CanMarkInvalid { get; set; }
-        public bool CanMarkStatus => CanMarkComplete || CanMarkInvalid;
+        public bool CanMarkStatus => CanMarkSettled || CanMarkInvalid;
         public bool ShowCheckout { get; set; }
         public string ExceptionStatus { get; set; }
         public string AmountCurrency { get; set; }

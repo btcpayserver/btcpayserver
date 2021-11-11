@@ -33,14 +33,14 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public class MoneroLikeStoreController : Controller
+    public class UIMoneroLikeStoreController : Controller
     {
         private readonly MoneroLikeConfiguration _MoneroLikeConfiguration;
         private readonly StoreRepository _StoreRepository;
         private readonly MoneroRPCProvider _MoneroRpcProvider;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
 
-        public MoneroLikeStoreController(MoneroLikeConfiguration moneroLikeConfiguration,
+        public UIMoneroLikeStoreController(MoneroLikeConfiguration moneroLikeConfiguration,
             StoreRepository storeRepository, MoneroRPCProvider moneroRpcProvider,
             BTCPayNetworkProvider btcPayNetworkProvider)
         {

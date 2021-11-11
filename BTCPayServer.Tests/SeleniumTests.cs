@@ -1644,6 +1644,56 @@ retry:
             }
         }
 
+        
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanUseLNURLAuth()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            var user = s.RegisterNewUser(true);
+            s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+            s.Driver.FindElement(By.Name("Name")).SendKeys("ln wallet");
+            s.Driver.FindElement(By.Name("type"))
+                .FindElement(By.CssSelector($"option[value='{(int)Fido2Credential.CredentialType.LNURLAuth}']")).Click();
+            s.Driver.FindElement(By.Id("btn-add")).Click();
+            var links = s.Driver.FindElements(By.CssSelector(".tab-content a")).Select(element => element.GetAttribute("href"));
+            Assert.Equal(2,links.Count());
+            Uri prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login",tag);
+                if(endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+
+            var linkingKey = new Key();
+            var request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+           TestUtils.Eventually(() => s.FindAlertMessage());
+            
+            s.Logout();
+            s.Login(user, "123456");
+            var section = s.Driver.FindElement(By.Id("lnurlauth-section"));
+            links = section.FindElements(By.CssSelector(".tab-content a")).Select(element => element.GetAttribute("href"));
+            Assert.Equal(2,links.Count());
+            prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login",tag);
+                if(endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+            request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+            TestUtils.Eventually(() =>
+            {
+                Assert.Equal(s.Driver.Url, s.ServerUri.ToString());
+            });
+        }
+        
         private static void CanBrowseContent(SeleniumTester s)
         {
             s.Driver.FindElement(By.ClassName("delivery-content")).Click();

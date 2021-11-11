@@ -1,0 +1,72 @@
+@model LoginWithLNURLAuthViewModel
+@{
+    Dictionary<string, string> formats = new Dictionary<string, string>()
+    {
+        { "Bech32", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", true).ToString().ToUpperInvariant() },
+        { "URI", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", true).ToString().ToUpperInvariant() }
+    };
+
+
+}
+
+<section class="pt-5" id="lnurlauth-section">
+    <div>
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>LNURL Auth</h2>
+                <hr class="primary">
+                <div class="align-items-center">
+                    <div class="tab-content">
+                        @for (int i = 0; i < formats.Count; i++)
+                        {
+                            var mode = formats.ElementAt(i);
+                            <div class="tab-pane @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
+                                <div class="qr-container text-center" style="min-height: 256px;">
+                                    <vc:qr-code data="@mode.Value"></vc:qr-code>
+                                </div>
+                                <a href="@mode.Value" class="btn btn-primary w-100 mt-2" rel="noreferrer noopener">
+                                    Open in wallet
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <ul class="nav justify-content-center bg-light text-dark my-2">
+                        @for (int i = 0; i < formats.Count; i++)
+                        {
+                            var mode = formats.ElementAt(i);
+                            <li class="nav-item">
+                                <a class="nav-link @(i == 0 ? "active" : "")"
+                                   data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
+                                   href="#">
+                                    @mode.Key
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                    <p>Scan the QR code with your lightning wallet and link to your user account.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<form id="authform" asp-action="LoginWithLNURLAuth" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+    <input type="hidden" asp-for="LNURLEndpoint"/>
+    <input type="hidden" asp-for="UserId"/>
+</form>
+
+<script>
+    function check(){
+        const request = new XMLHttpRequest();    
+        request.onload  = function() {
+          if (request.readyState === 4 && request.status === 200) {
+            setTimeout(check, 1000);
+          } else if (request.readyState === 4 ){
+              document.getElementById("authform").submit();
+          }
+        }
+        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "LNURLAuth", new {userId = Model.UserId})), true);                    
+        request.send(new FormData());
+    }
+    check();
+</script>

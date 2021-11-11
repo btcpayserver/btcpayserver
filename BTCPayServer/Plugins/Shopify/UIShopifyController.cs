@@ -31,7 +31,7 @@ namespace BTCPayServer.Plugins.Shopify
 
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public class ShopifyController : Controller
+    public class UIShopifyController : Controller
     {
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
@@ -42,7 +42,7 @@ namespace BTCPayServer.Plugins.Shopify
         private readonly IJsonHelper _jsonHelper;
         private readonly IHttpClientFactory _clientFactory;
 
-        public ShopifyController(BTCPayServerEnvironment btcPayServerEnvironment,
+        public UIShopifyController(BTCPayServerEnvironment btcPayServerEnvironment,
             IOptions<BTCPayServerOptions> btcPayServerOptions,
             IWebHostEnvironment webHostEnvironment,
             StoreRepository storeRepository,

@@ -45,7 +45,7 @@ namespace BTCPayServer.Fido2
             var existingKeys =
                 user.Fido2Credentials
                     .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
-                    .Select(c => c.GetBlob().Descriptor).ToList();
+                    .Select(c => c.GetFido2Blob().Descriptor).ToList();
 
             // 3. Create options
             var authenticatorSelection = new AuthenticatorSelection
@@ -144,7 +144,7 @@ namespace BTCPayServer.Fido2
         public async Task<bool> HasCredentials(string userId)
         {
             await using var context = _contextFactory.CreateContext();
-            return await context.Fido2Credentials.Where(fDevice => fDevice.ApplicationUserId == userId).AnyAsync();
+            return await context.Fido2Credentials.Where(fDevice => fDevice.ApplicationUserId == userId && fDevice.Type == Fido2Credential.CredentialType.FIDO2).AnyAsync();
         }
 
         public async Task<AssertionOptions> RequestLogin(string userId)
@@ -158,7 +158,7 @@ namespace BTCPayServer.Fido2
             }
             var existingCredentials = user.Fido2Credentials
                 .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
-                .Select(c => c.GetBlob().Descriptor)
+                .Select(c => c.GetFido2Blob().Descriptor)
                 .ToList();
             var exts = new AuthenticationExtensionsClientInputs()
             {
@@ -197,7 +197,7 @@ namespace BTCPayServer.Fido2
 
             var credential = user.Fido2Credentials
                 .Where(fido2Credential => fido2Credential.Type is Fido2Credential.CredentialType.FIDO2)
-                .Select(fido2Credential => (fido2Credential, fido2Credential.GetBlob()))
+                .Select(fido2Credential => (fido2Credential, fido2Credential.GetFido2Blob()))
                 .FirstOrDefault(fido2Credential => fido2Credential.Item2.Descriptor.Id.SequenceEqual(response.Id));
             if (credential.Item2 is null)
             {

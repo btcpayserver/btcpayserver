@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Plugins.Test
 {
     [Route("extensions/test")]
-    public class TestExtensionController : Controller
+    public class UITestExtensionController : Controller
     {
         private readonly TestPluginService _testPluginService;
 
-        public TestExtensionController(TestPluginService testPluginService)
+        public UITestExtensionController(TestPluginService testPluginService)
         {
             _testPluginService = testPluginService;
         }

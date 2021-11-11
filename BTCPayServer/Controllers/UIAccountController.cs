@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using System.Security.Claims;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -17,7 +19,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
@@ -33,6 +37,8 @@ namespace BTCPayServer.Controllers
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly Fido2Service _fido2Service;
+        private readonly LnurlAuthService _lnurlAuthService;
+        private readonly LinkGenerator _linkGenerator;
         private readonly UserLoginCodeService _userLoginCodeService;
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
@@ -49,6 +55,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             Fido2Service fido2Service,
             UserLoginCodeService userLoginCodeService,
+            LnurlAuthService lnurlAuthService,
+            LinkGenerator linkGenerator,
             Logs logs)
         {
             _userManager = userManager;
@@ -58,6 +66,8 @@ namespace BTCPayServer.Controllers
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
+            _lnurlAuthService = lnurlAuthService;
+            _linkGenerator = linkGenerator;
             _userLoginCodeService = userLoginCodeService;
             _eventAggregator = eventAggregator;
             _logger = logs.PayServer;
@@ -146,7 +156,8 @@ namespace BTCPayServer.Controllers
                 }
 
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
-                if (!await _userManager.IsLockedOutAsync(user) && fido2Devices)
+                var lnurlAuthCredentials = await _lnurlAuthService.HasCredentials(user.Id);
+                if (!await _userManager.IsLockedOutAsync(user) &&  (fido2Devices  || lnurlAuthCredentials))
                 {
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -165,7 +176,8 @@ namespace BTCPayServer.Controllers
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithFido2ViewModel = fido2Devices ? await BuildFido2ViewModel(model.RememberMe, user) : null,
+                            LoginWithFido2ViewModel = fido2Devices? await BuildFido2ViewModel(model.RememberMe, user): null, 
+                            LoginWithLNURLAuthViewModel = lnurlAuthCredentials? await BuildLNURLAuthViewModel(model.RememberMe, user): null, 
                         });
                     }
                     else
@@ -229,6 +241,84 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
+
+        private async Task<LoginWithLNURLAuthViewModel> BuildLNURLAuthViewModel(bool rememberMe, ApplicationUser user)
+        {
+            if (_btcPayServerEnvironment.IsSecure)
+            {
+                var r = await _lnurlAuthService.RequestLogin(user.Id);
+                if (r is null)
+                {
+                    return null;
+                }
+                return new LoginWithLNURLAuthViewModel()
+                {
+                    
+                    RememberMe = rememberMe,
+                    UserId = user.Id,
+                    LNURLEndpoint = new Uri(_linkGenerator.GetUriByAction(
+                    action: nameof(LNURLAuthController.LoginResponse),
+                    controller: "LNURLAuth",
+                    values: new { userId = user.Id, action="login", tag="login", k1= Encoders.Hex.EncodeData(r)  }, Request.Scheme, Request.Host, Request.PathBase))
+                };
+            }
+            return null;
+        }
+        
+        [HttpPost("/login/lnurlauth")]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWithLNURLAuth(LoginWithLNURLAuthViewModel viewModel, string returnUrl = null)
+        {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
+            ViewData["ReturnUrl"] = returnUrl;
+            var user = await _userManager.FindByIdAsync(viewModel.UserId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var errorMessage = string.Empty;
+            try
+            {
+                var k1 = Encoders.Hex.DecodeData(viewModel.LNURLEndpoint.ParseQueryString().Get("k1"));
+                if (_lnurlAuthService.FinalLoginStore.TryRemove(viewModel.UserId, out var storedk1) &&
+                    storedk1.SequenceEqual(k1))
+                {
+                    _lnurlAuthService.FinalLoginStore.TryRemove(viewModel.UserId, out _);
+                    await _signInManager.SignInAsync(user, viewModel.RememberMe, "FIDO2");
+                    _logger.LogInformation("User logged in.");
+                    return RedirectToLocal(returnUrl);
+                }
+
+                errorMessage = "Invalid login attempt.";
+            }
+            catch (Exception e)
+            {
+                errorMessage = e.Message;
+            }
+
+            ModelState.AddModelError(string.Empty, errorMessage);
+            return View("SecondaryLogin", new SecondaryLoginViewModel()
+            {
+                
+                LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(viewModel.RememberMe, user) : null,
+                LoginWithLNURLAuthViewModel = viewModel,
+                LoginWith2FaViewModel = !user.TwoFactorEnabled
+                    ? null
+                    : new LoginWith2faViewModel()
+                    {
+                        RememberMe = viewModel.RememberMe
+                    }
+            });
+        }
+        
+
         [HttpPost("/login/fido2")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -269,6 +359,7 @@ namespace BTCPayServer.Controllers
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
                 LoginWithFido2ViewModel = viewModel,
+                LoginWithLNURLAuthViewModel = (await _lnurlAuthService.HasCredentials(user.Id)) ? await BuildLNURLAuthViewModel(viewModel.RememberMe, user) : null,
                 LoginWith2FaViewModel = !user.TwoFactorEnabled
                     ? null
                     : new LoginWith2faViewModel()
@@ -300,6 +391,7 @@ namespace BTCPayServer.Controllers
             {
                 LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe },
                 LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(rememberMe, user) : null,
+                LoginWithLNURLAuthViewModel = (await _lnurlAuthService.HasCredentials(user.Id)) ? await BuildLNURLAuthViewModel(rememberMe, user) : null,
             });
         }
 
@@ -346,6 +438,7 @@ namespace BTCPayServer.Controllers
                 {
                     LoginWith2FaViewModel = model,
                     LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(rememberMe, user) : null,
+                    LoginWithLNURLAuthViewModel = (await _lnurlAuthService.HasCredentials(user.Id)) ? await BuildLNURLAuthViewModel(rememberMe, user) : null,
                 });
             }
         }

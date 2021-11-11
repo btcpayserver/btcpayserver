@@ -65,7 +65,7 @@
                 In Shopify please paste following script at <a href="@shopifyUrl/admin/settings/checkout#PolarisTextField1" target="_blank" class="fw-bold" rel="noreferrer noopener"> Settings &gt; Checkout &gt; Order Processing &gt; Additional Scripts</a>
             </p>
             <kbd style="display: block; word-break: break-all;">
-                @($"<script src='{Url.Action("ShopifyJavascript", "Shopify", new { storeId = Context.GetRouteValue("storeId") }, Context.Request.Scheme)}'></script>")
+                @($"<script src='{Url.Action("ShopifyJavascript", "UIShopify", new { storeId = Context.GetRouteValue("storeId") }, Context.Request.Scheme)}'></script>")
             </kbd>
         </div>
         <p class="alert alert-warning">

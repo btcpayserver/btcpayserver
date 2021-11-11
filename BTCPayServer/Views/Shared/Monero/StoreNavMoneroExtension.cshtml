@@ -4,7 +4,7 @@
 @inject MoneroLikeConfiguration MoneroLikeConfiguration;
 @{
     var controller = ViewContext.RouteData.Values["Controller"].ToString();
-    var isMonero = controller.Equals(nameof(MoneroLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
+    var isMonero = controller.Equals(nameof(UIMoneroLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
 }
 @if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
 {

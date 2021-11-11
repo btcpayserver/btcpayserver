@@ -189,7 +189,7 @@
                 
             <h4 class="mt-5 mb-3">Default Currency Pairs</h4>
             <div class="form-group">
-                <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="UIRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
+                <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="BitpayRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>

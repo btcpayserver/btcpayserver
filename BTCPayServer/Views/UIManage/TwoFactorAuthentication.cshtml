@@ -1,3 +1,4 @@
+@using Fido2NetLib
 @model TwoFactorAuthenticationViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Two-Factor Authentication");
@@ -102,20 +103,39 @@
                 {
                     var name = string.IsNullOrEmpty(device.Name) ? "Unnamed security device" : device.Name;
                     <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <h5 class="mb-0">@name</h5>
-                        <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                        <div class="mb-0">
+                            <h5 class="mb-0 w-100">@name</h5>
+                            @switch (device.Type)
+                            {
+                                case Fido2Credential.CredentialType.FIDO2:
+                                    <span class="text-muted">Security device (FIDO2)</span>
+                                    break;
+                                case Fido2Credential.CredentialType.LNURLAuth:
+                                    <span class="text-muted">Lightning node (LNURL Auth)</span>
+                                    break;
+                            }
+                        </div>
+
+                        @if (device.Type == Fido2Credential.CredentialType.FIDO2)
+                        {
+                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                        }
+                        else if (device.Type == Fido2Credential.CredentialType.LNURLAuth)
+                        {
+                            <a asp-controller="LNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                        }
                     </div>
                 }
             </div>
         }
 
-        <form asp-controller="UIFido2" asp-action="Create" method="get">
+        <form  asp-action="CreateCredential">
             <div class="input-group">
                 <input type="text" class="form-control" name="Name" placeholder="Security device name"/>
-                <button type="submit" class="btn btn-primary">
+                <select asp-items="@Html.GetEnumSelectList<Fido2Credential.CredentialType>()" class="form-select" name="type"></select>
+                <button id="btn-add" type="submit" class="btn btn-primary">
                     <span class="fa fa-plus"></span>
-                    Add
-                    <span class="d-none d-md-inline-block">Device</span>
+                    Add 
                 </button>
             </div>
         </form>

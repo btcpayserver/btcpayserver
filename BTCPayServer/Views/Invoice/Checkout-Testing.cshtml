@@ -2,22 +2,24 @@
 
 <div id="testing">
     <hr class="my-3" />
+    <p class="alert alert-danger" style="display: none; word-break: break-all;"></p>
+    <p class="alert alert-success" style="display: none; word-break: break-all;"></p>
     <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="form-inline my-2">
+        <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
         <div class="form-group mb-1">
-            <label for="test-payment-crypto-code" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
-            <p class="alert alert-danger" style="display: none; word-break: break-all;"></p>
-            <p class="alert alert-success" style="display: none; word-break: break-all;"></p>
+            <label for="test-payment-amount" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
             <div class="input-group">
-              <input id="test-payment-amount" name="amount" type="number" step="any" min="0" class="form-control" placeholder="Amount" value="@Model.BtcDue" aria-label="Amount" aria-describedby="test-payment-crypto-code">
-              <div class="input-group-addon" id="test-payment-crypto-code">@Model.CryptoCode</div>
+                <input id="test-payment-amount" name="Amount" type="number" step="0.00000001" min="0" class="form-control" placeholder="Amount" value="@Model.BtcDue" />
+                <div id="test-payment-crypto-code" class="input-group-addon">@Model.CryptoCode</div>
             </div>
         </div>
         <button class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>
         <p class="text-muted mt-1">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</p>
     </form>
     <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post" class="mb-1">
-        <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}} (TODO)</button>
+        <button class="btn btn-secondary" type="submit">{{$t("Expire Invoice Now")}}</button>
     </form>
+    @* TODO
     <form id="expire-monitoring" action="/i/@Model.InvoiceId/expire-monitoring" method="post" class="mb-1">
         <!-- TODO only show when expired -->
         <button class="btn btn-secondary" type="submit">{{$t("Expire Monitoring Now")}} (TODO)</button>
@@ -27,82 +29,80 @@
         <!-- TODO to make it work use Bitcoin RPC calls getnewaddress + generatetoaddress -->
         <button class="btn btn-secondary" type="submit">{{$t("Mine a block now")}} (TODO)</button>
     </form>
+    *@
 </div>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        let payForm = $('form#test-payment');
-        let loader = $('form#test-payment-loading');
-        let inputField = $('#test-payment-amount');
-        let submitButton = payForm.find('button[type=submit]');
-        let paySuccess = payForm.find('p.alert-success');
-        let payAlert = payForm.find('p.alert-danger');
+        const payForm = $('form#test-payment');
+        const loader = $('form#test-payment-loading');
+        const inputField = $('#test-payment-amount');
+        const successAlert = $('#testing p.alert-success');
+        const errorAlert = $('#testing p.alert-danger');
+        const submitButton = payForm.find('button[type=submit]');
+        const expireForm = $('form#expire-invoice');
+        const expireButton = expireForm.find('[type=submit]');
         
-        payForm.submit(function (e){
+        payForm.submit(e => {
              e.preventDefault();
              
-             let form = $(this);
-             let data = form.serialize();
-                          
-             paySuccess.hide();
-             payAlert.hide();
+             const form = $(e.target);
+             const url = form.attr('action');
+             const data = form.serialize();
+             
+             successAlert.hide();
+             errorAlert.hide();
              loader.show();
              inputField.prop('disabled', true);
              submitButton.prop('disabled', true);
              
              $.post({
-                 url: form.attr('action'),
-                 data: data,
-                 success: function (data,status,xhr){
-                     paySuccess.html(data.successMessage);
-                     paySuccess.show();
-                     inputField.val(data.amountRemaining);
-                     if (data.amountRemaining <= 0){
-                         // No need to fake any more payments.
-                         form.hide();                             
+                 url,
+                 data,
+                 success(data) {
+                     const { successMessage, amountRemaining } = data;
+                     successAlert.html(successMessage);
+                     successAlert.show();
+                     if (amountRemaining > 0) {
+                         inputField.val(amountRemaining);
+                     } else {
+                         form.hide();
+                         expireForm.hide();
                      }
                  },
-                 complete: function (xhr,status){
+                 error(xhr) {
+                     const { errorMessage } = JSON.parse(xhr.responseText);
+                     errorAlert.html(errorMessage).show();
+                 },
+                 complete() {
                      loader.hide();
                      inputField.prop('disabled', false);
                      submitButton.prop('disabled', false);
-                 },
-                 error: function (xhr,status,error){
-                     var data = JSON.parse(xhr.responseText);
-                     payAlert.html(data.errorMessage);
-                     payAlert.show();
                  }
              });
          });
         
         // Expire invoice form
-        let expireForm = $('form#expire-invoice');
-        let expireButton = expireForm.find('[type=submit]');
-        let expireSuccess = expireForm.find('p.alert-success');
-        let expireAlert = expireForm.find('p.alert-danger');
-        
-        expireForm.submit(function (e){
+        expireForm.submit(e => {
             e.preventDefault();
-            expireSuccess.hide();
-            expireAlert.hide();
+            successAlert.hide();
+            errorAlert.hide();
                          
             $.post({
-                url: form.attr('action'),
-                data: data,
-                success: function (data,status,xhr){
-                    expireSuccess.html(data.successMessage);
-                    expireSuccess.show();
+                url: expireForm.attr('action'),
+                success(data) {
+                    const { successMessage } = data;
+                    successAlert.html(successMessage).show();
                     expireButton.hide();
-                 },
-                 complete: function (xhr,status){
-                     loader.hide();
-                     submitButton.prop('disabled', false);
-                 },
-                 error: function (xhr,status,error){
-                     var data = JSON.parse(xhr.responseText);
-                     expireAlert.html(data.errorMessage);
-                     expireAlert.show();
-                 }
+                },
+                complete() {
+                    loader.hide();
+                    submitButton.prop('disabled', false);
+                },
+                error(xhr) {
+                    const { errorMessage } = JSON.parse(xhr.responseText);
+                    errorAlert.html(errorMessage).show();
+                }
             });
         });
     });

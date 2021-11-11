@@ -105,6 +105,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0];
         setColorMode(mode);
     })
+    
+    // Offcanvas navigation
+    const mainMenuToggle = document.getElementById('mainMenuToggle')
+    if (mainMenuToggle) {
+        delegate('show.bs.offcanvas', '#mainNav', function (e) {
+            mainMenuToggle.setAttribute('aria-expanded', 'true');
+        })
+        delegate('hide.bs.offcanvas', '#mainNav', function (e) {
+            mainMenuToggle.setAttribute('aria-expanded', 'false');
+        })
+    }
+    
 });
 
 function switchTimeFormat() {

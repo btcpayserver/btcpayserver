@@ -6,6 +6,7 @@
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",
+            "wwwroot/main/layout.css",
             "wwwroot/main/site.css"
         ]
     },

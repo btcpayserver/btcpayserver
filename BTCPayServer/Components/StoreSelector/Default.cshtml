@@ -1,0 +1,4 @@
+@model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+
+<select asp-for="CurrentStore" asp-items="Model.Options" class="form-select"></select>

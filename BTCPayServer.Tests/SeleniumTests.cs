@@ -1126,7 +1126,7 @@ namespace BTCPayServer.Tests
             });
             s.GoToHome();
             //offline/external payout test
-            s.Driver.FindElement(By.Id("NotificationsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("NotificationsHandle")).Click();
             s.Driver.FindElement(By.CssSelector("#notificationsForm button")).Click();
             
             var newStore = s.CreateNewStore();
@@ -1240,7 +1240,6 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
-
 
             s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
             if (!s.Driver.PageSource.Contains(bolt))

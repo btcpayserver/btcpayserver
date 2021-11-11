@@ -175,6 +175,12 @@ namespace BTCPayServer.Hosting
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.AddStoreToPayout)
+                {
+                    await MigrateAddStoreToPayout();
+                    settings.AddStoreToPayout = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -190,6 +196,15 @@ namespace BTCPayServer.Hosting
            {
               await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
            }
+        }
+
+        private async Task MigrateAddStoreToPayout()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+
+            await ctx.Payouts.Include(data => data.PullPaymentData)
+                .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
+            await ctx.SaveChangesAsync();
         }
 
         private async Task AddInitialUserBlob()

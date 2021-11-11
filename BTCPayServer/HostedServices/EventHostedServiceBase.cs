@@ -25,6 +25,12 @@ namespace BTCPayServer.HostedServices
             _EventAggregator = eventAggregator;
             Logs = logs;
         }
+        
+        public EventHostedServiceBase(EventAggregator eventAggregator, ILogger logger)
+        {
+            _EventAggregator = eventAggregator;
+            Logs = new Logs() { PayServer = logger, Events = logger, Configuration = logger};
+        }
 
         readonly Channel<object> _Events = Channel.CreateUnbounded<object>();
         public async Task ProcessEvents(CancellationToken cancellationToken)

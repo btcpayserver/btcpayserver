@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using BTCPayServer.Client.Models;
+using BTCPayServer.TransferProcessors;
+using TransferProcessorData = BTCPayServer.TransferProcessors.TransferProcessorData;
 
 namespace BTCPayServer.Data
 {
@@ -41,5 +43,7 @@ namespace BTCPayServer.Data
 
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
+        public IEnumerable<TransferProcessorData> TransferProcessors { get; set; }
+        public IEnumerable<PayoutData> Payouts { get; set; }
     }
 }

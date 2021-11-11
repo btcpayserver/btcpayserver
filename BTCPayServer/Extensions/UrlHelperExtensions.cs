@@ -1,5 +1,6 @@
 
 using BTCPayServer;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Http;
@@ -63,13 +64,13 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
-        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, string scheme, HostString host, string pathbase)
+        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, PayoutState payoutState,string scheme, HostString host, string pathbase)
         {
             WalletId.TryParse(walletIdOrStoreId, out var wallet);
             return urlHelper.GetUriByAction(
                 action: nameof(UIStorePullPaymentsController.Payouts),
                 controller: "UIStorePullPayments",
-                values: new { storeId = wallet?.StoreId ?? walletIdOrStoreId, pullPaymentId },
+                values: new { storeId = wallet?.StoreId ?? walletIdOrStoreId, pullPaymentId, payoutState },
                 scheme, host, pathbase);
         }
     }

@@ -770,18 +770,21 @@ namespace BTCPayServer.Services.Invoices
             return status;
         }
 
-        internal static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
+        public static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
             return ZipUtils.Zip(ToJsonString(obj, network));
         }
 
+        public static T FromBytes<T>(byte[] blob, BTCPayNetworkBase network = null)
+        {
+            return network == null
+                ? JsonConvert.DeserializeObject<T>(ZipUtils.Unzip(blob), DefaultSerializerSettings)
+                : network.ToObject<T>(ZipUtils.Unzip(blob));
+        }
+
         public static string ToJsonString<T>(T data, BTCPayNetworkBase network)
         {
-            if (network == null)
-            {
-                return JsonConvert.SerializeObject(data, DefaultSerializerSettings);
-            }
-            return network.ToString(data);
+            return network == null ? JsonConvert.SerializeObject(data, DefaultSerializerSettings) : network.ToString(data);
         }
     }
 

@@ -32,7 +32,7 @@ services:
       TESTS_SOCKSENDPOINT: "tor:9050"
     expose:
       - "80"
-    links:
+    depends_on:
       - dev
       - selenium
     extra_hosts: 
@@ -46,7 +46,7 @@ services:
   dev: 
     image: alpine:3.7
     command: [ "/bin/sh", "-c", "trap : TERM INT; while :; do echo Ready to code and debug like a rockstar!!!; sleep 2073600; done & wait" ]
-    links:
+    depends_on:
       - nbxplorer
       - postgres
       - customer_lightningd
@@ -79,7 +79,7 @@ services:
         connect=bitcoind:39388
         fallbackfee=0.0002
         rpcallowip=0.0.0.0/0
-    links:
+    depends_on:
       - nbxplorer
       - postgres
       - customer_lnd
@@ -116,7 +116,7 @@ services:
       NBXPLORER_VERBOSE: 1
       NBXPLORER_NOAUTH: 1
       NBXPLORER_EXPOSERPC: 1
-    links:
+    depends_on:
       - bitcoind
       - litecoind
       - elementsd-liquid
@@ -175,7 +175,7 @@ services:
     volumes:
       - "bitcoin_datadir:/etc/bitcoin"
       - "customer_lightningd_datadir:/root/.lightning"
-    links:
+    depends_on:
       - bitcoind
 
   lightning-charged:
@@ -196,7 +196,7 @@ services:
       - "9735" # Lightning
     ports:
       - "54938:9112" # Charge
-    links:
+    depends_on:
       - bitcoind
       - merchant_lightningd
 
@@ -223,7 +223,7 @@ services:
     volumes:
       - "bitcoin_datadir:/etc/bitcoin"
       - "merchant_lightningd_datadir:/root/.lightning"
-    links:
+    depends_on:
       - bitcoind
   postgres:
     image:  postgres:13.4
@@ -265,7 +265,7 @@ services:
     volumes:
       - "merchant_lnd_datadir:/data"
       - "bitcoin_datadir:/deps/.bitcoin"
-    links:
+    depends_on:
       - bitcoind
 
   customer_lnd:
@@ -300,7 +300,7 @@ services:
     volumes:
       - "customer_lnd_datadir:/root/.lnd"
       - "bitcoin_datadir:/deps/.bitcoin"
-    links:
+    depends_on:
       - bitcoind
 
   tor:

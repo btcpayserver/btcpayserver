@@ -65,6 +65,10 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
         private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
         private readonly GreenfieldStoreUsersController _greenfieldStoreUsersController;
+        private readonly GreenfieldStoreTransferProcessorsController _greenfieldStoreTransferProcessorsController;
+        private readonly GreenfieldTransferProcessorsController _greenfieldTransferProcessorsController;
+        private readonly GreenfieldStoreAutomatedOnChainTransferProcessorsController _greenfieldStoreAutomatedOnChainTransferProcessorsController;
+        private readonly GreenfieldStoreAutomatedLightningTransferProcessorsController _greenfieldStoreAutomatedLightningTransferProcessorsController;
         private readonly IServiceProvider _serviceProvider;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
@@ -90,6 +94,10 @@ namespace BTCPayServer.Controllers.Greenfield
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             GreenfieldStoreEmailController greenfieldStoreEmailController,
             GreenfieldStoreUsersController greenfieldStoreUsersController,
+            GreenfieldStoreTransferProcessorsController greenfieldStoreTransferProcessorsController,
+            GreenfieldTransferProcessorsController greenfieldTransferProcessorsController,
+            GreenfieldStoreAutomatedOnChainTransferProcessorsController greenfieldStoreAutomatedOnChainTransferProcessorsController,
+            GreenfieldStoreAutomatedLightningTransferProcessorsController greenfieldStoreAutomatedLightningTransferProcessorsController,
             IServiceProvider serviceProvider)
         {
             _storeRepository = storeRepository;
@@ -115,6 +123,10 @@ namespace BTCPayServer.Controllers.Greenfield
             _storePaymentMethodsController = storePaymentMethodsController;
             _greenfieldStoreEmailController = greenfieldStoreEmailController;
             _greenfieldStoreUsersController = greenfieldStoreUsersController;
+            _greenfieldStoreTransferProcessorsController = greenfieldStoreTransferProcessorsController;
+            _greenfieldTransferProcessorsController = greenfieldTransferProcessorsController;
+            _greenfieldStoreAutomatedOnChainTransferProcessorsController = greenfieldStoreAutomatedOnChainTransferProcessorsController;
+            _greenfieldStoreAutomatedLightningTransferProcessorsController = greenfieldStoreAutomatedLightningTransferProcessorsController;
             _serviceProvider = serviceProvider;
         }
 
@@ -189,6 +201,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 _storePaymentMethodsController,
                 _greenfieldStoreEmailController,
                 _greenfieldStoreUsersController,
+                _greenfieldStoreTransferProcessorsController,
+                _greenfieldTransferProcessorsController,
+                _greenfieldStoreAutomatedOnChainTransferProcessorsController,
+                _greenfieldStoreAutomatedLightningTransferProcessorsController,
                 new LocalHttpContextAccessor() { HttpContext = context }
             );
         }
@@ -223,6 +239,10 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
         private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
+        private readonly GreenfieldStoreTransferProcessorsController _greenfieldStoreTransferProcessorsController;
+        private readonly GreenfieldTransferProcessorsController _greenfieldTransferProcessorsController;
+        private readonly GreenfieldStoreAutomatedOnChainTransferProcessorsController _greenfieldStoreAutomatedOnChainTransferProcessorsController;
+        private readonly GreenfieldStoreAutomatedLightningTransferProcessorsController _greenfieldStoreAutomatedLightningTransferProcessorsController;
         private readonly GreenfieldStoreUsersController _greenfieldStoreUsersController;
 
         public LocalBTCPayServerClient(
@@ -247,6 +267,10 @@ namespace BTCPayServer.Controllers.Greenfield
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             GreenfieldStoreEmailController greenfieldStoreEmailController,
             GreenfieldStoreUsersController greenfieldStoreUsersController,
+            GreenfieldStoreTransferProcessorsController greenfieldStoreTransferProcessorsController,
+            GreenfieldTransferProcessorsController greenfieldTransferProcessorsController,
+            GreenfieldStoreAutomatedOnChainTransferProcessorsController greenfieldStoreAutomatedOnChainTransferProcessorsController,
+            GreenfieldStoreAutomatedLightningTransferProcessorsController greenfieldStoreAutomatedLightningTransferProcessorsController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -269,6 +293,10 @@ namespace BTCPayServer.Controllers.Greenfield
             _storePaymentMethodsController = storePaymentMethodsController;
             _greenfieldStoreEmailController = greenfieldStoreEmailController;
             _greenfieldStoreUsersController = greenfieldStoreUsersController;
+            _greenfieldStoreTransferProcessorsController = greenfieldStoreTransferProcessorsController;
+            _greenfieldTransferProcessorsController = greenfieldTransferProcessorsController;
+            _greenfieldStoreAutomatedOnChainTransferProcessorsController = greenfieldStoreAutomatedOnChainTransferProcessorsController;
+            _greenfieldStoreAutomatedLightningTransferProcessorsController = greenfieldStoreAutomatedLightningTransferProcessorsController;
 
             var controllers = new[]
             {
@@ -278,6 +306,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
                 lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
                 storePaymentMethodsController, greenfieldStoreEmailController, greenfieldStoreUsersController
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController, 
+                greenfieldStoreEmailController, greenfieldStoreTransferProcessorsController, greenfieldTransferProcessorsController,
+                greenfieldStoreAutomatedOnChainTransferProcessorsController,
+                greenfieldStoreAutomatedLightningTransferProcessorsController,
             };
 
             var authoverride = new DefaultAuthorizationService(
@@ -1100,6 +1132,68 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<ApplicationUserData>(await _usersController.GetUser(idOrEmail));
+        }
+
+        public override async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest,
+            CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<PayoutData>(
+                await _greenfieldPullPaymentController.CreatePayoutThroughStore(storeId, payoutRequest));
+        }
+
+        public override async Task<IEnumerable<TransferProcessorData>> GetTransferProcessors(string storeId, CancellationToken token = default)
+        {
+            return GetFromActionResult<IEnumerable<TransferProcessorData>>(await _greenfieldStoreTransferProcessorsController.GetStoreTransferProcessors(storeId));
+        }
+
+        public override Task<IEnumerable<TransferProcessorData>> GetTransferProcessors(CancellationToken token = default)
+        {
+            return Task.FromResult(GetFromActionResult<IEnumerable<TransferProcessorData>>(_greenfieldTransferProcessorsController.GetTransferProcessors()));
+        }
+
+        public override async Task RemoveTransferProcessor(string storeId, string processor, string paymentMethod, CancellationToken token = default)
+        {
+            HandleActionResult(await _greenfieldStoreTransferProcessorsController.RemoveStoreTransferProcessor(storeId, processor, paymentMethod));
+        }
+
+        public override async Task<IEnumerable<OnChainAutomatedTransferSettings>>
+            GetStoreOnChainAutomatedTransferProcessors(string storeId, string? paymentMethod = null,
+                CancellationToken token = default)
+        {
+            return GetFromActionResult<IEnumerable<OnChainAutomatedTransferSettings>>(
+                await _greenfieldStoreAutomatedOnChainTransferProcessorsController
+                    .GetStoreOnChainAutomatedTransferProcessors(storeId, paymentMethod));
+        }
+
+        public override async Task<IEnumerable<LightningAutomatedTransferSettings>> GetStoreLightningAutomatedTransferProcessors(string storeId, string? paymentMethod = null,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<IEnumerable<LightningAutomatedTransferSettings>>(
+                await _greenfieldStoreAutomatedLightningTransferProcessorsController
+                    .GetStoreLightningAutomatedTransferProcessors(storeId, paymentMethod));
+        }
+
+        public override async Task<OnChainAutomatedTransferSettings> UpdateStoreOnChainAutomatedTransferProcessors(string storeId, string paymentMethod,
+            OnChainAutomatedTransferSettings request, CancellationToken token = default)
+        {
+            return GetFromActionResult<OnChainAutomatedTransferSettings>(
+                await _greenfieldStoreAutomatedOnChainTransferProcessorsController
+                    .UpdateStoreOnchainAutomatedTransferProcessor(storeId, paymentMethod, request));
+        }
+
+        public override async Task<LightningAutomatedTransferSettings> UpdateStoreLightningAutomatedTransferProcessors(string storeId, string paymentMethod,
+            LightningAutomatedTransferSettings request, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningAutomatedTransferSettings>(
+                await _greenfieldStoreAutomatedLightningTransferProcessorsController
+                    .UpdateStoreLightningAutomatedTransferProcessor(storeId, paymentMethod, request));
+        }
+
+        public override async Task<PayoutData[]> GetStorePayouts(string storeId, bool includeCancelled = false, CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<PayoutData[]>(
+                await _greenfieldPullPaymentController
+                    .GetStorePayouts(storeId,includeCancelled));
         }
     }
 }

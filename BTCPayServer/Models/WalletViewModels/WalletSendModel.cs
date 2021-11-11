@@ -20,6 +20,7 @@ namespace BTCPayServer.Models.WalletViewModels
         }
         public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
 
+        public List<string> ScheduledTransfersToInclude = new List<string>();
         public class TransactionOutput
         {
             [Display(Name = "Destination Address")]
@@ -33,6 +34,8 @@ namespace BTCPayServer.Models.WalletViewModels
 
             [Display(Name = "Subtract fees from amount")]
             public bool SubtractFeesFromOutput { get; set; }
+
+            public string PayoutId { get; set; }
         }
         public decimal CurrentBalance { get; set; }
         public decimal ImmatureBalance { get; set; }

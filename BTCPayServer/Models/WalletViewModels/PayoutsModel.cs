@@ -8,7 +8,7 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class PayoutsModel : BasePagingViewModel
     {
-        public string PullPaymentId { get; set; }
+        public string? PullPaymentId { get; set; }
         public string Command { get; set; }
         public Dictionary<PayoutState, int> PayoutStateCount { get; set; }
         public string PaymentMethodId { get; set; }

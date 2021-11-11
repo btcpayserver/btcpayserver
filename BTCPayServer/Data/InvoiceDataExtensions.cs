@@ -6,7 +6,8 @@ namespace BTCPayServer.Data
     {
         public static InvoiceEntity GetBlob(this Data.InvoiceData invoiceData, BTCPayNetworkProvider networks)
         {
-            var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(invoiceData.Blob), null);
+
+            var entity = InvoiceRepository.FromBytes<InvoiceEntity>(invoiceData.Blob);
             entity.Networks = networks;
             if (entity.Metadata is null)
             {

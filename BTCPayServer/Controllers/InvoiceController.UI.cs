@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(PaymentRequestController.ViewPaymentRequest), "PaymentRequest", new { id = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
-                State = invoiceState.Status.ToModernStatus().ToString(),
+                State = invoiceState.Status.ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
@@ -602,7 +602,7 @@ namespace BTCPayServer.Controllers
                 },
                 BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
-                Status = invoice.StatusString, //invoice.Status.ToModernStatus().ToString(),
+                Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,

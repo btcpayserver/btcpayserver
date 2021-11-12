@@ -36,7 +36,14 @@ jobs:
             else
               echo "Skipping running ExternalIntegration tests outside of context of main user and repository that have access to secrets"
             fi
-
+  trigger_docs_build:
+    machine:
+        enabled: true
+        image: circleci/classic:201808-01
+    steps:
+        - run:
+              command: |
+                  curl -X POST -H "Authorization: token $GH_PAT"  -H "Accept: application/vnd.github.everest-preview+json"  -H "Content-Type: application/json" https://api.github.com/repos/btcpayserver/btcpayserver-doc/dispatches --data '{"event_type": "build_docs"}'
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   amd64:
@@ -126,6 +133,13 @@ workflows:
                 only: master
   publish:
     jobs:
+      - trigger_docs_build:
+          filters:
+            branches:
+              ignore: /.*/
+            # only act on version tags
+            tags:
+              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - amd64:
           filters:
             # ignore any commit on any branch by default
@@ -135,7 +149,6 @@ workflows:
             # OR feature tags like vlndseedbackup
             # OR features on specific versions like v1.0.0.88-lndseedbackup-1
             tags:
-
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - arm32v7:
           filters:

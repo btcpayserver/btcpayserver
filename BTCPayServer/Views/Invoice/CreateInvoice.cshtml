@@ -40,6 +40,7 @@
                         <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                         <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Invoice Details</h4>
                     <div class="form-group">
                         <label asp-for="Amount" class="form-label"></label>
                         <input asp-for="Amount" class="form-control" />
@@ -66,16 +67,6 @@
                         <span asp-validation-for="PosData" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="BuyerEmail" class="form-label"></label>
-                        <input asp-for="BuyerEmail" class="form-control" />
-                        <span asp-validation-for="BuyerEmail" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
-                        <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
                         <label asp-for="SupportedTransactionCurrencies" class="form-label"></label>
                         <select asp-for="SupportedTransactionCurrencies" asp-items="Model.AvailablePaymentMethods" class="form-select" multiple="multiple"></select>
                         <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
@@ -87,6 +78,18 @@
                         </select>
                         <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
                     </div>
+                    <h4 class="mt-5 mb-4">Customer Information</h4>
+                    <div class="form-group">
+                        <label asp-for="BuyerEmail" class="form-label"></label>
+                        <input asp-for="BuyerEmail" class="form-control" />
+                        <span asp-validation-for="BuyerEmail" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="RequiresRefundEmail" class="form-label"></label>
+                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
+                        <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                    </div>
+                    <h4 class="mt-5 mb-4">Invoice Notifications</h4>
                     <div class="form-group">
                         <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />

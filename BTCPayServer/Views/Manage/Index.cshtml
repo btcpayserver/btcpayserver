@@ -1,14 +1,13 @@
 @model IndexViewModel
 @{
-    ViewData.SetActivePageAndTitle(ManageNavPages.Index, "Profile");
+    ViewData.SetActivePageAndTitle(ManageNavPages.Index, "Update your account");
 }
-
+<h2 class="mb-4">@ViewData["Title"]</h2>
 <form method="post">
     @if (!ViewContext.ModelState.IsValid)
     {
         <div asp-validation-summary="All" class="text-danger"></div>
     }
-
     <div class="form-group row">
         <div class="col-md-6 mb-3">
             <label asp-for="Username" class="form-label"></label>
@@ -36,12 +35,9 @@
         </div>
     </div>
     <button type="submit" id="save" class="btn btn-primary">Save</button>
-    <h4 class="mt-5 mb-3">Other actions</h4>
-    <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#danger-zone">
-        See more actions
-    </button>
-    <div id="danger-zone" class="collapse">
-        <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete your user.</a>
+    <h4 class="mt-5 mb-3">Delete Account</h4>
+    <div id="danger-zone">
+        <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete Account</a>
     </div>
 </form>
 

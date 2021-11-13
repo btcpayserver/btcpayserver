@@ -2,8 +2,9 @@
 @model BTCPayServer.Controllers.ManageController.NotificationSettingsViewModel
 @inject IEnumerable<INotificationHandler> NotificationHandlers
 @{
-    ViewData.SetActivePageAndTitle(ManageNavPages.Notifications, "Notification preferences");
+    ViewData.SetActivePageAndTitle(ManageNavPages.Notifications, "Notification Settings");
 }
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <form method="post" asp-action="NotificationSettings">
     @if (Model.All)
@@ -33,9 +34,9 @@
                 </ul>
             </div>
         </div>
-        <div>
-            <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all</button>
+        <div class="form-group mt-4">
             <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
+            <button type="submit" class="btn btn-secondary ms-3" name="command" value="disable-all">Disable all</button>
         </div>
     }
 </form>

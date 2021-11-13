@@ -1,13 +1,13 @@
 @model TwoFactorAuthenticationViewModel
 @{
-    ViewData.SetActivePageAndTitle(ManageNavPages.TwoFactorAuthentication, "Two-factor authentication");
+    ViewData.SetActivePageAndTitle(ManageNavPages.TwoFactorAuthentication, "Two-Factor Authentication");
 }
-
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
     <div class="col-lg-10 col-xl-8">
         <p>
-            Two-factor authentication (2FA) is an additional measure to protect your account.
+            Two-Factor Authentication (2FA) is an additional measure to protect your account.
             In addition to your password you will be asked for a second proof on login.
             This can be provided by an app (such as Google or Microsoft Authenticator) 
             or a security device (like a Yubikey or your hardware wallet supporting FIDO2).

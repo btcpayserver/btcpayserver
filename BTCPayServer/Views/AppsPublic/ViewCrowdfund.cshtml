@@ -324,7 +324,7 @@
                 <img v-if="perk.image && perk.image != 'null'" class="card-img-top" :src="perk.image" />
                 <div class="card-body">
                     <div class="card-title d-flex justify-content-between">
-                        <span class="h5">{{perk.title? perk.title : perk.id}}</span>
+                        <span class="h5">{{perk.title ? perk.title : perk.id}}</span>
                         <span class="text-muted"> 
                             <template v-if="perk.price && perk.price.value">
                                 {{new Intl.NumberFormat().format(perk.price.value.noExponents())}}

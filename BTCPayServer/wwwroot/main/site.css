@@ -49,6 +49,10 @@ hr.light {
     white-space: nowrap;
 }
 
+.semibold {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
 @media (min-width: 768px) {
     .text-md-nowrap {
         white-space: nowrap;

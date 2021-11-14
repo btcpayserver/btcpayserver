@@ -105,7 +105,8 @@
                             <label asp-for="Enabled" class="form-label mb-0"></label>
                         </div>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
-                        <div class="text-muted">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
+                        <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
+                        <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
                     </div>
                 </div>
                 <div class="col-lg-12">

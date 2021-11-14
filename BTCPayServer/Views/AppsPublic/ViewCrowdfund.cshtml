@@ -1,4 +1,4 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject ISettingsRepository SettingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Models.AppViewModels
@@ -287,8 +287,8 @@
     
     <template id="perks-template">
         <div class="perks-container">
-            <perk v-if="!perks || perks.length ===0"
-                  :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null}}"
+            <perk v-if="!perks || perks.length === 0"
+                :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null}}"
                 :target-currency="targetCurrency" 
                 :active="active" 
                 :loading="loading"

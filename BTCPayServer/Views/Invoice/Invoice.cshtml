@@ -47,7 +47,7 @@
     <div class="container">
     <partial name="_StatusMessage" />
 
-        <div class="row mb-4">
+        <div class="row mb-5">
             <h2 class="col-xs-12 col-lg-6 mb-4 mb-lg-0">@ViewData["Title"]</h2>
             <div class="col-xs-12 col-lg-6 mb-2 mb-lg-0 text-lg-end">
                 <div class="d-inline-flex">
@@ -83,20 +83,20 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-4">
+        <div class="row justify-content-between">
+            <div class="col-md-5 mb-4">
                 <h3 class="mb-3">Invoice Information</h3>
                 <table class="table table-responsive-md">
                     <tr>
-                        <th>Store</th>
+                        <th class="semibold">Store</th>
                         <td><a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a></td>
                     </tr>
                     <tr>
-                        <th>Invoice Id</th>
+                        <th class="semibold">Invoice Id</th>
                         <td>@Model.Id</td>
                     </tr>
                     <tr>
-                        <th>Order Id</th>
+                        <th class="semibold">Order Id</th>
                         <td>
                             @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
                             {
@@ -118,11 +118,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Payment Request Id</th>
+                        <th class="semibold">Payment Request Id</th>
                         <td><a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a></td>
                     </tr>
                     <tr>
-                        <th>State</th>
+                        <th class="semibold">State</th>
                         <td>
                             @if (Model.CanMarkStatus)
                             {
@@ -152,85 +152,85 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Created date</th>
+                        <th class="semibold">Created Date</th>
                         <td>@Model.CreatedDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
-                        <th>Expiration date</th>
+                        <th class="semibold">Expiration Date</th>
                         <td>@Model.ExpirationDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
-                        <th>Monitoring date</th>
+                        <th class="semibold">Monitoring Date</th>
                         <td>@Model.MonitoringDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
-                        <th>Transaction speed</th>
+                        <th class="semibold">Transaction Speed</th>
                         <td>@Model.TransactionSpeed</td>
                     </tr>
                     <tr>
-                        <th>Total fiat due</th>
+                        <th class="semibold">Total Fiat Due</th>
                         <td>@Model.Fiat</td>
                     </tr>
                     @if (!string.IsNullOrEmpty(Model.RefundEmail))
                     {
                         <tr>
-                            <th>Refund email</th>
+                            <th class="semibold">Refund email</th>
                             <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
                         </tr>
                     }
                     @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                     {
                         <tr>
-                            <th>Notification Url</th>
+                            <th class="semibold">Notification Url</th>
                             <td>@Model.NotificationUrl</td>
                         </tr>
                     }
                     @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                     {
                         <tr>
-                            <th>Redirect Url</th>
+                            <th class="semibold">Redirect Url</th>
                             <td><a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a></td>
                         </tr>
                     }
                 </table>
             </div>
-            <div class="col-md-6 mb-4">
+            <div class="col-md-5 mb-4">
                 <h3 class="mb-3">Buyer Information</h3>
                 <table class="table table-responsive-md">
                     <tr>
-                        <th>Name</th>
+                        <th class="semibold">Name</th>
                         <td>@Model.TypedMetadata.BuyerName</td>
                     </tr>
                     <tr>
-                        <th>Email</th>
+                        <th class="semibold">Email</th>
                         <td><a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a></td>
                     </tr>
                     <tr>
-                        <th>Phone</th>
+                        <th class="semibold">Phone</th>
                         <td>@Model.TypedMetadata.BuyerPhone</td>
                     </tr>
                     <tr>
-                        <th>Address 1</th>
+                        <th class="semibold">Address 1</th>
                         <td>@Model.TypedMetadata.BuyerAddress1</td>
                     </tr>
                     <tr>
-                        <th>Address 2</th>
+                        <th class="semibold">Address 2</th>
                         <td>@Model.TypedMetadata.BuyerAddress2</td>
                     </tr>
                     <tr>
-                        <th>City</th>
+                        <th class="semibold">City</th>
                         <td>@Model.TypedMetadata.BuyerCity</td>
                     </tr>
                     <tr>
-                        <th>State</th>
+                        <th class="semibold">State</th>
                         <td>@Model.TypedMetadata.BuyerState</td>
                     </tr>
                     <tr>
-                        <th>Country</th>
+                        <th class="semibold">Country</th>
                         <td>@Model.TypedMetadata.BuyerCountry</td>
                     </tr>
                     <tr>
-                        <th>Zip</th>
+                        <th class="semibold">Zip</th>
                         <td>@Model.TypedMetadata.BuyerZip</td>
                     </tr>
                 </table>
@@ -241,23 +241,23 @@
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                         {
                             <tr>
-                                <th>Item code</th>
+                                <th class="semibold">Item code</th>
                                 <td>@Model.TypedMetadata.ItemCode</td>
                             </tr>
                         }
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
                         {
                             <tr>
-                                <th>Item Description</th>
+                                <th class="semibold">Item Description</th>
                                 <td>@Model.TypedMetadata.ItemDesc</td>
                             </tr>
                         }
                         <tr>
-                            <th>Price</th>
+                            <th class="semibold">Price</th>
                             <td>@Model.Fiat</td>
                         </tr>
                         <tr>
-                            <th>Tax included</th>
+                            <th class="semibold">Tax Included</th>
                             <td>@Model.TaxIncluded</td>
                         </tr>
                     </table>

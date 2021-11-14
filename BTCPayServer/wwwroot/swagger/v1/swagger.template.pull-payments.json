@@ -313,6 +313,46 @@
                 "security": []
             }
         },
+        "/api/v1/pull-payments/{pullPaymentId}/payouts/{payoutId}": {
+            "parameters": [
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": { "type": "string" }
+                },
+                {
+                    "name": "payoutId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment payout",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "get": {
+                "summary": "Get Payout",
+                "operationId": "PullPayments_GetPayout",
+                "description": "Get payout",
+                "responses": {
+                    "200": {
+                        "description": "A specific payout of a pull payment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pull payment payout not found"
+                    }
+                },
+                "tags": [ "Pull payments (Public)", "Pull payments payout (Public)" ],
+                "security": []
+            }
+        },
         "/api/v1/stores/{storeId}/payouts/{payoutId}": {
             "parameters": [
                 {
@@ -554,7 +594,12 @@
                     "paymentMethod": {
                         "type": "string",
                         "example": "BTC",
-                        "description": "The payment method of the payout"
+                        "description": "The payment method of the payout (e.g., \"BTC\" or \"BTC_LightningLike\""
+                    },
+                    "cryptoCode": {
+                        "type": "string",
+                        "example": "BTC",
+                        "description": "Crypto code of the payment method of the payout (e.g., \"BTC\" or \"LTC\")"
                     },
                     "paymentMethodAmount": {
                         "type": "string",

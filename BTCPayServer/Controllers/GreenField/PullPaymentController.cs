@@ -218,6 +218,7 @@ namespace BTCPayServer.Controllers.GreenField
             };
             model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
+            model.CryptoCode = p.GetPaymentMethodId().CryptoCode;
             return model;
         }
 

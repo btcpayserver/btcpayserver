@@ -354,6 +354,7 @@ namespace BTCPayServer.Controllers.GreenField
                     {
                         Activated = details.Activated,
                         PaymentMethod = method.GetId().ToStringNormalized(),
+                        CryptoCode = method.GetId().CryptoCode,
                         Destination = details.GetPaymentDestination(),
                         Rate = method.Rate,
                         Due = accounting.DueUncapped.ToDecimal(MoneyUnit.BTC),

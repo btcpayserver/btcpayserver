@@ -1186,6 +1186,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(paymentMethods);
                 var paymentMethod = paymentMethods.First();
                 Assert.Equal("BTC", paymentMethod.PaymentMethod);
+                Assert.Equal("BTC", paymentMethod.CryptoCode);
                 Assert.Empty(paymentMethod.Payments);
 
 

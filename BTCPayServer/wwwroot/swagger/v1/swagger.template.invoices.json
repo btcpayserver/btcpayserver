@@ -1152,7 +1152,11 @@
                 "properties": {
                     "paymentMethod": {
                         "type": "string",
-                        "description": "The payment method"
+                        "description": "Payment method available for the invoice (e.g., \"BTC\" or \"BTC-LightningNetwork\" or \"BTC-LNURLPAY\")"
+                    },
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "Crypto code of the payment method (e.g., \"BTC\" or \"LTC\")"
                     },
                     "destination": {
                         "type": "string",

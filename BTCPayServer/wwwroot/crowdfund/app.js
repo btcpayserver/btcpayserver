@@ -48,8 +48,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.amount = this.perk.price.type === 0? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
-
-
         },
         mounted: function () {
             this.setAmount(this.perk.price.value);
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             }
         }
-        
     });
     
     app = new Vue({
@@ -82,7 +79,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 active: true,
                 animation: true, 
                 sound: true,
-                lastUpdated:"",
+                lastUpdated: "",
                 loading: false,
                 timeoutState: 0
             }

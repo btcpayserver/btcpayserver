@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.5
+
+### Bug fixes:
+
+* Fix: Checkout page of for invoices of 0 amount shouldn't crash, but 404 @NicolasDorier
+* Swagger doc: Fix type of property cryptoCode (#3088) @ndeet
+* Fix bug with fraction amount display in crowdfund app (#3098) @bolatovumar
+* Swagger doc: Update Swagger docs for webhook event types (#3104) @bolatovumar
+* Payout/pull payment page would crash if no payment method are set on the store @satwo
+
+### Improvements:
+
+* Add crypto code for invoice and pull payment payout API response (#3099) @bolatovumar
+* Prevent creation of on-chain invoices below the dust limit (#3082) @satwo
+
+
 ## 1.3.4
 
 ### Bug fixes:

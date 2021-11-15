@@ -1,8 +1,8 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Globalization;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -49,14 +49,14 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices")]
-        public async Task<IActionResult> GetInvoices(string storeId, [FromQuery] string[] orderId = null, [FromQuery] string[] status = null,
+        public async Task<IActionResult> GetInvoices(string storeId, [FromQuery] string[]? orderId = null, [FromQuery] string[]? status = null,
             [FromQuery]
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
             DateTimeOffset? startDate = null,
             [FromQuery] 
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
             DateTimeOffset? endDate = null,
-            [FromQuery] string textSearch = null,
+            [FromQuery] string? textSearch = null,
             [FromQuery] bool includeArchived = false,
             [FromQuery] int? skip = null,
             [FromQuery] int? take = null
@@ -354,6 +354,7 @@ namespace BTCPayServer.Controllers.GreenField
                     {
                         Activated = details.Activated,
                         PaymentMethod = method.GetId().ToStringNormalized(),
+                        CryptoCode = method.GetId().CryptoCode,
                         Destination = details.GetPaymentDestination(),
                         Rate = method.Rate,
                         Due = accounting.DueUncapped.ToDecimal(MoneyUnit.BTC),

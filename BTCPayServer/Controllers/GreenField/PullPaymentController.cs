@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,7 +99,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
-            PaymentMethodId[] paymentMethods = null;
+            PaymentMethodId?[]? paymentMethods = null;
             if (request.PaymentMethods is { } paymentMethodsStr)
             {
                 paymentMethods = paymentMethodsStr.Select(s =>
@@ -218,6 +219,7 @@ namespace BTCPayServer.Controllers.GreenField
             };
             model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
+            model.CryptoCode = p.GetPaymentMethodId().CryptoCode;
             return model;
         }
 
@@ -245,7 +247,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (pp is null)
                 return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
-            var destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination, true);
+            var destination = await payoutHandler.ParseClaimDestination(paymentMethodId, request!.Destination, true);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), destination.error??"The destination is invalid for the payment specified");
@@ -338,7 +340,7 @@ namespace BTCPayServer.Controllers.GreenField
             var payout = await ctx.Payouts.GetPayout(payoutId, storeId, true, true);
             if (payout is null)
                 return PayoutNotFound();
-            RateResult rateResult = null;
+            RateResult? rateResult = null;
             try
             {
                 rateResult = await _pullPaymentService.GetRate(payout, approvePayoutRequest?.RateRule, cancellationToken);
@@ -357,7 +359,7 @@ namespace BTCPayServer.Controllers.GreenField
             var result = await _pullPaymentService.Approve(new PullPaymentHostedService.PayoutApproval()
             {
                 PayoutId = payoutId,
-                Revision = revision.Value,
+                Revision = revision!.Value,
                 Rate = rateResult.BidAsk.Ask
             });
             var errorMessage = PullPaymentHostedService.PayoutApproval.GetErrorMessage(result);

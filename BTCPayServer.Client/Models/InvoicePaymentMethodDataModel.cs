@@ -33,6 +33,8 @@ namespace BTCPayServer.Client.Models
         public List<Payment> Payments { get; set; }
         public string PaymentMethod { get; set; }
 
+        public string CryptoCode { get; set; }
+
         public class Payment
         {
             public string Id { get; set; }

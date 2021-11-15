@@ -193,7 +193,7 @@
                                 <form asp-action="ModifyTransaction" method="post"
                                       asp-route-walletId="@Context.GetRouteValue("walletId")">
                                     <input type="hidden" name="transactionId" value="@transaction.Id"/>
-                                    <div class="input-group p-2">
+                                    <div class="input-group input-group-sm p-2">
                                         <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm"/>
                                         <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
                                     </div>

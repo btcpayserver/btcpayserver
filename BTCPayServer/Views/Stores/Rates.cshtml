@@ -59,7 +59,7 @@
             @if (Model.TestRateRules != null)
             {
                 <div class="form-group">
-                    <h5>Test results:</h5>
+                    <h5>Test Results:</h5>
                     <table class="table table-hover table-responsive-md">
                         <tbody>
                         @foreach (var result in Model.TestRateRules)
@@ -175,7 +175,7 @@
             <h4 class="mt-5 mb-3">Testing</h4>
             
             <div class="form-group">
-                <label asp-for="ScriptTest" class="form-label">Enter currency pairs which you want to test against your rule (eg. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
+                <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                 <div class="d-flex">
                     <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                     <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>

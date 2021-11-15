@@ -1028,7 +1028,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
-            ;
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
 
@@ -1178,7 +1177,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
-            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("#PaymentMethods option"));
+            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));
             Assert.Equal(2, paymentMethodOptions.Count);
             
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");

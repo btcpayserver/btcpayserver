@@ -146,9 +146,6 @@
                         <button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults">Set to default settings</button>
                     </p>
                 </div>
-                <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-off" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Disable advanced rate rule scripting</button>
-                </p>
             }
             else
             {
@@ -160,10 +157,16 @@
                         Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
                     </p>
                 </div>
-                <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-on" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Enable advanced rate rule scripting</button>
-                </p>
             }
+            <div class="form-group">
+                <label class="d-flex align-items-center mb-2">
+                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-2 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
+                    <span>Advanced rate rule scripting</span>
+                </label>    
+                <p class="text-muted small form-text">
+                    @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
+                </p>
+            </div>
             <div class="form-group">
                 <label asp-for="Spread" class="form-label"></label>
                 <div class="input-group">

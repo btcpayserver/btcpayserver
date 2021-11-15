@@ -516,10 +516,12 @@ namespace BTCPayServer.Controllers
                 {
                     paymentMethodId = enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.BTCLike) ??
                                       enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
-                                      enabledPaymentIds.First();
+                                      enabledPaymentIds.FirstOrDefault();
                 }
                 isDefaultPaymentId = true;
             }
+            if (paymentMethodId is null)
+                return null;
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
             if (network is null || !invoice.Support(paymentMethodId))
             {
@@ -529,7 +531,9 @@ namespace BTCPayServer.Controllers
                     .GetPaymentMethods()
                     .FirstOrDefault(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode);
                 if (paymentMethodTemp == null)
-                    paymentMethodTemp = invoice.GetPaymentMethods().First();
+                    paymentMethodTemp = invoice.GetPaymentMethods().FirstOrDefault();
+                if (paymentMethodTemp is null)
+                    return null;
                 network = paymentMethodTemp.Network;
                 paymentMethodId = paymentMethodTemp.GetId();
             }

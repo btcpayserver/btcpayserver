@@ -1,4 +1,4 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
+ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -70,7 +70,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="6.0.17" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.4" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />

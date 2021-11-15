@@ -424,7 +424,7 @@ namespace BTCPayServer.Payments.PayJoin
                     {
                         var outputContribution = Money.Min(additionalFee, -due);
                         outputContribution = Money.Min(outputContribution,
-                            newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
+                            newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold());
                         newTx.Outputs[i].Value -= outputContribution;
                         additionalFee -= outputContribution;
                         due += outputContribution;
@@ -437,7 +437,7 @@ namespace BTCPayServer.Payments.PayJoin
                 {
                     var outputContribution = Money.Min(additionalFee, feeOutput.Value);
                     outputContribution = Money.Min(outputContribution,
-                        feeOutput.Value - feeOutput.GetDustThreshold(minRelayTxFee));
+                        feeOutput.Value - feeOutput.GetDustThreshold());
                     outputContribution = Money.Min(outputContribution, allowedSenderFeeContribution);
                     feeOutput.Value -= outputContribution;
                     additionalFee -= outputContribution;

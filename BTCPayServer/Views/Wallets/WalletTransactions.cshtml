@@ -200,17 +200,19 @@
                                     @if (Model.Labels.Count > 0)
                                     {
                                         <div class="dropdown-divider"></div>
-                                        @foreach (var label in Model.Labels)
-                                        {
-                                            @if (transaction.Labels.Contains(label))
+                                        <div class="px-2">
+                                            @foreach (var label in Model.Labels)
                                             {
-                                                <button name="removelabel" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Text</span></button>
+                                                @if (transaction.Labels.Contains(label))
+                                                {
+                                                    <button name="removelabel" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Text</span></button>
+                                                }
+                                                else
+                                                {
+                                                    <button name="addlabelclick" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Text</span></button>
+                                                }
                                             }
-                                            else
-                                            {
-                                                <button name="addlabelclick" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Text</span></button>
-                                            }
-                                        }
+                                        </div>
                                     }
                                 </form>
                             </div>

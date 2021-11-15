@@ -161,7 +161,7 @@ namespace BTCPayServer.Rating
         public ExpressionSyntax FindBestCandidate(CurrencyPair p)
         {
             var invP = p.Inverse();
-            var candidates = new List<(CurrencyPair Pair, int Prioriy, ExpressionSyntax Expression, bool Inverse)>();
+            var candidates = new List<(CurrencyPair Pair, int Priority, ExpressionSyntax Expression, bool Inverse)>();
             foreach (var pair in new[]
             {
                 (Pair: p, Priority: 0, Inverse: false),
@@ -181,7 +181,7 @@ namespace BTCPayServer.Rating
             if (candidates.Count == 0)
                 return CreateExpression($"ERR_NO_RULE_MATCH({p})");
             var best = candidates
-                    .OrderBy(c => c.Prioriy)
+                    .OrderBy(c => c.Priority)
                     .ThenBy(c => c.Expression.Span.Start)
                     .First();
             return best.Inverse

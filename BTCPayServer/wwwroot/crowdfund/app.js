@@ -48,8 +48,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.amount = this.perk.price.type === 0? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
-
-
         },
         mounted: function () {
             this.setAmount(this.perk.price.value);
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             }
         }
-        
     });
     
     app = new Vue({
@@ -82,14 +79,17 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 active: true,
                 animation: true, 
                 sound: true,
-                lastUpdated:"",
+                lastUpdated: "",
                 loading: false,
                 timeoutState: 0
             }
         },
         computed: {
             raisedAmount: function(){
-               return parseFloat(this.srvModel.info.currentAmount + this.srvModel.info.currentPendingAmount ).toFixed(this.srvModel.currencyData.divisibility) ;
+                return this.formatAmount(this.srvModel.info.currentAmount + this.srvModel.info.currentPendingAmount);
+            },
+            targetAmount: function(){
+                return this.formatAmount(this.srvModel.targetAmount);
             },
             percentageRaisedAmount: function(){
                 return parseFloat(this.srvModel.info.progressPercentage + this.srvModel.info.pendingProgressPercentage ).toFixed(2);
@@ -203,6 +203,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 if(this.timeoutState){
                     clearTimeout(this.timeoutState);
                 }
+            },
+            formatAmount: function(amount) {
+                return formatAmount(amount, this.srvModel.currencyData.divisibility)
             }
         },
         mounted: function () {
@@ -315,3 +318,18 @@ document.addEventListener("DOMContentLoaded",function (ev) {
     });
 });
 
+/**
+ * Formats input string as a number according to browser locale
+ * with correctly displayed fraction amount (e.g. 0.012345 for BTC instead of just 0.0123)
+ * 
+ * @param {number | string} amount Amount to format
+ * @param {number} divisibility Currency divisibility (e.g., 8 for BTC)
+ * @returns String formatted as a number according to current browser locale and correct fraction amount
+ */
+function formatAmount(amount, divisibility) {
+    var parsedAmount = parseFloat(amount).toFixed(divisibility);
+    var [wholeAmount, fractionAmount] = parsedAmount.split('.');
+    var formattedWholeAmount = new Intl.NumberFormat().format(parseInt(wholeAmount, 10));
+
+    return formattedWholeAmount + (fractionAmount ? '.' + fractionAmount : '');
+}

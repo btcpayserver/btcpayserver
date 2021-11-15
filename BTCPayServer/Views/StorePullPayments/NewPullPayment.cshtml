@@ -7,50 +7,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "New pull payment", Context.GetStoreData().StoreName);
 }
 
-<style type="text/css">
-    .smMaxWidth {
-        max-width: 200px;
-    }
-
-    @@media (min-width: 768px) {
-        .smMaxWidth {
-            max-width: 400px;
-        }
-    }
-
-    .unconf > * {
-        opacity: 0.5;
-    }
-
-    .switchTimeFormat {
-        display: block;
-        max-width: 150px;
-        width: 150px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-
-    .transactionLabel:not(:last-child) {
-        margin-bottom: 4px;
-    }
-
-    .removeTransactionLabelForm {
-        display: inline;
-        position: absolute;
-        right: 4px;
-    }
-
-        .removeTransactionLabelForm button {
-            color: #212529;
-            cursor: pointer;
-            display: inline;
-            padding: 0;
-            background-color: transparent;
-            border: 0;
-        }
-</style>
-
 <div class="row">
     <div class="col-md-6">
         <h4 class="mb-3">@ViewData["Title"]</h4>

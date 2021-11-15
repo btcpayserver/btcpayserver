@@ -65,14 +65,23 @@ namespace BTCPayServer.Controllers
             if (CurrentStore is  null)
                 return NotFound();
 
-            var paymentMethodOptions = await _payoutHandlers.GetSupportedPaymentMethods(CurrentStore);
+            var paymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(CurrentStore);
+            if (!paymentMethods.Any())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "You must enable at least one payment method before creating a pull payment.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("PaymentMethods", "Stores", new { storeId });
+            }
             return View(new NewPullPaymentModel
             {
                 Name = "",
                 Currency = "BTC",
                 CustomCSSLink = "",
                 EmbeddedCSS = "",
-                PaymentMethodItems = paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true))
+                PaymentMethodItems = paymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true))
             });
         }
         
@@ -406,6 +415,16 @@ namespace BTCPayServer.Controllers
             int skip = 0, int count = 50)
         {
             var paymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData());
+            if (!paymentMethods.Any())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "You must enable at least one payment method before creating a payout.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("PaymentMethods", "Stores", new { storeId });
+            }
+
             var vm = this.ParseListQuery(new PayoutsModel
             {
                 PaymentMethods = paymentMethods,

@@ -1,4 +1,4 @@
-@model ListTransactionsViewModel
+﻿@model ListTransactionsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
@@ -232,7 +232,7 @@
                                         <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm">@transaction.Comment</textarea>
                                     </div>
                                     <div class="p-2">
-                                        <button type="submit" class="btn btn-primary">Save comment</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Save comment</button>
                                     </div>
                                 </form>
                             </div>

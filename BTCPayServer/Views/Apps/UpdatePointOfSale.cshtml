@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Apps
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
@@ -117,15 +117,15 @@
                 <div class="col-lg-9">
                     <h4 class="mt-5 mb-2">Additional Options</h4>
                     <div class="form-group">
-                        <div class="accordion" id="accordion-dev-info">
+                        <div class="accordion" id="additional">
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-embed-payment-button-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordion-dev-info-embed-payment-button">
+                                <h2 class="accordion-header" id="additional-embed-payment-button-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-payment-button" aria-expanded="false" aria-controls="additional-embed-payment-button">
                                         Embed a payment button linking to POS item
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-payment-button-header">
+                                <div id="additional-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="additional-embed-payment-button-header">
                                     <div class="accordion-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
                                         @if (Model.Example1 != null)
@@ -142,13 +142,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-embed-pos-iframe-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordion-dev-info-embed-pos-iframe">
+                                <h2 class="accordion-header" id="additional-embed-pos-iframe-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-pos-iframe" aria-expanded="false" aria-controls="additional-embed-pos-iframe">
                                         Embed Point of Sale via Iframe
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-embed-pos-iframe-header">
+                                <div id="additional-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="additional-embed-pos-iframe-header">
                                     <div class="accordion-body">
                                         You can embed this POS via an iframe.
                                         @{
@@ -159,13 +159,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-redirect-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-redirect" aria-expanded="false" aria-controls="accordion-dev-info-redirect">
+                                <h2 class="accordion-header" id="additional-redirect-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-redirect" aria-expanded="false" aria-controls="additional-redirect">
                                         Redirects
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-redirect" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
+                                <div id="additional-redirect" class="accordion-collapse collapse" aria-labelledby="additional-redirect-header">
                                     <div class="accordion-body">
                                         <div class="form-group">
                                             <label asp-for="RedirectUrl" class="form-label"></label>
@@ -181,13 +181,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-notification-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-notification" aria-expanded="false" aria-controls="accordion-dev-info-notification">
+                                <h2 class="accordion-header" id="additional-notification-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
                                         Notification URL Callbacks
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-notification-header">
+                                <div id="additional-notification" class="accordion-collapse collapse" aria-labelledby="additional-notification-header">
                                     <div class="accordion-body">
                                         <div class="form-group">
                                             <label asp-for="NotificationUrl" class="form-label"></label>
@@ -208,13 +208,13 @@
                                 </div>
                             </div>
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="accordion-dev-info-appearance-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-dev-info-appearance" aria-expanded="false" aria-controls="accordion-dev-info-appearance">
+                                <h2 class="accordion-header" id="additional-custom-css-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
                                         Custom CSS
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h2>
-                                <div id="accordion-dev-info-appearance" class="accordion-collapse collapse" aria-labelledby="accordion-dev-info-redirect-header">
+                                <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
                                     <div class="accordion-body">
                                         <div class="form-group">
                                             <label asp-for="CustomCSSLink" class="form-label"></label>

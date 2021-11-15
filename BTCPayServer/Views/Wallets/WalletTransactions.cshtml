@@ -231,7 +231,7 @@
                                       asp-route-walletId="@Context.GetRouteValue("walletId")">
                                     <input type="hidden" name="transactionId" value="@transaction.Id"/>
                                     <div class="input-group p-2">
-                                        <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm">@transaction.Comment</textarea>
+                                        <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm p-1">@transaction.Comment</textarea>
                                     </div>
                                     <div class="p-2">
                                         <button type="submit" class="btn btn-primary btn-sm">Save comment</button>

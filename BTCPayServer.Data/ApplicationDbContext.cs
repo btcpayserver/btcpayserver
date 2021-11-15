@@ -75,6 +75,7 @@ namespace BTCPayServer.Data
 
             // some of the data models don't have OnModelCreating for now, commenting them
 
+            ApplicationUser.OnModelCreating(builder);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder);
             AppData.OnModelCreating(builder);

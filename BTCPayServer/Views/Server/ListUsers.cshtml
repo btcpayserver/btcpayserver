@@ -64,9 +64,9 @@
         <tr>
             <td class="d-flex align-items-center">
                 <span class="me-2">@user.Email</span>
-                @if (user.IsAdmin)
+                @foreach (var role in user.Roles)
                 {
-                    <span class="badge bg-info">Admin</span>
+                    <span class="badge bg-info">@Model.Roles[role]</span>
                 }
             </td>
             <td>@user.Created?.ToBrowserDate()</td>

@@ -20,7 +20,8 @@ namespace BTCPayServer.Controllers
     {
         [Route("server/users")]
         public async Task<IActionResult> ListUsers(
-            UsersViewModel model,
+            [FromServices] RoleManager<IdentityRole> roleManager,
+        UsersViewModel model,
             string sortOrder = null
         )
         {
@@ -50,7 +51,9 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
             model.Users = await usersQuery
+                .Include(user => user.UserRoles)
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
@@ -59,16 +62,11 @@ namespace BTCPayServer.Controllers
                     Email = u.Email,
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
-                    Created = u.Created
+                    Created = u.Created,
+                    Roles = u.UserRoles.Select(role => role.RoleId)
                 })
                 .ToListAsync();
             model.Total = await usersQuery.CountAsync();
-
-            foreach (UsersViewModel.UserViewModel uvm in model.Users)
-            {
-                var userId = await _UserManager.FindByIdAsync(uvm.Id);
-                uvm.IsAdmin = await _userService.IsAdminUser(userId);;
-            }
              
             return View(model);
         }

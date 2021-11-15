@@ -625,7 +625,7 @@
                     "type": {
                         "type": "string",
                         "nullable": false,
-                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceSettled`, and `InvoiceInvalid`."
+                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`, and `InvoicePaymentSettled`."
                     },
                     "timestamp": {
                         "description": "The timestamp when this delivery has been created",
@@ -899,9 +899,9 @@
                 }
             }
         },
-        "InvoicePaidInFull": {
+        "InvoiceProcessing": {
             "post": {
-                "summary": "InvoicePaidInFull",
+                "summary": "InvoiceProcessing",
                 "description": "Triggers when an invoice is fully paid, but doesn't have the required amount of confirmations on the blockchain yet according to your store's settings.",
                 "parameters": [
                     {

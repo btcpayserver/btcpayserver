@@ -47,14 +47,7 @@
 
             @if (ViewData["SupportTaproot"] is true)
             {
-                @if (isTaprootActivated)
-                {
-                    <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (For advanced users)</option>
-                }
-                else
-                {
-                    <option value="@ScriptPubKeyType.TaprootBIP86" disabled>Taproot (Available from block 709632)</option>
-                }
+                <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (For advanced users)</option>
             }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>

@@ -7,7 +7,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"Create {Model.CryptoCode} {type} Wallet", Context.GetStoreData().StoreName);
     ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
-    ViewData.Add(nameof(Model.IsTaprootActivated), Model.IsTaprootActivated);
     ViewData.Add(nameof(Model.SupportSegwit), Model.SupportSegwit);
     ViewData.Add(nameof(Model.SupportTaproot), Model.SupportTaproot);
     ViewData.Add(nameof(Model.Method), Model.Method);

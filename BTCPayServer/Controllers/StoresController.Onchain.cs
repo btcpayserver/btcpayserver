@@ -58,7 +58,6 @@ namespace BTCPayServer.Controllers
             vm.CanUseRPCImport = rpcImport;
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
             vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-            vm.IsTaprootActivated = TaprootActivated(vm.CryptoCode);
 
             if (vm.Method == null)
             {
@@ -213,7 +212,6 @@ namespace BTCPayServer.Controllers
             vm.CanUseRPCImport = rpcImport;
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
             vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-            vm.IsTaprootActivated = TaprootActivated(vm.CryptoCode);
             vm.Network = network;
 
             if (vm.Method == null)
@@ -264,7 +262,6 @@ namespace BTCPayServer.Controllers
                 DerivationSchemeFormat = "BTCPay",
                 CanUseHotWallet = hotWallet,
                 CanUseRPCImport = rpcImport,
-                IsTaprootActivated = TaprootActivated(cryptoCode),
                 SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
                 SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
             };

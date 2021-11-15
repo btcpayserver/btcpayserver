@@ -437,6 +437,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal(payout.Id, payout2.Id);
                 Assert.Equal(destination, payout2.Destination);
                 Assert.Equal(PayoutState.AwaitingApproval, payout.State);
+                Assert.Equal("BTC", payout2.PaymentMethod);
+                Assert.Equal("BTC", payout2.CryptoCode);
                 Assert.Null(payout.PaymentMethodAmount);
 
                 Logs.Tester.LogInformation("Can't overdraft");
@@ -1186,6 +1188,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(paymentMethods);
                 var paymentMethod = paymentMethods.First();
                 Assert.Equal("BTC", paymentMethod.PaymentMethod);
+                Assert.Equal("BTC", paymentMethod.CryptoCode);
                 Assert.Empty(paymentMethod.Payments);
 
 

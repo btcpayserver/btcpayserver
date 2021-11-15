@@ -41,6 +41,11 @@ hr.light {
     display: none;
 }
 
+.note-editable {
+    color: var(--btcpay-form-text);
+    background-color: var(--btcpay-form-bg);
+}
+
 .wraptextAuto {
     max-width: 300px;
     text-overflow: ellipsis;

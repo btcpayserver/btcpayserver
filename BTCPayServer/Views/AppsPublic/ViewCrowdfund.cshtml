@@ -65,7 +65,7 @@
                     {
                         <span v-if="srvModel.targetAmount" class="mt-3" id="crowdfund-header-target">
                             <h3 class="d-inline-block">
-                                <span class="badge bg-info px-3" v-text="`${new Intl.NumberFormat().format(srvModel.targetAmount)} ${targetCurrency}`">@Math.Round(Model.TargetAmount.GetValueOrDefault(0)) @Model.TargetCurrency</span>
+                                <span class="badge bg-info px-3" v-text="`${targetAmount} ${targetCurrency}`">@Math.Round(Model.TargetAmount.GetValueOrDefault(0)) @Model.TargetCurrency</span>
                             </h3>
                             @if (Model.ResetEveryAmount > 0 && !Model.NeverReset)
                             {
@@ -123,7 +123,7 @@
                 <div class="card-body">
                     <div class="row py-2 text-center crowdfund-stats">
                         <div class="col-sm border-end p-3 text-center" id="crowdfund-body-raised-amount">
-                            <h3 v-text="`${new Intl.NumberFormat().format(raisedAmount)} ${targetCurrency}`">@Math.Round(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency</h3>
+                            <h3 v-text="`${raisedAmount} ${targetCurrency}`">@Math.Round(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount, Model.CurrencyData.Divisibility) @Model.TargetCurrency</h3>
                             <h5 class="text-muted fst-italic mb-0">Raised</h5>
                             <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0" class="only-for-js">
                                 <ul class="p-0 text-uppercase">
@@ -287,8 +287,8 @@
     
     <template id="perks-template">
         <div class="perks-container">
-            <perk v-if="!perks || perks.length ===0"
-                  :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null}}"
+            <perk v-if="!perks || perks.length === 0"
+                :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null}}"
                 :target-currency="targetCurrency" 
                 :active="active" 
                 :loading="loading"
@@ -324,10 +324,10 @@
                 <img v-if="perk.image && perk.image != 'null'" class="card-img-top" :src="perk.image" />
                 <div class="card-body">
                     <div class="card-title d-flex justify-content-between">
-                        <span class="h5">{{perk.title? perk.title : perk.id}}</span>
+                        <span class="h5">{{perk.title ? perk.title : perk.id}}</span>
                         <span class="text-muted"> 
                             <template v-if="perk.price && perk.price.value">
-                                {{new Intl.NumberFormat().format(perk.price.value.noExponents())}}
+                                {{formatAmount(perk.price.value.noExponents(), srvModel.currencyData.divisibility)}}
                                 {{targetCurrency}}
                                 <template v-if="perk.price.type == 1">or more</template>
                             </template>

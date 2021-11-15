@@ -1,4 +1,4 @@
-﻿@model ListTransactionsViewModel
+@model ListTransactionsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
@@ -35,7 +35,6 @@
 
         .badge-container {
             display: flex;
-            align-items: center;
             flex-wrap: nowrap;
         }
 

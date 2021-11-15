@@ -65,7 +65,7 @@
                         "description": "Whether the payment method is enabled"
                     },
                     "cryptoCode": {
-                        "type": "boolean",
+                        "type": "string",
                         "description": "The currency code of the payment method"
                     },
                     "data": {

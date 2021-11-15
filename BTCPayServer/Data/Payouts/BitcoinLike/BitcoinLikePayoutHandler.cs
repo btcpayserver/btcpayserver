@@ -136,7 +136,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             claimDestination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
         {
             txout.ScriptPubKey = bitcoinLikeClaimDestination.Address.ScriptPubKey;
-            return Task.FromResult(txout.GetDustThreshold(new FeeRate(1.0m)).ToDecimal(MoneyUnit.BTC));
+            return Task.FromResult(txout.GetDustThreshold().ToDecimal(MoneyUnit.BTC));
         }
 
         return Task.FromResult(0m);

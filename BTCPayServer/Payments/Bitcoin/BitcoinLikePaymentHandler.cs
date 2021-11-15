@@ -190,6 +190,15 @@ namespace BTCPayServer.Payments.Bitcoin
             }
 
             var reserved = await prepare.ReserveAddress;
+            if (paymentMethod.ParentEntity.Type != InvoiceType.TopUp)
+            {
+                var txOut = network.NBitcoinNetwork.Consensus.ConsensusFactory.CreateTxOut();
+                txOut.ScriptPubKey = reserved.Address.ScriptPubKey;
+                var dust = txOut.GetDustThreshold();
+                var amount = paymentMethod.Calculate().Due;
+                if (amount < dust)
+                    throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
+            }
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&

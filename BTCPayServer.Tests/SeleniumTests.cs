@@ -493,7 +493,7 @@ namespace BTCPayServer.Tests
                 var client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
                 await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
                 await client.CreateInvoiceAsync(
-                    new NBitpayClient.Invoice() { Price = 0.000000012m, Currency = "USD", FullNotifications = true },
+                    new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
                     NBitpayClient.Facade.Merchant);
 
                 client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
@@ -503,7 +503,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
 
                 await client.CreateInvoiceAsync(
-                    new NBitpayClient.Invoice() { Price = 0.000000012m, Currency = "USD", FullNotifications = true },
+                    new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
                     NBitpayClient.Facade.Merchant);
 
                 s.Driver.Navigate().GoToUrl(s.Link("/api-tokens"));

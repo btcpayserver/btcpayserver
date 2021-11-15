@@ -3004,15 +3004,31 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanCreateStrangeInvoice()
         {
             using (var tester = ServerTester.Create())
             {
+                tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
+                
                 DateTimeOffset expiration = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(21);
+
+                // This should fail, the amount is too low to be above the dust limit of bitcoin
+                var ex = Assert.Throws<BitPayException>(() => user.BitPay.CreateInvoice(
+                    new Invoice()
+                    {
+                        Price = 0.000000012m,
+                        Currency = "USD",
+                        FullNotifications = true,
+                        ExpirationTime = expiration
+                    }, Facade.Merchant));
+                Assert.Contains("dust threshold", ex.Message);
+                await user.RegisterLightningNodeAsync("BTC");
+
                 var invoice1 = user.BitPay.CreateInvoice(
                     new Invoice()
                     {
@@ -3021,6 +3037,7 @@ namespace BTCPayServer.Tests
                         FullNotifications = true,
                         ExpirationTime = expiration
                     }, Facade.Merchant);
+
                 Assert.Equal(expiration.ToUnixTimeSeconds(), invoice1.ExpirationTime.ToUnixTimeSeconds());
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice() { Price = 0.000000019m, Currency = "USD" },
                     Facade.Merchant);

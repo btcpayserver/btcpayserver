@@ -865,10 +865,10 @@ namespace BTCPayServer.Controllers
 
             if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id })}' class='alert-link'>set up your wallet</a> first",
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(StoresController.PaymentMethods), "Stores", new { storeId = store.Id })}' class='alert-link'>set up a payment method</a> first",
                     AllowDismiss = false
                 });
                 return View(model);

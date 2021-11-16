@@ -35,9 +35,8 @@
         }
     </template>
     <script>
-        var srvModel = @Safe.Json(Model);
-
-        var payButtonCtrl = new Vue({
+        const srvModel = @Safe.Json(Model);
+        const payButtonCtrl = new Vue({
             el: '#payButtonCtrl',
             data: {
                 srvModel: srvModel,
@@ -45,28 +44,27 @@
                 buttonInlineTextMode: false
             },
             computed: {
-                imageUrlRequired: function(){
+                imageUrlRequired() {
                     return !this.buttonInlineTextMode;
                 }
             },
             methods: {
-                inputChanges: function (event, buttonSize) {
+                inputChanges(event, buttonSize) {
                     inputChanges(event, buttonSize);
                 }
-                
             },
             watch: {
-                buttonInlineTextMode: function (checked) {
-                  if(!checked){
-                      this.srvModel.payButtonText = "";
-                      this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
-                  }else {
-                      this.srvModel.payButtonText = "Pay with";
-                      this.srvModel.payButtonImageUrl = this.srvModel.urlRoot + "img/logo.svg";
-                  }
-                  this.inputChanges();
+                buttonInlineTextMode(checked) {
+                    if (!checked) {
+                        this.srvModel.payButtonText = '';
+                        this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
+                    } else {
+                        this.srvModel.payButtonText = 'Pay with';
+                        this.srvModel.payButtonImageUrl = `${this.srvModel.urlRoot}img/logo.svg`;
+                    }
+                    this.inputChanges();
                 }
-              }
+            }
         });
     </script>
 }

@@ -76,6 +76,8 @@
         <div class="col-lg-7">
             <h4 class="mb-3">@ViewData["PageTitle"]</h4>
             <div class="row">
+                <p>Set parameters that define the purchase: price, currency and an optional description of purchase.</p>
+                <p>Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page. Clicking on the button will redirect customer to checkout.</p>
                 <div class="form-group col-md-8">
                     <label class="form-label">Price</label>
                     <input name="price" type="text" class="form-control" placeholder="(optional)"
@@ -101,16 +103,9 @@
                        v-model="srvModel.orderId" v-on:change="inputChanges">
             </div>
         </div>
-        <div class="col-lg-5">
-            <br />
-            Set parameters that define the purchase: price, currency and an optional description of purchase.
-            <br /><br />
-            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
-            Clicking on the button will redirect customer to checkout.
-        </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Pay button display options</h4>
+    <h4 class="mt-5 mb-3">Display Options</h4>
 
     <div class="row">
         <div class="col-lg-7">
@@ -266,7 +261,7 @@
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Advanced options</h4>
+    <h4 class="mt-5 mb-3">Advanced Options</h4>
 
     <div class="row" v-if="!srvModel.appIdEndpoint">
         <div class="col-lg-7">

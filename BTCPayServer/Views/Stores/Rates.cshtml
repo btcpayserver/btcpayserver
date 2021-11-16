@@ -59,7 +59,7 @@
             @if (Model.TestRateRules != null)
             {
                 <div class="form-group">
-                    <h5>Test results:</h5>
+                    <h5>Test Results:</h5>
                     <table class="table table-hover table-responsive-md">
                         <tbody>
                         @foreach (var result in Model.TestRateRules)
@@ -146,9 +146,6 @@
                         <button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults">Set to default settings</button>
                     </p>
                 </div>
-                <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-off" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Turn off advanced rate rule scripting</button>
-                </p>
             }
             else
             {
@@ -160,10 +157,16 @@
                         Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
                     </p>
                 </div>
-                <p>
-                    <button type="submit" class="btn btn-secondary" value="scripting-on" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">Turn on advanced rate rule scripting</button>
-                </p>
             }
+            <div class="form-group">
+                <label class="d-flex align-items-center mb-2">
+                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-2 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
+                    <span>Advanced rate rule scripting</span>
+                </label>    
+                <p class="text-muted small form-text">
+                    @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
+                </p>
+            </div>
             <div class="form-group">
                 <label asp-for="Spread" class="form-label"></label>
                 <div class="input-group">
@@ -173,20 +176,24 @@
                 <span asp-validation-for="Spread" class="text-danger"></span>
             </div>
             <h4 class="mt-5 mb-3">Testing</h4>
+            
             <div class="form-group">
-                <label asp-for="ScriptTest" class="form-label">Enter currency pairs which you want to test against your rule (eg. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
-                <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
+                <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
+                <div class="d-flex">
+                    <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
+                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>
+                </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>
-            <button name="command" value="Test" type="submit" class="btn btn-primary" title="Test">Test</button>
-
-            <h4 class="mt-5 mb-3">Default currency pairs</h4>
+                    
+                
+            <h4 class="mt-5 mb-3">Default Currency Pairs</h4>
             <div class="form-group">
-                <label asp-for="DefaultCurrencyPairs" class="form-label">You can query those pairs via REST by querying <a asp-controller="Rate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
+                <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="Rate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-3" value="Save">Save</button>
         </form>
     </div>
 </div>

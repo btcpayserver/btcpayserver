@@ -45,7 +45,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public bool ShowScripting { get; set; }
 
-        [Display(Name = "Rate rules")]
+        [Display(Name = "Rate Rules")]
         [MaxLength(2000)]
         public string Script { get; set; }
         public string DefaultScript { get; set; }
@@ -54,7 +54,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string StoreId { get; set; }
         public IEnumerable<AvailableRateProvider> AvailableExchanges { get; set; }
 
-        [Display(Name = "Add a spread on exchange rate of ... %")]
+        [Display(Name = "Add Exchange Rate Spread")]
         [Range(0.0, 100.0)]
         public double Spread
         {
@@ -62,7 +62,7 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        [Display(Name = "Preferred price source (eg. bitfinex, bitstamp...)")]
+        [Display(Name = "Preferred Price Source")]
         public string PreferredExchange { get; set; }
 
         public string RateSource

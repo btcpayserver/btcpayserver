@@ -260,6 +260,10 @@
 
     <div class="row" v-if="!srvModel.appIdEndpoint">
         <div class="col-lg-7">
+            <p>
+                This parameter allows you to specify additional query string parameters that should be appended to the checkout page once the invoice is created.
+                For example, <code>lang=da-DK</code> would load the checkout page in Danish by default.
+            </p>
             <div class="form-group">
                 <label class="form-label">Checkout Additional Query String</label>
                 <input name="checkoutQueryString" type="text" class="form-control"
@@ -268,15 +272,11 @@
                 <small class="text-danger">{{ errors.first('checkoutQueryString') }}</small>
             </div>
         </div>
-        <div class="col-lg-5">
-            <br />
-            This parameter allows you to specify additional query string parameters that should be appended to the checkout page once the invoice is created. 
-            For example, <code>lang=da-DK</code> would load the checkout page in Danish by default.
-        </div>
     </div>
 
     <div class="row">
         <div class="col-lg-7">
+            <p>This following settings enable you to link this pay button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting.</p>
             <div class="form-group">
                 <label class="form-label">Use App as endpoint</label>
                 <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-select">
@@ -293,13 +293,9 @@
                 <small class="text-danger">{{ errors.first('appChoiceKey') }}</small>
             </div>
         </div>
-        <div class="col-lg-5">
-            <br />
-            This allows you to link this pay button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting.
-        </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Generated code</h4>
+    <h4 class="mt-5 mb-3">Generated Code</h4>
 
     <div class="row" v-show="!errors.any()">
         <div class="col-lg-12">

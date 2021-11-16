@@ -146,19 +146,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        public bool TaprootActivated(string crytoCode)
-        {
-            var network = (BTCPayNetwork)_NetworkProvider.GetNetwork(crytoCode);
-#pragma warning disable CS0618
-            if (!(network.IsBTC && network.NBitcoinNetwork.ChainName == ChainName.Mainnet))
-                // Consider it activated for everything that is not mainnet bitcoin
-                return true;
-#pragma warning restore CS0618
-            var status = _Dashboard.Get(crytoCode).Status;
-            return  status.ChainHeight >= 709632;
-        }
-
-
         [HttpPost]
         [Route("{storeId}/users")]
         public async Task<IActionResult> StoreUsers(StoreUsersViewModel vm)

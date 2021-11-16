@@ -39,8 +39,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool CanUseRPCImport { get; set; }
         public bool SupportSegwit { get; set; }
         public bool SupportTaproot { get; set; }
-        [Display(Name = "Is taproot activated")]
-        public bool IsTaprootActivated { get; set; }
         public RootedKeyPath GetAccountKeypath()
         {
             if (KeyPath != null && RootFingerprint != null &&

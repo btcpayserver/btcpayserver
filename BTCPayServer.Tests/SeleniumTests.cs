@@ -1028,7 +1028,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
-            ;
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
 
@@ -1178,7 +1177,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
-            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("#PaymentMethods option"));
+            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));
             Assert.Equal(2, paymentMethodOptions.Count);
             
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");
@@ -1392,11 +1391,8 @@ namespace BTCPayServer.Tests
             await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
-
-
-
-            s.GoToStore(s.StoreId);
-            s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            
+            s.GoToLightningSettings(s.StoreId, cryptoCode);
             // LNURL is enabled and settings are expanded
             Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
             Assert.Contains("show", s.Driver.FindElement(By.Id("LNURLSettings")).GetAttribute("class"));
@@ -1413,8 +1409,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(i);
             s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
 
-            s.GoToStore(s.StoreId);
-            s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            s.GoToLightningSettings(s.StoreId, cryptoCode);
             s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
             s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
@@ -1422,7 +1417,7 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
             
             // Ensure the toggles are set correctly
-            s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            s.GoToLightningSettings(s.StoreId, cryptoCode);
 
             //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
             // checkboxes is not good choice here, in next release we should have multi choice instead
@@ -1442,7 +1437,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             var newStore = s.CreateNewStore(false);
             s.AddLightningNode(cryptoCode, LightningConnectionType.LndREST, false);
-            s.Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            s.GoToLightningSettings(newStore.storeId, cryptoCode);
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();
@@ -1456,11 +1451,10 @@ namespace BTCPayServer.Tests
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-            Assert.Equal(new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike),PaymentMethodId.Parse(Assert.Single(s.Driver.FindElement(By.Id("PaymentMethods")).FindElements(By.TagName("option"))).GetAttribute("value")));
+            Assert.Equal(new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike),PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
-            ;
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.Id("Destination")).SendKeys(lnurl);

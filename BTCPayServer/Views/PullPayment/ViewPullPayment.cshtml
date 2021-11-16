@@ -57,7 +57,15 @@
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
                                 <div class="input-group">
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
-                                    <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                    @if (Model.PaymentMethods.Length == 1)
+                                    {
+                                        <input type="hidden" asp-for="SelectedPaymentMethod">
+                                        <span class="input-group-text">@Model.PaymentMethods.First().ToPrettyString()</span>
+                                    }
+                                    else
+                                    {
+                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                    }
                                 </div>
                             </div>
 

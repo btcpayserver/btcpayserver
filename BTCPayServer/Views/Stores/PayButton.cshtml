@@ -229,22 +229,25 @@
 
     <div class="row">
         <div class="col-lg-7">
-            <p>These following parameters allow you to influence the process after purchase. <i>Server IPN</i> is the URL to which we'll post purchase data. We can also deliver an email notification to a specified address.</p>
-            <p>Finally, <i>Browser Redirect</i> defines where BTCPayServer will redirect the customer after purchase is completed.</p>
             <div class="form-group">
                 <label class="form-label">Server IPN</label>
                 <input name="serverIpn" type="text" class="form-control"
                        v-model="srvModel.serverIpn" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
+                <p id="ServerIPNHelpBlock" class="form-text text-muted">
+                    The URL to post purchase data.
+                </p>
             </div>
-            <div class="form-group"  v-if="!srvModel.appIdEndpoint">
-                <label class="form-label">Send Email Notifications to</label>
-                <input name="notifyEmail" type="text" class="form-control"
+            <div class="form-group" v-if="!srvModel.appIdEndpoint">
+                <label class="form-label">Email Notifications</label>
+                <input name="notifyEmail" type="text" class="form-control" placeholder="name@domain.com"
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-
+                <p id="BrowserRedirectHelpBlock" class="form-text text-muted">
+                    Recieve email notification updates.
+                </p>
             </div>
             <div class="form-group">
                 <label class="form-label">Browser Redirect</label>
@@ -252,6 +255,9 @@
                        v-model="srvModel.browserRedirect" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
                 <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
+                <p id="BrowserRedirectHelpBlock" class="form-text text-muted">
+                    Where to redirect the customer after payment is complete.
+                </p>
             </div>
         </div>
     </div>

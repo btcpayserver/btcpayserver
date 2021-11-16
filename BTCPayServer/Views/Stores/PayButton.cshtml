@@ -231,7 +231,7 @@
                        v-model="srvModel.serverIpn" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
-                <p id="ServerIPNHelpBlock" class="form-text text-muted">
+                <p class="form-text text-muted">
                     The URL to post purchase data.
                 </p>
             </div>
@@ -242,8 +242,8 @@
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-                <p id="BrowserRedirectHelpBlock" class="form-text text-muted">
-                    Recieve email notification updates.
+                <p class="form-text text-muted">
+                    Receive email notification updates.
                 </p>
             </div>
             <div class="form-group">
@@ -252,7 +252,7 @@
                        v-model="srvModel.browserRedirect" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
                 <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
-                <p id="BrowserRedirectHelpBlock" class="form-text text-muted">
+                <p class="form-text text-muted">
                     Where to redirect the customer after payment is complete.
                 </p>
             </div>

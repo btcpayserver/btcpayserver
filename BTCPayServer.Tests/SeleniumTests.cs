@@ -114,28 +114,29 @@ namespace BTCPayServer.Tests
 
                 var tester = s.Server;
                 var u1 = tester.NewAccount();
-                u1.GrantAccess();
+                await u1.GrantAccessAsync();
                 await u1.MakeAdmin(false);
 
                 var u2 = tester.NewAccount();
-                u2.GrantAccess();
+                await u2.GrantAccessAsync();
                 await u2.MakeAdmin(false);
 
                 s.GoToLogin();
                 s.Login(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
-                s.GoToProfile(ManageNavPages.Index);
+                s.GoToProfile();
                 s.Driver.FindElement(By.Id("Email")).Clear();
                 s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
                 s.Driver.FindElement(By.Id("save")).Click();
 
-                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+                Assert.Contains("The email address is already in use with an other account.", 
+                    s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
 
-                s.GoToProfile(ManageNavPages.Index);
+                s.GoToProfile();
                 s.Driver.FindElement(By.Id("Email")).Clear();
                 var changedEmail = Guid.NewGuid() + "@lol.com";
                 s.Driver.FindElement(By.Id("Email")).SendKeys(changedEmail);
                 s.Driver.FindElement(By.Id("save")).Click();
-                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+                s.FindAlertMessage();
 
                 var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
                 Assert.NotNull(await manager.FindByNameAsync(changedEmail));

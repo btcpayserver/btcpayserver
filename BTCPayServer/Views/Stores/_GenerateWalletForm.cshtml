@@ -7,7 +7,6 @@
     var isHotWallet = method is WalletSetupMethod.HotWallet;
     var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
     var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
-    var isTaprootActivated = ViewData["IsTaprootActivated"] is true;
 }
 
 @if (!User.IsInRole(Roles.ServerAdmin))

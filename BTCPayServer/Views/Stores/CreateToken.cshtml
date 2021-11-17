@@ -20,16 +20,15 @@
             </div>
             @if (!ViewBag.HidePublicKey)
             {
-            <div class="form-group">
-                <label asp-for="PublicKey" class="form-label"></label>
-                <input asp-for="PublicKey" class="form-control" />
-                <span asp-validation-for="PublicKey" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    Keep empty for server-initiated pairing.
-                </p>
-            </div>
+                <div class="form-group">
+                    <label asp-for="PublicKey" class="form-label"></label>
+                    <input asp-for="PublicKey" class="form-control" />
+                    <span asp-validation-for="PublicKey" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Keep empty for server-initiated pairing.
+                    </p>
+                </div>
             }
-
             @if (ViewBag.ShowStores)
             {
                 <div class="form-group">

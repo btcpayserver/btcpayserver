@@ -19,17 +19,17 @@
         }
 
         <form method="post">
-            <div class="row g-1">
+            <div class="d-flex justify-content-between">
                 <div class="col-sm">
                     <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
                 </div>
-                <div class="col-sm">
+                <div class="ms-3">
                     <select asp-for="Role" class="form-select">
                         <option value="@StoreRoles.Owner">Owner</option>
                         <option value="@StoreRoles.Guest">Guest</option>
                     </select>
                 </div>
-                <div class="col-sm">
+                <div class="ms-3">
                     <button type="submit" role="button" class="btn btn-primary"><span class="fa fa-plus"></span> Add user</button>
                 </div>
             </div>

@@ -1420,9 +1420,10 @@ namespace BTCPayServer.Tests
 
             //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
             // checkboxes is not good choice here, in next release we should have multi choice instead
+            Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
-            Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
+            // Invoice creation should fail, because it is a standard invoice with amount, but DisableBolt11PaymentMethod  = true and LNURLStandardInvoiceEnabled = false
             s.CreateInvoice(storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
 
             i = s.CreateInvoice(storeName, null, cryptoCode);

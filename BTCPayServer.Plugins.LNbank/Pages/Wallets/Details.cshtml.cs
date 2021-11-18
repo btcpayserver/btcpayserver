@@ -14,7 +14,6 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
     public class DetailsModel : BasePageModel
     {
         public Wallet Wallet { get; set; }
-        public string ConnectionString { get; set; }
 
         public DetailsModel(
             UserManager<ApplicationUser> userManager, 
@@ -31,8 +30,6 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
             });
 
             if (Wallet == null) return NotFound();
-
-            ConnectionString = $"type=lnbank;wallet-id={Wallet.WalletId}";
 
             return Page();
         }

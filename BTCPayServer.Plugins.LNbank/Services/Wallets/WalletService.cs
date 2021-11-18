@@ -359,5 +359,24 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 Event = "paid"
             });
         }
+
+        public async Task Cancel(string invoiceId)
+        {
+            var transaction = await GetTransaction(new TransactionQuery() { InvoiceId = invoiceId });
+            if (transaction.SetCancelled())
+            {
+                await UpdateTransaction(transaction);
+                await _transactionHub.Clients.All.SendAsync("transaction-update", new
+                {
+                    transaction.TransactionId,
+                    transaction.InvoiceId,
+                    transaction.WalletId,
+                    transaction.Status,
+                    transaction.IsPaid,
+                    transaction.IsExpired,
+                    Event = "cancelled"
+                });
+            }
+        }
     }
 }

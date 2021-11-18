@@ -92,6 +92,13 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
             return Ok(invoice);
         }
 
+        [HttpDelete("invoice/{invoiceId}")]
+        public async Task<ActionResult<LightningInvoiceData>> CancelLightningInvoice(string invoiceId)
+        {
+            await _walletService.Cancel(invoiceId);
+            return Ok();
+        }
+
         [HttpGet("channels")]
         public async Task<ActionResult<IEnumerable<LightningChannelData>>> ListLightningChannels()
         {

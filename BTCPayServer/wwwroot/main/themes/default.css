@@ -384,7 +384,6 @@
   --btcpay-dark-rgb: 33, 38, 45;
 }
 
-header.masthead::before,
 .service-box img {
   filter: hue-rotate(318deg);
 }

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Lightning;
 using BTCPayServer.Plugins.LNbank.Data.Models;
@@ -17,6 +18,7 @@ namespace BTCPayServer.Plugins.LNbank
         }
         
         public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<AccessKey> AccessKeys { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -48,8 +50,15 @@ namespace BTCPayServer.Plugins.LNbank
             }
             
             modelBuilder.Entity<Wallet>().HasIndex(o => o.UserId);
+            modelBuilder.Entity<AccessKey>().HasIndex(o => o.WalletId);
             modelBuilder.Entity<Transaction>().HasIndex(o => o.InvoiceId);
             modelBuilder.Entity<Transaction>().HasIndex(o => o.WalletId);
+            
+            modelBuilder
+                .Entity<AccessKey>()
+                .HasOne(o => o.Wallet)
+                .WithMany(w => w.AccessKeys)
+                .OnDelete(DeleteBehavior.Cascade);    
             
             modelBuilder
                 .Entity<Transaction>()
@@ -71,5 +80,14 @@ namespace BTCPayServer.Plugins.LNbank
                     v => v.MilliSatoshi,
                     v => new LightMoney(v));
         }
+    }
+
+    public class AccessKey
+    {
+        [Key]
+        public string Key { get; set; }
+        
+        public string WalletId { get; set; }
+        public Wallet Wallet { get; set; }
     }
 }

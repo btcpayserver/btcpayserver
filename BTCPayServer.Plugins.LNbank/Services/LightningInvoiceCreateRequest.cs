@@ -11,8 +11,6 @@ namespace BTCPayServer.Plugins.LNbank.Services
     public class LightningInvoiceCreateRequest
     {
         public static readonly TimeSpan ExpiryDefault = TimeSpan.FromDays(1);
-        [Required]
-        public string WalletId { get; set; }
         public string Description { get; set; }
         [JsonConverter(typeof(UInt256JsonConverter))]
         public uint256 DescriptionHash { get; set; }

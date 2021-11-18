@@ -13,12 +13,10 @@ namespace BTCPayServer.Plugins.LNbank.Data.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [DisplayName("Wallet ID")]
         public string WalletId { get; set; }
-        [DisplayName("User ID")]
-        public string UserId { get; set; }
-        [Required]
-        public string Name { get; set; }
-        [DisplayName("Creation date")]
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        [DisplayName("User ID")] public string UserId { get; set; }
+        [Required] public string Name { get; set; }
+        [DisplayName("Creation date")] public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
@@ -31,5 +29,7 @@ namespace BTCPayServer.Plugins.LNbank.Data.Models
                     .Aggregate(new LightMoney(0), (total, t) => total + t.AmountSettled);
             }
         }
+
+        public List<AccessKey> AccessKeys { get; set; } = new List<AccessKey>();
     }
 }

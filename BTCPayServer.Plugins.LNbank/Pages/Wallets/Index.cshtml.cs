@@ -2,13 +2,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
 {
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class IndexModel : BasePageModel
     {
         public IEnumerable<Wallet> Wallets { get; set; }
@@ -21,9 +23,9 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
 
         public async Task OnGetAsync(string walletId)
         {
-            Wallets = await WalletService.GetWallets(new WalletsQuery {
-                UserId = UserId,
-                IncludeTransactions = true
+            Wallets = await WalletService.GetWallets(new WalletsQuery
+            {
+                UserId = new[] { UserId }, IncludeTransactions = true
             });
 
             var list = Wallets.ToList();

@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
+using BTCPayServer.Plugins.LNbank.Authentication;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Plugins.LNbank.Controllers.API
 {
@@ -17,7 +21,8 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
 
         public LightningController(
             BTCPayService btcpayService,
-            WalletService walletService)
+            WalletService walletService,
+            IOptionsMonitor<IdentityOptions> identityOptions) : base(identityOptions)
         {
             _btcpayService = btcpayService;
             _walletService = walletService;
@@ -28,22 +33,17 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
         [HttpPost("invoice")]
         public async Task<ActionResult<LightningInvoiceData>> CreateLightningInvoice(LightningInvoiceCreateRequest req)
         {
-            var wallet = await _walletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = req.WalletId,
-                IncludeTransactions = true
-            });
 
-            if (wallet == null) return NotFound();
+            if (Wallet == null) return NotFound();
 
             Transaction transaction;
             if (req.Description is null)
             {
-                transaction = await _walletService.Receive(wallet, req.Amount, req.DescriptionHash);
+                transaction = await _walletService.Receive(Wallet, req.Amount, req.DescriptionHash);
             }
             else
             {
-                transaction = await _walletService.Receive(wallet, req.Amount, req.Description);
+                transaction = await _walletService.Receive(Wallet, req.Amount, req.Description);
             }
           
             var data = ToLightningInvoiceData(transaction);
@@ -53,20 +53,14 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
         [HttpPost("pay")]
         public async Task<ActionResult<PayResponse>> Pay(LightningInvoicePayRequest req)
         {
-            var wallet = await _walletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = req.WalletId,
-                IncludeTransactions = true
-            });
-
-            if (wallet == null) return NotFound();
+            if (Wallet == null) return NotFound();
 
             var paymentRequest = req.PaymentRequest;
             var bolt11 = _walletService.ParsePaymentRequest(paymentRequest);
 
             try
             {
-                await _walletService.Send(wallet, bolt11, paymentRequest);
+                await _walletService.Send(Wallet, bolt11, paymentRequest);
                 var response = new PayResponse(PayResult.Ok);
                 return Ok(response);
             }
@@ -91,6 +85,7 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
             var transaction = await _walletService.GetTransaction(new TransactionQuery
             {
                 UserId = UserId,
+                WalletId = WalletId,
                 InvoiceId = invoiceId
             });
             var invoice = ToLightningInvoiceData(transaction);

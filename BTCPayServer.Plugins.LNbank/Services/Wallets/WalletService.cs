@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using Transaction = BTCPayServer.Plugins.LNbank.Data.Models.Transaction;
 
 namespace BTCPayServer.Plugins.LNbank.Services.Wallets
@@ -38,29 +39,53 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
 
         public async Task<IEnumerable<Wallet>> GetWallets(WalletsQuery query)
         {
+            
             await using var dbContext = _dbContextFactory.CreateContext();
-            var queryable = dbContext.Wallets.Where(w => w.UserId == query.UserId);
+            return await FilterWallets(dbContext.Wallets.AsQueryable(), query).ToListAsync();
+        }
+
+        private IQueryable<Wallet> FilterWallets(IQueryable<Wallet> queryable, WalletsQuery query)
+        {
+            if (query.UserId != null)
+            {
+                queryable = queryable.Where(wallet => query.UserId.Contains(wallet.UserId));
+            }
+            if (query.AccessKey != null)
+            {
+                queryable = queryable.Include(wallet => wallet.AccessKeys).Where(wallet =>
+                    wallet.AccessKeys.Any(key => query.AccessKey.Contains(key.Key)));
+            }
+
+            if (query.WalletId != null)
+            {
+                queryable = queryable.Where(wallet => query.WalletId.Contains(wallet.WalletId));
+            }
 
             if (query.IncludeTransactions)
             {
                 queryable = queryable.Include(w => w.Transactions).AsNoTracking();
             }
 
-            return await queryable.ToListAsync();
+            if (query.IncludeAccessKeys)
+            {
+                queryable = queryable.Include(w => w.AccessKeys).AsNoTracking();
+            }
+
+            return queryable;
         }
 
         public async Task<Wallet> GetWallet(WalletQuery query)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
-            var queryable = dbContext.Wallets
-                .Where(w => w.UserId == query.UserId && w.WalletId == query.WalletId);
-
-            if (query.IncludeTransactions)
+            var walletsQuery = new WalletsQuery()
             {
-                queryable = queryable.Include(w => w.Transactions).AsNoTracking();
-            }
-
-            return await queryable.FirstOrDefaultAsync();
+                IncludeTransactions = query.IncludeTransactions,
+                IncludeAccessKeys = query.IncludeAccessKeys,
+                UserId = query.UserId is null? null : new []{ query.UserId},
+                WalletId = query.WalletId is null? null : new []{ query.WalletId},
+                AccessKey = query.AccessKey is null? null : new []{ query.AccessKey},
+            };
+            return await FilterWallets(dbContext.Wallets.AsQueryable(), walletsQuery).FirstOrDefaultAsync();
         }
 
         public async Task<Transaction> Receive(Wallet wallet, long amount, string description) =>
@@ -76,7 +101,6 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
 
             var data = await _btcpayService.CreateLightningInvoice(wallet.UserId, new LightningInvoiceCreateRequest
             {
-                WalletId = wallet.WalletId,
                 Amount = amount,
                 Description = description,
                 DescriptionHash = descriptionHash,
@@ -177,7 +201,12 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
 
             if (string.IsNullOrEmpty(wallet.WalletId))
             {
-                dbContext.Wallets.Add(wallet);
+                wallet.AccessKeys ??= new List<AccessKey>();
+                wallet.AccessKeys.Add(new AccessKey()
+                {
+                    Key = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20))
+                });
+                await dbContext.Wallets.AddAsync(wallet);
             }
             else
             {
@@ -186,6 +215,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             }
             await dbContext.SaveChangesAsync();
         }
+        
 
         public async Task RemoveWallet(Wallet wallet)
         {

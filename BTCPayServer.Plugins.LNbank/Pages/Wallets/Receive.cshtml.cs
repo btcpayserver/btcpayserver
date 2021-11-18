@@ -2,15 +2,19 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
 {
+    
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class ReceiveModel : BasePageModel
     {
         public Wallet Wallet { get; set; }

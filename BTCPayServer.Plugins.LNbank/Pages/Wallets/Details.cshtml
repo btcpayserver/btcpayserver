@@ -3,6 +3,12 @@
 
 @{
     ViewData.SetActivePageAndTitle(LNbankNavPages.Wallets, Model.Wallet.Name);
+    var rootUrl =  string.Concat(
+        Request.Scheme,
+        "://",
+        Request.Host.ToUriComponent(),
+        Request.PathBase.ToUriComponent());
+    ;
 }
 
 <header class="d-flex align-items-center justify-content-between mb-3">
@@ -29,6 +35,22 @@
         @Model.Wallet.CreatedAt
     </dd>
 </dl>
+
+@foreach (var accessKey in Model.Wallet.AccessKeys)
+{
+    <dl class="row">
+        <dt class="col-sm-3 col-lg-2">
+            Access Key
+        </dt>
+        <dd class="col-sm-9 col-lg-10">
+            @accessKey.Key
+        </dd>
+        <dt class="col-12">
+            <pre>type=lnbank;server=@rootUrl;api-token=@accessKey.Key</pre>
+        </dt>
+
+    </dl>
+}
     
 <div class="d-none mt-4">
     <h2>Connection String</h2>

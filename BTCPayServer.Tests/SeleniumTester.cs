@@ -393,8 +393,9 @@ namespace BTCPayServer.Tests
             var currencyEl = Driver.FindElement(By.Id("Currency"));
             currencyEl.Clear();
             currencyEl.SendKeys(currency);
-            Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
-            Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
+            Driver.FindElement(By.CssSelector("button[value=buyer-details]")).Click();
+            Driver.WaitForElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
+            Driver.WaitForElement(By.Name("StoreId")).SendKeys(storeName);
             if (defaultPaymentMethod is string)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             if (requiresRefundEmail is bool)

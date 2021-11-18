@@ -104,15 +104,15 @@
                         <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
                     </div>
                     <div class="form-group border border-secondary px-2">
-                        <div class="accordion" id="additional">
+                        <div class="accordion">
                             <div class="accordion-item">
-                                <h3 class="accordion-header" id="additional-embed-pos-iframe-header">
-                                    <button class="accordion-button collapsed fs-3" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-pos-iframe" aria-expanded="false" aria-controls="additional-embed-pos-iframe">
+                                <h3 class="accordion-header" id="buyer-details-header">
+                                    <button class="accordion-button collapsed fs-3" type="button" data-bs-toggle="collapse" data-bs-target="#buyer-details" aria-expanded="false" aria-controls="buyer-details">
                                         Buyer details
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </h3>
-                                <div id="additional-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="additional-embed-pos-iframe-header" style="">
+                                <div id="buyer-details" class="accordion-collapse collapse" aria-labelledby="buyer-details-header" style="">
                                     <div class="row">
                                         <div class="form-group col-sm-6">
                                             <label asp-for="BuyerEmail" class="form-label"></label>

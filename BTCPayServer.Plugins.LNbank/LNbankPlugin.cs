@@ -21,6 +21,7 @@ namespace BTCPayServer.Plugins.LNbank
         public override void Execute(IServiceCollection services)
         {
             services.AddSingleton<IUIExtension>(new UIExtension("LNbankNavExtension", "header-nav"));
+            services.AddSingleton<IUIExtension>(new UIExtension("LNMethodOptions", "ln-payment-method-setup-custom"));
             services.AddSingleton<LNbankPluginDbContextFactory>();
             services.AddDbContext<LNbankPluginDbContext>((provider, o) =>
             {

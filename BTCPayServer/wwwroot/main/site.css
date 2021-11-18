@@ -12,15 +12,11 @@ p {
     margin-bottom: 1.5rem;
 }
 
-hr {
+hr.primary {
     width: 50px;
     height: 3px;
     background: var(--btcpay-primary);
     display: inline-block;
-}
-
-hr.light {
-    background: var(--btcpay-white);
 }
 
 .no-gutter > [class*='col-'] {

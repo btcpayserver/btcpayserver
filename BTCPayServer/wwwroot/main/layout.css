@@ -100,11 +100,18 @@
 #StoreSelector {
     display: flex;
     align-items: center;
+    z-index: 2000;
 }
 
-#StoreSelector select {
-    height: 40px;
-    border-radius: 20px;
+#StoreSelectorDropdown,
+#StoreSelectorToggle,
+#StoreSelectorMenu {
+    width: 100%;
+}
+
+#StoreSelectorToggle {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Logo */
@@ -277,6 +284,10 @@
     #StoreSelector {
         margin: 0 auto;
     }
+
+    #StoreSelectorDropdown {
+        max-width: 40vw;
+    }
     
     #Notifications {
         margin-left: var(--btcpay-space-s);
@@ -365,10 +376,6 @@
     #StoreSelector {
         order: 2;
         margin-top: var(--btcpay-space-s);
-        width: 100%;
-    }
-
-    #StoreSelector select {
         width: 100%;
     }
     

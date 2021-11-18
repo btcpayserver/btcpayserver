@@ -11,7 +11,7 @@ namespace BTCPayServer.Components.StoreSelector
 {
     public class StoreSelector : ViewComponent
     {
-        private const string RootName = "Dashboard";
+        private const string RootName = "Global";
         private readonly StoreRepository _storeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -33,7 +33,6 @@ namespace BTCPayServer.Components.StoreSelector
                     Value = store.Id,
                     Selected = store.Id == currentStore?.Id
                 })
-                .Prepend(new SelectListItem(RootName, "", currentStore == null))
                 .ToList();
             
             var vm = new StoreSelectorViewModel

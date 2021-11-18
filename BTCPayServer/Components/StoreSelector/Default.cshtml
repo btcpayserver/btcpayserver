@@ -2,7 +2,17 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 <div id="StoreSelector">
-    <select asp-for="CurrentStoreId" asp-items="Model.Options" class="form-select only-for-js" data-path-base="@ViewContext.HttpContext.Request.PathBase"></select>
+    <div id="StoreSelectorDropdown" class="dropdown only-for-js">
+        <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.CurrentDisplayName</button>
+        <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
+            <li><a asp-controller="Home" asp-action="Index" asp-route-storeId="" class="dropdown-item@(Model.CurrentStoreId == null ? " active" : "")">Global</a></li>
+            <li><hr class="dropdown-divider"></li>
+            @foreach (var option in Model.Options)
+            {
+                <li><a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")">@option.Text</a></li>
+            }
+        </ul>
+    </div>
     <noscript>
         <span class="h5 mb-0 me-2">@Model.CurrentDisplayName</span>
         <a asp-controller="UserStores" asp-action="ListStores">Stores</a>

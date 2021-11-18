@@ -81,6 +81,7 @@
             <p class="my-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
         }
     </div>
+    <vc:ui-extension-point location="ln-payment-method-setup" model="@Model" />
     <div id="CustomSetup" class="text-start">
         <label asp-for="ConnectionString" class="form-label mt-4">Connection configuration for your custom Lightning node:</label>
         <div class="d-sm-flex">
@@ -88,6 +89,7 @@
             <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
         </div>
         <span asp-validation-for="ConnectionString" class="text-danger"></span>
+        <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model" />
         <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
         <div class="accordion" id="CustomNodeSupport">
             <div class="accordion-item">

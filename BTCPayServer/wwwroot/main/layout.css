@@ -75,6 +75,14 @@
     color: var(--btcpay-header-link-active);
 }
 
+#mainNav.mainNav-store #mainNavGlobal {
+    display: none;
+}
+
+#mainNavSettings {
+    margin-top: auto;
+}
+
 .navbar-brand,
 .navbar-brand:hover,
 .navbar-brand:focus {

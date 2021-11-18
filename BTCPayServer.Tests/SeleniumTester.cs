@@ -151,9 +151,9 @@ namespace BTCPayServer.Tests
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id($"Nav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id($"Nav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -279,9 +279,9 @@ namespace BTCPayServer.Tests
         }
 
         public Logging.ILog TestLogs => Server.TestLogs;
-        public void ClickOnAllSideMenus()
+        public void ClickOnAllSectionLinks()
         {
-            var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            var links = Driver.FindElements(By.CssSelector("#SectionNav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
             foreach (var l in links)
             {
@@ -348,7 +348,7 @@ namespace BTCPayServer.Tests
 
             if (storeNavPage != StoreNavPages.PaymentMethods)
             {
-                Driver.FindElement(By.Id($"Nav-{storeNavPage.ToString()}")).Click();
+                Driver.FindElement(By.Id($"SectionNav-{storeNavPage.ToString()}")).Click();
             }
         }
 
@@ -491,7 +491,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("ServerSettings")).Click();
             if (navPages != ServerNavPages.Index)
             {
-                Driver.FindElement(By.Id($"Server-{navPages}")).Click();
+                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }
         }
 

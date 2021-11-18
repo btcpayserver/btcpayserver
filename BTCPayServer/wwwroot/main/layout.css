@@ -111,6 +111,10 @@
     z-index: 2000;
 }
 
+#StoreSelector hr {
+    height: 1px;
+}
+
 #StoreSelectorDropdown,
 #StoreSelectorToggle,
 #StoreSelectorMenu {

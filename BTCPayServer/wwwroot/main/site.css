@@ -71,22 +71,36 @@ h2 small .fa-question-circle-o {
     font-size: var(--btcpay-font-size-l);
 }
 
-/* Admin Sidebar Navigation */
-.col-md-3 .nav-pills {
-    margin-left: -1rem;
+/* Section Navigation */
+#SectionNav {
+    --border-size: 2px;
+    
+    width: 100%;
+    margin-top: calc(var(--btcpay-space-s) * -1);
+    margin-bottom: var(--btcpay-space-l);
+    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
 }
 
-#sideNav .nav-link {
-    margin: .3rem 0;
-    border-left: 2px solid transparent;
-    padding: .2rem 1rem;
+#SectionNav .nav-link {
+    color: var(--btcpay-nav-link);
+    margin-right: var(--btcpay-space-l);
+    margin-bottom: calc(var(--border-size) * -1);
+    border-bottom: var(--border-size) solid transparent;
+    padding: var(--btcpay-space-m) 0;
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
-#sideNav .nav-link.active,
-#sideNav .show > .nav-link {
+#SectionNav .nav-link:last-child {
+    margin-right: 0;
+}
+
+#SectionNav .nav-link:hover {
+    color: var(--btcpay-nav-link-accent);
+}
+
+#SectionNav .nav-link.active {
     color: var(--btcpay-nav-link-active);
-    border-left-color: var(--btcpay-nav-border-active);
+    border-bottom-color: var(--btcpay-nav-border-active);
     background: var(--btcpay-nav-bg-active);
 }
 

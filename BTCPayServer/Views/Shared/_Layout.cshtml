@@ -52,11 +52,7 @@
         @if (SignInManager.IsSignedIn(User))
         {
             <ul id="mainNavGlobal" class="navbar-nav p-3">
-                <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(StoreNavPages))" id="Stores">Stores</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(AppsNavPages))" id="Apps">Apps</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="Wallets">Wallets</a></li>
                 <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Invoices">Invoices</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="PaymentRequests">Payment Requests</a></li>
                 @* TODO: Rename this to global-nav *@
                 <vc:ui-extension-point location="header-nav" model="@Model"/>
             </ul>

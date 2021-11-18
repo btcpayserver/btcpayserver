@@ -219,18 +219,18 @@
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
                                     <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
+                                    <dd class="order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
                                     <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
+                                    <dd class="order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
                                     <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
-                                    <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Total requested</dd>
+                                    <dd class="text-sm-end order-1 order-sm-2 mb-1">Total requested</dd>
                                 </div>
                             </dl>
                         </div>

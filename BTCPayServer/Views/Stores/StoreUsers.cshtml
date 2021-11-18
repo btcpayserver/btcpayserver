@@ -1,16 +1,15 @@
 ﻿@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Manage users", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Store Users", Context.GetStoreData().StoreName);
 }
-
 
 <div class="row">
     <div class="col-lg-8">
-        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        <h3 class="mb-3">@ViewData["PageTitle"]</h3>
         <p>
-            Add access to your store to other users (Guest will not be able to see and modify the store settings)<br/>
-            Note that the user must have a registered account on this BTCPay Server.
+            Give other registered BTCPay Server users access to your store.<br />
+            Guests will not be able to see or modify the store settings.
         </p>
 
         @if (!ViewContext.ModelState.IsValid)
@@ -19,17 +18,17 @@
         }
 
         <form method="post">
-            <div class="row g-1">
-                <div class="col-sm">
+            <div class="d-flex">
+                <div class="flex-grow-1">
                     <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
                 </div>
-                <div class="col-sm">
+                <div class="ms-3">
                     <select asp-for="Role" class="form-select">
                         <option value="@StoreRoles.Owner">Owner</option>
                         <option value="@StoreRoles.Guest">Guest</option>
                     </select>
                 </div>
-                <div class="col-sm">
+                <div class="ms-3">
                     <button type="submit" role="button" class="btn btn-primary"><span class="fa fa-plus"></span> Add user</button>
                 </div>
             </div>
@@ -66,4 +65,3 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }
-

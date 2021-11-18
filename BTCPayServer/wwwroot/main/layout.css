@@ -41,6 +41,7 @@
 #mainNav {
     height: calc(100vh - var(--mobile-header-height));
     overflow-y: scroll;
+    padding-top: var(--btcpay-space-m);
 }
 
 #mainNav i.fa,
@@ -55,10 +56,21 @@
     padding: .15rem 0 0 var(--btcpay-space-xs);
 }
 
+#mainNav .accordion-button {
+    padding: var(--btcpay-space-s) 0;
+    text-transform: uppercase;
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+#mainNav .accordion-item {
+    border: none !important;
+}
+
 #mainNav .navbar-nav > li.nav-item > .nav-link {
     display: inline-flex;
     align-items: center;
-    font-weight: var(--btcpay-font-weight-bold);
+    font-weight: var(--btcpay-font-weight-semibold);
     color: var(--btcpay-header-link);
     transition-property: color;
     transition-duration: var(--btcpay-transition-duration-fast);
@@ -73,10 +85,6 @@
 #mainNav .navbar-nav > li.nav-item > .nav-link.active:focus,
 #mainNav .navbar-nav > li.nav-item > .nav-link.active:hover {
     color: var(--btcpay-header-link-active);
-}
-
-#mainNav.mainNav-store #mainNavGlobal {
-    display: none;
 }
 
 #mainNavSettings {

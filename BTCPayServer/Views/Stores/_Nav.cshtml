@@ -9,7 +9,5 @@
     <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.PayButton))" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@Context.GetRouteValue("storeId")">Pay Button</a>
     <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Integrations))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Integrations)" asp-controller="Stores" asp-action="Integrations" asp-route-storeId="@Context.GetRouteValue("storeId")">Integrations</a>
     <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Webhooks)" asp-controller="Stores" asp-action="Webhooks" asp-route-storeId="@Context.GetRouteValue("storeId")">Webhooks</a>
-    <a id="SectionNav-@(nameof(StoreNavPages.PullPayments))" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" asp-action="PullPayments" asp-controller="StorePullPayments" asp-route-storeId="@Context.GetRouteValue("storeId")">Pull Payments</a>
-    <a id="SectionNav-@(nameof(StoreNavPages.Payouts))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" asp-action="Payouts" asp-controller="StorePullPayments" asp-route-storeId="@Context.GetRouteValue("storeId")">Payouts</a>
     <vc:ui-extension-point location="store-nav" model="@Model" />
 </nav>

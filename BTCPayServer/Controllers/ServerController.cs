@@ -1124,5 +1124,13 @@ namespace BTCPayServer.Controllers
 
             return View("Logs", vm);
         }
+        
+        //This is for a temporary infobox to inform users about the state changes in 1.4.0. It should be removed eventually. 
+        public async Task<IActionResult> DisableStateChangeInfobox(PoliciesSettings settings)
+        {
+            settings.DisableStatusChangeInfobox = true;
+            await _SettingsRepository.UpdateSetting(settings);
+            return RedirectToAction("ListInvoices", "Invoice");
+        }
     }
 }

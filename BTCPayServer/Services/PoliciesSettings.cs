@@ -34,6 +34,9 @@ namespace BTCPayServer.Services
         public bool DisableNonAdminCreateUserApi { get; set; }
 
         public bool DisableSSHService { get; set; }
+        
+        //This is for a temporary infobox to inform users about the state changes in 1.4.0. It should be removed eventually. 
+        public bool DisableStatusChangeInfobox { get; set; }
 
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }

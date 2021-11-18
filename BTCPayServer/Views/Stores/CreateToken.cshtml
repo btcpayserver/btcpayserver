@@ -1,14 +1,13 @@
 ﻿@model CreateTokenViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Create a new token", Context.GetStoreData()?.StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Create New Token", Context.GetStoreData()?.StoreName);
     ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
     ViewBag.ShowStores = ViewBag.ShowStores ?? false;
 }
-
 <div class="row">
     <div class="col-lg-6">
-        <h4 class="mb-4">@ViewData["PageTitle"]</h4>
+        <h3 class="mb-4">@ViewData["PageTitle"]</h3>
         <form method="post">
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
@@ -23,12 +22,13 @@
             {
                 <div class="form-group">
                     <label asp-for="PublicKey" class="form-label"></label>
-                    <small class="text-muted">Keep empty for server-initiated pairing</small>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Keep empty for server-initiated pairing.
+                    </p>
                 </div>
             }
-
             @if (ViewBag.ShowStores)
             {
                 <div class="form-group">
@@ -42,7 +42,7 @@
                 <input type="hidden" asp-for="StoreId" />
             }
             <div class="form-group">
-                <input id="RequestPairing" type="submit" value="Request pairing" class="btn btn-primary" />
+                <input id="RequestPairing" type="submit" value="Request Pairing" class="btn btn-primary" />
             </div>
         </form>
     </div>

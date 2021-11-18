@@ -18,10 +18,10 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h4 class="mb-0">@ViewData["PageTitle"]</h4>
+            <h3 class="mb-0">@ViewData["PageTitle"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
                 <span class="fa fa-plus"></span>
-                Create a new token
+                Create New Token
             </a>
         </div>
 
@@ -57,27 +57,27 @@
         else
         {
             <p class="text-secondary mt-3">
-                There are no access tokens yet.
+                No access tokens yet.
             </p>
         }
 
-        <h4 class="mt-5 mb-3">Legacy API Keys</h4>
+        <h3 class="mt-5 mb-3">Legacy API Keys</h3>
         <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
         <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
             <div class="form-group">
                 <label asp-for="ApiKey" class="form-label"></label>
-                <div class="input-group">
+                <div class="d-flex">
                     <input asp-for="ApiKey" readonly class="form-control"/>
                     @if (string.IsNullOrEmpty(Model.ApiKey))
                     {
-                        <button class="btn btn-success" type="submit">Generate</button>
+                        <button class="btn btn-success ms-3" type="submit">Generate</button>
                     }
                     else
                     {
-                        <button class="btn btn-danger" type="submit" name="command" value="revoke">Revoke</button>
-                        <button class="btn btn-success" type="submit">Re-generate</button>
+                        <button class="btn btn-danger ms-3" type="submit" name="command" value="revoke">Revoke</button>
+                        <button class="btn btn-success ms-3" type="submit">Regenerate</button>
                     }
                 </div>
             </div>
@@ -86,4 +86,3 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" />
-

@@ -64,9 +64,12 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
         }
 
         public async Task<Transaction> Receive(Wallet wallet, long amount, string description) =>
-            await Receive(wallet, amount, description, LightningInvoiceCreateRequest.ExpiryDefault);
+            await Receive(wallet, amount, description, null, LightningInvoiceCreateRequest.ExpiryDefault);
+        
+        public async Task<Transaction> Receive(Wallet wallet, long amount, uint256 description) =>
+            await Receive(wallet, amount, null, description, LightningInvoiceCreateRequest.ExpiryDefault);
 
-        private async Task<Transaction> Receive(Wallet wallet, long amount, string description, TimeSpan expiry)
+        private async Task<Transaction> Receive(Wallet wallet, long amount, string description, uint256 descriptionHash, TimeSpan expiry)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
             if (amount <= 0) throw new ArgumentException(nameof(amount));
@@ -76,6 +79,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 WalletId = wallet.WalletId,
                 Amount = amount,
                 Description = description,
+                DescriptionHash = descriptionHash,
                 Expiry = expiry
             });
 
@@ -86,7 +90,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 Amount = data.Amount,
                 ExpiresAt = data.ExpiresAt,
                 PaymentRequest = data.BOLT11,
-                Description = description
+                Description = description?? descriptionHash.ToString()
             });
             await dbContext.SaveChangesAsync();
 

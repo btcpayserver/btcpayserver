@@ -36,7 +36,16 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
 
             if (wallet == null) return NotFound();
 
-            var transaction = await _walletService.Receive(wallet, req.Amount, req.Description);
+            Transaction transaction;
+            if (req.Description is null)
+            {
+                transaction = await _walletService.Receive(wallet, req.Amount, req.DescriptionHash);
+            }
+            else
+            {
+                transaction = await _walletService.Receive(wallet, req.Amount, req.Description);
+            }
+          
             var data = ToLightningInvoiceData(transaction);
             return Ok(data);
         }

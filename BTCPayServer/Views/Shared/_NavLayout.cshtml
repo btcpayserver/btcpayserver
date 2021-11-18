@@ -16,17 +16,17 @@
     @await RenderSectionAsync("PageFootContent", false)
 }
 
-<div class="container">
-    @if (!string.IsNullOrEmpty(ViewData["MainTitle"] as string))
-    {
-        <h2 class="mb-5">@ViewData["MainTitle"]</h2>
-    }
-    @if (ViewBag.ShowMenu)
-    {
-        <nav class="nav">
-            <partial name="@ViewData["NavPartialName"].ToString()" />
-        </nav>
-    }
-    <partial name="_StatusMessage" />
-    @RenderBody()
-</div>
+@if (!string.IsNullOrEmpty(ViewData["MainTitle"] as string))
+{
+    <h2 class="mb-5">@ViewData["MainTitle"]</h2>
+}
+@if (ViewBag.ShowMenu)
+{
+    <nav class="nav">
+        <partial name="@ViewData["NavPartialName"].ToString()" />
+    </nav>
+}
+
+<partial name="_StatusMessage" />
+
+@RenderBody()

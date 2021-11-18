@@ -137,7 +137,9 @@
         </div>
     }
     <section>
-        @RenderBody()
+        <div class="container">
+            @RenderBody()
+        </div>
     </section>
     @if (User.Identity.IsAuthenticated)
     {

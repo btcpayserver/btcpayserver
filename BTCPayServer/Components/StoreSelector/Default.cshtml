@@ -3,14 +3,14 @@
 
 <div id="StoreSelector">
     <div id="StoreSelectorDropdown" class="dropdown only-for-js">
-        <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.CurrentDisplayName</button>
+        <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill @(Model.CurrentStoreId == null ? "text-secondary" :"")" type="button" data-bs-toggle="dropdown" aria-expanded="false">@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</button>
         <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
-            <li><a asp-controller="Home" asp-action="Index" asp-route-storeId="" class="dropdown-item@(Model.CurrentStoreId == null ? " active" : "")">Global</a></li>
-            <li><hr class="dropdown-divider"></li>
             @foreach (var option in Model.Options)
             {
                 <li><a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")">@option.Text</a></li>
             }
+            <li><hr class="dropdown-divider"></li>
+            <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item">Create Store</a></li>
         </ul>
     </div>
     <noscript>

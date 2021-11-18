@@ -5,11 +5,13 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NBitcoin.Secp256k1;
 
 namespace BTCPayServer.Components.StoreSelector
 {
     public class StoreSelector : ViewComponent
     {
+        private const string RootName = "Dashboard";
         private readonly StoreRepository _storeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -19,23 +21,26 @@ namespace BTCPayServer.Components.StoreSelector
             _userManager = userManager;
         }
 
-        public async Task<IViewComponentResult> InvokeAsync(string currentOptionId = null)
+        public async Task<IViewComponentResult> InvokeAsync()
         {
             var userId = _userManager.GetUserId(UserClaimsPrincipal);
             var stores = await _storeRepo.GetStoresByUserId(userId);
+            var currentStore = ViewContext.HttpContext.GetStoreData();
             var options = stores
                 .Select(store => new SelectListItem
                 {
                     Text = store.StoreName,
                     Value = store.Id,
-                    Selected = store.Id == currentOptionId
+                    Selected = store.Id == currentStore?.Id
                 })
-                .Prepend(new SelectListItem("Dashboard", null, currentOptionId == null))
+                .Prepend(new SelectListItem(RootName, "", currentStore == null))
                 .ToList();
+            
             var vm = new StoreSelectorViewModel
             {
                 Options = options,
-                CurrentStore = currentOptionId
+                CurrentStoreId = currentStore?.Id,
+                CurrentDisplayName = currentStore?.StoreName ?? RootName
             };
             
             return View(vm);

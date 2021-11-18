@@ -92,7 +92,12 @@
     flex: 1;
 }
 
-#CurrentStore {
+#StoreSelector {
+    display: flex;
+    align-items: center;
+}
+
+#StoreSelector select {
     height: 40px;
     border-radius: 20px;
 }
@@ -164,6 +169,10 @@
 
     .offcanvas-backdrop.show {
         opacity: 0.8;
+    }
+
+    #StoreSelector {
+        margin: 0 auto;
     }
     
     #Notifications {
@@ -246,9 +255,14 @@
         margin-left: auto;
     }
 
-    #CurrentStore {
+    #StoreSelector {
         order: 2;
         margin-top: var(--btcpay-space-s);
+        width: 100%;
+    }
+
+    #StoreSelector select {
+        width: 100%;
     }
     
     #mainMenuToggle,

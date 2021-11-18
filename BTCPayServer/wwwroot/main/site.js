@@ -99,20 +99,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    delegate('click', '.btcpay-theme-switch', function (e) {
+    // Theme Switch
+    delegate('click', '.btcpay-theme-switch', e => {
         e.preventDefault();
         const current = document.documentElement.getAttribute(THEME_ATTR) || COLOR_MODES[0];
         const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0];
         setColorMode(mode);
     })
+
+    // Store Selector
+    delegate('change', '#StoreSelector select', e => {
+        const { value } = e.target;
+        const { pathBase } = e.target.dataset;
+        console.log(pathBase, value)
+        const path = value ? `/stores/${value}` : '/'
+        window.location.href = `${pathBase}${path}`
+    })
     
     // Offcanvas navigation
     const mainMenuToggle = document.getElementById('mainMenuToggle')
     if (mainMenuToggle) {
-        delegate('show.bs.offcanvas', '#mainNav', function (e) {
+        delegate('show.bs.offcanvas', '#mainNav', () => {
             mainMenuToggle.setAttribute('aria-expanded', 'true');
         })
-        delegate('hide.bs.offcanvas', '#mainNav', function (e) {
+        delegate('hide.bs.offcanvas', '#mainNav', () => {
             mainMenuToggle.setAttribute('aria-expanded', 'false');
         })
     }

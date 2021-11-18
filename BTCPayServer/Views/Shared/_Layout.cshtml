@@ -41,7 +41,7 @@
                 <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@Env.NetworkType.ToString()</span>
             }
         </a>
-        <vc:store-selector current-option-id=""/>
+        <vc:store-selector />
         <vc:notifications-dropdown />
         <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span>Menu</span>
@@ -69,7 +69,7 @@
                     </li>
                 }
                 <li class="nav-item">
-                    <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="MySettings">
+                    <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="MySettings">
                         <vc:icon symbol="account" />
                         <span>Account</span>
                     </a>
@@ -81,7 +81,7 @@
                     </li>
                 }
                 <li class="nav-item">
-                    <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout">
+                    <a asp-area="" asp-controller="Account" asp- asp-action="Logout" class="nav-link js-scroll-trigger" id="Logout">
                         <i class="fa fa-sign-out"></i>
                         <span>Logout</span>
                     </a>

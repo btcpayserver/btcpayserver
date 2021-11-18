@@ -1,4 +1,10 @@
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
-<select asp-for="CurrentStore" asp-items="Model.Options" class="form-select"></select>
+<div id="StoreSelector">
+    <select asp-for="CurrentStoreId" asp-items="Model.Options" class="form-select only-for-js" data-path-base="@ViewContext.HttpContext.Request.PathBase"></select>
+    <noscript>
+        <span class="h5 mb-0 me-2">@Model.CurrentDisplayName</span>
+        <a asp-controller="UserStores" asp-action="ListStores">Stores</a>
+    </noscript>
+</div>

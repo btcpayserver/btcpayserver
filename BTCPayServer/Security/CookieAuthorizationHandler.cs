@@ -37,7 +37,7 @@ namespace BTCPayServer.Security
                     return;
             }
 
-            string storeId = _HttpContext.GetImplicitStoreId();
+            string storeId =  context.Resource is string s? s :_HttpContext.GetImplicitStoreId();
             if (storeId == null)
                 return;
 
@@ -47,20 +47,20 @@ namespace BTCPayServer.Security
 
 
             var store = await _storeRepository.FindStore(storeId, userid);
-            if (store == null)
-                return;
+            
             bool success = false;
             switch (requirement.Policy)
             {
                 case Policies.CanModifyStoreSettings:
-                    if (store.Role == StoreRoles.Owner || isAdmin)
+                    if (store != null && (store.Role == StoreRoles.Owner || isAdmin))
+                        success = true;
+                    break;
+                case Policies.CanViewStoreSettings:
+                    if (store != null || isAdmin)
                         success = true;
                     break;
                 case Policies.CanCreateInvoice:
-                    if (store.Role == StoreRoles.Owner ||
-                        store.Role == StoreRoles.Guest ||
-                        isAdmin ||
-                        store.GetStoreBlob().AnyoneCanInvoice)
+                    if (store != null || isAdmin)
                         success = true;
                     break;
             }

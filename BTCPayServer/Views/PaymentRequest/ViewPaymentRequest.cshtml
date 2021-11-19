@@ -205,12 +205,16 @@
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             <h2 class="h4 mb-3">Invoice Summary</h2>
-                            <div v-html="srvModel.description">
-                                @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
-                                {
+                            @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
+                            {
+                                <div v-html="srvModel.description">
                                     @Safe.Raw(Model.Description)
-                                }
-                            </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mt-3 mb-0">No details provided.</p>
+                            }
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">

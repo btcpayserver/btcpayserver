@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,15 +63,24 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("")]
+        [HttpGet("/stores/{storeId}/payment-requests")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(ListPaymentRequestsViewModel model = null)
+        public async Task<IActionResult> GetPaymentRequests(string? storeId, ListPaymentRequestsViewModel model = null)
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
+            if (storeId != null)
+            {
+                var store = await _StoreRepository.FindStore(storeId, GetUserId());
+                if (store != null)
+                    HttpContext.SetStoreData(store);
+            }
+            
             var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
                 UserId = GetUserId(),
+                StoreId = storeId,
                 Skip = model.Skip,
                 Count = model.Count,
                 IncludeArchived = includeArchived

@@ -733,14 +733,24 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices")]
+        [HttpGet("/stores/{storeId}/invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
+        public async Task<IActionResult> ListInvoices(string? storeId, InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
 
             var fs = new SearchString(model.SearchTerm);
-            var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
+            var storeIds = storeId == null
+                ? fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray()
+                : new []{ storeId };
+            
+            if (storeId != null)
+            {
+                var store = await _StoreRepository.FindStore(storeId, GetUserId());
+                if (store != null)
+                    HttpContext.SetStoreData(store);
+            }
 
             model.StoreIds = storeIds;
 

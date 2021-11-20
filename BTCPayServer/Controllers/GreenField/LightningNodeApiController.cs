@@ -240,7 +240,7 @@ namespace BTCPayServer.Controllers.GreenField
             var inv = await lightningClient.GetInvoice(id);
             if (inv == null)
             {
-                return NotFound();
+                return this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id");
             }
             return Ok(ToModel(inv));
         }

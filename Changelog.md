@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.6
+
+### Improvements:
+
+* Fix breaking changes of LND API 0.14 @NicolasDorier
+
 ## 1.3.5
 
 ### Bug fixes:

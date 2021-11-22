@@ -411,7 +411,7 @@ namespace BTCPayServer.Tests
                 //let's test archiving an invoice
                 Assert.DoesNotContain("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
                 s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
-                Assert.Contains("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
+                Assert.Contains("Unarchive", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
                 //check that it no longer appears in list
                 s.GoToInvoices();
 
@@ -420,7 +420,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
                 s.FindAlertMessage();
-                Assert.DoesNotContain("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
+                Assert.DoesNotContain("Unarchive", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
                 s.GoToInvoices();
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 

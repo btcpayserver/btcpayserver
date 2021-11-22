@@ -1,5 +1,6 @@
 @page "/Plugins/LNbank/Wallets/{walletId?}"
 @using BTCPayServer.Lightning
+@using System.Globalization
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.IndexModel
 
 @{
@@ -68,7 +69,9 @@
                             <tr>
                                 <td>
                                     <a asp-page="/Transactions/Details" asp-route-walletId="@Model.SelectedWallet.WalletId" asp-route-transactionId="@transaction.TransactionId">
-                                        @transaction.CreatedAt.LocalDateTime
+                                        <time datetime="@transaction.CreatedAt.ToString("o", CultureInfo.InvariantCulture)">
+                                            @transaction.CreatedAt.ToTimeAgo()
+                                        </time>
                                     </a>
                                 </td>
                                 <td>

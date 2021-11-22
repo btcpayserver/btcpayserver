@@ -1,5 +1,6 @@
 @page "/Plugins/LNbank/TX/{transactionId}"
 @using BTCPayServer.Lightning
+@using System.Globalization
 @model BTCPayServer.Plugins.LNbank.Pages.Transactions.ShareModel
 
 @{
@@ -35,8 +36,10 @@
                         @Model.Transaction.Status
                     </h2>
                     <h3 class="h4 text-muted">
-                        Paid at
-                        @Model.Transaction.PaidAt
+                        Paid
+                        <time datetime="@Model.Transaction.PaidAt?.ToString("o", CultureInfo.InvariantCulture)">
+                            @Model.Transaction.PaidAt?.ToTimeAgo()
+                        </time>
                     </h3>
                 }
                 else
@@ -48,7 +51,9 @@
                     </h2>
                     <h3 class="h4 text-muted">
                         @(Model.Transaction.IsExpired ? "Expired" : "Expires")
-                        @Model.Transaction.ExpiresAt
+                        <time datetime="@Model.Transaction.ExpiresAt.ToString("o", CultureInfo.InvariantCulture)">
+                            @Model.Transaction.ExpiresAt.ToTimeAgo()
+                        </time>
                     </h3>
             
                     @if (!Model.Transaction.IsExpired)

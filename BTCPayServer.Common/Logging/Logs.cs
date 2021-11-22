@@ -6,11 +6,11 @@ namespace BTCPayServer.Logging
 {
     public class Logs
     {
-        static Logs()
+        public Logs()
         {
             Configure(new FuncLoggerFactory(n => NullLogger.Instance));
         }
-        public static void Configure(ILoggerFactory factory)
+        public void Configure(ILoggerFactory factory)
         {
             if (factory == null)
                 Configure(new FuncLoggerFactory(n => NullLogger.Instance));
@@ -21,16 +21,16 @@ namespace BTCPayServer.Logging
                 Events = factory.CreateLogger("Events");
             }
         }
-        public static ILogger Configuration
+        public ILogger Configuration
         {
             get; set;
         }
-        public static ILogger PayServer
+        public ILogger PayServer
         {
             get; set;
         }
 
-        public static ILogger Events
+        public ILogger Events
         {
             get; set;
         }

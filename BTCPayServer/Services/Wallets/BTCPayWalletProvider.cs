@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -8,16 +9,20 @@ namespace BTCPayServer.Services.Wallets
 {
     public class BTCPayWalletProvider
     {
+        public Logs Logs { get; }
+
         private readonly ExplorerClientProvider _Client;
         readonly BTCPayNetworkProvider _NetworkProvider;
         readonly IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
                                     Data.ApplicationDbContextFactory dbContextFactory,
-                                    BTCPayNetworkProvider networkProvider)
+                                    BTCPayNetworkProvider networkProvider,
+                                    Logs logs)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
+            this.Logs = logs;
             _Client = client;
             _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
@@ -27,7 +32,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, dbContextFactory));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, dbContextFactory, Logs));
             }
         }
 

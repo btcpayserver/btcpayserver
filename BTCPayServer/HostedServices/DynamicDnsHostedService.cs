@@ -10,7 +10,7 @@ namespace BTCPayServer.HostedServices
 {
     public class DynamicDnsHostedService : BaseAsyncService
     {
-        public DynamicDnsHostedService(IHttpClientFactory httpClientFactory, SettingsRepository settingsRepository)
+        public DynamicDnsHostedService(IHttpClientFactory httpClientFactory, SettingsRepository settingsRepository, Logs logs) : base(logs)
         {
             HttpClientFactory = httpClientFactory;
             SettingsRepository = settingsRepository;

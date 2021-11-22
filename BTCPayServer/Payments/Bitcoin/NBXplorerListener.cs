@@ -39,8 +39,10 @@ namespace BTCPayServer.Payments.Bitcoin
                                 InvoiceRepository invoiceRepository,
                                 EventAggregator aggregator,
                                 PayJoinRepository payjoinRepository,
-                                PaymentService paymentService)
+                                PaymentService paymentService,
+                                Logs logs)
         {
+            this.Logs = logs;
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;
             _InvoiceRepository = invoiceRepository;
@@ -55,6 +57,9 @@ namespace BTCPayServer.Payments.Bitcoin
         private Timer _ListenPoller;
 
         TimeSpan _PollInterval;
+
+        public Logs Logs { get; }
+
         public TimeSpan PollInterval
         {
             get

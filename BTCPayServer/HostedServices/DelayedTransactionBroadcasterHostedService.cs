@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
@@ -8,7 +9,7 @@ namespace BTCPayServer.HostedServices
     {
         private readonly DelayedTransactionBroadcaster _transactionBroadcaster;
 
-        public DelayedTransactionBroadcasterHostedService(DelayedTransactionBroadcaster transactionBroadcaster)
+        public DelayedTransactionBroadcasterHostedService(DelayedTransactionBroadcaster transactionBroadcaster, Logs logs) : base(logs)
         {
             _transactionBroadcaster = transactionBroadcaster;
         }

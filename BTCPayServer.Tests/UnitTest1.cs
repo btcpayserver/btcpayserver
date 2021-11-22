@@ -70,14 +70,12 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
 {
-    public class UnitTest1
+    public class UnitTest1 : UnitTestBase
     {
         public const int LongRunningTestTimeout = 60_000; // 60s
 
-        public UnitTest1(ITestOutputHelper helper)
+        public UnitTest1(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         class DockerImage
@@ -283,7 +281,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckSwaggerIsConformToSchema()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -317,7 +315,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task EnsureSwaggerPermissionsDocumented()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -341,7 +339,7 @@ namespace BTCPayServer.Tests
                         string.Join("\n", serverPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
                     .Replace("#STOREPERMISSIONS#",
                         string.Join("\n", storePolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")));
-                Logs.Tester.LogInformation(description);
+                TestLogs.LogInformation(description);
                                 
                 var sresp = Assert
                     .IsType<JsonResult>(await tester.PayTester.GetController<HomeController>(acc.UserId, acc.StoreId)
@@ -353,7 +351,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
+        private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
         {
             List<Task> checkLinks = new List<Task>();
             var text = await File.ReadAllTextAsync(file);
@@ -377,7 +375,7 @@ namespace BTCPayServer.Tests
             await Task.WhenAll(checkLinks);
         }
 
-        private static async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
+        private async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
         {
             var uri = new Uri(url);
 
@@ -391,7 +389,7 @@ namespace BTCPayServer.Tests
                 var response = await httpClient.SendAsync(request);
                 if (response.StatusCode == HttpStatusCode.ServiceUnavailable) // Temporary issue
                 {
-                    Logs.Tester.LogInformation($"Unavailable: {url} ({file})");
+                    TestLogs.LogInformation($"Unavailable: {url} ({file})");
                     return;
                 }
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -402,19 +400,19 @@ namespace BTCPayServer.Tests
                     Assert.Matches($"id=\"{fragment}\"", contents);
                 }
 
-                Logs.Tester.LogInformation($"OK: {url} ({file})");
+                TestLogs.LogInformation($"OK: {url} ({file})");
             }
             catch (Exception ex) when (ex is MatchesException)
             {
                 var details = ex.Message;
-                Logs.Tester.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
+                TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
 
                 throw;
             }
             catch (Exception ex)
             {
                 var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
-                Logs.Tester.LogInformation($"FAILED: {url} ({file}) {details}");
+                TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 
                 throw;
             }
@@ -651,7 +649,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseTestWebsiteUI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var response = await tester.PayTester.HttpClient.GetAsync("");
@@ -833,7 +831,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanAcceptInvoiceWithTolerance2()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -877,7 +875,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanThrowBitpay404Error()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -978,7 +976,7 @@ namespace BTCPayServer.Tests
                 new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
                 {
                     TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
-                }));
+                }), BTCPayLogs);
             await tor.Refresh();
 
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
@@ -991,7 +989,7 @@ namespace BTCPayServer.Tests
                 {
                     TorrcFile = null,
                     TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
-                }));
+                }), BTCPayLogs);
             await Task.WhenAll(tor.StartAsync(CancellationToken.None));
 
             var btcpayS = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
@@ -1026,7 +1024,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task EnsureNewLightningInvoiceOnPartialPayment()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -1055,7 +1053,7 @@ namespace BTCPayServer.Tests
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
             }, 40000);
             
-            Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
+            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
@@ -1066,14 +1064,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
             //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
-            Logs.Tester.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice ");
+            TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice ");
             await Assert.ThrowsAsync<LightningRPCException>(async () =>
             {
                 await tester.SendLightningPaymentAsync(invoice);
             });
         
             //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
-            // Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
+            // TestLogs.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
             // evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             // {
             //     await tester.SendLightningPaymentAsync(invoice);
@@ -1088,7 +1086,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetLightningServer()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -1157,7 +1155,7 @@ namespace BTCPayServer.Tests
             // For easier debugging and testing
             // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
 
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -1185,9 +1183,9 @@ namespace BTCPayServer.Tests
                 ItemDesc = "Some description"
             });
             await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
-            Logs.Tester.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
+            TestLogs.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
             await tester.SendLightningPaymentAsync(invoice);
-            Logs.Tester.LogInformation($"Lightning payment to {invoice.Id} is sent");
+            TestLogs.LogInformation($"Lightning payment to {invoice.Id} is sent");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
@@ -1201,7 +1199,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseServerInitiatedPairingCode()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1230,7 +1228,7 @@ namespace BTCPayServer.Tests
         {
             using (var callbackServer = new CustomServer())
             {
-                using (var tester = ServerTester.Create())
+                using (var tester = CreateServerTester())
                 {
                     await tester.StartAsync();
                     var acc = tester.NewAccount();
@@ -1298,7 +1296,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CantPairTwiceWithSamePubkey()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1340,7 +1338,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseTorClient()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var proxy = tester.PayTester.GetService<Socks5HttpProxyServer>();
@@ -1377,12 +1375,12 @@ namespace BTCPayServer.Tests
                 response.EnsureSuccessStatusCode();
                 AssertConnectionDropped();
 
-                Logs.Tester.LogInformation("Querying an onion address which can't be found should send http 500");
+                TestLogs.LogInformation("Querying an onion address which can't be found should send http 500");
                 response = await client.GetAsync("http://dwoduwoi.onion/");
                 Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
                 AssertConnectionDropped();
 
-                Logs.Tester.LogInformation("Querying valid onion but unreachable should send error 502");
+                TestLogs.LogInformation("Querying valid onion but unreachable should send error 502");
                 using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
                 {
                     try
@@ -1393,7 +1391,7 @@ namespace BTCPayServer.Tests
                     }
                     catch when (cts.Token.IsCancellationRequested)
                     {
-                        Logs.Tester.LogInformation("Skipping this test, it timed out");
+                        TestLogs.LogInformation("Skipping this test, it timed out");
                     }
                 }
             }
@@ -1403,7 +1401,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1505,7 +1503,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanListInvoices()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1556,7 +1554,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanListNotifications()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1589,7 +1587,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanGetRates()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -1657,7 +1655,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRBFPayment()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -1676,12 +1674,12 @@ namespace BTCPayServer.Tests
                     false, //subtractfeefromamount
                     true, //replaceable
                 }).ResultString);
-                Logs.Tester.LogInformation(
+                TestLogs.LogInformation(
                     $"Let's send a first payment of {payment1} for the {invoice.BtcDue} invoice ({tx1})");
                 var invoiceAddress =
                     BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
 
-                Logs.Tester.LogInformation($"The invoice should be paidOver");
+                TestLogs.LogInformation($"The invoice should be paidOver");
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -1709,13 +1707,13 @@ namespace BTCPayServer.Tests
                     var replaced = tester.ExplorerNode.SignRawTransaction(tx);
                     Thread.Sleep(1000); // Make sure the replacement has a different timestamp
                     var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
-                    Logs.Tester.LogInformation(
+                    TestLogs.LogInformation(
                         $"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
                     Assert.Equal(tx2,
                         ((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);
                 }
 
-                Logs.Tester.LogInformation($"The invoice should now not be paidOver anymore");
+                TestLogs.LogInformation($"The invoice should now not be paidOver anymore");
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -1724,7 +1722,7 @@ namespace BTCPayServer.Tests
                 });
 
 
-                Logs.Tester.LogInformation(
+                TestLogs.LogInformation(
                     $"Let's test out rbf payments where the payment gets sent elsehwere instead");
                 var invoice2 =
                     user.BitPay.CreateInvoice(new Invoice() { Price = 0.01m, Currency = "BTC" }, Facade.Merchant);
@@ -1765,7 +1763,7 @@ namespace BTCPayServer.Tests
                     Assert.False(i.GetPayments(false).First().Accounted);
                 });
 
-                Logs.Tester.LogInformation("Let's test if we can RBF a normal payment without adding fees to the invoice");
+                TestLogs.LogInformation("Let's test if we can RBF a normal payment without adding fees to the invoice");
                 await user.SetNetworkFeeMode(NetworkFeeMode.MultiplePaymentsOnly);
                 invoice = user.BitPay.CreateInvoice(new Invoice { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
                 payment1 = invoice.BtcDue;
@@ -1776,7 +1774,7 @@ namespace BTCPayServer.Tests
                     false, //subtractfeefromamount
                     true, //replaceable
                 }).ResultString);
-                Logs.Tester.LogInformation($"Paid {tx1}");
+                TestLogs.LogInformation($"Paid {tx1}");
                 TestUtils.Eventually(() =>
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -1789,7 +1787,7 @@ namespace BTCPayServer.Tests
                 {
                     tx1.ToString(),
                 }).Result["txid"].Value<string>());
-                Logs.Tester.LogInformation($"Bumped with {tx1Bump}");
+                TestLogs.LogInformation($"Bumped with {tx1Bump}");
                 await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
@@ -1814,7 +1812,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanSaveKeyPathForOnChainPayments()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -1887,7 +1885,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async void CheckCORSSetOnBitpayAPI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 foreach (var req in new[] { "invoices/", "invoices", "rates", "tokens" }.Select(async path =>
@@ -1922,7 +1920,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task TestAccessBitpayAPI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2001,7 +1999,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseExchangeSpecificRate()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.PayTester.MockRates = false;
                 await tester.StartAsync();
@@ -2046,14 +2044,14 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseAnyoneCanCreateInvoice()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
 
-                Logs.Tester.LogInformation("StoreId without anyone can create invoice = 403");
+                TestLogs.LogInformation("StoreId without anyone can create invoice = 403");
                 var response = await tester.PayTester.HttpClient.SendAsync(
                     new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
                     {
@@ -2062,7 +2060,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(403, (int)response.StatusCode);
 
-                Logs.Tester.LogInformation(
+                TestLogs.LogInformation(
                     "No store without  anyone can create invoice = 404 because the bitpay API can't know the storeid");
                 response = await tester.PayTester.HttpClient.SendAsync(
                     new HttpRequestMessage(HttpMethod.Post, $"invoices")
@@ -2074,7 +2072,7 @@ namespace BTCPayServer.Tests
 
                 await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
 
-                Logs.Tester.LogInformation("Bad store with anyone can create invoice = 403");
+                TestLogs.LogInformation("Bad store with anyone can create invoice = 403");
                 response = await tester.PayTester.HttpClient.SendAsync(
                     new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId=badid")
                     {
@@ -2083,7 +2081,7 @@ namespace BTCPayServer.Tests
                     });
                 Assert.Equal(403, (int)response.StatusCode);
 
-                Logs.Tester.LogInformation("Good store with anyone can create invoice = 200");
+                TestLogs.LogInformation("Good store with anyone can create invoice = 200");
                 response = await tester.PayTester.HttpClient.SendAsync(
                     new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
                     {
@@ -2098,7 +2096,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanTweakRate()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2146,7 +2144,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateTopupInvoices()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2156,7 +2154,7 @@ namespace BTCPayServer.Tests
                 var rng = new Random();
                 var seed = rng.Next();
                 rng = new Random(seed);
-                Logs.Tester.LogInformation("Seed: " + seed);
+                TestLogs.LogInformation("Seed: " + seed);
                 foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
                 { 
                     await user.SetNetworkFeeMode(networkFeeMode);
@@ -2229,7 +2227,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanModifyRates()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2340,7 +2338,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseDefaultCurrency()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2381,7 +2379,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetPaymentMethodLimits()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -2459,7 +2457,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanSetUnifiedQrCode()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -2521,7 +2519,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetPaymentMethodLimitsLightning()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -2582,34 +2580,34 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public async Task CanScheduleBackgroundTasks()
         {
-            BackgroundJobClient client = new BackgroundJobClient();
+            BackgroundJobClient client = new BackgroundJobClient(BTCPayLogs);
             MockDelay mockDelay = new MockDelay();
             client.Delay = mockDelay;
             bool[] jobs = new bool[4];
-            Logs.Tester.LogInformation("Start Job[0] in 5 sec");
+            TestLogs.LogInformation("Start Job[0] in 5 sec");
             client.Schedule((_) =>
             {
-                Logs.Tester.LogInformation("Job[0]");
+                TestLogs.LogInformation("Job[0]");
                 jobs[0] = true;
                 return Task.CompletedTask;
             }, TimeSpan.FromSeconds(5.0));
-            Logs.Tester.LogInformation("Start Job[1] in 2 sec");
+            TestLogs.LogInformation("Start Job[1] in 2 sec");
             client.Schedule((_) =>
             {
-                Logs.Tester.LogInformation("Job[1]");
+                TestLogs.LogInformation("Job[1]");
                 jobs[1] = true;
                 return Task.CompletedTask;
             }, TimeSpan.FromSeconds(2.0));
-            Logs.Tester.LogInformation("Start Job[2] fails in 6 sec");
+            TestLogs.LogInformation("Start Job[2] fails in 6 sec");
             client.Schedule((_) =>
             {
                 jobs[2] = true;
                 throw new Exception("Job[2]");
             }, TimeSpan.FromSeconds(6.0));
-            Logs.Tester.LogInformation("Start Job[3] starts in in 7 sec");
+            TestLogs.LogInformation("Start Job[3] starts in in 7 sec");
             client.Schedule((_) =>
             {
-                Logs.Tester.LogInformation("Job[3]");
+                TestLogs.LogInformation("Job[3]");
                 jobs[3] = true;
                 return Task.CompletedTask;
             }, TimeSpan.FromSeconds(7.0));
@@ -2644,7 +2642,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(0, client.GetExecutingCount());
 
             bool jobExecuted = false;
-            Logs.Tester.LogInformation("This job will be cancelled");
+            TestLogs.LogInformation("This job will be cancelled");
             client.Schedule((_) =>
             {
                 jobExecuted = true;
@@ -2706,7 +2704,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2763,7 +2761,7 @@ namespace BTCPayServer.Tests
                 return decimal.Parse(match.Groups[1].Value.Trim(), CultureInfo.InvariantCulture);
             }
 
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2835,7 +2833,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanChangeNetworkFeeMode()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
                 await tester.StartAsync();
@@ -2844,7 +2842,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
                 {
-                    Logs.Tester.LogInformation($"Trying with {nameof(networkFeeMode)}={networkFeeMode}");
+                    TestLogs.LogInformation($"Trying with {nameof(networkFeeMode)}={networkFeeMode}");
                     await user.SetNetworkFeeMode(networkFeeMode);
                     var invoice = user.BitPay.CreateInvoice(
                         new Invoice
@@ -2879,7 +2877,7 @@ namespace BTCPayServer.Tests
 
                     var due = Money.Parse(invoice.CryptoInfo[0].Due);
                     var productPartDue = (invoice.Price / invoice.Rate);
-                    Logs.Tester.LogInformation(
+                    TestLogs.LogInformation(
                         $"Product part due is {productPartDue} and due {due} with network fee {nextNetworkFee}");
                     Assert.Equal(productPartDue + nextNetworkFee, due.ToDecimal(MoneyUnit.BTC));
                     var firstPayment = productPartDue - missingMoney;
@@ -2889,7 +2887,7 @@ namespace BTCPayServer.Tests
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         due = Money.Parse(invoice.CryptoInfo[0].Due);
-                        Logs.Tester.LogInformation($"Remaining due after first payment: {due}");
+                        TestLogs.LogInformation($"Remaining due after first payment: {due}");
                         Assert.Equal(Money.Coins(firstPayment), Money.Parse(invoice.CryptoInfo[0].Paid));
                         nextNetworkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
                             .GetPaymentMethods()[btc]
@@ -2912,7 +2910,7 @@ namespace BTCPayServer.Tests
                             Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
                     });
                     cashCow.SendToAddress(invoiceAddress, due);
-                    Logs.Tester.LogInformation($"After payment of {due}, the invoice should be paid");
+                    TestLogs.LogInformation($"After payment of {due}, the invoice should be paid");
                     TestUtils.Eventually(() =>
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -2926,7 +2924,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanExportInvoicesCsv()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -2968,7 +2966,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteApps()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -3007,7 +3005,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStrangeInvoice()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -3101,7 +3099,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceFlowThroughDifferentStatesCorrectly()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -3317,10 +3315,10 @@ namespace BTCPayServer.Tests
                     Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
-                Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
+                TestLogs.LogInformation($"Testing {result.ExpectedName}");
                 if (result.ExpectedName == "ndax")
                 {
-                    Logs.Tester.LogInformation($"Skipping (currently crashing)");
+                    TestLogs.LogInformation($"Skipping (currently crashing)");
                     continue;
                 }
 
@@ -3443,7 +3441,7 @@ namespace BTCPayServer.Tests
             foreach (var value in result)
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
-                Logs.Tester.LogInformation($"Testing {value.Key.ToString()}");
+                TestLogs.LogInformation($"Testing {value.Key.ToString()}");
                 if (value.Key.ToString() == "BTX_USD") // Broken shitcoin
                     continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
@@ -3484,7 +3482,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckLogsRoute()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -3722,7 +3720,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -3797,7 +3795,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async void CheckOnionlocationForNonOnionHtmlRequests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var url = tester.PayTester.ServerUri.AbsoluteUri;
@@ -3843,7 +3841,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCheckForNewVersion()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 await tester.StartAsync();
 
@@ -3856,7 +3854,7 @@ namespace BTCPayServer.Tests
                 var mockEnv = tester.PayTester.GetService<BTCPayServerEnvironment>();
                 var mockSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();
 
-                var svc = new NewVersionCheckerHostedService(settings, mockEnv, mockSender, new MockVersionFetcher());
+                var svc = new NewVersionCheckerHostedService(settings, mockEnv, mockSender, new MockVersionFetcher(), BTCPayLogs);
                 await svc.ProcessVersionCheck();
 
                 // since last version present in database was null, it should've been updated with version mock returned
@@ -3889,7 +3887,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanDoLightningInternalNodeMigration()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 tester.ActivateLightning(LightningConnectionType.CLightning);
                 await tester.StartAsync();
@@ -3968,7 +3966,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanDoInvoiceMigrations()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 await tester.StartAsync();
 
@@ -4049,7 +4047,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task EmailSenderTests()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 await tester.StartAsync();
 

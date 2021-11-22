@@ -20,8 +20,9 @@ namespace BTCPayServer.HostedServices
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly LinkGenerator _generator;
 
+
         public UserEventHostedService(EventAggregator eventAggregator, UserManager<ApplicationUser> userManager,
-            EmailSenderFactory emailSenderFactory, LinkGenerator generator) : base(eventAggregator)
+            EmailSenderFactory emailSenderFactory, LinkGenerator generator, Logs logs) : base(eventAggregator, logs)
         {
             _userManager = userManager;
             _emailSenderFactory = emailSenderFactory;

@@ -39,15 +39,18 @@ namespace BTCPayServer.Services.Wallets
     }
     public class BTCPayWallet
     {
+        public Logs Logs { get; }
+
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
-            ApplicationDbContextFactory dbContextFactory)
+            ApplicationDbContextFactory dbContextFactory, Logs logs)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             if (memoryCache == null)
                 throw new ArgumentNullException(nameof(memoryCache));
+            Logs = logs;
             _Client = client;
             _Network = network;
             _dbContextFactory = dbContextFactory;

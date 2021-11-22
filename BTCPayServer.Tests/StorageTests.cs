@@ -19,19 +19,17 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class StorageTests
+    public class StorageTests : UnitTestBase
     {
-        public StorageTests(ITestOutputHelper helper)
+        public StorageTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanConfigureStorage()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -114,7 +112,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async void CanUseLocalProviderFiles()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -142,7 +140,7 @@ namespace BTCPayServer.Tests
         [Trait("ExternalIntegration", "ExternalIntegration")]
         public async Task CanUseAzureBlobStorage()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();

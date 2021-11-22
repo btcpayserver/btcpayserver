@@ -36,6 +36,8 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
 
+        public Logs Logs { get; }
+
         public AccountController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -44,7 +46,8 @@ namespace BTCPayServer.Controllers
             Configuration.BTCPayServerOptions options,
             BTCPayServerEnvironment btcPayServerEnvironment,
             EventAggregator eventAggregator,
-            Fido2Service fido2Service)
+            Fido2Service fido2Service,
+            Logs logs)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -54,7 +57,8 @@ namespace BTCPayServer.Controllers
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
             _eventAggregator = eventAggregator;
-            _logger = Logs.PayServer;
+            _logger = logs.PayServer;
+            Logs = logs;
         }
 
         [TempData]
@@ -447,7 +451,7 @@ namespace BTCPayServer.Controllers
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
 
-                        await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration);
+                        await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration, Logs);
                         RegisteredAdmin = true;
                     }
 

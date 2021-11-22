@@ -21,7 +21,7 @@ namespace BTCPayServer.HostedServices
         private readonly IVersionFetcher _versionFetcher;
 
         public NewVersionCheckerHostedService(SettingsRepository settingsRepository, BTCPayServerEnvironment env,
-            NotificationSender notificationSender, IVersionFetcher versionFetcher)
+            NotificationSender notificationSender, IVersionFetcher versionFetcher, Logs logs) : base(logs)
         {
             _settingsRepository = settingsRepository;
             _env = env;
@@ -80,10 +80,13 @@ namespace BTCPayServer.HostedServices
 
     public class GithubVersionFetcher : IVersionFetcher
     {
+        public Logs Logs { get; }
+
         private readonly HttpClient _httpClient;
         private readonly Uri _updateurl;
-        public GithubVersionFetcher(IHttpClientFactory httpClientFactory, BTCPayServerOptions options)
+        public GithubVersionFetcher(IHttpClientFactory httpClientFactory, BTCPayServerOptions options, Logs logs)
         {
+            Logs = logs;
             _httpClient = httpClientFactory.CreateClient(nameof(GithubVersionFetcher));
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");

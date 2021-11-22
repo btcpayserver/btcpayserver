@@ -40,8 +40,13 @@ namespace BTCPayServer.Tests
     {
         private readonly string _Directory;
 
-        public BTCPayServerTester(string scope)
+        public ILoggerProvider LoggerProvider { get; }
+
+        ILog TestLogs;
+        public BTCPayServerTester(ILog testLogs, ILoggerProvider loggerProvider, string scope)
         {
+            this.LoggerProvider = loggerProvider;
+            this.TestLogs = testLogs;
             this._Directory = scope ?? throw new ArgumentNullException(nameof(scope));
         }
 
@@ -154,7 +159,7 @@ namespace BTCPayServer.Tests
             HttpClient = new HttpClient();
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
+            var conf = new DefaultConfiguration() { Logger = LoggerProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)
                     .UseContentRoot(FindBTCPayServerDirectory())
@@ -168,7 +173,7 @@ namespace BTCPayServer.Tests
                             .AddFilter("Microsoft", LogLevel.Error)
                             .AddFilter("Hangfire", LogLevel.Error)
                             .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
-                            .AddProvider(Logs.LogProvider);
+                            .AddProvider(LoggerProvider);
                         });
                     })
                     .ConfigureServices(services =>
@@ -183,9 +188,9 @@ namespace BTCPayServer.Tests
             var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
             foreach (var url in urls)
             {
-                Logs.Tester.LogInformation("Listening on " + url);
+                TestLogs.LogInformation("Listening on " + url);
             }
-            Logs.Tester.LogInformation("Server URI " + ServerUri);
+            TestLogs.LogInformation("Server URI " + ServerUri);
 
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
@@ -230,9 +235,9 @@ namespace BTCPayServer.Tests
             }
 
 
-            Logs.Tester.LogInformation("Waiting site is operational...");
+            TestLogs.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();
-            Logs.Tester.LogInformation("Site is now operational");
+            TestLogs.LogInformation("Site is now operational");
         }
         MockRateProvider coinAverageMock;
         private async Task WaitSiteIsOperational()

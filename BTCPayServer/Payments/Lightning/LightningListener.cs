@@ -24,6 +24,8 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningListener : IHostedService
     {
+        public Logs Logs { get; }
+
         readonly EventAggregator _Aggregator;
         readonly InvoiceRepository _InvoiceRepository;
         private readonly IMemoryCache _memoryCache;
@@ -44,8 +46,10 @@ namespace BTCPayServer.Payments.Lightning
                               LightningLikePaymentHandler lightningLikePaymentHandler,
                               StoreRepository storeRepository,
                               IOptions<LightningNetworkOptions> options,
-                              PaymentService paymentService)
+                              PaymentService paymentService,
+                              Logs logs)
         {
+            Logs = logs;
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;
             _memoryCache = memoryCache;
@@ -70,7 +74,7 @@ namespace BTCPayServer.Payments.Lightning
                         if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener) ||
                             !instanceListener.IsListening)
                         {
-                            instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, GetLightningUrl(listenedInvoice.SupportedPaymentMethod), _paymentService);
+                            instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, GetLightningUrl(listenedInvoice.SupportedPaymentMethod), _paymentService, Logs);
                             var status = await instanceListener.PollPayment(listenedInvoice, cancellation);
                             if (status is null ||
                                 status is LightningInvoiceStatus.Paid ||
@@ -393,6 +397,8 @@ namespace BTCPayServer.Payments.Lightning
 
     public class LightningInstanceListener
     {
+        public Logs Logs { get; }
+
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetwork _network;
@@ -406,10 +412,12 @@ namespace BTCPayServer.Payments.Lightning
                                         LightningClientFactoryService lightningClientFactory,
                                         BTCPayNetwork network,
                                         LightningConnectionString connectionString,
-                                        PaymentService paymentService)
+                                        PaymentService paymentService,
+                                        Logs logs)
         {
             if (connectionString == null)
                 throw new ArgumentNullException(nameof(connectionString));
+            Logs = logs;
             this._invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
             this._network = network;

@@ -23,7 +23,7 @@ namespace BTCPayServer.HostedServices
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly IOptions<DataDirectories> _datadirs;
 
-        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory, IOptions<DataDirectories> datadirs)
+        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory, IOptions<DataDirectories> datadirs, Logs logs) : base(logs)
         {
             _invoiceRepository = invoiceRepository;
             _settingsRepository = settingsRepository;

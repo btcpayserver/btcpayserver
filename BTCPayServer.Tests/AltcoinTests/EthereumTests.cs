@@ -13,14 +13,12 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class EthereumTests
+    public class EthereumTests : UnitTestBase
     {
         public const int TestTimeout = 60_000;
 
-        public EthereumTests(ITestOutputHelper helper)
+        public EthereumTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact]
@@ -36,7 +34,7 @@ namespace BTCPayServer.Tests
                 })
             });
 
-            var networkProvider = config.ConfigureNetworkProvider();
+            var networkProvider = config.ConfigureNetworkProvider(BTCPayLogs);
             Assert.NotNull(networkProvider.GetNetwork("ETH"));
             Assert.NotNull(networkProvider.GetNetwork("USDT20"));
         }
@@ -45,7 +43,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanUseEthereum()
         {
-            using var s = SeleniumTester.Create("ETHEREUM", true);
+            using var s = CreateSeleniumTester("ETHEREUM", true);
             s.Server.ActivateETH();
             await s.StartAsync();
             s.RegisterNewUser(true);

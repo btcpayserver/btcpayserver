@@ -103,7 +103,8 @@ namespace BTCPayServer.PaymentRequest
         public PaymentRequestStreamer(EventAggregator eventAggregator,
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
-            PaymentRequestService paymentRequestService) : base(eventAggregator)
+            PaymentRequestService paymentRequestService,
+            Logs logs) : base(eventAggregator, logs)
         {
             _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;

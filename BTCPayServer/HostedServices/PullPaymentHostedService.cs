@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
@@ -154,7 +155,8 @@ namespace BTCPayServer.HostedServices
             NotificationSender notificationSender,
             RateFetcher rateFetcher,
             IEnumerable<IPayoutHandler> payoutHandlers,
-            ILogger<PullPaymentHostedService> logger)
+            ILogger<PullPaymentHostedService> logger,
+            Logs logs) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;

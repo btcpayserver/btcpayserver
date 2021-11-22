@@ -23,7 +23,8 @@ namespace BTCPayServer.Plugins.Shopify
 
         public ShopifyOrderMarkerHostedService(EventAggregator eventAggregator,
             StoreRepository storeRepository,
-            IHttpClientFactory httpClientFactory) : base(eventAggregator)
+            IHttpClientFactory httpClientFactory,
+            Logs logs) : base(eventAggregator, logs)
         {
             _storeRepository = storeRepository;
             _httpClientFactory = httpClientFactory;

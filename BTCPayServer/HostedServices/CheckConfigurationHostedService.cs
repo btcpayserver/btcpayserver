@@ -10,12 +10,15 @@ namespace BTCPayServer.HostedServices
 {
     public class CheckConfigurationHostedService : IHostedService
     {
+        public Logs Logs { get; }
+
         private readonly BTCPayServerOptions _options;
         Task _testingConnection;
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        public CheckConfigurationHostedService(BTCPayServerOptions options)
+        public CheckConfigurationHostedService(BTCPayServerOptions options, Logs logs)
         {
+            Logs = logs;
             _options = options;
         }
 

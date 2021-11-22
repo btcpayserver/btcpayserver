@@ -93,7 +93,7 @@
                 }
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             @if (!Model.Title.IsNullOrWhiteSpace())
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
@@ -107,7 +107,7 @@
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
                                 <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
+                                <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
                             </div>
@@ -126,23 +126,23 @@
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
-                                    <dt class="h4 fw-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1">Available claim</dd>
+                                    <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@Model.AmountDueFormatted</dt>
+                                    <dd class="order-1 order-sm-2 mb-1">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1">Already claimed</dd>
+                                    <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1">@Model.AmountCollectedFormatted</dt>
+                                    <dd class="order-1 order-sm-2 mb-1">Already claimed</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
-                                    <dt class="h4 text-sm-end fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
-                                    <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
+                                    <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1">@Model.AmountFormatted</dt>
+                                    <dd class="text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
                                 </div>
                             </dl>
                         </div>
@@ -150,8 +150,8 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
-                            <h2 class="h4 mb-3">Claims</h2>
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+                            <h2 class="h4 mb-0">Claims</h2>
                             <div class="table-responsive">
                                 @if (Model.Payouts.Any())
                                 {
@@ -190,7 +190,7 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted">No claim made yet.</p>
+                                    <p class="text-muted mt-3 mb-0">No claim made yet.</p>
                                 }
                             </div>
                         </div>

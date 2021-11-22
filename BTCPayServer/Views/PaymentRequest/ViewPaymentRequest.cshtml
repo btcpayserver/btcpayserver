@@ -1,4 +1,4 @@
-@using BTCPayServer.Services.Invoices
+﻿@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
@@ -83,10 +83,10 @@
                                 &nbsp;
                                 <span class="text-nowrap d-print-none" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
                                 <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate">@Model.LastUpdated.ToString("g")</span>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.print" v-cloak>
+                                <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.copyUrlToClipboard" v-cloak>
+                                <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.copyUrlToClipboard" v-cloak>
                                     Copy Link
                                 </button>
                             </div>
@@ -203,34 +203,38 @@
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             <h2 class="h4 mb-3">Invoice Summary</h2>
-                            <div v-html="srvModel.description">
-                                @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
-                                {
+                            @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
+                            {
+                                <div v-html="srvModel.description">
                                     @Safe.Raw(Model.Description)
-                                }
-                            </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mt-3 mb-0">No details provided.</p>
+                            }
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
-                                    <dt class="h4 fw-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
+                                    <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
+                                    <dd class="order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 fw-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
-                                    <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
+                                    <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
+                                    <dd class="order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
-                                    <dt class="h4 text-sm-end fw-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
-                                    <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Total requested</dd>
+                                    <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
+                                    <dd class="text-sm-end order-1 order-sm-2 mb-1">Total requested</dd>
                                 </div>
                             </dl>
                         </div>
@@ -238,13 +242,13 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
-                            <h2 class="h4 mb-3">Payment History</h2>
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+                            <h2 class="h4 mb-0">Payment History</h2>
                             <div class="table-responsive">
                                 <noscript>
                                     @if (Model.Invoices == null || !Model.Invoices.Any())
                                     {
-                                        <p class="text-muted">No payments made yet.</p>
+                                        <p class="text-muted mt-3 mb-0">No payments made yet.</p>
                                     }
                                     else
                                     {
@@ -310,7 +314,7 @@
                                 </noscript>
 
                                 <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
-                                    <p class="text-muted">No payments made yet.</p>
+                                    <p class="text-muted mt-3 mb-0">No payments made yet.</p>
                                 </template>
                                 <template v-else>
                                     <table v-for="invoice of srvModel.invoices" :key="invoice.id" class="invoice table">

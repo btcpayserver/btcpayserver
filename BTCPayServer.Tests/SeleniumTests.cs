@@ -20,6 +20,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Tests.Fixtures;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
@@ -43,32 +44,33 @@ using CreateInvoiceRequest = BTCPayServer.Lightning.Charge.CreateInvoiceRequest;
 namespace BTCPayServer.Tests
 {
     [Trait("Selenium", "Selenium")]
-    public class ChromeTests : UnitTestBase
+    public class ChromeTests : UnitTestBase, IClassFixture<UserWithBitcoinWalletSelenium>
     {
         private const int TestTimeout = TestUtils.TestTimeout;
 
-        public ChromeTests(ITestOutputHelper helper) : base(helper)
+        public ChromeTests(ITestOutputHelper helper, UserWithBitcoinWalletSelenium fixture) : base(helper)
         {
+            SeleniumTester = fixture.SeleniumTester;
+            ServerTester = fixture.ServerTester;
+            fixture.OutputHelper = helper;
+            SeleniumTester.GoToHome();
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanNavigateServerSettings()
-        {
-            using (var s = CreateSeleniumTester())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser(true);
-                s.Driver.FindElement(By.Id("ServerSettings")).Click();
-                s.Driver.AssertNoError();
-                s.ClickOnAllSideMenus();
-                s.Driver.FindElement(By.LinkText("Services")).Click();
+        public SeleniumTester SeleniumTester { get; }
+        public ServerTester ServerTester { get; set; }
 
-                TestLogs.LogInformation("Let's check if we can access the logs");
-                s.Driver.FindElement(By.LinkText("Logs")).Click();
-                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
-                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
-                s.Driver.Quit();
-            }
+        [Fact(Timeout = TestTimeout)]
+        public void CanNavigateServerSettings()
+        {
+            SeleniumTester.Driver.FindElement(By.Id("ServerSettings")).Click();
+            SeleniumTester.Driver.AssertNoError();
+            SeleniumTester.ClickOnAllSideMenus();
+            SeleniumTester.Driver.FindElement(By.LinkText("Services")).Click();
+
+            TestLogs.LogInformation("Let's check if we can access the logs");
+            SeleniumTester.Driver.FindElement(By.LinkText("Logs")).Click();
+            SeleniumTester.Driver.FindElement(By.PartialLinkText(".log")).Click();
+            Assert.Contains("Starting listening NBXplorer", SeleniumTester.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -551,72 +553,59 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public async Task CanCreateCrowdfundingApp()
+        public void CanCreateCrowdfundingApp()
         {
-            using (var s = CreateSeleniumTester())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser();
-                var (storeName, _) = s.CreateNewStore();
-                s.AddDerivationScheme();
-
-                s.Driver.FindElement(By.Id("Apps")).Click();
-                s.Driver.FindElement(By.Id("CreateNewApp")).Click();
-                s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
-                s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
-                s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
-                s.Driver.FindElement(By.Id("Create")).Click();
-                s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
-                s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
-                s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
-                s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
-                s.Driver.FindElement(By.Id("SaveSettings")).Click();
-                s.Driver.FindElement(By.Id("ViewApp")).Click();
-                Assert.Equal("currently active!",
-                    s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
-            }
+            SeleniumTester.RegisterNewUser();
+            SeleniumTester.CreateNewStore();
+            SeleniumTester.AddDerivationScheme();
+            SeleniumTester.Driver.FindElement(By.Id("Apps")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("CreateNewApp")).Click();
+            SeleniumTester.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
+            SeleniumTester.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
+            SeleniumTester.Driver.FindElement(By.Id("SelectedStore")).SendKeys(SeleniumTester.StoreName);
+            SeleniumTester.Driver.FindElement(By.Id("Create")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
+            SeleniumTester.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            SeleniumTester.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
+            SeleniumTester.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+            SeleniumTester.Driver.FindElement(By.Id("SaveSettings")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("ViewApp")).Click();
+            Assert.Equal("currently active!",
+                SeleniumTester.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
         }
 
         [Fact(Timeout = TestTimeout)]
-        public async Task CanCreatePayRequest()
+        public void CanCreatePayRequest()
         {
-            using (var s = CreateSeleniumTester())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser();
-                s.CreateNewStore();
-                s.AddDerivationScheme();
+            SeleniumTester.Driver.FindElement(By.Id("PaymentRequests")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
+            SeleniumTester.Driver.FindElement(By.Id("Amount")).SendKeys("700");
+            SeleniumTester.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
+            SeleniumTester.Driver.FindElement(By.Id("SaveButton")).Click();
+            SeleniumTester.Driver.FindElement(By.Name("ViewAppButton")).Click();
+            SeleniumTester.Driver.SwitchTo().Window(SeleniumTester.Driver.WindowHandles.Last());
+            Assert.Equal("Amount due", SeleniumTester.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
+            Assert.Equal("Pay Invoice",
+                SeleniumTester.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
 
-                s.Driver.FindElement(By.Id("PaymentRequests")).Click();
-                s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
-                s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
-                s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
-                s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
-                s.Driver.FindElement(By.Id("SaveButton")).Click();
-                s.Driver.FindElement(By.Name("ViewAppButton")).Click();
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-                Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
-                Assert.Equal("Pay Invoice",
-                    s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            // expire
+            SeleniumTester.Driver.SwitchTo().Window(SeleniumTester.Driver.WindowHandles.First());
+            SeleniumTester.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
+            SeleniumTester.Driver.FindElement(By.Id("SaveButton")).Click();
+            SeleniumTester.Driver.SwitchTo().Window(SeleniumTester.Driver.WindowHandles.Last());
+            SeleniumTester.Driver.Navigate().Refresh();
+            Assert.Equal("Expired", SeleniumTester.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
 
-                // expire
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-                s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
-                s.Driver.FindElement(By.Id("SaveButton")).Click();
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-                s.Driver.Navigate().Refresh();
-                Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
-
-                // unexpire
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-                s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
-                s.Driver.FindElement(By.Id("SaveButton")).Click();
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-                s.Driver.Navigate().Refresh();
-                s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
-                Assert.Equal("Pay Invoice",
-                    s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
-            }
+            // unexpire
+            SeleniumTester.Driver.SwitchTo().Window(SeleniumTester.Driver.WindowHandles.First());
+            SeleniumTester.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
+            SeleniumTester.Driver.FindElement(By.Id("SaveButton")).Click();
+            SeleniumTester.Driver.SwitchTo().Window(SeleniumTester.Driver.WindowHandles.Last());
+            SeleniumTester.Driver.Navigate().Refresh();
+            SeleniumTester.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
+            Assert.Equal("Pay Invoice",
+                SeleniumTester.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
         }
 
         [Fact(Timeout = TestTimeout)]

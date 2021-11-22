@@ -201,6 +201,7 @@ namespace BTCPayServer.Hosting
             IOptions<DataDirectories> dataDirectories,
             ILoggerFactory loggerFactory)
         {
+            Logs.Configure(loggerFactory);
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {

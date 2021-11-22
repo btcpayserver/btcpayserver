@@ -139,9 +139,14 @@ namespace BTCPayServer.Tests
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             Driver.FindElement(By.Id($"Nav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
             if (keepId)
+            {
                 StoreId = storeId;
+                StoreName = name;
+            }
             return (name, storeId);
         }
+
+        public string StoreName { get; set; }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {

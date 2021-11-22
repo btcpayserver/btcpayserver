@@ -53,4 +53,10 @@
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="xunit.runner.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

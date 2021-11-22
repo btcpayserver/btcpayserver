@@ -31,20 +31,18 @@ using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
 {
-    public class GreenfieldAPITests
+    public class GreenfieldAPITests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-        public GreenfieldAPITests(ITestOutputHelper helper)
+        public GreenfieldAPITests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task LocalClientTests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -61,7 +59,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ApiKeysControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -90,7 +88,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseMiscAPIs()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -112,7 +110,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task SpecificCanModifyStoreCantCreateNewStore()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -137,7 +135,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteAPIKeyViaAPI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -169,7 +167,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanDeleteUsersViaApi()
         {
-            using var tester = ServerTester.Create(newDb: true);
+            using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             // Should not be authorized to perform this action
@@ -208,7 +206,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateUsersViaAPI()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
@@ -345,7 +343,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePullPaymentViaAPI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -393,9 +391,9 @@ namespace BTCPayServer.Tests
                     PaymentMethods = new[] { "BTC" }
                 });
 
-                Logs.Tester.LogInformation("Can't archive without knowing the walletId");
+                TestLogs.LogInformation("Can't archive without knowing the walletId");
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await client.ArchivePullPayment("lol", result.Id));
-                Logs.Tester.LogInformation("Can't archive without permission");
+                TestLogs.LogInformation("Can't archive without permission");
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
                 await client.ArchivePullPayment(storeId, result.Id);
                 result = await unauthenticated.GetPullPayment(result.Id);
@@ -441,7 +439,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("BTC", payout2.CryptoCode);
                 Assert.Null(payout.PaymentMethodAmount);
 
-                Logs.Tester.LogInformation("Can't overdraft");
+                TestLogs.LogInformation("Can't overdraft");
                 
                 var destination2 = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
                 await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
@@ -451,14 +449,14 @@ namespace BTCPayServer.Tests
                     PaymentMethod = "BTC"
                 }));
 
-                Logs.Tester.LogInformation("Can't create too low payout");
+                TestLogs.LogInformation("Can't create too low payout");
                 await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
                 {
                     Destination = destination2,
                     PaymentMethod = "BTC"
                 }));
 
-                Logs.Tester.LogInformation("Can archive payout");
+                TestLogs.LogInformation("Can archive payout");
                 await client.CancelPayout(storeId, payout.Id);
                 payouts = await unauthenticated.GetPayouts(pps[0].Id);
                 Assert.Empty(payouts);
@@ -467,7 +465,7 @@ namespace BTCPayServer.Tests
                 payout = Assert.Single(payouts);
                 Assert.Equal(PayoutState.Cancelled, payout.State);
 
-                Logs.Tester.LogInformation("Can create payout after cancelling");
+                TestLogs.LogInformation("Can create payout after cancelling");
                 payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
                 {
                     Destination = destination,
@@ -517,7 +515,7 @@ namespace BTCPayServer.Tests
                 }));
 
 
-                Logs.Tester.LogInformation("Create a pull payment with USD");
+                TestLogs.LogInformation("Create a pull payment with USD");
                 var pp = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
                 {
                     Name = "Test USD",
@@ -527,7 +525,7 @@ namespace BTCPayServer.Tests
                 });
 
                 destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-                Logs.Tester.LogInformation("Try to pay it in BTC");
+                TestLogs.LogInformation("Try to pay it in BTC");
                 payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
                 {
                     Destination = destination,
@@ -594,7 +592,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoresControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -670,7 +668,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task UsersControllerTests()
         {
-            using (var tester = ServerTester.Create(newDb: true))
+            using (var tester = CreateServerTester(newDb: true))
             {
                 tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
@@ -743,7 +741,7 @@ namespace BTCPayServer.Tests
                 Assert.False(hook.AutomaticRedelivery);
                 Assert.Equal(fakeServer.ServerUri.AbsoluteUri, hook.Url);
             }
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
             await tester.StartAsync();
@@ -803,18 +801,18 @@ namespace BTCPayServer.Tests
             var jObj = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
             Assert.NotNull(jObj);
 
-            Logs.Tester.LogInformation("Should not be able to access webhook without proper auth");
+            TestLogs.LogInformation("Should not be able to access webhook without proper auth");
             var unauthorized = await user.CreateClient(Policies.CanCreateInvoice);
             await AssertHttpError(403, async () =>
             {
                 await unauthorized.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
             });
 
-            Logs.Tester.LogInformation("Can use btcpay.store.canmodifystoresettings to query webhooks");
+            TestLogs.LogInformation("Can use btcpay.store.canmodifystoresettings to query webhooks");
             clientProfile = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanCreateInvoice);
             await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
 
-            Logs.Tester.LogInformation("Testing corner cases");
+            TestLogs.LogInformation("Testing corner cases");
             Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", newDeliveryId));
             Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, "lol"));
             Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", "lol"));
@@ -832,7 +830,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task HealthControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
@@ -847,7 +845,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ServerInfoControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
@@ -872,7 +870,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task PaymentControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -963,7 +961,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceLegacyTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -972,7 +970,7 @@ namespace BTCPayServer.Tests
                 var client = await user.CreateClient(Policies.Unrestricted);
                 var oldBitpay = user.BitPay;
 
-                Logs.Tester.LogInformation("Let's create an invoice with bitpay API");
+                TestLogs.LogInformation("Let's create an invoice with bitpay API");
                 var oldInvoice = await oldBitpay.CreateInvoiceAsync(new Invoice()
                 {
                     Currency = "BTC",
@@ -990,7 +988,7 @@ namespace BTCPayServer.Tests
 
                 async Task<Client.Models.InvoiceData> AssertInvoiceMetadata()
                 {
-                    Logs.Tester.LogInformation("Let's check if we can get invoice in the new format with the metadata");
+                    TestLogs.LogInformation("Let's check if we can get invoice in the new format with the metadata");
                     var newInvoice = await client.GetInvoice(user.StoreId, oldInvoice.Id);
                     Assert.Equal("posData", newInvoice.Metadata["posData"].Value<string>());
                     Assert.Equal("code", newInvoice.Metadata["itemCode"].Value<string>());
@@ -1004,8 +1002,7 @@ namespace BTCPayServer.Tests
                 }
 
                 await AssertInvoiceMetadata();
-
-                Logs.Tester.LogInformation("Let's hack the Bitpay created invoice to be just like before this update. (Invoice V1)");
+                TestLogs.LogInformation("Let's hack the Bitpay created invoice to be just like before this update. (Invoice V1)");
                 var invoiceV1 = "{\r\n  \"version\": 1,\r\n  \"id\": \"" + oldInvoice.Id + "\",\r\n  \"storeId\": \"" + user.StoreId + "\",\r\n  \"orderId\": \"orderId\",\r\n  \"speedPolicy\": 1,\r\n  \"rate\": 1.0,\r\n  \"invoiceTime\": 1598329634,\r\n  \"expirationTime\": 1598330534,\r\n  \"depositAddress\": \"mm83rVs8ZnZok1SkRBmXiwQSiPFgTgCKpD\",\r\n  \"productInformation\": {\r\n    \"itemDesc\": \"desc\",\r\n    \"itemCode\": \"code\",\r\n    \"physical\": false,\r\n    \"price\": 1000.19392922,\r\n    \"currency\": \"BTC\"\r\n  },\r\n  \"buyerInformation\": {\r\n    \"buyerName\": null,\r\n    \"buyerEmail\": null,\r\n    \"buyerCountry\": null,\r\n    \"buyerZip\": null,\r\n    \"buyerState\": null,\r\n    \"buyerCity\": null,\r\n    \"buyerAddress2\": \"blah2\",\r\n    \"buyerAddress1\": \"blah\",\r\n    \"buyerPhone\": null\r\n  },\r\n  \"posData\": \"posData\",\r\n  \"internalTags\": [],\r\n  \"derivationStrategy\": null,\r\n  \"derivationStrategies\": \"{\\\"BTC\\\":{\\\"signingKey\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf\\\",\\\"source\\\":\\\"NBXplorer\\\",\\\"accountDerivation\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf-[legacy]\\\",\\\"accountOriginal\\\":null,\\\"accountKeySettings\\\":[{\\\"rootFingerprint\\\":\\\"54d5044d\\\",\\\"accountKeyPath\\\":\\\"44'/1'/0'\\\",\\\"accountKey\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf\\\"}],\\\"label\\\":null}}\",\r\n  \"status\": \"new\",\r\n  \"exceptionStatus\": \"\",\r\n  \"payments\": [],\r\n  \"refundable\": false,\r\n  \"refundMail\": null,\r\n  \"redirectURL\": null,\r\n  \"redirectAutomatically\": false,\r\n  \"txFee\": 0,\r\n  \"fullNotifications\": false,\r\n  \"notificationEmail\": null,\r\n  \"notificationURL\": null,\r\n  \"serverUrl\": \"http://127.0.0.1:8001\",\r\n  \"cryptoData\": {\r\n    \"BTC\": {\r\n      \"rate\": 1.0,\r\n      \"paymentMethod\": {\r\n        \"networkFeeMode\": 0,\r\n        \"networkFeeRate\": 100.0,\r\n        \"payjoinEnabled\": false\r\n      },\r\n      \"feeRate\": 100.0,\r\n      \"txFee\": 0,\r\n      \"depositAddress\": \"mm83rVs8ZnZok1SkRBmXiwQSiPFgTgCKpD\"\r\n    }\r\n  },\r\n  \"monitoringExpiration\": 1598416934,\r\n  \"historicalAddresses\": null,\r\n  \"availableAddressHashes\": null,\r\n  \"extendedNotifications\": false,\r\n  \"events\": null,\r\n  \"paymentTolerance\": 0.0,\r\n  \"archived\": false\r\n}";
                 var db = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
                 using var ctx = db.CreateContext();
@@ -1014,7 +1011,7 @@ namespace BTCPayServer.Tests
                 await ctx.SaveChangesAsync();
                 var newInvoice = await AssertInvoiceMetadata();
 
-                Logs.Tester.LogInformation("Now, let's create an invoice with the new API but with the same metadata as Bitpay");
+                TestLogs.LogInformation("Now, let's create an invoice with the new API but with the same metadata as Bitpay");
                 newInvoice.Metadata.Add("lol", "lol");
                 newInvoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
                 {
@@ -1032,7 +1029,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanOverpayInvoice()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -1064,7 +1061,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -1407,7 +1404,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 await tester.StartAsync();
@@ -1495,7 +1492,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task NotificationAPITests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
@@ -1534,7 +1531,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task OnChainPaymentMethodAPITests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             var user2 = tester.NewAccount();
@@ -1651,7 +1648,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task LightningNetworkPaymentMethodAPITests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -1768,7 +1765,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task WalletAPITests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             await tester.StartAsync();
 
             var user = tester.NewAccount();
@@ -1989,7 +1986,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StorePaymentMethodsAPITests()
         {
-            using var tester = ServerTester.Create();
+            using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();

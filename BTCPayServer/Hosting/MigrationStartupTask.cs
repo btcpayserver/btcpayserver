@@ -31,6 +31,8 @@ namespace BTCPayServer.Hosting
 {
     public class MigrationStartupTask : IStartupTask
     {
+        public Logs Logs { get; }
+
         private readonly ApplicationDbContextFactory _DBContextFactory;
         private readonly StoreRepository _StoreRepository;
         private readonly BTCPayNetworkProvider _NetworkProvider;
@@ -51,8 +53,10 @@ namespace BTCPayServer.Hosting
             SettingsRepository settingsRepository,
             AppService appService, 
             IEnumerable<IPayoutHandler> payoutHandlers,
-            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
+            Logs logs)
         {
+            Logs = logs;
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;

@@ -57,19 +57,22 @@ namespace BTCPayServer.HostedServices
         readonly ExplorerClientProvider _explorerClientProvider;
         private readonly NotificationSender _notificationSender;
         private readonly PaymentService _paymentService;
+        public Logs Logs { get; }
 
         public InvoiceWatcher(
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             ExplorerClientProvider explorerClientProvider,
             NotificationSender notificationSender,
-            PaymentService paymentService)
+            PaymentService paymentService,
+            Logs logs)
         {
             _invoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _explorerClientProvider = explorerClientProvider;
             _notificationSender = notificationSender;
             _paymentService = paymentService;
+            this.Logs = logs;
         }
 
         readonly CompositeDisposable leases = new CompositeDisposable();

@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
         private readonly CheckConfigurationHostedService _sshState;
         private readonly EventAggregator _eventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+        private readonly Logs Logs;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
@@ -75,7 +76,8 @@ namespace BTCPayServer.Controllers
             AppService appService,
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
-            IOptions<ExternalServicesOptions> externalServiceOptions)
+            IOptions<ExternalServicesOptions> externalServiceOptions,
+            Logs logs)
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -93,6 +95,7 @@ namespace BTCPayServer.Controllers
             _sshState = sshState;
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
+            Logs = logs;
         }
 
         [Route("server/maintenance")]
@@ -250,7 +253,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private static async Task RunSSHCore(SshClient sshClient, string ssh)
+        private async Task RunSSHCore(SshClient sshClient, string ssh)
         {
             try
             {

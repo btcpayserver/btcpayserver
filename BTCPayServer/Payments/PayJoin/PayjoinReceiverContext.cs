@@ -15,9 +15,10 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClient _explorerClient;
         private readonly PayJoinRepository _payJoinRepository;
-
-        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, PayJoinRepository payJoinRepository)
+        private readonly BTCPayServer.Logging.Logs BTCPayLogs;
+        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, PayJoinRepository payJoinRepository, BTCPayServer.Logging.Logs logs)
         {
+            this.BTCPayLogs = logs;
             _invoiceRepository = invoiceRepository;
             _explorerClient = explorerClient;
             _payJoinRepository = payJoinRepository;
@@ -47,7 +48,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
             catch (Exception ex)
             {
-                BTCPayServer.Logging.Logs.PayServer.LogWarning(ex, "Error while disposing the PayjoinReceiverContext");
+                BTCPayLogs.PayServer.LogWarning(ex, "Error while disposing the PayjoinReceiverContext");
             }
         }
 

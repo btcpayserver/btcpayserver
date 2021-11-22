@@ -61,11 +61,11 @@ namespace BTCPayServer.HostedServices
     public class NBXplorerWaiters : IHostedService
     {
         readonly List<NBXplorerWaiter> _Waiters = new List<NBXplorerWaiter>();
-        public NBXplorerWaiters(NBXplorerDashboard dashboard, ExplorerClientProvider explorerClientProvider, EventAggregator eventAggregator)
+        public NBXplorerWaiters(NBXplorerDashboard dashboard, ExplorerClientProvider explorerClientProvider, EventAggregator eventAggregator, Logs logs)
         {
             foreach (var explorer in explorerClientProvider.GetAll())
             {
-                _Waiters.Add(new NBXplorerWaiter(dashboard, explorer.Item1, explorer.Item2, eventAggregator));
+                _Waiters.Add(new NBXplorerWaiter(dashboard, explorer.Item1, explorer.Item2, eventAggregator, logs));
             }
         }
         public Task StartAsync(CancellationToken cancellationToken)
@@ -82,8 +82,9 @@ namespace BTCPayServer.HostedServices
     public class NBXplorerWaiter : IHostedService
     {
 
-        public NBXplorerWaiter(NBXplorerDashboard dashboard, BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
+        public NBXplorerWaiter(NBXplorerDashboard dashboard, BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator, Logs logs)
         {
+            this.Logs = logs;
             _Network = network;
             _Client = client;
             _Aggregator = aggregator;
@@ -92,6 +93,9 @@ namespace BTCPayServer.HostedServices
         }
 
         readonly NBXplorerDashboard _Dashboard;
+
+        public Logs Logs { get; }
+
         readonly BTCPayNetwork _Network;
         readonly EventAggregator _Aggregator;
         readonly ExplorerClient _Client;

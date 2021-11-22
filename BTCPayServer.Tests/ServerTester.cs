@@ -11,6 +11,7 @@ using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
@@ -20,15 +21,16 @@ namespace BTCPayServer.Tests
 {
     public class ServerTester : IDisposable
     {
-        public static ServerTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false)
-        {
-            return new ServerTester(scope, newDb);
-        }
-
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
-        public ServerTester(string scope, bool newDb)
+
+        public ILoggerProvider LoggerProvider { get; }
+
+        internal ILog TestLogs;
+        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider)
         {
+            LoggerProvider = loggerProvider;
+            this.TestLogs = testLogs;
             _Directory = scope;
             if (Directory.Exists(_Directory))
                 Utils.DeleteDirectory(_Directory);
@@ -41,7 +43,7 @@ namespace BTCPayServer.Tests
 
             ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
-            PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
+            PayTester = new BTCPayServerTester(TestLogs, LoggerProvider, Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
                 TestDatabase = Enum.Parse<TestDatabases>(GetEnvironment("TESTS_DB", TestDatabases.Postgres.ToString()), true),
@@ -150,10 +152,10 @@ namespace BTCPayServer.Tests
         /// <returns></returns>
         public async Task EnsureChannelsSetup()
         {
-            Logs.Tester.LogInformation("Connecting channels");
-            BTCPayServer.Lightning.Tests.ConnectChannels.Logs = Logs.LogProvider.CreateLogger("Connect channels");
+            TestLogs.LogInformation("Connecting channels");
+            BTCPayServer.Lightning.Tests.ConnectChannels.Logs = LoggerProvider.CreateLogger("Connect channels");
             await BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients()).ConfigureAwait(false);
-            Logs.Tester.LogInformation("Channels connected");
+            TestLogs.LogInformation("Channels connected");
         }
 
         private IEnumerable<ILightningClient> GetLightningSenderClients()
@@ -248,14 +250,14 @@ namespace BTCPayServer.Tests
         {
             foreach (var r in this.Resources)
                 r.Dispose();
-            Logs.Tester.LogInformation("Disposing the BTCPayTester...");
+            TestLogs.LogInformation("Disposing the BTCPayTester...");
             foreach (var store in Stores)
             {
                 Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
             }
             if (PayTester != null)
                 PayTester.Dispose();
-            Logs.Tester.LogInformation("BTCPayTester disposed");
+            TestLogs.LogInformation("BTCPayTester disposed");
         }
     }
 }

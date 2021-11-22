@@ -31,9 +31,6 @@ namespace BTCPayServer.Tests
 
         public string StoreId { get; set; }
 
-        public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
-            new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
-
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
 
         public async Task StartAsync()
@@ -65,7 +62,7 @@ namespace BTCPayServer.Tests
                 Driver = new OpenQA.Selenium.Remote.RemoteWebDriver(new Uri("http://selenium:4444/wd/hub"), new RemoteSessionSettings(options));
                 var containerIp = File.ReadAllText("/etc/hosts").Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
                     .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
-                Logs.Tester.LogInformation($"Selenium: Container's IP {containerIp}");
+                TestLogs.LogInformation($"Selenium: Container's IP {containerIp}");
                 ServerUri = new Uri(Server.PayTester.ServerUri.AbsoluteUri.Replace($"http://{Server.PayTester.HostName}", $"http://{containerIp}", StringComparison.OrdinalIgnoreCase), UriKind.Absolute);
             }
             else
@@ -82,9 +79,9 @@ namespace BTCPayServer.Tests
             }
             Driver.Manage().Window.Maximize();
 
-            Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
-            Logs.Tester.LogInformation($"Selenium: Browsing to {ServerUri}");
-            Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
+            TestLogs.LogInformation($"Selenium: Using {Driver.GetType()}");
+            TestLogs.LogInformation($"Selenium: Browsing to {ServerUri}");
+            TestLogs.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
             GoToRegister();
             Driver.AssertNoError();
         }
@@ -120,7 +117,7 @@ namespace BTCPayServer.Tests
         public string RegisterNewUser(bool isAdmin = false)
         {
             var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
-            Logs.Tester.LogInformation($"User: {usr} with password 123456");
+            TestLogs.LogInformation($"User: {usr} with password 123456");
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");
             Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
@@ -162,7 +159,7 @@ namespace BTCPayServer.Tests
 
             if (isImport)
             {
-                Logs.Tester.LogInformation("Progressing with existing seed");
+                TestLogs.LogInformation("Progressing with existing seed");
                 Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
                 Driver.FindElement(By.Id("ImportSeedLink")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
@@ -171,7 +168,7 @@ namespace BTCPayServer.Tests
             else
             {
                 var option = privkeys ? "Hotwallet" : "Watchonly";
-                Logs.Tester.LogInformation($"Generating new seed ({option})");
+                TestLogs.LogInformation($"Generating new seed ({option})");
                 Driver.FindElement(By.Id("GenerateWalletLink")).Click();
                 Driver.FindElement(By.Id($"Generate{option}Link")).Click();
             }
@@ -265,13 +262,14 @@ namespace BTCPayServer.Tests
             }
         }
 
+        public Logging.ILog TestLogs => Server.TestLogs;
         public void ClickOnAllSideMenus()
         {
             var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
             foreach (var l in links)
             {
-                Logs.Tester.LogInformation($"Checking no error on {l}");
+                TestLogs.LogInformation($"Checking no error on {l}");
                 Driver.Navigate().GoToUrl(l);
                 Driver.AssertNoError();
             }
@@ -451,7 +449,7 @@ namespace BTCPayServer.Tests
             //
             //            if (jsErrors.Any())
             //            {
-            //                Logs.Tester.LogInformation("JavaScript error(s):" + Environment.NewLine + jsErrors.Aggregate("", (s, entry) => s + entry.Message + Environment.NewLine));
+            //                TestLogs.LogInformation("JavaScript error(s):" + Environment.NewLine + jsErrors.Aggregate("", (s, entry) => s + entry.Message + Environment.NewLine));
             //            }
             //            Assert.Empty(jsErrors);
 

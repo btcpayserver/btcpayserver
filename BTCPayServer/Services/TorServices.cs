@@ -17,7 +17,8 @@ namespace BTCPayServer.Services
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IOptions<BTCPayServerOptions> _options;
 
-        public TorServices(BTCPayNetworkProvider btcPayNetworkProvider, IOptions<BTCPayServerOptions> options)
+
+        public TorServices(BTCPayNetworkProvider btcPayNetworkProvider, IOptions<BTCPayServerOptions> options, Logs logs) : base(logs)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _options = options;

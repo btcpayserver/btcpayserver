@@ -17,18 +17,18 @@ namespace BTCPayServer
     internal static class ActionLogicExtensions
     {
         internal static async Task FirstAdminRegistered(this SettingsRepository settingsRepository, PoliciesSettings policies, 
-            bool updateCheck, bool disableRegistrations)
+            bool updateCheck, bool disableRegistrations, Logs logs)
         {
             if (updateCheck)
             {
-                Logs.PayServer.LogInformation("First admin created, enabling checks for new versions");
+                logs.PayServer.LogInformation("First admin created, enabling checks for new versions");
                 policies.CheckForNewVersions = updateCheck;
             }
 
             if (disableRegistrations)
             {
                 // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).
-                Logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
+                logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
                 policies.LockSubscription = true;
             }
 

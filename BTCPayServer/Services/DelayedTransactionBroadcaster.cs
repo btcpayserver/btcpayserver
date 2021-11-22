@@ -25,16 +25,20 @@ namespace BTCPayServer.Services
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly ApplicationDbContextFactory _dbContextFactory;
 
+        public Logs Logs { get; }
+
         public DelayedTransactionBroadcaster(
             BTCPayNetworkProvider networkProvider,
             ExplorerClientProvider explorerClientProvider,
-            Data.ApplicationDbContextFactory dbContextFactory)
+            Data.ApplicationDbContextFactory dbContextFactory,
+            Logs logs)
         {
             if (explorerClientProvider == null)
                 throw new ArgumentNullException(nameof(explorerClientProvider));
             _networkProvider = networkProvider;
             _explorerClientProvider = explorerClientProvider;
             _dbContextFactory = dbContextFactory;
+            this.Logs = logs;
         }
 
         public async Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)

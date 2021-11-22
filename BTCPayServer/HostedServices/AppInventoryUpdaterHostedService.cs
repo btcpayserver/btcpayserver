@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
@@ -20,8 +21,7 @@ namespace BTCPayServer.HostedServices
             Subscribe<UpdateAppInventory>();
         }
 
-        public AppInventoryUpdaterHostedService(EventAggregator eventAggregator, AppService appService) : base(
-            eventAggregator)
+        public AppInventoryUpdaterHostedService(EventAggregator eventAggregator, AppService appService, Logs logs) : base(eventAggregator, logs)
         {
             _eventAggregator = eventAggregator;
             _appService = appService;

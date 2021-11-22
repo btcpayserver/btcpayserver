@@ -70,7 +70,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IJsonConverterRegistration, JsonConverterRegistration>((s) => new JsonConverterRegistration(create));
             return services;
         }
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
@@ -84,6 +84,7 @@ namespace BTCPayServer.Hosting
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
 
+            services.AddSingleton<Logs>(logs);
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
 
             services.AddPayJoinServices();
@@ -117,7 +118,7 @@ namespace BTCPayServer.Hosting
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>
                 {
-                    options.LoadArgs(configuration);
+                    options.LoadArgs(configuration, logs);
                 });
             services.AddOptions<DataDirectories>().Configure(
                 (options) =>
@@ -185,7 +186,7 @@ namespace BTCPayServer.Hosting
                             if (!LightningConnectionString.TryParse(lightning, true, out var connectionString,
                                 out var error))
                             {
-                                Logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
+                                logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
                                                               Environment.NewLine +
                                                               $"If you have a c-lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " +
                                                               Environment.NewLine +
@@ -206,7 +207,7 @@ namespace BTCPayServer.Hosting
                             {
                                 if (connectionString.IsLegacy)
                                 {
-                                    Logs.Configuration.LogWarning(
+                                    logs.Configuration.LogWarning(
                                         $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
                                 }
                                 options.InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
@@ -238,7 +239,7 @@ namespace BTCPayServer.Hosting
                         }
                     }
                 });
-            services.TryAddSingleton(o => configuration.ConfigureNetworkProvider());
+            services.TryAddSingleton(o => configuration.ConfigureNetworkProvider(logs));
 
             services.TryAddSingleton<AppService>();
             services.AddSingleton<PluginService>();

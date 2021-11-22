@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NicolasDorier.RateLimits;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -28,6 +29,8 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class UsersController : ControllerBase
     {
+        public Logs Logs { get; }
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SettingsRepository _settingsRepository;
@@ -46,8 +49,10 @@ namespace BTCPayServer.Controllers.GreenField
             RateLimitService throttleService,
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
-            UserService userService)
+            UserService userService,
+            Logs logs)
         {
+            this.Logs = logs;
             _userManager = userManager;
             _roleManager = roleManager;
             _settingsRepository = settingsRepository;
@@ -168,7 +173,7 @@ namespace BTCPayServer.Controllers.GreenField
                         await _settingsRepository.UpdateSetting(settings);
                     }
 
-                    await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
+                    await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });

@@ -18,15 +18,13 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {
-    public class ApiKeysTests
+    public class ApiKeysTests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;
 
         public const string TestApiPath = "api/test/apikey";
-        public ApiKeysTests(ITestOutputHelper helper)
+        public ApiKeysTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -37,7 +35,7 @@ namespace BTCPayServer.Tests
             //as a user through your profile
             //as an external application requesting an api key from a user
 
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 var tester = s.Server;

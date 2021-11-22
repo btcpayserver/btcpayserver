@@ -47,10 +47,14 @@ namespace BTCPayServer.HostedServices
             public CancellationToken CancellationToken;
             public int ConnectionCount;
         }
+
+        public Logs Logs { get; }
+
         private readonly BTCPayServerOptions _opts;
 
-        public Socks5HttpProxyServer(Configuration.BTCPayServerOptions opts)
+        public Socks5HttpProxyServer(Configuration.BTCPayServerOptions opts, Logs logs)
         {
+            this.Logs = logs;
             _opts = opts;
         }
         private ServerContext _ServerContext;

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using NBXplorer;
 
@@ -13,8 +14,8 @@ namespace BTCPayServer.HostedServices
     public class InvoiceEventSaverService : EventHostedServiceBase
     {
         private readonly InvoiceRepository _invoiceRepository;
-        public InvoiceEventSaverService(EventAggregator eventAggregator, InvoiceRepository invoiceRepository) : base(
-            eventAggregator)
+        public InvoiceEventSaverService(EventAggregator eventAggregator, InvoiceRepository invoiceRepository, Logs logs) : base(
+            eventAggregator, logs)
         {
             _invoiceRepository = invoiceRepository;
         }

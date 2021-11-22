@@ -35,13 +35,14 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly EventAggregator _eventAggregator;
     private readonly NotificationSender _notificationSender;
-
+    private readonly Logs Logs;
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
         ExplorerClientProvider explorerClientProvider, 
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory, 
         EventAggregator eventAggregator, 
-        NotificationSender notificationSender)
+        NotificationSender notificationSender,
+        Logs logs)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         _explorerClientProvider = explorerClientProvider;
@@ -49,7 +50,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         _dbContextFactory = dbContextFactory;
         _eventAggregator = eventAggregator;
         _notificationSender = notificationSender;
+        this.Logs = logs;
     }
+
 
     public bool CanHandle(PaymentMethodId paymentMethod)
     {

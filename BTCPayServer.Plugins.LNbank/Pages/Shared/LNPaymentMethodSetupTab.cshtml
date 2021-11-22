@@ -1,0 +1,84 @@
+﻿@using BTCPayServer.Data
+@using BTCPayServer.Plugins.LNbank.Services.Wallets
+@using BTCPayServer.Security
+@using Microsoft.AspNetCore.Identity
+@using NBitcoin
+@model object
+@inject UserManager<ApplicationUser> _userManager;
+@inject ContentSecurityPolicies _contentSecurityPolicies;
+@inject WalletService _walletService;
+
+@{
+    var userId = _userManager.GetUserId(User);
+    var wallets = await _walletService.GetWallets(new WalletsQuery
+    {
+        UserId = new[] { userId },
+        IncludeAccessKeys = true
+    });
+
+    var nonce = RandomUtils.GetUInt256().ToString().Substring(0, 32);
+    _contentSecurityPolicies.Add("script-src", $"'nonce-{nonce}'");
+}
+
+<div id="LNbankSetup" class="pt-3 tab-pane fade" role="tabpanel" aria-labelledby="LightningNodeType-LNbank">
+    <div class="form-group">
+        <div class="d-flex align-items-center justify-content-between">
+            <label class="form-label" for="LNbankWallet">LNbank Wallet</label>
+            <a href="@Context.Request.PathBase.ToUriComponent()/Plugins/LNbank/Wallets/Create" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2">
+                <span class="fa fa-plus"></span> Create new wallet
+            </a>
+        </div>
+        <select id="LNbankWallet" class="form-select">
+            <option value="">Select a wallet</option>
+            @foreach (var wallet in wallets)
+            {
+                <option value="@wallet.AccessKeys.First().Key">@wallet.Name</option>
+            }
+        </select>
+    </div>
+</div>
+
+<script nonce="@nonce">
+    const typePrefix = 'type=lnbank;server=@Context.Request.Scheme://@Context.Request.Host@Context.Request.PathBase.ToUriComponent()'
+    const walletEl = document.getElementById('LNbankWallet')
+    const triggerEl = document.getElementById('LightningNodeType-LNbank')
+    const connStringEl = document.getElementById('ConnectionString')
+    const connString = connStringEl.value
+    const isLNbank = connString.startsWith(typePrefix)
+    
+    if (isLNbank) {
+        const [, apiToken] = (connString.match(/api-token=([\w]*)/) || [])
+        walletEl.value = apiToken
+        
+        // deactivate currently active tab and activate LNbank tab
+        const activeEl = document.querySelector('input[name="LightningNodeType"]:checked')
+        if (activeEl) {
+            activeEl.removeAttribute('checked')
+            activeEl.setAttribute('aria-selected', 'false')
+            document.querySelector('#LightningNodeTypeTabs .tab-pane.active').classList.remove('active', 'show')
+            triggerEl.setAttribute('checked', 'checked')
+            triggerEl.setAttribute('aria-selected', 'true')
+            document.getElementById('LNbankSetup').classList.add('active', 'show')
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isLNbank) {
+            const tabTrigger = new bootstrap.Tab(triggerEl)
+            triggerEl.checked = true
+            tabTrigger.show()
+        }
+        
+        delegate('change', '#LNbankWallet', e => {
+            const { value } = e.target
+            connStringEl.value = value.length 
+                ? `${typePrefix};api-token=${value}@(Context.Request.IsHttps ? "" : ";allowinsecure=true")`
+                : ''
+            const tabTrigger = new bootstrap.Tab(triggerEl)
+            triggerEl.checked = true
+            tabTrigger.show()
+        })
+    })
+</script>
+
+

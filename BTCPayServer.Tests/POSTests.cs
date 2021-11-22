@@ -19,6 +19,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanUsePoSApp1()
         {
             using (var tester = ServerTester.Create())

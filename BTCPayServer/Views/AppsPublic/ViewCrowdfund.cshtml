@@ -369,7 +369,7 @@
                     <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{new Intl.NumberFormat().format(perk.inventory)}} left</span>
                     <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
                     <span v-if="perk.sold">{{new Intl.NumberFormat().format(perk.sold)}} Contributor{{perk.sold === 1 ? "": "s"}}</span>
-                    <span v-if="perk.value">{{new Intl.NumberFormat().format(perk.value)}} {{targetCurrency}} total</span>
+                    <span v-if="perk.value">{{formatAmount(perk.value, srvModel.currencyData.divisibility)}} {{targetCurrency}} total</span>
                 </div>
             </form>
         </div> 

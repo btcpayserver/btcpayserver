@@ -47,8 +47,8 @@
         </div>
     }
 
-    <p class="mt-4 text-muted">
-        You can set up this wallet as a Lightning Node in BTCPay Server from version 1.4.0.<br/>
+    <p class="mt-3 text-muted">
+        You can set up this wallet as a Lightning Node in BTCPay Server.<br/>
         Add the following settings as the Lightning Node Connection String in your store's Lightning settings.
     </p>
     @foreach (var accessKey in Model.Wallet.AccessKeys)
@@ -62,16 +62,13 @@
                 @accessKey.Key
             </dd>
             <dt class="col-12">
-                <pre class="connection-string my-3"><code>@connectionString</code></pre>
+                <pre class="connection-string my-3 text-wrap"><code>@connectionString</code></pre>
                 <button class="btn btn-primary my-2" type="button" data-clipboard="@connectionString">Copy connection string</button>
             </dt>
 
         </dl>
     }
 </div>
-
-    
-
 
 <p>
     <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>

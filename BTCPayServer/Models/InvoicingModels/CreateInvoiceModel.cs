@@ -38,7 +38,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Display(Name = "Default payment method on checkout")]
+        [DisplayName("Default payment method on checkout")]
         public string DefaultPaymentMethod
         {
             get; set;
@@ -58,7 +58,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [Uri]
-        [DisplayName("Notification Url")]
+        [DisplayName("Notification URL")]
         public string NotificationUrl
         {
             get; set;
@@ -89,7 +89,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Display(Name = "Require Refund Email")]
+        [DisplayName("Require Refund Email")]
         public RequiresRefundEmail RequiresRefundEmail
         {
             get; set;

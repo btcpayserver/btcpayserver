@@ -24,24 +24,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Fast", "Fast")]
-        [Trait("Altcoins", "Altcoins")]
-        public void LoadSubChainsAlways()
-        {
-            var config = new ConfigurationRoot(new List<IConfigurationProvider>()
-            {
-                new MemoryConfigurationProvider(new MemoryConfigurationSource()
-                {
-                    InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt20"),}
-                })
-            });
-
-            var networkProvider = config.ConfigureNetworkProvider();
-            Assert.NotNull(networkProvider.GetNetwork("ETH"));
-            Assert.NotNull(networkProvider.GetNetwork("USDT20"));
-        }
-
-        [Fact]
         [Trait("Altcoins", "Altcoins")]
         public async Task CanUseEthereum()
         {

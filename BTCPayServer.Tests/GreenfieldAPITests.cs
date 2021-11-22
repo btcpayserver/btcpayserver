@@ -1983,50 +1983,6 @@ namespace BTCPayServer.Tests
                     new[] { TransactionStatus.Confirmed }), data => data.TransactionHash == txdata.TransactionHash);
 
         }
-
-        [Theory(Timeout = TestTimeout)]
-        [InlineData("DE-de")]
-        [InlineData("")]
-        [Trait("Fast", "Fast")]
-        public void NumericJsonConverterTests(string culture)
-        {
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
-            JsonReader Get(string val)
-            {
-                return new JsonTextReader(new StringReader(val));
-            }
-
-            var jsonConverter = new NumericStringJsonConverter();
-            Assert.True(jsonConverter.CanConvert(typeof(decimal)));
-            Assert.True(jsonConverter.CanConvert(typeof(decimal?)));
-            Assert.True(jsonConverter.CanConvert(typeof(double)));
-            Assert.True(jsonConverter.CanConvert(typeof(double?)));
-            Assert.False(jsonConverter.CanConvert(typeof(float)));
-            Assert.False(jsonConverter.CanConvert(typeof(string)));
-
-            var numberJson = "1";
-            var numberDecimalJson = "1.2";
-            var stringJson = "\"1.2\"";
-            Assert.Equal(1m, jsonConverter.ReadJson(Get(numberJson), typeof(decimal), null, null));
-            Assert.Equal(1.2m, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(decimal), null, null));
-            Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(decimal?), null, null));
-            Assert.Equal((double)1.0, jsonConverter.ReadJson(Get(numberJson), typeof(double), null, null));
-            Assert.Equal((double)1.2, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(double), null, null));
-            Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(double?), null, null));
-            Assert.Throws<JsonSerializationException>(() =>
-            {
-                jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
-            });
-            Assert.Throws<JsonSerializationException>(() =>
-         {
-             jsonConverter.ReadJson(Get("null"), typeof(double), null, null);
-         });
-            Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal), null, null));
-            Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null));
-            Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));
-            Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double?), null, null));
-        }
-        
         
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Lightning", "Lightning")]

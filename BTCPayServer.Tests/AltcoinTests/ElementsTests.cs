@@ -47,23 +47,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Fast", "Fast")]
-        public void LoadSubChainsAlways()
-        {
-            var config = new ConfigurationRoot(new List<IConfigurationProvider>()
-            {
-                new MemoryConfigurationProvider(new MemoryConfigurationSource()
-                {
-                    InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt"),}
-                })
-            });
-            var networkProvider = config.ConfigureNetworkProvider();
-            Assert.NotNull(networkProvider.GetNetwork("LBTC"));
-            Assert.NotNull(networkProvider.GetNetwork("USDT"));
-        }
-
-
-        [Fact]
         [Trait("Altcoins", "Altcoins")]
         public async Task ElementsAssetsAreHandledCorrectly()
         {

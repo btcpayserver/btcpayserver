@@ -13,6 +13,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PSBTTests : UnitTestBase
     {
         public PSBTTests(ITestOutputHelper helper) : base(helper)

@@ -10,6 +10,7 @@ using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class POSTests : UnitTestBase
     {
         public POSTests(ITestOutputHelper helper) : base(helper)

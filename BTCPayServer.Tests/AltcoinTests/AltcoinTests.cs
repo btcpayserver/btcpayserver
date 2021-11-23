@@ -30,6 +30,7 @@ using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettin
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class AltcoinTests : UnitTestBase
     {
         public const int TestTimeout = 60_000;

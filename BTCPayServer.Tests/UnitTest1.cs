@@ -74,6 +74,7 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class UnitTest1 : UnitTestBase
     {
         public const int LongRunningTestTimeout = 60_000; // 60s

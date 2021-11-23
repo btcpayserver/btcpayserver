@@ -33,6 +33,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PayJoinTests : UnitTestBase
     {
         public const int TestTimeout = 60_000;

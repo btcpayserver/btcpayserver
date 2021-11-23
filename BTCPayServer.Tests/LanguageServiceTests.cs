@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class LanguageServiceTests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;

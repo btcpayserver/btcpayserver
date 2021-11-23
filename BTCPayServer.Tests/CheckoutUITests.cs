@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 namespace BTCPayServer.Tests
 {
     [Trait("Selenium", "Selenium")]
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class CheckoutUITests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;

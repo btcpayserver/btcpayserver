@@ -43,6 +43,7 @@ using CreateInvoiceRequest = BTCPayServer.Lightning.Charge.CreateInvoiceRequest;
 namespace BTCPayServer.Tests
 {
     [Trait("Selenium", "Selenium")]
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class ChromeTests : UnitTestBase
     {
         private const int TestTimeout = TestUtils.TestTimeout;

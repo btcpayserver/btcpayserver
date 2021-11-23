@@ -31,6 +31,7 @@ using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class GreenfieldAPITests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;

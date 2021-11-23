@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "Fast=Fast" && ./can-build.sh
+            cd .circleci && ./run-tests.sh "Fast=Fast|ThirdParty=ThirdParty" && ./can-build.sh
   selenium_tests:
     machine:
         enabled: true
@@ -24,18 +24,6 @@ jobs:
       - run:
           command: |
             cd .circleci && ./run-tests.sh "Integration=Integration"
-  external_tests:
-    machine:
-        enabled: true
-    steps:
-      - checkout
-      - run:
-          command: |
-            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
-                cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
-            else
-              echo "Skipping running ExternalIntegration tests outside of context of main user and repository that have access to secrets"
-            fi
   trigger_docs_build:
     machine:
         enabled: true
@@ -127,10 +115,6 @@ workflows:
       - fast_tests
       - selenium_tests
       - integration_tests
-      - external_tests:
-          filters:
-            branches:
-                only: master
   publish:
     jobs:
       - trigger_docs_build:

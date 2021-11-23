@@ -18,13 +18,13 @@ namespace BTCPayServer.Tests
         /// <summary>
         /// Download transifex transactions and put them in BTCPayServer\wwwroot\locales
         /// </summary>
+        [FactWithSecret("TransifexAPIToken")]
         [Trait("Utilities", "Utilities")]
-        [Fact]
         public async Task PullTransifexTranslations()
         {
             // 1. Generate an API Token on https://www.transifex.com/user/settings/api/
             // 2. Run "dotnet user-secrets set TransifexAPIToken <youapitoken>"
-            var client = new TransifexClient(GetTransifexAPIToken());
+            var client = new TransifexClient(FactWithSecretAttribute.GetFromSecrets("TransifexAPIToken"));
             var json = await client.GetTransifexAsync("https://api.transifex.com/organizations/btcpayserver/projects/btcpayserver/resources/enjson/");
             var langs = new[] { "en" }.Concat(((JObject)json["stats"]).Properties().Select(n => n.Name)).ToArray();
 
@@ -73,16 +73,6 @@ namespace BTCPayServer.Tests
                 content = jobj.ToString(Newtonsoft.Json.Formatting.Indented);
                 File.WriteAllText(Path.Combine(langsDir, langFile), content);
             }).ToArray());
-        }
-
-        private static string GetTransifexAPIToken()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
-            var config = builder.Build();
-            var token = config["TransifexAPIToken"];
-            Assert.False(token == null, "TransifexAPIToken is not set.\n 1.Generate an API Token on https://www.transifex.com/user/settings/api/ \n 2.Run \"dotnet user-secrets set TransifexAPIToken <youapitoken>\"");
-            return token;
         }
     }
 

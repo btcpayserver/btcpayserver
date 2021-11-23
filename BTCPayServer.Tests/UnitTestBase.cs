@@ -14,6 +14,8 @@ namespace BTCPayServer.Tests
         {
             TestLogs = new XUnitLog(helper) { Name = "Tests" };
             TestLogProvider = new XUnitLogProvider(helper);
+            Logs.Tester = TestLogs;
+            Logs.LogProvider = TestLogProvider;
         }
         public ILog TestLogs
         {

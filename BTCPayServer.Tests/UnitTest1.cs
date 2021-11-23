@@ -45,10 +45,14 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
+using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Validation;
 using ExchangeSharp;
 using Fido2NetLib;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -138,12 +142,8 @@ namespace BTCPayServer.Tests
                 var sresp = Assert
                     .IsType<JsonResult>(await tester.PayTester.GetController<HomeController>(acc.UserId, acc.StoreId)
                         .Swagger()).Value.ToJson();
-
                 JObject swagger = JObject.Parse(sresp);
-                using HttpClient client = new HttpClient();
-                var resp = await client.GetAsync(
-                    "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json");
-                var schema = JSchema.Parse(await resp.Content.ReadAsStringAsync());
+                var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
                 IList<ValidationError> errors;
                 bool valid = swagger.IsValid(schema, out errors);
                 //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas. 
@@ -1263,51 +1263,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
                 //
             }
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanUseExchangeSpecificRate()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.PayTester.MockRates = false;
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                List<decimal> rates = new List<decimal>();
-                rates.Add(await CreateInvoice(tester, user, "coingecko"));
-                var bitflyer = await CreateInvoice(tester, user, "bitflyer", "JPY");
-                var bitflyer2 = await CreateInvoice(tester, user, "bitflyer", "JPY");
-                Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
-                rates.Add(bitflyer);
-
-                foreach (var rate in rates)
-                {
-                    Assert.Single(rates.Where(r => r == rate));
-                }
-            }
-        }
-
-        private static async Task<decimal> CreateInvoice(ServerTester tester, TestAccount user, string exchange,
-            string currency = "USD")
-        {
-            var storeController = user.GetController<StoresController>();
-            var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
-            vm.PreferredExchange = exchange;
-            await storeController.Rates(vm);
-            var invoice2 = await user.BitPay.CreateInvoiceAsync(
-                new Invoice()
-                {
-                    Price = 5000.0m,
-                    Currency = currency,
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-            return invoice2.CryptoInfo[0].Rate;
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2794,7 +2749,175 @@ namespace BTCPayServer.Tests
 
             }
         }
-        
-        
+
+        [Fact(Timeout = TestUtils.TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanConfigureStorage()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+
+
+                //Once we select a provider, redirect to its view
+                var localResult = Assert
+                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
+                    {
+                        Provider = StorageProvider.FileSystem
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), localResult.ActionName);
+                Assert.Equal(StorageProvider.FileSystem.ToString(), localResult.RouteValues["provider"]);
+
+
+                var AmazonS3result = Assert
+                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
+                    {
+                        Provider = StorageProvider.AmazonS3
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), AmazonS3result.ActionName);
+                Assert.Equal(StorageProvider.AmazonS3.ToString(), AmazonS3result.RouteValues["provider"]);
+
+                var GoogleResult = Assert
+                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
+                    {
+                        Provider = StorageProvider.GoogleCloudStorage
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), GoogleResult.ActionName);
+                Assert.Equal(StorageProvider.GoogleCloudStorage.ToString(), GoogleResult.RouteValues["provider"]);
+
+
+                var AzureResult = Assert
+                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
+                    {
+                        Provider = StorageProvider.AzureBlobStorage
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), AzureResult.ActionName);
+                Assert.Equal(StorageProvider.AzureBlobStorage.ToString(), AzureResult.RouteValues["provider"]);
+
+                //Cool, we get redirected to the config pages
+                //Let's configure this stuff
+
+                //Let's try and cheat and go to an invalid storage provider config
+                Assert.Equal(nameof(Storage), (Assert
+                    .IsType<RedirectToActionResult>(await controller.StorageProvider("I am not a real provider"))
+                    .ActionName));
+
+                //ok no more messing around, let's configure this shit. 
+                var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
+                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
+                    .Model);
+
+                //local file system does not need config, easy days!
+                Assert.IsType<ViewResult>(
+                    await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
+
+                //ok cool, let's see if this got set right
+                var shouldBeRedirectingToLocalStorageConfigPage =
+                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
+                Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
+                Assert.Equal(StorageProvider.FileSystem,
+                    shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
+
+
+                //if we tell the settings page to force, it should allow us to select a new provider
+                Assert.IsType<ChooseStorageViewModel>(Assert.IsType<ViewResult>(await controller.Storage(true)).Model);
+
+                //awesome, now let's see if the files result says we're all set up
+                var viewFilesViewModel =
+                    Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files()).Model);
+                Assert.True(viewFilesViewModel.StorageConfigured);
+                Assert.Empty(viewFilesViewModel.Files);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanUseLocalProviderFiles()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+
+                var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
+                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
+                    .Model);
+                Assert.IsType<ViewResult>(
+                    await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
+
+                var shouldBeRedirectingToLocalStorageConfigPage =
+                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
+                Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
+                Assert.Equal(StorageProvider.FileSystem,
+                    shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
+
+
+                await CanUploadRemoveFiles(controller);
+            }
+        }
+
+        internal static async Task CanUploadRemoveFiles(ServerController controller)
+        {
+            var fileContent = "content";
+            List<IFormFile> fileList = new List<IFormFile>();
+            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
+
+            var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
+            Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileIds"));
+            string[] uploadFileList = (string[])uploadFormFileResult.RouteValues["fileIds"];
+            var fileId = uploadFileList[0];
+            Assert.Equal("Files", uploadFormFileResult.ActionName);
+
+            //check if file was uploaded and saved in db
+            var viewFilesViewModel =
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
+
+            Assert.NotEmpty(viewFilesViewModel.Files);
+            Assert.True(viewFilesViewModel.DirectUrlByFiles.ContainsKey(fileId));
+            Assert.NotEmpty(viewFilesViewModel.DirectUrlByFiles[fileId]);
+
+
+            //verify file is available and the same
+            var net = new System.Net.WebClient();
+            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectUrlByFiles[fileId]));
+            Assert.Equal(fileContent, data);
+
+            //create a temporary link to file
+            var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
+                new ServerController.CreateTemporaryFileUrlViewModel()
+                {
+                    IsDownload = true,
+                    TimeAmount = 1,
+                    TimeType = ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes
+                }));
+            var statusMessageModel = controller.TempData.GetStatusMessageModel();
+            Assert.NotNull(statusMessageModel);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
+            var index = statusMessageModel.Html.IndexOf("target='_blank'>");
+            var url = statusMessageModel.Html.Substring(index)
+                .Replace("</a>", string.Empty)
+                .Replace("target='_blank'>", string.Empty);
+            //verify tmpfile is available and the same
+            data = await net.DownloadStringTaskAsync(new Uri(url));
+            Assert.Equal(fileContent, data);
+
+
+            //delete file
+            Assert.IsType<RedirectToActionResult>(await controller.DeleteFile(fileId));
+            statusMessageModel = controller.TempData.GetStatusMessageModel();
+            Assert.NotNull(statusMessageModel);
+
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
+
+            //attempt to fetch deleted file
+            viewFilesViewModel =
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
+            Assert.Null(viewFilesViewModel.DirectUrlByFiles);
+        }
     }
 }

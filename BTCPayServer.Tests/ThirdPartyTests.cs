@@ -34,7 +34,7 @@ namespace BTCPayServer.Tests
 
         }
 
-        [Fact(Timeout = TestUtils.TestTimeout)]
+        [FactWithSecret("AzureBlobStorageConnectionString")]
         public async Task CanUseAzureBlobStorage()
         {
             using (var tester = ServerTester.Create())
@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
                     .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                     .Model);
 
-                azureBlobStorageConfiguration.ConnectionString = GetFromSecrets("AzureBlobStorageConnectionString");
+                azureBlobStorageConfiguration.ConnectionString = FactWithSecretAttribute.GetFromSecrets("AzureBlobStorageConnectionString");
                 azureBlobStorageConfiguration.ContainerName = "testscontainer";
                 Assert.IsType<ViewResult>(
                     await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
@@ -71,19 +71,6 @@ namespace BTCPayServer.Tests
 
                 await UnitTest1.CanUploadRemoveFiles(controller);
             }
-        }
-
-        private static string GetFromSecrets(string key)
-        {
-            var connStr = Environment.GetEnvironmentVariable($"TESTS_{key}");
-            if (!string.IsNullOrEmpty(connStr) && connStr != "none")
-                return connStr;
-            var builder = new ConfigurationBuilder();
-            builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
-            var config = builder.Build();
-            var token = config[key];
-            Assert.False(token == null, $"{key} is not set.\n Run \"dotnet user-secrets set {key} <value>\"");
-            return token;
         }
 
         [Fact]

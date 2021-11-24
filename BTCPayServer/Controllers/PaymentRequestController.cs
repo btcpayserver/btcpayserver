@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -355,11 +354,11 @@ namespace BTCPayServer.Controllers
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
                 model.Archived = !model.Archived;
-                result = await EditPaymentRequest(id, model);
+                await EditPaymentRequest(id, model);
                 TempData[WellKnownTempData.SuccessMessage] = model.Archived
                     ? "The payment request has been archived and will no longer appear in the  payment request list by default again."
                     : "The payment request has been unarchived and will appear in the  payment request list by default.";
-                return result;
+                return RedirectToAction("GetPaymentRequests");
             }
 
             return NotFound();

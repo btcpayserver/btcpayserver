@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -98,7 +99,15 @@ namespace BTCPayServer.Tests
         internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
             var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
-            var el = Driver.FindElement(By.CssSelector(className)) ?? Driver.WaitForElement(By.CssSelector(className));
+            IWebElement el;
+            try
+            {
+                el = Driver.FindElement(By.CssSelector(className));
+            }
+            catch (NoSuchElementException)
+            {
+                el = Driver.WaitForElement(By.CssSelector(className));
+            }
             if (el is null)
                 throw new NoSuchElementException($"Unable to find {className}");
             return el;

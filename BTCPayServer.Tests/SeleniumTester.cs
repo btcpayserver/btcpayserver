@@ -242,7 +242,7 @@ namespace BTCPayServer.Tests
             else
             {
                 Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
-                Driver.FindElement(By.Id("ConnectionString")).Clear();
+                Driver.WaitForElement(By.Id("ConnectionString")).Clear();
                 Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
                 if (test)
                 {

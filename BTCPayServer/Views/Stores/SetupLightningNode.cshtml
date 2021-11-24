@@ -18,167 +18,175 @@
 
 @section PageHeadContent {
     <style>
-    header .icon-warning {
-        flex: 0 0 24px;
-        height: 24px;
-        align-self: center;
-        margin-right: 2rem;
-        color: var(--btcpay-warning);
-    }
-    #save { min-width: 7rem; }
-    #InternalSetup, #CustomSetup, #LightningNodeType-Internal, #LightningNodeType-Custom { display: none; }
-    #LightningNodeType-Internal:checked + * + * + * + #InternalSetup,
-    #LightningNodeType-Custom:checked + * + *+ #CustomSetup { display: block; }
-    #LightningNodeType-Internal:checked + label, #LightningNodeType-Custom:checked + label {
-        color: var(--btcpay-white);
-        background: var(--btcpay-primary);
-    }
-    label[for="LightningNodeType-Internal"], label[for="LightningNodeType-Custom"] {
-        display: inline-block;
-        padding: .75rem 2rem;
-        color: var(--btcpay-primary);
-        font-weight:  var(--btcpay-font-weight-semibold);
-        border-radius: 1.5rem;
-        cursor: pointer;
-    }
-    #LightningNodeType-Internal[disabled]:checked + label[for="LightningNodeType-Internal"] {
-        background: var(--btcpay-secondary);
-        color: var(--btcpay-white);
-        opacity: .5;
-    }
-    #LightningNodeType-Internal[disabled] + label[for="LightningNodeType-Internal"] {
-        color: var(--btcpay-secondary);
-        opacity: .5;
-    }
-    #CustomSetup ul {
-        list-style: none;
-        padding-left: 0;
-    }
-    #CustomSetup ul li code,
-    #CustomSetup pre {
-        display: block;
-        color: var(--btcpay-code-text);
-        background: var(--btcpay-bg-tile);
-        margin: .25rem 0;
-        padding: .75rem 1rem;
-        border-radius: 4px;
-    }
-</style>
+        header .icon-warning {
+            flex: 0 0 24px;
+            height: 24px;
+            align-self: center;
+            margin-right: 2rem;
+            color: var(--btcpay-warning);
+        }
+        #save { min-width: 7rem; }
+        #LightningNodeTypeTablist input { display: none; }
+        #LightningNodeTypeTablist input:checked + label {
+            color: var(--btcpay-white);
+            background: var(--btcpay-primary);
+        }
+        #LightningNodeTypeTablist label {
+            display: inline-block;
+            padding: .75rem 2rem;
+            color: var(--btcpay-primary);
+            font-weight:  var(--btcpay-font-weight-semibold);
+            border-radius: 1.5rem;
+            cursor: pointer;
+        }
+        #LightningNodeTypeTablist input[disabled]:checked + label {
+            background: var(--btcpay-secondary);
+            color: var(--btcpay-white);
+            opacity: .5;
+        }
+        #LightningNodeTypeTablist input[disabled] + label {
+            color: var(--btcpay-secondary);
+            opacity: .5;
+        }
+        #LightningNodeTypeTabs ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        #LightningNodeTypeTabs ul li code,
+        #LightningNodeTypeTabs pre {
+            display: block;
+            color: var(--btcpay-code-text);
+            background: var(--btcpay-bg-tile);
+            margin: .25rem 0;
+            padding: .75rem 1rem;
+            border-radius: 4px;
+        }
+    </style>
 }
 
 <form method="post" class="mt-n2 text-center">
-    <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" disabled="@(!Model.CanUseInternalNode)">
-    <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
-    <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom">
-    <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
-    <div id="InternalSetup" class="text-start">
-        @if (Model.CanUseInternalNode)
-        {
-            <p class="my-4">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
-        }
-        else
-        {
-            <p class="my-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
-        }
+    <div id="LightningNodeTypeTablist" class="nav nav-pills align-items-center justify-content-center mb-3" role="tablist">
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" disabled="@(!Model.CanUseInternalNode)">
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
+        
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")">
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
+
+        <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>
     </div>
-    <vc:ui-extension-point location="ln-payment-method-setup" model="@Model" />
-    <div id="CustomSetup" class="text-start">
-        <label asp-for="ConnectionString" class="form-label mt-4">Connection configuration for your custom Lightning node:</label>
-        <div class="d-sm-flex">
-            <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
-            <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
+    
+    <div id="LightningNodeTypeTabs" class="tab-content text-start">
+        <div id="InternalSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Internal ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.Internal">
+            @if (Model.CanUseInternalNode)
+            {
+                <p class="mb-4">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
+            }
+            else
+            {
+                <p class="mb-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
+            }
         </div>
-        <span asp-validation-for="ConnectionString" class="text-danger"></span>
-        <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model" />
-        <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
-        <div class="accordion" id="CustomNodeSupport">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="CustomNodeCLightningHeader">
-                    <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeCLightningContent" aria-controls="CustomNodeCLightningContent" aria-expanded="false">
-                        <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
-                        <vc:icon symbol="caret-down"/>
-                    </button>
-                </h2>
-                <div id="CustomNodeCLightningContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeCLightningHeader" data-bs-parent="#CustomNodeSupport">
-                    <div class="accordion-body">
-                        <ul class="mb-0">
-                            <li>
-                                <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
-                            </li>
-                            <li>
-                                <code><b>type=</b>clightning;<b>server=</b>tcp://1.1.1.1:27743/</code>
-                            </li>
-                        </ul>
+        <div id="CustomSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Custom ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.Custom">
+            <div class="form-group">
+                <label asp-for="ConnectionString" class="form-label">Connection configuration for your custom Lightning node:</label>
+                <div class="d-sm-flex">
+                    <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
+                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
+                </div>
+                <span asp-validation-for="ConnectionString" class="text-danger"></span>
+            </div>
+            <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model"/>
+            <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
+            <div class="accordion" id="CustomNodeSupport">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeCLightningHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeCLightningContent" aria-controls="CustomNodeCLightningContent" aria-expanded="false">
+                            <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </h2>
+                    <div id="CustomNodeCLightningContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeCLightningHeader" data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
+                                </li>
+                                <li>
+                                    <code><b>type=</b>clightning;<b>server=</b>tcp://1.1.1.1:27743/</code>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="CustomNodeChargeHeader">
-                    <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeChargeContent" aria-controls="CustomNodeChargeContent" aria-expanded="false">
-                        <span><strong>Lightning Charge</strong> via HTTPS</span>
-                        <vc:icon symbol="caret-down"/>
-                    </button>
-                </h2>
-                <div id="CustomNodeChargeContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeChargeHeader" data-bs-parent="#CustomNodeSupport">
-                    <div class="accordion-body">
-                        <ul class="mb-0">
-                            <li>
-                                <code><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</code>
-                            </li>
-                        </ul>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeChargeHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeChargeContent" aria-controls="CustomNodeChargeContent" aria-expanded="false">
+                            <span><strong>Lightning Charge</strong> via HTTPS</span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </h2>
+                    <div id="CustomNodeChargeContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeChargeHeader" data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</code>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="CustomNodeEclairHeader">
-                    <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeEclairContent" aria-controls="CustomNodeEclairContent" aria-expanded="false">
-                        <span><strong>Eclair</strong> via HTTPS</span>
-                        <vc:icon symbol="caret-down"/>
-                    </button>
-                </h2>
-                <div id="CustomNodeEclairContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeEclairHeader" data-bs-parent="#CustomNodeSupport">
-                    <div class="accordion-body">
-                        <ul class="mb-0">
-                            <li>
-                                <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
-                            </li>
-                        </ul>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeEclairHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeEclairContent" aria-controls="CustomNodeEclairContent" aria-expanded="false">
+                            <span><strong>Eclair</strong> via HTTPS</span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </h2>
+                    <div id="CustomNodeEclairContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeEclairHeader" data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="CustomNodeLNDHeader">
-                    <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDContent" aria-controls="CustomNodeLNDContent" aria-expanded="false">
-                        <span><strong>LND</strong> via the REST proxy</span>
-                        <vc:icon symbol="caret-down"/>
-                    </button>
-                </h2>
-                <div id="CustomNodeLNDContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDHeader" data-bs-parent="#CustomNodeSupport">
-                    <div class="accordion-body">
-                        <ul class="pb-3">
-                            <li>
-                                <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
-                            </li>
-                            <li>
-                                <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
-                            </li>
-                        </ul>
-                        <p class="mt-2">
-                            For the macaroon options you need to provide the <code>admin.macaroon</code>.<br/>
-                            The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
-                        </p>
-                        <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
-                        <pre class="mb-4">xxd -plain /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
-                        <p class="mb-2">
-                            You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.<br/>
-                            The <code>certthumbprint</code> can be obtained using this command:
-                        </p>
-                        <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
-                        <p class="mb-0">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeLNDHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDContent" aria-controls="CustomNodeLNDContent" aria-expanded="false">
+                            <span><strong>LND</strong> via the REST proxy</span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </h2>
+                    <div id="CustomNodeLNDContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDHeader" data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-3">
+                                <li>
+                                    <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
+                                </li>
+                                <li>
+                                    <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2">
+                                For the macaroon options you need to provide the <code>admin.macaroon</code>.<br/>
+                                The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
+                            </p>
+                            <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
+                            <pre class="mb-4">xxd -plain /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
+                            <p class="mb-2">
+                                You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.<br/>
+                                The <code>certthumbprint</code> can be obtained using this command:
+                            </p>
+                            <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
+                            <p class="mb-0">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <vc:ui-extension-point location="ln-payment-method-setup-tab" model="@Model"/>
     </div>
 
     <div class="text-start mt-4">

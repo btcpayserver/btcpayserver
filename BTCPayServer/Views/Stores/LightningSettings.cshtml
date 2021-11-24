@@ -1,3 +1,4 @@
+@using BTCPayServer.Lightning
 @model LightningSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -21,10 +22,24 @@
                 </tr>
                 @if (Model.LightningNodeType != LightningNodeType.Internal)
                 {
-                    <tr>
-                        <th>Connection String</th>
-                        <td class="text-break">@Model.ConnectionString</td>
-                    </tr>
+                    if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
+                    {
+                        <tr>
+                            <th>Connection Type</th>
+                            <td>@typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())</td>
+                        </tr>
+                        <tr>
+                            <th>Base URI</th>
+                            <td>@cs.BaseUri</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <th>Connection String</th>
+                            <td>@Model.ConnectionString</td>
+                        </tr>
+                    }
                 }
                 </tbody>
             </table>

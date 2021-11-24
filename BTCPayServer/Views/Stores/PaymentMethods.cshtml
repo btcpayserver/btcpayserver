@@ -1,4 +1,6 @@
 @using System.Text.RegularExpressions
+@using BTCPayServer.Lightning
+@using BTCPayServer.Services
 @model PaymentMethodsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -120,8 +122,18 @@
                                 <strong class="me-3">@scheme.CryptoCode</strong>
                                 @if (isSetUp)
                                 {
-                                    <span class="smMaxWidth text-truncate text-secondary me-3">@scheme.Address</span>
-                                    <a class="text-secondary"
+                                    <span class="text-truncate text-secondary me-3" style="max-width:150px;">
+                                        @if (LightningConnectionString.TryParse(scheme.Address, out var cs))
+                                        {
+                                            <span>@typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())</span>
+                                            <span>@cs.BaseUri.Host</span>
+                                        }
+                                        else
+                                        {
+                                            @scheme.Address
+                                        }
+                                    </span>
+                                    <a class="text-secondary me-3"
                                        asp-controller="PublicLightningNodeInfo"
                                        asp-action="ShowLightningNodeInfo"
                                        asp-route-cryptoCode="@scheme.CryptoCode"

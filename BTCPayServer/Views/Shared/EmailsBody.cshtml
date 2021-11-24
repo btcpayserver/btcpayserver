@@ -83,23 +83,18 @@
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </div>
     </div>
-
-    <hr class="mt-5 mb-4" />
-
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
-                <p class="form-text text-muted">
-                    If you want to test your settings, enter an email address here and click "Send Test Email".
-                    <strong>Your settings won't be saved</strong>, only a test email will be sent.
-                    <br />
-                    After a successful test, you can click "Save".
+                <h4 class="mt-5 mb-3">Testing</h4>
+                <p>
+                    To test your settings, enter an email address below.
                 </p>
                 <label asp-for="TestEmail" class="form-label"></label>
                 <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-secondary" name="command" value="Test">Send Test Email</button>
+            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test">Send Test Email</button>
         </div>
     </div>
 </form>

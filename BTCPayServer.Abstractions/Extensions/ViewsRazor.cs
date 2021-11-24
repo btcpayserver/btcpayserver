@@ -63,7 +63,10 @@ namespace BTCPayServer.Abstractions.Extensions
         
         public static string ToTimeAgo(this DateTimeOffset date)
         {
-            var formatted = (DateTimeOffset.UtcNow - date).TimeString() + " ago";
+            var diff = DateTimeOffset.UtcNow - date;
+            var formatted = diff.Seconds > 0 
+                ? $"{diff.TimeString()} ago"
+                : $"in {diff.Negate().TimeString()}";
             return formatted;
         }
 

@@ -26,8 +26,10 @@ namespace BTCPayServer.HostedServices
         }
         private readonly SettingsRepository _SettingsRepository;
         readonly RateProviderFactory _RateProviderFactory;
+
         public RatesHostedService(SettingsRepository repo,
-                                  RateProviderFactory rateProviderFactory)
+                                  RateProviderFactory rateProviderFactory,
+                                  Logs logs) : base(logs)
         {
             this._SettingsRepository = repo;
             _RateProviderFactory = rateProviderFactory;

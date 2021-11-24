@@ -30,13 +30,12 @@ using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettin
 
 namespace BTCPayServer.Tests
 {
-    public class AltcoinTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class AltcoinTests : UnitTestBase
     {
         public const int TestTimeout = 60_000;
-        public AltcoinTests(ITestOutputHelper helper)
+        public AltcoinTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact]
@@ -45,7 +44,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetupWallet()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 tester.ActivateLightning();
@@ -240,7 +239,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateInvoiceWithSpecificPaymentMethods()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 tester.ActivateLTC();
@@ -272,7 +271,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanHaveLTCOnlyStore()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();
@@ -343,7 +342,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanCreateRefunds()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLTC();
                 await s.StartAsync();
@@ -417,7 +416,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePaymentMethodDropdown()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLTC();
                 s.Server.ActivateLightning();
@@ -464,7 +463,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanPayWithTwoCurrencies()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();
@@ -532,7 +531,7 @@ namespace BTCPayServer.Tests
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                 firstPayment = Money.Coins(0.04m);
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
-                Logs.Tester.LogInformation("First payment sent to " + invoiceAddress);
+                TestLogs.LogInformation("First payment sent to " + invoiceAddress);
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -546,7 +545,7 @@ namespace BTCPayServer.Tests
                 var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due, CultureInfo.InvariantCulture));
                 cashCow.Generate(4); // LTC is not worth a lot, so just to make sure we have money...
                 cashCow.SendToAddress(invoiceAddress, secondPayment);
-                Logs.Tester.LogInformation("Second payment sent to " + invoiceAddress);
+                TestLogs.LogInformation("Second payment sent to " + invoiceAddress);
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -603,7 +602,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanUsePoSApp()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();
@@ -697,7 +696,7 @@ donation:
                         ExpectedThousandSeparator: ",", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
                 })
                 {
-                    Logs.Tester.LogInformation($"Testing for {test.Code}");
+                    TestLogs.LogInformation($"Testing for {test.Code}");
                     vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                     vmpos.Title = "hello";

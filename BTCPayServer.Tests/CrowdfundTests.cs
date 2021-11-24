@@ -15,19 +15,17 @@ using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests
 {
-    public class CrowdfundTests
+    public class CrowdfundTests : UnitTestBase
     {
-        public CrowdfundTests(ITestOutputHelper helper)
+        public CrowdfundTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -67,7 +65,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanContributeOnlyWhenAllowed()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -159,7 +157,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanComputeCrowdfundModel()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -174,7 +172,7 @@ namespace BTCPayServer.Tests
                 var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model)
                     .Apps[0].Id;
 
-                Logs.Tester.LogInformation("We create an invoice with a hardcap");
+                TestLogs.LogInformation("We create an invoice with a hardcap");
                 var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(apps.UpdateCrowdfund(appId).Result).Model);
                 crowdfundViewModel.Enabled = true;
@@ -201,8 +199,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.ProgressPercentage);
 
 
-                Logs.Tester.LogInformation("Unpaid invoices should show as pending contribution because it is hardcap");
-                Logs.Tester.LogInformation("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
+                TestLogs.LogInformation("Unpaid invoices should show as pending contribution because it is hardcap");
+                TestLogs.LogInformation("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
@@ -223,7 +221,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.ProgressPercentage);
                 Assert.Equal(1m, model.Info.PendingProgressPercentage);
 
-                Logs.Tester.LogInformation("Let's check current amount change once payment is confirmed");
+                TestLogs.LogInformation("Let's check current amount change once payment is confirmed");
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
                 tester.ExplorerNode.SendToAddress(invoiceAddress, invoice.BtcDue);
                 tester.ExplorerNode.Generate(1); // By default invoice confirmed at 1 block
@@ -235,7 +233,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal(0m, model.Info.CurrentPendingAmount);
                 });
 
-                Logs.Tester.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
+                TestLogs.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
                 var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
                 Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
                 Assert.Contains(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
@@ -243,7 +241,7 @@ namespace BTCPayServer.Tests
                 crowdfundViewModel.UseAllStoreInvoices = false;
                 Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel, "save").Result);
 
-                Logs.Tester.LogInformation("Because UseAllStoreInvoices is false, let's make sure the invoice is not tagged");
+                TestLogs.LogInformation("Because UseAllStoreInvoices is false, let's make sure the invoice is not tagged");
                 invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
@@ -257,7 +255,7 @@ namespace BTCPayServer.Tests
                 invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
                 Assert.DoesNotContain(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
 
-                Logs.Tester.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");
+                TestLogs.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");
                 crowdfundViewModel.EnforceTargetAmount = false;
                 crowdfundViewModel.UseAllStoreInvoices = true;
                 Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel, "save").Result);

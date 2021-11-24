@@ -13,18 +13,17 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class PSBTTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class PSBTTests : UnitTestBase
     {
-        public PSBTTests(ITestOutputHelper helper)
+        public PSBTTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanPlayWithPSBT()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();

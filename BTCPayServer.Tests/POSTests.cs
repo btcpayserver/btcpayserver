@@ -10,19 +10,18 @@ using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests
 {
-    public class POSTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class POSTests : UnitTestBase
     {
-        public POSTests(ITestOutputHelper helper)
+        public POSTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUsePoSApp1()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();

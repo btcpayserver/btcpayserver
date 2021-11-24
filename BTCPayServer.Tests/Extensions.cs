@@ -158,7 +158,6 @@ namespace BTCPayServer.Tests
 
             if (value != element.Selected)
             {
-                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
                 driver.SetCheckbox(selector, value);
             }
         }

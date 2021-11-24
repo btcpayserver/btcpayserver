@@ -29,13 +29,16 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
+        public Logs Logs { get; }
+
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
-            BTCPayNetworkProvider networks, EventAggregator eventAggregator)
+            BTCPayNetworkProvider networks, EventAggregator eventAggregator, Logs logs)
         {
+            Logs = logs;
             _applicationDbContextFactory = contextFactory;
             _btcPayNetworkProvider = networks;
             _eventAggregator = eventAggregator;

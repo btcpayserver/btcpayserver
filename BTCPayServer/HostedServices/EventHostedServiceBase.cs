@@ -12,14 +12,18 @@ namespace BTCPayServer.HostedServices
     public class EventHostedServiceBase : IHostedService
     {
         private readonly EventAggregator _EventAggregator;
+
+        public Logs Logs { get; }
+
         public EventAggregator EventAggregator => _EventAggregator;
 
         private List<IEventAggregatorSubscription> _Subscriptions;
         private CancellationTokenSource _Cts;
         public CancellationToken CancellationToken => _Cts.Token;
-        public EventHostedServiceBase(EventAggregator eventAggregator)
+        public EventHostedServiceBase(EventAggregator eventAggregator, Logs logs)
         {
             _EventAggregator = eventAggregator;
+            Logs = logs;
         }
 
         readonly Channel<object> _Events = Channel.CreateUnbounded<object>();

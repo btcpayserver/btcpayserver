@@ -43,20 +43,19 @@ using CreateInvoiceRequest = BTCPayServer.Lightning.Charge.CreateInvoiceRequest;
 namespace BTCPayServer.Tests
 {
     [Trait("Selenium", "Selenium")]
-    public class ChromeTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class ChromeTests : UnitTestBase
     {
         private const int TestTimeout = TestUtils.TestTimeout;
 
-        public ChromeTests(ITestOutputHelper helper)
+        public ChromeTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanNavigateServerSettings()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
@@ -65,7 +64,7 @@ namespace BTCPayServer.Tests
                 s.ClickOnAllSideMenus();
                 s.Driver.FindElement(By.LinkText("Services")).Click();
 
-                Logs.Tester.LogInformation("Let's check if we can access the logs");
+                TestLogs.LogInformation("Let's check if we can access the logs");
                 s.Driver.FindElement(By.LinkText("Logs")).Click();
                 s.Driver.FindElement(By.PartialLinkText(".log")).Click();
                 Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
@@ -77,7 +76,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLndSeedBackup()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLightning();
                 await s.StartAsync();
@@ -86,7 +85,7 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
                 s.Driver.FindElement(By.LinkText("Services")).Click();
 
-                Logs.Tester.LogInformation("Let's if we can access LND's seed");
+                TestLogs.LogInformation("Let's if we can access LND's seed");
                 Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
                 s.Driver.FindElement(By.Id("details")).Click();
@@ -109,7 +108,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanChangeUserMail()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
 
@@ -147,7 +146,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task NewUserLogin()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 //Register & Log Out
@@ -232,7 +231,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 var settings = s.Server.PayTester.GetService<SettingsRepository>();
@@ -289,7 +288,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanSetupEmailServer()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(isAdmin: true);
@@ -310,7 +309,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseDynamicDns()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(isAdmin: true);
@@ -362,7 +361,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLightning();
                 await s.StartAsync();
@@ -470,7 +469,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUsePairing()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
@@ -515,7 +514,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser();
@@ -555,7 +554,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateCrowdfundingApp()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser();
@@ -582,7 +581,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreatePayRequest()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser();
@@ -624,7 +623,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCoinSelection()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
@@ -686,14 +685,14 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseWebhooks()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
                 var (storeName, storeId) = s.CreateNewStore();
                 s.GoToStore(storeId, StoreNavPages.Webhooks);
 
-                Logs.Tester.LogInformation("Let's create two webhooks");
+                TestLogs.LogInformation("Let's create two webhooks");
                 for (var i = 0; i < 2; i++)
                 {
                     s.Driver.FindElement(By.Id("CreateWebhook")).Click();
@@ -704,7 +703,7 @@ namespace BTCPayServer.Tests
                     s.Driver.FindElement(By.Name("add")).Click();
                 }
 
-                Logs.Tester.LogInformation("Let's delete one of them");
+                TestLogs.LogInformation("Let's delete one of them");
                 var deletes = s.Driver.FindElements(By.LinkText("Delete"));
                 Assert.Equal(2, deletes.Count);
                 deletes[0].Click();
@@ -714,7 +713,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(deletes);
                 s.FindAlertMessage();
 
-                Logs.Tester.LogInformation("Let's try to update one of them");
+                TestLogs.LogInformation("Let's try to update one of them");
                 s.Driver.FindElement(By.LinkText("Modify")).Click();
 
                 using FakeServer server = new FakeServer();
@@ -744,7 +743,7 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
                 Assert.Contains(server.ServerUri.AbsoluteUri, s.Driver.PageSource);
 
-                Logs.Tester.LogInformation("Let's see if we can generate an event");
+                TestLogs.LogInformation("Let's see if we can generate an event");
                 s.GoToStore(storeId);
                 s.AddDerivationScheme();
                 s.CreateInvoice(storeName);
@@ -758,7 +757,7 @@ namespace BTCPayServer.Tests
                 request.Response.StatusCode = 200;
                 server.Done();
 
-                Logs.Tester.LogInformation("Let's make a failed event");
+                TestLogs.LogInformation("Let's make a failed event");
                 s.CreateInvoice(storeName);
                 request = await server.GetNextRequest();
                 request.Response.StatusCode = 404;
@@ -779,7 +778,7 @@ namespace BTCPayServer.Tests
                 request.Response.StatusCode = 404;
                 server.Done();
 
-                Logs.Tester.LogInformation("Can we browse the json content?");
+                TestLogs.LogInformation("Can we browse the json content?");
                 CanBrowseContent(s);
 
                 s.GoToInvoices();
@@ -793,7 +792,7 @@ namespace BTCPayServer.Tests
                 request.Response.StatusCode = 404;
                 server.Done();
 
-                Logs.Tester.LogInformation("Let's see if we can delete store with some webhooks inside");
+                TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
                 s.GoToStore(storeId, StoreNavPages.GeneralSettings);
                 s.Driver.FindElement(By.Id("delete-store")).Click();
                 s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
@@ -804,7 +803,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanImportMnemonic()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
@@ -825,7 +824,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
@@ -992,7 +991,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanImportWallet()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
@@ -1014,7 +1013,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePullPaymentsViaUI()
         {
-            using var s = SeleniumTester.Create();
+            using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             s.RegisterNewUser(true);
@@ -1258,7 +1257,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSPrint()
         {
-            using var s = SeleniumTester.Create();
+            using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
 
@@ -1302,7 +1301,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNURL()
         {
-            using var s = SeleniumTester.Create();
+            using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -1493,7 +1492,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNAddress()
         {
-            using var s = SeleniumTester.Create();
+            using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();

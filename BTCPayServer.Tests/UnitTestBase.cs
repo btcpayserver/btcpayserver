@@ -14,8 +14,8 @@ namespace BTCPayServer.Tests
         {
             TestLogs = new XUnitLog(helper) { Name = "Tests" };
             TestLogProvider = new XUnitLogProvider(helper);
-            Logs.Tester = TestLogs;
-            Logs.LogProvider = TestLogProvider;
+            BTCPayLogs = new BTCPayServer.Logging.Logs();
+            BTCPayLogs.Configure(new BTCPayServer.Logging.FuncLoggerFactory((n) => new XUnitLog(helper) { Name = n }));
         }
         public ILog TestLogs
         {
@@ -25,14 +25,15 @@ namespace BTCPayServer.Tests
         {
             get;
         }
+        public BTCPayServer.Logging.Logs BTCPayLogs { get; }
 
         public ServerTester CreateServerTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
-            return new ServerTester(scope, newDb);
+            return new ServerTester(scope, newDb, TestLogs, TestLogProvider);
         }
         public SeleniumTester CreateSeleniumTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
-            return new SeleniumTester() { Server = new ServerTester(scope, newDb) };
+            return new SeleniumTester() { Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider) };
         }
     }
 }

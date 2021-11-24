@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
@@ -21,8 +22,8 @@ namespace BTCPayServer.HostedServices
         private readonly EventAggregator _eventAggregator;
         private readonly WalletRepository _walletRepository;
 
-        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository) :
-            base(eventAggregator)
+        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+            base(eventAggregator, logs)
         {
             _eventAggregator = eventAggregator;
             _walletRepository = walletRepository;

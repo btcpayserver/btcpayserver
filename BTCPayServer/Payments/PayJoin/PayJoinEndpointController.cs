@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -93,6 +94,8 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly StoreRepository _storeRepository;
         private readonly PaymentService _paymentService;
 
+        public Logs Logs { get; }
+
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
             BTCPayWalletProvider btcPayWalletProvider,
@@ -103,7 +106,8 @@ namespace BTCPayServer.Payments.PayJoin
             BTCPayServerEnvironment env,
             WalletReceiveService walletReceiveService,
             StoreRepository storeRepository,
-            PaymentService paymentService)
+            PaymentService paymentService,
+            Logs logs)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
@@ -117,6 +121,7 @@ namespace BTCPayServer.Payments.PayJoin
             _walletReceiveService = walletReceiveService;
             _storeRepository = storeRepository;
             _paymentService = paymentService;
+            Logs = logs;
         }
 
         [HttpPost("")]
@@ -145,7 +150,7 @@ namespace BTCPayServer.Payments.PayJoin
                 });
             }
 
-            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
+            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository, Logs);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
                 ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);

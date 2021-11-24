@@ -56,7 +56,7 @@ namespace BTCPayServer.Configuration
             return (LogEventLevel)Enum.Parse(typeof(LogEventLevel), raw, true);
         }
 
-        public void LoadArgs(IConfiguration conf)
+        public void LoadArgs(IConfiguration conf, Logs Logs)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             

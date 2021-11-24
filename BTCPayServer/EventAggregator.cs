@@ -15,6 +15,10 @@ namespace BTCPayServer
     }
     public class EventAggregator : IDisposable
     {
+        public EventAggregator(Logs logs)
+        {
+            Logs = logs;
+        }
         class Subscription : IEventAggregatorSubscription
         {
             private readonly EventAggregator aggregator;
@@ -134,6 +138,8 @@ namespace BTCPayServer
         }
 
         readonly Dictionary<Type, Dictionary<Subscription, Action<object>>> _Subscriptions = new Dictionary<Type, Dictionary<Subscription, Action<object>>>();
+
+        public Logs Logs { get; }
 
         public IEventAggregatorSubscription Subscribe<T, TReturn>(Func<T, TReturn> subscription)
         {

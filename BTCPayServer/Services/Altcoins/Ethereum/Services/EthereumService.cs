@@ -43,8 +43,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             SettingsRepository settingsRepository,
             InvoiceRepository invoiceRepository,
             IConfiguration configuration,
-            PaymentService paymentService) : base(
-            eventAggregator)
+            PaymentService paymentService,
+            Logs logs) : base(eventAggregator, logs)
         {
             _httpClientFactory = httpClientFactory;
             _eventAggregator = eventAggregator;
@@ -189,7 +189,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 _chainHostedServiceCancellationTokenSources.AddOrReplace(ethereumLikeConfiguration.ChainId, cts);
                 _chainHostedServices.AddOrReplace(ethereumLikeConfiguration.ChainId,
                     new EthereumWatcher(ethereumLikeConfiguration.ChainId, ethereumLikeConfiguration,
-                        _btcPayNetworkProvider, _eventAggregator, _invoiceRepository, _paymentService));
+                        _btcPayNetworkProvider, _eventAggregator, _invoiceRepository, _paymentService, Logs));
                 await _chainHostedServices[ethereumLikeConfiguration.ChainId].StartAsync(CancellationTokenSource
                     .CreateLinkedTokenSource(cancellationToken, cts.Token).Token);
             }

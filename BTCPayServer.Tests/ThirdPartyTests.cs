@@ -37,7 +37,7 @@ namespace BTCPayServer.Tests
         [FactWithSecret("AzureBlobStorageConnectionString")]
         public async Task CanUseAzureBlobStorage()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -339,7 +339,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanUseExchangeSpecificRate()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 tester.PayTester.MockRates = false;
                 await tester.StartAsync();

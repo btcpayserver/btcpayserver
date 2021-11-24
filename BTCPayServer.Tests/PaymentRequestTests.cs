@@ -17,19 +17,18 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class PaymentRequestTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class PaymentRequestTests : UnitTestBase
     {
-        public PaymentRequestTests(ITestOutputHelper helper)
+        public PaymentRequestTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanCreateViewUpdateAndDeletePaymentRequest()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -100,7 +99,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanPayPaymentRequestWhenPossible()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -166,7 +165,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCancelPaymentWhenPossible()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();

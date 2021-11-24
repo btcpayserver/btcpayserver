@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BTCPayServer.Services.Apps
@@ -14,7 +15,8 @@ namespace BTCPayServer.Services.Apps
 
         public AppHubStreamer(EventAggregator eventAggregator,
            IHubContext<AppHub> hubContext,
-           AppService appService) : base(eventAggregator)
+           AppService appService,
+           Logs logs) : base(eventAggregator, logs)
         {
             _appService = appService;
             _HubContext = hubContext;

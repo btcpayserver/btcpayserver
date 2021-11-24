@@ -13,11 +13,15 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
     {
         private readonly MoneroRPCProvider _MoneroRpcProvider;
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
+
+        public Logs Logs { get; }
+
         private CancellationTokenSource _Cts;
-        public MoneroLikeSummaryUpdaterHostedService(MoneroRPCProvider moneroRpcProvider, MoneroLikeConfiguration moneroLikeConfiguration)
+        public MoneroLikeSummaryUpdaterHostedService(MoneroRPCProvider moneroRpcProvider, MoneroLikeConfiguration moneroLikeConfiguration, Logs logs)
         {
             _MoneroRpcProvider = moneroRpcProvider;
             _moneroLikeConfiguration = moneroLikeConfiguration;
+            Logs = logs;
         }
         public Task StartAsync(CancellationToken cancellationToken)
         {

@@ -42,6 +42,8 @@ namespace BTCPayServer.Hosting
             Configuration = conf;
             _Env = env;
             LoggerFactory = loggerFactory;
+            Logs = new Logs();
+            Logs.Configure(loggerFactory);
         }
 
         readonly IWebHostEnvironment _Env;
@@ -50,10 +52,10 @@ namespace BTCPayServer.Hosting
             get; set;
         }
         public ILoggerFactory LoggerFactory { get; }
+        public Logs Logs { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            Logs.Configure(LoggerFactory);
             services.AddMemoryCache();
             services.AddDataProtection()
                 .SetApplicationName("BTCPay Server")
@@ -80,7 +82,7 @@ namespace BTCPayServer.Hosting
                 opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
             });
 
-            services.AddBTCPayServer(Configuration);
+            services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
@@ -199,22 +201,22 @@ namespace BTCPayServer.Hosting
             IOptions<DataDirectories> dataDirectories,
             ILoggerFactory loggerFactory)
         {
+            Logs.Configure(loggerFactory);
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, loggerFactory, dataDirectories);
+                ConfigureCore(app, env, prov, dataDirectories);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, loggerFactory, dataDirectories);
+                    ConfigureCore(appChild, env, prov, dataDirectories);
                 });
             }
         }
-        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, IOptions<DataDirectories> dataDirectories)
+        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories)
         {
-            Logs.Configure(loggerFactory);
             app.UsePlugins();
             if (env.IsDevelopment())
             {

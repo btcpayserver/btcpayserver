@@ -61,7 +61,8 @@ namespace BTCPayServer.HostedServices
 
         public WebhookNotificationManager(EventAggregator eventAggregator,
             StoreRepository storeRepository,
-            IHttpClientFactory httpClientFactory) : base(eventAggregator)
+            IHttpClientFactory httpClientFactory,
+            Logs logs) : base(eventAggregator, logs)
         {
             StoreRepository = storeRepository;
             HttpClientFactory = httpClientFactory;

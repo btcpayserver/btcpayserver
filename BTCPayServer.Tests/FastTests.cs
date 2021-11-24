@@ -659,7 +659,7 @@ namespace BTCPayServer.Tests
                 new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
                 {
                     TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
-                }));
+                }), BTCPayLogs);
             await tor.Refresh();
 
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
@@ -672,7 +672,7 @@ namespace BTCPayServer.Tests
                 {
                     TorrcFile = null,
                     TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
-                }));
+                }), BTCPayLogs);
             await Task.WhenAll(tor.StartAsync(CancellationToken.None));
 
             var btcpayS = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
@@ -1031,7 +1031,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanScheduleBackgroundTasks()
         {
-            BackgroundJobClient client = new BackgroundJobClient();
+            BackgroundJobClient client = new BackgroundJobClient(BTCPayLogs);
             MockDelay mockDelay = new MockDelay();
             client.Delay = mockDelay;
             bool[] jobs = new bool[4];
@@ -1446,7 +1446,7 @@ namespace BTCPayServer.Tests
                 })
             });
 
-            var networkProvider = config.ConfigureNetworkProvider();
+            var networkProvider = config.ConfigureNetworkProvider(BTCPayLogs);
             Assert.NotNull(networkProvider.GetNetwork("ETH"));
             Assert.NotNull(networkProvider.GetNetwork("USDT20"));
             Assert.NotNull(networkProvider.GetNetwork("LBTC"));

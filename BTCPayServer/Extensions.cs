@@ -462,7 +462,7 @@ namespace BTCPayServer
             return sql;
         }
 
-        public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration)
+        public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration, Logs logs)
         {
             var _networkType = DefaultConfiguration.GetNetworkType(configuration);
             var supportedChains = configuration.GetOrDefault<string>("chains", "btc")
@@ -487,7 +487,7 @@ namespace BTCPayServer
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
-            Logs.Configuration.LogInformation(
+            logs.Configuration.LogInformation(
                 "Supported chains: " + String.Join(',', supportedChains.ToArray()));
             return result;
         }

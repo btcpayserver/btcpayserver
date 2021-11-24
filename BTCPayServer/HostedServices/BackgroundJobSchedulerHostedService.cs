@@ -14,12 +14,14 @@ namespace BTCPayServer.HostedServices
 {
     public class BackgroundJobSchedulerHostedService : IHostedService
     {
-        public BackgroundJobSchedulerHostedService(IBackgroundJobClient backgroundJobClient)
+        public BackgroundJobSchedulerHostedService(IBackgroundJobClient backgroundJobClient, Logs logs)
         {
             BackgroundJobClient = (BackgroundJobClient)backgroundJobClient;
+            Logs = logs;
         }
 
         public BackgroundJobClient BackgroundJobClient { get; }
+        public Logs Logs { get; }
 
         Task _Loop;
 
@@ -76,6 +78,12 @@ namespace BTCPayServer.HostedServices
                 await Action(cancellationToken);
             }
         }
+
+        public BackgroundJobClient(Logs logs)
+        {
+            Logs = logs;
+        }
+        Logs Logs;
 
         public IDelay Delay { get; set; } = TaskDelay.Instance;
         public int GetExecutingCount()

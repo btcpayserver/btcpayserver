@@ -6,20 +6,19 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class LanguageServiceTests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class LanguageServiceTests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-        public LanguageServiceTests(ITestOutputHelper helper)
+        public LanguageServiceTests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanAutoDetectLanguage()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var languageService = tester.PayTester.GetService<LanguageService>();

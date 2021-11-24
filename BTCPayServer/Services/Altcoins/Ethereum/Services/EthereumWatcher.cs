@@ -34,7 +34,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            Logs.NodeServer.LogInformation($"Starting EthereumWatcher for chain {ChainId}");
+            Logs.PayServer.LogInformation($"Starting EthereumWatcher for chain {ChainId}");
             var result = await Web3.Eth.ChainId.SendRequestAsync();
             if (result.Value != ChainId)
             {
@@ -203,7 +203,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            Logs.NodeServer.LogInformation($"Stopping EthereumWatcher for chain {ChainId}");
+            Logs.PayServer.LogInformation($"Stopping EthereumWatcher for chain {ChainId}");
             return base.StopAsync(cancellationToken);
         }
 
@@ -257,7 +257,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 var tasks = new List<Task>();
                 if (existingPaymentData.Any() && currentBlock.Value != LastBlock)
                 {
-                    Logs.NodeServer.LogInformation(
+                    Logs.PayServer.LogInformation(
                         $"Checking {existingPaymentData.Count} existing payments on {expandedInvoices.Count} invoices on {network.CryptoCode}");
                     var blockParameter = new BlockParameter(currentBlock);
 
@@ -282,7 +282,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
                 if (noAccountedPaymentInvoices.Any())
                 {
-                    Logs.NodeServer.LogInformation(
+                    Logs.PayServer.LogInformation(
                         $"Checking {noAccountedPaymentInvoices.Count} addresses for new payments on {network.CryptoCode}");
                     var blockParameter = BlockParameter.CreatePending();
                     tasks.AddRange(noAccountedPaymentInvoices.Select(async tuple =>
@@ -346,8 +346,9 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
         public EthereumWatcher(int chainId, EthereumLikeConfiguration config,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            EventAggregator eventAggregator, InvoiceRepository invoiceRepository, PaymentService paymentService) :
-            base(eventAggregator)
+            EventAggregator eventAggregator, InvoiceRepository invoiceRepository, PaymentService paymentService,
+            BTCPayServer.Logging.Logs logs) :
+            base(eventAggregator, logs)
         {
             _eventAggregator = eventAggregator;
             _invoiceRepository = invoiceRepository;

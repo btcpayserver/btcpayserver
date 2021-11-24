@@ -77,16 +77,4 @@ namespace BTCPayServer.Tests.Logging
                 catch { }
         }
     }
-    public class Logs
-    {
-        public static ILog Tester
-        {
-            get; set;
-        }
-        public static XUnitLogProvider LogProvider
-        {
-            get;
-            set;
-        }
-    }
 }

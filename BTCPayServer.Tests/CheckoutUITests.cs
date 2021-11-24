@@ -11,20 +11,19 @@ using Xunit.Abstractions;
 namespace BTCPayServer.Tests
 {
     [Trait("Selenium", "Selenium")]
-    public class CheckoutUITests
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
+    public class CheckoutUITests : UnitTestBase
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-        public CheckoutUITests(ITestOutputHelper helper)
+        public CheckoutUITests(ITestOutputHelper helper) : base(helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanHandleRefundEmailForm()
         {
 
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.GoToRegister();
@@ -74,7 +73,7 @@ namespace BTCPayServer.Tests
         public async Task CanHandleRefundEmailForm2()
         {
 
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 // Prepare user account and store
                 await s.StartAsync();
@@ -135,7 +134,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseLanguageDropdown()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.GoToRegister();
@@ -166,7 +165,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetDefaultPaymentMethod()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLightning();
                 await s.StartAsync();
@@ -188,7 +187,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningSatsFeature()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLightning();
                 await s.StartAsync();
@@ -211,7 +210,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseJSModal()
         {
-            using (var s = SeleniumTester.Create())
+            using (var s = CreateSeleniumTester())
             {
                 await s.StartAsync();
                 s.GoToRegister();

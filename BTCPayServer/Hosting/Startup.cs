@@ -217,7 +217,6 @@ namespace BTCPayServer.Hosting
         }
         private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories)
         {
-            app.UsePlugins();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -265,9 +264,11 @@ namespace BTCPayServer.Hosting
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
+                endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
+            app.UsePlugins();
         }
     }
 }

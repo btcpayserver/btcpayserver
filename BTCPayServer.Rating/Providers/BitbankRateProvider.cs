@@ -25,7 +25,7 @@ namespace BTCPayServer.Services.Rates
             // CHANGED: data is now an array of objects, each containing a key "pair"
             // which contains what used to be in the key of the object
             return ((jobj["data"] as JArray) ?? new JArray())
-                .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item)))
+                .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item as JObject)))
                 .ToArray();
         }
 

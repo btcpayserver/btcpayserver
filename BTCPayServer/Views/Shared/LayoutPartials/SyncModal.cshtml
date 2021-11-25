@@ -63,7 +63,13 @@
                 localStorage.removeItem("sync-collapsed");
             });
             function handleFooterBottom() {
-                if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
+                var footer = document.getElementsByTagName("footer")[0];
+                // Not all pages have a footer
+                if (!footer) {
+                    return;
+                }
+
+                if (footer.getBoundingClientRect().top < window.innerHeight){
                     syncModal.stop().animate({"bottom":"40px"}, 200);
                 } else {      
                     syncModal.stop().animate({"bottom":"10px"}, 200);

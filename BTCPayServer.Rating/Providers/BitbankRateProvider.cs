@@ -17,18 +17,22 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://public.bitbank.cc/prices", cancellationToken);
+            var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
-            return ((jobj["data"] as JObject) ?? new JObject())
-                .Properties()
-                .Select(p => new PairRate(CurrencyPair.Parse(p.Name), CreateBidAsk(p)))
+            // TODO: Need to assert jobj["success"] === 1
+            // Our API will never return error HTTP code, only error is success != 1 in response
+
+            // CHANGED: data is now an array of objects, each containing a key "pair"
+            // which contains what used to be in the key of the object
+            return ((jobj["data"] as JArray) ?? new JArray())
+                .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item)))
                 .ToArray();
         }
 
-        private static BidAsk CreateBidAsk(JProperty p)
+        private static BidAsk CreateBidAsk(JObject o)
         {
-            var buy = p.Value["buy"].Value<decimal>();
-            var sell = p.Value["sell"].Value<decimal>();
+            var buy = o["buy"].Value<decimal>();
+            var sell = o["sell"].Value<decimal>();
             // Bug from their API (https://github.com/btcpayserver/btcpayserver/issues/741)
             return buy < sell ? new BidAsk(buy, sell) : new BidAsk(sell, buy);
         }

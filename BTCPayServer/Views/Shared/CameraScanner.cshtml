@@ -63,7 +63,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 	const isModal = !!modalId;
 
 	Vue.component('scanner-wrap', {
-		props: ["modalId", "title", "workload"],
+		props: ["modalId", "title", "workload", "decoder"],
 		template: "#camera-qr-scanner-wrap",
 		methods: {
 			close() {

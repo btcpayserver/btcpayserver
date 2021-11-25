@@ -1314,7 +1314,7 @@ namespace BTCPayServer.Tests
             (string storeName, string storeId) = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             s.GoToStore(storeId);
-            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning);
+            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning, false);
             s.GoToLightningSettings(storeId, cryptoCode);
             // LNURL is false by default
             Assert.False(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
@@ -1422,10 +1422,12 @@ namespace BTCPayServer.Tests
             //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
             // checkboxes is not good choice here, in next release we should have multi choice instead
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
-            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
+            
+            //even though we set DisableBolt11PaymentMethod to true, logic when saving it turns it back off as otherwise no lightning option is available at all!
+            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
             // Invoice creation should fail, because it is a standard invoice with amount, but DisableBolt11PaymentMethod  = true and LNURLStandardInvoiceEnabled = false
-            s.CreateInvoice(storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
+            s.CreateInvoice(storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Success);
 
             i = s.CreateInvoice(storeName, null, cryptoCode);
             s.GoToInvoiceCheckout(i);

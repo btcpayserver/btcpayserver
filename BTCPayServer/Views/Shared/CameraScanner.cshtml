@@ -11,6 +11,7 @@
                     <h5 class="modal-title">
                         {{title}}
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
+                        <span v-if="decoder">Animated QR detected: {{decoder.processedPartsCount()}} / {{decoder.expectedPartCount()}} scanned</span>
                     </h5>
                     <button type="button" class="btn-close" aria-label="Close" v-on:click="close">
                         <vc:icon symbol="close"/>
@@ -62,7 +63,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 	const isModal = !!modalId;
 
 	Vue.component('scanner-wrap', {
-		props: ["modalId", "title", "workload"],
+		props: ["modalId", "title", "workload", "decoder"],
 		template: "#camera-qr-scanner-wrap",
 		methods: {
 			close() {
@@ -128,6 +129,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 				this.setQrData(null);
 				this.errorMessage = null;
 				this.workload = [];
+                this.decoder = null;
 			},
 			close() {
 				if (this.modalId) {
@@ -143,6 +145,22 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 					this.setQrData(content);
 					this.workload = [];
 				} else {
+                    if (this.workload.length == 0){
+                        const d = this.decoder || new window.URlib.URRegistryDecoder();
+                        if (d.receivePart(content)){
+                            this.decoder = d;
+                            if (d.isComplete()){
+                                if (!this.decoder.isSuccess()){
+				                    this.errorMessage = this.decoder.resultError();
+                                }else{
+                                    this.setQrData(this.decoder.resultRegistryType().toString());
+                                }
+                            }
+                        }
+                        if (this.decoder != null){
+                            return;
+                        }
+                    }
 					const [index, total] = window.bcur.extractSingleWorkload(content);
 					if (this.workload.length > 0) {
 						const currentTotal = this.workload[0].total;

@@ -19,8 +19,16 @@ namespace BTCPayServer.Services.Rates
         {
             var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
-            // TODO: Need to assert jobj["success"] === 1
-            // Our API will never return error HTTP code, only error is success != 1 in response
+            // bitbank API failure
+            /*
+            if (jobj["success"] as int != 1)
+            {
+                var errorCode = (jobj["data"] as JObject)["code"] as int;
+                // TODO: do something with the error code.
+                // human readable error code list here:
+                // https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md
+            }
+            */
 
             // CHANGED: data is now an array of objects, each containing a key "pair"
             // which contains what used to be in the key of the object

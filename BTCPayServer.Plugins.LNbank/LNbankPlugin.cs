@@ -16,7 +16,7 @@ namespace BTCPayServer.Plugins.LNbank
     {
         public override string Name { get; } = "LNbank";
         public override string Identifier { get; } = "BTCPayServer.Plugins.LNbank";
-        public override string Description { get; } = "This is a description of the loaded test extension!";
+        public override string Description { get; } = "Use the BTCPay Server Lightning node in custodial mode and give users access via custodial layer 3 wallets.";
 
         public override void Execute(IServiceCollection services)
         {

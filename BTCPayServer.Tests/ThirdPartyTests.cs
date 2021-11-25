@@ -89,11 +89,6 @@ namespace BTCPayServer.Tests
                 .ToList())
             {
                 TestLogs.LogInformation($"Testing {result.ExpectedName}");
-                if (result.ExpectedName == "ndax")
-                {
-                    TestLogs.LogInformation($"Skipping (currently crashing)");
-                    continue;
-                }
 
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = new ExchangeRates(result.ExpectedName, result.ResultAsync.Result);

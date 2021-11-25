@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -19,20 +20,14 @@ namespace BTCPayServer.Services.Rates
         {
             var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
-            // bitbank API failure
-            /*
-            if (jobj["success"] as int != 1)
+            var data = jobj.ContainsKey("data") ? jobj["data"] : null;
+            if (jobj["success"]?.Value<int>() != 1)
             {
-                var errorCode = (jobj["data"] as JObject)["code"] as int;
-                // TODO: do something with the error code.
-                // human readable error code list here:
-                // https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md
+                var errorCode = data is null? "Unknown": data["code"].Value<string>();
+                throw new Exception(
+                    $"BitBank Rates API Error: {errorCode}. See https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md for more details.");
             }
-            */
-
-            // CHANGED: data is now an array of objects, each containing a key "pair"
-            // which contains what used to be in the key of the object
-            return ((jobj["data"] as JArray) ?? new JArray())
+            return ((data as JArray) ?? new JArray())
                 .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item as JObject)))
                 .ToArray();
         }

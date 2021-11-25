@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -17,18 +18,24 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://public.bitbank.cc/prices", cancellationToken);
+            var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
-            return ((jobj["data"] as JObject) ?? new JObject())
-                .Properties()
-                .Select(p => new PairRate(CurrencyPair.Parse(p.Name), CreateBidAsk(p)))
+            var data = jobj.ContainsKey("data") ? jobj["data"] : null;
+            if (jobj["success"]?.Value<int>() != 1)
+            {
+                var errorCode = data is null? "Unknown": data["code"].Value<string>();
+                throw new Exception(
+                    $"BitBank Rates API Error: {errorCode}. See https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md for more details.");
+            }
+            return ((data as JArray) ?? new JArray())
+                .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item as JObject)))
                 .ToArray();
         }
 
-        private static BidAsk CreateBidAsk(JProperty p)
+        private static BidAsk CreateBidAsk(JObject o)
         {
-            var buy = p.Value["buy"].Value<decimal>();
-            var sell = p.Value["sell"].Value<decimal>();
+            var buy = o["buy"].Value<decimal>();
+            var sell = o["sell"].Value<decimal>();
             // Bug from their API (https://github.com/btcpayserver/btcpayserver/issues/741)
             return buy < sell ? new BidAsk(buy, sell) : new BidAsk(sell, buy);
         }

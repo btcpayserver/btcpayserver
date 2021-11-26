@@ -15,9 +15,9 @@ namespace BTCPayServer.Services
     {
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
 
-        public Cheater(BTCPayServerOptions opts, ApplicationDbContextFactory applicationDbContextFactory)
+        public Cheater(BTCPayServerOptions opts, ExplorerClientProvider prov, ApplicationDbContextFactory applicationDbContextFactory)
         {
-            CashCow = new RPCClient(RPCCredentialString.Parse("server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3"), Bitcoin.Instance.GetNetwork(opts.NetworkType));
+            CashCow = prov.GetExplorerClient("BTC").RPCClient;
             _applicationDbContextFactory = applicationDbContextFactory;
         }
         public RPCClient CashCow

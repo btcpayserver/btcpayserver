@@ -103,6 +103,7 @@ services:
       NBXPLORER_MINGAPSIZE: 5
       NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
+      NBXPLORER_EXPOSERPC: 1
       NBXPLORER_NOAUTH: 1
     links:
       - bitcoind

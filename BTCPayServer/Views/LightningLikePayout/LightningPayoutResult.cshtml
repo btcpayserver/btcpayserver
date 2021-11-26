@@ -10,7 +10,14 @@
         @foreach (var item in Model)
         {
             <div class="alert alert-@(item.Result == PayResult.Ok ? "success" : "danger") d-flex justify-content-between align-items-center mb-3" role="alert">
-                <div class="text-break me-3" title="@item.Destination">@item.Destination</div>
+                @if (item.Result == PayResult.Ok)
+                {
+                    <div class="text-break me-3" title="@item.Destination">@item.Destination</div>
+                }
+                else
+                {
+                    <div class="text-break me-3" title="@item.Destination">@item.Destination: @item.Message (@item.Result)</div>
+                }
                 <span class="badge fs-5">@(item.Result == PayResult.Ok ? "Sent" : "Failed")</span>
             </div>
         }

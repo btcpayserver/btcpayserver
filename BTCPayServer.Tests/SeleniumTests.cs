@@ -1015,8 +1015,9 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentsViaUI()
         {
             using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
+            s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.GenerateWallet("BTC", "", true, true);
@@ -1166,8 +1167,15 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
             Assert.Contains(tx.ToString(), s.Driver.PageSource);
-            
+
             //lightning tests
+            // Since the merchant is sending on lightning, it needs some liquidity from the client
+            var payoutAmount = LightMoney.Satoshis(1000);
+            var minimumReserve = LightMoney.Satoshis(167773m);
+            var inv = await s.Server.MerchantLnd.Client.CreateInvoice(minimumReserve + payoutAmount, "Donation to merchant", TimeSpan.FromHours(1), default);
+            var resp = await s.Server.CustomerLightningD.Pay(inv.BOLT11);
+            Assert.Equal(PayResult.Ok, resp.Result);
+
             newStore = s.CreateNewStore();
             s.AddLightningNode("BTC");
             //Currently an onchain wallet is required to use the Lightning payouts feature..
@@ -1182,14 +1190,14 @@ namespace BTCPayServer.Tests
             
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");
             s.Driver.FindElement(By.Id("Amount")).Clear();
-            s.Driver.FindElement(By.Id("Amount")).SendKeys("0.00001");
+            s.Driver.FindElement(By.Id("Amount")).SendKeys(payoutAmount.ToString());
             s.Driver.FindElement(By.Id("Currency")).Clear();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
 
-            var bolt = (await s.Server.MerchantLnd.Client.CreateInvoice(
-                LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
+            var bolt = (await s.Server.CustomerLightningD.CreateInvoice(
+                payoutAmount,
                 $"LN payout test {DateTime.Now.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None)).BOLT11;
             s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
@@ -1202,8 +1210,8 @@ namespace BTCPayServer.Tests
             //we do not allow short-life bolts.
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
-            bolt = (await s.Server.MerchantLnd.Client.CreateInvoice(
-                LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
+            bolt = (await s.Server.CustomerLightningD.CreateInvoice(
+                payoutAmount,
                 $"LN payout test {DateTime.Now.Ticks}",
                 TimeSpan.FromDays(31), CancellationToken.None)).BOLT11;
             s.Driver.FindElement(By.Id("Destination")).Clear();
@@ -1225,14 +1233,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
             Assert.Contains(bolt, s.Driver.PageSource);
-            Assert.Contains("0.00001 BTC", s.Driver.PageSource);
-
+            Assert.Contains($"{payoutAmount.ToString()} BTC", s.Driver.PageSource);
             s.Driver.FindElement(By.CssSelector("#pay-invoices-form")).Submit();
-            //lightning config in tests is very unstable so we can just go ahead and handle it as both
-            s.FindAlertMessage(new[]
-            {
-                StatusMessageModel.StatusSeverity.Error, StatusMessageModel.StatusSeverity.Success
-            });
+
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
 

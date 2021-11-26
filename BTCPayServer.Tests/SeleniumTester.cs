@@ -102,7 +102,12 @@ namespace BTCPayServer.Tests
             IWebElement el;
             try
             {
-                el = Driver.FindElement(By.CssSelector(className));
+                var elements = Driver.FindElements(By.CssSelector(className));
+                el = elements.FirstOrDefault(e => e.Displayed);
+                if (el is null)
+                    el = elements.FirstOrDefault();
+                if (el is null)
+                    el = Driver.WaitForElement(By.CssSelector(className));
             }
             catch (NoSuchElementException)
             {
@@ -110,6 +115,8 @@ namespace BTCPayServer.Tests
             }
             if (el is null)
                 throw new NoSuchElementException($"Unable to find {className}");
+            if (!el.Displayed)
+                throw new ElementNotVisibleException($"{className} is present, but not displayed: {el.GetAttribute("id")} - Text: {el.Text}");
             return el;
         }
 

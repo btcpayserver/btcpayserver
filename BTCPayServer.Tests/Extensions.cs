@@ -131,7 +131,7 @@ namespace BTCPayServer.Tests
                 var el = driver.FindElement(selector);
                 wait.Until(d => el.Displayed && el.Enabled);
                 driver.ScrollTo(selector);
-                el.Click();
+                driver.FindElement(selector).Click();
             }
             catch (ElementClickInterceptedException) when (retriesLeft > 0)
             {

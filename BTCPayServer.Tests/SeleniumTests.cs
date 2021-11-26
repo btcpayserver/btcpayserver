@@ -114,28 +114,29 @@ namespace BTCPayServer.Tests
 
                 var tester = s.Server;
                 var u1 = tester.NewAccount();
-                u1.GrantAccess();
+                await u1.GrantAccessAsync();
                 await u1.MakeAdmin(false);
 
                 var u2 = tester.NewAccount();
-                u2.GrantAccess();
+                await u2.GrantAccessAsync();
                 await u2.MakeAdmin(false);
 
                 s.GoToLogin();
                 s.Login(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
-                s.GoToProfile(ManageNavPages.Index);
+                s.GoToProfile();
                 s.Driver.FindElement(By.Id("Email")).Clear();
                 s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
                 s.Driver.FindElement(By.Id("save")).Click();
 
-                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+                Assert.Contains("The email address is already in use with an other account.", 
+                    s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
 
-                s.GoToProfile(ManageNavPages.Index);
+                s.GoToProfile();
                 s.Driver.FindElement(By.Id("Email")).Clear();
                 var changedEmail = Guid.NewGuid() + "@lol.com";
                 s.Driver.FindElement(By.Id("Email")).SendKeys(changedEmail);
                 s.Driver.FindElement(By.Id("save")).Click();
-                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+                s.FindAlertMessage();
 
                 var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
                 Assert.NotNull(await manager.FindByNameAsync(changedEmail));
@@ -1014,8 +1015,9 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentsViaUI()
         {
             using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
+            s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.GenerateWallet("BTC", "", true, true);
@@ -1165,8 +1167,15 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
             Assert.Contains(tx.ToString(), s.Driver.PageSource);
-            
+
             //lightning tests
+            // Since the merchant is sending on lightning, it needs some liquidity from the client
+            var payoutAmount = LightMoney.Satoshis(1000);
+            var minimumReserve = LightMoney.Satoshis(167773m);
+            var inv = await s.Server.MerchantLnd.Client.CreateInvoice(minimumReserve + payoutAmount, "Donation to merchant", TimeSpan.FromHours(1), default);
+            var resp = await s.Server.CustomerLightningD.Pay(inv.BOLT11);
+            Assert.Equal(PayResult.Ok, resp.Result);
+
             newStore = s.CreateNewStore();
             s.AddLightningNode("BTC");
             //Currently an onchain wallet is required to use the Lightning payouts feature..
@@ -1181,14 +1190,14 @@ namespace BTCPayServer.Tests
             
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");
             s.Driver.FindElement(By.Id("Amount")).Clear();
-            s.Driver.FindElement(By.Id("Amount")).SendKeys("0.00001");
+            s.Driver.FindElement(By.Id("Amount")).SendKeys(payoutAmount.ToString());
             s.Driver.FindElement(By.Id("Currency")).Clear();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
 
-            var bolt = (await s.Server.MerchantLnd.Client.CreateInvoice(
-                LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
+            var bolt = (await s.Server.CustomerLightningD.CreateInvoice(
+                payoutAmount,
                 $"LN payout test {DateTime.Now.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None)).BOLT11;
             s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
@@ -1201,8 +1210,8 @@ namespace BTCPayServer.Tests
             //we do not allow short-life bolts.
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
-            bolt = (await s.Server.MerchantLnd.Client.CreateInvoice(
-                LightMoney.FromUnit(0.00001m, LightMoneyUnit.BTC),
+            bolt = (await s.Server.CustomerLightningD.CreateInvoice(
+                payoutAmount,
                 $"LN payout test {DateTime.Now.Ticks}",
                 TimeSpan.FromDays(31), CancellationToken.None)).BOLT11;
             s.Driver.FindElement(By.Id("Destination")).Clear();
@@ -1224,14 +1233,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
             Assert.Contains(bolt, s.Driver.PageSource);
-            Assert.Contains("0.00001 BTC", s.Driver.PageSource);
-
+            Assert.Contains($"{payoutAmount.ToString()} BTC", s.Driver.PageSource);
             s.Driver.FindElement(By.CssSelector("#pay-invoices-form")).Submit();
-            //lightning config in tests is very unstable so we can just go ahead and handle it as both
-            s.FindAlertMessage(new[]
-            {
-                StatusMessageModel.StatusSeverity.Error, StatusMessageModel.StatusSeverity.Success
-            });
+
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
 
@@ -1313,7 +1318,7 @@ namespace BTCPayServer.Tests
             (string storeName, string storeId) = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             s.GoToStore(storeId);
-            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning);
+            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning, false);
             s.GoToLightningSettings(storeId, cryptoCode);
             // LNURL is false by default
             Assert.False(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
@@ -1420,10 +1425,13 @@ namespace BTCPayServer.Tests
 
             //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
             // checkboxes is not good choice here, in next release we should have multi choice instead
-            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
-            Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
-            s.CreateInvoice(storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
+            Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
+            
+            //even though we set DisableBolt11PaymentMethod to true, logic when saving it turns it back off as otherwise no lightning option is available at all!
+            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
+            // Invoice creation should fail, because it is a standard invoice with amount, but DisableBolt11PaymentMethod  = true and LNURLStandardInvoiceEnabled = false
+            s.CreateInvoice(storeName, 0.0000001m, cryptoCode,"",null, expectedSeverity: StatusMessageModel.StatusSeverity.Success);
 
             i = s.CreateInvoice(storeName, null, cryptoCode);
             s.GoToInvoiceCheckout(i);

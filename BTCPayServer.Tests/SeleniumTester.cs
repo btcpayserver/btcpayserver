@@ -102,7 +102,12 @@ namespace BTCPayServer.Tests
             IWebElement el;
             try
             {
-                el = Driver.FindElement(By.CssSelector(className));
+                var elements = Driver.FindElements(By.CssSelector(className));
+                el = elements.FirstOrDefault(e => e.Displayed);
+                if (el is null)
+                    el = elements.FirstOrDefault();
+                if (el is null)
+                    el = Driver.WaitForElement(By.CssSelector(className));
             }
             catch (NoSuchElementException)
             {

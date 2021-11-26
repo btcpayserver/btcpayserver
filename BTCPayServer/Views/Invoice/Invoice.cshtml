@@ -1,3 +1,4 @@
+@using BTCPayServer.Client.Models
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = $"Invoice {Model.Id}";
@@ -20,7 +21,7 @@
             $.post(invoiceId + "/changestate/" + newState)
                 .done(function (data) {
                     var alertClassModifier = {
-                        "complete (marked)": 'success',
+                        "settled (marked)": 'success',
                         "invalid (marked)": 'danger'
                     }[data.statusString];
                     var statusHtml = "<span class='fs-6 fw-normal badge bg-" + alertClassModifier + "'>" + data.statusString + " <span class='fa fa-check'></span></span>"
@@ -63,7 +64,7 @@
                     }
                     else
                     {
-                        <button href="#" class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled><span class="fa fa-undo me-1"></span> Issue Refund</button>
+                        <button href="#" class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it." disabled><span class="fa fa-undo me-1"></span> Issue refund</button>
                     }
                     <form class="p-0 ms-3" asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
                         <button type="submit" class="btn @(Model.Archived ? "btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
@@ -127,6 +128,10 @@
                                 <div class="dropdown">
                                     <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         @Model.State
+                                        @if (Model.StatusException  != InvoiceExceptionStatus.None)
+                                        {
+                                            @String.Format("({0})", Model.StatusException.ToString());
+                                        }
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
                                         @if (Model.CanMarkInvalid)
@@ -135,10 +140,10 @@
                                                 Mark as invalid <span class="fa fa-times"></span>
                                             </a>
                                         }
-                                        @if (Model.CanMarkComplete)
+                                        @if (Model.CanMarkSettled)
                                         {
-                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="complete" data-change-invoice-status-button>
-                                                Mark as complete <span class="fa fa-check-circle"></span>
+                                            <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
+                                                Mark as settled <span class="fa fa-check-circle"></span>
                                             </a>
                                         }
                                     </div>
@@ -147,6 +152,10 @@
                             else
                             {
                                 @Model.State
+                                @if (Model.StatusException  != InvoiceExceptionStatus.None)
+                                {
+                                    @String.Format(" ({0})", Model.StatusException.ToString());
+                                }
                             }
                         </td>
                     </tr>

@@ -87,6 +87,26 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisableShowInvoiceStatusChangeHint()
+        {
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var blob = user.GetBlob();
+            blob.ShowInvoiceStatusChangeHint = false;
+            if (user.SetBlob(blob))
+            {
+                await _userManager.UpdateAsync(user);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(IndexViewModel model)
         {
             if (!ModelState.IsValid)

@@ -1,3 +1,4 @@
+@using BTCPayServer.Client.Models
 @model InvoicesModel
 @{
     ViewData.SetActivePageAndTitle(InvoiceNavPages.Index, "Invoices");
@@ -58,14 +59,13 @@
             background: #c94a47;
             color: #fff;
         }
-
-        .badge-confirmed,
-        .badge-paid {
+        
+        .badge-processing {
             background: #f1c332;
             color: #000;
         }
-
-        .badge-complete {
+        
+        .badge-settled {
             background: #329f80;
             color: #fff;
         }
@@ -182,22 +182,23 @@
     <div class="container">
         <partial name="_StatusMessage" />
 
-        <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h2 class="mb-0">
-                @ViewData["Title"]
-                <small>
-                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                    </a>
-                </small>
-            </h2>
-            <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
-                <span class="fa fa-plus"></span>
-                Create an invoice
-            </a>
-        </div>
-
-        <div class="row">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0">
+            @ViewData["Title"]
+            <small>
+                <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+            </small>
+        </h2>
+        <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
+            <span class="fa fa-plus"></span>
+            Create an invoice
+        </a>
+    </div>
+  <partial name="InvoiceStatusChangePartial"/>
+    
+    <div class="row">
             <div class="col-12 col-lg-6 mb-5 mb-lg-2 ms-auto">
                 <form asp-action="ListInvoices" method="get">
                     <input type="hidden" asp-for="Count"/>
@@ -216,7 +217,7 @@
 
                         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
@@ -295,15 +296,12 @@
                     <li><code>storeid:id</code> for filtering a specific store</li>
                     <li><code>orderid:id</code> for filtering a specific order</li>
                     <li><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
-                    <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
+                    <li><code>status:(expired|invalid|settled|processing|new)</code> for filtering a specific status</li>
                     <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
                     <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
                     <li><code>startdate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created after certain date</li>
                     <li><code>enddate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created before certain date</li>
                 </ul>
-                <p>
-                    If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed, status:complete</code>.
-                </p>
             </div>
         </div>
 
@@ -381,9 +379,13 @@
                                 }
                                 @if (invoice.CanMarkStatus)
                                 {
-                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.ToString().ToLower()">
+                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
                                         <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.ToString()
+                                            @invoice.Status.Status.ToModernStatus().ToString() @* @invoice.Status.ToString()  *@
+                                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                            {
+                                                @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString());
+                                            }
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
@@ -392,10 +394,10 @@
                                                     Mark as invalid <span class="fa fa-times"></span>
                                                 </button>
                                             }
-                                            @if (invoice.CanMarkComplete)
+                                            @if (invoice.CanMarkSettled)
                                             {
-                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="complete">
-                                                    Mark as complete <span class="fa fa-check-circle"></span>
+                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                    Mark as settled <span class="fa fa-check-circle"></span>
                                                 </button>
                                             }
                                         </div>
@@ -403,8 +405,12 @@
                                 }
                                 else
                                 {
-                                    <span class="badge badge-@invoice.Status.ToString().ToLower()">
-                                        @invoice.Status.ToString().ToLower()
+                                    <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                        @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
+                                        @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                        {
+                                            @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString());
+                                        }
                                     </span>
                                 }
                                 @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))

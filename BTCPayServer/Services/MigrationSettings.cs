@@ -27,5 +27,6 @@ namespace BTCPayServer.Services
         public int? MigratedInvoiceTextSearchPages { get; set; }
         public bool MigrateAppCustomOption { get; set; }
         public bool MigratePayoutDestinationId { get; set; }
+        public bool AddInitialUserBlob { get; set; }
     }
 }

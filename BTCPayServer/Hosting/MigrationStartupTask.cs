@@ -163,12 +163,28 @@ namespace BTCPayServer.Hosting
                     settings.MigratePayoutDestinationId = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.AddInitialUserBlob)
+                {
+                    await AddInitialUserBlob();
+                    settings.AddInitialUserBlob = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+        
+        private async Task AddInitialUserBlob()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var user in await ctx.Users.AsQueryable().ToArrayAsync())
+            {
+                user.SetBlob(new UserBlob() { ShowInvoiceStatusChangeHint = true });
+            }
+            await ctx.SaveChangesAsync();
         }
         
         private async Task MigratePayoutDestinationId()

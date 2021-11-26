@@ -38,6 +38,7 @@ using OpenQA.Selenium.Support.UI;
 using Renci.SshNet.Security.Cryptography;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 using CreateInvoiceRequest = BTCPayServer.Lightning.Charge.CreateInvoiceRequest;
 
 namespace BTCPayServer.Tests
@@ -1325,8 +1326,7 @@ namespace BTCPayServer.Tests
             // LNURL settings are not expanded when LNURL is disabled
             Assert.DoesNotContain("show", s.Driver.FindElement(By.Id("LNURLSettings")).GetAttribute("class"));
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.WaitForAndClick(By.Id("save"));
-            Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
+            SudoForceSaveLightningSettingsRightNowAndFast(s, cryptoCode);
             
             // Topup Invoice test
             var i = s.CreateInvoice(storeName, null, cryptoCode);
@@ -1522,8 +1522,7 @@ namespace BTCPayServer.Tests
             
             s.GoToLightningSettings(s.StoreId, cryptoCode);
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.WaitForAndClick(By.Id("save"));
-            Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
+            SudoForceSaveLightningSettingsRightNowAndFast(s, cryptoCode);
             
             s.GoToStore(s.StoreId, StoreNavPages.Integrations);
             s.Driver.FindElement(By.Id("lightning-address-option"))
@@ -1576,6 +1575,25 @@ namespace BTCPayServer.Tests
                         Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
                         break;
                 }
+            }
+        }
+
+
+        // For god know why, selenium have problems clicking on the save button, resulting in ultimate hacks
+        // to make it works.
+        private void SudoForceSaveLightningSettingsRightNowAndFast(SeleniumTester s, string cryptoCode)
+        {
+retry:
+            int maxAttempts = 5;
+            s.Driver.WaitForAndClick(By.Id("save"));
+            try
+            {
+                Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
+            }
+            catch (NoSuchElementException) when (maxAttempts > 0)
+            {
+                maxAttempts--;
+                goto retry;
             }
         }
 

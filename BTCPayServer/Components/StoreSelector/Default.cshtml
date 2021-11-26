@@ -7,10 +7,10 @@
         <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
             @foreach (var option in Model.Options)
             {
-                <li><a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")">@option.Text</a></li>
+                <li><a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a></li>
             }
             <li><hr class="dropdown-divider"></li>
-            <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item">Create Store</a></li>
+            <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorMenuItem-Create">Create Store</a></li>
         </ul>
     </div>
     <noscript>

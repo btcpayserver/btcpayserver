@@ -15,43 +15,17 @@
     <partial name="_ValidationScriptsPartial" />
     <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js" asp-append-version="true"></bundle>
 }
-
 <partial name="_StatusMessage" />
-
 <h2 class="mb-4">@ViewData["Title"]</h2>
-<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { id = Model.Id}, Context.Request.Scheme)">
+<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { storeId = Model.StoreId, id = Model.Id }, Context.Request.Scheme)">
     <div class="row">
         <div class="col-lg-6">
-            <input type="hidden" name="Id" value="@Model.Id" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Stores" class="form-label"></label>
-                @if (string.IsNullOrEmpty(Model.Id))
-                {
-                    <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
-                }
-                else
-                {
-                    <input type="hidden" asp-for="StoreId" value="@Model.StoreId" />
-                    <input type="text" class="form-control" value="@Model.Stores.Single(item => item.Value == Model.StoreId).Text" readonly />
-                }
-                <span asp-validation-for="StoreId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email" class="form-label"></label>
-                <input type="email" asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-                <p id="PaymentRequestEmailHelpBlock" class="form-text text-muted">
-                    Receive updates for this payment request.
-                </p>
-            </div>
-            <h4 class="mt-5 mb-4">Request Details</h4>
             <div class="form-group">
                 <label asp-for="Title" class="form-label" data-required></label>
                 <input asp-for="Title" class="form-control" required />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-
             <div class="form-group">
                 <label asp-for="Amount" class="form-label" data-required></label>
                 <input type="number" step="any" asp-for="Amount" class="form-control" required />
@@ -79,6 +53,14 @@
                     </button>
                 </div>
                 <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="form-label"></label>
+                <input type="email" asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+                <p id="PaymentRequestEmailHelpBlock" class="form-text text-muted">
+                    Receive updates for this payment request.
+                </p>
             </div>
         </div>
         <div class="col-lg-9">
@@ -123,7 +105,7 @@
                 <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
                 @if (!string.IsNullOrEmpty(Model.Id))
                 {
-                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-id="@Context.GetRouteValue("id")" id="@Model.Id" name="ViewAppButton">View</a>
+                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-id="@Context.GetRouteValue("id")" id="ViewAppButton">View</a>
                     <a class="btn btn-secondary"
                        target="_blank"
                        asp-action="ListInvoices"

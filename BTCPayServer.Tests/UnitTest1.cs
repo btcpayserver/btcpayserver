@@ -959,7 +959,7 @@ namespace BTCPayServer.Tests
         private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
         {
             var result =
-                (Models.InvoicingModels.InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
+                (InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
                     .ListInvoices(new InvoicesModel { SearchTerm = filter }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }

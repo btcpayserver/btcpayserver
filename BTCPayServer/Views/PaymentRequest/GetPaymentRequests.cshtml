@@ -16,7 +16,7 @@
             </a>
         </small>
     </h2>
-    <a asp-action="EditPaymentRequest" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest">
+    <a asp-action="EditPaymentRequest" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest">
         <span class="fa fa-plus"></span>
         Create a payment request
     </a>
@@ -69,7 +69,7 @@
                             <td class="text-end">@item.Amount @item.Currency</td>
                             <td class="text-end">@item.Status</td>
                             <td class="text-end">
-                                <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
+                                <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id">Edit</a>
                                 <span> - </span>
                                 <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
                                 <span> - </span>
@@ -77,16 +77,16 @@
                                 <span> - </span>
                                 <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
                                 <span> - </span>
-                                <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
+                                <a target="_blank" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id">Clone</a>
                                 <span> - </span>
-                                <a asp-action="TogglePaymentRequestArchival" asp-route-id="@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a>
+                                <a asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
 
-            <vc:pager view-model="Model"></vc:pager>
+            <vc:pager view-model="Model" />
         }
         else
         {

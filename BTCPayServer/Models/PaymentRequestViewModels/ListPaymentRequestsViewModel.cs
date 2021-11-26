@@ -13,7 +13,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
     public class ListPaymentRequestsViewModel : BasePagingViewModel
     {
         public List<ViewPaymentRequestViewModel> Items { get; set; }
-
     }
 
     public class UpdatePaymentRequestViewModel
@@ -82,6 +81,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public ViewPaymentRequestViewModel(PaymentRequestData data)
         {
             Id = data.Id;
+            StoreId = data.StoreDataId;
             var blob = data.GetBlob();
             Archived = data.Archived;
             Title = blob.Title;
@@ -121,6 +121,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string AmountDueFormatted { get; set; }
         public decimal Amount { get; set; }
         public string Id { get; set; }
+        public string StoreId { get; set; }
         public string Currency { get; set; }
         public DateTime? ExpiryDate { get; set; }
         public string Title { get; set; }

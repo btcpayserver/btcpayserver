@@ -41,7 +41,7 @@ namespace BTCPayServer.Tests
                 var tester = s.Server;
 
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 await user.MakeAdmin(false);
                 s.GoToLogin();
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);

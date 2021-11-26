@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Common;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.PaymentRequestViewModels;
@@ -32,16 +33,17 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
 
                 var user2 = tester.NewAccount();
-                user2.GrantAccess();
+                
+                await user2.GrantAccessAsync();
 
                 var paymentRequestController = user.GetController<PaymentRequestController>();
                 var guestpaymentRequestController = user2.GetController<PaymentRequestController>();
 
-                var request = new UpdatePaymentRequestViewModel()
+                var request = new UpdatePaymentRequestViewModel
                 {
                     Title = "original juice",
                     Currency = "BTC",
@@ -49,14 +51,13 @@ namespace BTCPayServer.Tests
                     StoreId = user.StoreId,
                     Description = "description"
                 };
-                var id = (Assert
+                var id = Assert
                     .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
-                    .RouteValues.Values.First().ToString());
+                    .RouteValues.Values.First().ToString();
 
-
-                //permission guard for guests editing 
+                // Permission guard for guests editing 
                 Assert
-                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(id));
+                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user2.StoreId, id));
 
                 request.Title = "update";
                 Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
@@ -70,20 +71,20 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewPaymentRequestViewModel>(Assert
                     .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model);
 
-                //Archive
-
+                // Archive
                 Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
+                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(user.StoreId, id));
                 Assert.True(Assert
                     .IsType<ViewPaymentRequestViewModel>(Assert
                         .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
 
                 Assert.Empty(Assert
                     .IsType<ListPaymentRequestsViewModel>(Assert
-                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
-                //unarchive
+                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests(user.StoreId)).Model).Items);
+                
+                // Unarchive
                 Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
+                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(user.StoreId, id));
 
                 Assert.False(Assert
                     .IsType<ViewPaymentRequestViewModel>(Assert
@@ -91,7 +92,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(Assert
                     .IsType<ListPaymentRequestsViewModel>(Assert
-                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
+                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests(user.StoreId)).Model).Items);
             }
         }
 

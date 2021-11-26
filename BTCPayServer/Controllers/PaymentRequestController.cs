@@ -1,12 +1,9 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -19,14 +16,11 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
-    [Route("payment-requests")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class PaymentRequestController : Controller
     {
@@ -62,22 +56,21 @@ namespace BTCPayServer.Controllers
             _linkGenerator = linkGenerator;
         }
 
-        [HttpGet("")]
-        [HttpGet("/stores/{storeId}/payment-requests")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(string? storeId, ListPaymentRequestsViewModel model = null)
+        [HttpGet("/stores/{storeId}/payment-requests")]
+        public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
-            if (storeId != null)
+            var store = await _StoreRepository.FindStore(storeId, GetUserId());
+            if (store == null)
             {
-                var store = await _StoreRepository.FindStore(storeId, GetUserId());
-                if (store != null)
-                    HttpContext.SetStoreData(store);
+                return NotFound();
             }
+            HttpContext.SetStoreData(store);
             
             var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
-            var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
+            var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
                 StoreId = storeId,
@@ -91,34 +84,35 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet("edit/{id?}")]
-        public async Task<IActionResult> EditPaymentRequest(string id)
+        [HttpGet("/stores/{storeId}/payment-requests/edit/{id?}")]
+        public async Task<IActionResult> EditPaymentRequest(string storeId, string id)
         {
+            var store = await _StoreRepository.FindStore(storeId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+            
             var data = await _PaymentRequestRepository.FindPaymentRequest(id, GetUserId());
             if (data == null && !string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            SelectList stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id),
-                nameof(StoreData.StoreName), data?.StoreDataId);
-            if (!stores.Any())
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Html =
-                        $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}' class='alert-link'>Create store</a>",
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToAction("GetPaymentRequests");
-            }
-
-            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data) { Stores = stores });
+            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data) { StoreId = storeId });
         }
 
-        [HttpPost("edit/{id?}")]
+        [HttpPost("/stores/{storeId}/payment-requests/edit/{id?}")]
         public async Task<IActionResult> EditPaymentRequest(string id, UpdatePaymentRequestViewModel viewModel)
         {
+            var store = await _StoreRepository.FindStore(viewModel.StoreId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+            
             if (string.IsNullOrEmpty(viewModel.Currency) ||
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
@@ -136,10 +130,6 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()),
-                    nameof(StoreData.Id),
-                    nameof(StoreData.StoreName), data?.StoreDataId);
-
                 return View(nameof(EditPaymentRequest), viewModel);
             }
 
@@ -175,7 +165,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(EditPaymentRequest), new { id = data.Id });
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("/payment-requests/{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> ViewPaymentRequest(string id)
         {
@@ -189,7 +179,7 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        [HttpGet("{id}/pay")]
+        [HttpGet("/payment-requests/{id}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
@@ -339,10 +329,10 @@ namespace BTCPayServer.Controllers
             return _UserManager.GetUserId(User);
         }
 
-        [HttpGet("{id}/clone")]
-        public async Task<IActionResult> ClonePaymentRequest(string id)
+        [HttpGet("/stores/{storeId}/payment-requests/{id}/clone")]
+        public async Task<IActionResult> ClonePaymentRequest(string storeId, string id)
         {
-            var result = await EditPaymentRequest(id);
+            var result = await EditPaymentRequest(storeId, id);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
@@ -356,10 +346,10 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
-        [HttpGet("{id}/archive")]
-        public async Task<IActionResult> TogglePaymentRequestArchival(string id)
+        [HttpGet("/stores/{storeId}/payment-requests/{id}/archive")]
+        public async Task<IActionResult> TogglePaymentRequestArchival(string storeId, string id)
         {
-            var result = await EditPaymentRequest(id);
+            var result = await EditPaymentRequest(storeId, id);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;

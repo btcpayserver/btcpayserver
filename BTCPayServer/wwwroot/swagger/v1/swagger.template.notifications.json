@@ -16,6 +16,26 @@
                             "type": "string",
                             "nullable": true
                         }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records to skip",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "take",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records returned in response",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
                     }
                 ],
                 "description": "View current user's notifications",

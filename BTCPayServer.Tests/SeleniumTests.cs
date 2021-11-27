@@ -1583,8 +1583,8 @@ namespace BTCPayServer.Tests
         // to make it works.
         private void SudoForceSaveLightningSettingsRightNowAndFast(SeleniumTester s, string cryptoCode)
         {
-retry:
             int maxAttempts = 5;
+retry:
             s.Driver.WaitForAndClick(By.Id("save"));
             try
             {

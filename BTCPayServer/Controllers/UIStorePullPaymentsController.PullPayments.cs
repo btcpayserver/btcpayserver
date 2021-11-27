@@ -145,15 +145,20 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("")]
-        public async Task<IActionResult> PullPayments(string storeId, int skip = 0, int count = 50,
-            string sortOrder = "desc")
+        public async Task<IActionResult> PullPayments(
+            string storeId,
+            string paymentMethodId,
+            int skip = 0,
+            int count = 50,
+            string sortOrder = "desc"
+        )
         {
             await using var ctx = _dbContextFactory.CreateContext();
             var now = DateTimeOffset.UtcNow;
-            var ppsQuery = ctx.PullPayments
+            var ppsQuery = await ctx.PullPayments
                 .Include(data => data.Payouts)
-                .Where(p => p.StoreId == storeId && !p.Archived);
-
+                .Where(p => p.StoreId == storeId && !p.Archived)
+                .ToListAsync();
 
             if (sortOrder != null)
             {
@@ -161,13 +166,24 @@ namespace BTCPayServer.Controllers
                 {
                     case "desc":
                         ViewData["NextStartSortOrder"] = "asc";
-                        ppsQuery = ppsQuery.OrderByDescending(p => p.StartDate);
+                        ppsQuery = ppsQuery.OrderByDescending(p => p.StartDate).ToList();
                         break;
                     case "asc":
-                        ppsQuery = ppsQuery.OrderBy(p => p.StartDate);
+                        ppsQuery = ppsQuery.OrderBy(p => p.StartDate).ToList();
                         ViewData["NextStartSortOrder"] = "desc";
                         break;
                 }
+            }
+
+            var paymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData());
+            if (!paymentMethods.Any())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "You must enable at least one payment method before creating a pull payment.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("PaymentMethods", "Stores", new { storeId });
             }
 
             var vm = this.ParseListQuery(new PullPaymentsModel()
@@ -175,12 +191,21 @@ namespace BTCPayServer.Controllers
                 Skip = skip,
                 Count = count,
                 Total = await ppsQuery.CountAsync()
+                PaymentMethods = paymentMethods,
+                PaymentMethodId = paymentMethodId ?? paymentMethods.First().ToString(),
             });
-            var pps = (await ppsQuery
-                    .Skip(vm.Skip)
-                    .Take(vm.Count)
-                    .ToListAsync()
-                );
+
+            if (vm.PaymentMethodId != null)
+            {
+                ppsQuery = ppsQuery
+                    .Where(p => p.GetBlob().SupportedPaymentMethods.Contains(PaymentMethodId.Parse(vm.PaymentMethodId)))
+                    .ToList();
+            }
+
+            var pps = ppsQuery
+                .Skip(vm.Skip)
+                .Take(vm.Count)
+                .ToList();
             foreach (var pp in pps)
             {
                 var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||

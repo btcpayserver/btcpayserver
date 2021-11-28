@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Payments;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -32,6 +33,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
         public string PaymentMethodId { get; set; }
         public IEnumerable<PaymentMethodId> PaymentMethods { get; set; }
+        public PullPaymentState ActiveState { get; set; } = PullPaymentState.Active;
     }
 
     public class NewPullPaymentModel

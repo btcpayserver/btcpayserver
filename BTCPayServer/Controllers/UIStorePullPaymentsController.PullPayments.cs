@@ -148,6 +148,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PullPayments(
             string storeId,
             string paymentMethodId,
+            PullPaymentState pullPaymentState,
             int skip = 0,
             int count = 50,
             string sortOrder = "desc"
@@ -157,7 +158,7 @@ namespace BTCPayServer.Controllers
             var now = DateTimeOffset.UtcNow;
             var ppsQuery = await ctx.PullPayments
                 .Include(data => data.Payouts)
-                .Where(p => p.StoreId == storeId && !p.Archived)
+                .Where(p => p.StoreId == storeId)
                 .ToListAsync();
 
             if (sortOrder != null)
@@ -193,6 +194,7 @@ namespace BTCPayServer.Controllers
                 Total = await ppsQuery.CountAsync()
                 PaymentMethods = paymentMethods,
                 PaymentMethodId = paymentMethodId ?? paymentMethods.First().ToString(),
+                ActiveState = pullPaymentState
             });
 
             if (vm.PaymentMethodId != null)
@@ -200,6 +202,24 @@ namespace BTCPayServer.Controllers
                 ppsQuery = ppsQuery
                     .Where(p => p.GetBlob().SupportedPaymentMethods.Contains(PaymentMethodId.Parse(vm.PaymentMethodId)))
                     .ToList();
+            }
+
+            switch (pullPaymentState) {
+                case PullPaymentState.Active:
+                    ppsQuery = ppsQuery
+                        .Where(p => p.IsRunning())
+                        .ToList();
+                    break;
+                case PullPaymentState.Archived:
+                    ppsQuery = ppsQuery
+                        .Where(p => p.Archived)
+                        .ToList();
+                    break;
+                case PullPaymentState.Expired:
+                     ppsQuery = ppsQuery
+                        .Where(p => p.IsExpired())
+                        .ToList();
+                    break;
             }
 
             var pps = ppsQuery

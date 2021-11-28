@@ -17,6 +17,12 @@ namespace BTCPayServer.Controllers
             public Decimal Amount { get; set; }
             public string CryptoCode { get; set; } = "BTC";
         }
+
+        public class MineBlocksRequest
+        {
+            public int BlockCount { get; set; }
+            public string CryptoCode { get; set; } = "BTC";
+        }
         
         [HttpPost]
         [Route("i/{invoiceId}/test-payment")]
@@ -54,6 +60,45 @@ namespace BTCPayServer.Controllers
                 {
                     ErrorMessage = e.Message,
                     AmountRemaining = invoice.Price
+                });
+            }
+        }
+        
+        [HttpPost]
+        [Route("i/{invoiceId}/mine-blocks")]
+        [CheatModeRoute]
+        public async Task<IActionResult> MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
+        {
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            var store = await _StoreRepository.FindStore(invoice.StoreId);
+
+            // TODO support altcoins, not just bitcoin
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
+            var paymentMethodId = store.GetDefaultPaymentId() ?? store.GetEnabledPaymentIds(_NetworkProvider).FirstOrDefault(p => p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
+            var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
+            var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
+            
+            // Mine the blocks
+            try
+            {
+                if (request.BlockCount > 0) 
+                {
+                    cheater.CashCow.GenerateToAddress(request.BlockCount, bitcoinAddressObj);
+                    return Ok(new
+                    {
+                        SuccessMessage = "Mined "+request.BlockCount+" blocks for " + bitcoinAddressObj
+                    });                    
+                }
+                return BadRequest(new
+                {
+                    ErrorMessage = "Number of blocks should be > 0"
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new
+                {
+                    ErrorMessage = e.Message
                 });
             }
         }

@@ -4,7 +4,7 @@
     <hr class="my-3" />
     <p class="alert alert-danger" style="display: none; word-break: break-all;"></p>
     <p class="alert alert-success" style="display: none; word-break: break-all;"></p>
-    <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="form-inline my-2">
+    <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="cheat-mode form-inline my-2">
         <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
         <div class="form-group mb-1">
             <label for="test-payment-amount" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
@@ -24,35 +24,39 @@
         <!-- TODO only show when expired -->
         <button class="btn btn-secondary" type="submit">{{$t("Expire Monitoring Now")}} (TODO)</button>
     </form>
-    <form id="mine-block" action="/i/@Model.InvoiceId/mine-block" method="post">
-        <!-- TODO only show when BTC On-chain -->
-        <!-- TODO to make it work use Bitcoin RPC calls getnewaddress + generatetoaddress -->
-        <button class="btn btn-secondary" type="submit">{{$t("Mine a block now")}} (TODO)</button>
-    </form>
     *@
+     <form id="mine-block" action="/i/@Model.InvoiceId/mine-blocks" method="post" class="cheat-mode form-inline my-2">
+         <!-- TODO only show when BTC On-chain -->
+         <div class="form-group mb-1">
+             <label for="block-count" class="control-label">{{$t("Mine a few blocks to test processing and settlement.")}}</label>
+             <div class="input-group">
+                 <input id="block-count" name="BlockCount" type="number" step="1" min="1" class="form-control" value="1" />
+                 <div class="input-group-addon">{{$t("Blocks")}}</div>
+             </div>
+         </div>
+         <button class="btn btn-primary" type="submit">{{$t("Mine")}}</button>
+     </form>
 </div>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        const payForm = $('form#test-payment');
-        const loader = $('form#test-payment-loading');
-        const inputField = $('#test-payment-amount');
+        const cheatForms = $('form.cheat-mode');
+        const expireForm = $('form#expire-invoice');
+        
         const successAlert = $('#testing p.alert-success');
         const errorAlert = $('#testing p.alert-danger');
-        const submitButton = payForm.find('button[type=submit]');
-        const expireForm = $('form#expire-invoice');
-        const expireButton = expireForm.find('[type=submit]');
         
-        payForm.submit(e => {
+        cheatForms.submit(e => {
              e.preventDefault();
              
              const form = $(e.target);
              const url = form.attr('action');
              const data = form.serialize();
+             const inputField = form.find('input[type=number]');
+             const submitButton = form.find('button[type=submit]');
              
              successAlert.hide();
              errorAlert.hide();
-             loader.show();
              inputField.prop('disabled', true);
              submitButton.prop('disabled', true);
              
@@ -63,11 +67,13 @@
                      const { successMessage, amountRemaining } = data;
                      successAlert.html(successMessage);
                      successAlert.show();
-                     if (amountRemaining > 0) {
-                         inputField.val(amountRemaining);
-                     } else {
-                         form.hide();
-                         expireForm.hide();
+                     if (amountRemaining){
+                         if(amountRemaining > 0) {
+                             inputField.val(amountRemaining);
+                         } else {
+                             form.hide();
+                             expireForm.hide();
+                         }
                      }
                  },
                  error(xhr) {
@@ -75,7 +81,6 @@
                      errorAlert.html(errorMessage).show();
                  },
                  complete() {
-                     loader.hide();
                      inputField.prop('disabled', false);
                      submitButton.prop('disabled', false);
                  }
@@ -85,6 +90,10 @@
         // Expire invoice form
         expireForm.submit(e => {
             e.preventDefault();
+            
+            const form = $(e.target);
+            const submitButton = form.find('button[type=submit]');
+            const expireButton = form.find('[type=submit]');
             successAlert.hide();
             errorAlert.hide();
                          
@@ -96,7 +105,6 @@
                     expireButton.hide();
                 },
                 complete() {
-                    loader.hide();
                     submitButton.prop('disabled', false);
                 },
                 error(xhr) {

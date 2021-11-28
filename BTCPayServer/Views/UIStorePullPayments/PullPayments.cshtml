@@ -1,4 +1,4 @@
-@using BTCPayServer.Views.Stores
+﻿@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
@@ -55,8 +55,8 @@
     @foreach (var pm in Model.PaymentMethods)
     {
         <li class="nav-item py-0">
-            <a 
-                asp-action="PullPayments" 
+            <a
+                asp-action="PullPayments"
                 asp-route-paymentMethodId="@pm.ToString()"
                 asp-route-sortOrder="@startDateSortOrder"
                 asp-route-pullPaymentState="@Model.ActiveState"
@@ -72,10 +72,10 @@
     @foreach (var state in Enum.GetValues(typeof(PullPaymentState)).Cast<PullPaymentState>())
     {
         <li class="nav-item py-0">
-            <a id="@state-view" 
-                asp-action="PullPayments" 
-                asp-route-storeId="@Context.GetRouteValue("storeId")" 
-                asp-route-pullPaymentState="@state" 
+            <a id="@state-view"
+                asp-action="PullPayments"
+                asp-route-storeId="@Context.GetRouteValue("storeId")"
+                asp-route-pullPaymentState="@state"
                 asp-route-paymentMethodId="@Model.PaymentMethodId"
                 class="nav-link me-1 @(state == Model.ActiveState ? "active" : "")" role="tab">@state</a>
         </li>
@@ -154,16 +154,19 @@
                                asp-route-pullPaymentId="@pp.Id">
                                 Payouts
                             </a>
-                            <span permission="@Policies.CanModifyStoreSettings"> - </span>
-                            <a asp-action="ArchivePullPayment"
-                               permission="@Policies.CanModifyStoreSettings" 
-                               asp-route-storeId="@Context.GetRouteValue("storeId")"
-                               asp-route-pullPaymentId="@pp.Id"
-                               data-bs-toggle="modal"
-                               data-bs-target="#ConfirmModal"
-                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
-                                Archive
-                            </a>
+                            @if (!pp.Archived)
+                            {
+                               <span permission="@Policies.CanModifyStoreSettings"> - </span>
+                                <a asp-action="ArchivePullPayment"
+                                permission="@Policies.CanModifyStoreSettings" 
+                                asp-route-storeId="@Context.GetRouteValue("storeId")"
+                                asp-route-pullPaymentId="@pp.Id"
+                                data-bs-toggle="modal"
+                                data-bs-target="#ConfirmModal"
+                                data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
+                                    Archive
+                                </a> 
+                            }
                         </td>
                     </tr>
                 }

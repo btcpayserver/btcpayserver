@@ -253,8 +253,9 @@ namespace BTCPayServer.Controllers
                         Completed = totalCompleted.RoundToSignificant(ni.Divisibility).ToString("C", nfi),
                         Limit = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
                         ResetIn = period?.End is DateTimeOffset nr ? ZeroIfNegative(nr - now).TimeString() : null,
-                        EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null
-                    }
+                        EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null,
+                    },
+                    Archived = pp.Archived
                 });
             }
             return View(vm);

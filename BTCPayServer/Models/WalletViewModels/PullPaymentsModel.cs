@@ -28,6 +28,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public ProgressModel Progress { get; set; }
             public DateTimeOffset StartDate { get; set; }
             public DateTimeOffset? EndDate { get; set; }
+            public bool Archived { get; set; } = false;
         }
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();

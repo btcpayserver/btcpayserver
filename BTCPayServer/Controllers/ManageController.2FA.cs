@@ -29,7 +29,8 @@ namespace BTCPayServer.Controllers
             {
                 Is2faEnabled = user.TwoFactorEnabled,
                 RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
-                Credentials = await _fido2Service.GetCredentials( _userManager.GetUserId(User))
+                Credentials = await _fido2Service.GetCredentials( _userManager.GetUserId(User)),
+                LoginCode = _userLoginCodeService.GetOrGenerate( _userManager.GetUserId(User), false)
             };
 
             return View(model);

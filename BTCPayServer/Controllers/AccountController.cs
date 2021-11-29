@@ -127,7 +127,12 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return View(model);
                 }
-
+                if (!await _userManager.IsLockedOutAsync(user) && _userLoginCodeService.Verify(user.Id, model.Password))
+                {
+                    _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
+                    await _signInManager.SignInAsync(user, false, "LoginCode");
+                    return RedirectToLocal(returnUrl);
+                }
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
                 if (!await _userManager.IsLockedOutAsync(user) &&  fido2Devices)
                 {
@@ -143,14 +148,6 @@ namespace BTCPayServer.Controllers
                             {
                                 RememberMe = model.RememberMe
                             };
-                        }
-                        else
-                        {
-                            var identity = new ClaimsIdentity(IdentityConstants.TwoFactorUserIdScheme);
-                            identity.AddClaim(new Claim(ClaimTypes.Name, user.Id));
-                            
-                            identity.AddClaim(new Claim(ClaimTypes.AuthenticationMethod, "FIDO2"));
-                            await HttpContext.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
                         }
 
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
@@ -377,22 +374,14 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load two-factor authentication user.");
             }
- 
 
             var recoveryCode = model.RecoveryCode.Replace(" ", string.Empty, StringComparison.InvariantCulture);
 
-            if (_userLoginCodeService.Verify(user.Id, model.RecoveryCode))
-            {
-                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
-                await _signInManager.SignInAsync(user, false, "LoginCode");
-                return RedirectToLocal(returnUrl);
-            }
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
 
             if (result.Succeeded)
@@ -407,8 +396,8 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                _logger.LogWarning("Invalid recovery/login code entered for user with ID {UserId}", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid recovery/login code entered.");
+                _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
                 return View();
             }
         }

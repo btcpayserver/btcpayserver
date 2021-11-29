@@ -11,5 +11,7 @@ namespace BTCPayServer.Models.ManageViewModels
         public bool Is2faEnabled { get; set; }
         
         public List<Fido2Credential> Credentials { get; set; }
+
+        public string LoginCode { get; set; }
     }
 }

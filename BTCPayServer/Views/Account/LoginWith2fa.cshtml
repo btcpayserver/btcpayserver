@@ -30,6 +30,15 @@
                 </div>
             </form>
         </div>
+        <div class="row">
+            <div class="col-12">
+                <p class="text-secondary">
+                    Don't have access to your authenticator device?
+                    <br>
+                    You can <a asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@ViewData["ReturnUrl"]">log in with a recovery code</a>.
+                </p>
+            </div>
+        </div>
     </div>
 </section>
 

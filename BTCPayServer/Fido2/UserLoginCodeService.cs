@@ -19,8 +19,12 @@ namespace BTCPayServer.Fido2
             return $"{nameof(UserLoginCodeService)}_{userId.ToLowerInvariant()}";
         }
 
-        public string GetOrGenerate(string userId)
+        public string GetOrGenerate(string userId, bool forceUpdate)
         {
+            if (forceUpdate)
+            {
+                _memoryCache.Remove(GetCacheKey(userId));
+            }
             return _memoryCache.GetOrCreate(GetCacheKey(userId), entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);

@@ -70,21 +70,15 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
         {
             // TODO support altcoins, not just bitcoin
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
-            
-            // A random address where the block reward should be sent to
-            var bitcoinAddressString = "bcrt1pl63qqarewgeze8m34ysg0eadqvtrtqcnvf9u2y67xag9a9rlzz8qgka32t";
-            var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
-            
-            // Mine the blocks
+            var blockRewardBitcoinAddress = cheater.CashCow.GetNewAddress();
             try
             {
                 if (request.BlockCount > 0) 
                 {
-                    cheater.CashCow.GenerateToAddress(request.BlockCount, bitcoinAddressObj);
+                    cheater.CashCow.GenerateToAddress(request.BlockCount, blockRewardBitcoinAddress);
                     return Ok(new
                     {
-                        SuccessMessage = "Mined "+request.BlockCount+" blocks for " + bitcoinAddressObj
+                        SuccessMessage = "Mined "+request.BlockCount+" blocks"
                     });                    
                 }
                 return BadRequest(new

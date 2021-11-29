@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers
 
         public class MineBlocksRequest
         {
-            public int BlockCount { get; set; }
+            public int BlockCount { get; set; } = 1;
             public string CryptoCode { get; set; } = "BTC";
         }
         
@@ -69,24 +69,16 @@ namespace BTCPayServer.Controllers
         [CheatModeRoute]
         public async Task<IActionResult> MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            var store = await _StoreRepository.FindStore(invoice.StoreId);
-
             // TODO support altcoins, not just bitcoin
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
-            var paymentMethodId = store.GetDefaultPaymentId() ?? store.GetEnabledPaymentIds(_NetworkProvider).FirstOrDefault(p => p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
-            var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
-            var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
-            
-            // Mine the blocks
+            var blockRewardBitcoinAddress = cheater.CashCow.GetNewAddress();
             try
             {
                 if (request.BlockCount > 0) 
                 {
-                    cheater.CashCow.GenerateToAddress(request.BlockCount, bitcoinAddressObj);
+                    cheater.CashCow.GenerateToAddress(request.BlockCount, blockRewardBitcoinAddress);
                     return Ok(new
                     {
-                        SuccessMessage = "Mined "+request.BlockCount+" blocks for " + bitcoinAddressObj
+                        SuccessMessage = "Mined "+request.BlockCount+" blocks"
                     });                    
                 }
                 return BadRequest(new

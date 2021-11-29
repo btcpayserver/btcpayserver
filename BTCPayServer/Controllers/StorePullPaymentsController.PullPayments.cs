@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers
             model.PaymentMethodItems =
                 paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true));
             model.Name ??= string.Empty;
-            model.Currency = model.Currency != null ? model.Currency.ToUpperInvariant().Trim() : String.Empty;
+            model.Currency = model.Currency?.ToUpperInvariant()?.Trim() ?? String.Empty;
             model.PaymentMethods ??= new List<string>();
             if (!model.PaymentMethods.Any())
             {

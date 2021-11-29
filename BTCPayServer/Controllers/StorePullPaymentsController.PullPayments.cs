@@ -95,9 +95,13 @@ namespace BTCPayServer.Controllers
             model.PaymentMethodItems =
                 paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true));
             model.Name ??= string.Empty;
-            model.Currency = model.Currency.ToUpperInvariant().Trim();
+            model.Currency = model.Currency?.ToUpperInvariant()?.Trim() ?? String.Empty;
+            model.PaymentMethods ??= new List<string>();
             if (!model.PaymentMethods.Any())
             {
+                // Since we assign all payment methods to be selected by default above we need to update 
+                // them here to reflect user's selection so that they can correct their mistake
+                model.PaymentMethodItems = paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), false));
                 ModelState.AddModelError(nameof(model.PaymentMethods), "You need at least one payment method");
             }
             if (_currencyNameTable.GetCurrencyData(model.Currency, false) is null)

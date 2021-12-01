@@ -242,6 +242,7 @@
         @foreach (var plugin in availableAndNotInstalled)
         {
             var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
+            var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
             
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
@@ -249,7 +250,11 @@
                         <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
                             @plugin.Version
-                            @if (recommended)
+                            @if (disabled) 
+                            {
+                                <div class="badge bg-light ms-2">Disabled</div>
+                            }
+                            else if (recommended)
                             {
                                 <div class="badge bg-light ms-2 text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
@@ -274,19 +279,28 @@
                     </div>
                     @{
                         var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                        var pluginCommands = Model.Commands.GroupBy(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
                     <div class="card-footer border-0 pb-3">
                         @if (pending)
                         {
-                            <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending install</button>
-                            </form>
+                            @foreach (var command in pluginCommands)
+                            {
+                                
+                                <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                    <button type="submit" class="btn btn-outline-secondary">Cancel pending @command.Last().command</button>
+                                </form>
+                            }
                         }
                         else if (DependenciesMet(plugin.Dependencies))
                         {
-                            <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-primary">Install</button>
-                            </form>
+                            @* Don't show the "Install" button if plugin has been disabled *@
+                            @if (!disabled)
+                            {
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                    <button type="submit" class="btn btn-primary">Install</button>
+                                </form>
+                            }
                         }
                         else
                         {

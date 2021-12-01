@@ -128,8 +128,8 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
-                        <div class="d-flex flex-wrap align-items-center mb-3">
-                            <h5 class="card-subtitle text-muted d-flex align-items-center me-3">
+                        <div class="d-flex flex-wrap align-items-center mb-2">
+                            <h5 class="text-muted d-flex align-items-center mt-1">
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
@@ -160,7 +160,7 @@
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
-                                            <li class="list-group-item px-0">
+                                            <li class="list-group-item p-2">
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
@@ -182,7 +182,7 @@
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in matchedAvailable.Dependencies)
                                             {
-                                                <li class="list-group-item px-0">
+                                                <li class="list-group-item p-2">
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
@@ -248,7 +248,7 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                        <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
+                        <h5 class="text-muted d-flex align-items-center mt-1">
                             @plugin.Version
                             @if (disabled) 
                             {
@@ -266,7 +266,7 @@
                             <ul class="list-group list-group-flush">
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
-                                    <li class="list-group-item px-0">
+                                    <li class="list-group-item p-2">
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
@@ -352,7 +352,7 @@
                         <ul class="list-group list-group-flush">
                             @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
                             {
-                                <li class="list-group-item px-0">
+                                <li class="list-group-item p-2">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
                                         <span class="my-2 me-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">

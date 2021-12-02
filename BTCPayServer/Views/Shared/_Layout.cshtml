@@ -1,33 +1,21 @@
-@using BTCPayServer.Views.Server
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Views.Apps
-@using BTCPayServer.Views.Invoice
-@using BTCPayServer.Views.Manage
-@using BTCPayServer.Views.PaymentRequest
-@using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.Extensions
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
-@inject RoleManager<IdentityRole> RoleManager
-@inject ISettingsRepository SettingsRepository
-@inject LinkGenerator linkGenerator
+@inject BTCPayServer.Services.BTCPayServerEnvironment _env
+@inject UserManager<ApplicationUser> _userManager
+@inject ISettingsRepository _settingsRepository
+@inject LinkGenerator _linkGenerator
 
 @{
-    var theme = await SettingsRepository.GetTheme();
-    var store = Context.GetStoreData();
     var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
-    var notificationDisabled = (await SettingsRepository.GetPolicies()).DisableInstantNotifications;
+    var notificationDisabled = (await _settingsRepository.GetPolicies()).DisableInstantNotifications;
     if (!notificationDisabled)
     {
-        var user = await UserManager.GetUserAsync(User);
+        var user = await _userManager.GetUserAsync(User);
         notificationDisabled = user?.DisabledNotifications == "all";
     }
 }
 
 <!DOCTYPE html>
-<html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en"@(_env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
     @await RenderSectionAsync("PageHeadContent", false)
@@ -37,9 +25,9 @@
     <div id="mainMenuHead" class="d-flex flex-lg-wrap align-items-center justify-content-between py-2 px-3">
         <a href="~/" class="navbar-brand py-2 js-scroll-trigger">
             <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="logo"><use href="@logoSrc#small" class="logo-small" /><use href="@logoSrc#large" class="logo-large" /></svg>
-            @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
+            @if (_env.NetworkType != NBitcoin.ChainName.Mainnet)
             {
-                <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@Env.NetworkType.ToString()</span>
+                <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
             }
         </a>
         <vc:store-selector />
@@ -48,202 +36,23 @@
             <span>Menu</span>
         </button>
     </div>
-    <nav id="mainNav" class="d-flex flex-column justify-content-between mainNav-@(store != null ? "store" : "global")">
-        <div class="accordion ps-3">
-            @if (SignInManager.IsSignedIn(User))
-            {
-                @if (store == null)
-                {
-                    <div class="accordion-item">
-                        <header class="accordion-header" id="Nav-Payments-Header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
-                                Payments
-                                <vc:icon symbol="caret-down"/>
-                            </button>
-                        </header>
-                        <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
-                            <div class="accordion-body">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Nav-Invoices">Invoices</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    @* TODO: This is just a fake for visualization *@
-                    <div class="accordion-item">
-                        <header class="accordion-header" id="Nav-Plugins-Header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
-                                Plugins
-                                <vc:icon symbol="caret-down"/>
-                            </button>
-                        </header>
-                        <div id="Nav-Plugins" class="accordion-collapse collapse show" aria-labelledby="Nav-Plugins-Header">
-                            <div class="accordion-body">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger " id="Nav-LNbank">LNbank</a></li>
-                                    @* TODO: Rename this extension point *@
-                                    <vc:ui-extension-point location="header-nav" model="@Model"/>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="accordion-item">
-                        <header class="accordion-header" id="Nav-Payments-Header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
-                                Payments
-                                <vc:icon symbol="caret-down"/>
-                            </button>
-                        </header>
-                        <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
-                            <div class="accordion-body">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
-                                            <vc:icon symbol="payment-1"/>
-                                            <span>Invoices</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
-                                            <vc:icon symbol="payment-1"/>
-                                            <span>Requests</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="StorePullPayments" asp-action="PullPayments" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-@(nameof(StoreNavPages.PullPayments))">
-                                            <vc:icon symbol="payment-2"/>
-                                            <span>Pull Payments</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="StorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-@(nameof(StoreNavPages.Payouts))">
-                                            <vc:icon symbol="payment-2"/>
-                                            <span>Payouts</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-@(nameof(StoreNavPages.PayButton))">
-                                            <vc:icon symbol="payment-2"/>
-                                            <span>Pay Button</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <header class="accordion-header" id="Nav-Manage-Header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Manage" aria-expanded="true" aria-controls="Nav-Manage">
-                                Manage
-                                <vc:icon symbol="caret-down"/>
-                            </button>
-                        </header>
-                        <div id="Nav-Manage" class="accordion-collapse collapse show" aria-labelledby="Nav-Manage-Header">
-                            <div class="accordion-body">
-                                <ul class="navbar-nav">
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="Apps" asp-action="ListApps" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(AppsNavPages))" id="StoreNav-Apps">
-                                            <vc:icon symbol="settings" />
-                                            <span>Apps</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="Wallets" asp-action="ListWallets" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="StoreNav-Wallets">
-                                            <vc:icon symbol="settings" />
-                                            <span>Wallets</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Context.GetRouteValue("storeId")" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods)" id="StoreNav-Invoices">
-                                            <vc:icon symbol="settings" />
-                                            <span>Settings</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                }
-                <script>
-                    const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')
-                    const collapsed = navCollapsed ? JSON.parse(navCollapsed) : []
-                    collapsed.forEach(id => {
-                        const el = document.getElementById(id)
-                        const btn = el && el.previousElementSibling.querySelector(`[aria-controls="${id}"]`)
-                        if (el && btn) {
-                            el.classList.remove('show')
-                            btn.classList.add('collapsed')
-                            btn.setAttribute('aria-expanded', 'false')
-                        }
-                    })
-                </script>
-            }
-            else if (Env.IsSecure)
-            {
-                <ul class="navbar-nav">
-                    @if (!(await SettingsRepository.GetPolicies()).LockSubscription)
-                    {
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Nav-Register">Register</a>
-                        </li>
-                    }
-                    <li class="nav-item">
-                        <a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Nav-Login">Log in</a>
-                    </li>
-                    @* TODO: Rename this extension point *@
-                    <vc:ui-extension-point location="header-nav" model="@Model"/>
-                </ul>
-            }
-        </div>
-        <ul id="mainNavSettings" class="navbar-nav p-3 border-top">
-            @if (User.IsInRole(Roles.ServerAdmin))
-            {
-                <li class="nav-item">
-                    <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="Nav-ServerSettings">
-                        <vc:icon symbol="server-settings" />
-                        <span>Server Settings</span>
-                    </a>
-                </li>
-            }
-            <li class="nav-item">
-                <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-Account">
-                    <vc:icon symbol="account" />
-                    <span>Account</span>
-                </a>
-            </li>
-            @if (!theme.CustomTheme)
-            {
-                <li class="nav-item">
-                    <vc:theme-switch css-class="nav-link"/>
-                </li>
-            }
-            <li class="nav-item">
-                <a asp-area="" asp-controller="Account" asp- asp-action="Logout" class="nav-link js-scroll-trigger" id="Logout">
-                    <i class="fa fa-sign-out"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+    <vc:main-nav />
 </header>
 <main id="mainContent">
-    @if (Env.Context.Request.Host.ToString() != Env.ExpectedHost || Env.Context.Request.Scheme != Env.ExpectedProtocol)
+    @if (_env.Context.Request.Host.ToString() != _env.ExpectedHost || _env.Context.Request.Scheme != _env.ExpectedProtocol)
     {
         <div id="badUrl" class="alert alert-danger alert-dismissible m-3" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                 <vc:icon symbol="close"/>
             </button>
             <span>
-                BTCPay is expecting you to access this website from <strong>@(Env.ExpectedProtocol)://@(Env.ExpectedHost)/</strong>.
-                If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(Env.ExpectedProtocol)</strong>
+                BTCPay is expecting you to access this website from <strong>@(_env.ExpectedProtocol)://@(_env.ExpectedHost)/</strong>.
+                If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(_env.ExpectedProtocol)</strong>
                 (<a href="https://docs.btcpayserver.org/FAQ/Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link" rel="noreferrer noopener">More information</a>)
             </span>
         </div>
     }
-    @if (!Env.IsSecure)
+    @if (!_env.IsSecure)
     {
         <div id="insecureEnv" class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
@@ -279,7 +88,7 @@
                             <span style="margin-left:.4rem">Twitter</span>
                         </a>
                     </div>
-                    <div class="text-center text-xl-start">@Env.ToString()</div>
+                    <div class="text-center text-xl-start">@_env.ToString()</div>
                 </div>
             </div>
         </footer>
@@ -295,8 +104,8 @@
         <script>
             if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
                 const { host, protocol } = window.location;
-                const wsUri = `${protocol === "https:" ? "wss:" : "ws:"}//${host}@linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")`;
-                const newDataEndpoint = "@linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
+                const wsUri = `${protocol === "https:" ? "wss:" : "ws:"}//${host}@_linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")`;
+                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
                 try {
                     socket = new WebSocket(wsUri);
                     socket.onmessage = e => {

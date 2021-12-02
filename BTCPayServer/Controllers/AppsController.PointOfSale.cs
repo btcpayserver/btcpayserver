@@ -144,7 +144,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
 
-                    var items = _AppService.Parse(settings.Template, settings.Currency);
+                    var items = _appService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                vm.Template = _AppService.SerializeTemplate(_AppService.Parse(vm.Template, vm.Currency));
+                vm.Template = _appService.SerializeTemplate(_appService.Parse(vm.Template, vm.Currency));
             }
             catch
             {
@@ -211,7 +211,7 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
                 RequiresRefundEmail = vm.RequiresRefundEmail,
             });
-            await _AppService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }

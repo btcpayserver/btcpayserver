@@ -22,8 +22,15 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId)
+        public async Task<IActionResult> UpdateCrowdfund(string storeId, string appId)
         {
+            var store = await _storeRepository.FindStore(storeId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+            
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -64,10 +71,17 @@ namespace BTCPayServer.Controllers
             };
             return View(vm);
         }
-        [HttpPost]
-        [Route("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
+        
+        [HttpPost("{appId}/settings/crowdfund")]
+        public async Task<IActionResult> UpdateCrowdfund(string storeId, string appId, UpdateCrowdfundViewModel vm, string command)
         {
+            var store = await _storeRepository.FindStore(storeId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+            
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -77,7 +91,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                vm.PerksTemplate = _AppService.SerializeTemplate(_AppService.Parse(vm.PerksTemplate, vm.TargetCurrency));
+                vm.PerksTemplate = _appService.SerializeTemplate(_appService.Parse(vm.PerksTemplate, vm.TargetCurrency));
             }
             catch
             {
@@ -155,16 +169,16 @@ namespace BTCPayServer.Controllers
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
 
-            await _AppService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(app);
 
-            _EventAggregator.Publish(new AppUpdated()
+            _eventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
-            return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
+            return RedirectToAction(nameof(UpdateCrowdfund), new { storeId, appId });
         }
     }
 }

@@ -234,8 +234,8 @@
             <div class="d-grid gap-3 d-md-block">
                 <button type="submit" class="btn btn-primary me-md-2" id="SaveSettings">Save Settings</button>
                 <div class="btn-group me-md-2">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="Invoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="Invoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm"
                        target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
                 </div>
                 @if (Model.ModelWithMinimumData)

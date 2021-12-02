@@ -28,17 +28,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Store")]
         public string SelectedStore { get; set; }
 
-        public void SetStores(StoreData[] stores)
-        {
-            var defaultStore = stores[0].Id;
-            var choices = stores.Select(o => new Format() { Name = o.StoreName, Value = o.Id }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultStore) ?? choices.FirstOrDefault();
-            Stores = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            SelectedStore = chosen.Value;
-        }
-
-        public SelectList Stores { get; set; }
-
         [Display(Name = "App Type")]
         public string SelectedAppType { get; set; }
 

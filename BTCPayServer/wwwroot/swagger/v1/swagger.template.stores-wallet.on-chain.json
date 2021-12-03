@@ -750,7 +750,7 @@
                     "feeRate": {
                         "type": "number",
                         "format": "decimal or long (sats/byte)",
-                        "description": "A wallet address or a BIP21 payment link"
+                        "description": "Transaction fee."
                     },
                     "proceedWithPayjoin": {
                         "type": "boolean",

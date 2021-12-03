@@ -46,9 +46,8 @@ namespace BTCPayServer.Abstractions.Extensions
                 return null;
             }
             var activePage = (T)viewData[ACTIVE_PAGE_KEY];
-            // TODO: This needs to incorporate the category as well!
-            //var activeCategory = (T)viewData[ACTIVE_CATEGORY_KEY];
-            return page.Equals(activePage) ? "active" : null;
+            var activeCategory = viewData[ACTIVE_CATEGORY_KEY];
+            return activeCategory.Equals(activePage.GetType()) && page.Equals(activePage) ? "active" : null;
         }
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)

@@ -153,7 +153,8 @@
                         "required": false,
                         "description": "Whether to generate a new address for this request even if the previous one was not used",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean",
+                            "default": false
                         }
                     }
                 ],

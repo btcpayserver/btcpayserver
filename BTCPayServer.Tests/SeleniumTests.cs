@@ -509,11 +509,9 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 (string storeName, _) = s.CreateNewStore();
 
-                s.Driver.FindElement(By.Id("StoreNav-Apps")).Click();
-                s.Driver.FindElement(By.Id("CreateNewApp")).Click();
+                s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
                 s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
                 s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Point of Sale");
-                s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
                 s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
@@ -550,11 +548,9 @@ namespace BTCPayServer.Tests
                 (string storeName, _) = s.CreateNewStore();
                 s.AddDerivationScheme();
 
-                s.Driver.FindElement(By.Id("StoreNav-Apps")).Click();
-                s.Driver.FindElement(By.Id("CreateNewApp")).Click();
+                s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
                 s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
                 s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
-                s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
                 s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
@@ -818,16 +814,15 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
-                var (storeName, storeId) = s.CreateNewStore();
-                var cryptoCode = "BTC";
+                (string storeName, string storeId) = s.CreateNewStore();
+                const string cryptoCode = "BTC";
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0',
                 // then try to use the seed to sign the transaction
                 s.GenerateWallet(cryptoCode, "", true);
 
                 //let's test quickly the receive wallet page
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
 
@@ -862,8 +857,7 @@ namespace BTCPayServer.Tests
                 //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
                 s.GoToStore(storeId);
                 s.GenerateWallet(cryptoCode, "", true);
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 s.Driver.FindElement(By.Id("SectionNav-Receive")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
 
@@ -894,8 +888,7 @@ namespace BTCPayServer.Tests
                 await s.Server.ExplorerNode.GenerateAsync(1);
 
                 s.GoToStore(storeId);
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 s.ClickOnAllSectionLinks();
 
                 // Make sure wallet info is correct
@@ -905,8 +898,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("m/84'/1'/0'",
                     s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
                 
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 
                 // Make sure we can rescan, because we are admin!
                 s.Driver.FindElement(By.Id("SectionNav-Rescan")).Click();
@@ -930,8 +922,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);
 
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
 
                 var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
@@ -948,8 +939,7 @@ namespace BTCPayServer.Tests
                 //let's make bip21 more interesting
                 bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
                 var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
-                s.Driver.FindElement(By.Id("StoreNav-Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
                 s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
                 s.Driver.SwitchTo().Alert().SendKeys(bip21);
@@ -1260,22 +1250,21 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             var cryptoCode = "BTC";
             (_, string storeId) = s.CreateNewStore();
-            var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             s.GoToStore(storeId);
             s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning, false);
             s.GoToLightningSettings(storeId, cryptoCode);
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.GoToApps();
-            s.Driver.FindElement(By.Id("CreateNewApp")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
             s.Driver.FindElement(By.Id("SelectedAppType")).Click();
             s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            Thread.Sleep(5000);
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("DefaultView")).Click();
             s.Driver.FindElement(By.CssSelector("option[value='3']")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var btns = s.Driver.FindElements(By.ClassName("lnurl"));
@@ -1287,7 +1276,6 @@ namespace BTCPayServer.Tests
                 Assert.EndsWith(choice, parsed.ToString());
                 Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
             }
-
         }
 
         [Fact]

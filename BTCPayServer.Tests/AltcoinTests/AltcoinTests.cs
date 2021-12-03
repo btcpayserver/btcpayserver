@@ -607,15 +607,15 @@ namespace BTCPayServer.Tests
                 tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 var apps = user.GetController<AppsController>();
-                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId).Result).Model);
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
-                Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
-                var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model)
+                Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
+                var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model)
                     .Apps[0].Id;
                 var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
                     .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
@@ -658,13 +658,11 @@ donation:
                     .ViewPointOfSale(appId, PosViewType.Cart, 0, null, null, null, null, "orange").Result);
 
                 //
-                var invoices = user.BitPay.GetInvoices();
+                var invoices = await user.BitPay.GetInvoicesAsync();
                 var orangeInvoice = invoices.First();
                 Assert.Equal(10.00m, orangeInvoice.Price);
                 Assert.Equal("CAD", orangeInvoice.Currency);
                 Assert.Equal("orange", orangeInvoice.ItemDesc);
-
-
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(appId, PosViewType.Cart, 0, null, null, null, null, "apple").Result);
 
@@ -672,8 +670,7 @@ donation:
                 var appleInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("apple"));
                 Assert.NotNull(appleInvoice);
                 Assert.Equal("good apple", appleInvoice.ItemDesc);
-
-
+                
                 // testing custom amount
                 var action = Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(appId, PosViewType.Cart, 6.6m, null, null, null, null, "donation").Result);

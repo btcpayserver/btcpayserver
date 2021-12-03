@@ -2016,8 +2016,7 @@ namespace BTCPayServer.Tests
                 });
             }
         }
-
-
+        
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteApps()
@@ -2026,32 +2025,32 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 var user2 = tester.NewAccount();
-                user2.GrantAccess();
+                await user2.GrantAccessAsync();
                 var apps = user.GetController<AppsController>();
                 var apps2 = user2.GetController<AppsController>();
-                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId).Result).Model);
                 Assert.NotNull(vm.SelectedAppType);
                 Assert.Null(vm.AppName);
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
-                var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
+                var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
                 Assert.Equal(nameof(apps.UpdatePointOfSale), redirectToAction.ActionName);
-                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 var appList2 =
-                    Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps().Result).Model);
+                    Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
                 Assert.Single(appList.Apps);
                 Assert.Empty(appList2.Apps);
                 Assert.Equal("test", appList.Apps[0].AppName);
                 Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
                 Assert.True(appList.Apps[0].IsOwner);
                 Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
-                Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);
-                Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
-                redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+                Assert.IsType<NotFoundResult>(apps2.DeleteApp(user.StoreId, appList.Apps[0].Id).Result);
+                Assert.IsType<ViewResult>(apps.DeleteApp(user.StoreId, appList.Apps[0].Id).Result);
+                redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(user.StoreId, appList.Apps[0].Id).Result);
                 Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
-                appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 Assert.Empty(appList.Apps);
             }
         }

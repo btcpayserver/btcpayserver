@@ -155,11 +155,11 @@ namespace BTCPayServer.Controllers
             switch (appType)
             {
                 case AppType.PointOfSale:
-                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
+                    return RedirectToAction(nameof(UpdatePointOfSale), new { storeId = appData.StoreDataId, appId = appData.Id });
                 case AppType.Crowdfund:
-                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
+                    return RedirectToAction(nameof(UpdateCrowdfund), new { storeId = appData.StoreDataId, appId = appData.Id });
                 default:
-                    return RedirectToAction(nameof(ListApps));
+                    return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
             }
         }
 

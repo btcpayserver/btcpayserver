@@ -9,7 +9,7 @@ namespace BTCPayServer.Controllers
     public partial class ManageController
     {
         [HttpGet]
-        public async Task<IActionResult> RegenerateLoginCode()
+        public async Task<IActionResult> LoginCodes()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -17,12 +17,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            _userLoginCodeService.GetOrGenerate(user.Id, true);
-            TempData.SetStatusMessageModel(new StatusMessageModel()
-            {
-                Message = "Login code regenerated."
-            });
-            return RedirectToAction(nameof(ManageController.TwoFactorAuthentication));
+            return View(nameof(LoginCodes), _userLoginCodeService.GetOrGenerate(user.Id));
         }
     }
 }

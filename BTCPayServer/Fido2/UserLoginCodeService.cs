@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -19,24 +21,32 @@ namespace BTCPayServer.Fido2
             return $"{nameof(UserLoginCodeService)}_{userId.ToLowerInvariant()}";
         }
 
-        public string GetOrGenerate(string userId, bool forceUpdate)
+        public string GetOrGenerate(string userId)
         {
-            if (forceUpdate)
+            var key = GetCacheKey(userId);
+            if (_memoryCache.TryGetValue(key, out var code))
             {
-                _memoryCache.Remove(GetCacheKey(userId));
+                _memoryCache.Remove(code);
+                _memoryCache.Remove(key);
             }
             return _memoryCache.GetOrCreate(GetCacheKey(userId), entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
-                return Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
+                var code = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
+                var newEntry = _memoryCache.CreateEntry(code);
+                newEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+                newEntry.Value = userId;
+
+                return code;
             });
         }
-
-        public bool Verify(string userId, string code)
+        public string Verify(string code)
         {
-            if (!_memoryCache.TryGetValue(GetCacheKey(userId), out var userCode) || !userCode.Equals(code)) return false;
-            _memoryCache.Remove(GetCacheKey(userId));
-            return true;
+            if (!_memoryCache.TryGetValue(code, out var userId)) return null;
+            _memoryCache.Remove(GetCacheKey((string)userId));
+            _memoryCache.Remove(code);
+            return (string)userId;
+
         }
     }
 }

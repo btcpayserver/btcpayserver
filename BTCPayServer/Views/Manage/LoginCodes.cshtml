@@ -1,27 +1,28 @@
 @model string
-
-<h4 class="mb-3">Quick Login </h4>
-<div class="list-group mb-3">
-    <div class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3"
-         data-bs-toggle="collapse" data-bs-target="#login-code-section">
-        <div>
-            <h5>Show login code</h5>
-            <p class="mb-0 me-3">Quick login option for mobile devices when you are next to an authenticated machine.</p>
-        </div>
-        <button class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#login-code-section">Show</button>
-    </div>
-    <div class="list-group-item collapse card" id="login-code-section">
-            <div class="qr-container my-3">
-                <vc:qr-code data="@Model"> </vc:qr-code>
-            </div>
-            <div class="input-group  d-flex" data-clipboard="@Model">
-                <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model"/>
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
-                </div>
-            </div>
-            
-            <a class="w-100 btn btn-link text-center" asp-action="RegenerateLoginCode">Regenerate code</a>
-        </div>
-
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.LoginCodes, "Login codes");
+}
+<h2 class="mb-4">@ViewData["Title"]</h2>
+<p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
+<div class="qr-container my-3 w-100 text-center">
+    <vc:qr-code data="@Model"> </vc:qr-code>
 </div>
+@* <div class="input-group  d-flex" data-clipboard="@Model"> *@
+@*     <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model"/> *@
+@*     <div class="input-group-append"> *@
+@*         <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button> *@
+@*     </div> *@
+@* </div> *@
+<a class="w-100 btn btn-link text-center" asp-action="LoginCodes">Regenerate code</a>
+
+
+@section PageFootContent
+{
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
+        window.onload = function (){        
+            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
+        }
+        </script>
+}

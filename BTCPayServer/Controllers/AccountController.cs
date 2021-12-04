@@ -108,6 +108,23 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
+
+            if (!string.IsNullOrEmpty(model.LoginCode))
+            {
+                var userId = _userLoginCodeService.Verify(model.LoginCode);
+                if (userId is null)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Login code was invalid");
+                    return View(model);
+                } 
+                var user = await _userManager.FindByIdAsync(userId); 
+
+                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
+                await _signInManager.SignInAsync(user, false, "LoginCode");
+                return RedirectToLocal(returnUrl);
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -127,12 +144,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return View(model);
                 }
-                if (!await _userManager.IsLockedOutAsync(user) && _userLoginCodeService.Verify(user.Id, model.Password))
-                {
-                    _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
-                    await _signInManager.SignInAsync(user, false, "LoginCode");
-                    return RedirectToLocal(returnUrl);
-                }
+               
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
                 if (!await _userManager.IsLockedOutAsync(user) &&  fido2Devices)
                 {

@@ -1,13 +1,5 @@
 $(function () {
     inputChanges();
-
-    // Clipboard Copy
-    new Clipboard('#copyCode', {
-        text: function (trigger) {
-            $(".copyLabelPopup").show().delay(1000).fadeOut(500);
-            return inputChanges();
-        }
-    });
 });
 
 function esc(input) {

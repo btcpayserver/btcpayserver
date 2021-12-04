@@ -77,7 +77,6 @@ namespace BTCPayServer.Controllers
         [Route("~/Account/Login", Order = 2)]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
-
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
@@ -89,12 +88,35 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(new LoginViewModel()
-            {
-                Email = email
-            });
+            return View(nameof(Login), new LoginViewModel() { Email = email });
         }
 
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("~/login/code", Order = 1)]
+        [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+
+        public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
+        {
+            if (!string.IsNullOrEmpty(loginCode))
+            {
+                var userId = _userLoginCodeService.Verify(loginCode);
+                if (userId is null)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Login code was invalid");
+                    return await Login(returnUrl, null);
+                } 
+                var user = await _userManager.FindByIdAsync(userId); 
+
+                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
+                await _signInManager.SignInAsync(user, false, "LoginCode");
+                return RedirectToLocal(returnUrl);
+            }
+            return await Login(returnUrl, null);
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -107,22 +129,6 @@ namespace BTCPayServer.Controllers
             if (!CanLoginOrRegister())
             {
                 return RedirectToAction("Login");
-            }
-
-            if (!string.IsNullOrEmpty(model.LoginCode))
-            {
-                var userId = _userLoginCodeService.Verify(model.LoginCode);
-                if (userId is null)
-                {
-                    ModelState.AddModelError(string.Empty,
-                        "Login code was invalid");
-                    return View(model);
-                } 
-                var user = await _userManager.FindByIdAsync(userId); 
-
-                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
-                await _signInManager.SignInAsync(user, false, "LoginCode");
-                return RedirectToLocal(returnUrl);
             }
 
             ViewData["ReturnUrl"] = returnUrl;

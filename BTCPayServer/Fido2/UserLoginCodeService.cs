@@ -33,7 +33,7 @@ namespace BTCPayServer.Fido2
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
                 var code = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
-                var newEntry = _memoryCache.CreateEntry(code);
+                using var newEntry = _memoryCache.CreateEntry(code);
                 newEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
                 newEntry.Value = userId;
 

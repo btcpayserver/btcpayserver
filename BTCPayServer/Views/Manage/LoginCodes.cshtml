@@ -7,13 +7,8 @@
 <div class="qr-container my-3 w-100 text-center">
     <vc:qr-code data="@Model"> </vc:qr-code>
 </div>
-@* <div class="input-group  d-flex" data-clipboard="@Model"> *@
-@*     <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model"/> *@
-@*     <div class="input-group-append"> *@
-@*         <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button> *@
-@*     </div> *@
-@* </div> *@
-<a class="w-100 btn btn-link text-center" asp-action="LoginCodes">Regenerate code</a>
+<input type="hidden" value="@Model" id="logincode">
+<a class="w-100 btn btn-link text-center"  id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
 
 
 @section PageFootContent

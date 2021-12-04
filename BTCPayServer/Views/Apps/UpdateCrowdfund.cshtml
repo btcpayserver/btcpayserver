@@ -3,6 +3,7 @@
 @model UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePageAndTitle(AppsNavPages.Update, "Update Crowdfund", Model.StoreName);
+    ViewData.SetActiveId(Model.AppId);
 }
 
 @section PageHeadContent {

@@ -87,8 +87,7 @@ namespace BTCPayServer.Controllers
             public bool? RedirectAutomatically { get; set; }
         }
 
-        [HttpGet]
-        [Route("{appId}/settings/pos")]
+        [HttpGet("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId)
         {
             var store = await _storeRepository.FindStore(storeId, GetUserId());
@@ -101,6 +100,7 @@ namespace BTCPayServer.Controllers
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
@@ -168,8 +168,8 @@ namespace BTCPayServer.Controllers
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
             return View(vm);
         }
-        [HttpPost]
-        [Route("{appId}/settings/pos")]
+
+        [HttpPost("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId, UpdatePointOfSaleViewModel vm)
         {
             var store = await _storeRepository.FindStore(storeId, GetUserId());

@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -18,24 +19,27 @@ namespace BTCPayServer.Components.MainNav
     public class MainNav : ViewComponent
     {
         private const string RootName = "Global";
+        private readonly AppService _appService;
         private readonly StoreRepository _storeRepo;
-        readonly BTCPayNetworkProvider _networkProvider;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
 
         public MainNav(
-            StoreRepository storeRepo, 
+            AppService appService,
+            StoreRepository storeRepo,
             BTCPayNetworkProvider networkProvider, 
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             _storeRepo = storeRepo;
+            _appService = appService;
             _userManager = userManager;
             _networkProvider = networkProvider;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
         }
 
-        public IViewComponentResult Invoke()
+        public async Task<IViewComponentResult> InvokeAsync()
         {
             var store = ViewContext.HttpContext.GetStoreData();
             var vm = new MainNavViewModel { Store = store };
@@ -46,11 +50,21 @@ namespace BTCPayServer.Components.MainNav
             {
                 var storeBlob = store.GetStoreBlob();
                             
+                // Wallets
                 AddPaymentMethods(store, storeBlob, 
                     out var derivationSchemes, out var lightningNodes);
-
                 vm.DerivationSchemes = derivationSchemes;
                 vm.LightningNodes = lightningNodes;
+                
+                // Apps
+                var apps = await _appService.GetAllApps(GetUserId());
+                vm.Apps = apps.Select(a => new StoreApp
+                {
+                    Id = a.Id,
+                    AppName = a.AppName,
+                    AppType = a.AppType,
+                    IsOwner = a.IsOwner
+                }).ToList();
             }
             
             return View(vm);
@@ -113,6 +127,11 @@ namespace BTCPayServer.Components.MainNav
                         break;
                 }
             }
+        }
+
+        private string GetUserId()
+        {
+            return _userManager.GetUserId(HttpContext.User);
         }
     }
 }

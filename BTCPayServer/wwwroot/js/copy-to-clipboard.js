@@ -1,10 +1,9 @@
-window.copyToClipboard = function (e, text) {
+window.copyToClipboard = function (e, data) {
     if (navigator.clipboard) {
         e.preventDefault();
-        var item = e.currentTarget;
-        var data = text || item.getAttribute('data-clipboard');
-        var confirm = item.querySelector('[data-clipboard-confirm]') || item;
-        var message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
+        const item = e.target;
+        const confirm = item.querySelector('[data-clipboard-confirm]') || item;
+        const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
         if (!confirm.dataset.clipboardInitialText) {
             confirm.dataset.clipboardInitialText = confirm.innerText;
             confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
@@ -22,7 +21,14 @@ window.copyUrlToClipboard = function (e) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("[data-clipboard]").forEach(item => {
-        item.addEventListener("click", window.copyToClipboard)
+    delegate('click', '[data-clipboard]', e => {
+        const data = e.target.getAttribute('data-clipboard')
+        window.copyToClipboard(e, data)
+    })
+    delegate('click', '[data-clipboard-target]', e => {
+        const selector = e.target.getAttribute('data-clipboard-target')
+        const target = document.querySelector(selector)
+        const data = target.innerText
+        window.copyToClipboard(e, data)
     })
 })

@@ -1,5 +1,4 @@
 using System;
-using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.AppViewModels;

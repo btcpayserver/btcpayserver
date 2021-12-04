@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using BTCPayServer.Data;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -90,8 +89,15 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{appId}/settings/pos")]
-        public async Task<IActionResult> UpdatePointOfSale(string appId)
+        public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId)
         {
+            var store = await _storeRepository.FindStore(storeId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+            
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
@@ -164,8 +170,15 @@ namespace BTCPayServer.Controllers
         }
         [HttpPost]
         [Route("{appId}/settings/pos")]
-        public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
+        public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId, UpdatePointOfSaleViewModel vm)
         {
+            var store = await _storeRepository.FindStore(storeId, GetUserId());
+            if (store == null)
+            {
+                return NotFound();
+            }
+            HttpContext.SetStoreData(store);
+                
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();

@@ -57,7 +57,7 @@ namespace BTCPayServer.Components.MainNav
                 vm.LightningNodes = lightningNodes;
                 
                 // Apps
-                var apps = await _appService.GetAllApps(GetUserId());
+                var apps = await _appService.GetAllApps(GetUserId(), false, store.Id);
                 vm.Apps = apps.Select(a => new StoreApp
                 {
                     Id = a.Id,

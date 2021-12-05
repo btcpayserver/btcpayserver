@@ -35,7 +35,7 @@ namespace BTCPayServer.Tests
                 var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model)
                     .Apps[0].Id;
                 var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(user.StoreId, appId).Result).Model);
                 vmpos.Template = @"
 apple:
   price: 5.0
@@ -47,9 +47,9 @@ donation:
   price: 1.02
   custom: true
 ";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(user.StoreId, appId, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(user.StoreId, appId).Result).Model);
                 var publicApps = user.GetController<AppsPublicController>();
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert

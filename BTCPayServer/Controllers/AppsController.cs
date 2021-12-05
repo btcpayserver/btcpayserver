@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -25,13 +24,13 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
-            AppService AppService)
+            AppService appService)
         {
             _userManager = userManager;
             _eventAggregator = eventAggregator;
             _currencies = currencies;
             _storeRepository = storeRepository;
-            _appService = AppService;
+            _appService = appService;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -118,7 +117,7 @@ namespace BTCPayServer.Controllers
             
             vm.SelectedStore = store.Id;
 
-            if (!Enum.TryParse<AppType>(vm.SelectedAppType, out AppType appType))
+            if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
 
             if (!ModelState.IsValid)

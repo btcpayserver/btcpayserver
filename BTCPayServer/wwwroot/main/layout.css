@@ -40,19 +40,19 @@
 
 #mainNav {
     height: calc(100vh - var(--mobile-header-height));
-    overflow-y: scroll;
+    overflow-y: auto;
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav i.fa,
-#mainNav svg.icon {
+#mainNav .nav-item i.fa,
+#mainNav .nav-item svg.icon {
     font-size: 1.125rem;
     width: 1.5rem;
     height: 1.5rem;
     margin-right: var(--btcpay-space-xs);
 }
 
-#mainNav i.fa {
+#mainNav .nav-item i.fa {
     padding: .15rem 0 0 var(--btcpay-space-xs);
 }
 
@@ -285,7 +285,6 @@
         outline: 0;
         transform: translateX(-100%);
         transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
-        overflow-y: scroll;
     }
 
     #mainNav.show {

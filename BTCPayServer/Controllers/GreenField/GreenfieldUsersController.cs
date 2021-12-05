@@ -64,6 +64,44 @@ namespace BTCPayServer.Controllers.Greenfield
             _userService = userService;
         }
 
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/users")]
+        public async Task<ActionResult<ApplicationUserData[]>> GetUsers([FromQuery] string? id = null,
+            [FromQuery] string? email = null)
+        {
+            if (id != null)
+            {
+                // Look for 1 user by ID
+                var user = await _userManager.FindByIdAsync(id);
+                if (user != null)
+                {
+                    return Ok(await FromModel(user));
+                }
+                return NotFound();
+            }
+
+            if (email != null)
+            {
+                // Look for 1 user by email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    return Ok(await FromModel(user));
+                }
+                return NotFound();
+            }
+
+            // No filter specified, return all users
+            var users = _userManager.Users.ToArray();
+            ApplicationUserData[] userDataList = new ApplicationUserData[users.Length];
+
+            for (int i = 0; i < users.Length; i++)
+            {
+                userDataList[i] = await FromModel(users[i]);
+            }
+            return Ok(userDataList);
+        }
+
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me")]
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()

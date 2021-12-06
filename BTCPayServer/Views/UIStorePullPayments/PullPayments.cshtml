@@ -51,6 +51,8 @@
     </a>
 </div>
 
+@if (Model.PaymentMethods.Count() > 1)
+{
 <ul class="nav nav-pills border bg-tile mb-2" style="border-radius: 4px;">
     @foreach (var pm in Model.PaymentMethods)
     {
@@ -68,6 +70,7 @@
         </li>
     }
 </ul>
+}
 <ul class="nav nav-pills border bg-tile mb-2" style="border-radius: 4px;">
     @foreach (var state in Enum.GetValues(typeof(PullPaymentState)).Cast<PullPaymentState>())
     {

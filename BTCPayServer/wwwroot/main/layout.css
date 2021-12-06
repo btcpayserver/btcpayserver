@@ -124,14 +124,17 @@
 }
 
 #StoreSelectorDropdown,
-#StoreSelectorToggle,
-#StoreSelectorMenu {
+#StoreSelectorToggle {
     width: 100%;
 }
 
 #StoreSelectorToggle {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+#StoreSelectorMenu {
+    min-width: 100%;
 }
 
 /* Logo */

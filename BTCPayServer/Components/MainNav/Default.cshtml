@@ -19,7 +19,7 @@
 }
 
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
-    <div class="accordion px-3">
+    <div class="accordion px-3 px-lg-4">
         @if (SignInManager.IsSignedIn(User))
         {
             @if (Model.Store == null)
@@ -259,7 +259,7 @@
             </ul>
         }
     </div>
-    <ul id="mainNavSettings" class="navbar-nav p-3 border-top">
+    <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
         @if (User.IsInRole(Roles.ServerAdmin))
         {
             <li class="nav-item">

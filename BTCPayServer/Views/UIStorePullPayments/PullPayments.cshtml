@@ -54,6 +54,17 @@
 @if (Model.PaymentMethods.Count() > 1)
 {
 <ul class="nav nav-pills border bg-tile mb-2" style="border-radius: 4px;">
+    <li class="nav-item py-0">
+        <a
+            asp-action="PullPayments"
+            asp-route-sortOrder="@startDateSortOrder"
+            asp-route-pullPaymentState="@Model.ActiveState"
+            class="nav-link me-1 @(Model.PaymentMethodId == null ? "active" : "")"
+            id="all-view"
+            role="tab">
+            All
+        </a>
+    </li>
     @foreach (var pm in Model.PaymentMethods)
     {
         <li class="nav-item py-0">

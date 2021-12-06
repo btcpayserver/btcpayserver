@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Total = await ppsQuery.CountAsync()
                 PaymentMethods = paymentMethods,
-                PaymentMethodId = paymentMethodId ?? paymentMethods.First().ToString(),
+                PaymentMethodId = paymentMethodId,
                 ActiveState = pullPaymentState
             });
 

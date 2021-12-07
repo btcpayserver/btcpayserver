@@ -1,5 +1,6 @@
 ﻿@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -44,7 +45,7 @@
             </a>
         </small>
     </h4>
-    <a asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
+    <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create a new pull payment
     </a>
 </div>
@@ -88,7 +89,7 @@
                     </th>
                     <th scope="col">Name</th>
                     <th scope="col">Refunded</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col" class="text-end" >Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -113,12 +114,15 @@
                                asp-route-pullPaymentId="@pp.Id">
                                 View
                             </a> -
-                            <a class="pp-payout" asp-action="Payouts"
+                            <a class="pp-payout" 
+                               
+                               asp-action="Payouts"
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id">
                                 Payouts
-                            </a> -
+                            </a>
                             <a asp-action="ArchivePullPayment"
+                               permission="@Policies.CanModifyStoreSettings" 
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id"
                                data-bs-toggle="modal"

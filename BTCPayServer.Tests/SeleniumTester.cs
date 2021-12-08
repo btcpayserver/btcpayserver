@@ -367,7 +367,7 @@ namespace BTCPayServer.Tests
 
         public void GoToInvoiceCheckout(string invoiceId)
         {
-            Driver.FindElement(By.Id("Nav-Invoices")).Click();
+            Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
         }

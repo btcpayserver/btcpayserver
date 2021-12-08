@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.InvoicingModels
     {
         public List<InvoiceModel> Invoices { get; set; } = new List<InvoiceModel>();
         public string[] StoreIds { get; set; }
+        public string StoreId { get; set; }
     }
 
     public class InvoiceModel

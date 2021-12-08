@@ -190,7 +190,7 @@
             </a>
         </small>
     </h2>
-    <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
+    <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
         <span class="fa fa-plus"></span>
         Create an invoice
     </a>
@@ -200,7 +200,7 @@
 
 <div class="row">
     <div class="col-12 col-lg-6 mb-5 mb-lg-2 ms-auto">
-        <form asp-action="ListInvoices" method="get">
+        <form asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
             <input type="hidden" asp-for="Count"/>
             <input asp-for="TimezoneOffset" type="hidden"/>
             <div class="input-group">
@@ -216,17 +216,17 @@
                 </button>
 
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
                     <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
+                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
                     <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
                     <div role="separator" class="dropdown-divider"></div>
                     <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
@@ -308,6 +308,7 @@
 @if (Model.Total > 0)
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
+        <input type="hidden" name="storeId" value="@Model.StoreId" />
         <span class="me-2">
             <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Actions
@@ -334,7 +335,7 @@
             <thead>
             <tr>
                 <th style="width:2rem;" class="only-for-js">
-                    <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
+                    <input id="selectAllCheckbox" type="checkbox" class="form-check-input"/>
                 </th>
                 <th style="min-width:90px;" class="col-md-auto">
                     Date
@@ -384,7 +385,8 @@
                                     @invoice.Status.Status.ToModernStatus().ToString() @* @invoice.Status.ToString()  *@
                                     @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
                                     {
-                                        @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString());
+                                        @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
+                                        ;
                                     }
                                 </span>
                                 <div class="dropdown-menu pull-right">
@@ -409,7 +411,8 @@
                                 @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
                                 @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
                                 {
-                                    @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString());
+                                    @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
+                                    ;
                                 }
                             </span>
                         }
@@ -450,7 +453,7 @@
             </tbody>
         </table>
 
-        <vc:pager view-model="Model" />
+        <vc:pager view-model="Model"/>
     </form>
 }
 else

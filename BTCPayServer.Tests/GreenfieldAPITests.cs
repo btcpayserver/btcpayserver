@@ -212,6 +212,64 @@ namespace BTCPayServer.Tests
 
             tester.Stores.Remove(user.StoreId);
         }
+        
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanViewUsersViaApi()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            
+            // Should be 401 for all calls because we don't have permission
+            await AssertHttpError(401, async () => await unauthClient.GetUsers());
+            await AssertHttpError(401, async () => await unauthClient.GetUserById("some id"));
+            await AssertHttpError(401, async () => await unauthClient.GetUserByEmail("someone@example.com"));
+            
+            var adminUser = tester.NewAccount();
+            await adminUser.GrantAccessAsync();
+            await adminUser.MakeAdmin();
+            var adminClient = await adminUser.CreateClient(Policies.Unrestricted);
+
+            // Should 404 if user doesn't exist
+            await AssertHttpError(404,async () => await adminClient.GetUserById("non_existing_id"));
+            await AssertHttpError(404,async () => await adminClient.GetUserByEmail("doesnotexist@example.com"));
+            
+            // Try listing all users, should be fine
+            await adminClient.GetUsers();
+            
+            // Try loading 1 user by ID. Loading myself.
+            await adminClient.GetUserById(adminUser.UserId);
+            
+            //await adminClient.GetUserByEmail(user.Email);
+            
+            
+            
+            
+            // var badClient = await user.CreateClient(Policies.CanCreateInvoice);
+            // await AssertHttpError(403,
+            //     async () => await badClient.DeleteCurrentUser());
+
+            var goodClient = await adminUser.CreateClient(Policies.CanViewUsers);
+            
+            // Try listing all users, should be fine
+            await goodClient.GetUsers();
+            
+            // Try loading 1 user by ID
+            await goodClient.GetUserById(adminUser.UserId);
+                
+            // Try loading 1 user by email
+            //await goodClient.GetUserByEmail(user.Email);
+            
+            //await AssertHttpError(404, async () => await adminClient.DeleteUser(user.UserId));
+
+            
+            // Why is this line needed? I saw it in "CanDeleteUsersViaApi" as well. Is this part of the cleanup?
+            tester.Stores.Remove(adminUser.StoreId);
+        }
+        
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

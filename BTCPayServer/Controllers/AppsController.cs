@@ -99,11 +99,10 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             
-            var vm = new CreateAppViewModel
+            return View(new CreateAppViewModel
             {
-                SelectedStore = CurrentStore.Id
-            };
-            return View(vm);
+                StoreId = CurrentStore.Id
+            });
         }
 
         [HttpPost("/stores/{storeId}/apps/create")]
@@ -114,7 +113,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             
-            vm.SelectedStore = CurrentStore.Id;
+            vm.StoreId = CurrentStore.Id;
 
             if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
@@ -151,9 +150,9 @@ namespace BTCPayServer.Controllers
             switch (appType)
             {
                 case AppType.PointOfSale:
-                    return RedirectToAction(nameof(UpdatePointOfSale), new { storeId = appData.StoreDataId, appId = appData.Id });
+                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
                 case AppType.Crowdfund:
-                    return RedirectToAction(nameof(UpdateCrowdfund), new { storeId = appData.StoreDataId, appId = appData.Id });
+                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
                 default:
                     return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
             }

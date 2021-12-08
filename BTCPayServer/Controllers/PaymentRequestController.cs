@@ -99,7 +99,10 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data));
+            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data)
+            {
+                StoreId = CurrentStore.Id
+            });
         }
 
         [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]

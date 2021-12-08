@@ -17,7 +17,7 @@
 }
 <partial name="_StatusMessage" />
 <h2 class="mb-4">@ViewData["Title"]</h2>
-<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { storeId = Context.GetStoreData().Id, payReqId = Model.Id }, Context.Request.Scheme)">
+<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
     <div class="row">
         <div class="col-lg-6">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -121,7 +121,7 @@
                         <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Unarchive</a>
                     }
                 }
-                <a asp-action="GetPaymentRequests" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-link px-0 ms-3">Back to list</a>
+                <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" class="btn btn-link px-0 ms-3">Back to list</a>
             </div>
         </div>
     </div>

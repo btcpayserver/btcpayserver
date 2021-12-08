@@ -26,7 +26,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string AppName { get; set; }
 
         [Display(Name = "Store")]
-        public string SelectedStore { get; set; }
+        public string StoreId { get; set; }
 
         [Display(Name = "App Type")]
         public string SelectedAppType { get; set; }

@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 #if ALTCOINS
-using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 #endif
 using BTCPayServer.Services.Invoices;
@@ -20,7 +19,6 @@ namespace BTCPayServer.Payments
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS
             MoneroLike,
-            EthereumPaymentType.Instance
 #endif
         };
         /// <summary>

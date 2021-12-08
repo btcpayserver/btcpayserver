@@ -1442,13 +1442,11 @@ namespace BTCPayServer.Tests
                 new MemoryConfigurationProvider(new MemoryConfigurationSource()
                 {
                     InitialData = new[] {
-                        new KeyValuePair<string, string>("chains", "usdt20,usdt")}
+                        new KeyValuePair<string, string>("chains", "usdt")}
                 })
             });
 
             var networkProvider = config.ConfigureNetworkProvider(BTCPayLogs);
-            Assert.NotNull(networkProvider.GetNetwork("ETH"));
-            Assert.NotNull(networkProvider.GetNetwork("USDT20"));
             Assert.NotNull(networkProvider.GetNetwork("LBTC"));
             Assert.NotNull(networkProvider.GetNetwork("USDT"));
         }

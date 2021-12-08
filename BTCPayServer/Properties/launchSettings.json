@@ -86,7 +86,7 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc,eth",
+        "BTCPAY_CHAINS": "btc,ltc,lbtc",
         "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;",
         "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",

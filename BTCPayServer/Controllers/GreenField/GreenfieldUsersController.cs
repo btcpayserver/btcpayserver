@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _userService = userService;
         }
 
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers([FromQuery] string? id = null,
             [FromQuery] string? email = null)

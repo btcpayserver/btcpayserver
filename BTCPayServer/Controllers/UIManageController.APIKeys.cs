@@ -505,6 +505,7 @@ namespace BTCPayServer.Controllers
                 public static readonly Dictionary<string, (string Title, string Description)> PermissionDescriptions = new Dictionary<string, (string Title, string Description)>()
                 {
                     {BTCPayServer.Client.Policies.Unrestricted, ("Unrestricted access", "The app will have unrestricted access to your account.")},
+                    {BTCPayServer.Client.Policies.CanViewUsers, ("View users", "The app will be able to see all users on this server.")},
                     {BTCPayServer.Client.Policies.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
                     {BTCPayServer.Client.Policies.CanDeleteUser, ("Delete user", "The app will be able to delete the user to whom it is assigned. Admin users can delete any user without this permission.")},
                     {BTCPayServer.Client.Policies.CanModifyStoreSettings, ("Modify your stores", "The app will be able to manage invoices on all your stores and modify their settings.")},

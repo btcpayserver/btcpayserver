@@ -1,17 +1,11 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AngleSharp.Common;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.PaymentRequestViewModels;
-using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using NBitcoin;
 using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;
@@ -53,7 +47,7 @@ namespace BTCPayServer.Tests
                 };
                 var id = Assert
                     .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
-                    .RouteValues.Values.First().ToString();
+                    .RouteValues.Values.Last().ToString();
 
                 // Permission guard for guests editing 
                 Assert
@@ -104,7 +98,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
 
                 var paymentRequestController = user.GetController<PaymentRequestController>();
@@ -123,7 +117,7 @@ namespace BTCPayServer.Tests
                 };
                 var response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                    .RouteValues.First();
+                    .RouteValues.Last();
 
                 var invoiceId = Assert
                     .IsType<OkObjectResult>(
@@ -154,7 +148,7 @@ namespace BTCPayServer.Tests
 
                 response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                    .RouteValues.First();
+                    .RouteValues.Last();
 
                 Assert
                     .IsType<BadRequestObjectResult>(
@@ -188,7 +182,7 @@ namespace BTCPayServer.Tests
                 };
                 var response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                    .RouteValues.First();
+                    .RouteValues.Last();
                 var invoiceId = response.Value.ToString();
                 await paymentRequestController.PayPaymentRequest(invoiceId, false);
                 Assert.IsType<BadRequestObjectResult>(await
@@ -198,7 +192,7 @@ namespace BTCPayServer.Tests
 
                 response = Assert
                     .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                    .RouteValues.First();
+                    .RouteValues.Last();
 
                 var paymentRequestId = response.Value.ToString();
 
@@ -232,7 +226,7 @@ namespace BTCPayServer.Tests
                     .Value
                     .ToString();
 
-                invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
+                await user.BitPay.GetInvoiceAsync(invoiceId, Facade.Merchant);
 
                 //a hack to generate invoices for the payment request is to manually create an invoice with an order id that matches:
                 user.BitPay.CreateInvoice(new Invoice(1, "USD")

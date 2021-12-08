@@ -28,14 +28,14 @@ namespace BTCPayServer.Tests
                 await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 var apps = user.GetController<AppsController>();
-                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId).Result).Model);
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
                 Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
                 var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model)
                     .Apps[0].Id;
                 var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(user.StoreId, appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 vmpos.Template = @"
 apple:
   price: 5.0
@@ -47,9 +47,9 @@ donation:
   price: 1.02
   custom: true
 ";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(user.StoreId, appId, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(user.StoreId, appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 var publicApps = user.GetController<AppsPublicController>();
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert

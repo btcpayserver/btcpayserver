@@ -17,7 +17,7 @@
 }
 <partial name="_StatusMessage" />
 <h2 class="mb-4">@ViewData["Title"]</h2>
-<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { storeId = Model.StoreId, id = Model.Id }, Context.Request.Scheme)">
+<form method="post" action="@Url.Action("EditPaymentRequest", "PaymentRequest", new { storeId = Context.GetStoreData().Id, payReqId = Model.Id }, Context.Request.Scheme)">
     <div class="row">
         <div class="col-lg-6">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -105,23 +105,23 @@
                 <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
                 @if (!string.IsNullOrEmpty(Model.Id))
                 {
-                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-id="@Context.GetRouteValue("id")" id="ViewAppButton">View</a>
+                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewAppButton">View</a>
                     <a class="btn btn-secondary"
                        target="_blank"
                        asp-action="ListInvoices"
                        asp-controller="Invoice"
                        asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-                    <a class="btn btn-secondary" asp-route-id="@Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
+                    <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
                     @if (!Model.Archived)
                     {
-                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
+                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Archive</a>
                     }
                     else
                     {
-                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
+                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Unarchive</a>
                     }
                 }
-                <a asp-action="GetPaymentRequests" class="btn btn-link px-0 ms-3">Back to list</a>
+                <a asp-action="GetPaymentRequests" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-link px-0 ms-3">Back to list</a>
             </div>
         </div>
     </div>

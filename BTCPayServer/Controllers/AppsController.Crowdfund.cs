@@ -1,8 +1,11 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -20,16 +23,10 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string storeId, string appId)
+        public async Task<IActionResult> UpdateCrowdfund(string appId)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-            
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -72,15 +69,8 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpPost("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string storeId, string appId, UpdateCrowdfundViewModel vm, string command)
+        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-            
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -177,7 +167,7 @@ namespace BTCPayServer.Controllers
                 Settings = newSettings
             });
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
-            return RedirectToAction(nameof(UpdateCrowdfund), new { storeId, appId });
+            return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
     }
 }

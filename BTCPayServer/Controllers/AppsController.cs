@@ -3,6 +3,7 @@ using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
@@ -14,9 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
-    [Route("stores/{storeId}/apps")]
+    [Route("apps")]
     public partial class AppsController : Controller
     {
         public AppsController(
@@ -40,38 +41,37 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
-
+        
+        [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
             string storeId, 
             string sortOrder = null,
             string sortOrderColumn = null
         )
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
+            if (CurrentStore == null)
             {
                 return NotFound();
             }
-            HttpContext.SetStoreData(store);
             
-            var apps = await _appService.GetAllApps(GetUserId());
+            var apps = await _appService.GetAllApps(GetUserId(), false, CurrentStore.Id);
 
             if (sortOrder != null && sortOrderColumn != null) 
             {
                 apps = apps.OrderByDescending(app => 
+                {
+                    switch (sortOrderColumn)
                     {
-                        switch (sortOrderColumn)
-                        {
-                            case nameof(app.AppName):
-                                return app.AppName;
-                            case nameof(app.StoreName):
-                                return app.StoreName;
-                            case nameof(app.AppType):
-                                return app.AppType;
-                            default:
-                                return app.Id;
-                        }
-                    }).ToArray();
+                        case nameof(app.AppName):
+                            return app.AppName;
+                        case nameof(app.StoreName):
+                            return app.StoreName;
+                        case nameof(app.AppType):
+                            return app.AppType;
+                        default:
+                            return app.Id;
+                    }
+                }).ToArray();
 
                 switch (sortOrder)
                 {
@@ -91,31 +91,30 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet("create")]
-        public async Task<IActionResult> CreateApp(string storeId)
+        [HttpGet("/stores/{storeId}/apps/create")]
+        public IActionResult CreateApp(string storeId)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
+            if (CurrentStore == null)
             {
                 return NotFound();
             }
-            HttpContext.SetStoreData(store);
             
-            var vm = new CreateAppViewModel();
+            var vm = new CreateAppViewModel
+            {
+                SelectedStore = CurrentStore.Id
+            };
             return View(vm);
         }
 
-        [HttpPost("create")]
+        [HttpPost("/stores/{storeId}/apps/create")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
+            if (CurrentStore == null)
             {
                 return NotFound();
             }
-            HttpContext.SetStoreData(store);
             
-            vm.SelectedStore = store.Id;
+            vm.SelectedStore = CurrentStore.Id;
 
             if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
@@ -127,7 +126,7 @@ namespace BTCPayServer.Controllers
 
             var appData = new AppData
             {
-                StoreDataId = store.Id,
+                StoreDataId = CurrentStore.Id,
                 Name = vm.AppName,
                 AppType = appType.ToString()
             };
@@ -136,13 +135,11 @@ namespace BTCPayServer.Controllers
             switch (appType)
             {
                 case AppType.Crowdfund:
-                    var emptyCrowdfund = new CrowdfundSettings();
-                    emptyCrowdfund.TargetCurrency = defaultCurrency;
+                    var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
                     appData.SetSettings(emptyCrowdfund);
                     break;
                 case AppType.PointOfSale:
-                    var empty = new PointOfSaleSettings();
-                    empty.Currency = defaultCurrency;
+                    var empty = new PointOfSaleSettings { Currency = defaultCurrency };
                     appData.SetSettings(empty);
                     break;
             }
@@ -163,15 +160,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{appId}/delete")]
-        public async Task<IActionResult> DeleteApp(string storeId, string appId)
+        public async Task<IActionResult> DeleteApp(string appId)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-            
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
@@ -179,21 +169,14 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{appId}/delete")]
-        public async Task<IActionResult> DeleteAppPost(string storeId, string appId)
+        public async Task<IActionResult> DeleteAppPost(string appId)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-            
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
             if (await _appService.DeleteApp(appData))
                 TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
-            return RedirectToAction(nameof(ListApps), new { storeId });
+            return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
         }
 
         async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
@@ -213,6 +196,11 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _userManager.GetUserId(User);
+        }
+
+        private StoreData CurrentStore
+        {
+            get => HttpContext.GetStoreData();
         }
     }
 }

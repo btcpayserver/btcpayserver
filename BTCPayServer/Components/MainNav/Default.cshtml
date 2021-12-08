@@ -187,7 +187,7 @@
                                 @foreach (var app in Model.Apps)
                                 {
                                     <li class="nav-item">
-                                        <a asp-area="" asp-controller="Apps" asp-action="@app.Action" asp-route-appId="@app.Id" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                                        <a asp-area="" asp-controller="Apps" asp-action="@app.Action" asp-route-appId="@app.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
                                             <vc:icon symbol="@app.AppType.ToLower()"/>
                                             <span>@app.AppName</span>
                                         </a>

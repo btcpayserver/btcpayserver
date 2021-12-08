@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
 
                 // Permission guard for guests editing 
                 Assert
-                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user2.StoreId, id));
+                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
                 request.Title = "update";
                 Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
@@ -73,7 +73,7 @@ namespace BTCPayServer.Tests
 
                 // Archive
                 Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(user.StoreId, id));
+                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
                 Assert.True(Assert
                     .IsType<ViewPaymentRequestViewModel>(Assert
                         .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
@@ -84,7 +84,7 @@ namespace BTCPayServer.Tests
                 
                 // Unarchive
                 Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(user.StoreId, id));
+                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
 
                 Assert.False(Assert
                     .IsType<ViewPaymentRequestViewModel>(Assert

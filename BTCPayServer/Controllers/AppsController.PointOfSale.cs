@@ -88,15 +88,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{appId}/settings/pos")]
-        public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId)
+        public async Task<IActionResult> UpdatePointOfSale(string appId)
         {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-            
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
@@ -149,7 +142,6 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-
                     var items = _appService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
@@ -170,15 +162,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{appId}/settings/pos")]
-        public async Task<IActionResult> UpdatePointOfSale(string storeId, string appId, UpdatePointOfSaleViewModel vm)
-        {
-            var store = await _storeRepository.FindStore(storeId, GetUserId());
-            if (store == null)
-            {
-                return NotFound();
-            }
-            HttpContext.SetStoreData(store);
-                
+        public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
+        { 
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
@@ -228,8 +213,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
-
-
+        
         private int[] ListSplit(string list, string separator = ",")
         {
             if (string.IsNullOrEmpty(list))
@@ -242,7 +226,7 @@ namespace BTCPayServer.Controllers
                 Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
                 list = charsToDestroy.Replace(list, "");
 
-                return list.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+                return list.Split(separator, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
             }
         }
     }

@@ -1,6 +1,4 @@
 using System;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using NBitcoin.DataEncoders;

@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
 
                 return View(new ShowLightningNodeInfoViewModel
                 {
-                    Available = true,
+                    Available = nodeInfo.Any(),
                     NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray(),
                     CryptoCode = cryptoCode,
                     CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),

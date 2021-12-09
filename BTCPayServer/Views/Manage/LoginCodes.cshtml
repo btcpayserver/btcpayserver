@@ -4,20 +4,13 @@
 }
 <h2 class="mb-4">@ViewData["Title"]</h2>
 <p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
-<div class="qr-container my-3 w-100 text-center">
-    <vc:qr-code data="@Model"> </vc:qr-code>
+<div class="d-inline-flex flex-column qr-container" style="width:256px">
+    <vc:qr-code data="@Model" /> 
+    <input type="hidden" value="@Model" id="logincode">
+    <a class="btn btn-secondary mt-3" id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
 </div>
-<input type="hidden" value="@Model" id="logincode">
-<a class="w-100 btn btn-link text-center"  id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
-
 
 @section PageFootContent
 {
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
-    <script src="~/js/copy-to-clipboard.js"></script>
-    <script>
-        window.onload = function (){        
-            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
-        }
-        </script>
 }

@@ -49,11 +49,6 @@ namespace BTCPayServer.Controllers
             string sortOrderColumn = null
         )
         {
-            if (CurrentStore == null)
-            {
-                return NotFound();
-            }
-            
             var apps = await _appService.GetAllApps(GetUserId(), false, CurrentStore.Id);
 
             if (sortOrder != null && sortOrderColumn != null) 
@@ -94,11 +89,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("/stores/{storeId}/apps/create")]
         public IActionResult CreateApp(string storeId)
         {
-            if (CurrentStore == null)
-            {
-                return NotFound();
-            }
-            
             return View(new CreateAppViewModel
             {
                 StoreId = CurrentStore.Id
@@ -108,11 +98,6 @@ namespace BTCPayServer.Controllers
         [HttpPost("/stores/{storeId}/apps/create")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            if (CurrentStore == null)
-            {
-                return NotFound();
-            }
-            
             vm.StoreId = CurrentStore.Id;
 
             if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))

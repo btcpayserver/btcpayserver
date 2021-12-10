@@ -65,11 +65,6 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
-            if (CurrentStore == null)
-            {
-                return NotFound();
-            }
-            
             var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
@@ -88,11 +83,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
-            if (CurrentStore == null)
-            {
-                return NotFound();
-            }
-            
             var data = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
             if (data == null && !string.IsNullOrEmpty(payReqId))
             {

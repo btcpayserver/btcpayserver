@@ -311,6 +311,11 @@ namespace BTCPayServer.Tests
             Assert.Contains("404 - Page not found</h1>", Driver.PageSource);
         }
 
+        internal void AssertAccessDenied()
+        {
+            Assert.Contains("Access denied</h", Driver.PageSource);
+        }
+
         public void GoToHome()
         {
             Driver.Navigate().GoToUrl(ServerUri);

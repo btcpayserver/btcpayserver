@@ -413,19 +413,20 @@ namespace BTCPayServer.Tests
                 s.GoToInvoices();
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 
-                // When logout we should not be able to access store and invoice details
+                // When logout out we should not be able to access store and invoice details
                 s.Driver.FindElement(By.Id("Logout")).Click();
                 s.Driver.Navigate().GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.GoToRegister();
-                // When logged we should not be able to access store and invoice details
+                
+                // When logged in as different user we should not be able to access store and invoice details
                 var bob = s.RegisterNewUser();
                 s.Driver.Navigate().GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
-                s.AssertNotFound();
+                s.AssertAccessDenied();
                 s.GoToHome();
                 s.Logout();
 

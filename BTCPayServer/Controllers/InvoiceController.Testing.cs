@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("i/{invoiceId}/mine-blocks")]
         [CheatModeRoute]
-        public async Task<IActionResult> MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
+        public IActionResult MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
         {
             // TODO support altcoins, not just bitcoin
             var blockRewardBitcoinAddress = cheater.CashCow.GetNewAddress();

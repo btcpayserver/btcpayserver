@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices/{invoiceId}")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
@@ -141,8 +141,6 @@ namespace BTCPayServer.Controllers
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
-
-            HttpContext.SetStoreData(store);
             
             return View(model);
         }
@@ -185,7 +183,6 @@ namespace BTCPayServer.Controllers
                                 new { pullPaymentId = ppId });
             }
             
-            
             HttpContext.SetStoreData(invoice.StoreData);
             
             var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
@@ -221,7 +218,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpPost("invoices/{invoiceId}/refund")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund(string invoiceId, RefundModel model, CancellationToken cancellationToken)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -235,8 +232,6 @@ namespace BTCPayServer.Controllers
 
             if (!CanRefund(invoice.GetInvoiceState()))
                 return NotFound();
-            
-            HttpContext.SetStoreData(store);
             
             var paymentMethodId = PaymentMethodId.Parse(model.SelectedPaymentMethod);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);

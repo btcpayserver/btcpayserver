@@ -841,13 +841,6 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge(AuthenticationSchemes.Cookie);
-            var storeId = CurrentStore?.Id;
-            if (storeId != null)
-            {
-                var store = await _Repo.FindStore(storeId, userId);
-                if (store != null)
-                    HttpContext.SetStoreData(store);
-            }
             var model = new CreateTokenViewModel();
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;

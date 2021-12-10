@@ -4,6 +4,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -19,17 +20,20 @@ namespace BTCPayServer.Security
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly PaymentRequestService _paymentRequestService;
+        private readonly InvoiceRepository _invoiceRepository;
 
         public CookieAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
                                 UserManager<ApplicationUser> userManager,
                                 StoreRepository storeRepository,
                                 AppService appService,
+                                InvoiceRepository invoiceRepository,
                                 PaymentRequestService paymentRequestService)
         {
             _HttpContext = httpContextAccessor.HttpContext;
             _userManager = userManager;
             _appService = appService;
             _storeRepository = storeRepository;
+            _invoiceRepository = invoiceRepository;
             _paymentRequestService = paymentRequestService;
         }
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
@@ -65,6 +69,13 @@ namespace BTCPayServer.Security
                         string payReqId = vPayReqId as string;
                         var paymentRequest = await _paymentRequestService.GetPaymentRequest(payReqId);
                         storeId = paymentRequest?.StoreId;
+                    }
+                    // resolve from app
+                    if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId))
+                    {
+                        string invoiceId = vInvoiceId as string;
+                        var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+                        storeId = invoice?.StoreId;
                     }
                 }
                 

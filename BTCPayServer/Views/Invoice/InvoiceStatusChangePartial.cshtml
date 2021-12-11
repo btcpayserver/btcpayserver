@@ -4,41 +4,42 @@
 @if ((await _userManager.GetUserAsync(User)).GetBlob().ShowInvoiceStatusChangeHint)
 {
     <div class="row">
-        <div class="alert alert-light alert-dismissible fade show" role="alert">
+        <div class="alert alert-light alert-dismissible fade show mb-5" role="alert">
             <form method="post" asp-controller="Manage" asp-action="DisableShowInvoiceStatusChangeHint" id="invoicestatuschangeform">
-                <h6><strong>Update v1.4.0:</strong> Invoice states have been updated to match the Greenfield API.</h6>
-                <div class="float-start">
-                    <ul class="list-unstyled">
-                        <li>
-                            <span class="badge badge-processing">Paid</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                            </svg>
-                            <span class="badge badge-processing">Processing</span>
-                        </li>
-                        <li>
-                            <span class="badge badge-settled">Completed</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                            </svg>
-                            <span class="badge badge-settled">Settled</span>
-                        </li>
-                        <li>
-                            <span class="badge badge-settled">Confirmed</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                            </svg>
-                            <span class="badge badge-settled">Settled</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="float-end">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="alert">
-                        Dismiss
-                    </button>
-                    <button name="command" type="submit" value="save" class="btn btn-danger" data-bs-dismiss="alert">
-                        Don't Show Again
-                    </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
+                <h5 class="alert-heading">Updated in v1.4.0</h5>
+                <p class="mb-2">Invoice states have been updated to match the Greenfield API:</p>
+                <div class="row">
+                    <div class="col col-12 col-sm-6">
+                        <ul class="list-unstyled mb-sm-0">
+                            <li>
+                                <span class="badge badge-processing">Paid</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                                </svg>
+                                <span class="badge badge-processing">Processing</span>
+                            </li>
+                            <li class="mt-2">
+                                <span class="badge badge-settled">Completed</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                                </svg>
+                                <span class="badge badge-settled">Settled</span>
+                            </li>
+                            <li class="mt-2">
+                                <span class="badge badge-settled">Confirmed</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                                </svg>
+                                <span class="badge badge-settled">Settled</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col col-12 col-sm-6 d-flex justify-content-sm-end align-items-sm-end">
+                        <button name="command" type="submit" value="save" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="alert">Don't Show Again</button>
+                    </div>
                 </div>
             </form>
         </div>

@@ -4,8 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -18,15 +17,14 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("payment-requests")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class PaymentRequestController : Controller
     {
         private readonly InvoiceController _InvoiceController;
@@ -61,16 +59,17 @@ namespace BTCPayServer.Controllers
             _linkGenerator = linkGenerator;
         }
 
-        [HttpGet("")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(ListPaymentRequestsViewModel model = null)
+        [HttpGet("/stores/{storeId}/payment-requests")]
+        public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
             var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
-            var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
+            var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
+                StoreId = CurrentStore.Id,
                 Skip = model.Skip,
                 Count = model.Count,
                 IncludeArchived = includeArchived
@@ -81,40 +80,30 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet("edit/{id?}")]
-        public async Task<IActionResult> EditPaymentRequest(string id)
+        [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
+        public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
-            var data = await _PaymentRequestRepository.FindPaymentRequest(id, GetUserId());
-            if (data == null && !string.IsNullOrEmpty(id))
+            var data = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
+            if (data == null && !string.IsNullOrEmpty(payReqId))
             {
                 return NotFound();
             }
 
-            SelectList stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id),
-                nameof(StoreData.StoreName), data?.StoreDataId);
-            if (!stores.Any())
+            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Html =
-                        $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}' class='alert-link'>Create store</a>",
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToAction("GetPaymentRequests");
-            }
-
-            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(data) { Stores = stores });
+                StoreId = CurrentStore.Id
+            });
         }
 
-        [HttpPost("edit/{id?}")]
-        public async Task<IActionResult> EditPaymentRequest(string id, UpdatePaymentRequestViewModel viewModel)
+        [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
+        public async Task<IActionResult> EditPaymentRequest(string payReqId, UpdatePaymentRequestViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Currency) ||
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
 
-            var data = await _PaymentRequestRepository.FindPaymentRequest(id, GetUserId());
-            if (data == null && !string.IsNullOrEmpty(id))
+            var data = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
+            if (data == null && !string.IsNullOrEmpty(payReqId))
             {
                 return NotFound();
             }
@@ -126,10 +115,6 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()),
-                    nameof(StoreData.Id),
-                    nameof(StoreData.StoreName), data?.StoreDataId);
-
                 return View(nameof(EditPaymentRequest), viewModel);
             }
 
@@ -153,7 +138,7 @@ namespace BTCPayServer.Controllers
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
 
             data.SetBlob(blob);
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(payReqId))
             {
                 data.Created = DateTimeOffset.UtcNow;
             }
@@ -162,14 +147,14 @@ namespace BTCPayServer.Controllers
             _EventAggregator.Publish(new PaymentRequestUpdated { Data = data, PaymentRequestId = data.Id, });
 
             TempData[WellKnownTempData.SuccessMessage] = "Saved";
-            return RedirectToAction(nameof(EditPaymentRequest), new { id = data.Id });
+            return RedirectToAction(nameof(EditPaymentRequest), new { storeId = CurrentStore.Id, payReqId = data.Id });
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{payReqId}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id)
+        public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
             if (result == null)
             {
                 return NotFound();
@@ -179,9 +164,9 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        [HttpGet("{id}/pay")]
+        [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
-        public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
+        public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
             if (amount.HasValue && amount.Value <= 0)
@@ -189,7 +174,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest("Please provide an amount greater than 0");
             }
 
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
             if (result == null)
             {
                 return NotFound();
@@ -199,7 +184,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = id });
+                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
                 }
 
                 return BadRequest("Payment Request cannot be paid as it has been archived");
@@ -210,7 +195,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = id });
+                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
                 }
 
                 return BadRequest("Payment Request has already been settled.");
@@ -220,7 +205,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = id });
+                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
                 }
 
                 return BadRequest("Payment Request has expired");
@@ -249,18 +234,18 @@ namespace BTCPayServer.Controllers
             else
                 amount = result.AmountDue;
             
-            var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null, cancellationToken);
+            var pr = await _PaymentRequestRepository.FindPaymentRequest(payReqId, null, cancellationToken);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
             try
             {
-                var redirectUrl = _linkGenerator.PaymentRequestLink(id, Request.Scheme, Request.Host, Request.PathBase);
+                var redirectUrl = _linkGenerator.PaymentRequestLink(payReqId, Request.Scheme, Request.Host, Request.PathBase);
 
                 var invoiceMetadata =
                     new InvoiceMetadata
                     {
-                        OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
-                        PaymentRequestId = id,
+                        OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(payReqId),
+                        PaymentRequestId = payReqId,
                         BuyerEmail = result.Email
                     };
 
@@ -273,7 +258,7 @@ namespace BTCPayServer.Controllers
                         Checkout = {RedirectURL = redirectUrl}
                     };
 
-                var additionalTags = new List<string> {PaymentRequestRepository.GetInternalTag(id)};
+                var additionalTags = new List<string> {PaymentRequestRepository.GetInternalTag(payReqId)};
                 var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest,store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
 
                 if (redirectToInvoice)
@@ -289,10 +274,10 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet("{id}/cancel")]
-        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id, bool redirect = true)
+        [HttpGet("{payReqId}/cancel")]
+        public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
             if (result == null)
             {
                 return NotFound();
@@ -318,21 +303,16 @@ namespace BTCPayServer.Controllers
             if (redirect)
             {
                 TempData[WellKnownTempData.SuccessMessage] = "Payment cancelled";
-                return RedirectToAction(nameof(ViewPaymentRequest), new { Id = id });
+                return RedirectToAction(nameof(ViewPaymentRequest), new { Id = payReqId });
             }
 
             return Ok("Payment cancelled");
         }
 
-        private string GetUserId()
+        [HttpGet("{payReqId}/clone")]
+        public async Task<IActionResult> ClonePaymentRequest(string payReqId)
         {
-            return _UserManager.GetUserId(User);
-        }
-
-        [HttpGet("{id}/clone")]
-        public async Task<IActionResult> ClonePaymentRequest(string id)
-        {
-            var result = await EditPaymentRequest(id);
+            var result = await EditPaymentRequest(CurrentStore.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
@@ -346,15 +326,15 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
-        [HttpGet("{id}/archive")]
-        public async Task<IActionResult> TogglePaymentRequestArchival(string id)
+        [HttpGet("{payReqId}/archive")]
+        public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
-            var result = await EditPaymentRequest(id);
+            var result = await EditPaymentRequest(CurrentStore.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
                 model.Archived = !model.Archived;
-                await EditPaymentRequest(id, model);
+                await EditPaymentRequest(payReqId, model);
                 TempData[WellKnownTempData.SuccessMessage] = model.Archived
                     ? "The payment request has been archived and will no longer appear in the  payment request list by default again."
                     : "The payment request has been unarchived and will appear in the  payment request list by default.";
@@ -362,6 +342,16 @@ namespace BTCPayServer.Controllers
             }
 
             return NotFound();
+        }
+
+        private string GetUserId()
+        {
+            return _UserManager.GetUserId(User);
+        }
+        
+        private StoreData CurrentStore
+        {
+            get => HttpContext.GetStoreData();
         }
     }
 }

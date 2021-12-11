@@ -9,6 +9,7 @@ namespace BTCPayServer.Abstractions.Extensions
     {
         private const string ACTIVE_CATEGORY_KEY = "ActiveCategory";
         private const string ACTIVE_PAGE_KEY = "ActivePage";
+        private const string ACTIVE_ID_KEY = "ActiveId";
 
         public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null, string mainTitle = null)
             where T : IConvertible
@@ -28,25 +29,38 @@ namespace BTCPayServer.Abstractions.Extensions
             viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
         }
 
-        public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category)
+        // TODO: Refactor this and merge it with SetActivePage
+        public static void SetActiveId<T>(this ViewDataDictionary viewData, T activeId)
+        {
+            viewData[ACTIVE_ID_KEY] = activeId;
+        }
+
+        public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY))
             {
                 return null;
             }
+            var activeId = viewData[ACTIVE_ID_KEY];
             var activeCategory = (T)viewData[ACTIVE_CATEGORY_KEY];
-            return category.Equals(activeCategory) ? "active" : null;
+            var categoryMatch = category.Equals(activeCategory);
+            var idMatch = id == null || activeId == null || id.Equals(activeId);
+            return categoryMatch && idMatch ? "active" : null;
         }
 
-        public static string IsActivePage<T>(this ViewDataDictionary viewData, T page)
+        public static string IsActivePage<T>(this ViewDataDictionary viewData, T page, object id = null)
             where T : IConvertible
         {
             if (!viewData.ContainsKey(ACTIVE_PAGE_KEY))
             {
                 return null;
             }
+            var activeId = viewData[ACTIVE_ID_KEY];
             var activePage = (T)viewData[ACTIVE_PAGE_KEY];
-            return page.Equals(activePage) ? "active" : null;
+            var activeCategory = viewData[ACTIVE_CATEGORY_KEY];
+            var categoryAndPageMatch = activeCategory.Equals(activePage.GetType()) && page.Equals(activePage);
+            var idMatch = id == null || activeId == null || id.Equals(activeId);
+            return categoryAndPageMatch && idMatch ? "active" : null;
         }
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)

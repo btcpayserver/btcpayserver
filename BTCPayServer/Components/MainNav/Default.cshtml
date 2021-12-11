@@ -1,0 +1,285 @@
+@using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Views.Invoice
+@using BTCPayServer.Views.Manage
+@using BTCPayServer.Views.PaymentRequest
+@using BTCPayServer.Views.Wallets
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Contracts
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ISettingsRepository SettingsRepository
+
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+
+@{
+    var theme = await SettingsRepository.GetTheme();
+}
+
+<nav id="mainNav" class="d-flex flex-column justify-content-between">
+    <div class="accordion px-3 px-lg-4">
+        @if (SignInManager.IsSignedIn(User))
+        {
+            @if (Model.Store == null)
+            {
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Payments-Header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
+                            Payments
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </header>
+                    <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
+                        <div class="accordion-body">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Nav-Invoices">
+                                        <vc:icon symbol="invoice"/>
+                                        <span>Invoices</span>
+                                    </a>
+                                </li>
+                                @* FIXME: The wallets item is in here only for the tests *@
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="Nav-Wallets">
+                                        <vc:icon symbol="wallet-onchain"/>
+                                        <span>Wallets</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Plugins-Header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
+                            Plugins
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </header>
+                    <div id="Nav-Plugins" class="accordion-collapse collapse show" aria-labelledby="Nav-Plugins-Header">
+                        <div class="accordion-body">
+                            <ul class="navbar-nav">
+                                <vc:ui-extension-point location="header-nav" model="@Model"/>
+                                @* TODO: Limit this to admins *@
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Server" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
+                                        <vc:icon symbol="new"/>
+                                        <span>Add Plugin</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="accordion-item">
+                    <div class="accordion-body">
+                        <ul class="navbar-nav">
+                            @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
+                            {
+                                var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
+                                <li class="nav-item">
+                                    @if (isSetUp)
+                                    {
+                                        <a asp-area="" asp-controller="Stores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link" id="@($"StoreNav-Modify{scheme.Crypto}")">
+                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                            <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-area="" asp-controller="Stores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link" id="@($"StoreNav-Modify{scheme.Crypto}")">
+                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                            <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                        </a>
+                                    }
+                                </li>
+                            }
+                            @foreach (var scheme in Model.LightningNodes)
+                            {
+                                var isSetUp = !string.IsNullOrWhiteSpace(scheme.Address);
+                                <li class="nav-item">
+                                    @if (isSetUp)
+                                    {
+                                        <a asp-area="" asp-controller="Stores" asp-action="LightningSettings" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                            <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-area="" asp-controller="Stores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                            <span class="me-2 btcpay-status btcpay-status--disabled"></span>
+                                            <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
+                                        </a>
+                                    }
+                                    
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Payments-Header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
+                            Payments
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </header>
+                    <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
+                        <div class="accordion-body">
+                            <ul class="navbar-nav">
+                                @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
+                                {
+                                    var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
+                                    if (isSetUp && scheme.WalletSupported)
+                                    {
+                                        <li class="nav-item">
+                                            <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.Crypto)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                                <vc:icon symbol="wallet-onchain"/>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
+                                        <vc:icon symbol="invoice"/>
+                                        <span>Invoices</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
+                                        <vc:icon symbol="payment-1"/>
+                                        <span>Requests</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="StorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-@(nameof(StoreNavPages.PullPayments))">
+                                        <vc:icon symbol="payment-2"/>
+                                        <span>Pull Payments</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="StorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-@(nameof(StoreNavPages.Payouts))">
+                                        <vc:icon symbol="payment-2"/>
+                                        <span>Payouts</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Apps-Header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Apps" aria-expanded="true" aria-controls="Nav-Apps">
+                            Apps
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </header>
+                    <div id="Nav-Apps" class="accordion-collapse collapse show" aria-labelledby="Nav-Apps-Header">
+                        <div class="accordion-body">
+                            <ul class="navbar-nav">
+                                @foreach (var app in Model.Apps)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-area="" asp-controller="Apps" asp-action="@app.Action" asp-route-appId="@app.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                                            <vc:icon symbol="@app.AppType.ToLower()"/>
+                                            <span>@app.AppName</span>
+                                        </a>
+                                    </li>
+                                }
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Apps" asp-action="CreateApp" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Create)" id="StoreNav-CreateApp">
+                                        <vc:icon symbol="new"/>
+                                        <span>New App</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Manage-Header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Manage" aria-expanded="true" aria-controls="Nav-Manage">
+                            Manage
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </header>
+                    <div id="Nav-Manage" class="accordion-collapse collapse show" aria-labelledby="Nav-Manage-Header">
+                        <div class="accordion-body">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(StoreNavPages))" id="StoreNav-Invoices">
+                                        <vc:icon symbol="settings"/>
+                                        <span>Settings</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+            <script>
+                const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')
+                const collapsed = navCollapsed ? JSON.parse(navCollapsed) : []
+                collapsed.forEach(id => {
+                    const el = document.getElementById(id)
+                    const btn = el && el.previousElementSibling.querySelector(`[aria-controls="${id}"]`)
+                    if (el && btn) {
+                        el.classList.remove('show')
+                        btn.classList.add('collapsed')
+                        btn.setAttribute('aria-expanded', 'false')
+                    }
+                })
+            </script>
+        }
+        else if (Env.IsSecure)
+        {
+            <ul class="navbar-nav">
+                @if (!(await SettingsRepository.GetPolicies()).LockSubscription)
+                {
+                    <li class="nav-item">
+                        <a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Nav-Register">Register</a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Nav-Login">Log in</a>
+                </li>
+            </ul>
+        }
+    </div>
+    <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
+        @if (User.IsInRole(Roles.ServerAdmin))
+        {
+            <li class="nav-item">
+                <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="Nav-ServerSettings">
+                    <vc:icon symbol="server-settings"/>
+                    <span>Server Settings</span>
+                </a>
+            </li>
+        }
+        <li class="nav-item">
+            <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-Account">
+                <vc:icon symbol="account"/>
+                <span>Account</span>
+            </a>
+        </li>
+        @if (!theme.CustomTheme)
+        {
+            <li class="nav-item">
+                <vc:theme-switch css-class="nav-link"/>
+            </li>
+        }
+        <li class="nav-item">
+            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" class="nav-link js-scroll-trigger" id="Logout">
+                <i class="fa fa-sign-out"></i>
+                <span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</nav>

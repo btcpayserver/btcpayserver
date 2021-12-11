@@ -70,7 +70,7 @@
 </head>
 <body>
     <div id="app" class="min-vh-100 d-flex flex-column">
-        <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4 d-print-block">
+        <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-block">
             <div class="container">
                 <div class="row align-items-center" style="width:calc(100% + 30px)">
                     <div class="col-12 col-md-8 col-lg-9">
@@ -107,7 +107,7 @@
                             {
                                 @if (Model.AllowCustomPaymentAmounts && !Model.AnyPendingInvoice)
                                 {
-                                    <form method="get" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" class="d-print-none">
+                                    <form method="get" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" class="d-print-none">
                                         <div class="row">
                                             <div class="col col-12 col-sm-6 col-md-12">
                                                 <div class="input-group">
@@ -123,12 +123,12 @@
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" data-test="pay-button">
+                                    <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" data-test="pay-button">
                                         Pay Invoice
                                     </a>
                                     if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
                                     {
-                                        <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-id="@Model.Id" class="mt-2 d-print-none">
+                                        <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-payReqId="@Model.Id" class="mt-2 d-print-none">
                                             <button class="btn btn-outline-secondary w-100 text-nowrap" type="submit">Cancel Invoice</button>
                                         </form>
                                     }

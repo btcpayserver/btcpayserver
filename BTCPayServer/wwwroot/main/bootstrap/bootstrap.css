@@ -3521,7 +3521,7 @@ fieldset:disabled .btn {
 }
 
 .dropdown-item.active, .dropdown-item:active {
-  color: var(--btcpay-body-text);
+  color: var(--btcpay-body-text-active);
   text-decoration: none;
   background-color: var(--btcpay-body-bg-active);
 }
@@ -3567,7 +3567,7 @@ fieldset:disabled .btn {
 }
 
 .dropdown-menu-dark .dropdown-item.active, .dropdown-menu-dark .dropdown-item:active {
-  color: var(--btcpay-body-text);
+  color: var(--btcpay-body-text-active);
   background-color: var(--btcpay-body-bg-active);
 }
 
@@ -10295,7 +10295,7 @@ html[data-devenv]:before {
     z-index: 1000;
     right: 0;
     bottom: 0;
-    background: var(--btcpay-secondary);
+    background: var(--btcpay-bg-tile);
     color: var(--btcpay-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using BTCPayServer.Data;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -88,13 +87,13 @@ namespace BTCPayServer.Controllers
             public bool? RedirectAutomatically { get; set; }
         }
 
-        [HttpGet]
-        [Route("{appId}/settings/pos")]
+        [HttpGet("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId)
         {
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
@@ -143,8 +142,7 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-
-                    var items = _AppService.Parse(settings.Template, settings.Currency);
+                    var items = _appService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -162,10 +160,10 @@ namespace BTCPayServer.Controllers
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
             return View(vm);
         }
-        [HttpPost]
-        [Route("{appId}/settings/pos")]
+
+        [HttpPost("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
-        {
+        { 
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
@@ -178,7 +176,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                vm.Template = _AppService.SerializeTemplate(_AppService.Parse(vm.Template, vm.Currency));
+                vm.Template = _appService.SerializeTemplate(_appService.Parse(vm.Template, vm.Currency));
             }
             catch
             {
@@ -211,12 +209,11 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
                 RequiresRefundEmail = vm.RequiresRefundEmail,
             });
-            await _AppService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
-
-
+        
         private int[] ListSplit(string list, string separator = ",")
         {
             if (string.IsNullOrEmpty(list))
@@ -229,7 +226,7 @@ namespace BTCPayServer.Controllers
                 Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
                 list = charsToDestroy.Replace(list, "");
 
-                return list.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+                return list.Split(separator, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
             }
         }
     }

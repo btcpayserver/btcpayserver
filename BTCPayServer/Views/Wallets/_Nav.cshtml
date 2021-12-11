@@ -4,18 +4,17 @@
     var wallet = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
     var network = BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
 }
-<nav id="sideNav" class="nav flex-column mb-4">
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@Context.GetRouteValue("walletId")" id="WalletTransactions">Transactions</a>
+<nav id="SectionNav" class="nav">
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Transactions">Transactions</a>
     @if (!network.ReadonlyWallet)
     {
-        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" id="WalletSend">Send</a>
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Send">Send</a>
     }
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Receive)" asp-action="WalletReceive" asp-route-walletId="@Context.GetRouteValue("walletId")" id="WalletReceive">Receive</a>
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")" id="WalletRescan">Rescan</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Receive)" asp-action="WalletReceive" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Receive">Receive</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Rescan">Rescan</a>
     @if (!network.ReadonlyWallet)
     {
-        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")">PSBT</a>
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-PSBT">PSBT</a>
     }
-    <a class="nav-link" asp-controller="Stores" asp-action="WalletSettings" asp-route-storeId="@wallet.StoreId" asp-route-cryptoCode="@wallet.CryptoCode" id="WalletSettings">Settings</a>
     <vc:ui-extension-point location="wallet-nav" model="@Model" />  
 </nav>

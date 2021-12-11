@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -17,7 +14,6 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
-using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -25,18 +21,13 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBXplorer;
-using NBXplorer.DerivationStrategy;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -513,7 +504,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private void AddPaymentMethods(StoreData store, StoreBlob storeBlob, 
+        internal void AddPaymentMethods(StoreData store, StoreBlob storeBlob, 
             out List<StoreDerivationScheme> derivationSchemes, out List<StoreLightningNode> lightningNodes)
         {
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
@@ -850,13 +841,6 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge(AuthenticationSchemes.Cookie);
-            var storeId = CurrentStore?.Id;
-            if (storeId != null)
-            {
-                var store = await _Repo.FindStore(storeId, userId);
-                if (store != null)
-                    HttpContext.SetStoreData(store);
-            }
             var model = new CreateTokenViewModel();
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;

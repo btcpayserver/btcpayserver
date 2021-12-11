@@ -7,22 +7,18 @@
     <input type="hidden" asp-for="RememberMe"/>
 </form>
 
-<section class="pt-5">
-    <div>
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>FIDO2 Authentication</h2>
-                <hr class="primary">
-                <div>
-                    <span id="spinner" class="fa fa-spinner fa-spin float-end ms-3 me-5 mt-1 fido-running" style="font-size:2.5em"></span>
-                    <p>Insert your security key into your computer's USB port. If it has a button, tap on it.</p>
-                </div>
-                <p id="error-message" class="d-none alert alert-danger"></p>
-                <button id="btn-retry" class="btn btn-secondary d-none" type="button">Retry</button>
-            </div>
+<div class="row pt-5">
+    <div class="col-lg-12 section-heading">
+        <h2>FIDO2 Authentication</h2>
+        <hr class="primary">
+        <div>
+            <span id="spinner" class="fa fa-spinner fa-spin float-end ms-3 me-5 mt-1 fido-running" style="font-size:2.5em"></span>
+            <p>Insert your security key into your computer's USB port. If it has a button, tap on it.</p>
         </div>
+        <p id="error-message" class="d-none alert alert-danger"></p>
+        <button id="btn-retry" class="btn btn-secondary d-none" type="button">Retry</button>
     </div>
-</section>
+</div>
 
 <script>
     document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())

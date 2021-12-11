@@ -1,9 +1,11 @@
 using System;
-using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -21,6 +23,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
         {
@@ -64,8 +67,8 @@ namespace BTCPayServer.Controllers
             };
             return View(vm);
         }
-        [HttpPost]
-        [Route("{appId}/settings/crowdfund")]
+        
+        [HttpPost("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
@@ -77,7 +80,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                vm.PerksTemplate = _AppService.SerializeTemplate(_AppService.Parse(vm.PerksTemplate, vm.TargetCurrency));
+                vm.PerksTemplate = _appService.SerializeTemplate(_appService.Parse(vm.PerksTemplate, vm.TargetCurrency));
             }
             catch
             {
@@ -155,9 +158,9 @@ namespace BTCPayServer.Controllers
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
 
-            await _AppService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(app);
 
-            _EventAggregator.Publish(new AppUpdated()
+            _eventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
                 StoreId = app.StoreDataId,

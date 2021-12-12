@@ -29,6 +29,15 @@
     <dd class="col-sm-9 col-lg-10">
         @Model.Wallet.WalletId
     </dd>
+    @foreach (var accessKey in Model.Wallet.AccessKeys)
+    {
+        <dt class="col-sm-3 col-lg-2">
+            Access Key
+        </dt>
+        <dd class="col-sm-9 col-lg-10">
+            @accessKey.Key
+        </dd>
+    }
     <dt class="col-sm-3 col-lg-2">
         @Html.DisplayNameFor(model => model.Wallet.CreatedAt)
     </dt>
@@ -37,6 +46,7 @@
     </dd>
 </dl>
 
+@*
 <div class="mt-4">
     <h2>Connection String</h2>
 
@@ -69,6 +79,7 @@
         </dl>
     }
 </div>
+*@
 
 <p>
     <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>

@@ -11,7 +11,7 @@ main p {
     max-width: 40em;
 }
 
-svg[role="img"] {
+main svg[role="img"]:not(.icon) {
     width: 1em;
     height: 1em;
 }

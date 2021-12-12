@@ -1,4 +1,6 @@
+using System.Buffers;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -6,6 +8,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Security.GreenField
 {
@@ -116,6 +119,22 @@ namespace BTCPayServer.Security.GreenField
             if (success)
             {
                 context.Succeed(requirement);
+            }else{
+                // Solution 1: Just add an extra header.
+                _HttpContext.Response.Headers.Add("X-Missing-API-Permission", policy);
+                
+                // Solution 2: Write the entire response manually.
+                var outputObj = new
+                {
+                    ErrorMessage = "Missing API Permission \""+policy+"\"",
+                    MissingPermission = policy
+                };
+                string output = JsonConvert.SerializeObject(outputObj);
+                var outputBytes = Encoding.UTF8.GetBytes(output);
+
+                _HttpContext.Response.StatusCode = 403;
+                _HttpContext.Response.Headers.Add("Content-Length", ""+outputBytes.Length);
+                await _HttpContext.Response.Body.WriteAsync(outputBytes, 0, outputBytes.Length);
             }
         }
     }

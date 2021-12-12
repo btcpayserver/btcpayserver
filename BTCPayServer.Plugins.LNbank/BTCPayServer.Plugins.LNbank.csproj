@@ -5,6 +5,11 @@
     <PreserveCompilationContext>false</PreserveCompilationContext>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <Title>LNbank</Title>
+    <Authors>d11n</Authors>
+    <Description>Use the BTCPay Server Lightning node in custodial mode and give users access via custodial layer 3 wallets.</Description>
+    <PackageProjectUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</RepositoryUrl>
 
   </PropertyGroup>
   <ItemGroup>

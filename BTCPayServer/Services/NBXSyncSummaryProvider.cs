@@ -36,7 +36,8 @@ namespace BTCPayServer.Services
                         VerificationProgress = s.VerificationProgress
                     } : null,
                     ChainHeight = summary.Status.ChainHeight,
-                    SyncHeight = summary.Status.SyncHeight
+                    SyncHeight = summary.Status.SyncHeight,
+                    Available = summary.Status.IsFullySynched
                 });
         }
         

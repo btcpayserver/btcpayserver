@@ -77,9 +77,7 @@ namespace BTCPayServer.Tests
                 {
                     Assert.Equal("insufficient-api-permissions", e.APIError.Code);
                     Assert.NotNull(e.APIError.Message);
-                    Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
-
-                    GreenfieldPermissionAPIError permissionError = (GreenfieldPermissionAPIError)e.APIError;
+                    GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
                     Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
                     Assert.NotNull(permissionError.MissingPermissionDescription);
                 }

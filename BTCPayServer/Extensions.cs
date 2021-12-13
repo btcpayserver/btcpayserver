@@ -468,12 +468,18 @@ namespace BTCPayServer
             var supportedChains = configuration.GetOrDefault<string>("chains", "btc")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant()).ToHashSet();
-
+            foreach (var c in supportedChains.ToList())
+            {
+                if (new[] { "ETH", "USDT20", "FAU" }.Contains(c, StringComparer.OrdinalIgnoreCase))
+                {
+                    logs.Configuration.LogWarning($"'{c}' is not anymore supported, please remove it from 'chains'");
+                    supportedChains.Remove(c);
+                }
+            }
             var networkProvider = new BTCPayNetworkProvider(_networkType);
             var filtered = networkProvider.Filter(supportedChains.ToArray());
 #if ALTCOINS
             supportedChains.AddRange(filtered.GetAllElementsSubChains(networkProvider));
-            supportedChains.AddRange(filtered.GetAllEthereumSubChains(networkProvider));
 #endif
 #if !ALTCOINS
             var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";

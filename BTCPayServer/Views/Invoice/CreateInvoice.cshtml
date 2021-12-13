@@ -25,127 +25,131 @@
     </script>
 }
 
-<section>
-    <div class="container">
-        <partial name="_StatusMessage" />
+<partial name="_StatusMessage" />
 
-        <h2 class="mb-4">@ViewData["Title"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
-        <div class="row">
-            <div class="col-lg-6">
-                <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="Stores" class="form-label"></label>
-                        <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
-                        <span asp-validation-for="StoreId" class="text-danger"></span>
+<div class="row">
+    <div class="col-lg-6">
+        <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Model.StoreId != null)
+            {
+                <input type="hidden" asp-for="StoreId" />
+            }
+            else
+            {
+                <div class="form-group">
+                    <label asp-for="Stores" class="form-label"></label>
+                    <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
+                    <span asp-validation-for="StoreId" class="text-danger"></span>
+                </div>
+            
+                <h4 class="mt-5 mb-4">Invoice Details</h4>
+            }
+            <div class="form-group">
+                <label asp-for="Amount" class="form-label"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Currency" class="form-label"></label>
+                <input asp-for="Currency" class="form-control" />
+                <span asp-validation-for="Currency" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OrderId" class="form-label"></label>
+                <input asp-for="OrderId" class="form-control" />
+                <span asp-validation-for="OrderId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ItemDesc" class="form-label"></label>
+                <input asp-for="ItemDesc" class="form-control" />
+                <span asp-validation-for="ItemDesc" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-4">
+                <label asp-for="SupportedTransactionCurrencies" class="form-label"></label>
+                @foreach (var item in Model.AvailablePaymentMethods)
+                {
+                    <div class="form-check mb-2">
+                        <label class="form-check-label">
+                            <input name="SupportedTransactionCurrencies" class="form-check-input" checked="checked" type="checkbox" value="@item.Value">
+                            @item.Text
+                        </label>
                     </div>
-                    <h4 class="mt-5 mb-4">Invoice Details</h4>
-                    <div class="form-group">
-                        <label asp-for="Amount" class="form-label"></label>
-                        <input asp-for="Amount" class="form-control" />
-                        <span asp-validation-for="Amount" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Currency" class="form-label"></label>
-                        <input asp-for="Currency" class="form-control" />
-                        <span asp-validation-for="Currency" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="OrderId" class="form-label"></label>
-                        <input asp-for="OrderId" class="form-control" />
-                        <span asp-validation-for="OrderId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ItemDesc" class="form-label"></label>
-                        <input asp-for="ItemDesc" class="form-control" />
-                        <span asp-validation-for="ItemDesc" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-4">
-                        <label asp-for="SupportedTransactionCurrencies" class="form-label"></label>
-                        @foreach (var item in Model.AvailablePaymentMethods)
-                        {
-                            <div class="form-check mb-2">
-                                <label class="form-check-label">
-                                    <input name="SupportedTransactionCurrencies" class="form-check-input" checked="checked" type="checkbox" value="@item.Value">
-                                    @item.Text
-                                </label>
+                }
+                <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DefaultPaymentMethod" class="form-label"></label>
+                <select asp-for="DefaultPaymentMethod" asp-items="Model.AvailablePaymentMethods" class="form-select">
+                    <option value="" selected>Use the store’s default</option>
+                </select>
+                <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
+            </div>
+            <h4 class="mt-5 mb-4">Customer Information</h4>
+            <div class="form-group">
+                <label asp-for="BuyerEmail" class="form-label"></label>
+                <input asp-for="BuyerEmail" class="form-control" />
+                <span asp-validation-for="BuyerEmail" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RequiresRefundEmail" class="form-label"></label>
+                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
+                <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+            </div>
+            
+            <h4 class="mt-5 mb-2">Additional Options</h4>
+            <div class="form-group">
+                <div class="accordion" id="additional">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-pos-data-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-pos-data" aria-expanded="false" aria-controls="additional-pos-data">
+                                Point Of Sale Data
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-pos-data" class="accordion-collapse collapse" aria-labelledby="additional-pos-data-header">
+                            <p>Custom data to correlate the invoice with an order. This data can be a simple text, number or JSON object, e.g. <code>{ "orderId": 615, "product": "Pizza" }</code></p>
+                            <div class="form-group">
+                                <label asp-for="PosData" class="form-label"></label>
+                                <input asp-for="PosData" class="form-control"/>
+                                <span asp-validation-for="PosData" class="text-danger"></span>
                             </div>
-                        }
-                        <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="DefaultPaymentMethod" class="form-label"></label>
-                        <select asp-for="DefaultPaymentMethod" asp-items="Model.AvailablePaymentMethods" class="form-select">
-                            <option value="" selected>Use the store’s default</option>
-                        </select>
-                        <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
-                    </div>
-                    <h4 class="mt-5 mb-4">Customer Information</h4>
-                    <div class="form-group">
-                        <label asp-for="BuyerEmail" class="form-label"></label>
-                        <input asp-for="BuyerEmail" class="form-control" />
-                        <span asp-validation-for="BuyerEmail" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RequiresRefundEmail" class="form-label"></label>
-                        <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
-                        <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
-                    </div>
-                    
-                    <h4 class="mt-5 mb-2">Additional Options</h4>
-                    <div class="form-group">
-                        <div class="accordion" id="additional">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="additional-pos-data-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-pos-data" aria-expanded="false" aria-controls="additional-pos-data">
-                                        Point Of Sale Data
-                                        <vc:icon symbol="caret-down" />
-                                    </button>
-                                </h2>
-                                <div id="additional-pos-data" class="accordion-collapse collapse" aria-labelledby="additional-pos-data-header">
-                                    <p>Custom data to correlate the invoice with an order. This data can be a simple text, number or JSON object, e.g. <code>{ "orderId": 615, "product": "Pizza" }</code></p>
-                                    <div class="form-group">
-                                        <label asp-for="PosData" class="form-label"></label>
-                                        <input asp-for="PosData" class="form-control"/>
-                                        <span asp-validation-for="PosData" class="text-danger"></span>
-                                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-notifications-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notifications" aria-expanded="false" aria-controls="additional-notifications">
+                                Invoice Notifications
+                                <vc:icon symbol="caret-down"/>
+                            </button>
+                        </h2>
+                        <div id="additional-notifications" class="accordion-collapse collapse" aria-labelledby="additional-notifications-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="NotificationUrl" class="form-label"></label>
+                                    <input asp-for="NotificationUrl" class="form-control"/>
+                                    <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                                 </div>
-                            </div>
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="additional-notifications-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notifications" aria-expanded="false" aria-controls="additional-notifications">
-                                        Invoice Notifications
-                                        <vc:icon symbol="caret-down"/>
-                                    </button>
-                                </h2>
-                                <div id="additional-notifications" class="accordion-collapse collapse" aria-labelledby="additional-notifications-header">
-                                    <div class="accordion-body">
-                                        <div class="form-group">
-                                            <label asp-for="NotificationUrl" class="form-label"></label>
-                                            <input asp-for="NotificationUrl" class="form-control"/>
-                                            <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                                        </div>
-                                        <div class="form-group">
-                                            <label asp-for="NotificationEmail" class="form-label"></label>
-                                            <input asp-for="NotificationEmail" class="form-control"/>
-                                            <span asp-validation-for="NotificationEmail" class="text-danger"></span>
-                                            <p id="InvoiceEmailHelpBlock" class="form-text text-muted">
-                                                Receive updates for this invoice.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div class="form-group">
+                                    <label asp-for="NotificationEmail" class="form-label"></label>
+                                    <input asp-for="NotificationEmail" class="form-control"/>
+                                    <span asp-validation-for="NotificationEmail" class="text-danger"></span>
+                                    <p id="InvoiceEmailHelpBlock" class="form-text text-muted">
+                                        Receive updates for this invoice.
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="form-group mt-4">
-                        <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-                        <a asp-action="ListInvoices" class="btn btn-link px-0 ms-3">Back to list</a>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+            
+            <div class="form-group mt-4">
+                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+                <a asp-action="ListInvoices" class="btn btn-link px-0 ms-3">Back to list</a>
+            </div>
+        </form>
     </div>
-</section>
+</div>

@@ -153,7 +153,8 @@
                         "required": false,
                         "description": "Whether to generate a new address for this request even if the previous one was not used",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean",
+                            "default": false
                         }
                     }
                 ],
@@ -730,7 +731,7 @@
                     },
                     "subtractFromAmount": {
                         "type": "boolean",
-                        "description": "Whether to subtract from the provided amount. Must be false if `destination` is a BIP21 link"
+                        "description": "Whether to subtract the transaction fee from the provided amount. This makes the receiver receive less, or in other words: he or she pays the transaction fee. Also useful if you want to clear out your wallet. Must be false if `destination` is a BIP21 link"
                     }
                 }
             },
@@ -749,7 +750,7 @@
                     "feeRate": {
                         "type": "number",
                         "format": "decimal or long (sats/byte)",
-                        "description": "A wallet address or a BIP21 payment link"
+                        "description": "Transaction fee."
                     },
                     "proceedWithPayjoin": {
                         "type": "boolean",

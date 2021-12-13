@@ -1,17 +1,18 @@
 ﻿@using BTCPayServer.Configuration
 @inject BTCPayServerOptions BTCPayServerOptions
-<nav id="sideNav" class="nav flex-column mb-4">
-    <a asp-controller="Server" id="Server-@ServerNavPages.Users" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Emails" class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email Server</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Policies" class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Services" class="nav-link @ViewData.IsActivePage(ServerNavPages.Services)" asp-action="Services">Services</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Theme" class="nav-link @ViewData.IsActivePage(ServerNavPages.Theme)" asp-action="Theme">Theme</a>
+
+<nav id="SectionNav" class="nav">
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Emails" class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email Server</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Policies" class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Services" class="nav-link @ViewData.IsActivePage(ServerNavPages.Services)" asp-action="Services">Services</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Theme" class="nav-link @ViewData.IsActivePage(ServerNavPages.Theme)" asp-action="Theme">Theme</a>
     @if (BTCPayServerOptions.DockerDeployment)
     {
-        <a asp-controller="Server" id="Server-@ServerNavPages.Maintenance" class="nav-link @ViewData.IsActivePage(ServerNavPages.Maintenance)" asp-action="Maintenance">Maintenance</a>
+        <a asp-controller="Server" id="SectionNav-@ServerNavPages.Maintenance" class="nav-link @ViewData.IsActivePage(ServerNavPages.Maintenance)" asp-action="Maintenance">Maintenance</a>
     }
-    <a asp-controller="Server" id="Server-@ServerNavPages.Logs" class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Files" class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
-    <a asp-controller="Server" id="Server-@ServerNavPages.Plugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" asp-action="ListPlugins">Plugins (experimental)</a>
-    <vc:ui-extension-point location="server-nav"  model="@Model"/>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Logs" class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
+    <a asp-controller="Server" id="SectionNav-@ServerNavPages.Plugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" asp-action="ListPlugins">Plugins (experimental)</a>
+    <vc:ui-extension-point location="server-nav" model="@Model"/>
 </nav>

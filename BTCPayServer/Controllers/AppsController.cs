@@ -3,13 +3,10 @@ using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -18,65 +15,58 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class AppsController : Controller
     {
         public AppsController(
             UserManager<ApplicationUser> userManager,
-            ApplicationDbContextFactory contextFactory,
             EventAggregator eventAggregator,
-            BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
-            EmailSenderFactory emailSenderFactory,
-            Services.Stores.StoreRepository storeRepository,
-            AppService AppService)
+            StoreRepository storeRepository,
+            AppService appService)
         {
-            _UserManager = userManager;
-            _ContextFactory = contextFactory;
-            _EventAggregator = eventAggregator;
-            _NetworkProvider = networkProvider;
+            _userManager = userManager;
+            _eventAggregator = eventAggregator;
             _currencies = currencies;
-            _emailSenderFactory = emailSenderFactory;
             _storeRepository = storeRepository;
-            _AppService = AppService;
+            _appService = appService;
         }
 
-        private readonly UserManager<ApplicationUser> _UserManager;
-        private readonly ApplicationDbContextFactory _ContextFactory;
-        private readonly EventAggregator _EventAggregator;
-        private readonly BTCPayNetworkProvider _NetworkProvider;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly EventAggregator _eventAggregator;
         private readonly CurrencyNameTable _currencies;
-        private readonly EmailSenderFactory _emailSenderFactory;
         private readonly StoreRepository _storeRepository;
-        private readonly AppService _AppService;
+        private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
-
+        
+        [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
+            string storeId, 
             string sortOrder = null,
             string sortOrderColumn = null
         )
         {
-            var apps = await _AppService.GetAllApps(GetUserId());
+            var apps = await _appService.GetAllApps(GetUserId(), false, CurrentStore.Id);
 
             if (sortOrder != null && sortOrderColumn != null) 
             {
                 apps = apps.OrderByDescending(app => 
+                {
+                    switch (sortOrderColumn)
                     {
-                        switch (sortOrderColumn)
-                        {
-                            case nameof(app.AppName):
-                                return app.AppName;
-                            case nameof(app.StoreName):
-                                return app.StoreName;
-                            case nameof(app.AppType):
-                                return app.AppType;
-                            default:
-                                return app.Id;
-                        }
-                    }).ToArray();
+                        case nameof(app.AppName):
+                            return app.AppName;
+                        case nameof(app.StoreName):
+                            return app.StoreName;
+                        case nameof(app.AppType):
+                            return app.AppType;
+                        default:
+                            return app.Id;
+                    }
+                }).ToArray();
 
                 switch (sortOrder)
                 {
@@ -90,64 +80,27 @@ namespace BTCPayServer.Controllers
                 }
             }
             
-            return View(new ListAppsViewModel()
+            return View(new ListAppsViewModel
             {
                 Apps = apps
             });
         }
 
-        [HttpPost]
-        [Route("{appId}/delete")]
-        public async Task<IActionResult> DeleteAppPost(string appId)
+        [HttpGet("/stores/{storeId}/apps/create")]
+        public IActionResult CreateApp(string storeId)
         {
-            var appData = await GetOwnedApp(appId);
-            if (appData == null)
-                return NotFound();
-            if (await _AppService.DeleteApp(appData))
-                TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
-            return RedirectToAction(nameof(ListApps));
+            return View(new CreateAppViewModel
+            {
+                StoreId = CurrentStore.Id
+            });
         }
 
-        [HttpGet]
-        [Route("create")]
-        public async Task<IActionResult> CreateApp()
+        [HttpPost("/stores/{storeId}/apps/create")]
+        public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            var stores = await _AppService.GetOwnedStores(GetUserId());
-            if (stores.Length == 0)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Html =
-                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}' class='alert-link'>Create store</a>",
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToAction(nameof(ListApps));
-            }
-            var vm = new CreateAppViewModel();
-            vm.SetStores(stores);
-            return View(vm);
-        }
+            vm.StoreId = CurrentStore.Id;
 
-        [HttpPost]
-        [Route("create")]
-        public async Task<IActionResult> CreateApp(CreateAppViewModel vm)
-        {
-            var stores = await _AppService.GetOwnedStores(GetUserId());
-            if (stores.Length == 0)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Html =
-                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}' class='alert-link'>Create store</a>",
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToAction(nameof(ListApps));
-            }
-            var selectedStore = vm.SelectedStore;
-            vm.SetStores(stores);
-            vm.SelectedStore = selectedStore;
-
-            if (!Enum.TryParse<AppType>(vm.SelectedAppType, out AppType appType))
+            if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
 
             if (!ModelState.IsValid)
@@ -155,14 +108,9 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            if (!stores.Any(s => s.Id == selectedStore))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = "You are not owner of this store";
-                return RedirectToAction(nameof(ListApps));
-            }
             var appData = new AppData
             {
-                StoreDataId = selectedStore,
+                StoreDataId = CurrentStore.Id,
                 Name = vm.AppName,
                 AppType = appType.ToString()
             };
@@ -171,18 +119,16 @@ namespace BTCPayServer.Controllers
             switch (appType)
             {
                 case AppType.Crowdfund:
-                    var emptyCrowdfund = new CrowdfundSettings();
-                    emptyCrowdfund.TargetCurrency = defaultCurrency;
+                    var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
                     appData.SetSettings(emptyCrowdfund);
                     break;
                 case AppType.PointOfSale:
-                    var empty = new PointOfSaleSettings();
-                    empty.Currency = defaultCurrency;
+                    var empty = new PointOfSaleSettings { Currency = defaultCurrency };
                     appData.SetSettings(empty);
                     break;
             }
 
-            await _AppService.UpdateOrCreateApp(appData);
+            await _appService.UpdateOrCreateApp(appData);
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
@@ -193,17 +139,8 @@ namespace BTCPayServer.Controllers
                 case AppType.Crowdfund:
                     return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
                 default:
-                    return RedirectToAction(nameof(ListApps));
+                    return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
             }
-        }
-
-        async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
-        {
-            if (String.IsNullOrWhiteSpace(currency))
-            {
-                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
-            }
-            return currency.Trim().ToUpperInvariant();
         }
 
         [HttpGet("{appId}/delete")]
@@ -215,14 +152,39 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{appData.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
+        [HttpPost("{appId}/delete")]
+        public async Task<IActionResult> DeleteAppPost(string appId)
+        {
+            var appData = await GetOwnedApp(appId);
+            if (appData == null)
+                return NotFound();
+            if (await _appService.DeleteApp(appData))
+                TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
+            return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
+        }
+
+        async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
+        {
+            if (string.IsNullOrWhiteSpace(currency))
+            {
+                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+            }
+            return currency.Trim().ToUpperInvariant();
+        }
+
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
-            return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
+            return _appService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
         private string GetUserId()
         {
-            return _UserManager.GetUserId(User);
+            return _userManager.GetUserId(User);
+        }
+
+        private StoreData CurrentStore
+        {
+            get => HttpContext.GetStoreData();
         }
     }
 }

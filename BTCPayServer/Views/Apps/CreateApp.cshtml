@@ -7,35 +7,27 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-<section>
-    <div class="container">
-        <partial name="_StatusMessage" />
+<partial name="_StatusMessage" />
 
-        <h2 class="mb-4">@ViewData["Title"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
-        <div class="row">
-            <div class="col-lg-6">
-                <form asp-action="CreateApp">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="SelectedStore" class="form-label" data-required></label>
-                        <select asp-for="SelectedStore" asp-items="Model.Stores" class="form-select"></select>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="SelectedAppType" class="form-label" data-required></label>
-                        <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-select"></select>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AppName" class="form-label" data-required></label>
-                        <input asp-for="AppName" class="form-control" required />
-                        <span asp-validation-for="AppName" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mt-4">
-                        <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-                        <a asp-action="ListApps" class="btn btn-link px-0 ms-3">Back to list</a>
-                    </div>
-                </form>
+<div class="row">
+    <div class="col-lg-6">
+        <form asp-action="CreateApp">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="SelectedAppType" class="form-label" data-required></label>
+                <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-select"></select>
             </div>
-        </div>
+            <div class="form-group">
+                <label asp-for="AppName" class="form-label" data-required></label>
+                <input asp-for="AppName" class="form-control" required />
+                <span asp-validation-for="AppName" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-4">
+                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+                <a asp-action="ListApps" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-link px-0 ms-3">Back to list</a>
+            </div>
+        </form>
     </div>
-</section>
+</div>

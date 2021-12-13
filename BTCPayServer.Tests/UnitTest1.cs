@@ -959,7 +959,7 @@ namespace BTCPayServer.Tests
         private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
         {
             var result =
-                (Models.InvoicingModels.InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
+                (InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
                     .ListInvoices(new InvoicesModel { SearchTerm = filter }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
@@ -2016,8 +2016,7 @@ namespace BTCPayServer.Tests
                 });
             }
         }
-
-
+        
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteApps()
@@ -2026,21 +2025,21 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 var user2 = tester.NewAccount();
-                user2.GrantAccess();
+                await user2.GrantAccessAsync();
                 var apps = user.GetController<AppsController>();
                 var apps2 = user2.GetController<AppsController>();
-                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
                 Assert.NotNull(vm.SelectedAppType);
                 Assert.Null(vm.AppName);
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
-                var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
+                var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
                 Assert.Equal(nameof(apps.UpdatePointOfSale), redirectToAction.ActionName);
-                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 var appList2 =
-                    Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps().Result).Model);
+                    Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
                 Assert.Single(appList.Apps);
                 Assert.Empty(appList2.Apps);
                 Assert.Equal("test", appList.Apps[0].AppName);
@@ -2051,7 +2050,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
                 redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
                 Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
-                appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 Assert.Empty(appList.Apps);
             }
         }

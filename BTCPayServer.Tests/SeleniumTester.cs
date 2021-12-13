@@ -2,14 +2,10 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -146,14 +142,14 @@ namespace BTCPayServer.Tests
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)
         {
-            Driver.WaitForElement(By.Id("Stores")).Click();
-            Driver.WaitForElement(By.Id("CreateStore")).Click();
+            Driver.WaitForElement(By.Id("StoreSelectorToggle")).Click();
+            Driver.WaitForElement(By.Id("StoreSelectorMenuItem-Create")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id($"Nav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id($"Nav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -279,9 +275,9 @@ namespace BTCPayServer.Tests
         }
 
         public Logging.ILog TestLogs => Server.TestLogs;
-        public void ClickOnAllSideMenus()
+        public void ClickOnAllSectionLinks()
         {
-            var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            var links = Driver.FindElements(By.CssSelector("#SectionNav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
             foreach (var l in links)
             {
@@ -315,6 +311,11 @@ namespace BTCPayServer.Tests
             Assert.Contains("404 - Page not found</h1>", Driver.PageSource);
         }
 
+        internal void AssertAccessDenied()
+        {
+            Assert.Contains("Access denied</h", Driver.PageSource);
+        }
+
         public void GoToHome()
         {
             Driver.Navigate().GoToUrl(ServerUri);
@@ -331,24 +332,29 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
         }
+        
         public void GoToApps()
         {
-            Driver.FindElement(By.Id("Apps")).Click();
-        }
-        public void GoToStores()
-        {
-            Driver.FindElement(By.Id("Stores")).Click();
+            Driver.FindElement(By.Id("StoreNav-Apps")).Click();
         }
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
             GoToHome(); 
-            Driver.WaitForAndClick(By.Id("Stores"));
-            Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
+            Driver.WaitForAndClick(By.Id("StoreSelectorToggle"));
+            Driver.WaitForAndClick(By.Id($"StoreSelectorMenuItem-{storeId}"));
 
             if (storeNavPage != StoreNavPages.PaymentMethods)
             {
-                Driver.FindElement(By.Id($"Nav-{storeNavPage.ToString()}")).Click();
+                // FIXME: Review and optimize this once we decided on where which items belong
+                try
+                {
+                    Driver.FindElement(By.Id($"StoreNav-{storeNavPage.ToString()}")).Click();
+                }
+                catch (NoSuchElementException)
+                {
+                    Driver.FindElement(By.Id($"SectionNav-{storeNavPage.ToString()}")).Click();
+                }
             }
         }
 
@@ -366,22 +372,23 @@ namespace BTCPayServer.Tests
 
         public void GoToInvoiceCheckout(string invoiceId)
         {
-            Driver.FindElement(By.Id("Invoices")).Click();
+            Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
         }
 
         public void GoToInvoices()
         {
-            Driver.FindElement(By.Id("Invoices")).Click();
+            GoToHome();
+            Driver.FindElement(By.Id("Nav-Invoices")).Click();
         }
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            Driver.FindElement(By.Id("MySettings")).Click();
+            Driver.FindElement(By.Id("Nav-Account")).Click();
             if (navPages != ManageNavPages.Index)
             {
-                Driver.FindElement(By.Id(navPages.ToString())).Click();
+                Driver.FindElement(By.Id($"SectionNav-{navPages.ToString()}")).Click();
             }
         }
 
@@ -477,7 +484,7 @@ namespace BTCPayServer.Tests
             Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {
-                Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
+                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }
         }
 
@@ -488,10 +495,10 @@ namespace BTCPayServer.Tests
 
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {
-            Driver.FindElement(By.Id("ServerSettings")).Click();
+            Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
             if (navPages != ServerNavPages.Index)
             {
-                Driver.FindElement(By.Id($"Server-{navPages}")).Click();
+                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }
         }
 

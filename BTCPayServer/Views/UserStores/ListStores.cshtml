@@ -7,91 +7,89 @@
     var sortByAsc = "Sort by ascending...";
 }
 
-<section>
-    <div class="container">
-        <partial name="_StatusMessage" />
+<partial name="_StatusMessage" />
 
-        <div class="d-sm-flex align-items-center justify-content-between mb-2">
-            <h2 class="mb-0">@ViewData["PageTitle"]</h2>
-            <a asp-action="CreateStore" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a new store</a>
-        </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">@ViewData["PageTitle"]</h2>
+    <a asp-action="CreateStore" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a new store</a>
+</div>
 
-        <div class="row">
-            <div class="col-lg-12">
-                @if (Model.Stores.Any())
-                {
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <a asp-action="ListStores"
-                                       asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
-                                       asp-route-sortOrderColumn="StoreName"
-                                       class="text-nowrap"
-                                       title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)">
-                                        Name
-                                        <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                                    </a>
-                                </th>
-                                <th>
-                                    <a asp-action="ListStores"
-                                       asp-route-sortOrder="@(storeWebsiteSortOrder ?? "asc")"
-                                       asp-route-sortOrderColumn="StoreWebsite"
-                                       class="text-nowrap"
-                                       title="@(storeWebsiteSortOrder == "desc" ? sortByDesc : sortByAsc)">
-                                        Website
-                                        <span class="fa @(storeWebsiteSortOrder == "asc" ? "fa-sort-alpha-desc" : storeWebsiteSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                                    </a>
-                                </th>
-                                <th style="text-align:right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var store in Model.Stores)
-                            {
-                                <tr id="store-@store.Id">
-                                    <td>
-                                        @if (store.IsOwner)
-                                        {
-                                            <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id">@store.Name</a>
-                                        }
-                                        else
-                                        {
-                                            @store.Name
-                                        }
-                                        @if (store.HintWalletWarning)
-                                        {
-                                            <span class="fa fa-warning text-warning" title="Wallet not setup for this store" id="warninghint_@store.Id"></span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(store.WebSite))
-                                        {
-                                            <a href="@store.WebSite" rel="noreferrer noopener">@store.WebSite</a>
-                                        }
-                                    </td>
-                                    <td style="text-align:right">
-                                        <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
-                                        @if (store.IsOwner)
-                                        {
-                                            <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
-                                        }
-                                        <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete</a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <p class="text-secondary mt-3">
-                        There are no stores yet.
-                    </p>
-                }
-            </div>
-        </div>
+<div class="row">
+    <div class="col-lg-12">
+        @if (Model.Stores.Any())
+        {
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <a asp-action="ListStores"
+                               asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
+                               asp-route-sortOrderColumn="StoreName"
+                               class="text-nowrap"
+                               title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)">
+                                Name
+                                <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="ListStores"
+                               asp-route-sortOrder="@(storeWebsiteSortOrder ?? "asc")"
+                               asp-route-sortOrderColumn="StoreWebsite"
+                               class="text-nowrap"
+                               title="@(storeWebsiteSortOrder == "desc" ? sortByDesc : sortByAsc)">
+                                Website
+                                <span class="fa @(storeWebsiteSortOrder == "asc" ? "fa-sort-alpha-desc" : storeWebsiteSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                            </a>
+                        </th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var store in Model.Stores)
+                    {
+                        <tr id="store-@store.Id">
+                            <td>
+                                @if (store.IsOwner)
+                                {
+                                    <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id">@store.Name</a>
+                                }
+                                else
+                                {
+                                    @store.Name
+                                }
+                                @if (store.HintWalletWarning)
+                                {
+                                    <span class="fa fa-warning text-warning" title="Wallet not setup for this store" id="warninghint_@store.Id"></span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(store.WebSite))
+                                {
+                                    <a href="@store.WebSite" rel="noreferrer noopener">@store.WebSite</a>
+                                }
+                            </td>
+                            <td style="text-align:right">
+                                <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
+                                <a asp-action="PullPayments" asp-controller="StorePullPayments" asp-route-storeId="@store.Id">Pull Payments</a>
+                                @if (store.IsOwner)
+                                {
+                                    <span> - </span>
+                                    <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
+                                    <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete</a><span> - </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no stores yet.
+            </p>
+        }
     </div>
-</section>
+</div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />

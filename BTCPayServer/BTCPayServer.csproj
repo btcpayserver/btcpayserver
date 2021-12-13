@@ -37,25 +37,17 @@
   <ItemGroup>
     <EmbeddedResource Include="bundleconfig.json" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Altcoins)' == 'true'">
-    <PackageReference Include="Nethereum.ABI" Version="4.1.0" />
-    <PackageReference Include="Nethereum.HdWallet" Version="4.1.0" />
-    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="4.1.0" />
-    <PackageReference Include="Nethereum.Web3" Version="4.1.0" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
-    <Content Remove="Views\EthereumLikeStore\**\*" />
     <Content Remove="Views\MoneroLikeStore\**\*" />
-    <Content Remove="Views\Shared\Ethereum\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.16" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.17" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />

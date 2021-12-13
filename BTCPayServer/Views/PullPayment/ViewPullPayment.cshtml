@@ -50,7 +50,7 @@
     <div class="min-vh-100 d-flex flex-column">
         @if (Model.IsPending)
         {
-            <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4 d-print-none">
+            <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-none">
                 <div class="container">
                     <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="w-100">
                         <div class="row align-items-center" style="width:calc(100% + 30px)">

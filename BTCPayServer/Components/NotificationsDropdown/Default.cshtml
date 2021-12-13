@@ -1,23 +1,19 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject ISettingsRepository SettingsRepository
-@using BTCPayServer.HostedServices
 @using BTCPayServer.Views.Notifications
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Client
-@using BTCPayServer.Services
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
-@if (Model.UnseenCount > 0)
-{
-    <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="NotificationsDropdownToggle" role="button" data-bs-toggle="dropdown">
-            <span class="d-inline-block d-lg-none">Notifications</span>
-            <i class="fa fa-bell d-lg-inline-block d-none"></i>
-            <span class="notification-badge badge rounded-pill bg-danger">@Model.UnseenCount</span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-end text-center notification-dropdown" aria-labelledby="NotificationsDropdownToggle">
+<div id="Notifications">
+    @if (Model.UnseenCount > 0)
+    {
+        <button id="NotificationsHandle" class="mainMenuButton @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" title="Notifications" type="button" data-bs-toggle="dropdown">
+            <vc:icon symbol="notifications" />
+            <span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@Model.UnseenCount</span>
+        </button>
+        <div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>
                 <form id="notificationsForm" asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
@@ -30,7 +26,6 @@
                     <div class="me-3">
                         <vc:icon symbol="note" />
                     </div>
-
                     <div class="notification-item__content">
                         <div class="text-start text-wrap">
                             @notif.Body
@@ -45,13 +40,11 @@
                 <a asp-controller="Notifications" asp-action="Index">View all</a>
             </div>
         </div>
-    </li>
-}
-else
-{
-    <li class="nav-item" id="notifications-nav-item">
-        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" id="Notifications">
-            <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
+    }
+    else
+    {
+        <a asp-controller="Notifications" asp-action="Index" id="NotificationsHandle" class="mainMenuButton @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" title="Notifications">
+            <vc:icon symbol="notifications" />
         </a>
-    </li>
-}
+    }
+</div>

@@ -3,72 +3,68 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Index, "Wallets");
 }
 
-<section>
-    <div class="container">
-        <partial name="_StatusMessage" />
+<partial name="_StatusMessage" />
 
-        <div class="d-sm-flex justify-content-between mb-2">
-            <h2 class="mb-0">
-                @ViewData["Title"]
-                <small>
-                    <a href="https://docs.btcpayserver.org/Wallet/" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                    </a>
-                </small>
-            </h2>
-            @if (Model.Wallets.Any())
+<div class="d-sm-flex justify-content-between mb-2">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Wallet/" target="_blank" rel="noreferrer noopener">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </small>
+    </h2>
+    @if (Model.Wallets.Any())
+    {
+        <div class="mt-2 mt-sm-1">
+            @foreach (var balance in Model.BalanceForCryptoCode)
             {
-                <div class="mt-2 mt-sm-1">
-                    @foreach (var balance in Model.BalanceForCryptoCode)
-                    {
-                        <div class="fs-5 fw-semibold">@($"{balance.Value.ShowMoney(balance.Key)} {balance.Key.CryptoCode}")</div>
-                    }
-                    <div class="text-muted text-sm-end fs-6">Total Balance</div>
-                </div>
+                <div class="fs-5 fw-semibold">@($"{balance.Value.ShowMoney(balance.Key)} {balance.Key.CryptoCode}")</div>
             }
+            <div class="text-muted text-sm-end fs-6">Total Balance</div>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                @if (Model.Wallets.Any())
-                {
-                    <table class="table table-hover table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Store Name</th>
-                                <th>Crypto Code</th>
-                                <th>Balance</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var wallet in Model.Wallets)
+    }
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        @if (Model.Wallets.Any())
+        {
+            <table class="table table-hover table-responsive-md">
+                <thead>
+                    <tr>
+                        <th>Store Name</th>
+                        <th>Crypto Code</th>
+                        <th>Balance</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var wallet in Model.Wallets)
+                    {
+                        <tr>
+                            @if (wallet.IsOwner)
                             {
-                                <tr>
-                                    @if (wallet.IsOwner)
-                                    {
-                                        <td><a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
-                                    }
-                                    else
-                                    {
-                                        <td>@wallet.StoreName</td>
-                                    }
-                                    <td>@wallet.CryptoCode</td>
-                                    <td>@wallet.Balance</td>
-                                    <td class="text-end">
-                                        <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
-                                    </td>
-                                </tr>
+                                <td><a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
                             }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <p class="text-secondary mt-3">
-                        There are no wallets yet. You can add wallets in the store setup.
-                    </p>
-                }
-            </div>
-        </div>
+                            else
+                            {
+                                <td>@wallet.StoreName</td>
+                            }
+                            <td>@wallet.CryptoCode</td>
+                            <td>@wallet.Balance</td>
+                            <td class="text-end">
+                                <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no wallets yet. You can add wallets in the store setup.
+            </p>
+        }
     </div>
-</section>
+</div>

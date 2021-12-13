@@ -2,6 +2,7 @@
 @using BTCPayServer.Payments
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
@@ -88,9 +89,9 @@
             </ul>
            
         </div>
-        @if (Model.Payouts.Any() && stateActions.Any())
+        @if (Model.Payouts.Any() && stateActions.Any() )
         {
-            <div class="col-12">
+            <div class="col-12" permission="@Policies.CanModifyStoreSettings" >
                 <div class="dropdown  mt-4 ms-xl-auto mt-xl-0">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
                                     Actions
@@ -114,7 +115,7 @@
                 <table class="table table-hover table-responsive-lg">
                     <thead class="thead-inverse">
                     <tr>
-                        <th>
+                        <th permission="@Policies.CanModifyStoreSettings" >
                             <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
                         </th>
                         <th style="min-width: 90px;" class="col-md-auto">
@@ -134,7 +135,7 @@
                     {
                         var pp = Model.Payouts[i];
                         <tr class="payout">
-                            <td>
+                            <td permission="@Policies.CanModifyStoreSettings" >
                                 <span>
                                     <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected"/>
                                     <input type="hidden" asp-for="Payouts[i].PayoutId"/>

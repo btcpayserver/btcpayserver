@@ -1,0 +1,430 @@
+/* Breakpoints:
+   XS <576px
+   SM ≥576px
+   MD ≥768px
+   LG ≥992px
+   XL ≥1200px */
+
+:root {
+    --mobile-header-height: 4rem;
+    --desktop-header-height: 8rem;
+    --sidebar-width: 15%;
+    --sidebar-min-width: 250px;
+    --sidebar-max-width: 350px;
+}
+
+/* Main Menu */
+#mainMenu {
+    --button-width: 40px;
+    --button-height: 40px;
+    --button-padding: 7px;
+    
+    height: var(--header-height);
+    z-index: 1;
+}
+
+#mainMenuHead .mainMenuButton  {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-width);
+    height: var(--button-height);
+    padding: var(--button-padding);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    color: var(--btcpay-body-text-muted);
+}
+
+#mainNav {
+    height: calc(100vh - var(--mobile-header-height));
+    overflow-y: auto;
+    padding-top: var(--btcpay-space-m);
+}
+
+#mainNav .nav-item i.fa,
+#mainNav .nav-item svg.icon {
+    font-size: 1.125rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: var(--btcpay-space-xs);
+}
+
+#mainNav .nav-item i.fa {
+    padding: .15rem 0 0 var(--btcpay-space-xs);
+}
+
+#mainNav .accordion-button {
+    padding: var(--btcpay-space-s) 0;
+    text-transform: uppercase;
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+#mainNav .accordion-item {
+    border: none !important;
+}
+
+#mainNav .navbar-nav > li.nav-item > .nav-link {
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--btcpay-font-weight-semibold);
+    color: var(--btcpay-header-link);
+    transition-property: color;
+    transition-duration: var(--btcpay-transition-duration-fast);
+}
+
+#mainNav .navbar-nav > li.nav-item > .nav-link:focus,
+#mainNav .navbar-nav > li.nav-item > .nav-link:hover {
+    color: var(--btcpay-header-link-accent);
+}
+
+#mainNav .navbar-nav > li.nav-item > .nav-link.active,
+#mainNav .navbar-nav > li.nav-item > .nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item > .nav-link.active:hover {
+    color: var(--btcpay-header-link-active);
+}
+
+#mainNavSettings {
+    margin-top: auto;
+}
+
+.navbar-brand,
+.navbar-brand:hover,
+.navbar-brand:focus {
+    color: inherit;
+}
+
+.btcpay-header {
+    color: var(--btcpay-header-text);
+    background: var(--btcpay-header-bg);
+}
+
+#mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#mainContent > section {
+    padding: 0;
+    flex: 1;
+}
+
+#StoreSelector {
+    display: flex;
+    align-items: center;
+    z-index: 2000;
+}
+
+#StoreSelector hr {
+    height: 1px;
+}
+
+#StoreSelectorDropdown,
+#StoreSelectorToggle {
+    width: 100%;
+}
+
+#StoreSelectorToggle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#StoreSelectorMenu {
+    min-width: 100%;
+}
+
+/* Logo */
+@media (max-width: 575px) {
+    .logo {
+        width: 1.125rem;
+        height: 2rem;
+    }
+
+    .logo-large {
+        display: none;
+    }
+}
+
+@media (min-width: 576px) {
+    .logo {
+        width: 4.6rem;
+        height: 2rem;
+    }
+
+    .logo-small {
+        display: none;
+    }
+}
+
+/* Theme Switch */
+.btcpay-theme-switch {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    cursor: pointer;
+    border: 0;
+}
+
+.btcpay-theme-switch svg {
+    height: 1rem;
+    width: 1rem;
+}
+
+.btcpay-theme-switch svg[class="d-inline-block"] + span {
+    margin-left: var(--btcpay-space-xs);
+}
+
+.btcpay-theme-switch path {
+    stroke-width: .5px;
+    fill: currentColor;
+}
+
+.btcpay-theme-switch:hover .btcpay-theme-switch-light,
+.btcpay-theme-switch:hover .btcpay-theme-switch-dark {
+    fill: currentColor;
+}
+
+.btcpay-theme-switch-dark {
+    stroke: currentColor;
+}
+
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch-dark {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-btcpay-theme="dark"]) .btcpay-theme-switch-dark {
+        display: inline-block;
+    }
+}
+
+.btcpay-theme-switch-light {
+    display: none;
+}
+
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch-light {
+    display: inline-block;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-btcpay-theme="light"]) .btcpay-theme-switch-light {
+        display: inline-block;
+    }
+}
+
+/* Notifications */
+#Notifications {
+    flex: 0 0 var(--button-width);
+}
+
+#NotificationsBadge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 1.75em;
+}
+
+#NotificationsHandle svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    color: var(--btcpay-body-text-muted);
+}
+
+#NotificationsHandle:hover svg {
+    color: var(--btcpay-header-text);
+}
+
+#NotificationsDropdown {
+    border: 0;
+    border-radius: 4px;
+    background: var(--btcpay-bg-tile);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    padding: 0;
+    z-index: 2000;
+    top: var(--btcpay-space-xs) !important;
+}
+
+/* Footer */
+.btcpay-footer {
+    font-size: var(--btcpay-font-size-s);
+    overflow: hidden;
+    padding: .5em 0;
+    color: var(--btcpay-footer-text);
+    background: var(--btcpay-footer-bg);
+}
+
+.btcpay-footer a {
+    color: var(--btcpay-footer-link);
+    text-decoration: none;
+}
+
+.btcpay-footer a:focus,
+.btcpay-footer a:hover {
+    color: var(--btcpay-footer-link-accent);
+}
+
+@media (max-width: 991px) {
+    #mainMenu {
+        --header-height: var(--mobile-header-height);
+    }
+
+    #mainNav {
+        position: fixed;
+        top: var(--mobile-header-height);
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-min-width);
+        max-width: var(--sidebar-max-width);
+        z-index: 1045;
+        color: var(--btcpay-body-text);
+        visibility: hidden;
+        background-color: inherit;
+        background-clip: padding-box;
+        outline: 0;
+        transform: translateX(-100%);
+        transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+    }
+
+    #mainNav.show {
+        transform: none;
+    }
+
+    .offcanvas-backdrop {
+        top: var(--mobile-header-height);
+        transition-duration: var(--btcpay-transition-duration-fast);
+    }
+
+    .offcanvas-backdrop.show {
+        opacity: 0.8;
+    }
+
+    #StoreSelector {
+        margin: 0 auto;
+    }
+
+    #StoreSelectorDropdown {
+        max-width: 40vw;
+    }
+    
+    #Notifications {
+        margin-left: var(--btcpay-space-s);
+    }
+
+    #mainMenuToggle {
+        --line-thickness: 2px;
+        --transition-easing: ease-in-out;
+        --transition-duration: var(--btcpay-transition-duration-fast);
+
+        flex: 0 0 var(--button-width);
+        margin-right: calc(var(--button-padding) * -1);
+        margin-left: var(--btcpay-space-s);
+    }
+
+    #mainMenuToggle span {
+        position: relative;
+        display: inline-block;
+        width: calc(var(--button-width) - var(--button-padding) * 2);
+        height: calc(var(--button-height) - (var(--button-padding) * 2) - (var(--line-thickness) * 4));
+        border-top: var(--line-thickness) solid;
+        border-bottom: var(--line-thickness) solid;
+        color: var(--btcpay-body-text-muted);
+        font-size: 0;
+        transition: all var(--transition-duration) var(--transition-easing);
+    }
+
+    #mainMenuToggle span:before,
+    #mainMenuToggle span:after {
+        position: absolute;
+        display: block;
+        content: '';
+        width: 100%;
+        height: var(--line-thickness);
+        top: 50%;
+        left: 50%;
+        background: currentColor;
+        transform: translate(-50%, -50%);
+        transition: transform var(--transition-duration) var(--transition-easing);
+    }
+
+    #mainMenuToggle:hover span {
+        color: var(--btcpay-header-text);
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span {
+        border-color: transparent;
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span:before {
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span:after {
+        transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    #mainContent > section {
+        padding: var(--btcpay-space-l) 0 var(--btcpay-space-xl);
+    }
+}
+
+@media (min-width: 992px) {
+    #mainMenu {
+        --header-height: var(--desktop-header-height);
+
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-min-width);
+        max-width: var(--sidebar-max-width);
+        height: 100vh;
+    }
+
+    #mainNav {
+        visibility: visible !important;
+    }
+
+    #Notifications {
+        order: 1;
+        margin-left: auto;
+    }
+
+    #StoreSelector {
+        order: 2;
+        margin-top: var(--btcpay-space-s);
+        width: 100%;
+    }
+    
+    #mainMenuToggle,
+    .offcanvas-backdrop{
+        display: none !important;
+    }
+
+    #NotificationsDropdown {
+        inset: calc(var(--button-height) * -1 - var(--btcpay-space-s)) auto auto calc(var(--button-width) + var(--btcpay-space-s)) !important;
+        width: 400px;
+    }
+
+    #mainContent {
+        margin-left: clamp(var(--sidebar-min-width), var(--sidebar-width), var(--sidebar-max-width));
+    }
+
+    #mainContent > section {
+        padding: var(--btcpay-space-xl) var(--btcpay-space-l);
+    }
+
+    #mainContent > section > .container {
+        margin: 0;
+    }
+    
+    .btcpay-footer {
+        padding-left: var(--btcpay-space-l);
+        padding-right: var(--btcpay-space-l);
+    }
+}

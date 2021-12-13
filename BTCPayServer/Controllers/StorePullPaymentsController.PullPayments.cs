@@ -26,7 +26,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers
 {
     [Route("stores/{storeId}/pull-payments")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public class StorePullPaymentsController: Controller
     {
@@ -60,6 +60,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("new")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId)
         {
             if (CurrentStore is  null)
@@ -86,6 +87,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpPost("new")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId, NewPullPaymentModel model)
         {
             if (CurrentStore is  null)
@@ -217,6 +219,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{pullPaymentId}/archive")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult ArchivePullPayment(string storeId,
             string pullPaymentId)
         {
@@ -224,6 +227,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpPost("{pullPaymentId}/archive")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ArchivePullPaymentPost(string storeId,
             string pullPaymentId)
         {
@@ -236,6 +240,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { storeId = storeId });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("payouts")]
         public async Task<IActionResult> PayoutsPost(
             string storeId, PayoutsModel vm, CancellationToken cancellationToken)

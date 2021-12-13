@@ -28,7 +28,6 @@ namespace BTCPayServer.Tests
 
         public static void AssertNoError(this IWebDriver driver)
         {
-            Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
             if (!driver.PageSource.Contains("alert-danger")) return;
             foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
                 Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");

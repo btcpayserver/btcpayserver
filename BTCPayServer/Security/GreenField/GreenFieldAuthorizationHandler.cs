@@ -123,7 +123,8 @@ namespace BTCPayServer.Security.GreenField
                 context.Succeed(requirement);
             }else
             {
-                var outputObj = new GreenfieldPermissionAPIError(policy);
+                Controllers.ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.TryGetValue(policy, out var policyDescription);
+                var outputObj = new GreenfieldPermissionAPIError(policy, policyDescription.Description);
                 string output = JsonConvert.SerializeObject(outputObj);
                 var outputBytes = new UTF8Encoding(false).GetBytes(output);
 

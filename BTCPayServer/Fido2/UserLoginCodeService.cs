@@ -29,10 +29,10 @@ namespace BTCPayServer.Fido2
             }
             return _memoryCache.GetOrCreate(GetCacheKey(userId), entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
                 var code = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
                 using var newEntry = _memoryCache.CreateEntry(code);
-                newEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+                newEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
                 newEntry.Value = userId;
 
                 return code;

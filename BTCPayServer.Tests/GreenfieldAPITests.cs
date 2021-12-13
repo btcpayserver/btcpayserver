@@ -56,6 +56,35 @@ namespace BTCPayServer.Tests
             var s = await client.GetStores();
         }
 
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task MissingPermissionTest()
+        {
+            using (var tester = CreateServerTester())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var clientWithWrongPermissions = await user.CreateClient(Policies.CanViewProfile);
+                
+                try
+                {
+                    // Try to create a store with a client that has the wrong permissions.
+                    var data = await clientWithWrongPermissions.CreateStore(new CreateStoreRequest() { Name = "mystore" });
+                    throw new XunitException("This point should never be reached.");
+
+                }catch (GreenFieldAPIException e)
+                {
+                    Assert.Equal("insufficient-api-permissions", e.APIError.Code);
+                    Assert.NotNull(e.APIError.Message);
+                    Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
+
+                    GreenfieldPermissionAPIError permissionError = (GreenfieldPermissionAPIError)e.APIError;
+                    Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
+                    Assert.NotNull(permissionError.MissingPermissionDescription);
+                }
+            }
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.7
+
+### Improvements:
+
+* Update of Bitbank rate provider (#3157) @junderw
+
+### Bug fixes:
+
+* Fix visual bug when decoding PSBT (#3172) @dennisreimann
+* Swagger fixes: improve API docs and property types (#3170) @woutersamaey
+* Fix copy pay button code (#3175) @dennisreimann
+* Fix LN Node availability check (#3189) @dennisreimann
+* `available` property of nodes returned by /api/v1/server/info wasn't actually set (ee1a034c0ab7744a2988e5da874084bc7dfa8b73) @NicolasDorier
+* Format perk value correctly in crowdfund app (#3141) @bolatovumar
+* Invoice page: Dropdown magically disappears (#3167 #3169) @trigger67
+
 ## 1.3.6
 
 ### Improvements:

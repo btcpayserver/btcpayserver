@@ -1524,6 +1524,25 @@ namespace BTCPayServer.Tests
                 var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
                 Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
             });
+
+            //lnurl crowdfund support
+            s.GoToStore();
+            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
+            s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
+            s.Driver.FindElement(By.Id("Create")).Click();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
+            s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.FindElement(By.CssSelector("#crowdfund-body-contribution-container .perk")).Click();
+            s.Driver.FindElement(By.PartialLinkText("LNURL")).Click();
+            lnurl = s.Driver.FindElement(By.ClassName("lnurl"))
+                .GetAttribute("href");
+            
+            LNURL.LNURL.Parse(lnurl, out tag);
+            
+
         }
 
         [Fact]

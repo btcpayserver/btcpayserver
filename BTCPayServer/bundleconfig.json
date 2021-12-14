@@ -74,6 +74,7 @@
         "outputFileName": "wwwroot/bundles/crowdfund-bundle-1.min.js",
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/vue-toasted/vue-toasted.min.js",
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",

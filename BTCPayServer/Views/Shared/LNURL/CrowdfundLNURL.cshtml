@@ -1,0 +1,35 @@
+﻿@using BTCPayServer.Services.Stores
+@using BTCPayServer.Payments.Lightning
+@model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject StoreRepository StoreRepository
+@{
+    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+
+    var store = await StoreRepository.FindStore(Model.StoreId);
+    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().FirstOrDefault(method => method.CryptoCode == cryptoCode);
+    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+    {
+        supported = null;
+    }
+
+    if (supported != null)
+    {
+        var lnurls = Model.Perks.Select(item => (item.Id, LNURL.LNURL.EncodeUri(new Uri(Context.Request.GetAbsoluteUri(Url.Action("GetLNURLForApp", "UILNURL", new
+        {
+            cryptoCode = supported.CryptoCode,
+            appid = Model.AppId,
+            ItemCode = item.Id
+        }))), "payRequest", supported.UseBech32Scheme))).ToDictionary(tuple => tuple.Id, tuple => tuple.Item2);
+        lnurls.Add("", LNURL.LNURL.EncodeUri(new Uri(Context.Request.GetAbsoluteUri(Url.Action("GetLNURLForApp", "UILNURL", new
+        {
+            cryptoCode = supported.CryptoCode,
+            appid = Model.AppId,
+        }))), "payRequest", supported.UseBech32Scheme));
+        <script>
+            window.lnurl = true;
+            window.lnurlItems = @Safe.Json(lnurls);
+        </script>
+    }
+}

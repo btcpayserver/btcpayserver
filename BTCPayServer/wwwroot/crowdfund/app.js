@@ -16,11 +16,16 @@ document.addEventListener("DOMContentLoaded",function (ev) {
 
     Vue.component('perk', {
         props: ["perk", "targetCurrency", "active", "inModal", "displayPerksRanking", "perksValue", "index", "loading"],
-        template: "#perk-template",
+        template:  "#perk-template",
+        components: {
+            qrcode: VueQrcode
+        },
         data: function () {
             return {
                 amount: null,
-                expanded: false
+                expanded: false,
+                lnurl: window.lnurl,
+                currentMode: 'standard'
             }
         },
         computed: {

@@ -77,7 +77,7 @@ namespace BTCPayServer.Services.Mails
             using var connectCancel = new CancellationTokenSource(10000);
             try
             {
-                await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable, connectCancel.Token);
+                await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
                 await client.AuthenticateAsync(Login, Password, connectCancel.Token);
             }
             catch

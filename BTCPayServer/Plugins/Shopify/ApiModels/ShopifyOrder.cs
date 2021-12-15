@@ -9,6 +9,8 @@ namespace BTCPayServer.Plugins.Shopify.ApiModels
         public string Id { get; set; }
         [JsonProperty("total_price")]
         public decimal TotalPrice { get; set; }
+        [JsonProperty("total_outstanding")]
+        public decimal TotalOutstanding { get; set; }
         [JsonProperty("currency")]
         public string Currency { get; set; }
         [JsonProperty("financial_status")]

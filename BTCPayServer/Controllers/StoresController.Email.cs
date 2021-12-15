@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
@@ -41,9 +42,10 @@ namespace BTCPayServer.Controllers
                         TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                         return View(model);
                     }
-                    var client = model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test");
-                    await client.SendMailAsync(message);
+                    using var client = await model.Settings.CreateSmtpClient();
+                    var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false);
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
                     TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
                 }
                 catch (Exception ex)

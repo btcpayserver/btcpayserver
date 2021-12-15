@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 using NBitcoin;
 
 namespace BTCPayServer.Services.Mails
@@ -29,18 +30,11 @@ namespace BTCPayServer.Services.Mails
                     Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                     return;
                 }
-                using (var smtp = emailSettings.CreateSmtpClient())
+                using (var smtp = await emailSettings.CreateSmtpClient())
                 {
-                    var mail = emailSettings.CreateMailMessage(new MailAddress(email), subject, message);
-                    mail.IsBodyHtml = true;
-                    try
-                    {
-                        await smtp.SendMailAsync(mail).WithCancellation(cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        smtp.SendAsyncCancel();
-                    }
+                    var mail = emailSettings.CreateMailMessage(new MailboxAddress(email, email), subject, message, true);
+                    await smtp.SendAsync(mail, cancellationToken);
+                    await smtp.DisconnectAsync(true, cancellationToken);
                 }
             }, TimeSpan.Zero);
         }

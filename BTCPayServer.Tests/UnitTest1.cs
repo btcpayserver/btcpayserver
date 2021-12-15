@@ -2724,7 +2724,6 @@ namespace BTCPayServer.Tests
                  Password = "admin@admin.com",
                  Port = 1234,
                  Server = "admin.com",
-                 EnableSSL = true
                 });
                 Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
                 Assert.Equal("admin@admin.com",(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
@@ -2739,8 +2738,7 @@ namespace BTCPayServer.Tests
                     Login = "store@store.com",
                     Password = "store@store.com",
                     Port = 1234,
-                    Server = "store.com",
-                    EnableSSL = true
+                    Server = "store.com"
                 }), ""));
                 
                 Assert.Equal("store@store.com",(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);

@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
@@ -1025,10 +1026,11 @@ namespace BTCPayServer.Controllers
                         TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                         return View(model);
                     }
-                    using (var client = model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test"))
+                    using (var client = await model.Settings.CreateSmtpClient())
+                    using (var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false))
                     {
-                        await client.SendMailAsync(message);
+                        await client.SendAsync(message);
+                        await client.DisconnectAsync(true);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
                 }

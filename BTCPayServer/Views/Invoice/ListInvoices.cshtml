@@ -1,7 +1,7 @@
 @using BTCPayServer.Client.Models
 @model InvoicesModel
 @{
-    ViewData.SetActivePageAndTitle(InvoiceNavPages.Index, "Invoices");
+    ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
 }
 

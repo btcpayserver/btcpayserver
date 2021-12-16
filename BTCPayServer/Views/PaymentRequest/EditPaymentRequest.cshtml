@@ -3,7 +3,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
-    ViewData.SetActivePageAndTitle(PaymentRequestsNavPages.Create, (string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit") + " Payment Request");
+    ViewData.SetActivePage(PaymentRequestsNavPages.Create, (string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit") + " Payment Request");
 }
 
 @section PageHeadContent {

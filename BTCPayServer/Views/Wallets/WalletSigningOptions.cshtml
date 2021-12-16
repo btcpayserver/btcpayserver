@@ -3,7 +3,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWizard";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
     var walletId = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
 }
 

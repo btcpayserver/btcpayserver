@@ -2,7 +2,7 @@
 @using  BTCPayServer.Client.Models;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -15,7 +15,7 @@
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
-            <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+            <h4 class="mb-3">@ViewData["Title"]</h4>
             <div class="form-group">
                 <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />

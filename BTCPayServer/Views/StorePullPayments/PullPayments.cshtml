@@ -3,7 +3,7 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
-    ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
     string startDateSortOrder = null;
     switch (nextStartDateSortOrder)

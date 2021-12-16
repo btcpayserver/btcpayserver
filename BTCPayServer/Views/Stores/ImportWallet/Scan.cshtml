@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, "Scan QR code", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PaymentMethods, "Scan QR code", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {

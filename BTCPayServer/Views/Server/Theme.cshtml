@@ -1,13 +1,13 @@
 ﻿@model BTCPayServer.Services.ThemeSettings
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Theme, "Theme");
+    ViewData.SetActivePage(ServerNavPages.Theme, "Theme");
 }
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }
 
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
     <div class="col-lg-6">

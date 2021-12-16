@@ -1,12 +1,12 @@
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Rates, "Rates", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
     <div class="col-lg-8">
-        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        <h4 class="mb-3">@ViewData["Title"]</h4>
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>

@@ -1,13 +1,13 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel[]
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Dynamic DNS Settings");
+    ViewData.SetActivePage(ServerNavPages.Services, "Dynamic DNS Settings");
 }
 
 <div class="row">
     <div class="col-md-8">
         <div class="d-sm-flex align-items-center justify-content-between mb-3">
             <h2 class="mb-0">
-                @ViewData["PageTitle"]
+                @ViewData["Title"]
                 <small>
                     <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>

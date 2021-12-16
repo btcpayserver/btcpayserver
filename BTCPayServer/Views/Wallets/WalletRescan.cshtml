@@ -1,10 +1,10 @@
 ﻿@model RescanWalletModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Rescan, "Rescan wallet", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Rescan, "Rescan wallet", Context.GetStoreData().StoreName);
 }
 
-<h4 class="mb-3">@ViewData["PageTitle"]</h4>
+<h4 class="mb-3">@ViewData["Title"]</h4>
 
 @if (!Model.Ok)
 {

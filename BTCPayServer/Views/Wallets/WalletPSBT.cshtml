@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "Decode PSBT", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -22,7 +22,7 @@
     </script>
 }
 
-<h4 class="mb-3">@ViewData["PageTitle"]</h4>
+<h4 class="mb-3">@ViewData["Title"]</h4>
 
 <div class="row">
     <div class="col-lg-10">

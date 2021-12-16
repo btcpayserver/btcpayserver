@@ -3,7 +3,7 @@
 @model BTCPayServer.Controllers.ServerController.ListPluginsViewModel 
 @inject BTCPayServerOptions BTCPayServerOptions
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
+    ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
     var availableAndNotInstalled = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant()))

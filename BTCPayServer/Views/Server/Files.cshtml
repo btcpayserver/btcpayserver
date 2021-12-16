@@ -1,9 +1,9 @@
 @model ViewFilesViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Files, "File Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "File Storage");
 }
 
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 @if (!Model.StorageConfigured)
 {

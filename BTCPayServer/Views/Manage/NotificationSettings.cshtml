@@ -2,7 +2,7 @@
 @model BTCPayServer.Controllers.ManageController.NotificationSettingsViewModel
 @inject IEnumerable<INotificationHandler> NotificationHandlers
 @{
-    ViewData.SetActivePageAndTitle(ManageNavPages.Notifications, "Notification Settings");
+    ViewData.SetActivePage(ManageNavPages.Notifications, "Notification Settings");
 }
 <h2 class="mb-4">@ViewData["Title"]</h2>
 

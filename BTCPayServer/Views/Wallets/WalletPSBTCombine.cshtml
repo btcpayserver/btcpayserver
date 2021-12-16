@@ -1,7 +1,7 @@
 ﻿@model WalletPSBTCombineViewModel
 @{
     Layout = "_LayoutWizard";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "Combine PSBT", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, "Combine PSBT", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -11,7 +11,7 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["PageTitle"]</h1>
+    <h1>@ViewData["Title"]</h1>
 </header>
 
 <form class="form-group" method="post" asp-action="WalletPSBTCombine" enctype="multipart/form-data">

@@ -5,7 +5,7 @@
     var isSignable = !isReady && Model.NBXSeedAvailable;
     var needsExport = !isSignable && !isReady;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -42,7 +42,7 @@
 }
 
 <header class="text-center mb-3">
-    <h1>@ViewData["PageTitle"]</h1>
+    <h1>@ViewData["Title"]</h1>
 </header>
 
 <partial name="_PSBTInfo" model="Model" />

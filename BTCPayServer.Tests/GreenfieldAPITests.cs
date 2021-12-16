@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
 using JsonReader = Newtonsoft.Json.JsonReader;
 
@@ -661,8 +662,15 @@ namespace BTCPayServer.Tests
 
         private async Task AssertHttpError(int code, Func<Task> act)
         {
-            var ex = await Assert.ThrowsAsync<HttpRequestException>(act);
-            Assert.Contains(code.ToString(), ex.Message);
+            try
+            {
+                // Eventually all exception should be GreenFieldAPIException
+                var ex = await Assert.ThrowsAsync<HttpRequestException>(act);
+                Assert.Contains(code.ToString(), ex.Message);
+            }
+            catch (ThrowsException e) when (e.InnerException is GreenFieldAPIException ex && ex.HttpCode == code)
+            {
+            }
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1426,11 +1434,11 @@ namespace BTCPayServer.Tests
                 Assert.Single(info.NodeURIs);
                 Assert.NotEqual(0, info.BlockHeight);
 
-                var err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
-                Assert.Contains("503", err.Message);
+                var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await client.GetLightningNodeChannels("BTC"));
+                Assert.Equal(503, err.HttpCode);
                 // Not permission for the store!
-                err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels(user.StoreId, "BTC"));
-                Assert.Contains("403", err.Message);
+                var err2 = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels(user.StoreId, "BTC"));
+                Assert.Contains("403", err2.Message);
                 var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
                 {
                     Amount = LightMoney.Satoshis(1000),
@@ -1443,8 +1451,8 @@ namespace BTCPayServer.Tests
 
                 client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
                 // Not permission for the server
-                err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
-                Assert.Contains("403", err.Message);
+                err2 = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
+                Assert.Contains("403", err2.Message);
 
                 var data = await client.GetLightningNodeChannels(user.StoreId, "BTC");
                 Assert.Equal(2, data.Count());
@@ -1486,6 +1494,15 @@ namespace BTCPayServer.Tests
                 info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
                 Assert.Single(info.NodeURIs);
                 Assert.NotEqual(0, info.BlockHeight);
+
+
+                // As admin, can use the internal node through our store.
+                await user.MakeAdmin(true);
+                await user.RegisterInternalLightningNodeAsync("BTC");
+                await client.GetLightningNodeInfo(user.StoreId, "BTC");
+                // But if not admin anymore, nope
+                await user.MakeAdmin(false);
+                await AssertAPIError("insufficient-api-permissions", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
             }
         }
 

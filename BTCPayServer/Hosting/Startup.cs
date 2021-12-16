@@ -118,7 +118,8 @@ namespace BTCPayServer.Hosting
                 o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
                 if (!Configuration.GetOrDefault<bool>("nocsp", false))
                     o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
-        })
+                o.Filters.Add(new JsonHttpExceptionFilter());
+            })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>

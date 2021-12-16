@@ -102,16 +102,15 @@ namespace BTCPayServer.Controllers.GreenField
             return base.CreateInvoice(cryptoCode, request);
         }
 
-        protected override async Task<ILightningClient> GetLightningClient(string cryptoCode,
+        protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
             
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-
             var store = HttpContext.GetStoreData();
-            if (network == null || store == null)
+            if (store == null || network == null)
             {
-                return null;
+                throw ErrorCryptoCodeNotFound();
             }
 
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -119,19 +118,22 @@ namespace BTCPayServer.Controllers.GreenField
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             if (existing == null)
-                return null;
+                throw ErrorLightningNodeNotConfiguredForStore();
             if (existing.GetExternalLightningUrl() is LightningConnectionString connectionString)
             {
-                return _lightningClientFactory.Create(connectionString, network);
+                return Task.FromResult(_lightningClientFactory.Create(connectionString, network));
             }
-            else if (
-                await CanUseInternalLightning(doingAdminThings) && 
-                _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
-                out var internalLightningNode))
+            else if (existing.IsInternalNode &&
+            _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
+            out var internalLightningNode))
             {
-                return _lightningClientFactory.Create(internalLightningNode, network);
+                if (!User.IsInRole(Roles.ServerAdmin))
+                {
+                    throw ErrorShouldBeAdminForInternalNode();
+                }
+                return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
             }
-            return null;
+            throw ErrorLightningNodeNotConfiguredForStore();
         }
     }
 }

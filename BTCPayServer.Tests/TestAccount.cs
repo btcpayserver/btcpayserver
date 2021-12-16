@@ -283,6 +283,16 @@ namespace BTCPayServer.Tests
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
 
+        public async Task RegisterInternalLightningNodeAsync(string cryptoCode, string storeId = null)
+        {
+            var storeController = GetController<StoresController>();
+            var vm = new LightningNodeViewModel { ConnectionString = "", LightningNodeType = LightningNodeType.Internal, SkipPortTest = true };
+            await storeController.SetupLightningNode(storeId ?? StoreId,
+                vm, "save", cryptoCode);
+            if (storeController.ModelState.ErrorCount != 0)
+                Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
+        }
+
         public async Task<Coin> ReceiveUTXO(Money value, BTCPayNetwork network)
         {
             var cashCow = parent.ExplorerNode;

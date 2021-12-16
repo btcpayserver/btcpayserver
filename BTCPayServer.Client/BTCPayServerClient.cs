@@ -54,12 +54,12 @@ namespace BTCPayServer.Client
                 ;
                 throw new GreenFieldValidationException(err);
             }
-            else if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            else if (!message.IsSuccessStatusCode && message.Content?.Headers?.ContentType?.MediaType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) is true)
             {
                 var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
-                throw new GreenFieldAPIException(err);
+                if (err.Code != null)
+                    throw new GreenFieldAPIException((int)message.StatusCode, err);
             }
-
             message.EnsureSuccessStatusCode();
         }
 

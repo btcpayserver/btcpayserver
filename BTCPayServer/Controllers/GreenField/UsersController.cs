@@ -102,11 +102,11 @@ namespace BTCPayServer.Controllers.GreenField
 
             // If registration are locked and that an admin exists, don't accept unauthenticated connection
             if (anyAdmin && policies.LockSubscription && !isAuth)
-                return Unauthorized();
+                return this.CreateAPIError(401, "unauthenticated", "New user creation isn't authorized to users who are not admin");
 
             // Even if subscription are unlocked, it is forbidden to create admin unauthenticated
             if (anyAdmin && request.IsAdministrator is true && !isAuth)
-                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+                return this.CreateAPIError(401, "unauthenticated", "New admin creation isn't authorized to users who are not admin");
             // You are de-facto admin if there is no other admin, else you need to be auth and pass policy requirements
             bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
                                      && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
@@ -114,14 +114,14 @@ namespace BTCPayServer.Controllers.GreenField
                                     : true;
             // You need to be admin to create an admin
             if (request.IsAdministrator is true && !isAdmin)
-                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+                return this.CreateAPIPermissionError(Policies.Unrestricted, $"Insufficient API Permissions. Please use an API key with permission: {Policies.Unrestricted} and be an admin.");
 
             if (!isAdmin && (policies.LockSubscription || (await _settingsRepository.GetPolicies()).DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
                 if (!isAuth || !canCreateUser)
-                    return Forbid(AuthenticationSchemes.GreenfieldBasic);
+                    return this.CreateAPIPermissionError(Policies.CanCreateUser);
             }
 
             var user = new ApplicationUser

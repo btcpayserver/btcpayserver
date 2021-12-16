@@ -80,18 +80,20 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
         public ActionResult<LightningNetworkPaymentMethodData> GetLightningNetworkPaymentMethod(string storeId, string cryptoCode)
         {
-            if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
-            {
-                return NotFound();
-            }
+            AssertSupportLightning(cryptoCode);
 
             var method = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, Store);
             if (method is null)
             {
-                return NotFound();
+                throw ErrorPaymentMethodNotConfigured();
             }
 
             return Ok(method);
+        }
+
+        protected JsonHttpException ErrorPaymentMethodNotConfigured()
+        {
+            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The lightning payment method is not set up"));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -100,10 +102,7 @@ namespace BTCPayServer.Controllers.GreenField
             string storeId,
             string cryptoCode)
         {
-            if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
-            {
-                return NotFound();
-            }
+            AssertSupportLightning(cryptoCode);
 
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var store = Store;
@@ -118,11 +117,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] UpdateLightningNetworkPaymentMethodRequest request)
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-
-            if (!GetNetwork(cryptoCode, out var network))
-            {
-                return NotFound();
-            }
+            AssertSupportLightning(cryptoCode);
 
             if (string.IsNullOrEmpty(request.ConnectionString))
             {
@@ -210,11 +205,14 @@ namespace BTCPayServer.Controllers.GreenField
                     paymentMethod.PaymentId.ToStringNormalized(), paymentMethod.DisableBOLT11PaymentOption);
         }
 
-        private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)
+        private BTCPayNetwork AssertSupportLightning(string cryptoCode)
         {
-            network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            network = network?.SupportLightning is true ? network : null;
-            return network != null;
+            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            if (network is null)
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
+            if (!(network.SupportLightning is true))
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code doesn't support lightning"));
+            return network;
         }
 
         private async Task<bool> CanUseInternalLightning()

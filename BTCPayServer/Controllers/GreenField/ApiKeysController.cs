@@ -77,12 +77,11 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> RevokeKey(string apikey)
         {
-            if (string.IsNullOrEmpty(apikey))
-                return NotFound();
-            if (await _apiKeyRepository.Remove(apikey, _userManager.GetUserId(User)))
+            if (!string.IsNullOrEmpty(apikey) &&
+                await _apiKeyRepository.Remove(apikey, _userManager.GetUserId(User)))
                 return Ok();
             else
-                return NotFound();
+                return this.CreateAPIError("apikey-not-found", "This apikey does not exists");
         }
 
         private static ApiKeyData FromModel(APIKeyData data)

@@ -190,7 +190,7 @@ namespace BTCPayServer.Plugins.Shopify
                     new CreateInvoiceRequest()
                     {
                         Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,
-                        Currency = order.Currency,
+                        Currency = order.PresentmentCurrency,
                         Metadata = new JObject {["orderId"] = invoiceOrderId}
                     }, store,
                     Request.GetAbsoluteRoot(), new List<string>() {invoiceOrderId});

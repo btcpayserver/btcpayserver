@@ -486,9 +486,9 @@ namespace BTCPayServer.Controllers.GreenField
                 case UnprocessableEntityObjectResult {Value: List<GreenfieldValidationError> validationErrors}:
                     throw new GreenFieldValidationException(validationErrors.ToArray());
                 case BadRequestObjectResult {Value: GreenfieldAPIError error}:
-                    throw new GreenFieldAPIException(error);
+                    throw new GreenFieldAPIException(400, error);
                 case NotFoundResult _:
-                    throw new GreenFieldAPIException(new GreenfieldAPIError("not-found", ""));
+                    throw new GreenFieldAPIException(404, new GreenfieldAPIError("not-found", ""));
                 default:
                     return;
             }

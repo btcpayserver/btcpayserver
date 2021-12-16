@@ -104,12 +104,16 @@ namespace BTCPayServer.Controllers.GreenField
         protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network == null ||
-                !_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
-                out var internalLightningNode) ||
-                !await CanUseInternalLightning(doingAdminThings))
+            if (network is null)
+                throw ErrorCryptoCodeNotFound();
+            if (!_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
+                out var internalLightningNode))
             {
-                return null;
+                throw ErrorInternalLightningNodeNotConfigured();
+            }
+            if (!await CanUseInternalLightning(doingAdminThings))
+            {
+                throw ErrorShouldBeAdminForInternalNode();
             }
             return _lightningClientFactory.Create(internalLightningNode, network);
         }

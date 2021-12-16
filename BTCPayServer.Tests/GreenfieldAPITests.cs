@@ -66,21 +66,12 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var clientWithWrongPermissions = await user.CreateClient(Policies.CanViewProfile);
-                
-                try
-                {
-                    // Try to create a store with a client that has the wrong permissions.
-                    var data = await clientWithWrongPermissions.CreateStore(new CreateStoreRequest() { Name = "mystore" });
-                    throw new XunitException("This point should never be reached.");
-
-                }catch (GreenFieldAPIException e)
-                {
-                    Assert.Equal("insufficient-api-permissions", e.APIError.Code);
-                    Assert.NotNull(e.APIError.Message);
-                    GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
-                    Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
-                    Assert.NotNull(permissionError.MissingPermissionDescription);
-                }
+                var e = await AssertAPIError("insufficient-api-permissions", () => clientWithWrongPermissions.CreateStore(new CreateStoreRequest() { Name = "mystore" }));
+                Assert.Equal("insufficient-api-permissions", e.APIError.Code);
+                Assert.NotNull(e.APIError.Message);
+                GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
+                Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
+                Assert.NotNull(permissionError.MissingPermissionDescription);
             }
         }
 
@@ -611,10 +602,11 @@ namespace BTCPayServer.Tests
             return new DateTimeOffset(dateTimeOffset.Year, dateTimeOffset.Month, dateTimeOffset.Day, dateTimeOffset.Hour, dateTimeOffset.Minute, dateTimeOffset.Second, dateTimeOffset.Offset);
         }
 
-        private async Task AssertAPIError(string expectedError, Func<Task> act)
+        private async Task<GreenFieldAPIException> AssertAPIError(string expectedError, Func<Task> act)
         {
             var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await act());
             Assert.Equal(expectedError, err.APIError.Code);
+            return err;
         }
 
         [Fact(Timeout = TestTimeout)]

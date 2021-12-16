@@ -48,17 +48,24 @@ namespace BTCPayServer.Client
 
         protected async Task HandleResponse(HttpResponseMessage message)
         {
-            if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            if (!message.IsSuccessStatusCode && message.Content?.Headers?.ContentType?.MediaType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) is true)
             {
-                var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(await message.Content.ReadAsStringAsync());
-                ;
-                throw new GreenFieldValidationException(err);
-            }
-            else if (!message.IsSuccessStatusCode && message.Content?.Headers?.ContentType?.MediaType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) is true)
-            {
-                var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
-                if (err.Code != null)
+                if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                {
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(await message.Content.ReadAsStringAsync());
+                    throw new GreenFieldValidationException(err);
+                }
+                if (message.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldPermissionAPIError>(await message.Content.ReadAsStringAsync());
                     throw new GreenFieldAPIException((int)message.StatusCode, err);
+                }
+                else
+                {
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
+                    if (err.Code != null)
+                        throw new GreenFieldAPIException((int)message.StatusCode, err);
+                }
             }
             message.EnsureSuccessStatusCode();
         }

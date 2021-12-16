@@ -7,9 +7,7 @@
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../Stores/_Nav";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Payouts, $"Manage payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
     Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
@@ -50,11 +48,11 @@
     </script>
 }
 
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+
 <form method="post">
     <input type="hidden" asp-for="PaymentMethodId"/>
     <input type="hidden" asp-for="PayoutState"/>
-    <h4 class="mb-4">@ViewData["Title"]</h4>
-
     <div class="row">
         <div class="col-12">
             <ul class="nav nav-pills  bg-tile mb-2" style="border-radius:4px; border: 1px solid var(--btcpay-body-border-medium)">

@@ -3,11 +3,9 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
-    String startDateSortOrder = null;
+    string startDateSortOrder = null;
     switch (nextStartDateSortOrder)
     {
         case "asc":
@@ -36,15 +34,15 @@
     </style>
 }
 
-<div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
-    <h4 class="mb-0">
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">
         @ViewData["Title"]
         <small>
             <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener">
                 <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
             </a>
         </small>
-    </h4>
+    </h2>
     <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create a new pull payment
     </a>

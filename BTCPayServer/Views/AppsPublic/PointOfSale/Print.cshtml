@@ -81,7 +81,7 @@ else
                             ItemCode = item.Id
                         }, Context.Request.Scheme, Context.Request.Host.ToString()));
                         var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
-                        <a href="@lnUrl"><vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" /></a>
+                        <a href="@lnUrl" rel="noreferrer noopener"><vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" /></a>
                     }
                 }
             </div>

@@ -472,6 +472,7 @@ namespace BTCPayServer.Hosting
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
+            app.UseMiddleware<GreenfieldMiddleware>();
             app.UseMiddleware<BTCPayMiddleware>();
             return app;
         }

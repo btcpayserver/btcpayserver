@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -121,18 +122,9 @@ namespace BTCPayServer.Security.GreenField
             if (success)
             {
                 context.Succeed(requirement);
-            }else
-            {
-                Controllers.ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.TryGetValue(policy, out var policyDescription);
-                var outputObj = new GreenfieldPermissionAPIError(policy, policyDescription.Description);
-                string output = JsonConvert.SerializeObject(outputObj);
-                var outputBytes = new UTF8Encoding(false).GetBytes(output);
-
-                _HttpContext.Response.StatusCode = 403;
-                _HttpContext.Response.Headers.Add("Content-Type", "application/json");
-                _HttpContext.Response.Headers.Add("Content-Length", outputBytes.Length.ToString());
-                await _HttpContext.Response.Body.WriteAsync(outputBytes, 0, outputBytes.Length);
             }
+            _HttpContext.Items[RequestedPermissionKey] = policy;
         }
+        public const string RequestedPermissionKey = nameof(RequestedPermissionKey);
     }
 }

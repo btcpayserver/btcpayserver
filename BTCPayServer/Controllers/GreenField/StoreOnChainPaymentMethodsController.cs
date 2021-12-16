@@ -79,18 +79,19 @@ namespace BTCPayServer.Controllers.GreenField
             string storeId,
             string cryptoCode)
         {
-            if (!GetCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _))
-            {
-                return NotFound();
-            }
-
+            AssertCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _);
             var method = GetExistingBtcLikePaymentMethod(cryptoCode);
             if (method is null)
             {
-                return NotFound();
+                throw ErrorPaymentMethodNotConfigured();
             }
 
             return Ok(method);
+        }
+
+        protected JsonHttpException ErrorPaymentMethodNotConfigured()
+        {
+            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The lightning node is not set up"));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -100,15 +101,12 @@ namespace BTCPayServer.Controllers.GreenField
             string cryptoCode,
             int offset = 0, int amount = 10)
         {
-            if (!GetCryptoCodeWallet(cryptoCode, out var network, out BTCPayWallet _))
-            {
-                return NotFound();
-            }
+            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
 
             var paymentMethod = GetExistingBtcLikePaymentMethod(cryptoCode);
             if (string.IsNullOrEmpty(paymentMethod?.DerivationScheme))
             {
-                return NotFound();
+                throw ErrorPaymentMethodNotConfigured();
             }
 
             try
@@ -149,10 +147,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] UpdateOnChainPaymentMethodRequest paymentMethodData,
             int offset = 0, int amount = 10)
         {
-            if (!GetCryptoCodeWallet(cryptoCode, out var network, out BTCPayWallet _))
-            {
-                return NotFound();
-            }
+            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
 
             if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
             {
@@ -202,10 +197,7 @@ namespace BTCPayServer.Controllers.GreenField
             string cryptoCode,
             int offset = 0, int amount = 10)
         {
-            if (!GetCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _))
-            {
-                return NotFound();
-            }
+            AssertCryptoCodeWallet(cryptoCode, out _, out _);
 
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             var store = Store;
@@ -222,11 +214,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] UpdateOnChainPaymentMethodRequest request)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-
-            if (!GetCryptoCodeWallet(cryptoCode, out var network, out var wallet))
-            {
-                return NotFound();
-            }
+            AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
 
             if (string.IsNullOrEmpty(request?.DerivationScheme))
             {
@@ -271,11 +259,15 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        private bool GetCryptoCodeWallet(string cryptoCode, out BTCPayNetwork network, out BTCPayWallet wallet)
+        private void AssertCryptoCodeWallet(string cryptoCode, out BTCPayNetwork network, out BTCPayWallet wallet)
         {
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            wallet = network != null ? _walletProvider.GetWallet(network) : null;
-            return wallet != null;
+            if (network is null)
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
+
+            wallet = _walletProvider.GetWallet(network);
+            if (wallet is null)
+                throw ErrorPaymentMethodNotConfigured();
         }
 
         private OnChainPaymentMethodData GetExistingBtcLikePaymentMethod(string cryptoCode, StoreData store = null)

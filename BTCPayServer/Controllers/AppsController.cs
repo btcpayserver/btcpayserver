@@ -144,23 +144,24 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{appId}/delete")]
-        public async Task<IActionResult> DeleteApp(string appId)
+        public IActionResult DeleteApp(string appId)
         {
-            var appData = await GetOwnedApp(appId);
-            if (appData == null)
+            if (CurrentApp == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{appData.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
+            
+            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{CurrentApp.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
         [HttpPost("{appId}/delete")]
         public async Task<IActionResult> DeleteAppPost(string appId)
         {
-            var appData = await GetOwnedApp(appId);
-            if (appData == null)
+            if (CurrentApp == null)
                 return NotFound();
-            if (await _appService.DeleteApp(appData))
+            
+            if (await _appService.DeleteApp(CurrentApp))
                 TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
-            return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
+            
+            return RedirectToAction(nameof(ListApps), new { storeId = CurrentApp.StoreDataId });
         }
 
         async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
@@ -172,11 +173,6 @@ namespace BTCPayServer.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
-        {
-            return _appService.GetAppDataIfOwner(GetUserId(), appId, type);
-        }
-
         private string GetUserId()
         {
             return _userManager.GetUserId(User);
@@ -185,6 +181,11 @@ namespace BTCPayServer.Controllers
         private StoreData CurrentStore
         {
             get => HttpContext.GetStoreData();
+        }
+        
+        private AppData CurrentApp
+        {
+            get => HttpContext.GetAppData();
         }
     }
 }

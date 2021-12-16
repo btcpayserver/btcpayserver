@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Tests.Logging;
@@ -32,10 +33,11 @@ namespace BTCPayServer.Tests
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
                 Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
-                var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model)
-                    .Apps[0].Id;
+                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+                var app = appList.Apps[0];
+                apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
                 var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(app.Id)).Model);
                 vmpos.Template = @"
 apple:
   price: 5.0
@@ -47,13 +49,13 @@ donation:
   price: 1.02
   custom: true
 ";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
-                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(app.Id)).Model);
                 var publicApps = user.GetController<AppsPublicController>();
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert
-                        .IsType<ViewResult>(publicApps.ViewPointOfSale(appId, PosViewType.Cart).Result).Model);
+                        .IsType<ViewResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).Result).Model);
 
                 // apple shouldn't be available since we it's set to "disabled: true" above
                 Assert.Equal(2, vmview.Items.Length);
@@ -61,10 +63,10 @@ donation:
                 Assert.Equal("donation", vmview.Items[1].Title);
                 // orange is available
                 Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(appId, PosViewType.Cart, 0, null, null, null, null, "orange").Result);
+                    .ViewPointOfSale(app.Id, PosViewType.Cart, 0, null, null, null, null, "orange").Result);
                 // apple is not found
                 Assert.IsType<NotFoundResult>(publicApps
-                    .ViewPointOfSale(appId, PosViewType.Cart, 0, null, null, null, null, "apple").Result);
+                    .ViewPointOfSale(app.Id, PosViewType.Cart, 0, null, null, null, null, "apple").Result);
             }
         }
     }

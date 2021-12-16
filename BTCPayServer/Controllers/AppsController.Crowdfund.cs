@@ -25,18 +25,18 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId)
+        public IActionResult UpdateCrowdfund(string appId)
         {
-            var app = await GetOwnedApp(appId, AppType.Crowdfund);
-            if (app == null)
+            if (CurrentApp == null)
                 return NotFound();
-            var settings = app.GetSettings<CrowdfundSettings>();
+            
+            var settings = CurrentApp.GetSettings<CrowdfundSettings>();
             var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
-                StoreId = app.StoreDataId,
-                StoreName = app.StoreData?.StoreName,
-                AppName = app.Name,
+                StoreId = CurrentApp.StoreDataId,
+                StoreName = CurrentApp.StoreData?.StoreName,
+                AppName = CurrentApp.Name,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -56,9 +56,9 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
-                UseAllStoreInvoices = app.TagAllInvoices,
+                UseAllStoreInvoices = CurrentApp.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
+                SearchTerm = CurrentApp.TagAllInvoices ? $"storeid:{CurrentApp.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
@@ -71,10 +71,10 @@ namespace BTCPayServer.Controllers
         [HttpPost("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
-            var app = await GetOwnedApp(appId, AppType.Crowdfund);
-            if (app == null)
+            if (CurrentApp == null)
                 return NotFound();
-            vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.TargetCurrency);
+            
+            vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(CurrentApp.StoreDataId, vm.TargetCurrency);
             if (_currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
 
@@ -125,8 +125,8 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            app.Name = vm.AppName;
-            var newSettings = new CrowdfundSettings()
+            CurrentApp.Name = vm.AppName;
+            var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,
                 Enabled = vm.Enabled,
@@ -155,15 +155,15 @@ namespace BTCPayServer.Controllers
                 AnimationColors = parsedAnimationColors
             };
 
-            app.TagAllInvoices = vm.UseAllStoreInvoices;
-            app.SetSettings(newSettings);
+            CurrentApp.TagAllInvoices = vm.UseAllStoreInvoices;
+            CurrentApp.SetSettings(newSettings);
 
-            await _appService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(CurrentApp);
 
             _eventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
-                StoreId = app.StoreDataId,
+                StoreId = CurrentApp.StoreDataId,
                 Settings = newSettings
             });
             TempData[WellKnownTempData.SuccessMessage] = "App updated";

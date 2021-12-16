@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
@@ -49,9 +50,11 @@ namespace BTCPayServer.Tests
                     .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
                     .RouteValues.Values.Last().ToString();
 
+                paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
+                
                 // Permission guard for guests editing 
                 Assert
-                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
+                    .IsType<NotFoundResult>(guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
                 request.Title = "update";
                 Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));

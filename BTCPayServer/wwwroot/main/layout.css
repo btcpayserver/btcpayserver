@@ -419,7 +419,8 @@
         padding: var(--btcpay-space-xl) var(--btcpay-space-l);
     }
 
-    #mainContent > section > .container {
+    #mainContent > section > .container,
+    .btcpay-footer > .container {
         margin: 0;
     }
     

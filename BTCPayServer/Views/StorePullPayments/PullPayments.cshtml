@@ -114,13 +114,13 @@
                                asp-route-pullPaymentId="@pp.Id">
                                 View
                             </a> -
-                            <a class="pp-payout" 
-                               
+                            <a class="pp-payout"
                                asp-action="Payouts"
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-pullPaymentId="@pp.Id">
                                 Payouts
                             </a>
+                            <span permission="@Policies.CanModifyStoreSettings"> - </span>
                             <a asp-action="ArchivePullPayment"
                                permission="@Policies.CanModifyStoreSettings" 
                                asp-route-storeId="@Context.GetRouteValue("storeId")"

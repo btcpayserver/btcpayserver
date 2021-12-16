@@ -7,6 +7,7 @@
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ISettingsRepository SettingsRepository
@@ -51,7 +52,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
+                <div class="accordion-item" permission="@Policies.CanModifyServerSettings">
                     <header class="accordion-header" id="Nav-Plugins-Header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
                             Plugins
@@ -76,7 +77,7 @@
             }
             else
             {
-                <div class="accordion-item">
+                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
                             @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
@@ -138,7 +139,7 @@
                                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
                                     if (isSetUp && scheme.WalletSupported)
                                     {
-                                        <li class="nav-item">
+                                        <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                             <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.Crypto)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <vc:icon symbol="wallet-onchain"/>
                                                 <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
@@ -146,13 +147,13 @@
                                         </li>
                                     }
                                 }
-                                <li class="nav-item">
+                                <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                     <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
                                         <vc:icon symbol="invoice"/>
                                         <span>Invoices</span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                     <a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
                                         <vc:icon symbol="payment-1"/>
                                         <span>Requests</span>
@@ -174,7 +175,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
+                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
                     <header class="accordion-header" id="Nav-Apps-Header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Apps" aria-expanded="true" aria-controls="Nav-Apps">
                             Apps
@@ -203,7 +204,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
+                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
                     <header class="accordion-header" id="Nav-Manage-Header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Manage" aria-expanded="true" aria-controls="Nav-Manage">
                             Manage
@@ -254,15 +255,12 @@
         }
     </div>
     <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
-        @if (User.IsInRole(Roles.ServerAdmin))
-        {
-            <li class="nav-item">
-                <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="Nav-ServerSettings">
-                    <vc:icon symbol="server-settings"/>
-                    <span>Server Settings</span>
-                </a>
-            </li>
-        }
+        <li class="nav-item" permission="@Policies.CanModifyServerSettings">
+            <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="Nav-ServerSettings">
+                <vc:icon symbol="server-settings"/>
+                <span>Server Settings</span>
+            </a>
+        </li>
         <li class="nav-item">
             <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-Account">
                 <vc:icon symbol="account"/>

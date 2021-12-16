@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,11 +16,11 @@ namespace BTCPayServer.Security
 {
     public class CookieAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
     {
-        private readonly HttpContext _HttpContext;
+        private readonly HttpContext _httpContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
-        private readonly PaymentRequestService _paymentRequestService;
+        private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly InvoiceRepository _invoiceRepository;
 
         public CookieAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
@@ -27,14 +28,14 @@ namespace BTCPayServer.Security
                                 StoreRepository storeRepository,
                                 AppService appService,
                                 InvoiceRepository invoiceRepository,
-                                PaymentRequestService paymentRequestService)
+                                PaymentRequestRepository paymentRequestRepository)
         {
-            _HttpContext = httpContextAccessor.HttpContext;
+            _httpContext = httpContextAccessor.HttpContext;
             _userManager = userManager;
             _appService = appService;
             _storeRepository = storeRepository;
             _invoiceRepository = invoiceRepository;
-            _paymentRequestService = paymentRequestService;
+            _paymentRequestRepository = paymentRequestRepository;
         }
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
@@ -49,48 +50,48 @@ namespace BTCPayServer.Security
                         context.Succeed(requirement);
                     return;
             }
-
-            string storeId = context.Resource is string s ? s : _HttpContext.GetImplicitStoreId();
-            if (storeId == null)
-            {
-                var routeData = _HttpContext.GetRouteData();
-                if (routeData != null)
-                {
-                    // resolve from app
-                    if (routeData.Values.TryGetValue("appId", out var vAppId))
-                    {
-                        string appId = vAppId as string;
-                        var app = await _appService.GetApp(appId, null);
-                        storeId = app?.StoreDataId;
-                    }
-                    // resolve from payment request
-                    else if (routeData.Values.TryGetValue("payReqId", out var vPayReqId))
-                    {
-                        string payReqId = vPayReqId as string;
-                        var paymentRequest = await _paymentRequestService.GetPaymentRequest(payReqId);
-                        storeId = paymentRequest?.StoreId;
-                    }
-                    // resolve from app
-                    if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId))
-                    {
-                        string invoiceId = vInvoiceId as string;
-                        var invoice = await _invoiceRepository.GetInvoice(invoiceId);
-                        storeId = invoice?.StoreId;
-                    }
-                }
                 
-                // store could not be found
-                if (storeId == null)
-                {
-                    return;
-                }
-            }
-                
-            var userid = _userManager.GetUserId(context.User);
-            if (string.IsNullOrEmpty(userid))
+            var userId = _userManager.GetUserId(context.User);
+            if (string.IsNullOrEmpty(userId))
                 return;
 
-            var store = await _storeRepository.FindStore(storeId, userid);
+            AppData app = null;
+            InvoiceEntity invoice = null;
+            PaymentRequestData paymentRequest = null;
+            string storeId = context.Resource is string s ? s : _httpContext.GetImplicitStoreId();
+            var routeData = _httpContext.GetRouteData();
+            if (routeData != null)
+            {
+                // resolve from app
+                if (routeData.Values.TryGetValue("appId", out var vAppId))
+                {
+                    string appId = vAppId as string;
+                    app = await _appService.GetApp(appId, null);
+                    storeId ??= app?.StoreDataId;
+                }
+                // resolve from payment request
+                if (routeData.Values.TryGetValue("payReqId", out var vPayReqId))
+                {
+                    string payReqId = vPayReqId as string;
+                    paymentRequest = await _paymentRequestRepository.FindPaymentRequest(payReqId, userId);
+                    storeId ??= paymentRequest?.StoreDataId;
+                }
+                // resolve from invoice
+                if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId))
+                {
+                    string invoiceId = vInvoiceId as string;
+                    invoice = await _invoiceRepository.GetInvoice(invoiceId);
+                    storeId ??= invoice?.StoreId;
+                }
+            }
+            
+            // store could not be found
+            if (storeId == null)
+            {
+                return;
+            }
+
+            var store = await _storeRepository.FindStore(storeId, userId);
             
             bool success = false;
             switch (requirement.Policy)
@@ -112,8 +113,12 @@ namespace BTCPayServer.Security
             if (success)
             {
                 context.Succeed(requirement);
-                _HttpContext.SetStoreData(store);
-                return;
+                _httpContext.SetStoreData(store);
+                
+                // cache associated entities if present
+                if (app != null) _httpContext.SetAppData(app);
+                if (invoice != null) _httpContext.SetInvoiceData(invoice);
+                if (paymentRequest != null) _httpContext.SetPaymentRequestData(paymentRequest);
             }
         }
     }

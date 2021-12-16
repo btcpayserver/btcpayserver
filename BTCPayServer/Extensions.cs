@@ -415,6 +415,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
         }
+        
         public static void SetStoreData(this HttpContext ctx, StoreData storeData)
         {
             ctx.Items["BTCPAY.STOREDATA"] = storeData;
@@ -429,9 +430,39 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.STORESDATA"] = storeData;
         }
 
+        public static InvoiceEntity GetInvoiceData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.INVOICEDATA") as InvoiceEntity;
+        }
+        
+        public static void SetInvoiceData(this HttpContext ctx, InvoiceEntity invoiceEntity)
+        {
+            ctx.Items["BTCPAY.INVOICEDATA"] = invoiceEntity;
+        }
+
+        public static PaymentRequestData GetPaymentRequestData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
+        }
+        
+        public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData paymentRequestData)
+        {
+            ctx.Items["BTCPAY.PAYMENTREQUESTDATA"] = paymentRequestData;
+        }
+
+        public static AppData GetAppData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
+        }
+        
+        public static void SetAppData(this HttpContext ctx, AppData appData)
+        {
+            ctx.Items["BTCPAY.APPDATA"] = appData;
+        }
+
         public static IActionResult RedirectToRecoverySeedBackup(this Controller controller, RecoverySeedBackupViewModel vm)
         {
-            var redirectVm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel
             {
                 AspController = "Home",
                 AspAction = "RecoverySeedBackup",

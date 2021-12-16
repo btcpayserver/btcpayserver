@@ -2040,14 +2040,16 @@ namespace BTCPayServer.Tests
                 var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 var appList2 =
                     Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
+                var app = appList.Apps[0];
+                apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
                 Assert.Single(appList.Apps);
                 Assert.Empty(appList2.Apps);
                 Assert.Equal("test", appList.Apps[0].AppName);
                 Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
-                Assert.True(appList.Apps[0].IsOwner);
+                Assert.True(app.IsOwner);
                 Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
-                Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);
-                Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
+                Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
+                Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
                 redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
                 Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
                 appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);

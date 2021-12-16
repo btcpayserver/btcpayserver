@@ -49,7 +49,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -128,7 +128,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -184,7 +184,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -261,7 +261,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -318,7 +318,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -384,7 +384,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -463,7 +463,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.store.cancreatelightninginvoice"
                         ],
                         "Basic": []
                     }

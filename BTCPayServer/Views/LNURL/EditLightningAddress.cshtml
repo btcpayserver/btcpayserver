@@ -4,7 +4,7 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../Stores/_Nav";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent {
@@ -37,7 +37,7 @@
 }
 
 <div class="d-sm-flex align-items-center justify-content-between mb-2">
-    <h2 class="mb-3 mb-sm-0">@ViewData["PageTitle"]</h2>
+    <h2 class="mb-3 mb-sm-0">@ViewData["Title"]</h2>
     <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
         <span class="fa fa-plus"></span>
         Add Address

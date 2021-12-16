@@ -1,12 +1,12 @@
 ﻿@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Store Users", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
     <div class="col-lg-8">
-        <h3 class="mb-3">@ViewData["PageTitle"]</h3>
+        <h3 class="mb-3">@ViewData["Title"]</h3>
         <p>
             Give other registered BTCPay Server users access to your store.<br />
             Guests will not be able to see or modify the store settings.

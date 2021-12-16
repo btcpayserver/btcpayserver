@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, $"Setup {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PaymentMethods, $"Setup {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
 }
 
 <h1 class="text-center">Let's get started</h1>

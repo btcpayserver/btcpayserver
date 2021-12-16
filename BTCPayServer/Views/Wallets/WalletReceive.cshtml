@@ -2,7 +2,7 @@
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
 }
 
 @section PageHeadContent
@@ -16,7 +16,7 @@
             <div class="card-body">
                 @if (string.IsNullOrEmpty(Model.Address))
                 {
-                    <h3 class="card-title mb-3">@ViewData["PageTitle"]</h3>
+                    <h3 class="card-title mb-3">@ViewData["Title"]</h3>
                     <button id="generateButton" class="btn btn-lg btn-primary" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
                 }
                 else

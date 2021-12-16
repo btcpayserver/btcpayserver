@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PaymentMethods, "Import your wallet file", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PaymentMethods, "Import your wallet file", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {

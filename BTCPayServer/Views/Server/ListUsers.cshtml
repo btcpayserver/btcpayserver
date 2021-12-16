@@ -1,6 +1,6 @@
 ﻿@model UsersViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Users);
+    ViewData.SetActivePage(ServerNavPages.Users);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
     String userEmailSortOrder = null;
     switch (nextUserEmailSortOrder)

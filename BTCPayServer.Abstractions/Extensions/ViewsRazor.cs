@@ -11,28 +11,20 @@ namespace BTCPayServer.Abstractions.Extensions
         private const string ACTIVE_PAGE_KEY = "ActivePage";
         private const string ACTIVE_ID_KEY = "ActiveId";
 
-        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null, string mainTitle = null)
+        public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {
-            // Browser Title
+            // Page Title
             viewData["Title"] = title ?? activePage.ToString();
-            // Breadcrumb
-            viewData["MainTitle"] = mainTitle;
-            viewData["PageTitle"] = title;
             // Navigation
             viewData[ACTIVE_PAGE_KEY] = activePage;
+            viewData[ACTIVE_ID_KEY] = activeId;
             SetActiveCategory(viewData, activePage.GetType());
         }
 
         public static void SetActiveCategory<T>(this ViewDataDictionary viewData, T activeCategory)
         {
             viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
-        }
-
-        // TODO: Refactor this and merge it with SetActivePage
-        public static void SetActiveId<T>(this ViewDataDictionary viewData, T activeId)
-        {
-            viewData[ACTIVE_ID_KEY] = activeId;
         }
 
         public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category, object id = null)

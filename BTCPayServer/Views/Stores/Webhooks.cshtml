@@ -1,11 +1,11 @@
 @model WebhooksViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().StoreName);
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">@ViewData["PageTitle"]</h4>
+    <h4 class="mb-0">@ViewData["Title"]</h4>
     <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
         <span class="fa fa-plus"></span>
         Create a new webhook

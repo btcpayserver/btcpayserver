@@ -2,13 +2,13 @@
 @using  BTCPayServer.Client.Models;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
-            <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+            <h4 class="mb-3">@ViewData["Title"]</h4>
 
             <div class="form-group">
                 <label for="Type" class="form-label">Event type</label>

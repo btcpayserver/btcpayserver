@@ -1,7 +1,6 @@
 @{
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
-    ViewBag.ShowMainTitle = ViewBag.ShowMainTitle ?? true;
     if (!ViewData.ContainsKey("NavPartialName"))
     {
         ViewData["NavPartialName"] = "_Nav";
@@ -16,10 +15,6 @@
     @await RenderSectionAsync("PageFootContent", false)
 }
 
-@if (!string.IsNullOrEmpty(ViewData["MainTitle"] as string))
-{
-    <h2 class="mb-5">@ViewData["MainTitle"]</h2>
-}
 @if (ViewBag.ShowMenu)
 {
     <nav class="nav">

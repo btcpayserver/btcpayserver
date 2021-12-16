@@ -1,7 +1,7 @@
 @model WalletSendVaultModel
 @{
     Layout = "_LayoutWizard";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -14,7 +14,7 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["PageTitle"]</h1>
+    <h1>@ViewData["Title"]</h1>
     <p class="lead text-secondary mt-3">Using BTCPay Server Vault</p>
 </header>
 

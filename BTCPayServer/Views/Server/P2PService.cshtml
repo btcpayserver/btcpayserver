@@ -1,9 +1,9 @@
 ﻿@model LightningWalletServices
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services, Model.WalletName);
+    ViewData.SetActivePage(ServerNavPages.Services, Model.WalletName);
 }
 
-<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 @if (Model.ShowQR)
 {

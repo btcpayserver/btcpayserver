@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices/{invoiceId}/refund")]
-        [AllowAnonymous]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund([FromServices]IEnumerable<IPayoutHandler> payoutHandlers, string invoiceId, CancellationToken cancellationToken)
         {
             await using var ctx = _dbContextFactory.CreateContext();
@@ -183,8 +183,6 @@ namespace BTCPayServer.Controllers
                                 new { pullPaymentId = ppId });
             }
             
-            HttpContext.SetStoreData(invoice.StoreData);
-            
             var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
             var pmis = paymentMethods.Select(method => method.GetId()).ToList();
             var options = (await payoutHandlers.GetSupportedPaymentMethods(invoice.StoreData)).Where(id => pmis.Contains(id)).ToList();
@@ -203,11 +201,14 @@ namespace BTCPayServer.Controllers
                 .Select(p => p?.GetPaymentMethodId())
                 .FirstOrDefault(p => p != null && options.Contains(p));
             // TODO: What if no option?
-            var refund = new RefundModel();
-            refund.Title = "Select a payment method";
-            refund.AvailablePaymentMethods = 
-                new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())), "Value", "Text");
-            refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? options.First().ToString();
+            var refund = new RefundModel
+            {
+                Title = "Select a payment method",
+                AvailablePaymentMethods =
+                    new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())),
+                        "Value", "Text"),
+                SelectedPaymentMethod = defaultRefund?.ToString() ?? options.First().ToString()
+            };
 
             // Nothing to select, skip to next
             if (refund.AvailablePaymentMethods.Count() == 1)

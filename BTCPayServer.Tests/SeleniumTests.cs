@@ -508,7 +508,7 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser();
-                (string storeName, _) = s.CreateNewStore();
+                s.CreateNewStore();
 
                 s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
                 s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
@@ -546,7 +546,7 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser();
-                (string storeName, _) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddDerivationScheme();
 
                 s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();

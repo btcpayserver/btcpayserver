@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Filters;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -54,7 +55,9 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         public async Task<IActionResult> GetInvoices(
             string token,
+            [ModelBinder(typeof(BitpayDateTimeOffsetModelBinder))]
             DateTimeOffset? dateStart = null,
+            [ModelBinder(typeof(BitpayDateTimeOffsetModelBinder))]
             DateTimeOffset? dateEnd = null,
             string orderId = null,
             string itemCode = null,

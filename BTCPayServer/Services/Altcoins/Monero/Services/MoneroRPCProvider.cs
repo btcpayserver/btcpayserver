@@ -65,7 +65,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 summary.CurrentHeight = daemonResult.Height;
                 summary.TargetHeight = summary.TargetHeight == 0 ? summary.CurrentHeight : summary.TargetHeight;
                 summary.Synced = daemonResult.Height >= summary.TargetHeight && summary.CurrentHeight > 0;
-                summary.UpdatedAt = DateTime.Now;
+                summary.UpdatedAt = DateTime.UtcNow;
                 summary.DaemonAvailable = true;
             }
             catch

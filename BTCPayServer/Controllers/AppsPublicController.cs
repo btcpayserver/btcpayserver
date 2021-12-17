@@ -308,8 +308,8 @@ namespace BTCPayServer.Controllers
 
             var info = await GetAppInfo(appId);
             if (!isAdmin &&
-                ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
-                 (settings.EndDate.HasValue && DateTime.Now > settings.EndDate) ||
+                ((settings.StartDate.HasValue && DateTime.UtcNow < settings.StartDate) ||
+                 (settings.EndDate.HasValue && DateTime.UtcNow > settings.EndDate) ||
                  (settings.EnforceTargetAmount &&
                   (info.Info.PendingProgressPercentage.GetValueOrDefault(0) +
                    info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))

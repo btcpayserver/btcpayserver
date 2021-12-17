@@ -33,7 +33,7 @@ namespace BTCPayServer.Storage.Services.Providers
 
             return new StoredFile()
             {
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 FileName = file.FileName,
                 StorageFileName = storageFileName
             };

@@ -69,7 +69,7 @@ namespace BTCPayServer.Services.Apps
                 lastResetDate = settings.StartDate.Value;
 
                 nextResetDate = lastResetDate.Value;
-                while (DateTime.Now >= nextResetDate)
+                while (DateTime.UtcNow >= nextResetDate)
                 {
                     lastResetDate = nextResetDate;
                     switch (resetEvery)
@@ -171,7 +171,7 @@ namespace BTCPayServer.Services.Apps
                     TotalContributors = paidInvoices.Length,
                     ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
                     PendingProgressPercentage = (pendingPayments.TotalCurrency / settings.TargetAmount) * 100,
-                    LastUpdated = DateTime.Now,
+                    LastUpdated = DateTime.UtcNow,
                     PaymentStats = currentPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
                     PendingPaymentStats = pendingPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
                     LastResetDate = lastResetDate,

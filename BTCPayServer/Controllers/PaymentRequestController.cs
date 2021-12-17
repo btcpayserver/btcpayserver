@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest("Payment Request has already been settled.");
             }
 
-            if (result.ExpiryDate.HasValue && DateTime.Now >= result.ExpiryDate)
+            if (result.ExpiryDate.HasValue && DateTime.UtcNow >= result.ExpiryDate)
             {
                 if (redirectToInvoice)
                 {

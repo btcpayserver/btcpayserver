@@ -192,7 +192,7 @@ namespace BTCPayServer.PaymentRequest
         {
             Task.Run(async () =>
             {
-                var delay = expiry - DateTime.Now;
+                var delay = expiry - DateTime.UtcNow;
                 if (delay > TimeSpan.Zero)
                     await Task.Delay(delay, cancellationToken);
                 await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);

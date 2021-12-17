@@ -22,11 +22,11 @@ window.copyUrlToClipboard = function (e) {
 
 document.addEventListener("DOMContentLoaded", () => {
     delegate('click', '[data-clipboard]', e => {
-        const data = e.target.getAttribute('data-clipboard')
+        const data = e.target.closest('[data-clipboard]').getAttribute('data-clipboard')
         window.copyToClipboard(e, data)
     })
     delegate('click', '[data-clipboard-target]', e => {
-        const selector = e.target.getAttribute('data-clipboard-target')
+        const selector = e.target.closest('[data-clipboard-target]').getAttribute('data-clipboard-target')
         const target = document.querySelector(selector)
         const data = target.innerText
         window.copyToClipboard(e, data)

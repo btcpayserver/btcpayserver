@@ -656,6 +656,8 @@ namespace BTCPayServer.Tests
                     await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
                 Assert.Single(await scopedClient.GetStores());
 
+                var noauth = await user.CreateClient(Array.Empty<string>());
+                await AssertAPIError("missing-permission", () => noauth.GetStores());
 
                 // We strip the user's Owner right, so the key should not work
                 using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();

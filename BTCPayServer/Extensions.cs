@@ -34,6 +34,7 @@ using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
@@ -409,6 +410,32 @@ namespace BTCPayServer
             result = default;
             return false;
         }
+        
+        public static UserPrefsCookie GetUserPrefsCookie(this HttpContext ctx)
+        {
+            var prefCookie = new UserPrefsCookie();
+            ctx.Request.Cookies.TryGetValue(nameof(UserPrefsCookie), out var strPrefCookie);
+            if (!string.IsNullOrEmpty(strPrefCookie))
+            {
+                try
+                {
+                    prefCookie = JsonConvert.DeserializeObject<UserPrefsCookie>(strPrefCookie);
+                }
+                catch { /* ignore cookie deserialization failures */ }
+            }
+
+            return prefCookie;
+        }
+
+        private static void SetCurrentStoreId(this HttpContext ctx, string storeId)
+        {
+            var prefCookie = ctx.GetUserPrefsCookie();
+            if (prefCookie.CurrentStoreId != storeId)
+            {
+                prefCookie.CurrentStoreId = storeId;
+                ctx.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
+            }
+        }
 
         public static StoreData GetStoreData(this HttpContext ctx)
         {
@@ -418,6 +445,8 @@ namespace BTCPayServer
         public static void SetStoreData(this HttpContext ctx, StoreData storeData)
         {
             ctx.Items["BTCPAY.STOREDATA"] = storeData;
+            
+            SetCurrentStoreId(ctx, storeData.Id);
         }
 
         public static StoreData[] GetStoresData(this HttpContext ctx)

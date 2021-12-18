@@ -12,6 +12,7 @@ namespace BTCPayServer.Security
         {
             return scopes.All(s => context.User.HasClaim(c => c.Type.Equals("scope", StringComparison.InvariantCultureIgnoreCase) && c.Value.Split(' ').Contains(s)));
         }
+        
         public static string GetImplicitStoreId(this HttpContext httpContext)
         {
             // 1. Check in the routeData
@@ -51,6 +52,9 @@ namespace BTCPayServer.Security
                     storeId = w.StoreId;
                 }
             }
+            
+            // 4. Fall back to user prefs cookie
+            storeId ??= httpContext.GetUserPrefsCookie().CurrentStoreId;
 
             return storeId;
         }

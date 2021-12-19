@@ -253,6 +253,13 @@
     </div>
 </form>
 
+<h4 class="mt-5 mb-3">Other actions</h4>
+<div id="danger-zone">
+    <a id="DeleteApp" class="btn btn-outline-danger mb-5" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
     <bundle name="wwwroot/bundles/pos-admin-bundle.min.css" asp-append-version="true"></bundle>
@@ -260,8 +267,6 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
     <script id="template-product-item" type="text/template">
         <div class="col-sm-4 col-md-3 mb-3">
             <div class="card">

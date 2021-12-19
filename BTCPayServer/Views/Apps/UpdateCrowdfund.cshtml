@@ -11,7 +11,6 @@
 }
 
 @section PageFootContent {
-    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js" asp-append-version="true"></bundle>
 }
@@ -247,7 +246,15 @@
                            target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
                     </div>
                 }
+                            
             </div>
         </div>
     </div>
 </form>
+
+<h4 class="mt-5 mb-3">Other actions</h4>
+<div id="danger-zone">
+    <a id="DeleteApp" class="btn btn-outline-danger mb-5" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

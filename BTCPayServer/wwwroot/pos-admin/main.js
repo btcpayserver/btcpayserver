@@ -1,4 +1,3 @@
-hljs.initHighlightingOnLoad();
-$(document).ready(function () {
-    $(".richtext").summernote(window.summernoteOptions());
+document.addEventListener('DOMContentLoaded', () => {
+    $('.richtext').summernote(window.summernoteOptions())
 });

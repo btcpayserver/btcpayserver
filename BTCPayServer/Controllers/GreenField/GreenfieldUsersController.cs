@@ -65,33 +65,28 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/users/{id?}")]
-        public async Task<ActionResult<ApplicationUserData[]>> GetUsers([FromQuery] string? id = null,
-            [FromQuery] string? email = null)
+        [HttpGet("~/api/v1/users/{idOrEmail}")]
+        public async Task<ActionResult<ApplicationUserData[]>> GetUser(string idOrEmail)
         {
-            if (id != null)
+            // Try ID
+            var user = await _userManager.FindByIdAsync(idOrEmail);
+            if (user == null)
             {
-                // Look for 1 user by ID
-                var user = await _userManager.FindByIdAsync(id);
-                if (user != null)
-                {
-                    return Ok(await FromModel(user));
-                }
-                return NotFound();
+                // Try Email
+                user = await _userManager.FindByEmailAsync(idOrEmail);
+            }
+            if (user != null)
+            {
+                return Ok(await FromModel(user));
             }
 
-            if (email != null)
-            {
-                // Look for 1 user by email
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
-                {
-                    return Ok(await FromModel(user));
-                }
-                return NotFound();
-            }
+            return NotFound();
+        }
 
-            // No filter specified, return all users
+        [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/users/")]
+        public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
+        {
             var users = _userManager.Users.ToArray();
             ApplicationUserData[] userDataList = new ApplicationUserData[users.Length];
 

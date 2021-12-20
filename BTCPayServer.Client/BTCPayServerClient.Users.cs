@@ -26,19 +26,13 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{userId}", null, HttpMethod.Delete), token);
             await HandleResponse(response);
         }
-        
-        public virtual async Task GetUserById(string id, CancellationToken token = default)
+
+        public virtual async Task<ApplicationUserData> GetUserByIdOrEmail(string idOrEmail, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{id}", null, HttpMethod.Get), token);
-            await HandleResponse(response);
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{idOrEmail}", null, HttpMethod.Get), token);
+            return await HandleResponse<ApplicationUserData>(response);
         }
-        
-        public virtual async Task GetUserByEmail(string email, CancellationToken token = default)
-        {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/?email="+email, null, HttpMethod.Get), token);
-            await HandleResponse(response);
-        }
-        
+
         public virtual async Task GetUsers( CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/", null, HttpMethod.Get), token);

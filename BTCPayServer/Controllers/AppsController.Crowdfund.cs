@@ -27,16 +27,17 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/settings/crowdfund")]
         public IActionResult UpdateCrowdfund(string appId)
         {
-            if (CurrentApp == null)
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
-            var settings = CurrentApp.GetSettings<CrowdfundSettings>();
+            var settings = app.GetSettings<CrowdfundSettings>();
             var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
-                StoreId = CurrentApp.StoreDataId,
-                StoreName = CurrentApp.StoreData?.StoreName,
-                AppName = CurrentApp.Name,
+                StoreId = app.StoreDataId,
+                StoreName = app.StoreData?.StoreName,
+                AppName = app.Name,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -56,9 +57,9 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
-                UseAllStoreInvoices = CurrentApp.TagAllInvoices,
+                UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = CurrentApp.TagAllInvoices ? $"storeid:{CurrentApp.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
@@ -71,10 +72,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
-            if (CurrentApp == null)
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
-            vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(CurrentApp.StoreDataId, vm.TargetCurrency);
+            vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.TargetCurrency);
             if (_currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
 
@@ -125,7 +127,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            CurrentApp.Name = vm.AppName;
+            app.Name = vm.AppName;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,
@@ -155,15 +157,15 @@ namespace BTCPayServer.Controllers
                 AnimationColors = parsedAnimationColors
             };
 
-            CurrentApp.TagAllInvoices = vm.UseAllStoreInvoices;
-            CurrentApp.SetSettings(newSettings);
+            app.TagAllInvoices = vm.UseAllStoreInvoices;
+            app.SetSettings(newSettings);
 
-            await _appService.UpdateOrCreateApp(CurrentApp);
+            await _appService.UpdateOrCreateApp(app);
 
             _eventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
-                StoreId = CurrentApp.StoreDataId,
+                StoreId = app.StoreDataId,
                 Settings = newSettings
             });
             TempData[WellKnownTempData.SuccessMessage] = "App updated";

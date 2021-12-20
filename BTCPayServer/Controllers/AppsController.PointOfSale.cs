@@ -89,18 +89,19 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/settings/pos")]
         public IActionResult UpdatePointOfSale(string appId)
         {
-            if (CurrentApp == null)
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
-            var settings = CurrentApp.GetSettings<PointOfSaleSettings>();
+            var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
             var vm = new UpdatePointOfSaleViewModel
             {
                 Id = appId,
-                StoreId = CurrentApp.StoreDataId,
-                StoreName = CurrentApp.StoreData?.StoreName,
-                AppName = CurrentApp.Name,
+                StoreId = app.StoreDataId,
+                StoreName = app.StoreData?.StoreName,
+                AppName = app.Name,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -117,7 +118,7 @@ namespace BTCPayServer.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
-                SearchTerm = $"storeid:{CurrentApp.StoreDataId}",
+                SearchTerm = $"storeid:{app.StoreDataId}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 RequiresRefundEmail = settings.RequiresRefundEmail
             };
@@ -161,14 +162,15 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
-        { 
-            if (CurrentApp == null)
+        {
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
             if (!ModelState.IsValid)
                 return View(vm);
 
-            vm.Currency = await GetStoreDefaultCurrentIfEmpty(CurrentApp.StoreDataId, vm.Currency);
+            vm.Currency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.Currency);
             if (_currencies.GetCurrencyData(vm.Currency, false) == null)
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
@@ -184,8 +186,8 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            CurrentApp.Name = vm.AppName;
-            CurrentApp.SetSettings(new PointOfSaleSettings
+            app.Name = vm.AppName;
+            app.SetSettings(new PointOfSaleSettings
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
@@ -206,7 +208,7 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
                 RequiresRefundEmail = vm.RequiresRefundEmail,
             });
-            await _appService.UpdateOrCreateApp(CurrentApp);
+            await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }

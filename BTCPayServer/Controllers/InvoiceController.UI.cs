@@ -224,14 +224,16 @@ namespace BTCPayServer.Controllers
         {
             using var ctx = _dbContextFactory.CreateContext();
 
-            if (CurrentInvoice == null)
+            var invoice = GetCurrentInvoice();
+            if (invoice == null)
                 return NotFound();
 
-            if (!CanRefund(CurrentInvoice.GetInvoiceState()))
+            if (!CanRefund(invoice.GetInvoiceState()))
                 return NotFound();
             
+            var store = GetCurrentStore();
             var paymentMethodId = PaymentMethodId.Parse(model.SelectedPaymentMethod);
-            var cdCurrency = _CurrencyNameTable.GetCurrencyData(CurrentInvoice.Currency, true);
+            var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paymentMethodDivisibility = _CurrencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
             RateRules rules;
             RateResult rateResult;
@@ -241,7 +243,7 @@ namespace BTCPayServer.Controllers
                 case RefundSteps.SelectPaymentMethod:
                     model.RefundStep = RefundSteps.SelectRate;
                     model.Title = "What to refund?";
-                    var pms = CurrentInvoice.GetPaymentMethods();
+                    var pms = invoice.GetPaymentMethods();
                     var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
                     
                     //TODO: Make this clean
@@ -257,9 +259,9 @@ namespace BTCPayServer.Controllers
                         model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                         model.RateThenText =
                             _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
-                        rules = CurrentStore.GetStoreBlob().GetRateRules(_NetworkProvider);
+                        rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                         rateResult = await _RateProvider.FetchRate(
-                            new CurrencyPair(paymentMethodId.CryptoCode, CurrentInvoice.Currency), rules,
+                            new CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules,
                             cancellationToken);
                         //TODO: What if fetching rate failed?
                         if (rateResult.BidAsk is null)
@@ -275,13 +277,14 @@ namespace BTCPayServer.Controllers
                         model.FiatAmount = paidCurrency;
                     }
 
-                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, CurrentInvoice.Currency);
+                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency);
                     return View(model);
+                
                 case RefundSteps.SelectRate:
                     createPullPayment = new CreatePullPayment
                     {
-                        Name = $"Refund {CurrentInvoice.Id}", PaymentMethodIds = new[] { paymentMethodId },
-                        StoreId = CurrentInvoice.StoreId
+                        Name = $"Refund {invoice.Id}", PaymentMethodIds = new[] { paymentMethodId },
+                        StoreId = invoice.StoreId
                     };
                     switch (model.SelectedRefundOption)
                 {
@@ -294,12 +297,12 @@ namespace BTCPayServer.Controllers
                         createPullPayment.Amount = model.CryptoAmountNow;
                         break;
                     case "Fiat":
-                        createPullPayment.Currency = CurrentInvoice.Currency;
+                        createPullPayment.Currency = invoice.Currency;
                         createPullPayment.Amount = model.FiatAmount;
                         break;
                     case "Custom":
                         model.Title = "How much to refund?";
-                        model.CustomCurrency = CurrentInvoice.Currency;
+                        model.CustomCurrency = invoice.Currency;
                         model.CustomAmount = model.FiatAmount;
                         model.RefundStep = RefundSteps.SelectCustomAmount;
                         return View(model);
@@ -325,7 +328,8 @@ namespace BTCPayServer.Controllers
                     {
                         return View(model);
                     }
-                    rules = CurrentStore.GetStoreBlob().GetRateRules(_NetworkProvider);
+
+                    rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                     rateResult = await _RateProvider.FetchRate(
                         new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
                         cancellationToken);
@@ -339,8 +343,8 @@ namespace BTCPayServer.Controllers
 
                     createPullPayment = new CreatePullPayment
                     {
-                        Name = $"Refund {CurrentInvoice.Id}", PaymentMethodIds = new[] { paymentMethodId },
-                        StoreId = CurrentInvoice.StoreId,
+                        Name = $"Refund {invoice.Id}", PaymentMethodIds = new[] { paymentMethodId },
+                        StoreId = invoice.StoreId,
                         Currency = model.CustomCurrency,
                         Amount = model.CustomAmount
                     };
@@ -355,10 +359,10 @@ namespace BTCPayServer.Controllers
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            (await ctx.Invoices.FindAsync(new[] { CurrentInvoice.Id }, cancellationToken)).CurrentRefundId = ppId;
+            (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken)).CurrentRefundId = ppId;
             ctx.Refunds.Add(new RefundData()
             {
-                InvoiceDataId = CurrentInvoice.Id,
+                InvoiceDataId = invoice.Id,
                 PullPaymentDataId = ppId
             });
             await ctx.SaveChangesAsync(cancellationToken);
@@ -976,20 +980,11 @@ namespace BTCPayServer.Controllers
             public string? StatusString { get; set; }
         }
 
-        private StoreData CurrentStore
-        {
-            get => HttpContext.GetStoreData();
-        }
+        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
         
-        private InvoiceEntity CurrentInvoice
-        {
-            get => HttpContext.GetInvoiceData();
-        }
+        private InvoiceEntity GetCurrentInvoice() => HttpContext.GetInvoiceData();
 
-        private string GetUserId()
-        {
-            return _UserManager.GetUserId(User);
-        }
+        private string GetUserId() => _UserManager.GetUserId(User);
 
         public class PosDataParser
         {

@@ -49,7 +49,8 @@ namespace BTCPayServer.Controllers
             string sortOrderColumn = null
         )
         {
-            var apps = await _appService.GetAllApps(GetUserId(), false, CurrentStore.Id);
+            var store = GetCurrentStore();
+            var apps = await _appService.GetAllApps(GetUserId(), false, store.Id);
 
             if (sortOrder != null && sortOrderColumn != null) 
             {
@@ -91,14 +92,15 @@ namespace BTCPayServer.Controllers
         {
             return View(new CreateAppViewModel
             {
-                StoreId = CurrentStore.Id
+                StoreId = GetCurrentStore().Id
             });
         }
 
         [HttpPost("/stores/{storeId}/apps/create")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            vm.StoreId = CurrentStore.Id;
+            var store = GetCurrentStore();
+            vm.StoreId = store.Id;
 
             if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
@@ -110,7 +112,7 @@ namespace BTCPayServer.Controllers
 
             var appData = new AppData
             {
-                StoreDataId = CurrentStore.Id,
+                StoreDataId = store.Id,
                 Name = vm.AppName,
                 AppType = appType.ToString()
             };
@@ -146,22 +148,24 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/delete")]
         public IActionResult DeleteApp(string appId)
         {
-            if (CurrentApp == null)
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
-            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{CurrentApp.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
         [HttpPost("{appId}/delete")]
         public async Task<IActionResult> DeleteAppPost(string appId)
         {
-            if (CurrentApp == null)
+            var app = GetCurrentApp();
+            if (app == null)
                 return NotFound();
             
-            if (await _appService.DeleteApp(CurrentApp))
+            if (await _appService.DeleteApp(app))
                 TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
             
-            return RedirectToAction(nameof(ListApps), new { storeId = CurrentApp.StoreDataId });
+            return RedirectToAction(nameof(ListApps), new { storeId = app.StoreDataId });
         }
 
         async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
@@ -173,19 +177,10 @@ namespace BTCPayServer.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private string GetUserId()
-        {
-            return _userManager.GetUserId(User);
-        }
+        private string GetUserId() => _userManager.GetUserId(User);
 
-        private StoreData CurrentStore
-        {
-            get => HttpContext.GetStoreData();
-        }
+        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
         
-        private AppData CurrentApp
-        {
-            get => HttpContext.GetAppData();
-        }
+        private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

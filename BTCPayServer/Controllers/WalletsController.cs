@@ -368,8 +368,9 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
+            var store = GetCurrentStore();
             var address = _walletReceiveService.Get(walletId)?.Address;
-            var allowedPayjoin = paymentMethod.IsHotWallet && CurrentStore.GetStoreBlob().PayJoinEnabled;
+            var allowedPayjoin = paymentMethod.IsHotWallet && store.GetStoreBlob().PayJoinEnabled;
             var bip21 = network.GenerateBIP21(address?.ToString(), null);
             if (allowedPayjoin)
             {
@@ -1030,14 +1031,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction();
         }
 
-        private StoreData CurrentStore
-        {
-            get => HttpContext.GetStoreData();
-        }
-
         internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
+            return GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
         private static async Task<IMoney> GetBalanceAsMoney(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
@@ -1064,11 +1060,6 @@ namespace BTCPayServer.Controllers
             {
                 return "--";
             }
-        }
-
-        private string GetUserId()
-        {
-            return _userManager.GetUserId(User);
         }
         
         [HttpPost("{walletId}/actions")]
@@ -1125,6 +1116,10 @@ namespace BTCPayServer.Controllers
                 : Url.Content(network.LightningImagePath);
             return Request.GetRelativePathOrAbsolute(res);
         }
+
+        private string GetUserId() => _userManager.GetUserId(User);
+
+        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }
 
     public class WalletReceiveViewModel

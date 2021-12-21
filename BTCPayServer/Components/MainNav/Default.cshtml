@@ -45,7 +45,7 @@
                                             <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                             <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
                                         </a>
-                                    }                                   
+                                    }
                                 </li>
                             }
                             @foreach (var scheme in Model.LightningNodes)
@@ -165,7 +165,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item" permission="@Policies.CanModifyServerSettings">
+                <div class="accordion-item">
                     <header class="accordion-header" id="Nav-Plugins-Header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
                             Plugins
@@ -177,8 +177,7 @@
                             <ul class="navbar-nav">
                                 <vc:ui-extension-point location="header-nav" model="@Model"/>
                                 <vc:ui-extension-point location="store-integrations-list" model="@Model" />
-                                @* TODO: Limit this to admins *@
-                                <li class="nav-item">
+                                <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                     <a asp-area="" asp-controller="Server" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
                                         <vc:icon symbol="new"/>
                                         <span>Add Plugin</span>

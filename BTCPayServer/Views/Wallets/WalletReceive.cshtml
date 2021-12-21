@@ -1,8 +1,9 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", walletId);
 }
 
 @section PageHeadContent

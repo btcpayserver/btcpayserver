@@ -2,7 +2,7 @@
 @model PayButtonViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
     csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
 }
 

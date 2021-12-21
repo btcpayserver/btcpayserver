@@ -1,7 +1,7 @@
 @model IntegrationsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().Id);
 }
 
 <div class="row">

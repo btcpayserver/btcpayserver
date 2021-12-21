@@ -4,7 +4,7 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../Stores/_Nav";
-    ViewData.SetActivePage(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Integrations, "Lightning Address Setup", Context.GetStoreData().Id);
 }
 
 @section PageHeadContent {

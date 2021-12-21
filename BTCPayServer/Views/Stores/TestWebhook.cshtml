@@ -2,7 +2,7 @@
 @using  BTCPayServer.Client.Models;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().Id);
 }
 
 <div class="row">

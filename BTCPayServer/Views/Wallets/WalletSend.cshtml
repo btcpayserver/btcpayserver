@@ -3,8 +3,9 @@
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @model WalletSendModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
     csp.Add("worker-src", "blob:");
 }
 
@@ -30,7 +31,7 @@
 <div class="row">
     <div class="col-lg-8 col-xl-7 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
         <h4 class="mb-3">@ViewData["Title"]</h4>
-        <form method="post" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")">
+        <form method="post" asp-action="WalletSend" asp-route-walletId="@walletId">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="FiatDivisibility" />
             <input type="hidden" asp-for="CryptoDivisibility" />

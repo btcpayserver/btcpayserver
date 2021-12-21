@@ -3,6 +3,7 @@
 @model BTCPayServer.Controllers.ServerController.ListPluginsViewModel 
 @inject BTCPayServerOptions BTCPayServerOptions
 @{
+    Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
     var availableAndNotInstalled = Model.Available
@@ -95,6 +96,9 @@
     .version-switch .nav-link { display: inline; }
     .version-switch .nav-link.active { display: none; }
 </style>
+
+<partial name="_StatusMessage" />
+
 @if (Model.Disabled.Any())
 {
     <div class="alert alert-danger mb-5">

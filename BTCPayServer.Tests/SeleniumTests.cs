@@ -1486,25 +1486,19 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             //ln address tests
             s.CreateNewStore();
-            s.GoToStore(s.StoreId, StoreNavPages.Integrations);
             //ensure ln address is not available as Lightning is not enable
-            s.Driver.FindElement(By.Id("lightning-address-option"))
-                .FindElement(By.LinkText("You need to setup Lightning first"));
+            s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
 
             s.GoToStore(s.StoreId);
             s.AddLightningNode("BTC", LightningConnectionType.LndREST, false);
-            s.GoToStore(s.StoreId, StoreNavPages.Integrations);
             //ensure ln address is not available as lnurl is not configured
-            s.Driver.FindElement(By.Id("lightning-address-option"))
-                .FindElement(By.LinkText("You need LNURL configured first"));
+            s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
             
             s.GoToLightningSettings(s.StoreId, cryptoCode);
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             SudoForceSaveLightningSettingsRightNowAndFast(s, cryptoCode);
             
-            s.GoToStore(s.StoreId, StoreNavPages.Integrations);
-            s.Driver.FindElement(By.Id("lightning-address-option"))
-                .FindElement(By.Id("lightning-address-setup-link")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-LightningAddress")).Click();
 
             s.Driver.ToggleCollapse("AddAddress");
             var lnaddress1 = Guid.NewGuid().ToString();

@@ -1,4 +1,6 @@
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @{
     var store = Context.GetStoreData();
@@ -9,41 +11,13 @@
         isLNUrlEnabled &&
         store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().Any(type => type.CryptoCode == "BTC");
 }
-<li class="list-group-item bg-tile" id="lightning-address-option">
-    <div class="d-flex align-items-center">
-        <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
-            <strong class="me-3">
-                Lightning Address
-                <a href="https://lightningaddress.com/" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o" title="More information..."></span>
-                </a>
-            </strong>
-        </span>
-        <span class="d-flex align-items-center fw-semibold">
-            @if (possible)
-            {
-                <a id="lightning-address-setup-link" class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                    Setup
-                </a>
-            }
-            else
-            {
-                if (!isLightningEnabled)
-                {
-                    <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id" class="btn btn-link p-0">
-                        You need to setup Lightning first
-                    </a>
-                }
-                else
-                {
-                    <span class="d-flex align-items-center text-danger">
-                        <span class="me-2 btcpay-status btcpay-status--disabled"></span>
-                        <a asp-action="LightningSettings" asp-route-cryptoCode="BTC" asp-route-storeId="@store.Id" asp-fragment="ln-url">
-                            You need LNURL configured first
-                        </a>
-                    </span>
-                }
-            }
-        </span>
-    </div>
-</li>
+
+@if (possible)
+{
+    <li class="nav-item">
+        <a asp-area="" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.LightningAddress)" id="StoreNav-LightningAddress">
+            <span class="me-2 btcpay-status btcpay-status--enabled"></span>
+            <span>Lightning Address</span>
+        </a>
+    </li>
+}

@@ -31,19 +31,21 @@ namespace BTCPayServer.Controllers.GreenField
             var emailSettings = store.GetStoreBlob().EmailSettings ?? null;
             if (emailSettings != null || !emailSettings.IsComplete())
             {
-                return this.CreateAPIError("smtp-not-configured", "Store does not have an SMTP server configured.");
+                return this.CreateAPIError(404,"smtp-not-configured", "Store does not have an SMTP server configured.");
             }
 
-            var client = emailSettings.CreateSmtpClient();
-            var message = emailSettings.CreateMailMessage(request.toMailAddress(), request.subject, request.body);
+            var client = await emailSettings.CreateSmtpClient();
+            var message = emailSettings.CreateMailMessage(request.toMailAddress(), request.subject, request.body, false);
+
             try
             {
-                await client.SendMailAsync(message);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
                 return Ok();
             }
             catch (Exception e)
             {
-                return this.CreateAPIError("not-available", e.Message);
+                return this.CreateAPIError(500,"smtp-error", e.Message);
             }
         }
     }

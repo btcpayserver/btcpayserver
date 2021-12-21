@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using MimeKit;
 
 namespace BTCPayServer.Client.Models
 {
@@ -9,9 +10,9 @@ namespace BTCPayServer.Client.Models
         public string subject;
         public string body;
 
-        public MailAddress toMailAddress()
+        public MailboxAddress toMailAddress()
         {
-            return new MailAddress(toEmail, toName);
+            return new MailboxAddress(toEmail, toName);
         }
     }
 }

@@ -1,0 +1,81 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/email": {
+            "post": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Send an email for a store",
+                "description": "Send an email using the store's SMTP server",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "201": {
+                        "description": "The email was sent successfully"
+                    },
+                    "400": {
+                        "description": "The store's SMTP is not configured"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new stores"
+                    },
+                    "404": {
+                        "description": "The store was not found"
+                    },
+                    "500": {
+                        "description": "There was a problem while trying to send the email using the store's SMTP server."
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "EmailData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "toName": {
+                        "type": "string",
+                        "description": "Name of the recipient"
+                    },
+                    "toEmail": {
+                        "type": "string",
+                        "description": "Email of the recipient"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Subject of the email"
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Body of the email to send as plain text. HTML is not supported."
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Store Email"
+        }
+    ]
+}

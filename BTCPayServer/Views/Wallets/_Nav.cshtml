@@ -1,8 +1,8 @@
-@inject SignInManager<ApplicationUser> SignInManager
-@inject BTCPayNetworkProvider BtcPayNetworkProvider
+@using BTCPayServer.Views.Stores
+@inject BTCPayNetworkProvider _btcPayNetworkProvider
 @{
     var wallet = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
-    var network = BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
+    var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
 }
 <nav id="SectionNav" class="nav">
     <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Transactions">Transactions</a>
@@ -16,5 +16,6 @@
     {
         <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-PSBT">PSBT</a>
     }
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Settings) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" asp-controller="Stores" asp-action="WalletSettings"  asp-route-cryptoCode="@wallet.CryptoCode" asp-route-storeId="@wallet.StoreId" id="SectionNav-Settings">Settings</a>
     <vc:ui-extension-point location="wallet-nav" model="@Model" />  
 </nav>

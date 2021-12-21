@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.S3.Model;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -11,14 +12,18 @@ namespace BTCPayServer.Components.StoreSelector
 {
     public class StoreSelector : ViewComponent
     {
-        private const string RootName = "Global";
         private readonly StoreRepository _storeRepo;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StoreSelector(StoreRepository storeRepo, UserManager<ApplicationUser> userManager)
+        public StoreSelector(
+            StoreRepository storeRepo, 
+            BTCPayNetworkProvider networkProvider,
+            UserManager<ApplicationUser> userManager)
         {
             _storeRepo = storeRepo;
             _userManager = userManager;
+            _networkProvider = networkProvider;
         }
 
         public async Task<IViewComponentResult> InvokeAsync()
@@ -27,11 +32,21 @@ namespace BTCPayServer.Components.StoreSelector
             var stores = await _storeRepo.GetStoresByUserId(userId);
             var currentStore = ViewContext.HttpContext.GetStoreData();
             var options = stores
-                .Select(store => new SelectListItem
+                .Select(store =>
                 {
-                    Text = store.StoreName,
-                    Value = store.Id,
-                    Selected = store.Id == currentStore?.Id
+                    var cryptoCode = store
+                        .GetSupportedPaymentMethods(_networkProvider)
+                        .OfType<DerivationSchemeSettings>()
+                        .FirstOrDefault()?
+                        .Network.CryptoCode;
+                    var walletId = cryptoCode != null ? new WalletId(store.Id, cryptoCode) : null;
+                    return new StoreSelectorOption
+                    {
+                        Text = store.StoreName,
+                        Value = store.Id,
+                        Selected = store.Id == currentStore?.Id,
+                        WalletId = walletId
+                    };
                 })
                 .ToList();
             
@@ -39,7 +54,7 @@ namespace BTCPayServer.Components.StoreSelector
             {
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
-                CurrentDisplayName = currentStore?.StoreName ?? RootName
+                CurrentDisplayName = currentStore?.StoreName
             };
             
             return View(vm);

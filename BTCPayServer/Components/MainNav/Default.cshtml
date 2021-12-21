@@ -32,9 +32,9 @@
                             {
                                 var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
                                 <li class="nav-item">
-                                    @if (isSetUp)
+                                    @if (isSetUp && scheme.WalletSupported)
                                     {
-                                        <a asp-area="" asp-controller="Stores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Modify{scheme.Crypto}")">
+                                        <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId"class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                             <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                             <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
                                         </a>
@@ -45,7 +45,7 @@
                                             <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                             <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
                                         </a>
-                                    }
+                                    }                                   
                                 </li>
                             }
                             @foreach (var scheme in Model.LightningNodes)
@@ -82,19 +82,6 @@
                     <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
                         <div class="accordion-body">
                             <ul class="navbar-nav">
-                                @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
-                                {
-                                    var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
-                                    if (isSetUp && scheme.WalletSupported)
-                                    {
-                                        <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                            <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString())" id="@($"StoreNav-Wallet{scheme.Crypto}")">
-                                                <vc:icon symbol="wallet-onchain"/>
-                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
-                                            </a>
-                                        </li>
-                                    }
-                                }
                                 <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                     <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
                                         <vc:icon symbol="invoice"/>

@@ -568,7 +568,7 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task<PaymentRequestData> GetPaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
-            return GetFromActionResult(await _paymentRequestController.GetPaymentRequest(storeId, paymentRequestId));
+            return GetFromActionResult<PaymentRequestData>(await _paymentRequestController.GetPaymentRequest(storeId, paymentRequestId));
         }
 
         public override async Task ArchivePaymentRequest(string storeId, string paymentRequestId,
@@ -594,7 +594,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override async Task<ApiKeyData> GetCurrentAPIKeyInfo(CancellationToken token = default)
         {
-            return GetFromActionResult(await _apiKeysController.GetKey());
+            return GetFromActionResult<ApiKeyData>(await _apiKeysController.GetKey());
         }
 
         public override async Task<ApiKeyData> CreateAPIKey(CreateApiKeyRequest request,
@@ -734,7 +734,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override async Task<StoreData> GetStore(string storeId, CancellationToken token = default)
         {
-            return GetFromActionResult(await _storesController.GetStore(storeId));
+            return GetFromActionResult<StoreData>(_storesController.GetStore(storeId));
         }
 
         public override async Task RemoveStore(string storeId, CancellationToken token = default)

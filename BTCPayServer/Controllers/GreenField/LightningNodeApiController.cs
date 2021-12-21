@@ -29,7 +29,6 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly ISettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
-
         protected LightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
             ISettingsRepository settingsRepository,
             IAuthorizationService authorizationService)
@@ -95,11 +94,6 @@ namespace BTCPayServer.Controllers.GreenField
         public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            if (lightningClient == null)
-            {
-                return NotFound();
-            }
-
             if (request?.NodeURI is null)
             {
                 ModelState.AddModelError(nameof(request.NodeURI),
@@ -166,11 +160,6 @@ namespace BTCPayServer.Controllers.GreenField
         public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            if (lightningClient == null)
-            {
-                return NotFound();
-            }
-
             return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
         }
 
@@ -207,18 +196,8 @@ namespace BTCPayServer.Controllers.GreenField
         public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-
-            if (lightningClient == null)
-            {
-                return NotFound();
-            }
-
             var inv = await lightningClient.GetInvoice(id);
-            if (inv == null)
-            {
-                return this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id");
-            }
-            return Ok(ToModel(inv));
+            return inv == null ? this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id") : Ok(ToModel(inv));
         }
 
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)

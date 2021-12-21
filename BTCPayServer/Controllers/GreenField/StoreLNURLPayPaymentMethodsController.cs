@@ -77,11 +77,7 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LNURLPay/{cryptoCode}")]
         public IActionResult GetLNURLPayPaymentMethod(string storeId, string cryptoCode)
         {
-            if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
-            {
-                return NotFound();
-            }
-
+            AssertCryptoCodeWallet(cryptoCode, out _);
             var method = GetExistingLNURLPayPaymentMethod(cryptoCode);
             if (method is null)
             {
@@ -97,10 +93,8 @@ namespace BTCPayServer.Controllers.GreenField
             string storeId,
             string cryptoCode)
         {
-            if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
-            {
-                return NotFound();
-            }
+           
+            AssertCryptoCodeWallet(cryptoCode, out _);
 
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var store = Store;
@@ -115,11 +109,8 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] LNURLPayPaymentMethodData paymentMethodData)
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
-
-            if (!GetNetwork(cryptoCode, out var network))
-            {
-                return NotFound();
-            }
+           
+            AssertCryptoCodeWallet(cryptoCode, out _);
 
             var lnMethod = StoreLightningNetworkPaymentMethodsController.GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider,
                 cryptoCode, Store);
@@ -169,12 +160,12 @@ namespace BTCPayServer.Controllers.GreenField
                     paymentMethod.UseBech32Scheme, paymentMethod.EnableForStandardInvoices
                 );
         }
-
-        private bool GetNetwork(string cryptoCode, [MaybeNullWhen(false)] out BTCPayNetwork network)
+        private void AssertCryptoCodeWallet(string cryptoCode, out BTCPayNetwork network)
         {
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            network = network?.SupportLightning is true ? network : null;
-            return network != null;
+            if (network is null)
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
         }
+        
     }
 }

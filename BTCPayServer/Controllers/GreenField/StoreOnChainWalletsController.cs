@@ -151,7 +151,8 @@ namespace BTCPayServer.Controllers.GreenField
             var addr = await _walletReceiveService.UnReserveAddress(new WalletId(storeId, cryptoCode));
             if (addr is null)
             {
-                return NotFound();
+                return this.CreateAPIError("no-reserved-address",
+                    $"There was no reserved address for {cryptoCode} on this store.");
             }
             return Ok();
         }
@@ -210,7 +211,7 @@ namespace BTCPayServer.Controllers.GreenField
             var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
             if (tx is null)
             {
-                return NotFound();
+                return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
             }
 
             var walletId = new WalletId(storeId, cryptoCode);
@@ -523,8 +524,7 @@ namespace BTCPayServer.Controllers.GreenField
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null)
             {
-                actionResult = NotFound();
-                return true;
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
             }
 
 

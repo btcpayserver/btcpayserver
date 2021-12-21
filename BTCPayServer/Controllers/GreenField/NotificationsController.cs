@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (items.Count == 0)
             {
-                return NotFound();
+                return NotificationNotFound();
             }
 
             return Ok(ToModel(items.Items.First()));
@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (items.Count == 0)
             {
-                return NotFound();
+                return NotificationNotFound();
             }
 
             return Ok(ToModel(items.First()));
@@ -100,6 +100,10 @@ namespace BTCPayServer.Controllers.GreenField
                 Seen = entity.Seen,
                 Link = string.IsNullOrEmpty(entity.ActionLink) ? null : new Uri(entity.ActionLink)
             };
+        }
+        private IActionResult NotificationNotFound()
+        {
+            return this.CreateAPIError(404, "notification-not-found", "The notification was not found");
         }
     }
 }

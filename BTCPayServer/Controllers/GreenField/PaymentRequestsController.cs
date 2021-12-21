@@ -150,6 +150,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 Created = data.Created,
                 Id = data.Id,
+                StoreId = data.StoreDataId,
                 Status = data.Status,
                 Archived = data.Archived,
                 Amount = blob.Amount,

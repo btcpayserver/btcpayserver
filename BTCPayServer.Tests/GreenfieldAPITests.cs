@@ -937,6 +937,7 @@ namespace BTCPayServer.Tests
                 //get payment request
                 var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
                 Assert.Equal(newPaymentRequest.Title, paymentRequest.Title);
+                Assert.Equal(newPaymentRequest.StoreId, user.StoreId);
 
                 //update payment request
                 var updateRequest = JObject.FromObject(paymentRequest).ToObject<UpdatePaymentRequestRequest>();

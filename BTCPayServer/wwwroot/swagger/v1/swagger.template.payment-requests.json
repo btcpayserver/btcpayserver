@@ -289,6 +289,10 @@
                         "description":  "The id of the payment request",
                         "nullable": false
                     },
+                    "storeId": {
+                        "type": "string",
+                        "description": "The store identifier that the payment request belongs to"
+                    },
                     "status": {
                         "type": "string",
                         "enum": [ "Pending", "Completed" ,"Expired"],

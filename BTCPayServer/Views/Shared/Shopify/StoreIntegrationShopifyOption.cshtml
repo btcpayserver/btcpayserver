@@ -1,17 +1,12 @@
-@using BTCPayServer.Plugins.Shopify
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @{
     var store = Context.GetStoreData();
-    var shopify = store.GetStoreBlob().GetShopifySettings();
-    var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
-    var shopifyUrl = shopify?.ShopifyUrl;
 }
 
 <li class="nav-item">
     <a asp-area="" asp-controller="Shopify" asp-action="EditShopifyIntegration" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.Shopify)" id="StoreNav-Shopify">
-        <span class="me-2 btcpay-status btcpay-status--@(shopifyCredsSet ? "enabled" : "disabled")"></span>
+        <vc:icon symbol="shopify"/>
         <span>Shopify</span>
-        <span class="text-secondary">@shopifyUrl</span>
     </a>
 </li>

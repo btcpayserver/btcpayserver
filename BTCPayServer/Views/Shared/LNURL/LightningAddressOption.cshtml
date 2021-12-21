@@ -16,7 +16,7 @@
 {
     <li class="nav-item">
         <a asp-area="" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.LightningAddress)" id="StoreNav-LightningAddress">
-            <span class="me-2 btcpay-status btcpay-status--enabled"></span>
+            <vc:icon symbol="wallet-lightning"/>
             <span>Lightning Address</span>
         </a>
     </li>

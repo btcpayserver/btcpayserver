@@ -33,10 +33,10 @@ namespace BTCPayServer.Client
             return await HandleResponse<ApplicationUserData>(response);
         }
 
-        public virtual async Task GetUsers( CancellationToken token = default)
+        public virtual async Task<ApplicationUserData[]> GetUsers( CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/", null, HttpMethod.Get), token);
-            await HandleResponse(response);
+            return await HandleResponse<ApplicationUserData[]>(response);
         }
 
         public virtual async Task DeleteCurrentUser(CancellationToken token = default)

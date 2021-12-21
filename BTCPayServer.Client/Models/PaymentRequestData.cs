@@ -8,7 +8,8 @@ namespace BTCPayServer.Client.Models
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public PaymentRequestData.PaymentRequestStatus Status { get; set; }
-        public DateTimeOffset Created { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset CreatedTime { get; set; }
         public string Id { get; set; }
         public bool Archived { get; set; }
 

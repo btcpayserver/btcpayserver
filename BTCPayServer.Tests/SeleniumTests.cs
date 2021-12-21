@@ -752,7 +752,7 @@ namespace BTCPayServer.Tests
 
                 // The delivery is done asynchronously, so small wait here
                 await Task.Delay(500);
-                s.GoToStore(storeId, Views.Stores.StoreNavPages.Webhooks);
+                s.GoToStore(storeId, StoreNavPages.Webhooks);
                 s.Driver.FindElement(By.LinkText("Modify")).Click();
                 var elements = s.Driver.FindElements(By.ClassName("redeliver"));
                 // One worked, one failed
@@ -1339,7 +1339,7 @@ namespace BTCPayServer.Tests
             });
 
             // Standard invoice test
-            s.GoToHome();
+            s.GoToStore(storeId);
             i = s.CreateInvoice(storeName, 0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
             s.Driver.FindElement(By.ClassName("payment__currencies")).Click();
@@ -1386,7 +1386,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(i);
             s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
 
-            s.GoToHome();
+            s.GoToStore(storeId);
             i = s.CreateInvoice(storeName, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
             s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));

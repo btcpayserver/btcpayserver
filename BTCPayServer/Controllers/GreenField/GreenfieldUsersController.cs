@@ -68,13 +68,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/{idOrEmail}")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUser(string idOrEmail)
         {
-            // Try ID
-            var user = await _userManager.FindByIdAsync(idOrEmail);
-            if (user == null)
-            {
-                // Try Email
-                user = await _userManager.FindByEmailAsync(idOrEmail);
-            }
+            var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user != null)
             {
                 return Ok(await FromModel(user));

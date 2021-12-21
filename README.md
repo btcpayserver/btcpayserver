@@ -127,7 +127,7 @@ There are many other ways to get involved with the project. Check our [contribut
 
 ## 🧑‍💻 Developing
 
-To begin developing locally, visit our [local development guide](https://docs.btcpayserver.org/LocalDevelopment/). There are also several video-tutorials:
+To begin developing locally, visit our [local development guide](https://docs.btcpayserver.org/Development/LocalDevelopment/). There are also several video-tutorials:
 
 * [Setting up development environment on Windows](https://www.youtube.com/watch?v=ZePbMPSIvHM)
 * [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)

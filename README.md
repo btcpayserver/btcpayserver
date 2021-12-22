@@ -200,6 +200,8 @@ BTCPay Server has two APIs:
 The **Greenfield API** is our brand-new API which is still in development. Once complete, it will allow you to run BTCPay Server headlessly.
 The **Legacy API**, is fully compatible with [BitPay's API](https://bitpay.com/api/). It has limited features, but allows instant migration from BitPay.
 
+You can also automate BTCPay Server easily and without coding thanks to our **Zapier integration**. Connect BTCPay Server to +4400 other apps like Google Sheets, Forms, Slack, email services, accounting software, etc or make BTCPay Server do tasks automatically by simply connecting trigger and action blocks. [Learn more about BTCPay Server on Zapier.](https://zapier.com/apps/btcpay-server/integrations) or check out the source code, request features and report issues at https://github.com/btcpayserver/zapier
+
 ## 💚 Community
 
 Our community is the ❤️ of the project. To chat with other community members in real-time, join our [Mattermost chat](https://chat.btcpayserver.org). We're also on [GitHub discussions](https://github.com/btcpayserver/btcpayserver/discussions).

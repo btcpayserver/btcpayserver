@@ -52,9 +52,6 @@ namespace BTCPayServer.Security
                     storeId = w.StoreId;
                 }
             }
-            
-            // 4. Fall back to user prefs cookie
-            storeId ??= httpContext.GetUserPrefsCookie().CurrentStoreId;
 
             return storeId;
         }

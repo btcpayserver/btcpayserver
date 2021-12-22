@@ -90,6 +90,9 @@ namespace BTCPayServer.Security
                 }
             }
             
+            // Fall back to user prefs cookie
+            storeId ??= _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
+            
             var store = storeId != null
                 ? await _storeRepository.FindStore(storeId, userId)
                 : null;

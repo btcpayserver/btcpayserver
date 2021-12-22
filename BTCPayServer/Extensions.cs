@@ -453,6 +453,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
         }
+        
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
         {
             ctx.Items["BTCPAY.STORESDATA"] = storeData;

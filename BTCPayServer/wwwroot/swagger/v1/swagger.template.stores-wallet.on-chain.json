@@ -23,7 +23,8 @@
                         "description": "The crypto code of the payment method to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "View information about the specified wallet",
@@ -79,7 +80,8 @@
                         "description": "The crypto code of the payment method to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "blockTarget",
@@ -145,7 +147,8 @@
                         "description": "The crypto code of the payment method to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "forceGenerate",
@@ -209,7 +212,8 @@
                         "description": "The crypto code of the payment method to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "UnReserve address",
@@ -258,7 +262,8 @@
                         "description": "The crypto code of the wallet to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "statusFilter",
@@ -345,7 +350,8 @@
                         "description": "The crypto code of the wallet",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "requestBody": {
@@ -419,7 +425,8 @@
                         "description": "The crypto code of the wallet to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "transactionId",
@@ -484,7 +491,8 @@
                         "description": "The crypto code of the wallet to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Get store on-chain wallet utxos",

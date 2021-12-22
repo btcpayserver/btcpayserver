@@ -73,7 +73,8 @@
                         "description": "The crypto code of the payment method to fetch",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "View information about the specified payment method",
@@ -127,7 +128,8 @@
                         "description": "The crypto code of the payment method to update",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Update the specified store's payment method",
@@ -203,7 +205,8 @@
                         "description": "The crypto code of the payment method to update",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Removes the specified store payment method.",

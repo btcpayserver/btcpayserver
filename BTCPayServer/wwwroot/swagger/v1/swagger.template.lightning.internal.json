@@ -14,7 +14,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "View information about the lightning node",
@@ -61,7 +62,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Connect to another lightning node.",
@@ -131,7 +133,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "View information about the current channels of the lightning node",
@@ -176,7 +179,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Open a channel with another lightning node. You should connect to that node first.",
@@ -243,7 +247,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Get an on-chain deposit address for the lightning node ",
@@ -292,7 +297,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }   ,                 {
                         "name": "id",
                         "in": "path",
@@ -347,7 +353,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Pay a lightning invoice.",
@@ -417,7 +424,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     }
                 ],
                 "description": "Create a lightning invoice.",

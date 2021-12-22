@@ -1156,7 +1156,8 @@
                     },
                     "cryptoCode": {
                         "type": "string",
-                        "description": "Crypto code of the payment method (e.g., \"BTC\" or \"LTC\")"
+                        "description": "Crypto code of the payment method (e.g., \"BTC\" or \"LTC\")",
+                        "example": "BTC"
                     },
                     "destination": {
                         "type": "string",

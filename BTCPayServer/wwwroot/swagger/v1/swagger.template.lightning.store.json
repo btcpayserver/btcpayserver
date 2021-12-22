@@ -14,7 +14,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -70,7 +71,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -149,7 +151,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -203,7 +206,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -283,7 +287,8 @@
                         "schema": {
                             "type": "string",
                             "description": "A bitcoin address belonging to the lightning node"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -340,7 +345,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -405,7 +411,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",
@@ -484,7 +491,8 @@
                         "description": "The cryptoCode of the lightning-node to query",
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "BTC"
                     },
                     {
                         "name": "storeId",

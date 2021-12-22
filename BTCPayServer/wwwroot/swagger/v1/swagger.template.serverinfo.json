@@ -89,7 +89,8 @@
                 "properties": {
                     "cryptoCode": {
                         "type": "string",
-                        "description": "The CryptoCode of the crypto currency (eg. BTC)"
+                        "description": "The CryptoCode of the crypto currency (eg. BTC)",
+                        "example": "BTC"
                     },
                     "nodeInformation": {
                         "$ref": "#/components/schemas/ApplicationServerInfoNodeStatusData"

@@ -1,12 +1,10 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using NBitcoin.Secp256k1;
 
 namespace BTCPayServer.Components.StoreSelector
 {

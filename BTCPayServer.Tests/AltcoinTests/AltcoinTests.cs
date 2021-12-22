@@ -404,8 +404,6 @@ namespace BTCPayServer.Tests
                 Assert.Contains("2.20000000 ₿", s.Driver.PageSource);
             if (rateSelection == "RateThenText")
                 Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
-            s.GoToHome();
-            s.GoToInvoices();
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("refundlink")).Click();
             Assert.Contains("pull-payments", s.Driver.Url);
@@ -423,19 +421,19 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                var store = s.CreateNewStore();
+                (_, string storeId) = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
 
                 //check that there is no dropdown since only one payment method is set
-                var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
+                var invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore(store.storeId);
+                s.GoToStore(storeId);
                 s.AddDerivationScheme("LTC");
                 s.AddLightningNode("BTC", LightningConnectionType.CLightning);
                 //there should be three now
-                invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
+                invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("BTC", currencyDropdownButton.Text);

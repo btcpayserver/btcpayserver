@@ -377,8 +377,14 @@ namespace BTCPayServer.Tests
             CheckForJSErrors();
         }
 
-        public void GoToInvoices()
+        public void GoToInvoice(string id)
         {
+            GoToUrl($"/invoices/{id}/");
+        }
+
+        public void GoToInvoices(string storeId)
+        {
+            GoToStore(storeId);
             Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
         }
 
@@ -406,7 +412,7 @@ namespace BTCPayServer.Tests
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
-            GoToInvoices();
+            GoToInvoices(storeId);
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
             if (amount is decimal v)
                 Driver.FindElement(By.Id("Amount")).SendKeys(v.ToString(CultureInfo.InvariantCulture));
@@ -479,7 +485,7 @@ namespace BTCPayServer.Tests
         public void GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
         {
             walletId ??= WalletId;
-            GoToUrl($"/wallets/{walletId}");
+            Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
@@ -497,19 +503,6 @@ namespace BTCPayServer.Tests
             if (navPages != ServerNavPages.Index)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
-            }
-        }
-
-        public void GoToInvoice(string id)
-        {
-            GoToInvoices();
-            foreach (var el in Driver.FindElements(By.ClassName("invoice-details-link")))
-            {
-                if (el.GetAttribute("href").Contains(id, StringComparison.OrdinalIgnoreCase))
-                {
-                    el.Click();
-                    break;
-                }
             }
         }
     }

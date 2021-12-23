@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers.GreenField
             var blob = data.GetBlob();
             return new Client.Models.PaymentRequestData()
             {
-                Created = data.Created,
+                CreatedTime = data.Created,
                 Id = data.Id,
                 StoreId = data.StoreDataId,
                 Status = data.Status,

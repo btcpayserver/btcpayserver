@@ -30,11 +30,12 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpGet("~/api/v1/api-keys/current")]
-        public async Task<ActionResult<ApiKeyData>> GetKey()
+        public async Task<IActionResult> GetKey()
         {
             if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
             {
-                return NotFound();
+                return
+                    this.CreateAPIError(404, "api-key-not-found", "The api key was not present.");
             }
             var data = await _apiKeyRepository.GetKey(apiKey);
             return Ok(FromModel(data));
@@ -44,8 +45,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateKey(CreateApiKeyRequest request)
         {
-            if (request is null)
-                return NotFound();
+            request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
             var key = new APIKeyData()
             {

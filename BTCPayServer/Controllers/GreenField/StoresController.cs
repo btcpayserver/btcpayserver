@@ -42,14 +42,14 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
-        public Task<ActionResult<Client.Models.StoreData>> GetStore(string storeId)
+        public IActionResult GetStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
-                return Task.FromResult<ActionResult<Client.Models.StoreData>>(NotFound());
+                return StoreNotFound();
             }
-            return Task.FromResult<ActionResult<Client.Models.StoreData>>(Ok(FromModel(store)));
+            return Ok(FromModel(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers.GreenField
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
-                return NotFound();
+                return StoreNotFound();
             }
 
             if (!_storeRepository.CanDeleteStores())
@@ -96,7 +96,7 @@ namespace BTCPayServer.Controllers.GreenField
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
-                return NotFound();
+                return StoreNotFound();
             }
             var validationResult = Validate(request);
             if (validationResult != null)
@@ -214,6 +214,11 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
             return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
+        }
+        
+        private IActionResult StoreNotFound()
+        {
+            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

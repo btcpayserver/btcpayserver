@@ -42,14 +42,14 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
-        public async Task<ActionResult<Client.Models.PaymentRequestData>> GetPaymentRequest(string storeId, string paymentRequestId)
+        public async Task<IActionResult> GetPaymentRequest(string storeId, string paymentRequestId)
         {
             var pr = await _paymentRequestRepository.FindPaymentRequests(
                 new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
 
             if (pr.Total == 0)
             {
-                return NotFound();
+                return PaymentRequestNotFound();
             }
 
             return Ok(FromModel(pr.Items.First()));
@@ -58,13 +58,13 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyPaymentRequests,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
-        public async Task<ActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
+        public async Task<IActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
         {
             var pr = await _paymentRequestRepository.FindPaymentRequests(
                 new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId }, IncludeArchived = false });
             if (pr.Total == 0)
             {
-                return NotFound();
+                return PaymentRequestNotFound();
             }
 
             var updatedPr = pr.Items.First();
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.GreenField
                 new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
             if (pr.Total == 0)
             {
-                return NotFound();
+                return PaymentRequestNotFound();
             }
 
             var updatedPr = pr.Items.First();
@@ -163,6 +163,11 @@ namespace BTCPayServer.Controllers.GreenField
                 EmbeddedCSS = blob.EmbeddedCSS,
                 CustomCSSLink = blob.CustomCSSLink
             };
+        }
+        
+        private IActionResult PaymentRequestNotFound()
+        {
+            return this.CreateAPIError(404, "payment-request-not-found", "The payment request was not found");
         }
     }
 }

@@ -227,8 +227,6 @@ namespace BTCPayServer.Controllers.GreenField
         [AllowAnonymous]
         public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request)
         {
-            if (request is null)
-                return NotFound();
             if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");

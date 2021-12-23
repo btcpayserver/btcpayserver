@@ -116,9 +116,7 @@ namespace BTCPayServer.Security
                         success = true;
                     break;
                 case Policies.CanViewProfile:
-                    // FIXME: Is there a better way to check this?
-                    var endpoint = context.Resource as RouteEndpoint;
-                    if (endpoint?.RoutePattern?.RawText.IndexOf("Manage/", StringComparison.InvariantCultureIgnoreCase) == 0 || isAdmin)
+                    if (context.User != null)
                         success = true;
                     break;
             }

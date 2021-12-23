@@ -299,7 +299,7 @@
                         "description": "The status of the payment request",
                         "nullable": false
                     },
-                    "created": {
+                    "createdTime": {
                         "description": "The creation date of the payment request",
                         "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
                         "nullable": false

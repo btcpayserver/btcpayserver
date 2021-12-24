@@ -9,7 +9,7 @@
         <p>
             Two-Factor Authentication (2FA) is an additional measure to protect your account.
             In addition to your password you will be asked for a second proof on login.
-            This can be provided by an app (such as Google or Microsoft Authenticator) 
+            This can be provided by an app (such as Google or Microsoft Authenticator)
             or a security device (like a Yubikey or your hardware wallet supporting FIDO2).
         </p>
 
@@ -57,28 +57,28 @@
                         <h5>Disable 2FA</h5>
                         <p class="mb-0 me-3">Re-enabling will not require you to reconfigure your app.</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
+                    <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="GenerateRecoveryCodes" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Reset recovery codes" data-description="Your existing recovery codes will no longer be valid!" data-confirm="Reset" data-confirm-input="RESET">
                     <div>
                         <h5>Reset recovery codes</h5>
                         <p class="mb-0 me-3">Regenerate your 2FA recovery codes.</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
+                    <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="ResetAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Reset authenticator app" data-description="This process disables 2FA until you verify your authenticator app and will also reset your 2FA recovery codes. If you do not complete your authenticator app configuration you may lose access to your account." data-confirm="Reset" data-confirm-input="RESET">
                     <div>
                         <h5>Reset app</h5>
                         <p class="mb-0 me-3">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised.</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
+                    <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="EnableAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
                     <div>
                         <h5>Configure app</h5>
                         <p class="mb-0 me-3">Display the key or QR code to configure an authenticator app with your current setup.</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
+                    <vc:icon symbol="caret-right"/>
                 </a>
             }
             else
@@ -88,7 +88,7 @@
                         <h5>Enable 2FA</h5>
                         <p class="mb-0 me-3">Using apps such as Google or Microsoft Authenticator.</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
+                    <vc:icon symbol="caret-right"/>
                 </a>
             }
         </div>
@@ -114,7 +114,7 @@
                 <input type="text" class="form-control" name="Name" placeholder="Security device name"/>
                 <button type="submit" class="btn btn-primary">
                     <span class="fa fa-plus"></span>
-                    Add 
+                    Add
                     <span class="d-none d-md-inline-block">security device</span>
                 </button>
             </div>
@@ -122,4 +122,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Two-Factor Authentication", "Placeholder", "Placeholder"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Two-Factor Authentication", "Placeholder", "Placeholder"))"/>

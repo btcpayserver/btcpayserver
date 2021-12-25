@@ -67,7 +67,14 @@ namespace BTCPayServer.Security
                 {
                     string appId = vAppId as string;
                     app = await _appService.GetAppDataIfOwner(userId, appId);
-                    storeId ??= app?.StoreDataId;
+                    if (storeId == null)
+                    {
+                        storeId = app?.StoreDataId;
+                    }
+                    else if (app?.StoreDataId != storeId)
+                    {
+                        app = null;
+                    }
                 }
                 // resolve from payment request
                 if (routeData.Values.TryGetValue("payReqId", out var vPayReqId))

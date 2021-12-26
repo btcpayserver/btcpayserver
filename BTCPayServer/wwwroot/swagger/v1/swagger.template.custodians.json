@@ -1,0 +1,616 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "BTCPay Greenfield API - Custodian Extension",
+        "description": "Move API calls for handling custodial wallets and exchanges.",
+        "version": "v1"
+    },
+    "paths": {
+        "/api/v1/custodians": {
+            "get": {
+                "tags": [
+                    "Custodians"
+                ],
+                "summary": "Get custodians",
+                "description": "View information about the available custodians. You can install plugins to gain access to more parties.",
+                "operationId": "Custodians_GetCustodians",
+                "responses": {
+                    "200": {
+                        "description": "list of custodians",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/custodians/{custodianCode}": {
+            "get": {
+                "tags": [
+                    "Custodians"
+                ],
+                "summary": "Get custodian",
+                "parameters": [
+                    {
+                        "name": "custodianCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The custodian to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified custodian",
+                "operationId": "Custodians_GetCustodian",
+                "responses": {
+                    "200": {
+                        "description": "specified store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/store/{storeId}/custodian-accounts": {
+            "get": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "List all store custodian accounts"
+            },
+            "post": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Register a custodial account with a store.",
+                "description": "Register a custodial account with a store.",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustodianAccountData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the new custodian account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianAccountData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "TODO": true
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new custodian account"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Update a store custodian account"
+            },
+            "delete": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Delete a store custodian account"
+            }
+        },
+        "/api/v1/store/{storeId}/trade": {
+            "post": {
+                "tags": [
+                    "Custodian Account Trade"
+                ],
+                "summary": "Quick convert to fiat or other crypto",
+                "description": "Quickly trade a store's funds for fiat (or another crypto) by moving funds to the store's default custodian/exchange + trade immediately on arrival in 1 step. BTCPay Server will watch for the transfer to complete and execute the trade as soon as possible.",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TradeRequestData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the quick trade that was executed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MoveAssetResultData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "TODO"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to create trades"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade": {
+            "post": {
+                "tags": [
+                    "Custodian Account Trade"
+                ],
+                "summary": "Trade one asset for another.",
+                "description": "Trade one asset for another.",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TradeRequestData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the trade that was executed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TradeResultData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "TODO"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to create trades"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/transfer": {
+            "post": {
+                "tags": [
+                    "Custodian Account Asset Transfer"
+                ],
+                "summary": "Move an asset from or to the custodian.",
+                "description": "Move an asset from or to the custodian.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store IDs",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": false,
+                        "description": "The Custodian Account ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MoveAssetRequestData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the transfer that was executed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MoveAssetResultData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "TODO"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to move assets"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CustodianDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/CustodianData"
+                }
+            },
+            "CustodianData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CustodianData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "type": "string",
+                                "description": "The unique code of the custodian. Example: \"kraken\".",
+                                "nullable": false
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "The name of the custodian. Example: \"Kraken\".",
+                                "nullable": false
+                            },
+                            "homepage": {
+                                "type": "string",
+                                "description": "The homepage of the custodian. Example: \"https://www.kraken.com\".",
+                                "format": "url",
+                                "nullable": false
+                            },
+                            "supportedAssets": {
+                                "type": "array",
+                                "description": "A list of asset (crypto or fiat) the custodian can store. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
+                                "nullable": false
+                            },
+                            "tradeableAssetPairs": {
+                                "type": "array",
+                                "description": "A list of tradeable asset pairs, or NULL if the custodian cannot trade/convert assets. if thr asset pair contains fiat, fiat is always put last. If both assets are a cyrptocode or both are fiat, the pair is written alphabetically. Always in uppercase. Example: [\"BTC/EUR\",\"BTC/USD\", \"EUR/USD\", \"BTC/ETH\",...]",
+                                "nullable": true
+                            },
+                            "canEstimateTradeCost": {
+                                "type": "boolean",
+                                "description": "If true, this custodian supports a dry run of a trade which can be used to estimate the costs and result of the trade. This is like a dry-run of the trade.",
+                                "nullable": false
+                            },
+                            "supportsTaprootDeposits": {
+                                "type": "boolean",
+                                "description": "The custodian accepts deposits via taproot addresses.",
+                                "nullable": false
+                            },
+                            "supportsTaprootWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals to taproot addresses.",
+                                "nullable": false
+                            },
+                            "supportsSegwitDeposits": {
+                                "type": "boolean",
+                                "description": "The custodian accepts deposits via segwit addresses.",
+                                "nullable": false
+                            },
+                            "supportsSegwitWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals to segwit addresses.",
+                                "nullable": false
+                            },
+                            "supportsLightningDeposits": {
+                                "type": "boolean",
+                                "description": "The custodian accepts deposits via lightning network.",
+                                "nullable": false
+                            },
+                            "supportsLightningWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals via lightning network.",
+                                "nullable": false
+                            },
+                            "supportsLNURLPay": {
+                                "type": "boolean",
+                                "description": "The custodian accepts deposits via LNURL-Pay.",
+                                "nullable": false
+                            },
+                            "supportsLNURLWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals via LNURL-Withdraw.",
+                                "nullable": false
+                            },
+                            "supportsNonInteractiveWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals without requiring user intervention (like clicking on a link in an email).",
+                                "nullable": false
+                            },
+                            "supportsWithdrawalsToNewAddresses": {
+                                "type": "boolean",
+                                "description": "The custodian accepts withdrawals to an address that is not (yet) on a previously defined whitelist. Some exchanges only allow you to withdraw to one or more addresses that you need to enter beforehand.",
+                                "nullable": false
+                            },
+                            "hasWebhookForDeposits": {
+                                "type": "boolean",
+                                "description": "The custodian can send a webhook when a deposit is made. This way BTCPay Server does not need to poll.",
+                                "nullable": false
+                            },
+                            "hasWebhookForWithdrawals": {
+                                "type": "boolean",
+                                "description": "The custodian can send a webhook when a withdrawal is made. This way BTCPay Server does not need to poll.",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "CustodianAccountData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "accountId": {
+                        "type": "string",
+                        "description": "The unique code of the customer's account with this custodian. The format depends on the custodian."
+                    },
+                    "apiKey": {
+                        "type": "string",
+                        "description": "The API key for this account"
+                    },
+                    "assetBalances": {
+                        "type": "array",
+                        "description": "A list of assets (fiat or crypto) on this custodian and the quantity held in the account. Assets with qty 0 can be omitted.",
+                        "items": {
+                            "$ref": "#/components/schemas/LedgerEntryData"
+                        }
+                    }
+                }
+            },
+            "TradeRequestData": {
+                "type": "object",
+                "properties": {
+                    "isCostEstimate": {
+                        "type": "boolean",
+                        "description": "If true, don't execute the trade, but estimate the costs and outcome instead (dry-run)."
+                    },
+                    "fromAsset": {
+                        "type": "string",
+                        "description": "The asset to trade."
+                    },
+                    "toAsset": {
+                        "type": "string",
+                        "description": "The asset you want."
+                    },
+                    "tradeType": {
+                        "type": "string",
+                        "description": "The type of trade. Currently only \"market\" is supported, meaning an instant purchase with instant result or failure."
+                    },
+                    "qty": {
+                        "oneOf": [
+                            {
+                                "type": "number",
+                                "description": "The amount of fromAsset to convert into toAsset."
+                            },
+                            {
+                                "type": "string",
+                                "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage."
+                            }
+                        ]
+                    }
+                }
+            },
+            "TradeResultData": {
+                "type": "object",
+                "properties": {
+                    "isCostEstimate": {
+                        "type": "boolean",
+                        "description": "If true, the trade was not executed, but an estimate of the costs and outcome instead."
+                    },
+                    "fromAsset": {
+                        "type": "string",
+                        "description": "The asset to trade."
+                    },
+                    "toAsset": {
+                        "type": "string",
+                        "description": "The asset you want."
+                    },
+                    "costs": {
+                        "type": "array",
+                        "description": "The assets used to pay for the trade. This is an array and can contain multiple items if the trade involved credits or exchange tokens to give a discount.",
+                        "items": {
+                            "$ref": "#/components/schemas/LedgerEntryData"
+                        }
+                    },
+                    "tradeType": {
+                        "type": "string",
+                        "description": "The type of trade that was executed. Currently only \"market\" is supported, meaning an instant purchase with instant result or failure."
+                    },
+                    "tradeStatus": {
+                        "enum": [
+                            "Queued",
+                            "Complete"
+                        ]
+                    },
+                    "tradeId": {
+                        "type": "string",
+                        "description": "The ID of the trade/order used by the exchange.",
+                        "nullable": true
+                    },
+                    "qtyFromAsset": {
+                        "type": "number",
+                        "description": "The amount of fromAsset that was converted. Will be a negative number."
+                    },
+                    "qtyToAsset": {
+                        "type": "number",
+                        "description": "The amount of toAsset that was gained. Will be a positive number."
+                    }
+                }
+            },
+            "MoveAssetRequestData": {
+                "type": "object",
+                "properties": {
+                    "isCostEstimate": {
+                        "type": "boolean",
+                        "description": "If true, the transfer is not executed, but an estimate of the costs and outcome will be returned (dry-run)."
+                    },
+                    "storeWallet": {
+                        "enum": [
+                            "StoreOnChain",
+                            "StoreLightning"
+                        ],
+                        "description": "Which store wallet to move from or to."
+                    },
+                    "asset": {
+                        "type": "string",
+                        "description": "The asset to move."
+                    },
+                    "qty": {
+                        "oneOf": [
+                            {
+                                "type": "number",
+                                "description": "The amount of your asset to move to the custodian. A positive number is a deposit from your store wallet to the custodian. A negative number is a withdrawal from the custodian to your store wallet."
+                            },
+                            {
+                                "type": "string",
+                                "description": "The percent of your asset to move to the custodian. A positive number is a deposit from your store wallet to the custodian. A negative number is a withdrawal from the custodian to your store wallet. For the percentage to be understood, the value should end with a \"%\" sign."
+                            }
+                        ]
+                    }
+                }
+            },
+            "MoveAssetResultData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number",
+                        "description": "The ID of the asset move action as kept in BTCPay Server. Only filled if \"isCostEstimate\" is \"false\".",
+                        "nullable": true
+                    },
+                    "status": {
+                        "enum": [
+                            "Processing",
+                            "Settled",
+                            "Canceled"
+                        ]
+                    },
+                    "isCostEstimate": {
+                        "type": "boolean",
+                        "description": "If true, the transfer was not executed, but an estimate of the costs and outcome instead."
+                    },
+                    "asset": {
+                        "type": "string",
+                        "description": "The asset that was moved."
+                    },
+                    "costs": {
+                        "type": "array",
+                        "description": "The assets used to pay for the transfer. This is an array and can contain multiple items if the trade involved credits or exchange tokens to give a discount.",
+                        "items": {
+                            "$ref": "#/components/schemas/LedgerEntryData"
+                        }
+                    },
+                    "qty": {
+                        "type": "number",
+                        "description": "The amount of your asset that was moved to the custodian. A positive number is a deposit from your store wallet to the custodian. A negative number is a withdrawal from the custodian to your store wallet."
+                    }
+                }
+            },
+            "LedgerEntryData": {
+                "type": "object",
+                "description": "A single ledger entry meaning an asset and qty has changed (increased or decreased).",
+                "properties": {
+                    "asset": {
+                        "type": "string",
+                        "description": "An asset.",
+                        "nullable": false
+                    },
+                    "qty": {
+                        "type": "number",
+                        "description": "The quantity changed of the asset. Can be positive or negative.",
+                        "nullable": false
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Custodians"
+        }
+    ]
+}

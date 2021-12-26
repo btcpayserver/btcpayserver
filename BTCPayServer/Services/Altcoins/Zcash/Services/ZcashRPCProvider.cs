@@ -61,6 +61,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                 var daemonResult =
                     await daemonRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, SyncInfoResponse>("sync_info",
                         JsonRpcClient.NoRequestModel.Instance);
+
                 summary.TargetHeight = daemonResult.TargetHeight.GetValueOrDefault(0);
                 summary.CurrentHeight = daemonResult.Height;
                 summary.TargetHeight = summary.TargetHeight == 0 ? summary.CurrentHeight : summary.TargetHeight;
@@ -68,8 +69,9 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                 summary.UpdatedAt = DateTime.Now;
                 summary.DaemonAvailable = true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 summary.DaemonAvailable = false;
             }
 
@@ -114,6 +116,8 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             public DateTime UpdatedAt { get; set; }
             public bool DaemonAvailable { get; set; }
             public bool WalletAvailable { get; set; }
+
+            public override String ToString() { return String.Format("{0} {1} {2} {3} {4} {5}", Synced, CurrentHeight, TargetHeight, WalletHeight, DaemonAvailable, WalletAvailable); }
         }
     }
 }

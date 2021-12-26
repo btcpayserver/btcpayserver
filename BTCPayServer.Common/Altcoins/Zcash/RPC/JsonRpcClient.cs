@@ -35,24 +35,24 @@ namespace BTCPayServer.Services.Altcoins.Zcash.RPC
             var httpRequest = new HttpRequestMessage()
             {
                 Method = HttpMethod.Post,
-                RequestUri = new Uri(_address, "json_rpc"),
+                RequestUri = new Uri(_address, method),
                 Content = new StringContent(
-                    JsonConvert.SerializeObject(new JsonRpcCommand<TRequest>(method, data), jsonSerializer),
+                    JsonConvert.SerializeObject(data, jsonSerializer),
                     Encoding.UTF8, "application/json")
             };
-            httpRequest.Headers.Accept.Clear();
-            httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic",
-                Convert.ToBase64String(Encoding.Default.GetBytes($"{_username}:{_password}")));
+            // httpRequest.Headers.Accept.Clear();
+            // httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic",
+            //     Convert.ToBase64String(Encoding.Default.GetBytes($"{_username}:{_password}")));
 
             var rawResult = await _httpClient.SendAsync(httpRequest, cts);
 
             var rawJson = await rawResult.Content.ReadAsStringAsync();
             rawResult.EnsureSuccessStatusCode();
-            JsonRpcResult<TResponse> response;
+            TResponse response;
             try
             {
-                response = JsonConvert.DeserializeObject<JsonRpcResult<TResponse>>(rawJson, jsonSerializer);
+                response = JsonConvert.DeserializeObject<TResponse>(rawJson, jsonSerializer);
             }
             catch (Exception e)
             {
@@ -61,15 +61,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.RPC
                 throw;
             }
 
-            if (response.Error != null)
-            {
-                throw new JsonRpcApiException()
-                {
-                    Error = response.Error
-                };
-            }
-
-            return response.Result;
+            return response;
         }
 
         public class NoRequestModel

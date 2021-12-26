@@ -1,0 +1,88 @@
+version: "3"    
+
+# Run `docker-compose up dev` for bootstrapping your development environment
+# Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
+# The Visual Studio launch setting `Docker-regtest` is configured to use this environment.
+services:
+
+  tests:
+    build:
+      context: ..
+      dockerfile: BTCPayServer.Tests/Dockerfile
+      args:
+        CONFIGURATION_NAME: Altcoins-Release
+    environment:
+      TESTS_DB: "Postgres"
+      TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
+      TESTS_HOSTNAME: tests
+      TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
+      TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
+      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
+      TESTS_INCONTAINER: "true"
+      TESTS_SSHCONNECTION: "root@sshd:22"
+      TESTS_SSHPASSWORD: ""
+      TESTS_SSHKEYFILE: ""
+      TESTS_SOCKSENDPOINT: "tor:9050"
+    expose:
+      - "80"
+    links:
+      - dev
+      - selenium
+    extra_hosts: 
+      - "tests:127.0.0.1"
+    volumes:
+      - "sshd_datadir:/root/.ssh"
+
+  # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
+  dev: 
+    image: alpine:3.7
+    command: [ "/bin/sh", "-c", "trap : TERM INT; while :; do echo Ready to code and debug like a rockstar!!!; sleep 2073600; done & wait" ]
+    links:
+      - postgres
+      - sshd
+        #    - monero_wallet
+
+  sshd:
+    build:
+        context: .
+        dockerfile: sshd.Dockerfile
+    ports:
+        - "21622:22"
+    expose:
+        - 22
+    volumes:
+        - "sshd_datadir:/root/.ssh"
+
+  postgres:
+    image:  postgres:13.4
+    environment:
+        POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "39372:5432"
+    expose:
+      - "5432"
+
+  monerod:
+        image: btcpayserver/monero:0.17.0.0-amd64
+        restart: unless-stopped
+        container_name: xmr_monerod
+        entrypoint: sleep 999999
+#       entrypoint: monerod --fixed-difficulty 200 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --block-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --offline
+        volumes:
+            - "monero_data:/home/monero/.bitmonero"
+        ports:
+            - "18081:18081"
+  monero_wallet:
+      image: btcpayserver/monero:0.17.0.0-amd64
+      restart: unless-stopped
+      container_name: xmr_wallet_rpc
+      entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=monerod:18081 --wallet-file=/wallet/wallet.keys --password-file=/wallet/password --tx-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
+      ports:
+          - "18082:18082"
+      volumes:
+          - "./monero_wallet:/wallet"
+      depends_on:
+            - monerod   
+volumes:
+    sshd_datadir:
+    monero_data:

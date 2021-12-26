@@ -52,7 +52,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails, Money cryptoInfoDue, string serverUri)
         {
             return paymentMethodDetails.Activated
-                ? $"{(network as ZcashLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?tx_amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}"
+                ? $"{(network as ZcashLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}"
                 : string.Empty;
         }
 

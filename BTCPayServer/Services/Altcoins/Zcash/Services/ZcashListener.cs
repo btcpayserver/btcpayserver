@@ -88,7 +88,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                     catch (Exception e)
                     {
 
-                        _logger.LogError($"error with queue item", e);
+                        _logger.LogError($"error with queue item {e}");
                     }
                 }
                 else

@@ -58,6 +58,12 @@ services:
       - tor
       - monero_wallet
 
+  dev2: 
+    image: alpine:3.7
+    command: [ "/bin/sh", "-c", "trap : TERM INT; while :; do echo Ready to code and debug like a rockstar!!!; sleep 2073600; done & wait" ]
+    links:
+      - postgres
+
   sshd:
     build:
         context: .

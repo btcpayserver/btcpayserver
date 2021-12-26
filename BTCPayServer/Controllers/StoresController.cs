@@ -538,6 +538,7 @@ namespace BTCPayServer.Controllers
                             Enabled = isEnabled
                         });
                         break;
+
                 }
             }
         }
@@ -559,8 +560,10 @@ namespace BTCPayServer.Controllers
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.CanDelete = _Repo.CanDeleteStores();
             AddPaymentMethods(store, storeBlob, vm);
-            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
-            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
+            if (storeBlob.MonitoringExpiration.TotalMinutes > 0) 
+                vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
+            if (storeBlob.InvoiceExpiration.TotalMinutes > 0)
+                vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
             vm.PaymentTolerance = storeBlob.PaymentTolerance;
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;

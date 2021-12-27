@@ -2881,8 +2881,8 @@ namespace BTCPayServer.Tests
 
 
             //verify file is available and the same
-            var net = new System.Net.WebClient();
-            var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectUrlByFiles[fileId]));
+            using var net = new HttpClient();
+            var data = await net.GetStringAsync(new Uri(viewFilesViewModel.DirectUrlByFiles[fileId]));
             Assert.Equal(fileContent, data);
 
             //create a temporary link to file
@@ -2901,7 +2901,7 @@ namespace BTCPayServer.Tests
                 .Replace("</a>", string.Empty)
                 .Replace("target='_blank'>", string.Empty);
             //verify tmpfile is available and the same
-            data = await net.DownloadStringTaskAsync(new Uri(url));
+            data = await net.GetStringAsync(new Uri(url));
             Assert.Equal(fileContent, data);
 
 

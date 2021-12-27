@@ -91,11 +91,12 @@ namespace BTCPayServer.Controllers.GreenField
             }
             if (request.Password is null)
                 ModelState.AddModelError(nameof(request.Password), "Password is missing");
-
             if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);
             }
+            if (User.Identity is null)
+                throw new JsonHttpException(this.StatusCode(401));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -134,12 +135,12 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("### NBXplorer settings ###");
             foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
             {
-                builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
-                builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
                 if (n.SupportLightning)
                 {
-                    builder.AppendLine($"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");
-                    builder.AppendLine($"#{n.CryptoCode}.lightning=https://apitoken:API_TOKEN_SECRET@charge.example.com/");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.lightning=https://apitoken:API_TOKEN_SECRET@charge.example.com/");
                 }
             }
             return builder.ToString();

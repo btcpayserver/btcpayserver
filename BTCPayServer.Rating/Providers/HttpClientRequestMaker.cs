@@ -14,7 +14,6 @@ namespace BTCPayServer.Services.Rates
         internal class InternalHttpWebRequest : IHttpWebRequest
         {
             internal readonly HttpRequestMessage Request;
-            internal HttpResponseMessage? Response;
             private string? contentType;
 
             public InternalHttpWebRequest(string method, Uri fullUri)
@@ -132,7 +131,7 @@ namespace BTCPayServer.Services.Rates
             await api.ProcessRequestAsync(request, payload);
 
             // send the request
-            var response = request.Response;
+            HttpResponseMessage response = null;
             string responseString;
             using var cancel = new CancellationTokenSource(request.Timeout);
             try

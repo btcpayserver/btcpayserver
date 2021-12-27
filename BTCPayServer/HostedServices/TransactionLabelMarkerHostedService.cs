@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -161,7 +162,7 @@ namespace BTCPayServer.HostedServices
             var result = new StringBuilder();
             foreach (var transactionLabel in TransactionLabels)
             {
-                result.AppendLine(
+                result.AppendLine(CultureInfo.InvariantCulture,
                     $"Adding {transactionLabel.Value.Count} labels to {transactionLabel.Key} in wallet {WalletId}");
             }
 

@@ -538,7 +538,8 @@ namespace BTCPayServer.Controllers.GreenField
             derivationScheme = GetDerivationSchemeSettings(cryptoCode);
             if (derivationScheme?.AccountDerivation is null)
             {
-                actionResult = NotFound();
+                actionResult = this.CreateAPIError("not-available",
+                    $"{cryptoCode} doesn't have any derivation scheme set");
                 return true;
             }
 
@@ -546,7 +547,7 @@ namespace BTCPayServer.Controllers.GreenField
             return false;
         }
 
-        private DerivationSchemeSettings GetDerivationSchemeSettings(string cryptoCode)
+        private DerivationSchemeSettings? GetDerivationSchemeSettings(string cryptoCode)
         {
             var paymentMethod = Store
                 .GetSupportedPaymentMethods(_btcPayNetworkProvider)

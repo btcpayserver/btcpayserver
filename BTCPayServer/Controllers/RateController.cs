@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -159,7 +160,7 @@ namespace BTCPayServer.Controllers
                 if (!first)
                     currencyPairsBuilder.Append(',');
                 first = false;
-                currencyPairsBuilder.Append($"{baseCrypto}_{currencyCode}");
+                currencyPairsBuilder.Append(CultureInfo.InvariantCulture, $"{baseCrypto}_{currencyCode}");
             }
             return currencyPairsBuilder.ToString();
         }

@@ -732,9 +732,9 @@ namespace BTCPayServer.Controllers.GreenField
             return GetFromActionResult(await _storesController.GetStores());
         }
 
-        public override async Task<StoreData> GetStore(string storeId, CancellationToken token = default)
+        public override Task<StoreData> GetStore(string storeId, CancellationToken token = default)
         {
-            return GetFromActionResult<StoreData>(_storesController.GetStore(storeId));
+            return Task.FromResult(GetFromActionResult<StoreData>(_storesController.GetStore(storeId)));
         }
 
         public override async Task RemoveStore(string storeId, CancellationToken token = default)

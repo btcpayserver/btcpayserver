@@ -1,5 +1,5 @@
 # Note that we are using buster rather than bullseye. Somehow, raspberry pi 4 doesn't like bullseye.
-FROM mcr.microsoft.com/dotnet/sdk:3.1.413-buster AS builder
+FROM mcr.microsoft.com/dotnet/sdk:6.0.101-bullseye-slim AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN apt-get update \
 	&& apt-get install -qq --no-install-recommends qemu qemu-user-static qemu-user binfmt-support
@@ -25,7 +25,7 @@ ARG CONFIGURATION_NAME=Release
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration ${CONFIGURATION_NAME}
 
 # Note that we are using buster rather than bullseye. Somehow, raspberry pi 4 doesn't like bullseye.
-FROM mcr.microsoft.com/dotnet/aspnet:3.1.19-buster-slim-arm32v7
+FROM mcr.microsoft.com/dotnet/aspnet:6.0.1-bullseye-slim-arm32v7
 COPY --from=builder /usr/bin/qemu-arm-static /usr/bin/qemu-arm-static
 RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
     && rm -rf /var/lib/apt/lists/* 

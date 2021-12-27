@@ -18,7 +18,6 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
-using NUglify.Helpers;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
@@ -547,7 +546,7 @@ namespace BTCPayServer.Services.Apps
                 if (string.IsNullOrEmpty(app.Id))
                 {
                     app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
-                    app.Created = DateTimeOffset.Now;
+                    app.Created = DateTimeOffset.UtcNow;
                     await ctx.Apps.AddAsync(app);
                 }
                 else

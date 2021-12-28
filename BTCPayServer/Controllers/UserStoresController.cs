@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     [AutoValidateAntiforgeryToken]
     public class UserStoresController : Controller
     {
@@ -30,15 +29,15 @@ namespace BTCPayServer.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet]
-        [Route("create")]
+        [HttpGet("create")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public IActionResult CreateStore()
         {
             return View();
         }
 
-        [HttpPost]
-        [Route("create")]
+        [HttpPost("create")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> CreateStore(CreateStoreViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -60,6 +59,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public IActionResult DeleteStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
@@ -69,6 +69,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();
@@ -81,6 +82,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewStoreSettings)]
         public async Task<IActionResult> ListStores(
             string sortOrder = null,
             string sortOrderColumn = null
@@ -132,9 +134,6 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        private string GetUserId()
-        {
-            return _userManager.GetUserId(User);
-        }
+        private string GetUserId() => _userManager.GetUserId(User);
     }
 }

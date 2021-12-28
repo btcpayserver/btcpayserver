@@ -154,6 +154,7 @@ namespace BTCPayServer.Security
                 case Policies.CanViewProfile:
                 case Policies.CanViewNotificationsForUser:
                 case Policies.CanManageNotificationsForUser:
+                case Policies.CanModifyStoreSettingsUnscoped:
                     if (context.User != null)
                         success = true;
                     break;

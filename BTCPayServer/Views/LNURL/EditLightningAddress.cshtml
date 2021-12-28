@@ -2,7 +2,7 @@
 @using BTCPayServer.Abstractions.Extensions
 @model LNURLController.EditLightningAddressVM
 @{
-    ViewData.SetActivePage(StoreNavPages.LightningAddress, "Lightning Address", Context.GetStoreData().Id);
+    ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), "Lightning Address", Context.GetStoreData().Id);
 }
 
 @section PageHeadContent {

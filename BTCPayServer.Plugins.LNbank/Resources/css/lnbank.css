@@ -1,0 +1,17 @@
+﻿.qrcode {
+    max-width: 445px;
+}
+
+.qrcode svg {
+    display: block;
+    width: 100%;
+}
+
+main p {
+    max-width: 40em;
+}
+
+main svg[role="img"]:not(.icon) {
+    width: 1em;
+    height: 1em;
+}

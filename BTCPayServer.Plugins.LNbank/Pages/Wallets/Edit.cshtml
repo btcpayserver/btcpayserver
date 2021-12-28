@@ -1,0 +1,36 @@
+@page "/Plugins/LNbank/Wallets/{walletId}/Edit"
+@model BTCPayServer.Plugins.LNbank.Pages.Wallets.EditModel
+
+@{
+    ViewData.SetActivePage(LNbankNavPages.Wallets, "Edit your wallet");
+}
+
+<header class="d-flex align-items-center justify-content-between mb-3">
+    <h1>@ViewData["Title"]</h1>
+    <div>
+        <a asp-page="./Delete" asp-route-walletId="@Model.Wallet.WalletId" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center mx-1">
+            <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#delete"></use></svg>
+            Delete
+        </a>
+    </div>
+</header>
+
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Wallet.Name" class="form-label"></label>
+                <input asp-for="Wallet.Name" class="form-control" />
+                <small asp-validation-for="Wallet.Name" class="form-text text-danger"></small>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<p>
+    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>
+</p>

@@ -1,0 +1,15 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+@section PageHeadContent {
+    <partial name="_LayoutLNbankHead" />
+    @await RenderSectionAsync("Styles", false)
+}
+
+@section PageFootContent {
+    <partial name="_LayoutLNbankFoot" />
+    @await RenderSectionAsync("Scripts", false)
+}
+
+@RenderBody()

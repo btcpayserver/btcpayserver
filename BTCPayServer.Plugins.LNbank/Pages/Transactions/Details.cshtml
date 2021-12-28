@@ -1,0 +1,79 @@
+@page "/Plugins/LNbank/Wallets/{walletId}/Transactions/Details/{transactionId}"
+@using BTCPayServer.Lightning
+@using System.Globalization
+@model BTCPayServer.Plugins.LNbank.Pages.Transactions.DetailsModel
+
+@{
+    ViewData.SetActivePage(LNbankNavPages.Transactions, Model.Transaction.Description);
+}
+
+<header class="d-flex align-items-center justify-content-between mb-3">
+    <h1>@ViewData["Title"]</h1>
+    <div>
+        <a asp-page="./Edit" asp-route-walletId="@Model.WalletId" asp-route-transactionId="@Model.Transaction.TransactionId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1">
+            <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#edit"></use></svg>
+            Edit
+        </a>
+    </div>
+</header>
+
+<div class="mb-4">
+    @if (Model.Transaction.IsPaid)
+    {
+        <h2 class="text-@(Model.Transaction.AmountSettled > 0 ? "success" : "danger")">
+            @Model.Transaction.AmountSettled.ToUnit(LightMoneyUnit.Satoshi)
+            sats
+            @Model.Transaction.Status
+        </h2>
+        <h3 class="h4 text-muted">
+            Paid
+            <time datetime="@Model.Transaction.PaidAt?.ToString("o", CultureInfo.InvariantCulture)">
+                @Model.Transaction.PaidAt?.ToTimeAgo()
+            </time>
+        </h3>
+    }
+    else
+    {
+        <h2 class="text-@(Model.Transaction.IsExpired ? "info" : "warning")">
+            @Model.Transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
+            sats
+            @Model.Transaction.Status
+        </h2>
+        <h3 class="h4 text-muted">
+            @(Model.Transaction.IsExpired ? "Expired" : "Expires")
+            <time datetime="@Model.Transaction.ExpiresAt.ToString("o", CultureInfo.InvariantCulture)">
+                @Model.Transaction.ExpiresAt.ToTimeAgo()
+            </time>
+        </h3>
+
+        @if (!Model.Transaction.IsExpired)
+        {
+            <div class="mt-4">
+                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest">Copy payment request</button>
+                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })">Copy public share URL</button>
+            </div>
+            
+            <div class="qrcode my-4">
+                @await Component.InvokeAsync("QRCode", new { data = Model.Transaction.PaymentRequest })
+            </div>
+
+            <script>
+                window.LNbankHubs = window.LNbankHubs || []
+                window.LNbankHubs.push({
+                    id: 'Transaction',
+                    handlers: {
+                        'transaction-update': data => {
+                            if (data.transactionId === "@Model.Transaction.TransactionId") {
+                                window.location.reload();
+                            }
+                        }
+                    }
+                })
+            </script>
+        }
+    }
+</div>
+
+<p>
+    <a asp-page="/Wallets/Index" asp-route-walletId="@Model.WalletId" class="text-secondary">Back to Wallet</a>
+</p>

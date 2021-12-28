@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{1FC7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.PluginPacker", "BTCPayServer.PluginPacker\BTCPayServer.PluginPacker.csproj", "{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.LNbank", "BTCPayServer.Plugins.LNbank\BTCPayServer.Plugins.LNbank.csproj", "{8A4E2012-B044-44B2-BF79-8F745FFB7527}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Altcoins-Debug|Any CPU = Altcoins-Debug|Any CPU
@@ -269,6 +271,30 @@ Global
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x64.Build.0 = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.ActiveCfg = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|x64.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Debug|x86.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|Any CPU.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|x64.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|x64.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|x86.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Altcoins-Release|x86.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|x64.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Debug|x86.Build.0 = Debug|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|x64.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|x64.Build.0 = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|x86.ActiveCfg = Release|Any CPU
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -279,5 +305,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
+		{8A4E2012-B044-44B2-BF79-8F745FFB7527} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,85 @@
+@page "/Plugins/LNbank/TX/{transactionId}"
+@using BTCPayServer.Lightning
+@using System.Globalization
+@model BTCPayServer.Plugins.LNbank.Pages.Transactions.ShareModel
+
+@{
+    Layout = "_LayoutSimple";
+    ViewData.SetActivePage(LNbankNavPages.Share, Model.Transaction.Description);
+}
+
+@section PageHeadContent {
+    <partial name="_LayoutLNbankHead" />
+}
+
+@section PageFootContent {
+    <partial name="_LayoutLNbankFoot" />
+}
+
+<main role="main" class="pb-3">
+    <div class="row justify-content-center mb-2">
+        <div class="col text-center">
+            <a  asp-controller="Home" asp-action="Index" tabindex="-1">
+                <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+            </a>
+            <h1 class="h2 mb-3">LNbank</h1>
+        </div>
+    </div>
+    <div class="row justify-content-center mb-5">
+        <div class="col account-form">
+            <div class="text-center">
+                @if (Model.Transaction.IsPaid)
+                {
+                    <h2 class="text-success">
+                        @Model.Transaction.AmountSettled.ToUnit(LightMoneyUnit.Satoshi)
+                        sats
+                        @Model.Transaction.Status
+                    </h2>
+                    <h3 class="h4 text-muted">
+                        Paid
+                        <time datetime="@Model.Transaction.PaidAt?.ToString("o", CultureInfo.InvariantCulture)">
+                            @Model.Transaction.PaidAt?.ToTimeAgo()
+                        </time>
+                    </h3>
+                }
+                else
+                {
+                    <h2 class="text-@(Model.Transaction.IsExpired ? "danger" : "warning")">
+                        @Model.Transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
+                        sats
+                        @Model.Transaction.Status
+                    </h2>
+                    <h3 class="h4 text-muted">
+                        @(Model.Transaction.IsExpired ? "Expired" : "Expires")
+                        <time datetime="@Model.Transaction.ExpiresAt.ToString("o", CultureInfo.InvariantCulture)">
+                            @Model.Transaction.ExpiresAt.ToTimeAgo()
+                        </time>
+                    </h3>
+            
+                    @if (!Model.Transaction.IsExpired)
+                    {
+                        <button class="btn btn-primary mt-4" type="button" data-clipboard="@Model.Transaction.PaymentRequest">Copy payment request</button>
+                                                                                                                                           
+                        <div class="qrcode d-inline-block my-4">
+                            @await Component.InvokeAsync("QRCode", new { data = Model.Transaction.PaymentRequest })
+                        </div>
+            
+                        <script>
+                            window.LNbankHubs = window.LNbankHubs || []
+                            window.LNbankHubs.push({
+                                id: 'Transaction',
+                                handlers: {
+                                    'transaction-update': data => {
+                                        if (data.transactionId === "@Model.Transaction.TransactionId") {
+                                            window.location.reload();
+                                        }
+                                    }
+                                }
+                            })
+                        </script>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</main>

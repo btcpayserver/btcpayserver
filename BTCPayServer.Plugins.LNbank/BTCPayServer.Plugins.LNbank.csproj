@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <PreserveCompilationContext>false</PreserveCompilationContext>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <Title>LNbank</Title>
+    <Authors>d11n</Authors>
+    <Description>Use the BTCPay Server Lightning node in custodial mode and give users access via custodial layer 3 wallets.</Description>
+    <PackageProjectUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</RepositoryUrl>
+    <LangVersion>10</LangVersion>
+    <PackageVersion></PackageVersion>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
+    <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
+    <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
+    <EmbeddedResource Include="Resources\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

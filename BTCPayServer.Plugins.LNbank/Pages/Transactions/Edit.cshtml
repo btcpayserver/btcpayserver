@@ -1,0 +1,30 @@
+@page "/Plugins/LNbank/Wallets/{walletId}/Transactions/Edit/{transactionId}"
+@model BTCPayServer.Plugins.LNbank.Pages.Transactions.EditModel
+
+@{
+    ViewData.SetActivePage(LNbankNavPages.Transactions, "Edit your transaction");
+}
+
+<header class="mb-3">
+    <h1>@ViewData["Title"]</h1>
+</header>
+
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Transaction.Description" class="form-label"></label>
+                <input asp-for="Transaction.Description" class="form-control" />
+                <small asp-validation-for="Transaction.Description" class="form-text text-danger"></small>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<p>
+    <a asp-page="/Wallets/Index" asp-route-walletId="@Model.WalletId" class="text-secondary">Back to Wallet</a>
+</p>

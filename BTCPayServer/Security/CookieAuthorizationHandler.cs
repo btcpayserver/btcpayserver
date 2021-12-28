@@ -11,8 +11,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Security
@@ -56,7 +54,15 @@ namespace BTCPayServer.Security
             AppData app = null;
             InvoiceEntity invoice = null;
             PaymentRequestData paymentRequest = null;
-            string storeId = context.Resource is string s ? s : _httpContext.GetImplicitStoreId();
+            string storeId;
+            var explicitResource = false;
+            if (context.Resource is string s)
+            {
+                explicitResource = true;
+                storeId = s;
+            }
+            else
+                storeId = _httpContext.GetImplicitStoreId();
             var routeData = _httpContext.GetRouteData();
             if (routeData != null)
             {
@@ -141,15 +147,18 @@ namespace BTCPayServer.Security
             if (success)
             {
                 context.Succeed(requirement);
-                store = await storeT.Value;
-                if (store != null)
+                if (!explicitResource)
                 {
-                    _httpContext.SetStoreData(store);
-                    
-                    // cache associated entities if present
-                    if (app != null) _httpContext.SetAppData(app);
-                    if (invoice != null) _httpContext.SetInvoiceData(invoice);
-                    if (paymentRequest != null) _httpContext.SetPaymentRequestData(paymentRequest);
+                    store = await storeT.Value;
+                    if (store != null)
+                    {
+                        _httpContext.SetStoreData(store);
+
+                        // cache associated entities if present
+                        if (app != null) _httpContext.SetAppData(app);
+                        if (invoice != null) _httpContext.SetInvoiceData(invoice);
+                        if (paymentRequest != null) _httpContext.SetPaymentRequestData(paymentRequest);
+                    }
                 }
             }
         }

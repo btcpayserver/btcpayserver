@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -14,22 +15,19 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     [AutoValidateAntiforgeryToken]
-    public partial class UserStoresController : Controller
+    public class UserStoresController : Controller
     {
-        private readonly StoreRepository _Repo;
-        private readonly BTCPayNetworkProvider _NetworkProvider;
-        private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly StoreRepository _repo;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
-            BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository)
         {
-            _Repo = storeRepository;
-            _NetworkProvider = networkProvider;
-            _UserManager = userManager;
+            _repo = storeRepository;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -47,7 +45,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
-            var store = await _Repo.CreateStore(GetUserId(), vm.Name);
+            var store = await _repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(StoresController.PaymentMethods), "Stores", new
@@ -77,7 +75,7 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            await _Repo.RemoveStore(storeId, userId);
+            await _repo.RemoveStore(storeId, userId);
             TempData[WellKnownTempData.SuccessMessage] = "Store removed successfully";
             return RedirectToAction(nameof(ListStores));
         }
@@ -89,7 +87,7 @@ namespace BTCPayServer.Controllers
         )
         {
             StoresViewModel result = new StoresViewModel();
-            var stores = await _Repo.GetStoresByUserId(GetUserId());
+            var stores = await _repo.GetStoresByUserId(GetUserId());
             if (sortOrder != null && sortOrderColumn != null) 
             {
                 stores = stores.OrderByDescending(store => 
@@ -136,7 +134,7 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId()
         {
-            return _UserManager.GetUserId(User);
+            return _userManager.GetUserId(User);
         }
     }
 }

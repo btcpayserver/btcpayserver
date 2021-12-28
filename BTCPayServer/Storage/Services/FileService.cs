@@ -78,7 +78,7 @@ namespace BTCPayServer.Storage.Services
 
         private IStorageProviderService GetProvider(StorageSettings storageSettings)
         {
-            return _providers.FirstOrDefault((service) => service.StorageProvider().Equals(storageSettings.Provider));
+            return _providers.First((service) => service.StorageProvider().Equals(storageSettings.Provider));
         }
     }
 }

@@ -101,6 +101,17 @@ namespace BTCPayServer.Tests
         {
             driver.ExecuteJavaScript($"document.getElementById('{collapseId}').classList.add('show')");
         }
+        
+        
+
+        public static void SetAttribute(this IWebDriver driver, string element, string attribute, string value)
+        {
+            driver.ExecuteJavaScript($"document.getElementById('{element}').setAttribute('{attribute}', '{value}')");
+        }
+        public static void InvokeJSFunction(this IWebDriver driver, string element, string funcName)
+        {
+            driver.ExecuteJavaScript($"document.getElementById('{element}').{funcName}()");
+        }
 
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {

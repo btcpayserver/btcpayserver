@@ -16,6 +16,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
@@ -1555,6 +1556,31 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanSigninWithLoginCode()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            var user = s.RegisterNewUser();
+            s.GoToProfile(ManageNavPages.LoginCodes);
+            var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
+            s.Driver.FindElement(By.Id("regeneratecode")).Click();
+            Assert.NotEqual(code, s.Driver.FindElement(By.Id("logincode")).GetAttribute("value"));
+            
+            code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
+            s.Logout();
+            s.GoToLogin();
+            s.Driver.SetAttribute("LoginCode", "value", "bad code");
+            s.Driver.InvokeJSFunction("logincode-form", "submit");
+            
+            
+            s.Driver.SetAttribute("LoginCode", "value", code);
+            s.Driver.InvokeJSFunction("logincode-form", "submit");
+            s.GoToProfile();
+            Assert.Contains(user, s.Driver.PageSource);
+        }
+        
 
         // For god know why, selenium have problems clicking on the save button, resulting in ultimate hacks
         // to make it works.

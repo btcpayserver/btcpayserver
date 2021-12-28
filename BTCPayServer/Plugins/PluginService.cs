@@ -63,7 +63,10 @@ namespace BTCPayServer.Plugins
             }
             var filedest = Path.Join(dest, ext.Name);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            new WebClient().DownloadFile(new Uri(ext.DownloadUrl), filedest);
+            using var resp2 = await _githubClient.GetAsync(ext.DownloadUrl);
+            using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
+            await resp2.Content.CopyToAsync(fs);
+            await fs.FlushAsync();
         }
 
         public void InstallPlugin(string plugin)

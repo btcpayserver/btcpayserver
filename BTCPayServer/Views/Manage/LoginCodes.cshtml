@@ -1,0 +1,37 @@
+@model string
+@{
+    ViewData.SetActivePage(ManageNavPages.LoginCodes, "Login codes");
+}
+<h2 class="mb-4">@ViewData["Title"]</h2>
+<p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
+<div class="d-inline-flex flex-column qr-container" style="width:256px">
+    <vc:qr-code data="@Model" /> 
+    <input type="hidden" value="@Model" id="logincode">
+    <p class="text-center text-muted mb-1" id="progress">Valid for 60 seconds</p>
+    <div class="progress only-for-js" data-bs-toggle="tooltip" data-bs-placement="top">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:100%" id="progressbar"></div>
+    </div>
+    <a class="btn btn-secondary mt-3" id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
+</div>
+
+@section PageFootContent
+{
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
+        const SECONDS = 60
+        const progress = document.getElementById('progress')
+        const progressbar = document.getElementById('progressbar')
+        let remaining = SECONDS
+        const update = () => {
+            remaining--
+            const percent = Math.round(remaining/SECONDS * 100)
+            progress.innerText = `Valid for ${remaining} seconds`
+            progressbar.style.width = `${percent}%`
+            if (percent < 15) progressbar.classList.add('bg-warning')
+            if (percent < 1) document.getElementById('regeneratecode').click()
+        }
+        setInterval(update, 1000)
+        update()
+    </script>
+}

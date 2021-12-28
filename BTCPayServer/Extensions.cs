@@ -91,7 +91,7 @@ namespace BTCPayServer
                 builder.Append(expiration.Days.ToString(CultureInfo.InvariantCulture));
             if (expiration.Hours >= 1)
                 builder.Append(expiration.Hours.ToString("00", CultureInfo.InvariantCulture));
-            builder.Append($"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
+            builder.Append(CultureInfo.InvariantCulture, $"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
             return builder.ToString();
         }
         public static decimal RoundUp(decimal value, int precision)

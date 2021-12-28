@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -33,6 +34,7 @@ namespace BTCPayServer.Controllers
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly Fido2Service _fido2Service;
+        private readonly UserLoginCodeService _userLoginCodeService;
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
 
@@ -47,6 +49,7 @@ namespace BTCPayServer.Controllers
             BTCPayServerEnvironment btcPayServerEnvironment,
             EventAggregator eventAggregator,
             Fido2Service fido2Service,
+            UserLoginCodeService userLoginCodeService,
             Logs logs)
         {
             _userManager = userManager;
@@ -56,6 +59,7 @@ namespace BTCPayServer.Controllers
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
+            _userLoginCodeService = userLoginCodeService;
             _eventAggregator = eventAggregator;
             _logger = logs.PayServer;
             Logs = logs;
@@ -73,7 +77,6 @@ namespace BTCPayServer.Controllers
         [Route("~/Account/Login", Order = 2)]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
-
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
@@ -85,12 +88,35 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(new LoginViewModel()
-            {
-                Email = email
-            });
+            return View(nameof(Login), new LoginViewModel() { Email = email });
         }
 
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("~/login/code", Order = 1)]
+        [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+
+        public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
+        {
+            if (!string.IsNullOrEmpty(loginCode))
+            {
+                var userId = _userLoginCodeService.Verify(loginCode);
+                if (userId is null)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Login code was invalid");
+                    return await Login(returnUrl, null);
+                } 
+                var user = await _userManager.FindByIdAsync(userId); 
+
+                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
+                await _signInManager.SignInAsync(user, false, "LoginCode");
+                return RedirectToLocal(returnUrl);
+            }
+            return await Login(returnUrl, null);
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -104,6 +130,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
+
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -123,7 +150,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return View(model);
                 }
-
+               
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
                 if (!await _userManager.IsLockedOutAsync(user) &&  fido2Devices)
                 {

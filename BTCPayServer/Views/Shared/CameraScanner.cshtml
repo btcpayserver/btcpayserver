@@ -39,8 +39,8 @@
             <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]"/>
             
         </div>
-        <div v-if="isLoaded && requestInput && cameras.length >2" class="d-flex justify-content-center align-items-center">
-                        <button class="btn btn-link text-center" v-on:click="nextCamera">Switch camera</button>
+        <div v-if="isLoaded && requestInput && cameras.length > 2" class="d-flex justify-content-center align-items-center mt-3">
+            <button class="btn btn-secondary text-center" v-on:click="nextCamera">Switch camera</button>
         </div>
         <div v-else-if="qrData || errorMessage">
             <div v-if="errorMessage" class="alert alert-danger" role="alert">
@@ -107,13 +107,12 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		},
 		methods: {
 		    nextCamera: function (){
-		        if (this.camera == 0){
+		        if (this.camera === 0){
 		            this.camera++;
-		        }else if(this.camera == this.cameras.length -1){
-		                    
-		            this.camera = 1;
-		        }else{
-		            this.camera ++;
+		        } else if (this.camera == this.cameras.length -1) {
+		            this.camera = 0;
+		        } else {
+		            this.camera++;
 		        }
 		        
 		    },

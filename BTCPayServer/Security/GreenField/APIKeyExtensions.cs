@@ -14,13 +14,13 @@ namespace BTCPayServer.Security.GreenField
     {
         public static bool GetAPIKey(this HttpContext httpContext, out StringValues apiKey)
         {
+            apiKey = default;
             if (httpContext.Request.Headers.TryGetValue("Authorization", out var value) &&
                 value.ToString().StartsWith("token ", StringComparison.InvariantCultureIgnoreCase))
             {
                 apiKey = value.ToString().Substring("token ".Length);
                 return true;
             }
-
             return false;
         }
 

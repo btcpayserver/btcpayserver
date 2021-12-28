@@ -19,11 +19,6 @@ namespace BTCPayServer.ModelBinders
                 return Task.CompletedTask;
             }
             ValueProviderResult val = bindingContext.ValueProvider.GetValue(bindingContext.ModelName);
-            if (val == null)
-            {
-                return Task.CompletedTask;
-            }
-
             string v = val.FirstValue as string;
             if (v == null)
             {

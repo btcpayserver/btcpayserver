@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,11 @@ namespace BTCPayServer.Components.QRCode
 
         public IViewComponentResult Invoke(string data)
         {
-            
             QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
-            SvgQRCode qrCode = new SvgQRCode(qrCodeData);
-            return new HtmlContentViewComponentResult(new HtmlString(qrCode.GetGraphic(new Size(256,256), "#000", "#f5f5f7", true, SvgQRCode.SizingMode.ViewBoxAttribute)));
+            PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+            var bytes = qrCode.GetGraphic(5, new byte[] { 0, 0, 0, 255 }, new byte[] { 0xf5, 0xf5, 0xf7, 255 }, true);
+            var b64 = Convert.ToBase64String(bytes);
+            return new HtmlContentViewComponentResult(new HtmlString($"<img height=\"256\" style=\"image-rendering: pixelated;image-rendering: -moz-crisp-edges;\" src=\"data:image/png;base64,{b64}\" />"));
         }
     }
 }

@@ -24,7 +24,9 @@ namespace BTCPayServer.Abstractions.Contracts
 
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
+#pragma warning disable EF1001 // Internal EF Core API usage.
+            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, opts)
+#pragma warning restore EF1001 // Internal EF Core API usage.
             {
             }
 
@@ -90,7 +92,7 @@ namespace BTCPayServer.Abstractions.Contracts
                         .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
                     break;
                 case DatabaseType.MySQL:
-                    builder.UseMySql(_options.Value.ConnectionString, o =>
+                    builder.UseMySql(_options.Value.ConnectionString, ServerVersion.AutoDetect(_options.Value.ConnectionString), o =>
                     {
                         o.EnableRetryOnFailure(10);
                             

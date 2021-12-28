@@ -310,7 +310,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<HostedServices.WebhookNotificationManager>();
             services.AddSingleton<IHostedService, WebhookNotificationManager>(o => o.GetRequiredService<WebhookNotificationManager>());
             services.AddHttpClient(WebhookNotificationManager.OnionNamedClient)
-                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             
 
@@ -318,7 +317,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
             
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
-                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());

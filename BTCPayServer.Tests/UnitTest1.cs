@@ -60,6 +60,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
+using NBitcoin.Socks;
 using NBitpayClient;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -655,15 +656,6 @@ namespace BTCPayServer.Tests
             using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
-                var proxy = tester.PayTester.GetService<Socks5HttpProxyServer>();
-                void AssertConnectionDropped()
-                {
-                    TestUtils.Eventually(() =>
-                    {
-                        Thread.MemoryBarrier();
-                        Assert.Equal(0, proxy.ConnectionCount);
-                    });
-                }
                 var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
                 var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 Assert.NotNull(client);
@@ -672,42 +664,23 @@ namespace BTCPayServer.Tests
                 var result = await response.Content.ReadAsStringAsync();
                 Assert.DoesNotContain("You are not using Tor.", result);
                 Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
-                AssertConnectionDropped();
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
                 result = await response.Content.ReadAsStringAsync();
                 Assert.Contains("Bitcoin", result);
 
-                AssertConnectionDropped();
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
-                AssertConnectionDropped();
                 client.Dispose();
-                AssertConnectionDropped();
                 client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
-                AssertConnectionDropped();
 
                 TestLogs.LogInformation("Querying an onion address which can't be found should send http 500");
-                response = await client.GetAsync("http://dwoduwoi.onion/");
-                Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-                AssertConnectionDropped();
+                await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://dwoduwoi.onion/"));
 
                 TestLogs.LogInformation("Querying valid onion but unreachable should send error 502");
-                using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-                {
-                    try
-                    {
-                        response = await client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/", cts.Token);
-                        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
-                        AssertConnectionDropped();
-                    }
-                    catch when (cts.Token.IsCancellationRequested)
-                    {
-                        TestLogs.LogInformation("Skipping this test, it timed out");
-                    }
-                }
+                await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/"));
             }
         }
 

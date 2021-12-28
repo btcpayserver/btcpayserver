@@ -130,7 +130,7 @@ namespace BTCPayServer.Security
                     success = true;
                     if (usedCookieFallback)
                     {
-                        storeId = null;
+                        storeT = new AsyncLazy<StoreData>(() => Task.FromResult<StoreData>(null));
                     }
                     break;
                 case Policies.CanCreateInvoice:

@@ -794,11 +794,11 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
-                acc.GrantAccess();
+                await acc.GrantAccessAsync();
                 acc.RegisterDerivationScheme("BTC");
                 // First we try payment with a merchant having only BTC
-                var invoice = acc.BitPay.CreateInvoice(
-                    new Invoice()
+                var invoice = await acc.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 500,
                         Currency = "USD",
@@ -811,21 +811,22 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
-                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
                 TestUtils.Eventually(() =>
                 {
                     invoice = acc.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
                 });
 
-
+                AssertSearchInvoice(acc, true, invoice.Id, null);
+                AssertSearchInvoice(acc, true, invoice.Id, null, acc.StoreId);
                 AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
-                AssertSearchInvoice(acc, false, invoice.Id, $"storeid:blah");
+                AssertSearchInvoice(acc, false, invoice.Id, "storeid:doesnotexist");
                 AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
-                AssertSearchInvoice(acc, true, invoice.Id, $"exceptionstatus:paidPartial");
-                AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
-                AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
-                AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+                AssertSearchInvoice(acc, true, invoice.Id, "exceptionstatus:paidPartial");
+                AssertSearchInvoice(acc, false, invoice.Id, "exceptionstatus:paidOver");
+                AssertSearchInvoice(acc, true, invoice.Id, "unusual:true");
+                AssertSearchInvoice(acc, false, invoice.Id, "unusual:false");
 
                 var time = invoice.InvoiceTime;
                 AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
@@ -929,11 +930,11 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
+        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter, string storeId = null)
         {
             var result =
                 (InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
-                    .ListInvoices(new InvoicesModel { SearchTerm = filter }).Result).Model;
+                    .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
 

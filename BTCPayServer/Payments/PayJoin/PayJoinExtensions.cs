@@ -13,14 +13,11 @@ namespace BTCPayServer.Payments.PayJoin
         {
             services.AddSingleton<DelayedTransactionBroadcaster>();
             services.AddSingleton<IHostedService, HostedServices.DelayedTransactionBroadcasterHostedService>();
-            services.AddSingleton<HostedServices.Socks5HttpProxyServer>();
-            services.AddSingleton<IHostedService, HostedServices.Socks5HttpProxyServer>(s => s.GetRequiredService<Socks5HttpProxyServer>());
             services.AddSingleton<PayJoinRepository>();
             services.AddSingleton<IPayjoinServerCommunicator, PayjoinServerCommunicator>();
             services.AddSingleton<PayjoinClient>();
             services.AddTransient<Socks5HttpClientHandler>();
             services.AddHttpClient(PayjoinServerCommunicator.PayjoinOnionNamedClient)
-                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
         }
     }

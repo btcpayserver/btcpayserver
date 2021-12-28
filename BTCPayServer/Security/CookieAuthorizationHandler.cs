@@ -91,12 +91,19 @@ namespace BTCPayServer.Security
             }
             
             // Fall back to user prefs cookie
-            storeId ??= _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
-            
-            var store = storeId != null
-                ? await _storeRepository.FindStore(storeId, userId)
-                : null;
+            var usedCookieFallback = false;
+            if (storeId == null)
+            {
+                storeId = _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
+                usedCookieFallback = true;
+            }
 
+            var storeT = new AsyncLazy<StoreData>(() => storeId != null
+                ? _storeRepository.FindStore(storeId, userId)
+                : Task.FromResult<StoreData>(null));
+
+
+            StoreData store;
             switch (requirement.Policy)
             {
                 case Policies.CanModifyServerSettings:
@@ -104,14 +111,24 @@ namespace BTCPayServer.Security
                         success = true;
                     break;
                 case Policies.CanModifyStoreSettings:
+                    store = await storeT.Value;
                     if (store != null && (store.Role == StoreRoles.Owner || isAdmin))
                         success = true;
                     break;
                 case Policies.CanViewStoreSettings:
+                    store = await storeT.Value;
                     if (store != null || isAdmin)
                         success = true;
                     break;
+                case Policies.CanViewInvoices:
+                    success = true;
+                    if (usedCookieFallback)
+                    {
+                        storeId = null;
+                    }
+                    break;
                 case Policies.CanCreateInvoice:
+                    store = await storeT.Value;
                     if (store != null || isAdmin)
                         success = true;
                     break;
@@ -124,7 +141,7 @@ namespace BTCPayServer.Security
             if (success)
             {
                 context.Succeed(requirement);
-                
+                store = await storeT.Value;
                 if (store != null)
                 {
                     _httpContext.SetStoreData(store);
@@ -136,5 +153,14 @@ namespace BTCPayServer.Security
                 }
             }
         }
+    }
+    
+    public class AsyncLazy<T> : Lazy<Task<T>>
+    {
+        public AsyncLazy(Func<T> valueFactory) :
+            base(() => Task.Factory.StartNew(valueFactory)) { }
+
+        public AsyncLazy(Func<Task<T>> taskFactory) :
+            base(() => Task.Factory.StartNew(taskFactory).Unwrap()) { }
     }
 }

@@ -85,14 +85,28 @@ namespace BTCPayServer.Security
                 {
                     string payReqId = vPayReqId as string;
                     paymentRequest = await _paymentRequestRepository.FindPaymentRequest(payReqId, userId);
-                    storeId ??= paymentRequest?.StoreDataId;
+                    if (storeId == null)
+                    {
+                        storeId = paymentRequest?.StoreDataId;
+                    }
+                    else if (paymentRequest?.StoreDataId != storeId)
+                    {
+                        paymentRequest = null;
+                    }
                 }
                 // resolve from invoice
                 if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId))
                 {
                     string invoiceId = vInvoiceId as string;
                     invoice = await _invoiceRepository.GetInvoice(invoiceId);
-                    storeId ??= invoice?.StoreId;
+                    if (storeId == null)
+                    {
+                        storeId = invoice?.StoreId;
+                    }
+                    else if (invoice?.StoreId != storeId)
+                    {
+                        invoice = null;
+                    }
                 }
             }
             
@@ -107,7 +121,6 @@ namespace BTCPayServer.Security
             var storeT = new AsyncLazy<StoreData>(() => storeId != null
                 ? _storeRepository.FindStore(storeId, userId)
                 : Task.FromResult<StoreData>(null));
-
 
             StoreData store;
             switch (requirement.Policy)

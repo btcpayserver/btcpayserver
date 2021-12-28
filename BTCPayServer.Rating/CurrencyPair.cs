@@ -7,10 +7,8 @@ namespace BTCPayServer.Rating
     {
         public CurrencyPair(string left, string right)
         {
-            if (right == null)
-                throw new ArgumentNullException(nameof(right));
-            if (left == null)
-                throw new ArgumentNullException(nameof(left));
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(left);
             Right = right.ToUpperInvariant();
             Left = left.ToUpperInvariant();
         }
@@ -25,8 +23,7 @@ namespace BTCPayServer.Rating
         }
         public static bool TryParse(string str, out CurrencyPair value)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             value = null;
             str = str.Trim();
             if (str.Length > 12)

@@ -33,8 +33,7 @@ namespace BTCPayServer.Services
             Data.ApplicationDbContextFactory dbContextFactory,
             Logs logs)
         {
-            if (explorerClientProvider == null)
-                throw new ArgumentNullException(nameof(explorerClientProvider));
+            ArgumentNullException.ThrowIfNull(explorerClientProvider);
             _networkProvider = networkProvider;
             _explorerClientProvider = explorerClientProvider;
             _dbContextFactory = dbContextFactory;
@@ -43,10 +42,8 @@ namespace BTCPayServer.Services
 
         public async Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)
         {
-            if (transaction == null)
-                throw new ArgumentNullException(nameof(transaction));
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(transaction);
+            ArgumentNullException.ThrowIfNull(network);
             using (var db = _dbContextFactory.CreateContext())
             {
                 db.PlannedTransactions.Add(new PlannedTransaction()

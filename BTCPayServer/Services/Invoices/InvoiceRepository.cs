@@ -114,8 +114,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<AppData[]> GetAppsTaggingStore(string storeId)
         {
-            if (storeId == null)
-                throw new ArgumentNullException(nameof(storeId));
+            ArgumentNullException.ThrowIfNull(storeId);
             using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();

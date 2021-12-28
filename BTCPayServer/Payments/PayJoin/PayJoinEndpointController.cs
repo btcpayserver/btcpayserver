@@ -59,10 +59,8 @@ namespace BTCPayServer.Payments.PayJoin
             public static UTXODeterministicComparer Instance => _Instance;
             public int Compare([AllowNull] UTXO x, [AllowNull] UTXO y)
             {
-                if (x == null)
-                    throw new ArgumentNullException(nameof(x));
-                if (y == null)
-                    throw new ArgumentNullException(nameof(y));
+                ArgumentNullException.ThrowIfNull(x);
+                ArgumentNullException.ThrowIfNull(y);
                 Span<byte> tmpx = stackalloc byte[32];
                 Span<byte> tmpy = stackalloc byte[32];
                 x.Outpoint.Hash.ToBytes(tmpx);

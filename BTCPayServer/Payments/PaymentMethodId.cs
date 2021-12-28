@@ -13,17 +13,14 @@ namespace BTCPayServer.Payments
     {
         public PaymentMethodId? FindNearest(PaymentMethodId[] others)
         {
-            if (others is null)
-                throw new ArgumentNullException(nameof(others));
+            ArgumentNullException.ThrowIfNull(others);
             return others.FirstOrDefault(f => f == this) ??
                    others.FirstOrDefault(f => f.CryptoCode == CryptoCode);
         }
         public PaymentMethodId(string cryptoCode, PaymentType paymentType)
         {
-            if (cryptoCode == null)
-                throw new ArgumentNullException(nameof(cryptoCode));
-            if (paymentType == null)
-                throw new ArgumentNullException(nameof(paymentType));
+            ArgumentNullException.ThrowIfNull(cryptoCode);
+            ArgumentNullException.ThrowIfNull(paymentType);
             PaymentType = paymentType;
             CryptoCode = cryptoCode.ToUpperInvariant();
         }

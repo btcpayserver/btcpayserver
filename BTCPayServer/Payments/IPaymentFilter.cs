@@ -83,16 +83,13 @@ namespace BTCPayServer.Payments
         }
         public static IPaymentFilter Where(Func<PaymentMethodId, bool> predicate)
         {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
+            ArgumentNullException.ThrowIfNull(predicate);
             return new PredicateFilter(predicate);
         }
         public static IPaymentFilter Or(IPaymentFilter a, IPaymentFilter b)
         {
-            if (a == null)
-                throw new ArgumentNullException(nameof(a));
-            if (b == null)
-                throw new ArgumentNullException(nameof(b));
+            ArgumentNullException.ThrowIfNull(a);
+            ArgumentNullException.ThrowIfNull(b);
             return new OrPaymentFilter(a, b);
         }
         public static IPaymentFilter Never()
@@ -101,14 +98,12 @@ namespace BTCPayServer.Payments
         }
         public static IPaymentFilter Any(IPaymentFilter[] filters)
         {
-            if (filters == null)
-                throw new ArgumentNullException(nameof(filters));
+            ArgumentNullException.ThrowIfNull(filters);
             return new CompositePaymentFilter(filters);
         }
         public static IPaymentFilter WhereIs(PaymentMethodId paymentMethodId)
         {
-            if (paymentMethodId == null)
-                throw new ArgumentNullException(nameof(paymentMethodId));
+            ArgumentNullException.ThrowIfNull(paymentMethodId);
             return new PaymentIdFilter(paymentMethodId);
         }
     }

@@ -10,8 +10,7 @@ namespace BTCPayServer.Services.Fees
     {
         public NBXplorerFeeProviderFactory(ExplorerClientProvider explorerClients)
         {
-            if (explorerClients == null)
-                throw new ArgumentNullException(nameof(explorerClients));
+            ArgumentNullException.ThrowIfNull(explorerClients);
             _ExplorerClients = explorerClients;
         }
 
@@ -27,8 +26,7 @@ namespace BTCPayServer.Services.Fees
     {
         public NBXplorerFeeProvider(NBXplorerFeeProviderFactory parent, ExplorerClient explorerClient)
         {
-            if (explorerClient == null)
-                throw new ArgumentNullException(nameof(explorerClient));
+            ArgumentNullException.ThrowIfNull(explorerClient);
             _Factory = parent;
             _ExplorerClient = explorerClient;
         }

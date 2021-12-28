@@ -15,10 +15,8 @@ namespace BTCPayServer
     {
         public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (derivationStrategy == null)
-                throw new ArgumentNullException(nameof(derivationStrategy));
+            ArgumentNullException.ThrowIfNull(network);
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
             var result = new DerivationSchemeSettings();
             result.Network = network;
             var parser = new DerivationSchemeParser(network);
@@ -32,10 +30,8 @@ namespace BTCPayServer
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (config == null)
-                throw new ArgumentNullException(nameof(config));
+            ArgumentNullException.ThrowIfNull(network);
+            ArgumentNullException.ThrowIfNull(config);
             strategy = null;
             try
             {
@@ -90,10 +86,8 @@ namespace BTCPayServer
         public static bool TryParseFromWalletFile(string fileContents, BTCPayNetwork network, out DerivationSchemeSettings settings)
         {
             settings = null;
-            if (fileContents == null)
-                throw new ArgumentNullException(nameof(fileContents));
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(fileContents);
+            ArgumentNullException.ThrowIfNull(network);
             var result = new DerivationSchemeSettings();
             var derivationSchemeParser = new DerivationSchemeParser(network);
             JObject jobj = null;
@@ -247,10 +241,8 @@ namespace BTCPayServer
 
         public DerivationSchemeSettings(DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (derivationStrategy == null)
-                throw new ArgumentNullException(nameof(derivationStrategy));
+            ArgumentNullException.ThrowIfNull(network);
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
             AccountDerivation = derivationStrategy;
             Network = network;
             AccountKeySettings = derivationStrategy.GetExtPubKeys().Select(c => new AccountKeySettings()

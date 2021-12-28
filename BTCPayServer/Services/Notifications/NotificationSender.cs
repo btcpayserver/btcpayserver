@@ -33,10 +33,8 @@ namespace BTCPayServer.Services.Notifications
 
         public async Task SendNotification(NotificationScope scope, BaseNotification notification)
         {
-            if (scope == null)
-                throw new ArgumentNullException(nameof(scope));
-            if (notification == null)
-                throw new ArgumentNullException(nameof(notification));
+            ArgumentNullException.ThrowIfNull(scope);
+            ArgumentNullException.ThrowIfNull(notification);
             var users = await GetUsers(scope, notification.Identifier);
             await using (var db = _contextFactory.CreateContext())
             {

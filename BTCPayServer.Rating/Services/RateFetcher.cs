@@ -41,8 +41,7 @@ namespace BTCPayServer.Services.Rates
 
         public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules, CancellationToken cancellationToken)
         {
-            if (rules == null)
-                throw new ArgumentNullException(nameof(rules));
+            ArgumentNullException.ThrowIfNull(rules);
 
             var fetchingRates = new Dictionary<CurrencyPair, Task<RateResult>>();
             var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
@@ -67,8 +66,7 @@ namespace BTCPayServer.Services.Rates
 
         public Task<RateResult> FetchRate(RateRule rateRule, CancellationToken cancellationToken)
         {
-            if (rateRule == null)
-                throw new ArgumentNullException(nameof(rateRule));
+            ArgumentNullException.ThrowIfNull(rateRule);
             var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
             var dependentQueries = new List<Task<QueryRateResult>>();
             foreach (var requiredExchange in rateRule.ExchangeRates)

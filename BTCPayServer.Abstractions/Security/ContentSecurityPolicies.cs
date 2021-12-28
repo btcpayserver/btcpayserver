@@ -96,8 +96,7 @@ namespace BTCPayServer.Security
         /// <param name="script"></param>
         public void AllowInline(string script)
         {
-            if (script is null)
-                throw new ArgumentNullException(nameof(script));
+            ArgumentNullException.ThrowIfNull(script);
             var sha = GetSha256(script);
             Add("script-src", $"'sha256-{sha}'");
         }

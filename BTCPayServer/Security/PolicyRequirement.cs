@@ -7,8 +7,7 @@ namespace BTCPayServer.Security
     {
         public PolicyRequirement(string policy)
         {
-            if (policy == null)
-                throw new ArgumentNullException(nameof(policy));
+            ArgumentNullException.ThrowIfNull(policy);
             Policy = policy;
         }
         public string Policy { get; }

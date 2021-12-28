@@ -235,8 +235,7 @@ namespace BTCPayServer.HostedServices
 
         private void Watch(string invoiceId)
         {
-            if (invoiceId == null)
-                throw new ArgumentNullException(nameof(invoiceId));
+            ArgumentNullException.ThrowIfNull(invoiceId);
 
             if (!_WatchRequests.Writer.TryWrite(invoiceId))
             {

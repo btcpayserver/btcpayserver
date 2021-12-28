@@ -15,10 +15,8 @@ namespace BTCPayServer.Services
 
         public ILightningClient Create(LightningConnectionString lightningConnectionString, BTCPayNetwork network)
         {
-            if (lightningConnectionString == null)
-                throw new ArgumentNullException(nameof(lightningConnectionString));
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(lightningConnectionString);
+            ArgumentNullException.ThrowIfNull(network);
             return new Lightning.LightningClientFactory(network.NBitcoinNetwork)
             {
                 HttpClient = _httpClientFactory.CreateClient($"{network.CryptoCode}: Lightning client")

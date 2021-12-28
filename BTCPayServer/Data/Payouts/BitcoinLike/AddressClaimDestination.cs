@@ -9,8 +9,7 @@ namespace BTCPayServer.Data
 
         public AddressClaimDestination(BitcoinAddress bitcoinAddress)
         {
-            if (bitcoinAddress == null)
-                throw new ArgumentNullException(nameof(bitcoinAddress));
+            ArgumentNullException.ThrowIfNull(bitcoinAddress);
             _bitcoinAddress = bitcoinAddress;
         }
         public BitcoinAddress Address => _bitcoinAddress;

@@ -45,20 +45,17 @@ namespace BTCPayServer.Services
 
         public JsonSerializerSettings GetSerializer(Network network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(network);
             return GetSerializer(network.NetworkSet.CryptoCode);
         }
         public JsonSerializerSettings GetSerializer(BTCPayNetwork network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(network);
             return GetSerializer(network.CryptoCode);
         }
         public JsonSerializerSettings GetSerializer(string cryptoCode)
         {
-            if (cryptoCode == null)
-                throw new ArgumentNullException(nameof(cryptoCode));
+            ArgumentNullException.ThrowIfNull(cryptoCode);
             _Serializers.TryGetValue(cryptoCode, out var serializer);
             return serializer;
         }

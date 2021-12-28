@@ -11,8 +11,7 @@ namespace BTCPayServer.Data
 
         public UriClaimDestination(BitcoinUrlBuilder bitcoinUrl)
         {
-            if (bitcoinUrl == null)
-                throw new ArgumentNullException(nameof(bitcoinUrl));
+            ArgumentNullException.ThrowIfNull(bitcoinUrl);
             if (bitcoinUrl.Address is null)
                 throw new ArgumentException(nameof(bitcoinUrl));
             _bitcoinUrl = bitcoinUrl;

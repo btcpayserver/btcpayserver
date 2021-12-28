@@ -41,14 +41,12 @@ namespace BTCPayServer.HostedServices
         {
             public CancelRequest(string pullPaymentId)
             {
-                if (pullPaymentId == null)
-                    throw new ArgumentNullException(nameof(pullPaymentId));
+                ArgumentNullException.ThrowIfNull(pullPaymentId);
                 PullPaymentId = pullPaymentId;
             }
             public CancelRequest(string[] payoutIds)
             {
-                if (payoutIds == null)
-                    throw new ArgumentNullException(nameof(payoutIds));
+                ArgumentNullException.ThrowIfNull(payoutIds);
                 PayoutIds = payoutIds;
             }
             public string PullPaymentId { get; set; }
@@ -91,8 +89,7 @@ namespace BTCPayServer.HostedServices
         }
         public async Task<string> CreatePullPayment(CreatePullPayment create)
         {
-            if (create == null)
-                throw new ArgumentNullException(nameof(create));
+            ArgumentNullException.ThrowIfNull(create);
             if (create.Amount <= 0.0m)
                 throw new ArgumentException("Amount out of bound", nameof(create));
             using var ctx = this._dbContextFactory.CreateContext();
@@ -137,10 +134,8 @@ namespace BTCPayServer.HostedServices
         {
             public PayoutRequest(TaskCompletionSource<ClaimRequest.ClaimResponse> completionSource, ClaimRequest request)
             {
-                if (request == null)
-                    throw new ArgumentNullException(nameof(request));
-                if (completionSource == null)
-                    throw new ArgumentNullException(nameof(completionSource));
+                ArgumentNullException.ThrowIfNull(request);
+                ArgumentNullException.ThrowIfNull(completionSource);
                 Completion = completionSource;
                 ClaimRequest = request;
             }
@@ -536,10 +531,8 @@ namespace BTCPayServer.HostedServices
         {
             public InternalPayoutPaidRequest(TaskCompletionSource<PayoutPaidRequest.PayoutPaidResult> completionSource, PayoutPaidRequest request)
             {
-                if (request == null)
-                    throw new ArgumentNullException(nameof(request));
-                if (completionSource == null)
-                    throw new ArgumentNullException(nameof(completionSource));
+                ArgumentNullException.ThrowIfNull(request);
+                ArgumentNullException.ThrowIfNull(completionSource);
                 Completion = completionSource;
                 Request = request;
             }

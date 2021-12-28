@@ -121,8 +121,7 @@ namespace BTCPayServer
         }
         public T GetNetwork<T>(string cryptoCode) where T : BTCPayNetworkBase
         {
-            if (cryptoCode == null)
-                throw new ArgumentNullException(nameof(cryptoCode));
+            ArgumentNullException.ThrowIfNull(cryptoCode);
             if (!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
             {
                 if (cryptoCode == "XBT")

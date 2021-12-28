@@ -32,8 +32,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public bool TryGetValue(PaymentMethodId paymentMethodId, out PaymentMethod data)
         {
-            if (paymentMethodId == null)
-                throw new ArgumentNullException(nameof(paymentMethodId));
+            ArgumentNullException.ThrowIfNull(paymentMethodId);
             return _Inner.TryGetValue(paymentMethodId, out data);
         }
 
@@ -56,15 +55,13 @@ namespace BTCPayServer.Services.Invoices
 
         public PaymentMethod TryGet(PaymentMethodId paymentMethodId)
         {
-            if (paymentMethodId == null)
-                throw new ArgumentNullException(nameof(paymentMethodId));
+            ArgumentNullException.ThrowIfNull(paymentMethodId);
             _Inner.TryGetValue(paymentMethodId, out var value);
             return value;
         }
         public PaymentMethod TryGet(string network, PaymentType paymentType)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(network);
             var id = new PaymentMethodId(network, paymentType);
             return TryGet(id);
         }

@@ -46,10 +46,8 @@ namespace BTCPayServer.Services.Wallets
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
             ApplicationDbContextFactory dbContextFactory, Logs logs)
         {
-            if (client == null)
-                throw new ArgumentNullException(nameof(client));
-            if (memoryCache == null)
-                throw new ArgumentNullException(nameof(memoryCache));
+            ArgumentNullException.ThrowIfNull(client);
+            ArgumentNullException.ThrowIfNull(memoryCache);
             Logs = logs;
             _Client = client;
             _Network = network;
@@ -73,8 +71,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<KeyPathInformation> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
-            if (derivationStrategy == null)
-                throw new ArgumentNullException(nameof(derivationStrategy));
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             // Might happen on some broken install
             if (pathInfo == null)
@@ -87,8 +84,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<(BitcoinAddress, KeyPath)> GetChangeAddressAsync(DerivationStrategyBase derivationStrategy)
         {
-            if (derivationStrategy == null)
-                throw new ArgumentNullException(nameof(derivationStrategy));
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Change, 0, false).ConfigureAwait(false);
             // Might happen on some broken install
             if (pathInfo == null)
@@ -109,8 +105,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<TransactionResult> GetTransactionAsync(uint256 txId, bool includeOffchain = false, CancellationToken cancellation = default(CancellationToken))
         {
-            if (txId == null)
-                throw new ArgumentNullException(nameof(txId));
+            ArgumentNullException.ThrowIfNull(txId);
             var tx = await _Client.GetTransactionAsync(txId, cancellation);
             if (tx is null && includeOffchain)
             {
@@ -252,8 +247,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<ReceivedCoin[]> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            if (derivationStrategy == null)
-                throw new ArgumentNullException(nameof(derivationStrategy));
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
             return (await GetUTXOChanges(derivationStrategy, cancellation))
                           .GetUnspentUTXOs()
                           .Select(c => new ReceivedCoin()

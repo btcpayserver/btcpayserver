@@ -15,8 +15,7 @@ namespace BTCPayServer
 
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
-            if (expectedNetwork == null)
-                throw new ArgumentNullException(nameof(expectedNetwork));
+            ArgumentNullException.ThrowIfNull(expectedNetwork);
             BtcPayNetwork = expectedNetwork;
         }
 
@@ -44,8 +43,7 @@ namespace BTCPayServer
                 }
             }
             
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
             switch(outputDescriptor)
@@ -95,8 +93,7 @@ namespace BTCPayServer
         public DerivationStrategyBase ParseElectrum(string str)
         {
 
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
             var data = Network.GetBase58CheckEncoder().DecodeData(str);
             if (data.Length < 4)
@@ -123,8 +120,7 @@ namespace BTCPayServer
 
         public DerivationStrategyBase Parse(string str)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
 
             HashSet<string> hintedLabels = new HashSet<string>();

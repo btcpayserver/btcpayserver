@@ -152,6 +152,8 @@ namespace BTCPayServer.Security
                         success = true;
                     break;
                 case Policies.CanViewProfile:
+                case Policies.CanViewNotificationsForUser:
+                case Policies.CanManageNotificationsForUser:
                     if (context.User != null)
                         success = true;
                     break;

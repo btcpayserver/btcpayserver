@@ -189,8 +189,8 @@ namespace BTCPayServer.Plugins.Shopify
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(
                     new CreateInvoiceRequest()
                     {
-                        Amount = amount < order.TotalPrice ? amount : order.TotalPrice,
-                        Currency = order.Currency,
+                        Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,
+                        Currency = order.PresentmentCurrency,
                         Metadata = new JObject {["orderId"] = invoiceOrderId}
                     }, store,
                     Request.GetAbsoluteRoot(), new List<string>() {invoiceOrderId});

@@ -37,8 +37,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public void SetLightningUrl(LightningConnectionString connectionString)
         {
-            if (connectionString == null)
-                throw new ArgumentNullException(nameof(connectionString));
+            ArgumentNullException.ThrowIfNull(connectionString);
 #pragma warning disable CS0618 // Type or member is obsolete
             LightningConnectionString = connectionString.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -16,8 +16,7 @@ namespace BTCPayServer.Models
         readonly BitTokenEntity[] _Tokens;
         public GetTokensResponse(BitTokenEntity[] tokens)
         {
-            if (tokens == null)
-                throw new ArgumentNullException(nameof(tokens));
+            ArgumentNullException.ThrowIfNull(tokens);
             this._Tokens = tokens;
         }
 

@@ -15,8 +15,7 @@ namespace BTCPayServer.Services.Rates
         readonly HttpClient _httpClient;
         public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
         {
-            if (httpClient == null)
-                throw new ArgumentNullException(nameof(httpClient));
+            ArgumentNullException.ThrowIfNull(httpClient);
             ReverseCurrencyPair = reverseCurrencyPair;
             _httpClient = httpClient;
         }

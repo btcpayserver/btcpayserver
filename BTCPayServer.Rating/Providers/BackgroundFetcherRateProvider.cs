@@ -85,8 +85,7 @@ namespace BTCPayServer.Services.Rates
 
         public BackgroundFetcherRateProvider(IRateProvider inner)
         {
-            if (inner == null)
-                throw new ArgumentNullException(nameof(inner));
+            ArgumentNullException.ThrowIfNull(inner);
             _Inner = inner;
         }
 

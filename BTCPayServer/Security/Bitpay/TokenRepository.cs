@@ -21,8 +21,7 @@ namespace BTCPayServer.Security.Bitpay
         readonly ApplicationDbContextFactory _Factory;
         public TokenRepository(ApplicationDbContextFactory dbFactory)
         {
-            if (dbFactory == null)
-                throw new ArgumentNullException(nameof(dbFactory));
+            ArgumentNullException.ThrowIfNull(dbFactory);
             _Factory = dbFactory;
         }
 

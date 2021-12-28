@@ -10,8 +10,7 @@ namespace BTCPayServer
     {
         public static async Task<SshClient> ConnectAsync(this SSHSettings sshSettings, CancellationToken cancellationToken = default)
         {
-            if (sshSettings == null)
-                throw new ArgumentNullException(nameof(sshSettings));
+            ArgumentNullException.ThrowIfNull(sshSettings);
             TaskCompletionSource<SshClient> tcs = new TaskCompletionSource<SshClient>(TaskCreationOptions.RunContinuationsAsynchronously);
             new Thread(() =>
             {
@@ -58,10 +57,8 @@ namespace BTCPayServer
 
         public static Task<SSHCommandResult> RunBash(this SshClient sshClient, string command, TimeSpan? timeout = null)
         {
-            if (sshClient == null)
-                throw new ArgumentNullException(nameof(sshClient));
-            if (command == null)
-                throw new ArgumentNullException(nameof(command));
+            ArgumentNullException.ThrowIfNull(sshClient);
+            ArgumentNullException.ThrowIfNull(command);
             command = $"bash -c '{command.EscapeSingleQuotes()}'";
             var sshCommand = sshClient.CreateCommand(command);
             if (timeout is TimeSpan v)
@@ -106,8 +103,7 @@ namespace BTCPayServer
 
         public static async Task DisconnectAsync(this SshClient sshClient, CancellationToken cancellationToken = default)
         {
-            if (sshClient == null)
-                throw new ArgumentNullException(nameof(sshClient));
+            ArgumentNullException.ThrowIfNull(sshClient);
 
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             new Thread(() =>

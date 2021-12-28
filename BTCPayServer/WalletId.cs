@@ -9,8 +9,7 @@ namespace BTCPayServer
         static readonly Regex _WalletStoreRegex = new Regex("^S-([a-zA-Z0-9]{30,60})-([a-zA-Z]{2,5})$");
         public static bool TryParse(string str, out WalletId walletId)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             walletId = null;
             WalletId w = new WalletId();
             var match = _WalletStoreRegex.Match(str);

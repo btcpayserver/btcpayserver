@@ -68,8 +68,7 @@ namespace BTCPayServer.Data
 
         public static IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(this StoreData storeData, BTCPayNetworkProvider networks)
         {
-            if (storeData == null)
-                throw new ArgumentNullException(nameof(storeData));
+            ArgumentNullException.ThrowIfNull(storeData);
 #pragma warning disable CS0618
             bool btcReturned = false;
 

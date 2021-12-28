@@ -18,8 +18,7 @@ namespace BTCPayServer.Services
 
         public async Task SetWalletInfo(WalletId walletId, WalletBlobInfo blob)
         {
-            if (walletId == null)
-                throw new ArgumentNullException(nameof(walletId));
+            ArgumentNullException.ThrowIfNull(walletId);
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var walletData = new WalletData() { Id = walletId.ToString() };
@@ -40,8 +39,7 @@ namespace BTCPayServer.Services
 
         public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId, string[] transactionIds = null)
         {
-            if (walletId == null)
-                throw new ArgumentNullException(nameof(walletId));
+            ArgumentNullException.ThrowIfNull(walletId);
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return (await ctx.WalletTransactions
@@ -55,8 +53,7 @@ namespace BTCPayServer.Services
 
         public async Task<WalletBlobInfo> GetWalletInfo(WalletId walletId)
         {
-            if (walletId == null)
-                throw new ArgumentNullException(nameof(walletId));
+            ArgumentNullException.ThrowIfNull(walletId);
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var data = await ctx.Wallets
@@ -69,10 +66,8 @@ namespace BTCPayServer.Services
 
         public async Task SetWalletTransactionInfo(WalletId walletId, string transactionId, WalletTransactionInfo walletTransactionInfo)
         {
-            if (walletId == null)
-                throw new ArgumentNullException(nameof(walletId));
-            if (transactionId == null)
-                throw new ArgumentNullException(nameof(transactionId));
+            ArgumentNullException.ThrowIfNull(walletId);
+            ArgumentNullException.ThrowIfNull(transactionId);
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var walletData = new WalletTransactionData() { WalletDataId = walletId.ToString(), TransactionId = transactionId };

@@ -10,8 +10,7 @@ namespace BTCPayServer.SSH
     {
         public static bool TryParse(string str, out SSHFingerprint fingerPrint)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             fingerPrint = null;
             str = str.Trim();
             try
@@ -77,10 +76,8 @@ namespace BTCPayServer.SSH
 
         public bool Match(byte[] shortFingerprint, byte[] hostKey)
         {
-            if (shortFingerprint == null)
-                throw new ArgumentNullException(nameof(shortFingerprint));
-            if (hostKey == null)
-                throw new ArgumentNullException(nameof(hostKey));
+            ArgumentNullException.ThrowIfNull(shortFingerprint);
+            ArgumentNullException.ThrowIfNull(hostKey);
             if (_ShortFingerprint != null)
                 return Utils.ArrayEqual(shortFingerprint, _ShortFingerprint);
             return Utils.ArrayEqual(_FullHash, NBitcoin.Crypto.Hashes.SHA256(hostKey));

@@ -19,8 +19,7 @@ namespace BTCPayServer.Controllers
         }
         public static async Task<Macaroons> GetFromDirectoryAsync(string directoryPath)
         {
-            if (directoryPath == null)
-                throw new ArgumentNullException(nameof(directoryPath));
+            ArgumentNullException.ThrowIfNull(directoryPath);
             Macaroons macaroons = new Macaroons();
             if (!Directory.Exists(directoryPath))
                 throw new DirectoryNotFoundException("Macaroons directory not found");

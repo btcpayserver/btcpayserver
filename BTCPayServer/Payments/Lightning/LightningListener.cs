@@ -415,8 +415,7 @@ namespace BTCPayServer.Payments.Lightning
                                         PaymentService paymentService,
                                         Logs logs)
         {
-            if (connectionString == null)
-                throw new ArgumentNullException(nameof(connectionString));
+            ArgumentNullException.ThrowIfNull(connectionString);
             Logs = logs;
             this._invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;

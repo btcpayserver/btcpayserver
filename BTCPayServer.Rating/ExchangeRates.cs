@@ -232,10 +232,8 @@ namespace BTCPayServer.Rating
     {
         public PairRate(CurrencyPair currencyPair, BidAsk bidAsk)
         {
-            if (currencyPair == null)
-                throw new ArgumentNullException(nameof(currencyPair));
-            if (bidAsk == null)
-                throw new ArgumentNullException(nameof(bidAsk));
+            ArgumentNullException.ThrowIfNull(currencyPair);
+            ArgumentNullException.ThrowIfNull(bidAsk);
             this.CurrencyPair = currencyPair;
             this.BidAsk = bidAsk;
         }

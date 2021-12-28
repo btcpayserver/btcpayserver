@@ -11,8 +11,7 @@ namespace BTCPayServer.Services.Rates
         readonly IRateProvider[] _Providers;
         public FallbackRateProvider(IRateProvider[] providers)
         {
-            if (providers == null)
-                throw new ArgumentNullException(nameof(providers));
+            ArgumentNullException.ThrowIfNull(providers);
             _Providers = providers;
         }
 

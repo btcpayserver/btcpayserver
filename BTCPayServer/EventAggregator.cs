@@ -81,8 +81,7 @@ namespace BTCPayServer
 
         public void Publish(object evt, Type evtType)
         {
-            if (evt == null)
-                throw new ArgumentNullException(nameof(evt));
+            ArgumentNullException.ThrowIfNull(evt);
             List<Action<object>> actionList = new List<Action<object>>();
             lock (_Subscriptions)
             {

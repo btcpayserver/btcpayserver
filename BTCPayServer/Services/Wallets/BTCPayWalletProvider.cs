@@ -20,8 +20,7 @@ namespace BTCPayServer.Services.Wallets
                                     BTCPayNetworkProvider networkProvider,
                                     Logs logs)
         {
-            if (client == null)
-                throw new ArgumentNullException(nameof(client));
+            ArgumentNullException.ThrowIfNull(client);
             this.Logs = logs;
             _Client = client;
             _NetworkProvider = networkProvider;
@@ -40,14 +39,12 @@ namespace BTCPayServer.Services.Wallets
 
         public BTCPayWallet GetWallet(BTCPayNetworkBase network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
+            ArgumentNullException.ThrowIfNull(network);
             return GetWallet(network.CryptoCode);
         }
         public BTCPayWallet GetWallet(string cryptoCode)
         {
-            if (cryptoCode == null)
-                throw new ArgumentNullException(nameof(cryptoCode));
+            ArgumentNullException.ThrowIfNull(cryptoCode);
             _Wallets.TryGetValue(cryptoCode.ToUpperInvariant(), out var result);
             return result;
         }

@@ -34,8 +34,7 @@ namespace BTCPayServer.Services.Labels
         }
         public static Label Parse(string str)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             if (str.StartsWith("{", StringComparison.InvariantCultureIgnoreCase))
             {
                 var jObj = JObject.Parse(str);

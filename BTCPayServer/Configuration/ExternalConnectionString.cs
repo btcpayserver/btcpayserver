@@ -147,8 +147,7 @@ namespace BTCPayServer.Configuration
         }
         public static bool TryParse(string str, out ExternalConnectionString result, out string error)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
+            ArgumentNullException.ThrowIfNull(str);
             error = null;
             result = null;
             var resultTemp = new ExternalConnectionString();

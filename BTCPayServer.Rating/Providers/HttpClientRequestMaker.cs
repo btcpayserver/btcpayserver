@@ -96,10 +96,8 @@ namespace BTCPayServer.Services.Rates
 
         public HttpClientRequestMaker(IAPIRequestHandler api, HttpClient httpClient, CancellationToken cancellationToken)
         {
-            if (api == null)
-                throw new ArgumentNullException(nameof(api));
-            if (httpClient == null)
-                throw new ArgumentNullException(nameof(httpClient));
+            ArgumentNullException.ThrowIfNull(api);
+            ArgumentNullException.ThrowIfNull(httpClient);
             this.api = api;
             _httpClient = httpClient;
             _cancellationToken = cancellationToken;

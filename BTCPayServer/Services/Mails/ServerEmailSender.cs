@@ -10,8 +10,7 @@ namespace BTCPayServer.Services.Mails
                                 IBackgroundJobClient backgroundJobClient,
                                 Logs logs) : base(backgroundJobClient, logs)
         {
-            if (settingsRepository == null)
-                throw new ArgumentNullException(nameof(settingsRepository));
+            ArgumentNullException.ThrowIfNull(settingsRepository);
             SettingsRepository = settingsRepository;
         }
 

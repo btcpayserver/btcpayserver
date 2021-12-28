@@ -215,8 +215,7 @@ namespace BTCPayServer
 
         public static bool IsLocalNetwork(string server)
         {
-            if (server == null)
-                throw new ArgumentNullException(nameof(server));
+            ArgumentNullException.ThrowIfNull(server);
             if (Uri.CheckHostName(server) == UriHostNameType.Dns)
             {
                 return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||

@@ -40,8 +40,7 @@ namespace BTCPayServer.Services.Labels
         const string DefaultColor = "#000";
         private ColoredLabel CreateLabel(LabelData uncoloredLabel, string color, HttpRequest request)
         {
-            if (uncoloredLabel == null)
-                throw new ArgumentNullException(nameof(uncoloredLabel));
+            ArgumentNullException.ThrowIfNull(uncoloredLabel);
             color = color ?? DefaultColor;
 
             ColoredLabel coloredLabel = new ColoredLabel()

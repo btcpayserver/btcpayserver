@@ -44,10 +44,8 @@ namespace BTCPayServer.Payments
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(network);
+            ArgumentNullException.ThrowIfNull(value);
             var net = (BTCPayNetwork)network;
             if (value is JObject jobj)
             {
@@ -61,8 +59,7 @@ namespace BTCPayServer.Payments
 
         public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
         {
-            if (txId == null)
-                throw new ArgumentNullException(nameof(txId));
+            ArgumentNullException.ThrowIfNull(txId);
             if (network?.BlockExplorerLink == null)
                 return null;
             txId = txId.Split('-').First();

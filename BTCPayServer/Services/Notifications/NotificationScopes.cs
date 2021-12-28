@@ -12,8 +12,7 @@ namespace BTCPayServer.Services.Notifications
     {
         public StoreScope(string storeId)
         {
-            if (storeId == null)
-                throw new ArgumentNullException(nameof(storeId));
+            ArgumentNullException.ThrowIfNull(storeId);
             StoreId = storeId;
         }
         public string StoreId { get; }
@@ -22,8 +21,7 @@ namespace BTCPayServer.Services.Notifications
     {
         public UserScope(string userId)
         {
-            if (userId == null)
-                throw new ArgumentNullException(nameof(userId));
+            ArgumentNullException.ThrowIfNull(userId);
             UserId = userId;
         }
         public string UserId { get; }

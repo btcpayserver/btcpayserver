@@ -156,7 +156,7 @@
                         <div class="accordion-body">
                             <ul class="navbar-nav">
                                 <vc:ui-extension-point location="header-nav" model="@Model"/>
-                                <vc:ui-extension-point location="store-integrations-list" model="@Model" />
+                                <vc:ui-extension-point location="store-integrations-nav-list" model="@Model" />
                                 <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                     <a asp-area="" asp-controller="Server" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
                                         <vc:icon symbol="new"/>

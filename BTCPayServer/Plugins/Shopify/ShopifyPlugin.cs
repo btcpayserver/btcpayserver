@@ -16,7 +16,7 @@ namespace BTCPayServer.Plugins.Shopify
         {
             applicationBuilder.AddSingleton<IHostedService, ShopifyOrderMarkerHostedService>();
             applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("Shopify/StoreIntegrationShopifyOption",
-                "store-integrations-list"));
+                "store-integrations-nav-list"));
             base.Execute(applicationBuilder);
         }
     }

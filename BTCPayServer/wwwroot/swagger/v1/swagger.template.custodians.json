@@ -6,17 +6,86 @@
         "version": "v1"
     },
     "paths": {
+        "/api/v1/assets": {
+            "get": {
+                "tags": [
+                    "Assets"
+                ],
+                "summary": "List Supported Assets",
+                "description": "List all supported assets for the BTCPay instance. This includes both fiat currency codes + all crypto codes. You can add a filter to return only fiat or crypto. By default both are returned.",
+                "operationId": "Custodians_GetSupportedAssets",
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "required": false,
+                        "description": "Filter results to contain only fiat or crypto.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fiat",
+                                "crypto"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of supported assets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AssetData"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "code": "BTC",
+                                        "label": "Bitcoin",
+                                        "type": "crypto"
+                                    },
+                                    {
+                                        "code": "LTC",
+                                        "label": "Litecoin",
+                                        "type": "crypto"
+                                    },
+                                    {
+                                        "code": "USD",
+                                        "label": "US Dollar",
+                                        "type": "fiat"
+                                    },
+                                    {
+                                        "code": "EUR",
+                                        "label": "Euro",
+                                        "type": "fiat"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "TODO"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/custodians": {
             "get": {
                 "tags": [
                     "Custodians"
                 ],
-                "summary": "Get custodians",
-                "description": "View information about the available custodians. You can install plugins to gain access to more parties.",
-                "operationId": "Custodians_GetCustodians",
+                "summary": "List Supported Custodians",
+                "description": "List all supported custodians for the BTCPay instance. You can install plugins to add more custodians.",
+                "operationId": "Custodians_GetSupportedCustodians",
                 "responses": {
                     "200": {
-                        "description": "list of custodians",
+                        "description": "list of supported custodians",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -41,7 +110,7 @@
                 "tags": [
                     "Store Custodian Account"
                 ],
-                "summary": "List all store custodian accounts",
+                "summary": "List store custodian accounts",
                 "responses": {
                     "200": {
                         "description": "List of custodian accounts for the store.",
@@ -52,6 +121,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the store's custodian accounts"
                     }
                 },
                 "post": {
@@ -116,10 +188,10 @@
         "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade": {
             "post": {
                 "tags": [
-                    "Custodian Account Trade"
+                    "Store Custodian Account"
                 ],
                 "summary": "Trade one asset for another.",
-                "description": "Trade one asset for another.",
+                "description": "Trade one asset for another. A suitable asset pair will automatically be selected. If no asset pair is available, the call will fail.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -144,7 +216,7 @@
                         }
                     },
                     "404": {
-                        "description": "No asset pair found for this trade."
+                        "description": "No tradable asset pair found for this trade."
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to create trades"
@@ -163,7 +235,7 @@
         "/api/v1/store/{storeId}/custodian-accounts/{accountId}/{cryptoCode}/address": {
             "post": {
                 "tags": [
-                    "Custodian Account"
+                    "Store Custodian Account"
                 ],
                 "summary": "Get deposit address for custodian",
                 "description": "Get an on-chain deposit address for the custodian",
@@ -328,6 +400,26 @@
                     }
                 ]
             },
+            "AssetData": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "The unique code of the asset. Example: BTC, USD, EUR, LTC, ..."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "The human readable name of the asset. Example: Bitcoin, US Dollar, Euro, Litecoin, ..."
+                    },
+                    "type": {
+                        "description": "Is this a fiat currency or a crypto code.",
+                        "enum": [
+                            "fiat",
+                            "crypto"
+                        ]
+                    }
+                }
+            },
             "CustodianAccountData": {
                 "type": "object",
                 "additionalProperties": false,
@@ -336,13 +428,17 @@
                         "type": "string",
                         "description": "The unique code of the customer's account with this custodian. The format depends on the custodian."
                     },
+                    "storeId": {
+                        "type": "string",
+                        "description": "The store ID."
+                    },
                     "custodianCode": {
                         "type": "string",
                         "description": "The code for the custodian. I.e. \"kraken\""
                     },
                     "assetBalances": {
                         "type": "array",
-                        "description": "A list of assets (fiat or crypto) on this custodian and the quantity held in the account. Assets with qty 0 can be omitted.",
+                        "description": "A real-time loaded list of all assets (fiat and crypto) on this custodian and the quantity held in the account. Assets with qty 0 can be omitted.",
                         "items": {
                             "$ref": "#/components/schemas/LedgerEntryData"
                         }
@@ -389,9 +485,9 @@
                         "type": "string",
                         "description": "The asset you want."
                     },
-                    "costs": {
+                    "ledgerEntries": {
                         "type": "array",
-                        "description": "The assets used to pay for the trade. This is an array and can contain multiple items if the trade involved credits or exchange tokens to give a discount.",
+                        "description": "The asset entries that were changed during the trade. This is an array of at least 2 items for the asset sold and the asset gained. It also includes ledger entries for the costs of the trade and may include credits or exchange tokens to give a discount.",
                         "items": {
                             "$ref": "#/components/schemas/LedgerEntryData"
                         }
@@ -400,24 +496,10 @@
                         "type": "string",
                         "description": "The type of trade that was executed. Currently only \"market\" is supported, meaning an instant purchase with instant result or failure."
                     },
-                    "tradeStatus": {
-                        "enum": [
-                            "Queued",
-                            "Complete"
-                        ]
-                    },
                     "tradeId": {
                         "type": "string",
-                        "description": "The ID of the trade/order used by the exchange.",
+                        "description": "The unique ID of the trade/order used by the exchange.",
                         "nullable": true
-                    },
-                    "qtyFromAsset": {
-                        "type": "number",
-                        "description": "The amount of fromAsset that was converted. Will be a negative number."
-                    },
-                    "qtyToAsset": {
-                        "type": "number",
-                        "description": "The amount of toAsset that was gained. Will be a positive number."
                     }
                 }
             },
@@ -438,10 +520,5 @@
                 }
             }
         }
-    },
-    "tags": [
-        {
-            "name": "Custodians"
-        }
-    ]
+    }
 }

@@ -66,15 +66,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/{idOrEmail}")]
-        public async Task<ActionResult<ApplicationUserData[]>> GetUser(string idOrEmail)
+        public async Task<IActionResult> GetUser(string idOrEmail)
         {
             var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user != null)
             {
                 return Ok(await FromModel(user));
             }
-
-            return NotFound();
+            return UserNotFound();
         }
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

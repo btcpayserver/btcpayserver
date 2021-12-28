@@ -382,10 +382,9 @@ namespace BTCPayServer.Tests
             GoToUrl($"/invoices/{id}/");
         }
 
-        public void GoToInvoices(string storeId)
+        public void GoToInvoices(string storeId = null)
         {
-            GoToStore(storeId);
-            Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+            GoToUrl(storeId == null ? "/invoices/" : $"/stores/{storeId}/invoices/");
         }
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)

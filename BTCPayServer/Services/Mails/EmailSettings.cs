@@ -5,6 +5,8 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace BTCPayServer.Services.Mails
 {
@@ -77,6 +79,13 @@ namespace BTCPayServer.Services.Mails
             using var connectCancel = new CancellationTokenSource(10000);
             try
             {
+                if (Extensions.IsLocalNetwork(Server))
+                {
+                    client.CheckCertificateRevocation = false;
+#pragma warning disable CA5359 // Do Not Disable Certificate Validation
+                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+#pragma warning restore CA5359 // Do Not Disable Certificate Validation
+                }
                 await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
                 await client.AuthenticateAsync(Login, Password, connectCancel.Token);
             }

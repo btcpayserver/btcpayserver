@@ -676,10 +676,10 @@ namespace BTCPayServer.Tests
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
 
-                TestLogs.LogInformation("Querying an onion address which can't be found should send http 500");
+                TestLogs.LogInformation("Querying an onion address which can't be found");
                 await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://dwoduwoi.onion/"));
 
-                TestLogs.LogInformation("Querying valid onion but unreachable should send error 502");
+                TestLogs.LogInformation("Querying valid onion but unreachable");
                 await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/"));
             }
         }

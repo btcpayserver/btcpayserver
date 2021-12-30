@@ -9,7 +9,8 @@ namespace BTCPayServer.Client.Models
     {
         Active,
         Expired,
-        Archived
+        Archived,
+        Future
     }
     public class PullPaymentData
     {

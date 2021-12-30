@@ -208,6 +208,8 @@ namespace BTCPayServer.Controllers
                 case PullPaymentState.Expired:
                     ppsQuery = ppsQuery.Where(p => DateTimeOffset.UtcNow > p.EndDate);
                     break;
+                case PullPaymentState.Future:
+                    ppsQuery = ppsQuery.Where(p => p.StartDate > DateTimeOffset.UtcNow);
                     break;
             }
 

@@ -262,7 +262,7 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/{cryptoCode}/address": {
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/{paymentMethod}/address": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -289,10 +289,10 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
+                        "name": "paymentMethod",
                         "in": "path",
                         "required": true,
-                        "description": "The cryptoCode to deposit.",
+                        "description": "The payment method to use for the deposit. Example: \"BTC-OnChain\" or \"BTC-Lightning\"",
                         "schema": {
                             "type": "string"
                         }
@@ -320,7 +320,7 @@
                         }
                     },
                     "404": {
-                        "description": "The custodian does not support deposits"
+                        "description": "The custodian does not support deposits using this payment method."
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to get the deposit address"

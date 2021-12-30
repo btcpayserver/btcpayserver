@@ -155,10 +155,9 @@ namespace BTCPayServer.Controllers
         {
             await using var ctx = _dbContextFactory.CreateContext();
             var now = DateTimeOffset.UtcNow;
-            var ppsQuery = await ctx.PullPayments
+            var ppsQuery = ctx.PullPayments
                 .Include(data => data.Payouts)
-                .Where(p => p.StoreId == storeId)
-                .ToListAsync();
+                .Where(p => p.StoreId == storeId);
 
             if (sortOrder != null)
             {
@@ -166,10 +165,10 @@ namespace BTCPayServer.Controllers
                 {
                     case "desc":
                         ViewData["NextStartSortOrder"] = "asc";
-                        ppsQuery = ppsQuery.OrderByDescending(p => p.StartDate).ToList();
+                        ppsQuery = ppsQuery.OrderByDescending(p => p.StartDate);
                         break;
                     case "asc":
-                        ppsQuery = ppsQuery.OrderBy(p => p.StartDate).ToList();
+                        ppsQuery = ppsQuery.OrderBy(p => p.StartDate);
                         ViewData["NextStartSortOrder"] = "desc";
                         break;
                 }
@@ -197,25 +196,26 @@ namespace BTCPayServer.Controllers
             switch (pullPaymentState) {
                 case PullPaymentState.Active:
                     ppsQuery = ppsQuery
-                        .Where(p => p.IsRunning())
-                        .ToList();
+                        .Where(
+                            p => !p.Archived &&
+                            (p.EndDate != null ? p.EndDate > DateTimeOffset.UtcNow : true) &&
+                            p.StartDate <= DateTimeOffset.UtcNow
+                         );
                     break;
                 case PullPaymentState.Archived:
-                    ppsQuery = ppsQuery
-                        .Where(p => p.Archived)
-                        .ToList();
+                    ppsQuery = ppsQuery.Where(p => p.Archived);
                     break;
                 case PullPaymentState.Expired:
-                     ppsQuery = ppsQuery
-                        .Where(p => p.IsExpired())
-                        .ToList();
+                    ppsQuery = ppsQuery.Where(p => DateTimeOffset.UtcNow > p.EndDate);
+                    break;
                     break;
             }
 
-            var pps = ppsQuery
-                .Skip(vm.Skip)
-                .Take(vm.Count)
-                .ToList();
+            var pps = (await ppsQuery
+                    .Skip(vm.Skip)
+                    .Take(vm.Count)
+                    .ToListAsync()
+                );
             foreach (var pp in pps)
             {
                 var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||

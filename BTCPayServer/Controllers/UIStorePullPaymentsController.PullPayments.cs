@@ -147,7 +147,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("")]
         public async Task<IActionResult> PullPayments(
             string storeId,
-            string paymentMethodId,
             PullPaymentState pullPaymentState,
             int skip = 0,
             int count = 50,
@@ -191,18 +190,9 @@ namespace BTCPayServer.Controllers
             {
                 Skip = skip,
                 Count = count,
-                Total = await ppsQuery.CountAsync()
-                PaymentMethods = paymentMethods,
-                PaymentMethodId = paymentMethodId,
+                Total = await ppsQuery.CountAsync(),
                 ActiveState = pullPaymentState
             });
-
-            if (vm.PaymentMethodId != null)
-            {
-                ppsQuery = ppsQuery
-                    .Where(p => p.GetBlob().SupportedPaymentMethods.Contains(PaymentMethodId.Parse(vm.PaymentMethodId)))
-                    .ToList();
-            }
 
             switch (pullPaymentState) {
                 case PullPaymentState.Active:

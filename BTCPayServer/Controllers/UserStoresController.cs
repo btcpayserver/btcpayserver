@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     [AutoValidateAntiforgeryToken]
     public class UserStoresController : Controller
     {
@@ -60,6 +59,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public IActionResult DeleteStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
@@ -69,6 +69,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();

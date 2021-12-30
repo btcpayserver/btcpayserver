@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Controllers
 {
     [Route("vault")]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     public class VaultController : Controller
     {
         private readonly IAuthorizationService _authorizationService;

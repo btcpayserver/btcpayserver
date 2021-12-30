@@ -52,6 +52,7 @@ namespace BTCPayServer.Security
             var isAdmin = context.User.IsInRole(Roles.ServerAdmin);
 
             AppData app = null;
+            StoreData store = null;
             InvoiceEntity invoice = null;
             PaymentRequestData paymentRequest = null;
             string storeId;
@@ -111,43 +112,32 @@ namespace BTCPayServer.Security
             }
             
             // Fall back to user prefs cookie
-            var usedCookieFallback = false;
             if (storeId == null)
             {
                 storeId = _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
-                usedCookieFallback = true;
             }
 
-            var storeT = new AsyncLazy<StoreData>(() => storeId != null
-                ? _storeRepository.FindStore(storeId, userId)
-                : Task.FromResult<StoreData>(null));
-
-            StoreData store;
+            if (storeId != null)
+            {
+                store = await _storeRepository.FindStore(storeId, userId);
+            }
+            
             switch (requirement.Policy)
             {
                 case Policies.CanModifyServerSettings:
                     if (isAdmin)
                         success = true;
                     break;
+                case Policies.CanViewInvoices:
                 case Policies.CanModifyStoreSettings:
-                    store = await storeT.Value;
                     if (store != null && (store.Role == StoreRoles.Owner || isAdmin))
                         success = true;
                     break;
                 case Policies.CanViewStoreSettings:
-                    store = await storeT.Value;
                     if (store != null || isAdmin)
                         success = true;
                     break;
-                case Policies.CanViewInvoices:
-                    success = true;
-                    if (usedCookieFallback)
-                    {
-                        storeT = new AsyncLazy<StoreData>(() => Task.FromResult<StoreData>(null));
-                    }
-                    break;
                 case Policies.CanCreateInvoice:
-                    store = await storeT.Value;
                     if (store != null || isAdmin)
                         success = true;
                     break;
@@ -165,7 +155,7 @@ namespace BTCPayServer.Security
                 context.Succeed(requirement);
                 if (!explicitResource)
                 {
-                    store = await storeT.Value;
+                    
                     if (store != null)
                     {
                         _httpContext.SetStoreData(store);
@@ -178,14 +168,5 @@ namespace BTCPayServer.Security
                 }
             }
         }
-    }
-    
-    public class AsyncLazy<T> : Lazy<Task<T>>
-    {
-        public AsyncLazy(Func<T> valueFactory) :
-            base(() => Task.Factory.StartNew(valueFactory)) { }
-
-        public AsyncLazy(Func<Task<T>> taskFactory) :
-            base(() => Task.Factory.StartNew(taskFactory).Unwrap()) { }
     }
 }

@@ -229,7 +229,7 @@ namespace BTCPayServer.Services.Wallets
         public async Task<TransactionInformation> FetchTransaction(DerivationStrategyBase derivationStrategyBase, uint256 transactionId)
         {
             var tx = await _Client.GetTransactionAsync(derivationStrategyBase, transactionId);
-            if (tx is null || !_Network.FilterValidTransactions(new List<TransactionInformation>() {tx}).Any())
+            if (tx is null || !_Network.FilterValidTransactions(new List<TransactionInformation>() { tx }).Any())
             {
                 return null;
             }

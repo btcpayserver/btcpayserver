@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
         }
-        
+
         [Route("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
@@ -104,21 +104,21 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(pullPaymentId), "This pull payment does not exists");
             }
-            
+
             var ppBlob = pp.GetBlob();
-            
+
             var paymentMethodId = ppBlob.SupportedPaymentMethods.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
-            
-            var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FindPayoutHandler(paymentMethodId);
+
+            var payoutHandler = paymentMethodId is null ? null : _payoutHandlers.FindPayoutHandler(paymentMethodId);
             if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");   
+                ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
             var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination, true);
             if (destination.destination is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), destination.error??"Invalid destination with selected payment method");
+                ModelState.AddModelError(nameof(vm.Destination), destination.error ?? "Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
 

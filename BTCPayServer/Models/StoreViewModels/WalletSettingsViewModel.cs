@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string StoreId { get; set; }
         public bool IsHotWallet { get; set; }
         public bool CanUsePayJoin { get; set; }
-        
+
         [Display(Name = "Enable Payjoin/P2EP")]
         public bool PayJoinEnabled { get; set; }
 
@@ -28,9 +28,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Consider the invoice confirmed when the payment transaction …")]
         public SpeedPolicy SpeedPolicy { get; set; }
-        
+
         public string Label { get; set; }
-        
+
         public string DerivationSchemeInput { get; set; }
         [Display(Name = "Is signing key")]
         public string SelectedSigningKey { get; set; }

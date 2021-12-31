@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Plugins.Test
 {
-    
+
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TestPluginDbContext>
     {
         public TestPluginDbContext CreateDbContext(string[] args)
@@ -31,7 +31,7 @@ namespace BTCPayServer.Plugins.Test
             var builder = new DbContextOptionsBuilder<TestPluginDbContext>();
             ConfigureBuilder(builder);
             return new TestPluginDbContext(builder.Options);
-            
+
         }
     }
 }

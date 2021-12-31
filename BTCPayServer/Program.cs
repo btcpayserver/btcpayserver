@@ -68,7 +68,7 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(ex.Message))
                     logs.Configuration.LogError(ex.Message);
             }
-            catch(Exception e) when( PluginManager.IsExceptionByPlugin(e))
+            catch (Exception e) when (PluginManager.IsExceptionByPlugin(e))
             {
                 var pluginDir = new DataDirectories().Configure(conf).PluginDir;
                 PluginManager.DisablePlugin(pluginDir, e.Source);

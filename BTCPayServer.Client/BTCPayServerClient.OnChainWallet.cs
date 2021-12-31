@@ -25,14 +25,14 @@ namespace BTCPayServer.Client
             Dictionary<string, object> queryParams = new Dictionary<string, object>();
             if (blockTarget != null)
             {
-                queryParams.Add("blockTarget",blockTarget);
+                queryParams.Add("blockTarget", blockTarget);
             }
             var response =
                 await _httpClient.SendAsync(
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/feeRate", queryParams), token);
             return await HandleResponse<OnChainWalletFeeRateData>(response);
         }
-        
+
         public virtual async Task<OnChainWalletAddressData> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false,
             CancellationToken token = default)
         {
@@ -44,16 +44,16 @@ namespace BTCPayServer.Client
                     }), token);
             return await HandleResponse<OnChainWalletAddressData>(response);
         }
-        
+
         public virtual async Task UnReserveOnChainWalletReceiveAddress(string storeId, string cryptoCode,
             CancellationToken token = default)
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address",method:HttpMethod.Delete), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
-       
+
         public virtual async Task<IEnumerable<OnChainWalletTransactionData>> ShowOnChainWalletTransactions(
             string storeId, string cryptoCode, TransactionStatus[] statusFilter = null,
             CancellationToken token = default)
@@ -68,7 +68,7 @@ namespace BTCPayServer.Client
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions", query), token);
             return await HandleResponse<IEnumerable<OnChainWalletTransactionData>>(response);
         }
-        
+
         public virtual async Task<OnChainWalletTransactionData> GetOnChainWalletTransaction(
             string storeId, string cryptoCode, string transactionId,
             CancellationToken token = default)
@@ -78,7 +78,7 @@ namespace BTCPayServer.Client
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions/{transactionId}"), token);
             return await HandleResponse<OnChainWalletTransactionData>(response);
         }
-        
+
         public virtual async Task<IEnumerable<OnChainWalletUTXOData>> GetOnChainWalletUTXOs(string storeId,
             string cryptoCode,
             CancellationToken token = default)
@@ -88,7 +88,7 @@ namespace BTCPayServer.Client
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/utxos"), token);
             return await HandleResponse<IEnumerable<OnChainWalletUTXOData>>(response);
         }
-        
+
         public virtual async Task<OnChainWalletTransactionData> CreateOnChainTransaction(string storeId,
             string cryptoCode, CreateOnChainTransactionRequest request,
             CancellationToken token = default)
@@ -103,7 +103,7 @@ namespace BTCPayServer.Client
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions", null, request, HttpMethod.Post), token);
             return await HandleResponse<OnChainWalletTransactionData>(response);
         }
-        
+
         public virtual async Task<Transaction> CreateOnChainTransactionButDoNotBroadcast(string storeId,
             string cryptoCode, CreateOnChainTransactionRequest request, Network network,
             CancellationToken token = default)

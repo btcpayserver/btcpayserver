@@ -51,7 +51,7 @@ namespace BTCPayServer.Services.Wallets
                 return null;
             }
 
-            await explorerClient.CancelReservationAsync(kpi.DerivationStrategy, new[] {kpi.KeyPath});
+            await explorerClient.CancelReservationAsync(kpi.DerivationStrategy, new[] { kpi.KeyPath });
             Remove(walletId);
             return kpi.Address.ToString();
         }
@@ -130,14 +130,14 @@ namespace BTCPayServer.Services.Wallets
             return Task.CompletedTask;
         }
 
-        public Tuple<WalletId, KeyPathInformation> GetByScriptPubKey(string cryptoCode,Script script)
+        public Tuple<WalletId, KeyPathInformation> GetByScriptPubKey(string cryptoCode, Script script)
         {
-            var match =  _walletReceiveState.Where(pair =>
-                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
-                pair.Value.ScriptPubKey == script);
+            var match = _walletReceiveState.Where(pair =>
+               pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+               pair.Value.ScriptPubKey == script);
             if (match.Any())
             {
-                var f =match.First();
+                var f = match.First();
                 return new Tuple<WalletId, KeyPathInformation>(f.Key, f.Value);
             }
 

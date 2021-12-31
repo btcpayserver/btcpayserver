@@ -54,13 +54,13 @@ namespace BTCPayServer.Services
 
         public IEnumerable<SelectListItem> GetLanguageSelectListItems()
         {
-              IEnumerable<SelectListItem> items = GetLanguages().Select(l => new SelectListItem
-              {
-                  Value = l.Code, 
-                  Text = l.DisplayName,
-                  Disabled = false
-              }).OrderBy(lang => lang.Text);
-              
+            IEnumerable<SelectListItem> items = GetLanguages().Select(l => new SelectListItem
+            {
+                Value = l.Code,
+                Text = l.DisplayName,
+                Disabled = false
+            }).OrderBy(lang => lang.Text);
+
             return items;
         }
 

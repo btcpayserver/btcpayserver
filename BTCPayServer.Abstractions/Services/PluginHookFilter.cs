@@ -3,7 +3,7 @@ using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Abstractions.Services
 {
-    public abstract class PluginHookFilter<T>:IPluginHookFilter
+    public abstract class PluginHookFilter<T> : IPluginHookFilter
     {
         public abstract string Hook { get; }
 

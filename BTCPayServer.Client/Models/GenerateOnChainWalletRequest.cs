@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Client.JsonConverters;
+using BTCPayServer.Client.JsonConverters;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -8,7 +8,7 @@ namespace BTCPayServer.Client
     public class GenerateOnChainWalletRequest
     {
         public int AccountNumber { get; set; } = 0;
-        [JsonConverter(typeof(MnemonicJsonConverter))]	
+        [JsonConverter(typeof(MnemonicJsonConverter))]
         public Mnemonic ExistingMnemonic { get; set; }
         [JsonConverter(typeof(WordlistJsonConverter))]
         public NBitcoin.Wordlist WordList { get; set; }

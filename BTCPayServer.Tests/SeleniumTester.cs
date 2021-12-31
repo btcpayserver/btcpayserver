@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Manage;
@@ -12,11 +13,10 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using Xunit;
 using OpenQA.Selenium.Support.UI;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
@@ -82,7 +82,7 @@ namespace BTCPayServer.Tests
             GoToRegister();
             Driver.AssertNoError();
         }
-        
+
         /// <summary>
         /// Use this ServerUri when trying to browse with selenium
         /// Because for some reason, the selenium container can't resolve the tests container domain name
@@ -90,7 +90,7 @@ namespace BTCPayServer.Tests
         public Uri ServerUri;
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
-            return FindAlertMessage(new[] {severity});
+            return FindAlertMessage(new[] { severity });
         }
         internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
@@ -187,7 +187,7 @@ namespace BTCPayServer.Tests
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            
+
             Driver.ToggleCollapse("AdvancedSettings");
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
@@ -210,7 +210,7 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("confirm")).Click();
                 Driver.FindElement(By.Id("submit")).Click();
             }
-            
+
             WalletId = new WalletId(StoreId, cryptoCode);
             return new Mnemonic(seed);
         }
@@ -240,7 +240,7 @@ namespace BTCPayServer.Tests
                 LightningConnectionType.Charge =>
                     $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                 LightningConnectionType.CLightning =>
-                    $"type=clightning;server={((CLightningClient) Server.MerchantLightningD).Address.AbsoluteUri}",
+                    $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
                 LightningConnectionType.LndREST =>
                     $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
                 _ => null
@@ -402,9 +402,9 @@ namespace BTCPayServer.Tests
         }
 
         public string CreateInvoice(
-            string storeId, 
-            decimal? amount = 100, 
-            string currency = "USD", 
+            string storeId,
+            decimal? amount = 100,
+            string currency = "USD",
             string refundEmail = "",
             string defaultPaymentMethod = null,
             bool? requiresRefundEmail = null,

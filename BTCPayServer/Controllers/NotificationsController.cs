@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
         {
             return ViewComponent("NotificationsDropdown");
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> SubscribeUpdates(CancellationToken cancellationToken)
         {
@@ -110,10 +110,12 @@ namespace BTCPayServer.Controllers
 
             var res = await _notificationManager.GetNotifications(new NotificationsQuery()
             {
-                Skip = skip, Take = count, UserId = userId
+                Skip = skip,
+                Take = count,
+                UserId = userId
             });
 
-            var model = new IndexViewModel() {Skip = skip, Count = count, Items = res.Items, Total = res.Count};
+            var model = new IndexViewModel() { Skip = skip, Count = count, Items = res.Items, Total = res.Count };
 
             return View(model);
         }
@@ -133,7 +135,7 @@ namespace BTCPayServer.Controllers
         {
             if (ValidUserClaim(out var userId))
             {
-                await _notificationManager.ToggleSeen(new NotificationsQuery() {Ids = new[] {id}, UserId = userId}, null);
+                await _notificationManager.ToggleSeen(new NotificationsQuery() { Ids = new[] { id }, UserId = userId }, null);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -148,9 +150,10 @@ namespace BTCPayServer.Controllers
                 var items = await
                     _notificationManager.ToggleSeen(new NotificationsQuery()
                     {
-                        Ids = new[] {id}, UserId = userId
+                        Ids = new[] { id },
+                        UserId = userId
                     }, true);
-                
+
                 var link = items.FirstOrDefault()?.ActionLink ?? "";
                 if (string.IsNullOrEmpty(link))
                 {
@@ -162,7 +165,7 @@ namespace BTCPayServer.Controllers
 
             return NotFound();
         }
-        
+
         [HttpPost]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
@@ -185,21 +188,26 @@ namespace BTCPayServer.Controllers
                     case "delete":
                         await _notificationManager.Remove(new NotificationsQuery()
                         {
-                            UserId = userId, Ids = selectedItems
+                            UserId = userId,
+                            Ids = selectedItems
                         });
 
                         break;
                     case "mark-seen":
                         await _notificationManager.ToggleSeen(new NotificationsQuery()
                         {
-                            UserId = userId, Ids = selectedItems, Seen = false
+                            UserId = userId,
+                            Ids = selectedItems,
+                            Seen = false
                         }, true);
 
                         break;
                     case "mark-unseen":
                         await _notificationManager.ToggleSeen(new NotificationsQuery()
                         {
-                            UserId = userId, Ids = selectedItems, Seen = true
+                            UserId = userId,
+                            Ids = selectedItems,
+                            Seen = true
                         }, false);
                         break;
                 }
@@ -217,7 +225,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            await _notificationManager.ToggleSeen(new NotificationsQuery() {Seen = false, UserId = userId}, true);
+            await _notificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
             return Redirect(returnUrl);
         }
 

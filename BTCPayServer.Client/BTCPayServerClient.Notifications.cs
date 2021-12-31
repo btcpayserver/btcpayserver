@@ -9,11 +9,11 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, int? skip = null, 
+        public virtual async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, int? skip = null,
             int? take = null, CancellationToken token = default)
         {
             Dictionary<string, object> queryPayload = new Dictionary<string, object>();
-            
+
             if (seen != null)
                 queryPayload.Add(nameof(seen), seen);
             if (skip != null)
@@ -41,7 +41,7 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/users/me/notifications/{notificationId}",
-                    method: HttpMethod.Put, bodyPayload: new UpdateNotification() {Seen = seen}), token);
+                    method: HttpMethod.Put, bodyPayload: new UpdateNotification() { Seen = seen }), token);
             return await HandleResponse<NotificationData>(response);
         }
 

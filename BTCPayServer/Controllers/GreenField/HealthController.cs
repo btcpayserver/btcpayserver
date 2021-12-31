@@ -12,7 +12,7 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private readonly NBXplorerDashboard _dashBoard;
 
-        public HealthController(NBXplorerDashboard dashBoard )
+        public HealthController(NBXplorerDashboard dashBoard)
         {
             _dashBoard = dashBoard;
         }

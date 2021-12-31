@@ -14,9 +14,9 @@ namespace BTCPayServer.Abstractions.Extensions
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {
-            SetActivePage(viewData, activePage.ToString(), activePage.GetType().Name,title, activeId );
+            SetActivePage(viewData, activePage.ToString(), activePage.GetType().Name, title, activeId);
         }
-        
+
         public static void SetActivePage(this ViewDataDictionary viewData, string activePage, string category, string title = null, string activeId = null)
         {
             // Page Title
@@ -57,9 +57,9 @@ namespace BTCPayServer.Abstractions.Extensions
         public static string IsActivePage<T>(this ViewDataDictionary viewData, T page, object id = null)
             where T : IConvertible
         {
-            return IsActivePage(viewData, page.ToString(), page.GetType().Name, id );
+            return IsActivePage(viewData, page.ToString(), page.GetType().Name, id);
         }
-        public static string IsActivePage(this ViewDataDictionary viewData, string page,string category,  object id = null)
+        public static string IsActivePage(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_PAGE_KEY))
             {
@@ -68,7 +68,7 @@ namespace BTCPayServer.Abstractions.Extensions
             var activeId = viewData[ACTIVE_ID_KEY];
             var activePage = viewData[ACTIVE_PAGE_KEY]?.ToString();
             var activeCategory = viewData[ACTIVE_CATEGORY_KEY]?.ToString();
-            var categoryAndPageMatch = ( category == null || activeCategory.Equals(category, StringComparison.InvariantCultureIgnoreCase )) && page.Equals(activePage, StringComparison.InvariantCultureIgnoreCase);
+            var categoryAndPageMatch = (category == null || activeCategory.Equals(category, StringComparison.InvariantCultureIgnoreCase)) && page.Equals(activePage, StringComparison.InvariantCultureIgnoreCase);
             var idMatch = id == null || activeId == null || id.Equals(activeId);
             return categoryAndPageMatch && idMatch ? "active" : null;
         }
@@ -84,11 +84,11 @@ namespace BTCPayServer.Abstractions.Extensions
             var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
             return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
         }
-        
+
         public static string ToTimeAgo(this DateTimeOffset date)
         {
             var diff = DateTimeOffset.UtcNow - date;
-            var formatted = diff.Seconds > 0 
+            var formatted = diff.Seconds > 0
                 ? $"{diff.TimeString()} ago"
                 : $"in {diff.Negate().TimeString()}";
             return formatted;

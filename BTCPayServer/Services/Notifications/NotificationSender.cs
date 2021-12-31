@@ -74,11 +74,11 @@ namespace BTCPayServer.Services.Notifications
             switch (scope)
             {
                 case AdminScope _:
-                {
-                    query = _userManager.GetUsersInRoleAsync(Roles.ServerAdmin).Result.AsQueryable();
+                    {
+                        query = _userManager.GetUsersInRoleAsync(Roles.ServerAdmin).Result.AsQueryable();
 
-                    break;
-                }
+                        break;
+                    }
                 case StoreScope s:
                     query = ctx.UserStore
                         .Include(store => store.ApplicationUser)
@@ -87,12 +87,12 @@ namespace BTCPayServer.Services.Notifications
                     break;
                 case UserScope userScope:
                     query = ctx.Users
-                        .Where(user => user.Id ==  userScope.UserId);
+                        .Where(user => user.Id == userScope.UserId);
                     break;
                 default:
                     throw new NotSupportedException("Notification scope not supported");
-                
-                
+
+
             }
             query = query.Where(store => store.DisabledNotifications != "all");
             foreach (string term in terms)
@@ -100,7 +100,7 @@ namespace BTCPayServer.Services.Notifications
                 // Cannot specify StringComparison as EF core does not support it and would attempt client-side evaluation 
                 // ReSharper disable once CA1307
 #pragma warning disable CA1307 // Specify StringComparison
-                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term));
+                query = query.Where(user => user.DisabledNotifications == null || !user.DisabledNotifications.Contains(term));
 #pragma warning restore CA1307 // Specify StringComparison
             }
 

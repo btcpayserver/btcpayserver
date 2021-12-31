@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using BTCPayServer.Data;
-using BTCPayServer.Storage.Services;
-using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Services
 {
@@ -33,18 +33,18 @@ namespace BTCPayServer.Services
             _fileService = fileService;
             _storeRepository = storeRepository;
         }
-        
-        public async Task<bool> IsAdminUser(string userId) 
+
+        public async Task<bool> IsAdminUser(string userId)
         {
-            return IsRoleAdmin(await _userManager.GetRolesAsync(new ApplicationUser(){Id = userId}));
+            return IsRoleAdmin(await _userManager.GetRolesAsync(new ApplicationUser() { Id = userId }));
         }
 
-        public async Task<bool> IsAdminUser(ApplicationUser user) 
+        public async Task<bool> IsAdminUser(ApplicationUser user)
         {
             return IsRoleAdmin(await _userManager.GetRolesAsync(user));
         }
 
-        public async Task DeleteUserAndAssociatedData(ApplicationUser user) 
+        public async Task DeleteUserAndAssociatedData(ApplicationUser user)
         {
             var userId = user.Id;
             var files = await _storedFileRepository.GetFiles(new StoredFileRepository.FilesQuery()

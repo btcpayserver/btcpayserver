@@ -19,7 +19,7 @@ namespace BTCPayServer.Fido2
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Fido2Service _fido2Service;
 
-        public Fido2Controller(UserManager<ApplicationUser> userManager,  Fido2Service fido2Service)
+        public Fido2Controller(UserManager<ApplicationUser> userManager, Fido2Service fido2Service)
         {
             _userManager = userManager;
             _fido2Service = fido2Service;
@@ -27,7 +27,7 @@ namespace BTCPayServer.Fido2
 
         [HttpGet("{id}/delete")]
         public IActionResult Remove(string id)
-        { 
+        {
             return View("Confirm", new ConfirmModel("Remove security device", "Your account will no longer have this security device as an option for two-factor authentication.", "Remove"));
         }
 
@@ -41,7 +41,7 @@ namespace BTCPayServer.Fido2
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Html = "The security device was removed successfully."
             });
-            
+
             return RedirectToList();
         }
 
@@ -56,7 +56,7 @@ namespace BTCPayServer.Fido2
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = "The security device could not be registered."
                 });
-                
+
                 return RedirectToList();
             }
 

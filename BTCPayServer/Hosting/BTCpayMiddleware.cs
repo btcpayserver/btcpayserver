@@ -71,7 +71,7 @@ namespace BTCPayServer.Hosting
                 var isModal = httpContext.Request.Query.TryGetValue("view", out var view)
                             && view.ToString().Equals("modal", StringComparison.OrdinalIgnoreCase);
                 if (!string.IsNullOrEmpty(_Env.OnionUrl) &&
-                    !httpContext.Request.IsOnion() && 
+                    !httpContext.Request.IsOnion() &&
                     isHtml &&
                     !isModal)
                 {

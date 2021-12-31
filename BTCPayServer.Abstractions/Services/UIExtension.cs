@@ -2,7 +2,7 @@ using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Abstractions.Services
 {
-    public class UIExtension: IUIExtension
+    public class UIExtension : IUIExtension
     {
         public UIExtension(string partial, string location)
         {

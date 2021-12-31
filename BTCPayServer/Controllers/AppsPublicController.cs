@@ -43,19 +43,19 @@ namespace BTCPayServer.Controllers
         [HttpGet("/apps/{appId}")]
         public async Task<IActionResult> RedirectToApp(string appId)
         {
-           
+
             switch ((await _AppService.GetApp(appId, null)).AppType)
             {
                 case nameof(AppType.Crowdfund):
-                    return RedirectToAction("ViewCrowdfund", new {appId});
-                
+                    return RedirectToAction("ViewCrowdfund", new { appId });
+
                 case nameof(AppType.PointOfSale):
-                    return RedirectToAction("ViewPointOfSale", new {appId});
+                    return RedirectToAction("ViewPointOfSale", new { appId });
             }
 
             return NotFound();
         }
-        
+
         [HttpGet]
         [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
-                                                        string posData = null, 
+                                                        string posData = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                if (choice.Price.Type ==  ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers
                     if (amount > price)
                         price = amount;
                 }
-               
+
 
                 if (choice.Inventory.HasValue)
                 {
@@ -230,7 +230,7 @@ namespace BTCPayServer.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
-                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore 
+                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? store.GetStoreBlob().RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
@@ -274,7 +274,7 @@ namespace BTCPayServer.Controllers
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
             var appInfo = await GetAppInfo(appId);
-            
+
             if (settings.Enabled)
                 return View(appInfo);
             if (!isAdmin)
@@ -292,7 +292,7 @@ namespace BTCPayServer.Controllers
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-           
+
             var app = await _AppService.GetApp(appId, AppType.Crowdfund, true);
 
             if (app == null)

@@ -9,7 +9,7 @@ namespace BTCPayServer.Models.ManageViewModels
         public int RecoveryCodesLeft { get; set; }
 
         public bool Is2faEnabled { get; set; }
-        
+
         public List<Fido2Credential> Credentials { get; set; }
 
         public string LoginCode { get; set; }

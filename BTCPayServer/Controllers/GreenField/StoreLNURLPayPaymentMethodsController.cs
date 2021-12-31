@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.GreenField
             string storeId,
             string cryptoCode)
         {
-           
+
             AssertCryptoCodeWallet(cryptoCode, out _);
 
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
@@ -109,7 +109,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] LNURLPayPaymentMethodData paymentMethodData)
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
-           
+
             AssertCryptoCodeWallet(cryptoCode, out _);
 
             var lnMethod = StoreLightningNetworkPaymentMethodsController.GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider,
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers.GreenField
                 UseBech32Scheme = paymentMethodData.UseBech32Scheme,
                 EnableForStandardInvoices = paymentMethodData.EnableForStandardInvoices
             };
-            
+
             var store = Store;
             var storeBlob = store.GetStoreBlob();
             store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
@@ -166,6 +166,6 @@ namespace BTCPayServer.Controllers.GreenField
             if (network is null)
                 throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
         }
-        
+
     }
 }

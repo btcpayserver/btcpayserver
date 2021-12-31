@@ -1,9 +1,9 @@
 using System;
-using BTCPayServer.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
@@ -41,10 +41,10 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
-        
+
         [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
-            string storeId, 
+            string storeId,
             string sortOrder = null,
             string sortOrderColumn = null
         )
@@ -52,9 +52,9 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             var apps = await _appService.GetAllApps(GetUserId(), false, store.Id);
 
-            if (sortOrder != null && sortOrderColumn != null) 
+            if (sortOrder != null && sortOrderColumn != null)
             {
-                apps = apps.OrderByDescending(app => 
+                apps = apps.OrderByDescending(app =>
                 {
                     switch (sortOrderColumn)
                     {
@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
                         break;
                 }
             }
-            
+
             return View(new ListAppsViewModel
             {
                 Apps = apps
@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
-            
+
             return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
@@ -161,10 +161,10 @@ namespace BTCPayServer.Controllers
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
-            
+
             if (await _appService.DeleteApp(app))
                 TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
-            
+
             return RedirectToAction(nameof(ListApps), new { storeId = app.StoreDataId });
         }
 
@@ -180,7 +180,7 @@ namespace BTCPayServer.Controllers
         private string GetUserId() => _userManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-        
+
         private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

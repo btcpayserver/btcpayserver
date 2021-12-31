@@ -43,7 +43,7 @@ namespace BTCPayServer.Security
         {
             if (context.User.Identity.AuthenticationType != AuthenticationSchemes.Cookie)
                 return;
-                
+
             var userId = _userManager.GetUserId(context.User);
             if (string.IsNullOrEmpty(userId))
                 return;
@@ -110,7 +110,7 @@ namespace BTCPayServer.Security
                     }
                 }
             }
-            
+
             // Fall back to user prefs cookie
             if (storeId == null)
             {
@@ -121,7 +121,7 @@ namespace BTCPayServer.Security
             {
                 store = await _storeRepository.FindStore(storeId, userId);
             }
-            
+
             switch (requirement.Policy)
             {
                 case Policies.CanModifyServerSettings:
@@ -158,15 +158,18 @@ namespace BTCPayServer.Security
                 context.Succeed(requirement);
                 if (!explicitResource)
                 {
-                    
+
                     if (store != null)
                     {
                         _httpContext.SetStoreData(store);
 
                         // cache associated entities if present
-                        if (app != null) _httpContext.SetAppData(app);
-                        if (invoice != null) _httpContext.SetInvoiceData(invoice);
-                        if (paymentRequest != null) _httpContext.SetPaymentRequestData(paymentRequest);
+                        if (app != null)
+                            _httpContext.SetAppData(app);
+                        if (invoice != null)
+                            _httpContext.SetInvoiceData(invoice);
+                        if (paymentRequest != null)
+                            _httpContext.SetPaymentRequestData(paymentRequest);
                     }
                 }
             }

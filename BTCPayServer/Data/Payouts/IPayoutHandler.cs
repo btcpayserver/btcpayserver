@@ -5,8 +5,8 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
-using PayoutData = BTCPayServer.Data.PayoutData;
 using Microsoft.AspNetCore.Mvc;
+using PayoutData = BTCPayServer.Data.PayoutData;
 using StoreData = BTCPayServer.Data.StoreData;
 
 public interface IPayoutHandler

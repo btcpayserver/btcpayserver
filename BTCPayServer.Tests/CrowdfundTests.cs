@@ -92,7 +92,7 @@ namespace BTCPayServer.Tests
 
                 var anonAppPubsController = tester.PayTester.GetController<AppsPublicController>();
                 var publicApps = user.GetController<AppsPublicController>();
-                
+
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(app.Id, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.01)
@@ -187,7 +187,7 @@ namespace BTCPayServer.Tests
 
                 var model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, String.Empty).Result).Model);
-                
+
                 Assert.Equal(crowdfundViewModel.TargetAmount, model.TargetAmount);
                 Assert.Equal(crowdfundViewModel.EndDate, model.EndDate);
                 Assert.Equal(crowdfundViewModel.StartDate, model.StartDate);
@@ -195,7 +195,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.CurrentAmount);
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
                 Assert.Equal(0m, model.Info.ProgressPercentage);
-                
+
                 TestLogs.LogInformation("Unpaid invoices should show as pending contribution because it is hardcap");
                 TestLogs.LogInformation("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
@@ -208,7 +208,7 @@ namespace BTCPayServer.Tests
                     TransactionSpeed = "high",
                     FullNotifications = true
                 }, Facade.Merchant);
-                
+
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
 

@@ -35,16 +35,18 @@ namespace BTCPayServer.Client
             if (textSearch != null)
                 queryPayload.Add(nameof(textSearch), textSearch);
             if (status != null)
-                queryPayload.Add(nameof(status), status.Select(s=> s.ToString().ToLower()).ToArray());
+                queryPayload.Add(nameof(status), status.Select(s => s.ToString().ToLower()).ToArray());
 
-            if(skip != null) {
+            if (skip != null)
+            {
                 queryPayload.Add(nameof(skip), skip);
             }
 
-             if(take != null) {
+            if (take != null)
+            {
                 queryPayload.Add(nameof(take), take);
             }
-            
+
             var response =
                 await _httpClient.SendAsync(
                     CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
@@ -114,7 +116,7 @@ namespace BTCPayServer.Client
         public virtual async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive", 
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive",
                     method: HttpMethod.Post), token);
             return await HandleResponse<InvoiceData>(response);
         }
@@ -122,7 +124,7 @@ namespace BTCPayServer.Client
         public virtual async Task ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate", 
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate",
                     method: HttpMethod.Post), token);
             await HandleResponse(response);
         }

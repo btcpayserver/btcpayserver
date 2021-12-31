@@ -140,7 +140,7 @@ namespace BTCPayServer.PaymentRequest
                     if (state.Status == InvoiceStatusLegacy.Invalid ||
                         state.Status == InvoiceStatusLegacy.Expired && !payments.Any())
                         return null;
-                    
+
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice
                     {
                         Id = entity.Id,

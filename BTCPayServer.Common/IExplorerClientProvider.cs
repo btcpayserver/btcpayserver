@@ -1,4 +1,4 @@
-﻿using NBXplorer;
+using NBXplorer;
 
 namespace BTCPayServer.Common
 {

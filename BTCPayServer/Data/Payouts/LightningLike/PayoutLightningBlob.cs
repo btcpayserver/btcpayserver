@@ -1,6 +1,6 @@
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
-    public class PayoutLightningBlob: IPayoutProof
+    public class PayoutLightningBlob : IPayoutProof
     {
         public string Bolt11Invoice { get; set; }
         public string Preimage { get; set; }

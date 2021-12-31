@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
                 }
                 return View("Home");
             }
-            
+
             return Challenge();
         }
 
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
 
-        
+
         [Route("misc/permissions")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Permissions()

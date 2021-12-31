@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using NBitcoin;
 using BTCPayServer;
+using NBitcoin;
 
 namespace BTCPayServer.Models.WalletViewModels
 {

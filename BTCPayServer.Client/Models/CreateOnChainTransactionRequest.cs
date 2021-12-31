@@ -18,7 +18,7 @@ namespace BTCPayServer.Client.Models
         }
         [JsonConverter(typeof(FeeRateJsonConverter))]
         public FeeRate FeeRate { get; set; }
-        public bool ProceedWithPayjoin { get; set; }= true;
+        public bool ProceedWithPayjoin { get; set; } = true;
         public bool ProceedWithBroadcast { get; set; } = true;
         public bool NoChange { get; set; } = false;
         [JsonProperty(ItemConverterType = typeof(OutpointJsonConverter))]

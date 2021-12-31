@@ -20,7 +20,7 @@ namespace BTCPayServer.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                         .Annotation("MySql:ValueGeneratedOnAdd", true)
                         .Annotation("Sqlite:Autoincrement", true),
-                        // eof manually added
+                    // eof manually added
                     InvoiceDataId = table.Column<string>(maxLength: 255, nullable: true),
                     Value = table.Column<string>(maxLength: 512, nullable: true)
                 },

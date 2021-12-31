@@ -55,7 +55,7 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonIgnore]
         public Money NextNetworkFee { get; set; }
         [JsonIgnore]
-        public String DepositAddress { get; set; }        
+        public String DepositAddress { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
         public KeyPath KeyPath { get; set; }
 

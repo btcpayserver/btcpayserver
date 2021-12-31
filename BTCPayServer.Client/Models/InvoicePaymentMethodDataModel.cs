@@ -52,7 +52,7 @@ namespace BTCPayServer.Client.Models
             public PaymentStatus Status { get; set; }
 
             public string Destination { get; set; }
-            
+
             public enum PaymentStatus
             {
                 Invalid,

@@ -1,6 +1,6 @@
-﻿namespace BTCPayServer.Data.Payouts.LightningLike
+namespace BTCPayServer.Data.Payouts.LightningLike
 {
-    public class LNURLPayClaimDestinaton: ILightningLikeLikeClaimDestination
+    public class LNURLPayClaimDestinaton : ILightningLikeLikeClaimDestination
     {
         public LNURLPayClaimDestinaton(string lnurl)
         {

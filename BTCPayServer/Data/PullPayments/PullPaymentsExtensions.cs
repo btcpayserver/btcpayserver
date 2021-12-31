@@ -7,7 +7,7 @@ namespace BTCPayServer.Data
 {
     public static class PullPaymentsExtensions
     {
-      
+
         public static PullPaymentBlob GetBlob(this PullPaymentData data)
         {
             return JsonConvert.DeserializeObject<PullPaymentBlob>(Encoding.UTF8.GetString(data.Blob));

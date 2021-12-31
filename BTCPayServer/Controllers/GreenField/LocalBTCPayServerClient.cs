@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers.GreenField
                 _greenfieldPullPaymentController,
                 _homeController,
                 _storePaymentMethodsController,
-                new HttpContextAccessor() {HttpContext = context}
+                new HttpContextAccessor() { HttpContext = context }
             );
         }
     }
@@ -471,8 +471,8 @@ namespace BTCPayServer.Controllers.GreenField
             switch (result)
             {
                 case JsonResult jsonResult:
-                    return (T) jsonResult.Value;
-                case OkObjectResult {Value: T res}:
+                    return (T)jsonResult.Value;
+                case OkObjectResult { Value: T res }:
                     return res;
                 default:
                     return default;
@@ -483,9 +483,9 @@ namespace BTCPayServer.Controllers.GreenField
         {
             switch (result)
             {
-                case UnprocessableEntityObjectResult {Value: List<GreenfieldValidationError> validationErrors}:
+                case UnprocessableEntityObjectResult { Value: List<GreenfieldValidationError> validationErrors }:
                     throw new GreenFieldValidationException(validationErrors.ToArray());
-                case BadRequestObjectResult {Value: GreenfieldAPIError error}:
+                case BadRequestObjectResult { Value: GreenfieldAPIError error }:
                     throw new GreenFieldAPIException(400, error);
                 case NotFoundResult _:
                     throw new GreenFieldAPIException(404, new GreenfieldAPIError("not-found", ""));
@@ -612,8 +612,8 @@ namespace BTCPayServer.Controllers.GreenField
         {
             HandleActionResult(await _apiKeysController.RevokeKey(apikey));
         }
-        
-        public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, 
+
+        public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,
             int? skip = null, int? take = null, CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<NotificationData>>(
@@ -632,7 +632,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return GetFromActionResult<NotificationData>(
                 await _notificationsController.UpdateNotification(notificationId,
-                    new UpdateNotification() {Seen = seen}));
+                    new UpdateNotification() { Seen = seen }));
         }
 
         public override async Task RemoveNotification(string notificationId, CancellationToken token = default)
@@ -752,7 +752,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return GetFromActionResult<StoreData>(await _storesController.UpdateStore(storeId, request));
         }
-        
+
         public override Task<IEnumerable<LNURLPayPaymentMethodData>>
             GetStoreLNURLPayPaymentMethods(string storeId, bool? enabled,
                 CancellationToken token = default)
@@ -784,7 +784,7 @@ namespace BTCPayServer.Controllers.GreenField
                 _storeLnurlPayPaymentMethodsController.UpdateLNURLPayPaymentMethod(storeId, cryptoCode,
                     paymentMethod));
         }
-        
+
         public override Task<IEnumerable<LightningNetworkPaymentMethodData>>
             GetStoreLightningNetworkPaymentMethods(string storeId, bool? enabled,
                 CancellationToken token = default)
@@ -826,13 +826,13 @@ namespace BTCPayServer.Controllers.GreenField
             int? skip = null,
             int? take = null,
             CancellationToken token = default
-            
+
             )
         {
             return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await _greenFieldInvoiceController.GetInvoices(storeId, orderId,
                     status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
-                    endDate, textSearch, includeArchived,skip,take));
+                    endDate, textSearch, includeArchived, skip, take));
         }
 
         public override async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
@@ -928,7 +928,7 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId, string cryptoCode, GenerateOnChainWalletRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<OnChainPaymentMethodDataWithSensitiveData>(await  _chainPaymentMethodsController.GenerateOnChainWallet(storeId, cryptoCode, new GenerateWalletRequest()
+            return GetFromActionResult<OnChainPaymentMethodDataWithSensitiveData>(await _chainPaymentMethodsController.GenerateOnChainWallet(storeId, cryptoCode, new GenerateWalletRequest()
             {
                 Passphrase = request.Passphrase,
                 AccountNumber = request.AccountNumber,

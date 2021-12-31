@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             var store = new Data.StoreData();
-            
+
             PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Name), "DefaultPaymentMethod is invalid");
             }
-            
+
             if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");
             else if (request.Name.Length < 1 || request.Name.Length > 50)
@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
         }
-        
+
         private IActionResult StoreNotFound()
         {
             return this.CreateAPIError(404, "store-not-found", "The store was not found");

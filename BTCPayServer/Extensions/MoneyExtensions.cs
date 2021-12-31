@@ -38,7 +38,7 @@ namespace BTCPayServer
                 .Replace("-", "", StringComparison.InvariantCulture)
                 .PadLeft(divisibility, '0');
             amt = amt.Length == divisibility ? $"0.{amt}" : amt.Insert(amt.Length - divisibility, ".");
-            return decimal.Parse($"{(negative? "-": string.Empty)}{amt}", CultureInfo.InvariantCulture);
+            return decimal.Parse($"{(negative ? "-" : string.Empty)}{amt}", CultureInfo.InvariantCulture);
         }
         public static string ShowMoney(this IMoney money, BTCPayNetwork network)
         {

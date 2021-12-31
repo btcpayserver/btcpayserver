@@ -7,7 +7,7 @@ namespace BTCPayServer
 {
     public static class EnumExtensions
     {
-        public static string DisplayName(this Type enumType, string input) => 
+        public static string DisplayName(this Type enumType, string input) =>
             enumType.GetMember(input).First().GetCustomAttribute<DisplayAttribute>()?.Name ?? input;
     }
 }

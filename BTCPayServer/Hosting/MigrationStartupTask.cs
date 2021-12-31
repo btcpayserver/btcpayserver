@@ -51,7 +51,7 @@ namespace BTCPayServer.Hosting
             UserManager<ApplicationUser> userManager,
             IOptions<LightningNetworkOptions> lightningOptions,
             SettingsRepository settingsRepository,
-            AppService appService, 
+            AppService appService,
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             Logs logs)
@@ -176,7 +176,7 @@ namespace BTCPayServer.Hosting
                 throw;
             }
         }
-        
+
         private async Task AddInitialUserBlob()
         {
             await using var ctx = _DBContextFactory.CreateContext();
@@ -186,25 +186,25 @@ namespace BTCPayServer.Hosting
             }
             await ctx.SaveChangesAsync();
         }
-        
+
         private async Task MigratePayoutDestinationId()
         {
             await using var ctx = _DBContextFactory.CreateContext();
             foreach (var payoutData in await ctx.Payouts.AsQueryable().ToArrayAsync())
             {
-                    var pmi = payoutData.GetPaymentMethodId();
-                    if (pmi is null)
-                    {
-                        continue;
-                    }
-                    var handler = _payoutHandlers
-                        .FindPayoutHandler(pmi);
-                    if (handler is null)
-                    {
-                        continue;
-                    }
-                    var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, false);
-                    payoutData.Destination = claim.destination?.Id;
+                var pmi = payoutData.GetPaymentMethodId();
+                if (pmi is null)
+                {
+                    continue;
+                }
+                var handler = _payoutHandlers
+                    .FindPayoutHandler(pmi);
+                if (handler is null)
+                {
+                    continue;
+                }
+                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, false);
+                payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();
         }
@@ -233,9 +233,9 @@ namespace BTCPayServer.Hosting
                             app.SetSettings(settings1);
                         };
                         break;
-                
+
                     case nameof(AppType.PointOfSale):
-                        
+
                         var settings2 = app.GetSettings<AppsController.PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))
                         {
@@ -288,14 +288,14 @@ namespace BTCPayServer.Hosting
                 fido2.SetBlob(new Fido2CredentialBlob()
                 {
                     SignatureCounter = (uint)u2FDevice.Counter,
-                    PublicKey = CreatePublicKeyFromU2fRegistrationData( u2FDevice.PublicKey).EncodeToBytes() ,
+                    PublicKey = CreatePublicKeyFromU2fRegistrationData(u2FDevice.PublicKey).EncodeToBytes(),
                     UserHandle = u2FDevice.KeyHandle,
                     Descriptor = new PublicKeyCredentialDescriptor(u2FDevice.KeyHandle),
                     CredType = "u2f"
                 });
 
                 await ctx.AddAsync(fido2);
-                
+
                 ctx.Remove(u2FDevice);
             }
             await ctx.SaveChangesAsync();
@@ -536,30 +536,34 @@ retry:
                         CurrencyValue.TryParse(lightningMaxValueJToken.Value<string>(), out lightningMaxValue);
                         blob.AdditionalData.Remove("lightningMaxValue");
                     }
-                    blob.PaymentMethodCriteria =  store.GetEnabledPaymentIds(_NetworkProvider).Select(paymentMethodId=>
-                    {
-                        var matchedFromBlob =
-                            blob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
-                        return matchedFromBlob switch
-                        {
-                            null when paymentMethodId.PaymentType == LightningPaymentType.Instance &&
-                                      lightningMaxValue != null => new PaymentMethodCriteria()
-                            {
-                                Above = false, PaymentMethod = paymentMethodId, Value = lightningMaxValue
-                            },
-                            null when paymentMethodId.PaymentType == BitcoinPaymentType.Instance &&
-                                      onChainMinValue != null => new PaymentMethodCriteria()
-                            {
-                                Above = true, PaymentMethod = paymentMethodId, Value = onChainMinValue
-                            },
-                            _ => new PaymentMethodCriteria()
-                            {
-                                PaymentMethod = paymentMethodId,
-                                Above = matchedFromBlob?.Above ?? true,
-                                Value = matchedFromBlob?.Value
-                            }
-                        };
-                    }).ToList();
+                    blob.PaymentMethodCriteria = store.GetEnabledPaymentIds(_NetworkProvider).Select(paymentMethodId =>
+                   {
+                       var matchedFromBlob =
+                           blob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
+                       return matchedFromBlob switch
+                       {
+                           null when paymentMethodId.PaymentType == LightningPaymentType.Instance &&
+                                     lightningMaxValue != null => new PaymentMethodCriteria()
+                                     {
+                                         Above = false,
+                                         PaymentMethod = paymentMethodId,
+                                         Value = lightningMaxValue
+                                     },
+                           null when paymentMethodId.PaymentType == BitcoinPaymentType.Instance &&
+                                     onChainMinValue != null => new PaymentMethodCriteria()
+                                     {
+                                         Above = true,
+                                         PaymentMethod = paymentMethodId,
+                                         Value = onChainMinValue
+                                     },
+                           _ => new PaymentMethodCriteria()
+                           {
+                               PaymentMethod = paymentMethodId,
+                               Above = matchedFromBlob?.Above ?? true,
+                               Value = matchedFromBlob?.Value
+                           }
+                       };
+                   }).ToList();
 
                     store.SetStoreBlob(blob);
                 }

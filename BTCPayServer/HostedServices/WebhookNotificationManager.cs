@@ -110,7 +110,7 @@ namespace BTCPayServer.HostedServices
             return new WebhookDeliveryRequest(webhookDelivery.Webhook.Id, webhookEvent, newDelivery, webhookDelivery.Webhook.GetBlob());
         }
 
-        private WebhookEvent GetTestWebHook(string storeId, string webhookId, WebhookEventType webhookEventType, Data.WebhookDeliveryData delivery) 
+        private WebhookEvent GetTestWebHook(string storeId, string webhookId, WebhookEventType webhookEventType, Data.WebhookDeliveryData delivery)
         {
             var webhookEvent = GetWebhookEvent(webhookEventType);
             webhookEvent.InvoiceId = "__test__" + Guid.NewGuid().ToString() + "__test__";
@@ -129,12 +129,12 @@ namespace BTCPayServer.HostedServices
             var delivery = NewDelivery(webhookId);
             var webhook = (await StoreRepository.GetWebhooks(storeId)).FirstOrDefault(w => w.Id == webhookId);
             var deliveryRequest = new WebhookDeliveryRequest(
-                webhookId, 
-                GetTestWebHook(storeId, webhookId, webhookEventType, delivery), 
-                delivery, 
+                webhookId,
+                GetTestWebHook(storeId, webhookId, webhookEventType, delivery),
+                delivery,
                 webhook.GetBlob()
             );
-            
+
             return await SendDelivery(deliveryRequest);
         }
 
@@ -194,7 +194,7 @@ namespace BTCPayServer.HostedServices
                 case WebhookEventType.InvoiceSettled:
                     return new WebhookInvoiceSettledEvent(WebhookEventType.InvoiceSettled);
                 case WebhookEventType.InvoiceInvalid:
-                    return new WebhookInvoiceInvalidEvent(WebhookEventType.InvoiceInvalid);        
+                    return new WebhookInvoiceInvalidEvent(WebhookEventType.InvoiceInvalid);
                 default:
                     return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
             }
@@ -352,10 +352,10 @@ namespace BTCPayServer.HostedServices
             }
             ctx.Delivery.SetBlob(deliveryBlob);
 
-            return new DeliveryResult() 
-            { 
-                Success = deliveryBlob.ErrorMessage is null, 
-                DeliveryId = ctx.Delivery.Id, 
+            return new DeliveryResult()
+            {
+                Success = deliveryBlob.ErrorMessage is null,
+                DeliveryId = ctx.Delivery.Id,
                 ErrorMessage = deliveryBlob.ErrorMessage
             };
         }

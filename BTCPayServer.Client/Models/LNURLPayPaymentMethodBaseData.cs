@@ -1,4 +1,4 @@
-﻿namespace BTCPayServer.Client.Models
+namespace BTCPayServer.Client.Models
 {
     public class LNURLPayPaymentMethodBaseData
     {
@@ -8,7 +8,7 @@
 
         public LNURLPayPaymentMethodBaseData()
         {
-            
+
         }
     }
 }

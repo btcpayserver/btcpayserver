@@ -8,7 +8,7 @@ namespace BTCPayServer.Plugins.Test.Data
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
         public DateTimeOffset Timestamp { get; set; }
-        
-        
+
+
     }
 }

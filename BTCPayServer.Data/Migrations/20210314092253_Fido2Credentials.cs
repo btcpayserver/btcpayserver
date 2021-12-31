@@ -1,7 +1,7 @@
 using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {

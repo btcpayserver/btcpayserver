@@ -84,7 +84,7 @@ namespace BTCPayServer.Payments
         public abstract string InvoiceViewPaymentPartialName { get; }
 
         public abstract object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod, bool canModifyStore);
-        
+
         public virtual bool IsPaymentType(string paymentType)
         {
             return IsPaymentTypeBase(paymentType);
@@ -95,7 +95,7 @@ namespace BTCPayServer.Payments
             paymentType = paymentType?.ToLowerInvariant();
             return new[]
             {
-                GetId().Replace("-", "", StringComparison.InvariantCulture), 
+                GetId().Replace("-", "", StringComparison.InvariantCulture),
                 ToStringNormalized()
             }.Contains(
                 paymentType,

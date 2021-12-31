@@ -61,7 +61,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(64)]
         public string Secret { get; set; }
 
-        public List<DeliveryViewModel> Deliveries { get; set;  } = new List<DeliveryViewModel>();
+        public List<DeliveryViewModel> Deliveries { get; set; } = new List<DeliveryViewModel>();
 
         public WebhookBlob CreateBlob()
         {

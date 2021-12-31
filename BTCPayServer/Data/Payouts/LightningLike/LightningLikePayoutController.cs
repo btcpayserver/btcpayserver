@@ -76,7 +76,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .ToListAsync())
                 .Where(payout =>
                 {
-                    if (approvedStores.TryGetValue(payout.PullPaymentData.StoreId, out var value)) return value;
+                    if (approvedStores.TryGetValue(payout.PullPaymentData.StoreId, out var value))
+                        return value;
                     value = payout.PullPaymentData.StoreData.UserStores
                         .Any(store => store.Role == StoreRoles.Owner && store.ApplicationUserId == userId);
                     approvedStores.Add(payout.PullPaymentData.StoreId, value);
@@ -98,7 +99,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                 return new ConfirmVM()
                 {
-                    Amount = blob.CryptoAmount.Value, Destination = blob.Destination, PayoutId = payoutData.Id
+                    Amount = blob.CryptoAmount.Value,
+                    Destination = blob.Destination,
+                    PayoutId = payoutData.Id
                 };
             }).ToList();
             return View(vm);
@@ -124,9 +127,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     results.Add(new ResultVM()
                     {
-                        PayoutId = payoutData.Id, 
+                        PayoutId = payoutData.Id,
                         Result = PayResult.Error,
-                        Message = $"The BOLT11 invoice amount did not match the payout's amount ({boltAmount} instead of {payoutBlob.CryptoAmount})", 
+                        Message = $"The BOLT11 invoice amount did not match the payout's amount ({boltAmount} instead of {payoutBlob.CryptoAmount})",
                         Destination = payoutBlob.Destination
                     });
                     return;
@@ -136,7 +139,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     results.Add(new ResultVM()
                     {
-                        PayoutId = payoutData.Id, Result = result.Result, Destination = payoutBlob.Destination
+                        PayoutId = payoutData.Id,
+                        Result = result.Result,
+                        Destination = payoutBlob.Destination
                     });
                     payoutData.State = PayoutState.Completed;
                 }
@@ -144,16 +149,18 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     results.Add(new ResultVM()
                     {
-                        PayoutId = payoutData.Id, Result = result.Result, Destination = payoutBlob.Destination
+                        PayoutId = payoutData.Id,
+                        Result = result.Result,
+                        Destination = payoutBlob.Destination
                     });
                 }
             }
 
-            var authorizedForInternalNode = (await  _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
+            var authorizedForInternalNode = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
             foreach (var payoutDatas in payouts)
             {
                 var store = payoutDatas.First().PullPaymentData.StoreData;
-                
+
                 var lightningSupportedPaymentMethod = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                     .OfType<LightningSupportedPaymentMethod>()
                     .FirstOrDefault(method => method.PaymentId == pmi);
@@ -162,7 +169,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     foreach (PayoutData payoutData in payoutDatas)
                     {
-                        
+
                         var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
                         results.Add(new ResultVM()
                         {
@@ -176,7 +183,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                     continue;
                 }
-                
+
                 var client =
                     lightningSupportedPaymentMethod.CreateLightningClient(network, _options.Value,
                         _lightningClientFactoryService);
@@ -213,7 +220,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     {
                                         var lnurlPayRequestCallbackResponse =
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
-                                        
+
                                         await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork));
                                     }
                                     catch (LNUrlException e)
@@ -249,7 +256,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     {
                         results.Add(new ResultVM()
                         {
-                            PayoutId = payoutData.Id, Result = PayResult.Error, Destination = blob.Destination
+                            PayoutId = payoutData.Id,
+                            Result = PayResult.Error,
+                            Destination = blob.Destination
                         });
                     }
                 }

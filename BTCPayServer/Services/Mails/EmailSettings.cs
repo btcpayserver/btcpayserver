@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using Newtonsoft.Json;
-using MailKit.Net.Smtp;
-using MimeKit;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
+using MailKit.Net.Smtp;
+using MimeKit;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
@@ -67,7 +67,7 @@ namespace BTCPayServer.Services.Mails
             }
 
             return new MimeMessage(
-                from : new[] { new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay) }, 
+                from: new[] { new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay) },
                 to: new[] { to },
                 subject,
                 bodyBuilder.ToMessageBody());

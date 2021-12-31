@@ -28,7 +28,7 @@ namespace BTCPayServer.Security.GreenField
             return Task.CompletedTask;
         }
     }
-    
+
     public class GreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
 
     {

@@ -200,7 +200,7 @@ namespace BTCPayServer.Tests
                 s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
                 s.Driver.FindElement(By.Id("save")).Click();
                 Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
-                
+
                 var invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);

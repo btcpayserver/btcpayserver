@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
         )
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
-            
+
             var usersQuery = _UserManager.Users;
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CA1307 // Specify StringComparison
             }
 
-            if (sortOrder != null) 
+            if (sortOrder != null)
             {
                 switch (sortOrder)
                 {
@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
                 })
                 .ToListAsync();
             model.Total = await usersQuery.CountAsync();
-             
+
             return View(model);
         }
 
@@ -138,8 +138,14 @@ namespace BTCPayServer.Controllers
             if (ModelState.IsValid)
             {
                 IdentityResult result;
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = requiresConfirmedEmail, 
-                    Created = DateTimeOffset.UtcNow };
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    EmailConfirmed = model.EmailConfirmed,
+                    RequiresEmailConfirmation = requiresConfirmedEmail,
+                    Created = DateTimeOffset.UtcNow
+                };
 
                 if (!string.IsNullOrEmpty(model.Password))
                 {
@@ -149,23 +155,26 @@ namespace BTCPayServer.Controllers
                 {
                     result = await _UserManager.CreateAsync(user);
                 }
-                
+
                 if (result.Succeeded)
                 {
                     if (model.IsAdmin && !(await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin)).Succeeded)
                         model.IsAdmin = false;
 
                     var tcs = new TaskCompletionSource<Uri>();
-                    
+
                     _eventAggregator.Publish(new UserRegisteredEvent()
                     {
-                        RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = model.IsAdmin is true, CallbackUrlGenerated = tcs
+                        RequestUri = Request.GetAbsoluteRootUri(),
+                        User = user,
+                        Admin = model.IsAdmin is true,
+                        CallbackUrlGenerated = tcs
                     });
                     var callbackUrl = await tcs.Task;
 
                     if (user.RequiresEmailConfirmation && !user.EmailConfirmed)
                     {
-                        
+
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
                             Severity = StatusMessageModel.StatusSeverity.Success,
@@ -173,7 +182,8 @@ namespace BTCPayServer.Controllers
                             Html =
                                 $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
                         });
-                    }else if (!await _UserManager.HasPasswordAsync(user))
+                    }
+                    else if (!await _UserManager.HasPasswordAsync(user))
                     {
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
@@ -185,7 +195,7 @@ namespace BTCPayServer.Controllers
                     }
                     return RedirectToAction(nameof(ListUsers));
                 }
-                
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -218,7 +228,7 @@ namespace BTCPayServer.Controllers
                     $"The admin <strong>{user.Email}</strong> will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?",
                     "Delete"));
             }
-            
+
             return View("Confirm", new ConfirmModel("Delete user", $"The user <strong>{user.Email}</strong> will be permanently deleted. Are you sure?", "Delete"));
         }
 
@@ -257,6 +267,6 @@ namespace BTCPayServer.Controllers
         public bool IsAdmin { get; set; }
 
         [Display(Name = "Email confirmed?")]
-        public bool EmailConfirmed { get; set; } 
+        public bool EmailConfirmed { get; set; }
     }
 }

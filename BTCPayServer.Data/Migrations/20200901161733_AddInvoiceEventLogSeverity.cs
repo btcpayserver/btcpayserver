@@ -1,10 +1,10 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
-    
+
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20200901161733_AddInvoiceEventLogSeverity")]
     public partial class AddInvoiceEventLogSeverity : Migration

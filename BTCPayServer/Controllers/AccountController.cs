@@ -108,8 +108,8 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty,
                         "Login code was invalid");
                     return await Login(returnUrl, null);
-                } 
-                var user = await _userManager.FindByIdAsync(userId); 
+                }
+                var user = await _userManager.FindByIdAsync(userId);
 
                 _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
                 await _signInManager.SignInAsync(user, false, "LoginCode");
@@ -150,9 +150,9 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return View(model);
                 }
-               
+
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
-                if (!await _userManager.IsLockedOutAsync(user) &&  fido2Devices)
+                if (!await _userManager.IsLockedOutAsync(user) && fido2Devices)
                 {
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -171,7 +171,7 @@ namespace BTCPayServer.Controllers
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithFido2ViewModel = fido2Devices? await BuildFido2ViewModel(model.RememberMe, user): null, 
+                            LoginWithFido2ViewModel = fido2Devices ? await BuildFido2ViewModel(model.RememberMe, user) : null,
                         });
                     }
                     else
@@ -464,8 +464,13 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, RequiresEmailConfirmation = policies.RequiresConfirmedEmail, 
-                    Created = DateTimeOffset.UtcNow };
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
+                    Created = DateTimeOffset.UtcNow
+                };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -534,17 +539,17 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{userId}'.");
             }
-           
+
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (!await _userManager.HasPasswordAsync(user))
             {
-                
+
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
                     Message = "Your email has been confirmed but you still need to set your password."
                 });
-                return RedirectToAction("SetPassword", new { email = user.Email, code= await _userManager.GeneratePasswordResetTokenAsync(user)});
+                return RedirectToAction("SetPassword", new { email = user.Email, code = await _userManager.GeneratePasswordResetTokenAsync(user) });
             }
 
             if (result.Succeeded)
@@ -554,7 +559,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Success,
                     Message = "Your email has been confirmed."
                 });
-                return RedirectToAction("Login", new {email = user.Email});
+                return RedirectToAction("Login", new { email = user.Email });
             }
 
             return View("Error");
@@ -583,7 +588,8 @@ namespace BTCPayServer.Controllers
                 }
                 _eventAggregator.Publish(new UserPasswordResetRequestedEvent()
                 {
-                    User = user, RequestUri = Request.GetAbsoluteRootUri()
+                    User = user,
+                    RequestUri = Request.GetAbsoluteRootUri()
                 });
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
@@ -614,7 +620,7 @@ namespace BTCPayServer.Controllers
                 email = user?.Email;
             }
 
-            var model = new SetPasswordViewModel {Code = code, Email = email, EmailSetInternally = !string.IsNullOrEmpty(email)};
+            var model = new SetPasswordViewModel { Code = code, Email = email, EmailSetInternally = !string.IsNullOrEmpty(email) };
             return View(model);
         }
 
@@ -639,7 +645,8 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    Severity = StatusMessageModel.StatusSeverity.Success, Message = "Password successfully set."
+                    Severity = StatusMessageModel.StatusSeverity.Success,
+                    Message = "Password successfully set."
                 });
                 return RedirectToAction(nameof(Login));
             }

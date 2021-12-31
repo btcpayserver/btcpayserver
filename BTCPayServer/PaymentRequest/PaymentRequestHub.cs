@@ -151,7 +151,7 @@ namespace BTCPayServer.PaymentRequest
             {
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment || invoiceEvent.Name == InvoiceEvent.MarkedCompleted  || invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
+                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment || invoiceEvent.Name == InvoiceEvent.MarkedCompleted || invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
                         var data = invoiceEvent.Payment?.GetCryptoPaymentData();

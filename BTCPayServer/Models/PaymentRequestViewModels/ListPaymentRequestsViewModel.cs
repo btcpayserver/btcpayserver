@@ -62,7 +62,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Store")]
         public SelectList Stores { get; set; }
-        
+
         [EmailAddress]
         public string Email { get; set; }
 

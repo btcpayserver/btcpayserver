@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
@@ -9,11 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.Test
 {
-    public class TestPlugin: BaseBTCPayServerPlugin
+    public class TestPlugin : BaseBTCPayServerPlugin
     {
-        public  override string Identifier { get; } = "BTCPayServer.Plugins.Test";
-        public  override string Name { get; } = "Test Plugin!";
-        public  override string Description { get; } = "This is a description of the loaded test extension!";
+        public override string Identifier { get; } = "BTCPayServer.Plugins.Test";
+        public override string Name { get; } = "Test Plugin!";
+        public override string Description { get; } = "This is a description of the loaded test extension!";
 
         public override void Execute(IServiceCollection services)
         {
@@ -33,7 +33,7 @@ namespace BTCPayServer.Plugins.Test
             base.Execute(applicationBuilder, applicationBuilderApplicationServices);
             applicationBuilderApplicationServices.GetService<TestPluginDbContextFactory>().CreateContext().Database.Migrate();
             applicationBuilderApplicationServices.GetService<TestPluginService>().AddTestDataRecord().GetAwaiter().GetResult();
-            
+
         }
     }
 }

@@ -8,7 +8,7 @@ namespace BTCPayServer.Components.StoreSelector
         public string CurrentStoreId { get; set; }
         public string CurrentDisplayName { get; set; }
     }
-    
+
     public class StoreSelectorOption
     {
         public bool Selected { get; set; }

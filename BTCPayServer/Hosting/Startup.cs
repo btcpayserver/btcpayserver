@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Filters;
@@ -13,15 +14,16 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Fido2NetLib;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,8 +32,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
-using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.Controllers.GreenField;
 
 namespace BTCPayServer.Hosting
 {
@@ -95,7 +95,7 @@ namespace BTCPayServer.Hosting
                     //They'll be used in a "first match wins" way in the order registered
                     config.AddStaticMetadataRepository();
                 });
-            var descriptor =services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
+            var descriptor = services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
             services.Remove(descriptor);
             services.AddScoped(provider =>
             {
@@ -109,18 +109,18 @@ namespace BTCPayServer.Hosting
             });
             services.AddScoped<Fido2Service>();
             services.AddSingleton<UserLoginCodeService>();
-            
-            var mvcBuilder= services.AddMvc(o =>
-            {
-                o.Filters.Add(new XFrameOptionsAttribute("DENY"));
-                o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
-                o.Filters.Add(new XXSSProtectionAttribute());
-                o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
-                o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
-                if (!Configuration.GetOrDefault<bool>("nocsp", false))
-                    o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
-                o.Filters.Add(new JsonHttpExceptionFilter());
-            })
+
+            var mvcBuilder = services.AddMvc(o =>
+             {
+                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
+                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
+                 o.Filters.Add(new XXSSProtectionAttribute());
+                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
+                 o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
+                 if (!Configuration.GetOrDefault<bool>("nocsp", false))
+                     o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
+                 o.Filters.Add(new JsonHttpExceptionFilter());
+             })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>

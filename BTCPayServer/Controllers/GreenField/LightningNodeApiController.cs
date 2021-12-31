@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         protected async Task<bool> CanUseInternalLightning(bool doingAdminThings)
         {
-            
+
             return (!doingAdminThings && (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll) ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;

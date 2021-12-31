@@ -32,7 +32,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
 
                 var user2 = tester.NewAccount();
-                
+
                 await user2.GrantAccessAsync();
 
                 var paymentRequestController = user.GetController<PaymentRequestController>();
@@ -51,7 +51,7 @@ namespace BTCPayServer.Tests
                     .RouteValues.Values.Last().ToString();
 
                 paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
-                
+
                 // Permission guard for guests editing 
                 Assert
                     .IsType<NotFoundResult>(guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
@@ -78,7 +78,7 @@ namespace BTCPayServer.Tests
                 Assert.Empty(Assert
                     .IsType<ListPaymentRequestsViewModel>(Assert
                         .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests(user.StoreId)).Model).Items);
-                
+
                 // Unarchive
                 Assert
                     .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));

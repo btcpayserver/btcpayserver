@@ -28,11 +28,12 @@ namespace BTCPayServer.Tests
 
         public static void AssertNoError(this IWebDriver driver)
         {
-            if (!driver.PageSource.Contains("alert-danger")) return;
+            if (!driver.PageSource.Contains("alert-danger"))
+                return;
             foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
                 Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
         }
-        
+
         public static T AssertViewModel<T>(this IActionResult result)
         {
             Assert.NotNull(result);
@@ -50,7 +51,7 @@ namespace BTCPayServer.Tests
         // Sometimes, selenium is flaky...
         public static IWebElement FindElementUntilNotStaled(this IWebDriver driver, By by, Action<IWebElement> act)
         {
-            retry:
+retry:
             try
             {
                 var el = driver.FindElement(by);
@@ -91,18 +92,18 @@ namespace BTCPayServer.Tests
 
         public static void UntilJsIsReady(this WebDriverWait wait)
         {
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+            wait.Until(d => ((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(d => ((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
         }
-        
+
         // Open collapse via JS, because if we click the link it triggers the toggle animation.
         // This leads to Selenium trying to click the button while it is moving resulting in an error.
         public static void ToggleCollapse(this IWebDriver driver, string collapseId)
         {
             driver.ExecuteJavaScript($"document.getElementById('{collapseId}').classList.add('show')");
         }
-        
-        
+
+
 
         public static void SetAttribute(this IWebDriver driver, string element, string attribute, string value)
         {
@@ -135,7 +136,7 @@ namespace BTCPayServer.Tests
             wait.UntilJsIsReady();
 
             int retriesLeft = 4;
-            retry:
+retry:
             try
             {
                 var el = driver.FindElement(selector);

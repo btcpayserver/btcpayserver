@@ -30,7 +30,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
-        
+
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
@@ -39,10 +39,10 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
-        
+
         [Display(Name = "Auto-detect language on checkout")]
         public bool AutoDetectLanguage { get; set; }
-        
+
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
 
@@ -62,7 +62,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string PaymentMethod { get; set; }
         public string Value { get; set; }
 
-        public  CriteriaType Type { get; set; }
+        public CriteriaType Type { get; set; }
 
         public enum CriteriaType
         {
@@ -81,6 +81,6 @@ namespace BTCPayServer.Models.StoreViewModels
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }
-        
+
     }
 }

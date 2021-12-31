@@ -31,7 +31,7 @@ namespace BTCPayServer.Components.MainNav
             AppService appService,
             StoreRepository storeRepo,
             StoresController storesController,
-            BTCPayNetworkProvider networkProvider, 
+            BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
@@ -53,13 +53,13 @@ namespace BTCPayServer.Components.MainNav
             if (store != null)
             {
                 var storeBlob = store.GetStoreBlob();
-                            
+
                 // Wallets
-                _storesController.AddPaymentMethods(store, storeBlob, 
+                _storesController.AddPaymentMethods(store, storeBlob,
                     out var derivationSchemes, out var lightningNodes);
                 vm.DerivationSchemes = derivationSchemes;
                 vm.LightningNodes = lightningNodes;
-                
+
                 // Apps
                 var apps = await _appService.GetAllApps(UserId, false, store.Id);
                 vm.Apps = apps.Select(a => new StoreApp
@@ -70,7 +70,7 @@ namespace BTCPayServer.Components.MainNav
                     IsOwner = a.IsOwner
                 }).ToList();
             }
-            
+
             return View(vm);
         }
 

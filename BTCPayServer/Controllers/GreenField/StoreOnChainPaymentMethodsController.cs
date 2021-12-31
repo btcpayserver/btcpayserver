@@ -179,12 +179,12 @@ namespace BTCPayServer.Controllers.GreenField
                     new
                         OnChainPaymentMethodPreviewResultData.
                         OnChainPaymentMethodPreviewResultAddressItem()
-                        {
-                            KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                            Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
+                    {
+                        KeyPath = deposit.GetKeyPath((uint)i).ToString(),
+                        Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
                                 line.KeyPathTemplate.GetKeyPath((uint)i),
                                 derivation.ScriptPubKey).ToString()
-                        });
+                    });
             }
 
             return Ok(result);

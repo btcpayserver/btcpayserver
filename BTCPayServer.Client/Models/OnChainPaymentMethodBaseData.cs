@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
@@ -19,6 +19,6 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        
+
     }
 }

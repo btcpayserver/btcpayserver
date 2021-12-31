@@ -4,7 +4,7 @@ namespace BTCPayServer.Plugins.Shopify.ApiModels
 {
     public class CountResponse
     {
-        [JsonProperty("count")] 
+        [JsonProperty("count")]
         public long Count { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace BTCPayServer.Data
 
         [JsonProperty(ItemConverterType = typeof(PaymentMethodIdJsonConverter))]
         public PaymentMethodId[] SupportedPaymentMethods { get; set; }
-        
+
         public class PullPaymentView
         {
             public string Title { get; set; }

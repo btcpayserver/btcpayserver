@@ -15,7 +15,7 @@ namespace BTCPayServer.Plugins.Test
         {
             _testPluginService = testPluginService;
         }
-        
+
         // GET
         public async Task<IActionResult> Index()
         {
@@ -24,8 +24,8 @@ namespace BTCPayServer.Plugins.Test
                 Data = await _testPluginService.Get()
             });
         }
-        
-        
+
+
     }
 
     public class TestPluginPageViewModel

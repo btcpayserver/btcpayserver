@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers.GreenField
         public GreenFieldServerInfoController(
             BTCPayServerEnvironment env,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            IEnumerable<ISyncSummaryProvider>summaryProviders)
+            IEnumerable<ISyncSummaryProvider> summaryProviders)
         {
             _env = env;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers.GreenField
             var supportedPaymentMethods = _paymentMethodHandlerDictionary
                 .SelectMany(handler => handler.GetSupportedPaymentMethods().Select(id => id.ToString()))
                 .Distinct();
-            
+
             ServerInfoData model = new ServerInfoData2
             {
                 FullySynched = _summaryProviders.All(provider => provider.AllAvailable()),
@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.GreenField
             };
             return Ok(model);
         }
-        
+
         public class ServerInfoData2 : ServerInfoData
         {
             public new IEnumerable<ISyncStatus> SyncStatus { get; set; }

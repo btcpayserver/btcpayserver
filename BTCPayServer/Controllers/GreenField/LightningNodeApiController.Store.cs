@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-            
+
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = HttpContext.GetStoreData();
             if (store == null || network == null)

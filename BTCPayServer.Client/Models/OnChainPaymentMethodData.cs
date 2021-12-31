@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.Models
 
         public OnChainPaymentMethodDataPreview()
         {
-            
+
         }
 
         public OnChainPaymentMethodDataPreview(string cryptoCode, string derivationScheme, string label, RootedKeyPath accountKeyPath)
@@ -34,7 +34,7 @@ namespace BTCPayServer.Client.Models
 
         public OnChainPaymentMethodData()
         {
-            
+
         }
 
         public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled, string label, RootedKeyPath accountKeyPath, string paymentMethod) :

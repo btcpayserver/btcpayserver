@@ -44,7 +44,8 @@ namespace BTCPayServer.Filters
                     return true;
                 }
 
-                if (AppType == policies.RootAppType) {
+                if (AppType == policies.RootAppType)
+                {
                     context.RouteContext.RouteData.Values.Add("appId", policies.RootAppId);
 
                     return true;

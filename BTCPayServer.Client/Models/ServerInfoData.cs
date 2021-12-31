@@ -29,14 +29,14 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public IEnumerable<SyncStatus> SyncStatus { get; set; }
     }
-    
+
     public class SyncStatus
     {
         public string CryptoCode { get; set; }
         public virtual bool Available { get; set; }
     }
 
-    public class ServerInfoSyncStatusData: SyncStatus
+    public class ServerInfoSyncStatusData : SyncStatus
     {
         public int ChainHeight { get; set; }
         public int? SyncHeight { get; set; }

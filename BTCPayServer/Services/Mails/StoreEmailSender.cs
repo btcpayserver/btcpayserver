@@ -32,7 +32,8 @@ namespace BTCPayServer.Services.Mails
                 return emailSettings;
             }
 
-            if (FallbackSender != null) return await FallbackSender?.GetEmailSettings();
+            if (FallbackSender != null)
+                return await FallbackSender?.GetEmailSettings();
             return null;
         }
     }

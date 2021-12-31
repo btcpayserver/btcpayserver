@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -16,11 +17,10 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
-using BTCPayServer.Views.Stores;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -179,7 +179,7 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
 
-                var unsupportedFormats = new[] {ScriptPubKeyType.Legacy};
+                var unsupportedFormats = new[] { ScriptPubKeyType.Legacy };
 
 
                 foreach (ScriptPubKeyType senderAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
@@ -287,7 +287,7 @@ namespace BTCPayServer.Tests
                 var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
                 s.RegisterNewUser(true);
 
-                foreach (var format in new []{ScriptPubKeyType.Segwit, ScriptPubKeyType.SegwitP2SH})
+                foreach (var format in new[] { ScriptPubKeyType.Segwit, ScriptPubKeyType.SegwitP2SH })
                 {
                     var cryptoCode = "BTC";
                     var receiver = s.CreateNewStore();
@@ -300,7 +300,7 @@ namespace BTCPayServer.Tests
                     var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
-                    
+
                     s.GoToWalletSettings(receiver.storeId, cryptoCode);
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
@@ -867,7 +867,7 @@ retry:
                 //give the cow some cash
                 await cashCow.GenerateAsync(1);
                 //let's get some more utxos first
-                foreach (var m in new []
+                foreach (var m in new[]
                 {
                     Money.Coins(0.011m),
                     Money.Coins(0.012m),
@@ -940,7 +940,7 @@ retry:
                     coin5 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.025m);
                     coin6 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
                 });
-                
+
 
                 var signingKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
                 signingKeySettings.RootFingerprint =

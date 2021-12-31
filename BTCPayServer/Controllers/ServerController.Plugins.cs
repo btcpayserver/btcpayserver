@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin , bool update = false)
+            [FromServices] PluginService pluginService, string plugin, bool update = false)
         {
             try
             {
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    
+
                     pluginService.InstallPlugin(plugin);
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -107,7 +107,8 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    Message = "The plugin could not be downloaded. Try again later.", Severity = StatusMessageModel.StatusSeverity.Error
+                    Message = "The plugin could not be downloaded. Try again later.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
                 });
             }
 
@@ -127,7 +128,7 @@ namespace BTCPayServer.Controllers
             }
 
             return RedirectToAction("ListPlugins",
-                new {StatusMessage = "Files uploaded, restart server to load plugins"});
+                new { StatusMessage = "Files uploaded, restart server to load plugins" });
         }
     }
 }

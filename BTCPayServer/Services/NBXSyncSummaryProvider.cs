@@ -40,12 +40,12 @@ namespace BTCPayServer.Services
                     Available = summary.Status.IsFullySynched
                 });
         }
-        
-        public class ServerInfoSyncStatusData2: ServerInfoSyncStatusData, ISyncStatus
+
+        public class ServerInfoSyncStatusData2 : ServerInfoSyncStatusData, ISyncStatus
         {
-            
+
         }
     }
-    
-    
+
+
 }

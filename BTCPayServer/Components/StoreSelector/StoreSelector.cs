@@ -15,7 +15,7 @@ namespace BTCPayServer.Components.StoreSelector
         private readonly UserManager<ApplicationUser> _userManager;
 
         public StoreSelector(
-            StoreRepository storeRepo, 
+            StoreRepository storeRepo,
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager)
         {
@@ -47,14 +47,14 @@ namespace BTCPayServer.Components.StoreSelector
                     };
                 })
                 .ToList();
-            
+
             var vm = new StoreSelectorViewModel
             {
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName
             };
-            
+
             return View(vm);
         }
     }

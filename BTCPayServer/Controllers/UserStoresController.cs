@@ -90,9 +90,9 @@ namespace BTCPayServer.Controllers
         {
             StoresViewModel result = new StoresViewModel();
             var stores = await _repo.GetStoresByUserId(GetUserId());
-            if (sortOrder != null && sortOrderColumn != null) 
+            if (sortOrder != null && sortOrderColumn != null)
             {
-                stores = stores.OrderByDescending(store => 
+                stores = stores.OrderByDescending(store =>
                     {
                         switch (sortOrderColumn)
                         {
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers
                 result.Stores.Add(new StoresViewModel.StoreViewModel()
                 {
                     Id = store.Id,
-                    
+
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
                     IsOwner = store.Role == StoreRoles.Owner,

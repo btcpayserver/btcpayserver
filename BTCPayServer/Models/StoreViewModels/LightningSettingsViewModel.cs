@@ -16,20 +16,20 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Description template of the lightning invoice")]
         public string LightningDescriptionTemplate { get; set; }
-        
+
         // LNURL
         [Display(Name = "Enable LNURL")]
         public bool LNURLEnabled { get; set; }
-        
+
         [Display(Name = "LNURL Classic Mode")]
         public bool LNURLBech32Mode { get; set; } = true;
 
         [Display(Name = "LNURL enabled for standard invoices")]
         public bool LNURLStandardInvoiceEnabled { get; set; } = true;
-        
+
         [Display(Name = "Allow payee to pass a comment")]
         public bool LUD12Enabled { get; set; }
-        
+
         [Display(Name = "Do not offer BOLT11 for standard invoices")]
         public bool DisableBolt11PaymentMethod { get; set; }
     }

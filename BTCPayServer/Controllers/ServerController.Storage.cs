@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
         {
             var model = new ViewFilesViewModel()
             {
-                Files = await _StoredFileRepository.GetFiles(),          
+                Files = await _StoredFileRepository.GetFiles(),
                 DirectUrlByFiles = null,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             };
@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
                 else
-                {                
+                {
                     model.DirectUrlByFiles = directUrlByFiles;
                 }
             }
@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers
             public bool IsDownload { get; set; }
         }
 
-        
+
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFiles(List<IFormFile> files)
         {
@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 StatusMessageModel.StatusSeverity statusMessageSeverity;
-                string statusMessage; 
+                string statusMessage;
 
                 if (invalidFileNameCount == 0)
                 {
@@ -212,13 +212,13 @@ namespace BTCPayServer.Controllers
                 }
 
                 this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Message = statusMessage,
-                        Severity = statusMessageSeverity
-                    });
+                {
+                    Message = statusMessage,
+                    Severity = statusMessageSeverity
+                });
 
                 return RedirectToAction(nameof(Files), new
-                { 
+                {
                     fileIds = fileIds.ToArray(),
                 });
             }

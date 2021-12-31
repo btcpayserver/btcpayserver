@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers
             public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
             public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = new int[] { 15, 18, 20 };
             public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
-            
+
             public string CustomCSSLink { get; set; }
 
             public string EmbeddedCSS { get; set; }
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
-            
+
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
@@ -167,7 +167,7 @@ namespace BTCPayServer.Controllers
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
-            
+
             if (!ModelState.IsValid)
                 return View(vm);
 
@@ -213,14 +213,14 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
-        
+
         private int[] ListSplit(string list, string separator = ",")
         {
             if (string.IsNullOrEmpty(list))
             {
                 return Array.Empty<int>();
             }
-            
+
             // Remove all characters except numeric and comma
             Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
             list = charsToDestroy.Replace(list, "");

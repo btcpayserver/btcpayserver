@@ -41,12 +41,12 @@ namespace BTCPayServer.Data
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }
         string _DefaultCurrency;
-        public string DefaultCurrency 
-        { 
-            get 
-            { 
+        public string DefaultCurrency
+        {
+            get
+            {
                 return string.IsNullOrEmpty(_DefaultCurrency) ? "USD" : _DefaultCurrency;
-            } 
+            }
             set
             {
                 _DefaultCurrency = value;

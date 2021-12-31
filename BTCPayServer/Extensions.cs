@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -29,7 +30,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -231,7 +231,7 @@ namespace BTCPayServer
             return false;
         }
 
-        
+
 
         public static StatusMessageModel GetStatusMessageModel(this ITempDataDictionary tempData)
         {
@@ -410,7 +410,7 @@ namespace BTCPayServer
             result = default;
             return false;
         }
-        
+
         public static UserPrefsCookie GetUserPrefsCookie(this HttpContext ctx)
         {
             var prefCookie = new UserPrefsCookie();
@@ -441,11 +441,11 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
         }
-        
+
         public static void SetStoreData(this HttpContext ctx, StoreData storeData)
         {
             ctx.Items["BTCPAY.STOREDATA"] = storeData;
-            
+
             SetCurrentStoreId(ctx, storeData.Id);
         }
 
@@ -453,7 +453,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
         }
-        
+
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
         {
             ctx.Items["BTCPAY.STORESDATA"] = storeData;
@@ -463,7 +463,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.INVOICEDATA") as InvoiceEntity;
         }
-        
+
         public static void SetInvoiceData(this HttpContext ctx, InvoiceEntity invoiceEntity)
         {
             ctx.Items["BTCPAY.INVOICEDATA"] = invoiceEntity;
@@ -473,7 +473,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
         }
-        
+
         public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData paymentRequestData)
         {
             ctx.Items["BTCPAY.PAYMENTREQUESTDATA"] = paymentRequestData;
@@ -483,7 +483,7 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
         }
-        
+
         public static void SetAppData(this HttpContext ctx, AppData appData)
         {
             ctx.Items["BTCPAY.APPDATA"] = appData;
@@ -564,7 +564,7 @@ namespace BTCPayServer
             var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             dataDirectories.DataDir = configuration["datadir"] ?? defaultSettings.DefaultDataDirectory;
             dataDirectories.PluginDir = configuration["plugindir"] ?? defaultSettings.DefaultPluginDirectory;
-            dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir , Storage.Services.Providers.FileSystemStorage.FileSystemFileProviderService.LocalStorageDirectoryName);
+            dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir, Storage.Services.Providers.FileSystemStorage.FileSystemFileProviderService.LocalStorageDirectoryName);
             dataDirectories.TempStorageDir = Path.Combine(dataDirectories.StorageDir, "tmp");
             return dataDirectories;
         }

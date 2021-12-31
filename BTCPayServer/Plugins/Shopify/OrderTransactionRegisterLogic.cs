@@ -19,7 +19,7 @@ namespace BTCPayServer.Plugins.Shopify
         {
             currency = currency.ToUpperInvariant().Trim();
             var existingShopifyOrderTransactions = (await _client.TransactionsList(orderId)).transactions;
-            
+
             //if there isn't a record for btcpay payment gateway, abort
             var baseParentTransaction = existingShopifyOrderTransactions.FirstOrDefault(holder => !_keywords.Any(a => holder.gateway.Contains(a, StringComparison.InvariantCultureIgnoreCase)));
             if (baseParentTransaction is null)

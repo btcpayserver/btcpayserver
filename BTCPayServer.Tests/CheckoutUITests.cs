@@ -28,17 +28,17 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
-                s.GoToStore(storeId, StoreNavPages.CheckoutAppearance);
+                s.GoToStore(StoreNavPages.CheckoutAppearance);
                 s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
                 s.Driver.FindElement(By.Name("command")).Click();
 
-                var emailAlreadyThereInvoiceId = s.CreateInvoice(storeId, 100, "USD", "a@g.com");
+                var emailAlreadyThereInvoiceId = s.CreateInvoice(100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.GoToHome();
-                s.CreateInvoice(storeId);
+                s.CreateInvoice();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 s.Driver.AssertNoError();
                 s.Driver.Navigate().Back();
@@ -79,11 +79,11 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
 
                 // Now create an invoice that requires a refund email
-                var invoice = s.CreateInvoice(storeId, 100, "USD", "", null, true);
+                var invoice = s.CreateInvoice(100, "USD", "", null, true);
                 s.GoToInvoiceCheckout(invoice);
 
                 var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
@@ -106,7 +106,7 @@ namespace BTCPayServer.Tests
                 s.GoToHome();
 
                 // Now create an invoice that doesn't require a refund email
-                s.CreateInvoice(storeId, 100, "USD", "", null, false);
+                s.CreateInvoice(100, "USD", "", null, false);
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 s.Driver.AssertNoError();
                 s.Driver.Navigate().Back();
@@ -119,7 +119,7 @@ namespace BTCPayServer.Tests
                 s.GoToHome();
 
                 // Now create an invoice that requires refund email but already has one set, email input shouldn't show up
-                s.CreateInvoice(storeId, 100, "USD", "a@g.com", null, true);
+                s.CreateInvoice(100, "USD", "a@g.com", null, true);
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 s.Driver.AssertNoError();
                 s.Driver.Navigate().Back();
@@ -139,10 +139,10 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
 
-                var invoiceId = s.CreateInvoice(storeId);
+                var invoiceId = s.CreateInvoice();
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.True(s.Driver.FindElement(By.Id("DefaultLang")).FindElements(By.TagName("option")).Count > 1);
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
@@ -171,11 +171,11 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser(true);
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddLightningNode();
                 s.AddDerivationScheme("BTC");
 
-                var invoiceId = s.CreateInvoice(storeId, defaultPaymentMethod: "BTC_LightningLike");
+                var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
                 s.GoToInvoiceCheckout(invoiceId);
 
                 Assert.Equal("Bitcoin (Lightning) (BTC)", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
@@ -193,15 +193,15 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser(true);
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddLightningNode();
-                s.GoToStore(storeId);
+                s.GoToStore();
                 s.Driver.FindElement(By.Id("Modify-LightningBTC")).Click();
                 s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
                 s.Driver.FindElement(By.Id("save")).Click();
                 Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
 
-                var invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
+                var invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
             }
@@ -215,10 +215,10 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                (_, string storeId) = s.CreateNewStore();
-                s.GoToStore(storeId);
+                s.CreateNewStore();
+                s.GoToStore();
                 s.AddDerivationScheme();
-                var invoiceId = s.CreateInvoice(storeId, 0.001m, "BTC", "a@x.com");
+                var invoiceId = s.CreateInvoice(0.001m, "BTC", "a@x.com");
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 s.Driver.Navigate()
                     .GoToUrl(new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}"));

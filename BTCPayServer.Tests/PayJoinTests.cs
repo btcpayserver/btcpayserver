@@ -336,6 +336,7 @@ namespace BTCPayServer.Tests
                         Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                     });
 
+                    s.SelectStoreContext(receiver.storeId);
                     s.GoToInvoices();
                     var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_details_{invoiceId}"))
                         .FindElement(By.ClassName("payment-value"));
@@ -343,7 +344,7 @@ namespace BTCPayServer.Tests
                         StringComparison.InvariantCultureIgnoreCase));
 
                     //let's do it all again, except now the receiver has funds and is able to payjoin
-                    invoiceId = s.CreateInvoice(receiver.storeId);
+                    invoiceId = s.CreateInvoice();
                     s.GoToInvoiceCheckout(invoiceId);
                     bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");

@@ -360,7 +360,7 @@ namespace BTCPayServer.Tests
                 s.Server.ActivateLightning();
                 await s.StartAsync();
                 var alice = s.RegisterNewUser(true);
-                (string storeName, string storeId) = s.CreateNewStore();
+                (string storeName, _) = s.CreateNewStore();
                 var onchainHint = "Set up your wallet to receive payments at your store.";
                 var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
@@ -368,21 +368,21 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
 
-                s.GoToStore(storeId);
+                s.GoToStore();
                 Assert.Contains(storeName, s.Driver.PageSource);
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint),
                     "Lightning hint should be present at this point");
 
                 // setup onchain wallet
-                s.GoToStore(storeId);
+                s.GoToStore();
                 s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains(onchainHint),
                     "Wallet hint not dismissed on derivation scheme add");
 
                 // setup offchain wallet
-                s.GoToStore(storeId);
+                s.GoToStore();
                 s.AddLightningNode();
                 s.Driver.AssertNoError();
                 var successAlert = s.FindAlertMessage();
@@ -392,8 +392,8 @@ namespace BTCPayServer.Tests
 
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSectionLinks();
-                s.GoToInvoices(storeId);
-                var invoiceId = s.CreateInvoice(storeId);
+                s.GoToInvoices();
+                var invoiceId = s.CreateInvoice();
                 s.FindAlertMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
@@ -404,7 +404,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Unarchive", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
 
                 //check that it no longer appears in list
-                s.GoToInvoices(storeId);
+                s.GoToInvoices();
                 Assert.DoesNotContain(invoiceId, s.Driver.PageSource);
 
                 //ok, let's unarchive and see that it shows again
@@ -412,7 +412,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
                 s.FindAlertMessage();
                 Assert.DoesNotContain("Unarchive", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
-                s.GoToInvoices(storeId);
+                s.GoToInvoices();
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 
                 // When logout out we should not be able to access store and invoice details
@@ -449,7 +449,7 @@ namespace BTCPayServer.Tests
                 // Alice should be able to delete the store
                 s.Logout();
                 s.LogIn(alice);
-                s.GoToStore(storeId, StoreNavPages.GeneralSettings);
+                s.GoToStore(StoreNavPages.GeneralSettings);
                 s.Driver.FindElement(By.Id("DeleteStore")).Click();
                 s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
                 s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -677,8 +677,8 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
-                (_, string storeId) = s.CreateNewStore();
-                s.GoToStore(storeId, StoreNavPages.Webhooks);
+                s.CreateNewStore();
+                s.GoToStore(StoreNavPages.Webhooks);
 
                 TestLogs.LogInformation("Let's create two webhooks");
                 for (var i = 0; i < 2; i++)
@@ -732,9 +732,9 @@ namespace BTCPayServer.Tests
                 Assert.Contains(server.ServerUri.AbsoluteUri, s.Driver.PageSource);
 
                 TestLogs.LogInformation("Let's see if we can generate an event");
-                s.GoToStore(storeId);
+                s.GoToStore();
                 s.AddDerivationScheme();
-                s.CreateInvoice(storeId);
+                s.CreateInvoice();
                 var request = await server.GetNextRequest();
                 var headers = request.Request.Headers;
                 var actualSig = headers["BTCPay-Sig"].First();
@@ -746,14 +746,14 @@ namespace BTCPayServer.Tests
                 server.Done();
 
                 TestLogs.LogInformation("Let's make a failed event");
-                s.CreateInvoice(storeId);
+                s.CreateInvoice();
                 request = await server.GetNextRequest();
                 request.Response.StatusCode = 404;
                 server.Done();
 
                 // The delivery is done asynchronously, so small wait here
                 await Task.Delay(500);
-                s.GoToStore(storeId, StoreNavPages.Webhooks);
+                s.GoToStore(StoreNavPages.Webhooks);
                 s.Driver.FindElement(By.LinkText("Modify")).Click();
                 var elements = s.Driver.FindElements(By.ClassName("redeliver"));
                 // One worked, one failed
@@ -769,7 +769,7 @@ namespace BTCPayServer.Tests
                 TestLogs.LogInformation("Can we browse the json content?");
                 CanBrowseContent(s);
 
-                s.GoToInvoices(storeId);
+                s.GoToInvoices();
                 s.Driver.FindElement(By.LinkText("Details")).Click();
                 CanBrowseContent(s);
                 var element = s.Driver.FindElement(By.ClassName("redeliver"));
@@ -781,7 +781,7 @@ namespace BTCPayServer.Tests
                 server.Done();
 
                 TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
-                s.GoToStore(storeId, StoreNavPages.GeneralSettings);
+                s.GoToStore(StoreNavPages.GeneralSettings);
                 s.Driver.FindElement(By.Id("DeleteStore")).Click();
                 s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
                 s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -1160,7 +1160,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(PayResult.Ok, resp.Result);
 
             newStore = s.CreateNewStore();
-            s.AddLightningNode("BTC");
+            s.AddLightningNode();
             //Currently an onchain wallet is required to use the Lightning payouts feature..
             s.GenerateWallet("BTC", "", true, true);
 
@@ -1251,19 +1251,17 @@ namespace BTCPayServer.Tests
             await s.Server.EnsureChannelsSetup();
 
             s.RegisterNewUser(true);
-            var cryptoCode = "BTC";
-            (_, string storeId) = s.CreateNewStore();
-            s.GoToStore(storeId);
-            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning, false);
-            s.GoToLightningSettings(storeId, cryptoCode);
+            s.CreateNewStore();
+            s.GoToStore();
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
             s.Driver.FindElement(By.Id("SelectedAppType")).Click();
             s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
-            Thread.Sleep(5000);
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
             s.Driver.FindElement(By.Id("DefaultView")).Click();
             s.Driver.FindElement(By.CssSelector("option[value='3']")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
@@ -1297,9 +1295,9 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
-            s.GoToStore(storeId);
-            s.AddLightningNode(cryptoCode, LightningConnectionType.CLightning, false);
-            s.GoToLightningSettings(storeId, cryptoCode);
+            s.GoToStore();
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.GoToLightningSettings();
             // LNURL is false by default
             Assert.False(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
             // LNURL settings are not expanded when LNURL is disabled
@@ -1374,8 +1372,8 @@ namespace BTCPayServer.Tests
             await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
-
-            s.GoToLightningSettings(s.StoreId, cryptoCode);
+            s.GoToHome();
+            s.GoToLightningSettings();
             // LNURL is enabled and settings are expanded
             Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
             Assert.Contains("show", s.Driver.FindElement(By.Id("LNURLSettings")).GetAttribute("class"));
@@ -1392,7 +1390,8 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(i);
             s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
 
-            s.GoToLightningSettings(s.StoreId, cryptoCode);
+            s.GoToHome();
+            s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
             s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
@@ -1400,7 +1399,7 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
 
             // Ensure the toggles are set correctly
-            s.GoToLightningSettings(s.StoreId, cryptoCode);
+            s.GoToLightningSettings();
 
             //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
             // checkboxes is not good choice here, in next release we should have multi choice instead
@@ -1421,14 +1420,14 @@ namespace BTCPayServer.Tests
             LNURL.LNURL.Parse(lnurl, out tag);
 
             s.GoToHome();
-            var newStore = s.CreateNewStore(false);
-            s.AddLightningNode(cryptoCode, LightningConnectionType.LndREST, false);
-            s.GoToLightningSettings(newStore.storeId, cryptoCode);
+            s.CreateNewStore(false);
+            s.AddLightningNode(LightningConnectionType.LndREST, false);
+            s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
-            var invForPP = s.CreateInvoice(newStore.storeId, 0.0000001m, cryptoCode);
+            var invForPP = s.CreateInvoice(0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
             s.Driver.FindElement(By.Id("copy-tab")).Click();
             lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
@@ -1491,11 +1490,11 @@ namespace BTCPayServer.Tests
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
 
             s.GoToStore(s.StoreId);
-            s.AddLightningNode("BTC", LightningConnectionType.LndREST, false);
+            s.AddLightningNode(LightningConnectionType.LndREST, false);
             //ensure ln address is not available as lnurl is not configured
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
 
-            s.GoToLightningSettings(s.StoreId, cryptoCode);
+            s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             SudoForceSaveLightningSettingsRightNowAndFast(s, cryptoCode);
 

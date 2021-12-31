@@ -740,29 +740,22 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(InvoicesModel? model = null, string? storeId = null)
+        public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
-
+            
             var fs = new SearchString(model.SearchTerm);
-            var storeIds = storeId == null
+            var store = model.StoreId == null || fs.ContainsFilter("storeid") ? null : HttpContext.GetStoreData();
+            var storeIds = store == null
                 ? fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray()
-                : new []{ storeId };
+                : new []{ store.Id };
 
             model.StoreIds = storeIds;
             
-            if (storeId != null)
-            {
-                var store = await _StoreRepository.FindStore(storeId, GetUserId());
-                if (store == null)
-                    return NotFound();
-                HttpContext.SetStoreData(store);
-                model.StoreId = store.Id;
-            }
-
             InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
+            invoiceQuery.StoreId = storeIds;
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;

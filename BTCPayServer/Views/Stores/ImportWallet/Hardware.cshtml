@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.PaymentMethods, "Connect your hardware wallet", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Connect your hardware wallet", Context.GetStoreData().Id);
 }
 
 @section Navbar {

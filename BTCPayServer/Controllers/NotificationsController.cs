@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
@@ -18,7 +19,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint(false)]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewNotificationsForUser)]
     [Route("[controller]/[action]")]
     public class NotificationsController : Controller
     {
@@ -46,8 +47,7 @@ namespace BTCPayServer.Controllers
         {
             return ViewComponent("NotificationsDropdown");
         }
-
-
+        
         [HttpGet]
         public async Task<IActionResult> SubscribeUpdates(CancellationToken cancellationToken)
         {
@@ -128,6 +128,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]
         public async Task<IActionResult> FlipRead(string id)
         {
             if (ValidUserClaim(out var userId))
@@ -161,9 +162,9 @@ namespace BTCPayServer.Controllers
 
             return NotFound();
         }
-
-
+        
         [HttpPost]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
         {
             if (!ValidUserClaim(out var userId))
@@ -209,6 +210,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]
         public async Task<IActionResult> MarkAllAsSeen(string returnUrl)
         {
             if (!ValidUserClaim(out var userId))

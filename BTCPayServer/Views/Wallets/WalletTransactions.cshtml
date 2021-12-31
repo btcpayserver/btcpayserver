@@ -1,7 +1,8 @@
 ﻿@model ListTransactionsViewModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
 }
 
 @section PageHeadContent {

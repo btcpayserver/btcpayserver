@@ -8,9 +8,7 @@
 :root {
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
-    --sidebar-width: 15%;
-    --sidebar-min-width: 250px;
-    --sidebar-max-width: 350px;
+    --sidebar-width: 280px;
 }
 
 /* Main Menu */
@@ -278,8 +276,6 @@
         bottom: 0;
         left: 0;
         width: var(--sidebar-width);
-        min-width: var(--sidebar-min-width);
-        max-width: var(--sidebar-max-width);
         z-index: 1045;
         color: var(--btcpay-body-text);
         visibility: hidden;
@@ -381,8 +377,6 @@
         bottom: 0;
         left: 0;
         width: var(--sidebar-width);
-        min-width: var(--sidebar-min-width);
-        max-width: var(--sidebar-max-width);
         height: 100vh;
     }
 
@@ -412,7 +406,7 @@
     }
 
     #mainContent {
-        margin-left: clamp(var(--sidebar-min-width), var(--sidebar-width), var(--sidebar-max-width));
+        margin-left: var(--sidebar-width);
     }
 
     #mainContent > section {

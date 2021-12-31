@@ -1,7 +1,7 @@
 ﻿@model BTCPayServer.Security.Bitpay.BitTokenEntity
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>

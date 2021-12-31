@@ -329,6 +329,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<LNURLPayPaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LNURLPayPaymentHandler>());
+            services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressNav",
+                "store-integrations-nav"));
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressOption",
                 "store-integrations-list"));
             services.AddSingleton<IHostedService, LightningListener>();

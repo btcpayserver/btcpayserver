@@ -339,7 +339,7 @@ namespace BTCPayServer.Tests
                 tester.PayTester.MockRates = false;
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 List<decimal> rates = new List<decimal>();
                 rates.Add(await CreateInvoice(tester, user, "coingecko"));

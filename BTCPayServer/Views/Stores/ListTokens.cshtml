@@ -1,7 +1,7 @@
 @model TokensViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
 }
 
 @if (Model.StoreNotConfigured)

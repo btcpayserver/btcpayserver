@@ -1,0 +1,23 @@
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@{
+    var store = Context.GetStoreData();
+    var isLightningEnabled = store.IsLightningEnabled(BTCPayNetworkProvider);
+    var isLNUrlEnabled = store.IsLNUrlEnabled(BTCPayNetworkProvider);
+    var possible =
+        isLightningEnabled &&
+        isLNUrlEnabled &&
+        store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().Any(type => type.CryptoCode == "BTC");
+}
+
+@if (possible)
+{
+    <li class="nav-item">
+        <a asp-area="" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage("LightningAddress", nameof(StoreNavPages))" id="StoreNav-LightningAddress">
+            <vc:icon symbol="wallet-lightning"/>
+            <span>Lightning Address</span>
+        </a>
+    </li>
+}

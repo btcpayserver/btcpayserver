@@ -1,14 +1,15 @@
 @model WalletSendVaultModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId);
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="GoBack">
+    <a asp-action="WalletPSBT" asp-route-walletId="@walletId" id="GoBack">
         <vc:icon symbol="back" />
     </a>
-    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+    <a asp-action="WalletSend" asp-route-walletId="@walletId" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }
@@ -26,7 +27,7 @@
 </div>
 
 <div id="body" class="my-4">
-    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@Context.GetRouteValue("walletId")" method="post" style="display:none;">
+    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">
         <input type="hidden" id="WalletId" asp-for="WalletId" />
         <input type="hidden" asp-for="WebsocketPath" />
         <partial name="SigningContext" for="SigningContext" />

@@ -4,7 +4,8 @@
 @model WalletSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.PaymentMethods, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().StoreName);
+    ViewData["NavPartialName"] = "../Wallets/_Nav";
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().Id);
 }
 
 @section PageHeadContent {

@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers
         {            
             return View("Integrations", new IntegrationsViewModel());
         }
-
+        
         private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId) 
         {
             return (await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();

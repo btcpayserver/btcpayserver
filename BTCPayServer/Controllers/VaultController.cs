@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hwi;
@@ -18,6 +19,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Controllers
 {
     [Route("vault")]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     public class VaultController : Controller
     {
         private readonly IAuthorizationService _authorizationService;

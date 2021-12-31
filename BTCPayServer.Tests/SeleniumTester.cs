@@ -332,17 +332,10 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
         }
-        
-        public void GoToApps()
-        {
-            Driver.FindElement(By.Id("StoreNav-Apps")).Click();
-        }
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
-            GoToHome(); 
-            Driver.WaitForAndClick(By.Id("StoreSelectorToggle"));
-            Driver.WaitForAndClick(By.Id($"StoreSelectorMenuItem-{storeId}"));
+            GoToUrl($"/stores/{storeId}/");
 
             if (storeNavPage != StoreNavPages.PaymentMethods)
             {
@@ -360,8 +353,15 @@ namespace BTCPayServer.Tests
 
         public void GoToWalletSettings(string storeId, string cryptoCode = "BTC")
         {
-            GoToStore(storeId);
-            Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            try
+            {
+                GoToStore(storeId);
+                Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            }
+            catch (NoSuchElementException)
+            {
+                GoToWallet(new WalletId(storeId, cryptoCode), WalletsNavPages.Settings);
+            }
         }
 
         public void GoToLightningSettings(string storeId, string cryptoCode = "BTC")
@@ -377,10 +377,14 @@ namespace BTCPayServer.Tests
             CheckForJSErrors();
         }
 
-        public void GoToInvoices()
+        public void GoToInvoice(string id)
         {
-            GoToHome();
-            Driver.FindElement(By.Id("Nav-Invoices")).Click();
+            GoToUrl($"/invoices/{id}/");
+        }
+
+        public void GoToInvoices(string storeId = null)
+        {
+            GoToUrl(storeId == null ? "/invoices/" : $"/stores/{storeId}/invoices/");
         }
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
@@ -394,11 +398,11 @@ namespace BTCPayServer.Tests
 
         public void GoToLogin()
         {
-            Driver.Navigate().GoToUrl(new Uri(ServerUri, "/login"));
+            GoToUrl("/login");
         }
 
         public string CreateInvoice(
-            string storeName, 
+            string storeId, 
             decimal? amount = 100, 
             string currency = "USD", 
             string refundEmail = "",
@@ -407,7 +411,7 @@ namespace BTCPayServer.Tests
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
-            GoToInvoices();
+            GoToInvoices(storeId);
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
             if (amount is decimal v)
                 Driver.FindElement(By.Id("Amount")).SendKeys(v.ToString(CultureInfo.InvariantCulture));
@@ -415,7 +419,6 @@ namespace BTCPayServer.Tests
             currencyEl.Clear();
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
-            Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
             if (defaultPaymentMethod is string)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             if (requiresRefundEmail is bool)
@@ -499,19 +502,6 @@ namespace BTCPayServer.Tests
             if (navPages != ServerNavPages.Index)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
-            }
-        }
-
-        public void GoToInvoice(string id)
-        {
-            GoToInvoices();
-            foreach (var el in Driver.FindElements(By.ClassName("invoice-details-link")))
-            {
-                if (el.GetAttribute("href").Contains(id, StringComparison.OrdinalIgnoreCase))
-                {
-                    el.Click();
-                    break;
-                }
             }
         }
     }

@@ -1,7 +1,8 @@
 ﻿@model WalletPSBTCombineViewModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, "Combine PSBT", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, "Combine PSBT", walletId);
 }
 
 @section Navbar {

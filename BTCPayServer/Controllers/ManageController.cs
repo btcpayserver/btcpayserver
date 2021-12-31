@@ -2,6 +2,7 @@ using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models;
@@ -21,7 +22,7 @@ using Microsoft.Extensions.Logging;
 namespace BTCPayServer.Controllers
 {
     
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     [Route("[controller]/[action]")]
     public partial class ManageController : Controller
     {

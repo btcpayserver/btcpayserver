@@ -1,7 +1,7 @@
 ﻿@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);
 }
 
 <div class="row">

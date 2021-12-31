@@ -2,7 +2,7 @@
 @model LightningSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.PaymentMethods, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().Id);
 }
 
 <div class="row">

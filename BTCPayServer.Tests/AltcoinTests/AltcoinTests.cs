@@ -421,19 +421,19 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
-                (_, string storeId) = s.CreateNewStore();
+                s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
 
                 //check that there is no dropdown since only one payment method is set
-                var invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
+                var invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore(storeId);
+                s.GoToStore();
                 s.AddDerivationScheme("LTC");
-                s.AddLightningNode("BTC", LightningConnectionType.CLightning);
+                s.AddLightningNode(LightningConnectionType.CLightning);
                 //there should be three now
-                invoiceId = s.CreateInvoice(storeId, 10, "USD", "a@g.com");
+                invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("BTC", currencyDropdownButton.Text);

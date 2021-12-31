@@ -215,6 +215,11 @@ namespace BTCPayServer.Tests
             return new Mnemonic(seed);
         }
 
+        /// <summary>
+        /// Assume to be in store's settings
+        /// </summary>
+        /// <param name="cryptoCode"></param>
+        /// <param name="derivationScheme"></param>
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
@@ -226,8 +231,17 @@ namespace BTCPayServer.Tests
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null, bool test = true)
+        public void AddLightningNode()
         {
+            AddLightningNode(null, null, true);
+        }
+        public void AddLightningNode(LightningConnectionType? connectionType = null, bool test = true)
+        {
+            AddLightningNode(null, connectionType, test);
+        }
+        public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
+        {
+            cryptoCode ??= "BTC";
             Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
 
             if (Driver.PageSource.Contains("id=\"SetupLightningNodeLink\""))
@@ -333,9 +347,16 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("LoginButton")).Click();
         }
 
+        public void GoToStore(StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
+        {
+            GoToStore(null, storeNavPage);
+        }
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
-            GoToUrl($"/stores/{storeId}/");
+            if (storeId is null)
+                Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
+            else
+                GoToUrl($"/stores/{storeId}/");
 
             if (storeNavPage != StoreNavPages.PaymentMethods)
             {
@@ -364,10 +385,16 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public void GoToLightningSettings(string storeId, string cryptoCode = "BTC")
+        public void GoToLightningSettings(string cryptoCode = "BTC")
         {
-            GoToStore(storeId);
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            GoToStore();
+            Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
+        }
+
+        public void SelectStoreContext(string storeId)
+        {
+            Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
+            Driver.FindElement(By.Id($"StoreSelectorMenuItem-{storeId}")).Click();
         }
 
         public void GoToInvoiceCheckout(string invoiceId)
@@ -384,7 +411,14 @@ namespace BTCPayServer.Tests
 
         public void GoToInvoices(string storeId = null)
         {
-            GoToUrl(storeId == null ? "/invoices/" : $"/stores/{storeId}/invoices/");
+            if (storeId is null)
+            {
+                this.Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+            }
+            else
+            {
+                GoToUrl(storeId == null ? "/invoices/" : $"/stores/{storeId}/invoices/");
+            }
         }
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
@@ -399,6 +433,17 @@ namespace BTCPayServer.Tests
         public void GoToLogin()
         {
             GoToUrl("/login");
+        }
+
+        public string CreateInvoice(decimal? amount = 100,
+            string currency = "USD",
+            string refundEmail = "",
+            string defaultPaymentMethod = null,
+            bool? requiresRefundEmail = null,
+            StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
+        )
+        {
+            return CreateInvoice(null, amount, currency, refundEmail, defaultPaymentMethod, requiresRefundEmail, expectedSeverity);
         }
 
         public string CreateInvoice(

@@ -22,9 +22,8 @@
   </PropertyGroup>
   <!-- -->
 
-  <PropertyGroup Condition="( '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Altcoins-Debug') And '$(RazorCompileOnBuild)' != 'true'">
+  <PropertyGroup Condition="( '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Altcoins-Debug') And '$(RazorCompileOnBuild)' != 'true' And '$(DotNetWatchBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
     <RazorCompileOnBuild>false</RazorCompileOnBuild>
-    <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Altcoins)' == 'true'">

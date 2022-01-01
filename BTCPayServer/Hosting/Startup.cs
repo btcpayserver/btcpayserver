@@ -135,9 +135,7 @@ namespace BTCPayServer.Hosting
                 o.PageViewLocationFormats.Add("/{0}.cshtml");
             })
             .AddNewtonsoftJson()
-#if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
-#endif
             .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
 

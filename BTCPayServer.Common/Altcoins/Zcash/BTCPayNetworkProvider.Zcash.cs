@@ -9,8 +9,8 @@ namespace BTCPayServer
         {
             Add(new ZcashLikeSpecificBtcPayNetwork()
             {
-                CryptoCode = "YEC",
-                DisplayName = "Ycash",
+                CryptoCode = "ZEC",
+                DisplayName = "Zcash",
                 Divisibility = 8,
                 BlockExplorerLink =
                     NetworkType == ChainName.Mainnet
@@ -18,11 +18,11 @@ namespace BTCPayServer
                         : "https://testnet.xmrchain.net/tx/{0}",
                 DefaultRateRules = new[]
                 {
-                    "YEC_X = YEC_BTC * BTC_X",
-                    "YEC_BTC = kraken(YEC_BTC)"
+                    "ZEC_X = ZEC_BTC * BTC_X",
+                    "ZEC_BTC = kraken(ZEC_BTC)"
                 },
-                CryptoImagePath = "/imlegacy/ycash.png",
-                UriScheme = "ycash"
+                CryptoImagePath = "/imlegacy/zcash.png",
+                UriScheme = "zcash"
             });
         }
     }

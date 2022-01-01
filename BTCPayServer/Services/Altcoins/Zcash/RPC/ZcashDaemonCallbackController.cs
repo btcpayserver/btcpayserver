@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Services.Altcoins.Zcash.RPC
 {
     [Route("[controller]")]
-    [OnlyIfSupportAttribute("YEC")]
+    [OnlyIfSupportAttribute("ZEC")]
     public class ZcashLikeDaemonCallbackController : Controller
     {
         private readonly EventAggregator _eventAggregator;

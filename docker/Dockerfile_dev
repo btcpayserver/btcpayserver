@@ -1,0 +1,17 @@
+#syntax=docker/dockerfile:1.2
+FROM archlinux:base-devel as builder
+
+COPY ./docker/install-dotnet.sh .
+RUN /bin/sh ./install-dotnet.sh
+ENV PATH $PATH:/root/.dotnet
+
+COPY . /btcp
+
+RUN cd /btcp/BTCPayServer && dotnet publish --output /app/ -c Altcoins-Release
+
+WORKDIR /app
+ENV BTCPAY_DATADIR=/datadir
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+VOLUME /datadir
+
+ENTRYPOINT ["dotnet", "BTCPayServer.dll"]

@@ -1,0 +1,5 @@
+FROM archlinux:base-devel AS builder
+
+COPY install-deps.sh .
+
+RUN ./install-deps.sh

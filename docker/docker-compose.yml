@@ -1,0 +1,51 @@
+version: "3"    
+
+# Run `docker-compose up dev` for bootstrapping your development environment
+# Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
+# The Visual Studio launch setting `Docker-regtest` is configured to use this environment.
+services:
+  btcpay:
+    image: btcp
+    environment:
+      BTCPAY_LAUNCHSETTINGS: "false"
+      BTCPAY_BIND: "0.0.0.0"
+      BTCPAY_PORT: "9000"
+      BTCPAY_HttpsUseDefaultCertificate: "false"
+      BTCPAY_BUNDLEJSCSS: "false"
+      BTCPAY_ALLOW-ADMIN-REGISTRATION: "true"
+      BTCPAY_DISABLE-REGISTRATION: "false"
+      ASPNETCORE_ENVIRONMENT: "production"
+      BTCPAY_CHAINS: "zec"
+      BTCPAY_POSTGRES: "User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver"
+      BTCPAY_DOCKERDEPLOYMENT: "true"
+      BTCPAY_ZEC_DAEMON_URI: "http://wallet:8000"
+      BTCPAY_ZEC_WALLET_DAEMON_URI: "http://wallet:8000"
+      BTCPAY_ZEC_WALLET_DAEMON_WALLETDIR: "/"
+    links:
+      - postgres
+    ports:
+      - "9000:9000"
+    expose:
+      - "9000"
+    volumes:
+    - "btcpay_datadir:/datadir"
+  wallet:
+    image: zcash-walletd
+    environment:
+      VK: "zxviews1qwx7fxrcqqqqpqxnlaxr7ft3myvervpv9pjju8wglnynckes72h2mpalc4dezued7utmku5nghmgtr56cjgenahev6vhnkl72tqzmqnltu0s2ealuc5un86hcneanlc350hnnqzrh86m6s3hkxv23c34vmc3c3mwyuegurunhkvqvnpzu3xdg4f3dafukn4x6ynnprv9ays3eyr6ecztu90jjrxzdjxfl2j9nuc9m58hegh0rjgh5ptc7emg26wkhxv8s65a0whv6ss8e042r"
+      BIRTH_HEIGHT: 1330000
+    ports:
+      - "8000:8000"
+    volumes:
+    - "wallet_datadir:/data"
+  postgres:
+    image:  postgres:13.4
+    environment:
+        POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "39372:5432"
+    expose:
+      - "5432"
+volumes:
+  btcpay_datadir:
+  wallet_datadir:

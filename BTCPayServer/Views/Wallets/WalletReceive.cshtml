@@ -11,19 +11,19 @@
 }
 
 <div class="row no-gutters">
-    <div class="col-lg-8 mx-auto my-auto">
-        <form method="post" asp-action="WalletReceive" class="card text-center">
+    <div class="col-lg-8">
+        <form method="post" asp-action="WalletReceive" class="text-center">
             <div class="card-body">
                 @if (string.IsNullOrEmpty(Model.Address))
                 {
-                    <h3 class="card-title mb-3">@ViewData["Title"]</h3>
+                    <h3 class="mb-3">@ViewData["Title"]</h3>
                     <button id="generateButton" class="btn btn-lg btn-primary" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
                 }
                 else
                 {
-                    <h3 class="card-title mb-4">Next available @Model.CryptoCode&nbsp;address</h3>
+                    <h3 class="mb-4">@Model.CryptoCode&nbsp;address</h3>
                     <noscript>
-                        <div class="card-body m-sm-0 p-sm-0">
+                        <div class="m-sm-0 p-sm-0">
                             <div class="form-group">
                                 <div class="input-group">
                                     <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>

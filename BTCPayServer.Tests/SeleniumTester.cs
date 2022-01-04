@@ -142,8 +142,12 @@ namespace BTCPayServer.Tests
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)
         {
-            Driver.WaitForElement(By.Id("StoreSelectorToggle")).Click();
-            Driver.WaitForElement(By.Id("StoreSelectorMenuItem-Create")).Click();
+            // If there's no store yet, there is no dropdown toggle
+            if (Driver.PageSource.Contains("id=\"StoreSelectorToggle\""))
+            {
+                Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
+            }
+            Driver.WaitForElement(By.Id("StoreSelectorCreate")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();

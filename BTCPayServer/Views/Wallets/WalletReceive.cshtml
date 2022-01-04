@@ -24,18 +24,11 @@
                 <noscript>
                     <div class="m-sm-0 p-sm-0">
                         <div class="form-group">
-                            <div class="input-group">
-                                <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
-                                <span class="input-group-text fa fa-copy"> </span>
-                            </div>
+                            <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
                         </div>
                         <div class="form-group">
-                            <div class="input-group">
-                                <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
-                                <span class="input-group-text fa fa-copy"> </span>
-                            </div>
+                            <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
                         </div>
-
                         <div class="row mt-4">
                             <div class="col-12 col-sm-6">
                                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
@@ -64,14 +57,14 @@
                     </div>
                     <div class="form-group">
                         <div class="input-group" data-clipboard="@Model.Address">
-                            <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.Address" id="address"/>
-                            <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
+                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.Address" id="address"/>
+                            <button type="button" class="input-group-text btn btn-outline-secondary" style="width:10em;" data-clipboard-confirm>Copy address</button>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="input-group" data-clipboard="@Model.PaymentLink">
-                            <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
-                            <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
+                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
+                            <button type="button" class="btn btn-outline-secondary" style="width:10em;" data-clipboard-confirm>Copy link</button>
                         </div>
                     </div>
                     <div class="row mt-4">

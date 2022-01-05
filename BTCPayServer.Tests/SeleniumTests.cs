@@ -383,6 +383,43 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanSetupBasicsViaGuide()
+        {
+            using (var s = CreateSeleniumTester())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser();
+                s.GoToUrl("/");
+                
+                Assert.False(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should not be present");
+                Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorCreate\""), "Store selector create button should be present");
+                
+                // verify steps for store creation are displayed correctly
+                Assert.True(s.Driver.FindElement(By.CssSelector("#SetupGuide-Wallet.disabled")).Displayed);
+                s.Driver.FindElement(By.Id("SetupGuide-Store")).Click();
+                
+                Assert.Contains("/stores/create", s.Driver.Url);
+
+                (_, string storeId) = s.CreateNewStore();
+                s.GoToUrl("/");
+                
+                Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should be present");
+                
+                // verify steps for wallet setup are displayed correctly
+                Assert.True(s.Driver.FindElement(By.CssSelector("#SetupGuide-StoreDone")).Displayed);
+                s.Driver.FindElement(By.Id("SetupGuide-Wallet")).Click();
+                
+                Assert.Contains($"/stores/{storeId}", s.Driver.Url);
+                s.AddDerivationScheme();
+                
+                s.GoToUrl("/");
+                
+                // guide should be hidden now
+                Assert.False(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Setup guide should not be present");
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {

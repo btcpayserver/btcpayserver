@@ -89,7 +89,7 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.2.7
+    image: nicolasdorier/nbxplorer:2.2.18
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -357,7 +357,7 @@ services:
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid
-      image: btcpayserver/elements:0.18.1.12
+      image: btcpayserver/elements:0.21.0.1
       environment:
           ELEMENTS_CHAIN: elementsregtest
           ELEMENTS_EXTRA_ARGS: |
@@ -370,6 +370,7 @@ services:
               rpcauth=liquid:c8bf1a8961d97f224cb21224aaa8235d$$402f4a8907683d057b8c58a42940b6e54d1638322a42986ae28ebb844e603ae6
               port=19444
               whitelist=0.0.0.0/0
+              rpcallowip=0.0.0.0/0
               validatepegin=0
               initialfreecoins=210000000000000
               con_dyna_deploy_signal=1

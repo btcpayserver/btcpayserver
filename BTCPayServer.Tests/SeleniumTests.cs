@@ -180,7 +180,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Email")).SendKeys(email);
                 s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
-                Assert.True(s.Driver.PageSource.Contains("Stores"), "Can't Access Stores");
 
                 s.GoToProfile();
                 s.ClickOnAllSectionLinks();

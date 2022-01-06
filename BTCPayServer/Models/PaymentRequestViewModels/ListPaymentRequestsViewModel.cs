@@ -52,7 +52,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [Range(double.Epsilon, double.PositiveInfinity, ErrorMessage = "Please provide an amount greater than 0")]
         public decimal Amount { get; set; }
 
-        [Display(Name = "The currency used for payment request. (e.g. BTC, LTC, USD, etc.)")]
+        [Display(Name = "Currency")]
         public string Currency { get; set; }
 
         [Display(Name = "Expiration Date")]

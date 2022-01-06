@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Components.NotificationsDropdown;
+using BTCPayServer.Components.Notifications;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +33,7 @@ namespace BTCPayServer.Services.Notifications
 
         private const int _cacheExpiryMs = 5000;
 
-        public async Task<NotificationSummaryViewModel> GetSummaryNotifications(ClaimsPrincipal user)
+        public async Task<NotificationsViewModel> GetSummaryNotifications(ClaimsPrincipal user)
         {
             var userId = _userManager.GetUserId(user);
             var cacheKey = GetNotificationsCacheId(userId);
@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Notifications
                     UserId = userId
                 });
                 entry.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs));
-                var res = new NotificationSummaryViewModel() { Last5 = resp.Items, UnseenCount = resp.Count };
+                var res = new NotificationsViewModel { Last5 = resp.Items, UnseenCount = resp.Count };
                 entry.Value = res;
                 return res;
             });

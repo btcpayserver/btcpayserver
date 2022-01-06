@@ -23,6 +23,10 @@
             flex: 1;
             padding: 1rem 0;
         }
+        
+        #NotificationsRecent .notification {
+            padding: var(--btcpay-space-s) var(--btcpay-space-m) !important;
+        }
     </style>
 }
 
@@ -31,8 +35,8 @@
 @if (Model.HasStoreWithWallet)
 {
     <div class="row">
-        <div class="col-lg-10 col-xl-8">
-            <p>TODO: A dashboard would be nice here.</p>
+        <div class="col-lg-8 col-xl-6 pt-3">
+            <vc:notifications appearance="Recent" />
         </div>
     </div>
 }

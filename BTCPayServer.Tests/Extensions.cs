@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
                 foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
                     Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
             }
-            Assert.DoesNotContain("Access denied</h", driver.PageSource);
+            Assert.DoesNotContain("- Denied</h", driver.PageSource);
             Assert.DoesNotContain("Page not found</h", driver.PageSource);
         }
 

@@ -199,15 +199,16 @@
 <partial name="InvoiceStatusChangePartial"/>
 
 <div class="row">
-    <div class="col-12 col-lg-6 mb-5 mb-lg-2 ms-auto">
+
+    <div class="d-flex justify-content-between">
         <form asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
-            <input type="hidden" asp-for="Count"/>
-            <input asp-for="TimezoneOffset" type="hidden"/>
+            <input type="hidden" asp-for="Count" />
+            <input asp-for="TimezoneOffset" type="hidden" />
             <div class="input-group">
                 <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
                     <span class="fa fa-filter"></span>
                 </a>
-                <input asp-for="SearchTerm" class="form-control"/>
+                <input asp-for="SearchTerm" class="form-control" />
                 <button type="submit" class="btn btn-secondary" title="Search invoice">
                     <span class="fa fa-search"></span> Search
                 </button>
@@ -234,53 +235,81 @@
             </div>
             <span asp-validation-for="SearchTerm" class="text-danger"></span>
         </form>
-
-        @* Custom Range Modal *@
-        <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="customRangeModalTitle">Filter invoices by Custom Range</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                            <vc:icon symbol="close" />
+        @if (Model.Total > 0)
+            {
+            <form method="post" id="MassAction" asp-action="MassAction">
+                <div class="mr-auto">
+                    <input type="hidden" name="storeId" value="@Model.StoreId" />
+                    <span class="me-2">
+                        <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
                         </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group row">
-                            <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                        data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                        placeholder="Start Date" />
-                                    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                        <span class="fa fa-times"></span>
-                                    </button>
+                        <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+                            <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive"><i class="fa fa-archive"></i> Archive</button>
+                        </div>
+                    </span>
+                    <span>
+                        <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Export
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
+                            <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                            <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                        </div>
+                    </span>
+
+                    <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </div>
+            </form>
+            }
+
+            @* Custom Range Modal *@
+            <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="customRangeModalTitle">Filter invoices by Custom Range</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group row">
+                                <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                               data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                               placeholder="Start Date" />
+                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                            <span class="fa fa-times"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">End Date</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                               data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                               placeholder="End Date" />
+                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                            <span class="fa fa-times"></span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">End Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                        data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                        placeholder="End Date" />
-                                    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                        <span class="fa fa-times"></span>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="modal-footer">
+                            <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 <div class="row collapse" id="help">
     <div class="col @(Model.Total > 0 ? "pt-3 pb-lg-5" : "")">
@@ -307,30 +336,6 @@
 
 @if (Model.Total > 0)
 {
-    <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
-        <input type="hidden" name="storeId" value="@Model.StoreId" />
-        <span class="me-2">
-            <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Actions
-            </button>
-            <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive"><i class="fa fa-archive"></i> Archive</button>
-            </div>
-        </span>
-        <span>
-            <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Export
-            </a>
-            <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
-            </div>
-        </span>
-
-        <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank" rel="noreferrer noopener">
-            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-        </a>
-
         <table id="invoices" class="table table-hover table-responsive-md mt-4">
             <thead>
             <tr>
@@ -454,7 +459,7 @@
         </table>
 
         <vc:pager view-model="Model"/>
-    </form>
+   
 }
 else
 {

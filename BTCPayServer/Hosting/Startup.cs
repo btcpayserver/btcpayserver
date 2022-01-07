@@ -76,6 +76,7 @@ namespace BTCPayServer.Hosting
             {
                 opt.LoginPath = "/login";
                 opt.AccessDeniedPath = "/Error/Denied";
+                opt.LogoutPath = "/logout";
             });
 
             services.Configure<SecurityStampValidatorOptions>(opts =>

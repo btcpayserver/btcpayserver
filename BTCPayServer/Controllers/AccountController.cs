@@ -519,6 +519,7 @@ namespace BTCPayServer.Controllers
         public bool RegisteredAdmin { get; set; }
 
         [HttpGet]
+        [Route("logout")]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();

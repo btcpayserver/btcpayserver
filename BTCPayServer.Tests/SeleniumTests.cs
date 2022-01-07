@@ -167,6 +167,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ReturnUrl=%2Fserver%2Fusers", s.Driver.Url);
 
                 //Change Password & Log Out
+                s.GoToHome();
                 s.Driver.FindElement(By.Id("Nav-Account")).Click();
                 s.Driver.FindElement(By.Id("SectionNav-ChangePassword")).Click();
                 s.Driver.FindElement(By.Id("OldPassword")).SendKeys("123456");

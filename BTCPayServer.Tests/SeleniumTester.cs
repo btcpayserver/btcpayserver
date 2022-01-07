@@ -360,10 +360,10 @@ namespace BTCPayServer.Tests
         
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
-            if (storeId is null)
-                Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-            else
+            if (storeId is not null)
                 GoToUrl($"/stores/{storeId}/");
+                
+            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
 
             if (storeNavPage != StoreNavPages.PaymentMethods)
             {

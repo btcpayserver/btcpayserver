@@ -381,7 +381,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<RateFetcher>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddTransient<AccessTokenController>();
+            services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<InvoiceController>();
             services.AddTransient<AppsPublicController>();
             services.AddTransient<PaymentRequestController>();

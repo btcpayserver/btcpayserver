@@ -889,7 +889,7 @@ namespace BTCPayServer.Tests
                 acc.GrantAccess();
                 acc.RegisterDerivationScheme("BTC");
 
-                var rateController = acc.GetController<RateController>();
+                var rateController = acc.GetController<BitpayRateController>();
                 var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController
                     .GetBaseCurrencyRates("BTC", default)
                     .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
@@ -908,7 +908,7 @@ namespace BTCPayServer.Tests
                 ratesVM.DefaultCurrencyPairs = "BTC_USD,LTC_USD";
                 await store.Rates(ratesVM);
                 store = acc.GetController<StoresController>();
-                rateController = acc.GetController<RateController>();
+                rateController = acc.GetController<BitpayRateController>();
                 GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
                     .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
                 // Now we should have a result

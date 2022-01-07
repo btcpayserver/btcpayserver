@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
 {
     [EnableCors(CorsPolicies.All)]
     [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
-    public class RateController : Controller
+    public class BitpayRateController : Controller
     {
         public StoreData CurrentStore
         {
@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers
 
         public TokenRepository TokenRepository { get; }
 
-        public RateController(
+        public BitpayRateController(
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             TokenRepository tokenRepository,

@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             StoreRepository repo,
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
-            AccessTokenController tokenController,
+            BitpayAccessTokenController tokenController,
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
             RateFetcher rateFactory,
@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly ExplorerClientProvider _ExplorerProvider;
         readonly BTCPayWalletProvider _WalletProvider;
-        readonly AccessTokenController _TokenController;
+        readonly BitpayAccessTokenController _TokenController;
         readonly StoreRepository _Repo;
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;

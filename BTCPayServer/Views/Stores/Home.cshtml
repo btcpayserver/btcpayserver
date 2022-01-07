@@ -1,0 +1,164 @@
+﻿@model StoreHomeViewModel;
+@{
+    ViewData.SetActivePage(StoreNavPages.Home, Model.StoreName, Model.StoreId);
+    var isReady = Model.WalletEnabled || Model.LightningEnabled;
+}
+
+@section PageHeadContent
+{
+    <style>
+        .list-group-item .image {
+            display: flex;
+            flex: 0 0 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .list-group-item .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .list-group-item .content {
+            flex: 1;
+            padding: 1rem 0;
+        }
+    </style>
+}
+
+<partial name="_StatusMessage" />
+
+<h2>@ViewData["Title"]</h2>
+
+@if (isReady)
+{
+    <p class="lead text-secondary">This store is ready to accept transactions, good job!</p>
+}
+else
+{
+    <p class="lead text-secondary">To start accepting transactions, you need to set up a wallet or Lightning node.</p>
+}
+
+<div class="row">
+    <div class="col-md-7 col-xl-5">
+        <div class="list-group" id="SetupGuide">
+            <div class="list-group-item d-flex align-items-center" id="SetupGuide-StoreDone">
+                <vc:icon symbol="done"/>
+                <div class="content">
+                    <h5 class="mb-0 text-success">Create your store</h5>
+                </div>
+            </div>
+            @if (!Model.WalletEnabled)
+            {
+                if (!Model.AltcoinsBuild)
+                {
+                    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="BTC" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                        <vc:icon symbol="new-wallet"/>
+                        <div class="content">
+                            <h5 class="mb-0">Set up a wallet</h5>
+                        </div>
+                        <vc:icon symbol="caret-right"/>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.StoreId" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                        <vc:icon symbol="new-wallet"/>
+                        <div class="content">
+                            <h5 class="mb-0">Set up a wallet</h5>
+                        </div>
+                        <vc:icon symbol="caret-right"/>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="list-group-item d-flex align-items-center" id="SetupGuide-Wallet">
+                    <vc:icon symbol="done"/>
+                    <div class="content">
+                        <h5 class="mb-0 text-success">Set up a wallet</h5>
+                    </div>
+                </div>
+            }
+            @if (!Model.LightningEnabled)
+            {
+                if (!Model.AltcoinsBuild)
+                {
+                    <a asp-controller="Stores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                        <vc:icon symbol="new-wallet"/>
+                        <div class="content">
+                            <h5 class="mb-0">Set up a Lightning node</h5>
+                        </div>
+                        <vc:icon symbol="caret-right"/>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.StoreId" id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                        <vc:icon symbol="new-wallet"/>
+                        <div class="content">
+                            <h5 class="mb-0">Set up a Lightning node</h5>
+                        </div>
+                        <vc:icon symbol="caret-right"/>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
+                    <vc:icon symbol="done"/>
+                    <div class="content">
+                        <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (isReady)
+{
+    <div class="row">
+        <div class="col-lg-9 col-xl-7">
+            <h4 class="mt-5 mb-3">What's Next?</h4>
+            <p class="lead text-secondary">
+                BTCPay Server is a feature-rich software with plenty of <a href="https://docs.btcpayserver.org/UseCase/" target="_blank" rel="noreferrer noopener">use cases</a>.
+                There are many ways to accept payments without relying on trusted third-parties.
+            </p>
+
+            <h5>Invoices and Payment Requests</h5>
+            <p>
+                <a asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a> have a fixed price,
+                which is set at the time of the invoice creation.
+                <a asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId">Payment Requests</a>
+                use the exchange rate at the time of payment. This allows customers to make payments at their convenience without having to
+                negotiate or verify exchange rates at the time of payment.
+            </p>
+            
+            <h5>Create an app</h5>
+            <p class="mb-2">
+                You can self-host all sorts of customizable applications that work out of the box:
+            </p>
+            <ul>
+                <li>
+                    The <a href="https://docs.btcpayserver.org/Apps/#point-of-sale-app" target="_blank" rel="noreferrer noopener">Point of Sale</a>
+                    can be displayed easily on tablets or any other devices which support web browsing.
+                    Users can easily create a homescreen shortcut for a quick access to the web-app.
+                </li>
+
+                <li>
+                    You can launch a <a href="https://docs.btcpayserver.org/Apps/#crowdfunding-app" target="_blank" rel="noreferrer noopener">Crowdfunding</a>
+                    campaign, similar to Kickstarter or Indiegogo. Unlike traditional crowdfunding platforms, you are the owner of the platform.
+                    Funds go directly to your own wallet without any fees.
+                </li>
+
+                <li>
+                    The highly-customizable <a href="https://docs.btcpayserver.org/Apps/#payment-button" target="_blank" rel="noreferrer noopener">payment button</a>
+                    allows you to receive tips and donations. Online stores can also integrate payment buttons.
+                    When a site visitor clicks on the button, BTCPay displays the invoice.
+                </li>
+            </ul>
+        </div>
+    </div>
+}

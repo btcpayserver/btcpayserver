@@ -151,6 +151,7 @@ namespace BTCPayServer.Tests
             var name = "Store" + RandomUtils.GetUInt64();
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
+            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
@@ -356,6 +357,7 @@ namespace BTCPayServer.Tests
         {
             GoToStore(null, storeNavPage);
         }
+        
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.PaymentMethods)
         {
             if (storeId is null)

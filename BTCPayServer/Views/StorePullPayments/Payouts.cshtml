@@ -50,16 +50,16 @@
 
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
-@*@if (Model.Payouts.Any())
-{*@
+@if (Model.Payouts.Any())
+{
 <form method="post">
     <input type="hidden" asp-for="PaymentMethodId" />
     <input type="hidden" asp-for="PayoutState" />
 
     <div class="row">
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between mb-4">
        
-            <ul class="nav nav-pills mb-4">
+            <ul class="nav nav-pills">
                 @foreach (var state in Model.PaymentMethods)
                 {
                     <li class="nav-item py-0">
@@ -75,11 +75,10 @@
                     </li>
                 }
             </ul>
-        
     @if (stateActions.Any())
     {
         <div permission="@Policies.CanModifyStoreSettings">
-            <div class="dropdown  mt-4 ms-xl-auto mt-xl-0">
+            <div class="dropdown ms-xl-auto mt-xl-0">
                 <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
                     Actions
                 </button>
@@ -97,7 +96,6 @@
         <nav id="SectionNav" class="nav mb-0">
             @foreach (var state in Model.PayoutStateCount)
             {
-
                 <a id="@state.Key-view"
                    asp-action="Payouts"
                    asp-route-storeId="@Context.GetRouteValue("storeId")"
@@ -107,7 +105,6 @@
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
             }
         </nav>
-
         <div class="row">
             <table class="table table-hover table-responsive-lg">
                 <thead class="thead-inverse">
@@ -166,8 +163,8 @@
             <vc:pager view-model="Model" />
         </div>
 </form>
-@*}
+}
 else
 {
     <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
-}*@
+}

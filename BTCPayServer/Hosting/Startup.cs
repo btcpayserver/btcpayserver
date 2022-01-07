@@ -75,6 +75,7 @@ namespace BTCPayServer.Hosting
             services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
             {
                 opt.LoginPath = "/login";
+                opt.AccessDeniedPath = "/Error/Denied";
             });
 
             services.Configure<SecurityStampValidatorOptions>(opts =>

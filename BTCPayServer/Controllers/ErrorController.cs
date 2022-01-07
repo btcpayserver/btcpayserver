@@ -13,7 +13,7 @@ namespace BTCPayServer.Controllers
             {
                 if (statusCode.HasValue)
                 {
-                    var specialPages = new[] { 404, 406, 417, 429, 500, 502 };
+                    var specialPages = new[] { 404, 406, 417, 429, 500, 502, 403 };
                     if (specialPages.Any(a => a == statusCode.Value))
                     {
                         var viewName = statusCode.ToString();
@@ -23,6 +23,11 @@ namespace BTCPayServer.Controllers
                 return View(statusCode);
             }
             return this.StatusCode(statusCode.Value);
+        }
+
+        public IActionResult Denied()
+        {
+            return Handle(403);
         }
     }
 }

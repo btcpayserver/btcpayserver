@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -12,6 +15,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.Secp256k1;
 
@@ -26,6 +30,13 @@ namespace BTCPayServer.Components.MainNav
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+        private readonly ExternalServiceTypes[] _externalServiceTypes =
+        {
+            ExternalServiceTypes.Spark,
+            ExternalServiceTypes.RTL,
+            ExternalServiceTypes.ThunderHub
+        };
 
         public MainNav(
             AppService appService,
@@ -33,6 +44,7 @@ namespace BTCPayServer.Components.MainNav
             StoresController storesController,
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
+            IOptions<ExternalServicesOptions> externalServiceOptions,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             _storeRepo = storeRepo;
@@ -40,13 +52,44 @@ namespace BTCPayServer.Components.MainNav
             _userManager = userManager;
             _networkProvider = networkProvider;
             _storesController = storesController;
+            _externalServiceOptions = externalServiceOptions;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
         }
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var store = ViewContext.HttpContext.GetStoreData();
-            var vm = new MainNavViewModel { Store = store };
+            var services = _externalServiceOptions.Value.ExternalServices.ToList()
+                .Where(service => _externalServiceTypes.Contains(service.Type))
+                .Select(service => new AdditionalService
+                {
+                    DisplayName = service.DisplayName,
+                    ServiceName = service.ServiceName,
+                    CryptoCode = service.CryptoCode,
+                    Type = service.Type.ToString()
+                })
+                .ToList();
+            
+            // other services
+            foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+            {
+                if (key is "Lightning Terminal" or "Tallycoin Connect")
+                {
+                    services.Add(new AdditionalService
+                    {
+                        DisplayName = key,
+                        Type = key.Replace(" ", ""),
+                        Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
+                    });
+                }
+            }
+            
+            var vm = new MainNavViewModel
+            {
+                Store = store,
+                Services = services
+            };
+            
 #if ALTCOINS
             vm.AltcoinsBuild = true;
 #endif

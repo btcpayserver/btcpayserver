@@ -192,6 +192,42 @@
                         </div>
                     </div>
                 </div>
+                @if (Model.Services.Any())
+                {
+                    <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
+                        <header class="accordion-header" id="Nav-Services-Header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Services" aria-expanded="true" aria-controls="Nav-Services">
+                                Services
+                                <vc:icon symbol="caret-down"/>
+                            </button>
+                        </header>
+                        <div id="Nav-Services" class="accordion-collapse collapse show" aria-labelledby="Nav-Services-Header">
+                            <div class="accordion-body">
+                                <ul class="navbar-nav">
+                                    @foreach (var service in Model.Services)
+                                    {
+                                        <li class="nav-item">
+                                            @if (!string.IsNullOrEmpty(service.CryptoCode))
+                                            {
+                                                <a asp-area="" asp-controller="Server" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Services, service.ServiceName)" id="@($"Nav-Services-{service.ServiceName}")">
+                                                    <vc:icon symbol="thunderhub"/>
+                                                    <span>@service.DisplayName</span>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a href="@service.Link" target="_blank" rel="noreferrer noopener" class="nav-link" id="@($"Nav-Services-{service.ServiceName}")">
+                                                    <vc:icon symbol="@service.Type.ToLower()"/>
+                                                    <span>@service.DisplayName</span>
+                                                </a>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
             <script>
                 const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')

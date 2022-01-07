@@ -410,7 +410,7 @@
     }
 
     #mainContent > section {
-        padding: var(--btcpay-space-xl) var(--btcpay-space-l);
+        padding: 4.65rem var(--btcpay-space-l);
     }
 
     #mainContent > section > .container,

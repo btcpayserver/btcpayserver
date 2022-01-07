@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers.GreenField
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield,
                Policy = Policies.CanModifyStoreWebhooks)]
     [EnableCors(CorsPolicies.All)]
-    public class StoreWebhooksController : ControllerBase
+    public class GreenfieldStoreWebhooksController : ControllerBase
     {
         public StoreWebhooksController(StoreRepository storeRepository, WebhookSender webhookNotificationManager)
         {

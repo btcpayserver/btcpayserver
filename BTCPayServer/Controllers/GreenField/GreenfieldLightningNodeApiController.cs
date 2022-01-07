@@ -24,12 +24,12 @@ namespace BTCPayServer.Controllers.GreenField
             // Do not mark handled, it is possible filters above have better errors
         }
     }
-    public abstract class LightningNodeApiController : Controller
+    public abstract class GreenfieldLightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly ISettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
-        protected LightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
+        protected GreenfieldLightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
             ISettingsRepository settingsRepository,
             IAuthorizationService authorizationService)
         {

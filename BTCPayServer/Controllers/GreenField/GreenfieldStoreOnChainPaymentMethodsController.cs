@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public partial class StoreOnChainPaymentMethodsController : ControllerBase
+    public partial class GreenfieldStoreOnChainPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly ISettingsRepository _settingsRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
 
-        public StoreOnChainPaymentMethodsController(
+        public GreenfieldStoreOnChainPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayWalletProvider walletProvider,

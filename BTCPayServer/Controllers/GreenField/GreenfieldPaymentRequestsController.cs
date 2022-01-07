@@ -19,12 +19,12 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenFieldPaymentRequestsController : ControllerBase
+    public class GreenfieldPaymentRequestsController : ControllerBase
     {
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly CurrencyNameTable _currencyNameTable;
 
-        public GreenFieldPaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
+        public GreenfieldPaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
             CurrencyNameTable currencyNameTable)
         {
             _paymentRequestRepository = paymentRequestRepository;

@@ -16,13 +16,13 @@ namespace BTCPayServer.Controllers.GreenField
     [Route("api/test/apikey")]
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class TestApiKeyController : ControllerBase
+    public class GreenfieldTestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayServerClient _localBTCPayServerClient;
 
-        public TestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository, BTCPayServerClient localBTCPayServerClient)
+        public GreenfieldTestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository, BTCPayServerClient localBTCPayServerClient)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;

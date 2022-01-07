@@ -15,13 +15,13 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StorePaymentMethodsController : ControllerBase
+    public class GreenfieldStorePaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
 
-        public StorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider, IAuthorizationService authorizationService)
+        public GreenfieldStorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider, IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;

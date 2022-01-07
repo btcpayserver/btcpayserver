@@ -19,14 +19,14 @@ namespace BTCPayServer.Controllers.GreenField
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [LightningUnavailableExceptionFilter]
     [EnableCors(CorsPolicies.All)]
-    public class InternalLightningNodeApiController : LightningNodeApiController
+    public class GreenfieldInternalLightningNodeApiController : GreenfieldLightningNodeApiController
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
 
 
-        public InternalLightningNodeApiController(
+        public GreenfieldInternalLightningNodeApiController(
             BTCPayNetworkProvider btcPayNetworkProvider, ISettingsRepository settingsRepository, LightningClientFactoryService lightningClientFactory,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IAuthorizationService authorizationService) : base(

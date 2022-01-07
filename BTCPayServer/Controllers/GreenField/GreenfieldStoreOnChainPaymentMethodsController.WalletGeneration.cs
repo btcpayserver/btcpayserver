@@ -11,7 +11,7 @@ using NBXplorer.Models;
 
 namespace BTCPayServer.Controllers.GreenField
 {
-    public partial class StoreOnChainPaymentMethodsController
+    public partial class GreenfieldStoreOnChainPaymentMethodsController
     {
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/generate")]

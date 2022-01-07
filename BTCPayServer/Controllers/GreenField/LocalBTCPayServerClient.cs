@@ -33,47 +33,47 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private readonly StoreRepository _storeRepository;
         private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
-        private readonly StoreOnChainPaymentMethodsController _chainPaymentMethodsController;
-        private readonly StoreOnChainWalletsController _storeOnChainWalletsController;
-        private readonly StoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
-        private readonly StoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
-        private readonly HealthController _healthController;
-        private readonly GreenFieldPaymentRequestsController _paymentRequestController;
-        private readonly ApiKeysController _apiKeysController;
-        private readonly NotificationsController _notificationsController;
-        private readonly UsersController _usersController;
-        private readonly GreenFieldStoresController _storesController;
-        private readonly InternalLightningNodeApiController _internalLightningNodeApiController;
-        private readonly StoreLightningNodeApiController _storeLightningNodeApiController;
-        private readonly GreenFieldInvoiceController _greenFieldInvoiceController;
+        private readonly GreenfieldStoreOnChainPaymentMethodsController _chainPaymentMethodsController;
+        private readonly GreenfieldStoreOnChainWalletsController _storeOnChainWalletsController;
+        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
+        private readonly GreenfieldStoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
+        private readonly GreenfieldHealthController _healthController;
+        private readonly GreenfieldPaymentRequestsController _paymentRequestController;
+        private readonly GreenfieldApiKeysController _apiKeysController;
+        private readonly GreenfieldNotificationsController _notificationsController;
+        private readonly GreenfieldUsersController _usersController;
+        private readonly GreenfieldStoresController _storesController;
+        private readonly GreenfieldInternalLightningNodeApiController _internalLightningNodeApiController;
+        private readonly GreenfieldStoreLightningNodeApiController _storeLightningNodeApiController;
+        private readonly GreenfieldInvoiceController _greenFieldInvoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly GreenFieldServerInfoController _greenFieldServerInfoController;
-        private readonly StoreWebhooksController _storeWebhooksController;
+        private readonly GreenfieldServerInfoController _greenFieldServerInfoController;
+        private readonly GreenfieldStoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly HomeController _homeController;
-        private readonly StorePaymentMethodsController _storePaymentMethodsController;
+        private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
             IOptionsMonitor<IdentityOptions> identityOptions,
-            StoreOnChainPaymentMethodsController chainPaymentMethodsController,
-            StoreOnChainWalletsController storeOnChainWalletsController,
-            StoreLightningNetworkPaymentMethodsController storeLightningNetworkPaymentMethodsController,
-            StoreLNURLPayPaymentMethodsController storeLnurlPayPaymentMethodsController,
-            HealthController healthController,
-            GreenFieldPaymentRequestsController paymentRequestController,
-            ApiKeysController apiKeysController,
-            NotificationsController notificationsController,
-            UsersController usersController,
-            GreenFieldStoresController storesController,
-            InternalLightningNodeApiController internalLightningNodeApiController,
-            StoreLightningNodeApiController storeLightningNodeApiController,
-            GreenFieldInvoiceController greenFieldInvoiceController,
+            GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
+            GreenfieldStoreOnChainWalletsController storeOnChainWalletsController,
+            GreenfieldStoreLightningNetworkPaymentMethodsController storeLightningNetworkPaymentMethodsController,
+            GreenfieldStoreLNURLPayPaymentMethodsController storeLnurlPayPaymentMethodsController,
+            GreenfieldHealthController healthController,
+            GreenfieldPaymentRequestsController paymentRequestController,
+            GreenfieldApiKeysController apiKeysController,
+            GreenfieldNotificationsController notificationsController,
+            GreenfieldUsersController usersController,
+            GreenfieldStoresController storesController,
+            GreenfieldInternalLightningNodeApiController internalLightningNodeApiController,
+            GreenfieldStoreLightningNodeApiController storeLightningNodeApiController,
+            GreenfieldInvoiceController greenFieldInvoiceController,
             UserManager<ApplicationUser> userManager,
-            GreenFieldServerInfoController greenFieldServerInfoController,
-            StoreWebhooksController storeWebhooksController,
+            GreenfieldServerInfoController greenFieldServerInfoController,
+            GreenfieldStoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             HomeController homeController,
-            StorePaymentMethodsController storePaymentMethodsController)
+            GreenfieldStorePaymentMethodsController storePaymentMethodsController)
         {
             _storeRepository = storeRepository;
             _identityOptions = identityOptions;
@@ -157,43 +157,43 @@ namespace BTCPayServer.Controllers.GreenField
 
     public class LocalBTCPayServerClient : BTCPayServerClient
     {
-        private readonly StoreOnChainPaymentMethodsController _chainPaymentMethodsController;
-        private readonly StoreOnChainWalletsController _storeOnChainWalletsController;
-        private readonly HealthController _healthController;
-        private readonly GreenFieldPaymentRequestsController _paymentRequestController;
-        private readonly ApiKeysController _apiKeysController;
-        private readonly NotificationsController _notificationsController;
-        private readonly UsersController _usersController;
-        private readonly GreenFieldStoresController _storesController;
-        private readonly StoreLightningNodeApiController _storeLightningNodeApiController;
-        private readonly InternalLightningNodeApiController _lightningNodeApiController;
-        private readonly StoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
-        private readonly StoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
-        private readonly GreenFieldInvoiceController _greenFieldInvoiceController;
-        private readonly GreenFieldServerInfoController _greenFieldServerInfoController;
-        private readonly StoreWebhooksController _storeWebhooksController;
+        private readonly GreenfieldStoreOnChainPaymentMethodsController _chainPaymentMethodsController;
+        private readonly GreenfieldStoreOnChainWalletsController _storeOnChainWalletsController;
+        private readonly GreenfieldHealthController _healthController;
+        private readonly GreenfieldPaymentRequestsController _paymentRequestController;
+        private readonly GreenfieldApiKeysController _apiKeysController;
+        private readonly GreenfieldNotificationsController _notificationsController;
+        private readonly GreenfieldUsersController _usersController;
+        private readonly GreenfieldStoresController _storesController;
+        private readonly GreenfieldStoreLightningNodeApiController _storeLightningNodeApiController;
+        private readonly GreenfieldInternalLightningNodeApiController _lightningNodeApiController;
+        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
+        private readonly GreenfieldStoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
+        private readonly GreenfieldInvoiceController _greenFieldInvoiceController;
+        private readonly GreenfieldServerInfoController _greenFieldServerInfoController;
+        private readonly GreenfieldStoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly HomeController _homeController;
-        private readonly StorePaymentMethodsController _storePaymentMethodsController;
+        private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
 
-        public LocalBTCPayServerClient(StoreOnChainPaymentMethodsController chainPaymentMethodsController,
-            StoreOnChainWalletsController storeOnChainWalletsController,
-            HealthController healthController,
-            GreenFieldPaymentRequestsController paymentRequestController,
-            ApiKeysController apiKeysController,
-            NotificationsController notificationsController,
-            UsersController usersController,
-            GreenFieldStoresController storesController,
-            StoreLightningNodeApiController storeLightningNodeApiController,
-            InternalLightningNodeApiController lightningNodeApiController,
-            StoreLightningNetworkPaymentMethodsController storeLightningNetworkPaymentMethodsController,
-            StoreLNURLPayPaymentMethodsController storeLnurlPayPaymentMethodsController,
-            GreenFieldInvoiceController greenFieldInvoiceController,
-            GreenFieldServerInfoController greenFieldServerInfoController,
-            StoreWebhooksController storeWebhooksController,
+        public LocalBTCPayServerClient(GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
+            GreenfieldStoreOnChainWalletsController storeOnChainWalletsController,
+            GreenfieldHealthController healthController,
+            GreenfieldPaymentRequestsController paymentRequestController,
+            GreenfieldApiKeysController apiKeysController,
+            GreenfieldNotificationsController notificationsController,
+            GreenfieldUsersController usersController,
+            GreenfieldStoresController storesController,
+            GreenfieldStoreLightningNodeApiController storeLightningNodeApiController,
+            GreenfieldInternalLightningNodeApiController lightningNodeApiController,
+            GreenfieldStoreLightningNetworkPaymentMethodsController storeLightningNetworkPaymentMethodsController,
+            GreenfieldStoreLNURLPayPaymentMethodsController storeLnurlPayPaymentMethodsController,
+            GreenfieldInvoiceController greenFieldInvoiceController,
+            GreenfieldServerInfoController greenFieldServerInfoController,
+            GreenfieldStoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             HomeController homeController,
-            StorePaymentMethodsController storePaymentMethodsController,
+            GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;

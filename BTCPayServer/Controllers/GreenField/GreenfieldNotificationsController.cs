@@ -18,12 +18,12 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class NotificationsController : ControllerBase
+    public class GreenfieldNotificationsController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
-        public NotificationsController(UserManager<ApplicationUser> userManager,
+        public GreenfieldNotificationsController(UserManager<ApplicationUser> userManager,
             NotificationManager notificationManager)
         {
             _userManager = userManager;

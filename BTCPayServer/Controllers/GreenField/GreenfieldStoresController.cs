@@ -20,13 +20,13 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenFieldStoresController : ControllerBase
+    public class GreenfieldStoresController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
-        public GreenFieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, BTCPayNetworkProvider btcPayNetworkProvider)
+        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, BTCPayNetworkProvider btcPayNetworkProvider)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;

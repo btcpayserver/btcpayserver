@@ -27,7 +27,7 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class UsersController : ControllerBase
+    public class GreenfieldUsersController : ControllerBase
     {
         public Logs Logs { get; }
 
@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
 
-        public UsersController(UserManager<ApplicationUser> userManager,
+        public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SettingsRepository settingsRepository,
             EventAggregator eventAggregator,

@@ -8,11 +8,11 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [Controller]
     [EnableCors(CorsPolicies.All)]
-    public class HealthController : ControllerBase
+    public class GreenfieldHealthController : ControllerBase
     {
         private readonly NBXplorerDashboard _dashBoard;
 
-        public HealthController(NBXplorerDashboard dashBoard)
+        public GreenfieldHealthController(NBXplorerDashboard dashBoard)
         {
             _dashBoard = dashBoard;
         }

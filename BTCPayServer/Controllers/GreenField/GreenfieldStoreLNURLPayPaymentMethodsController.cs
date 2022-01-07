@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StoreLNURLPayPaymentMethodsController : ControllerBase
+    public class GreenfieldStoreLNURLPayPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly IAuthorizationService _authorizationService;
         private readonly ISettingsRepository _settingsRepository;
 
-        public StoreLNURLPayPaymentMethodsController(
+        public GreenfieldStoreLNURLPayPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             AssertCryptoCodeWallet(cryptoCode, out _);
 
-            var lnMethod = StoreLightningNetworkPaymentMethodsController.GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider,
+            var lnMethod = GreenfieldStoreLightningNetworkPaymentMethodsController.GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider,
                 cryptoCode, Store);
 
             if ((lnMethod is null || lnMethod.Enabled is false) && paymentMethodData.Enabled)

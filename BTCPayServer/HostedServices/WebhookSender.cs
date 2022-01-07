@@ -229,14 +229,14 @@ namespace BTCPayServer.HostedServices
                     {
                         AfterExpiration = invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired || invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
                         PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
-                        Payment = GreenFieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment)
+                        Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment)
                     };
                 case InvoiceEventCode.PaymentSettled:
                     return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoicePaymentSettled)
                     {
                         AfterExpiration = invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired || invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
                         PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
-                        Payment = GreenFieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
+                        Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                         OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
                     };
                 default:

@@ -68,13 +68,12 @@ namespace BTCPayServer.Security
             if (routeData != null)
             {
                 // resolve from app
-                if (routeData.Values.TryGetValue("appId", out var vAppId))
+                if (routeData.Values.TryGetValue("appId", out var vAppId) && vAppId is string appId)
                 {
-                    string appId = vAppId as string;
                     app = await _appService.GetAppDataIfOwner(userId, appId);
                     if (storeId == null)
                     {
-                        storeId = app?.StoreDataId;
+                        storeId = app?.StoreDataId ?? String.Empty;
                     }
                     else if (app?.StoreDataId != storeId)
                     {
@@ -82,13 +81,12 @@ namespace BTCPayServer.Security
                     }
                 }
                 // resolve from payment request
-                if (routeData.Values.TryGetValue("payReqId", out var vPayReqId))
+                if (routeData.Values.TryGetValue("payReqId", out var vPayReqId) && vPayReqId is string payReqId)
                 {
-                    string payReqId = vPayReqId as string;
                     paymentRequest = await _paymentRequestRepository.FindPaymentRequest(payReqId, userId);
                     if (storeId == null)
                     {
-                        storeId = paymentRequest?.StoreDataId;
+                        storeId = paymentRequest?.StoreDataId ?? String.Empty;
                     }
                     else if (paymentRequest?.StoreDataId != storeId)
                     {
@@ -96,13 +94,12 @@ namespace BTCPayServer.Security
                     }
                 }
                 // resolve from invoice
-                if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId))
+                if (routeData.Values.TryGetValue("invoiceId", out var vInvoiceId) && vInvoiceId is string invoiceId)
                 {
-                    string invoiceId = vInvoiceId as string;
                     invoice = await _invoiceRepository.GetInvoice(invoiceId);
                     if (storeId == null)
                     {
-                        storeId = invoice?.StoreId;
+                        storeId = invoice?.StoreId ?? String.Empty;
                     }
                     else if (invoice?.StoreId != storeId)
                     {
@@ -117,6 +114,8 @@ namespace BTCPayServer.Security
                 storeId = _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
             }
 
+            if (string.IsNullOrEmpty(storeId))
+                storeId = null;
             if (storeId != null)
             {
                 store = await _storeRepository.FindStore(storeId, userId);

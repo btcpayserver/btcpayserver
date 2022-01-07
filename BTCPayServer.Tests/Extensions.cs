@@ -28,10 +28,13 @@ namespace BTCPayServer.Tests
 
         public static void AssertNoError(this IWebDriver driver)
         {
-            if (!driver.PageSource.Contains("alert-danger"))
-                return;
-            foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
-                Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
+            if (driver.PageSource.Contains("alert-danger"))
+            {
+                foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
+                    Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
+            }
+            Assert.DoesNotContain("Access denied</h", driver.PageSource);
+            Assert.DoesNotContain("Page not found</h", driver.PageSource);
         }
 
         public static T AssertViewModel<T>(this IActionResult result)

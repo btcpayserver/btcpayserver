@@ -58,7 +58,7 @@
                                     <li class="nav-item">
                                         @if (isSetUp && scheme.WalletSupported)
                                         {
-                                            <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId"class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                            <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                                 <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
                                             </a>

@@ -327,7 +327,7 @@ namespace BTCPayServer.Tests
 
         internal void AssertAccessDenied()
         {
-            Assert.DoesNotContain("- Denied</h", Driver.PageSource);
+            Assert.Contains("- Denied</h", Driver.PageSource);
         }
 
         public void GoToHome()

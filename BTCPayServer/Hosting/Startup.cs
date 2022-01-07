@@ -270,7 +270,7 @@ namespace BTCPayServer.Hosting
                 PaymentRequestHub.Register(endpoints);
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapControllerRoute("default", "{controller:validate=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action=Index}/{id?}");
             });
             app.UsePlugins();
         }

@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly ISettingsRepository _settingsRepository;
         private readonly NBXplorerDashboard _nbXplorerDashboard;
-        private readonly WalletsController _walletsController;
+        private readonly UIWalletsController _walletsController;
         private readonly PayjoinClient _payjoinClient;
         private readonly DelayedTransactionBroadcaster _delayedTransactionBroadcaster;
         private readonly EventAggregator _eventAggregator;
@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.GreenField
             ExplorerClientProvider explorerClientProvider,
             ISettingsRepository settingsRepository,
             NBXplorerDashboard nbXplorerDashboard,
-            WalletsController walletsController,
+            UIWalletsController walletsController,
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
             EventAggregator eventAggregator,

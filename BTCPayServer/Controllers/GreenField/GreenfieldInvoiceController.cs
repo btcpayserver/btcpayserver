@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldInvoiceController : Controller
     {
-        private readonly InvoiceController _invoiceController;
+        private readonly UIInvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly LinkGenerator _linkGenerator;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         public LanguageService LanguageService { get; }
 
-        public GreenfieldInvoiceController(InvoiceController invoiceController, InvoiceRepository invoiceRepository,
+        public GreenfieldInvoiceController(UIInvoiceController invoiceController, InvoiceRepository invoiceRepository,
             LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
             EventAggregator eventAggregator, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {

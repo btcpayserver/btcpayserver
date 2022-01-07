@@ -150,8 +150,8 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
                 Assert.Contains("/login", s.Driver.Url);
 
-                s.GoToUrl("/Manage/Index");
-                Assert.Contains("ReturnUrl=%2FManage%2FIndex", s.Driver.Url);
+                s.GoToUrl("/UIManage/Index");
+                Assert.Contains("ReturnUrl=%2FUIManage%2FIndex", s.Driver.Url);
 
                 // We should be redirected to login
                 //Same User Can Log Back In
@@ -160,7 +160,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
 
                 // We should be redirected to invoice
-                Assert.EndsWith("/Manage/Index", s.Driver.Url);
+                Assert.EndsWith("/UIManage/Index", s.Driver.Url);
 
                 // Should not be able to reach server settings
                 s.GoToUrl("/server/users");
@@ -668,6 +668,8 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
                 s.Driver.FindElement(By.Id("SaveButton")).Click();
+                var aaa = s.Driver.PageSource;
+                var url = s.Driver.Url;
                 s.Driver.FindElement(By.Id("ViewAppButton")).Click();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);

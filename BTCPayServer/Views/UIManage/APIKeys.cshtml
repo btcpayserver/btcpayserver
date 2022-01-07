@@ -1,0 +1,118 @@
+@namespace BTCPayServer.Client
+@model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
+@{
+    ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
+}
+<h2 class="mb-4">@ViewData["Title"]</h2>
+<p>
+    The <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay
+    Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/Development/GreenFieldExample/" rel="noreferrer noopener">use case examples</a>).
+    For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "UIHome")#section/Authentication" target="_blank" rel="noreferrer noopener">API authentication docs</a>.
+</p>
+<a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">
+    <span class="fa fa-plus"></span>
+    Generate Key
+</a>
+@if (Model.ApiKeyDatas.Any())
+{
+    <table class="table table-lg">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th class="w-125px">Key</th>
+                <th>Permissions</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var index = 0;
+            }
+            @foreach (var keyData in Model.ApiKeyDatas)
+            {
+                <tr>
+                    <td>@keyData.Label</td>
+                    <td>
+                        <code class="hide-when-js">@keyData.Id</code>
+                        <a class="only-for-js" data-reveal-btn>Click to reveal</a>
+                        <div hidden>
+                            <code data-api-key>@keyData.Id</code>
+                            <a class="mt-2" data-clipboard-confirm>
+                                Copy to clipboard
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        @{
+                            var permissions = keyData.GetBlob().Permissions;
+                        }
+                        @if (!permissions.Any())
+                        {
+                            <span class="text-warning">No permissions</span>
+                        }
+                        else
+                        {
+                            <ul>
+                                @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
+                                {
+                                    <li>
+                                        <code class="text-break">@permission</code>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@(keyData.Label ?? keyData.Id)<strong> will immediately lose access." data-confirm-input="DELETE">Delete</a>
+                        <span>-</span>
+                        <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index">Show QR</button>
+                    </td>
+                </tr>
+                index++;
+            }
+        </tbody>
+    </table>
+}
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete API key", "Any application using the API key will immediately lose access.", "Delete"))" />
+
+<partial name="ShowQR" />
+
+@section PageHeadContent {
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
+}
+@section PageFootContent {
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("[data-reveal-btn]").on("click", function (){
+                var $revealButton = $(this);
+                $revealButton.attr("hidden", "true");
+
+                var $apiKeyContainer = $revealButton.next("[hidden]");
+                $apiKeyContainer.removeAttr("hidden");
+
+                (function setupCopyToClipboardButton() {
+                    var $clipboardBtn = $apiKeyContainer.children("[data-clipboard-confirm]");
+                    var apiKey = $apiKeyContainer.children("[data-api-key]").text().trim();
+                    $clipboardBtn.attr("data-clipboard", apiKey);
+                    $clipboardBtn.click(window.copyToClipboard);
+                })();
+            });
+
+            var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
+                          {
+                              ApiKey = data.Id,
+                              Host = Context.Request.GetAbsoluteRoot()
+                          }));
+            var qrApp = initQRShow("API Key QR", "", "scan-qr-modal");
+            $("button[data-qr]").on("click", function (){
+                var data =  apiKeys[parseInt($(this).data("qr"))];
+                qrApp.data = JSON.stringify(data);
+                qrApp.currentMode = "static";
+                qrApp.allowedModes = ["static"];
+                $("#scan-qr-modal").modal("show");
+            });
+        });
+    </script>
+}

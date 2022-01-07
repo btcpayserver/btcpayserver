@@ -18,10 +18,10 @@ namespace BTCPayServer.Controllers
     [Authorize(Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class BitpayInvoiceController : Controller
     {
-        private readonly InvoiceController _InvoiceController;
+        private readonly UIInvoiceController _InvoiceController;
         private readonly InvoiceRepository _InvoiceRepository;
 
-        public BitpayInvoiceController(InvoiceController invoiceController,
+        public BitpayInvoiceController(UIInvoiceController invoiceController,
                                     InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;

@@ -382,9 +382,9 @@ namespace BTCPayServer.Hosting
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<BitpayAccessTokenController>();
-            services.AddTransient<InvoiceController>();
-            services.AddTransient<AppsPublicController>();
-            services.AddTransient<PaymentRequestController>();
+            services.AddTransient<UIInvoiceController>();
+            services.AddTransient<UIAppsPublicController>();
+            services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
 

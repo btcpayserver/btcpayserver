@@ -35,8 +35,8 @@ namespace BTCPayServer.Tests
 
                 await user2.GrantAccessAsync();
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
-                var guestpaymentRequestController = user2.GetController<PaymentRequestController>();
+                var paymentRequestController = user.GetController<UIPaymentRequestController>();
+                var guestpaymentRequestController = user2.GetController<UIPaymentRequestController>();
 
                 var request = new UpdatePaymentRequestViewModel
                 {
@@ -104,7 +104,7 @@ namespace BTCPayServer.Tests
                 await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
+                var paymentRequestController = user.GetController<UIPaymentRequestController>();
 
                 Assert.IsType<NotFoundResult>(
                     await paymentRequestController.PayPaymentRequest(Guid.NewGuid().ToString()));
@@ -132,7 +132,7 @@ namespace BTCPayServer.Tests
                         await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
 
                 Assert.Equal("Checkout", actionResult.ActionName);
-                Assert.Equal("Invoice", actionResult.ControllerName);
+                Assert.Equal("UIInvoice", actionResult.ControllerName);
                 Assert.Contains(actionResult.RouteValues,
                     pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 
@@ -170,7 +170,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
+                var paymentRequestController = user.GetController<UIPaymentRequestController>();
 
                 Assert.IsType<NotFoundResult>(await
                     paymentRequestController.CancelUnpaidPendingInvoice(Guid.NewGuid().ToString(), false));
@@ -209,7 +209,7 @@ namespace BTCPayServer.Tests
                         await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
 
                 Assert.Equal("Checkout", actionResult.ActionName);
-                Assert.Equal("Invoice", actionResult.ControllerName);
+                Assert.Equal("UIInvoice", actionResult.ControllerName);
                 Assert.Contains(actionResult.RouteValues,
                     pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 

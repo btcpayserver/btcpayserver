@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly GreenfieldServerInfoController _greenFieldServerInfoController;
         private readonly GreenfieldStoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
-        private readonly HomeController _homeController;
+        private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
             GreenfieldServerInfoController greenFieldServerInfoController,
             GreenfieldStoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
-            HomeController homeController,
+            UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController)
         {
             _storeRepository = storeRepository;
@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly GreenfieldServerInfoController _greenFieldServerInfoController;
         private readonly GreenfieldStoreWebhooksController _storeWebhooksController;
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
-        private readonly HomeController _homeController;
+        private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
 
         public LocalBTCPayServerClient(GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
@@ -192,7 +192,7 @@ namespace BTCPayServer.Controllers.GreenField
             GreenfieldServerInfoController greenFieldServerInfoController,
             GreenfieldStoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
-            HomeController homeController,
+            UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {

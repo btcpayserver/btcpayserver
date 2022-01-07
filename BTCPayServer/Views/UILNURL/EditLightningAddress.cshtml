@@ -1,0 +1,157 @@
+﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model UILNURLController.EditLightningAddressVM
+@{
+    ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), "Lightning Address", Context.GetStoreData().Id);
+}
+
+@section PageHeadContent {
+    <style>
+        .settings-holder span:not(:last-child):after{
+            content: " / ";
+        }
+    </style>
+}
+
+@section PageFootContent {
+    <script>
+        delegate('click', '.remove', event => { 
+            event.preventDefault() 
+            const { name, value } = event.target
+            const confirmButton = document.getElementById('ConfirmContinue')
+            confirmButton.setAttribute('name', name)
+            confirmButton.setAttribute('value', value)
+        })
+    </script>
+}
+
+<partial name="_StatusMessage" />
+
+@if (Context.Request.PathBase.ToString() != string.Empty)
+{
+    <div class="alert alert-warning" role="alert">
+        Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br /><br />
+        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br /><br />
+        If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.
+    </div>
+}
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
+        <span class="fa fa-plus"></span>
+        Add Address
+    </a>
+</div>
+
+<form asp-action="EditLightningAddress" method="post">
+    @{
+        var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
+        var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || Model.Add?.Min != null || Model.Add?.Max != null;
+     }
+    
+    <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">
+        <div class="form-group pt-2">
+            <label asp-for="Add.Username" class="form-label"></label>
+            <div class="input-group">
+                <input asp-for="Add.Username" class="form-control"/>
+                <span class="input-group-text">@@@Context.Request.Host.ToUriComponent()@Context.Request.PathBase</span>
+            </div>
+            <span asp-validation-for="Add.Username" class="text-danger"></span>
+        </div>
+        <a class="d-inline-block mb-3" role="button" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings">Advanced settings</a>
+        <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
+            <div class="row">
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.CurrencyCode" class="form-label"></label>
+                        <input asp-for="Add.CurrencyCode" class="form-control" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.Min" class="form-label"></label>
+                        <input asp-for="Add.Min" class="form-control" type="number" min="1" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.Min" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.Max" class="form-label"></label>
+                        <input asp-for="Add.Max" class="form-control" type="number" min="1" max="@int.MaxValue" style="max-width:16ch;"/>
+                        <span asp-validation-for="Add.Max" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="form-group">
+            <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
+        </div>
+    </div>
+    
+    @if (Model.Items.Any())
+    {
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Address</th>
+                        <th>Settings</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @for (var index = 0; index < Model.Items.Count; index++)
+                    {
+                        <input asp-for="Items[index].CurrencyCode" type="hidden"/>
+                        <input asp-for="Items[index].Min" type="hidden"/>
+                        <input asp-for="Items[index].Max" type="hidden"/>
+                        <input asp-for="Items[index].Username" type="hidden"/>
+                        var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
+                        <tr>
+                            <td>
+                                <div class="input-group" data-clipboard="@address">
+                                    <input type="text" class="form-control copy-cursor lightning-address-value"  readonly="readonly" value="@address"/>
+                                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
+                                </div>
+
+                            </td>
+                            <td class="settings-holder align-middle">
+                                @if (Model.Items[index].Min.HasValue)
+                                {
+                                    <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>
+                                }
+                                @if (Model.Items[index].Max.HasValue)
+                                {
+                                    <span> @Safe.Raw($"{Model.Items[index].Max} max sats")</span>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
+                                {
+                                    <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
+                                        class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@address</strong> will be removed." data-confirm-input="REMOVE">
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no Lightning Addresses yet.
+        </p>
+    }
+</form>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))" />

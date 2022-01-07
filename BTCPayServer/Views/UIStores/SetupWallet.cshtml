@@ -1,0 +1,40 @@
+@model WalletSetupViewModel
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Setup {Model.CryptoCode} Wallet", Context.GetStoreData().Id);
+}
+
+<h1 class="text-center">Let's get started</h1>
+<br>
+<div class="mt-5">
+    <h3 class="my-4">I have a wallet</h3>
+    <div class="list-group">
+        <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ImportWalletOptionsLink" class="list-group-item list-group-item-action">
+            <div class="image">
+                <vc:icon symbol="existing-wallet"/>
+            </div>
+            <div class="content">
+                <h4>Connect an existing wallet</h4>
+                <p class="mb-0 text-secondary">Import an existing hardware or software wallet</p>
+            </div>
+            <vc:icon symbol="caret-right" />
+        </a>
+    </div>
+</div>
+
+<br>
+<div class="mt-5">
+    <h3 class="my-4">I don't have a wallet</h3>
+    <div class="list-group">
+        <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
+            <div class="image">
+                <vc:icon symbol="new-wallet"/>
+            </div>
+            <div class="content">
+                <h4>Create a new wallet</h4>
+                <p class="mb-0 text-secondary">Generate a brand-new wallet to use</p>
+            </div>
+            <vc:icon symbol="caret-right"/>
+        </a>
+    </div>
+</div>

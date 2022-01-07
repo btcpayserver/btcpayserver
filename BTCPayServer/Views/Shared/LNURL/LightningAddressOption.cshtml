@@ -22,7 +22,7 @@
         <span class="d-flex align-items-center fw-semibold">
             @if (possible)
             {
-                <a id="lightning-address-setup-link" class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="LNURL" asp-action="EditLightningAddress" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                <a id="lightning-address-setup-link" class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="UILNURL" asp-action="EditLightningAddress" asp-route-storeId="@Context.GetRouteValue("storeId")">
                     Setup
                 </a>
             }
@@ -30,7 +30,7 @@
             {
                 if (!isLightningEnabled)
                 {
-                    <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id" class="btn btn-link p-0">
+                    <a asp-action="PaymentMethods" asp-controller="UIStores" asp-route-storeId="@store.Id" class="btn btn-link p-0">
                         You need to setup Lightning first
                     </a>
                 }

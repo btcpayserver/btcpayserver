@@ -151,8 +151,8 @@ namespace BTCPayServer.Controllers.GreenField
                 Period = ppBlob.Period,
                 Archived = pp.Archived,
                 ViewLink = _linkGenerator.GetUriByAction(
-                                nameof(PullPaymentController.ViewPullPayment),
-                                "PullPayment",
+                                nameof(UIPullPaymentController.ViewPullPayment),
+                                "UIPullPayment",
                                 new { pullPaymentId = pp.Id },
                                 Request.Scheme,
                                 Request.Host,

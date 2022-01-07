@@ -33,8 +33,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
             protected override void FillViewModel(PayoutNotification notification, NotificationViewModel vm)
             {
                 vm.Body = "A new payout is awaiting for approval";
-                vm.ActionLink = _linkGenerator.GetPathByAction(nameof(StorePullPaymentsController.Payouts),
-                    "StorePullPayments",
+                vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),
+                    "UIStorePullPayments",
                     new { storeId = notification.StoreId, paymentMethodId = notification.PaymentMethod }, _options.RootPath);
             }
         }

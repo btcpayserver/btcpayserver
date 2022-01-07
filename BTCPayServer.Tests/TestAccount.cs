@@ -70,9 +70,9 @@ namespace BTCPayServer.Tests
 
         public async Task<BTCPayServerClient> CreateClient(params string[] permissions)
         {
-            var manageController = parent.PayTester.GetController<ManageController>(UserId, StoreId, IsAdmin);
+            var manageController = parent.PayTester.GetController<UIManageController>(UserId, StoreId, IsAdmin);
             var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
-                new ManageController.AddApiKeyViewModel()
+                new UIManageController.AddApiKeyViewModel()
                 {
                     PermissionValues = permissions.Select(s =>
                     {
@@ -82,11 +82,11 @@ namespace BTCPayServer.Tests
                     {
                         var stores = p.Where(permission => !string.IsNullOrEmpty(permission.Scope))
                             .Select(permission => permission.Scope).ToList();
-                        return new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                        return new UIManageController.AddApiKeyViewModel.PermissionValueItem()
                         {
                             Permission = p.Key,
                             Forbidden = false,
-                            StoreMode = stores.Any() ? ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific : ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores,
+                            StoreMode = stores.Any() ? UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific : UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores,
                             SpecificStores = stores,
                             Value = true
                         };
@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
         {
             await RegisterAsync(isAdmin);
             await CreateStoreAsync();
-            var store = GetController<StoresController>();
+            var store = GetController<UIStoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
@@ -135,7 +135,7 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyPayment(Action<PaymentMethodsViewModel> modify)
         {
-            var storeController = GetController<StoresController>();
+            var storeController = GetController<UIStoresController>();
             var response = storeController.PaymentMethods();
             PaymentMethodsViewModel paymentMethods = (PaymentMethodsViewModel)((ViewResult)response).Model;
             modify(paymentMethods);
@@ -144,7 +144,7 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyWalletSettings(Action<WalletSettingsViewModel> modify)
         {
-            var storeController = GetController<StoresController>();
+            var storeController = GetController<UIStoresController>();
             var response = await storeController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
@@ -153,7 +153,7 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
         {
-            var storeController = GetController<StoresController>();
+            var storeController = GetController<UIStoresController>();
             var response = await storeController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
@@ -172,7 +172,7 @@ namespace BTCPayServer.Tests
             {
                 await RegisterAsync();
             }
-            var store = GetController<UserStoresController>();
+            var store = GetController<UIUserStoresController>();
             await store.CreateStore(new CreateStoreViewModel { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
@@ -191,7 +191,7 @@ namespace BTCPayServer.Tests
             if (StoreId is null)
                 await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = parent.PayTester.GetController<StoresController>(UserId, StoreId, true);
+            var store = parent.PayTester.GetController<UIStoresController>(UserId, StoreId, true);
 
             var generateRequest = new WalletSetupRequest
             {
@@ -215,7 +215,7 @@ namespace BTCPayServer.Tests
 
         private async Task RegisterAsync(bool isAdmin = false)
         {
-            var account = parent.PayTester.GetController<AccountController>();
+            var account = parent.PayTester.GetController<UIAccountController>();
             RegisterDetails = new RegisterViewModel()
             {
                 Email = Guid.NewGuid() + "@toto.com",
@@ -271,7 +271,7 @@ namespace BTCPayServer.Tests
         }
         public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
         {
-            var storeController = GetController<StoresController>();
+            var storeController = GetController<UIStoresController>();
 
             var connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
             var nodeType = connectionString == LightningSupportedPaymentMethod.InternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
@@ -285,7 +285,7 @@ namespace BTCPayServer.Tests
 
         public async Task RegisterInternalLightningNodeAsync(string cryptoCode, string storeId = null)
         {
-            var storeController = GetController<StoresController>();
+            var storeController = GetController<UIStoresController>();
             var vm = new LightningNodeViewModel { ConnectionString = "", LightningNodeType = LightningNodeType.Internal, SkipPortTest = true };
             await storeController.SetupLightningNode(storeId ?? StoreId,
                 vm, "save", cryptoCode);

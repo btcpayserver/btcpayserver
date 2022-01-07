@@ -236,7 +236,7 @@ namespace BTCPayServer.Hosting
 
                     case nameof(AppType.PointOfSale):
 
-                        var settings2 = app.GetSettings<AppsController.PointOfSaleSettings>();
+                        var settings2 = app.GetSettings<UIAppsController.PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))
                         {
                             settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;

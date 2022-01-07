@@ -1,0 +1,162 @@
+﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
+@model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
+@{
+    ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull payments", Context.GetStoreData().Id);
+    var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
+    string startDateSortOrder = null;
+    switch (nextStartDateSortOrder)
+    {
+        case "asc":
+            startDateSortOrder = "desc";
+            break;
+        case "desc":
+            startDateSortOrder = "asc";
+            break;
+    }
+
+    var sortIconClass = "fa-sort";
+    if (startDateSortOrder != null)
+    {
+        sortIconClass = $"fa-sort-alpha-{startDateSortOrder}";
+    }
+
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
+}
+
+@section PageHeadContent {
+    <style type="text/css">
+        .tooltip-inner {
+            text-align: left;
+        }
+    </style>
+}
+
+<partial name="_StatusMessage" />
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </small>
+    </h2>
+    <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
+        <span class="fa fa-plus"></span> Create Pull Payment
+    </a>
+</div>
+
+@if (Model.PullPayments.Any())
+{
+    <div class="row">
+        @foreach (var pp in Model.PullPayments)
+        {
+            <script id="tooptip_template_@pp.Id" type="text/template">
+                <span>Awaiting:&nbsp;<span class="float-end">@pp.Progress.Awaiting</span></span>
+                <br />
+                <span>Completed:&nbsp;<span class="float-end">@pp.Progress.Completed</span></span>
+                <br />
+                <span>Limit:&nbsp;<span class="float-end">@pp.Progress.Limit</span></span>
+                @if (pp.Progress.ResetIn != null)
+                {
+                    <br />
+                    <span>Resets in:&nbsp;<span class="float-end">@pp.Progress.ResetIn</span></span>
+                }
+                @if (pp.Progress.EndIn != null)
+                {
+                    <br />
+                    <span>Expires in:&nbsp;<span class="float-end">@pp.Progress.EndIn</span></span>
+                }
+            </script>
+        }
+        <div class="col-md-12">
+            <table class="table table-hover table-responsive-lg">
+                <thead class="thead-inverse">
+                <tr>
+                    <th scope="col">
+                        <a
+                            asp-action="PullPayments"
+                            asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
+                            class="text-nowrap"
+                            title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
+                            Start
+                            <span class="fa @(sortIconClass)"></span>
+                        </a>
+                    </th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Refunded</th>
+                    <th scope="col" class="text-end" >Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var pp in Model.PullPayments)
+                {
+                    <tr>
+                        <td>@pp.StartDate.ToBrowserDate()</td>
+                        <td>@pp.Name</td>
+                        <td class="align-middle">
+                            <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
+                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
+                                     aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
+                                </div>
+                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
+                                     aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="ViewPullPayment"
+                               asp-controller="UIPullPayment"
+                               asp-route-pullPaymentId="@pp.Id">
+                                View
+                            </a> -
+                            <a class="pp-payout"
+                               asp-action="Payouts"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
+                               asp-route-pullPaymentId="@pp.Id">
+                                Payouts
+                            </a>
+                            <span permission="@Policies.CanModifyStoreSettings"> - </span>
+                            <a asp-action="ArchivePullPayment"
+                               permission="@Policies.CanModifyStoreSettings" 
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
+                               asp-route-pullPaymentId="@pp.Id"
+                               data-bs-toggle="modal"
+                               data-bs-target="#ConfirmModal"
+                               data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
+                                Archive
+                            </a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+        </div>
+        <vc:pager view-model="Model"/>
+    </div>
+
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))"/>
+
+@section PageFootContent {
+    <script>
+            var ppProgresses = document.getElementsByClassName("ppProgress");
+            for (var i = 0; i < ppProgresses.length; i++) {
+                var pp = ppProgresses[i];
+                var ppId = pp.getAttribute("data-pp");
+                var template = document.getElementById("tooptip_template_" + ppId);
+                pp.setAttribute("title", template.innerHTML);
+            }
+        </script>
+}
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no pull payments yet.
+    </p>
+}

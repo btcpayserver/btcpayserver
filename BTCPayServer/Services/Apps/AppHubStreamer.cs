@@ -25,7 +25,7 @@ namespace BTCPayServer.Services.Apps
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
-            Subscribe<AppsController.AppUpdated>();
+            Subscribe<UIAppsController.AppUpdated>();
         }
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ namespace BTCPayServer.Services.Apps
                     await InfoUpdated(appId);
                 }
             }
-            else if (evt is AppsController.AppUpdated app)
+            else if (evt is UIAppsController.AppUpdated app)
             {
                 await InfoUpdated(app.AppId);
             }

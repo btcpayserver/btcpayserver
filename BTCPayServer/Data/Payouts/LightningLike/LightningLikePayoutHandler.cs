@@ -165,7 +165,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds)
         {
             return Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout",
-                "LightningLikePayout", new { cryptoCode = paymentMethodId.CryptoCode, payoutIds }));
+                "UILightningLikePayout", new { cryptoCode = paymentMethodId.CryptoCode, payoutIds }));
         }
     }
 }

@@ -977,7 +977,7 @@ namespace BTCPayServer.Tests
                 var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
                     new CreatePaymentRequestRequest() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
 
-                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<PaymentRequestController>()
+                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
                     .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
                 var invoice = user.BitPay.GetInvoice(invoiceId);
                 await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
@@ -1332,7 +1332,7 @@ namespace BTCPayServer.Tests
                         }
                     });
                 Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
-                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
                 var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
                 Assert.Equal("it-IT", model.DefaultLang);
                 Assert.Equal("http://toto.com/lol", model.MerchantRefLink);

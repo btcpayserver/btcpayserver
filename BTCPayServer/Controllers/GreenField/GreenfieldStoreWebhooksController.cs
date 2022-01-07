@@ -26,14 +26,14 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreWebhooksController : ControllerBase
     {
-        public StoreWebhooksController(StoreRepository storeRepository, WebhookSender webhookNotificationManager)
+        public GreenfieldStoreWebhooksController(StoreRepository storeRepository, WebhookSender webhookSender)
         {
             StoreRepository = storeRepository;
-            WebhookNotificationManager = webhookNotificationManager;
+            WebhookSender = webhookSender;
         }
 
         public StoreRepository StoreRepository { get; }
-        public WebhookSender WebhookNotificationManager { get; }
+        public WebhookSender WebhookSender { get; }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId?}")]
         public async Task<IActionResult> ListWebhooks(string storeId, string webhookId)
@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers.GreenField
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
                 return WebhookDeliveryNotFound();
-            return this.Ok(new JValue(await WebhookNotificationManager.Redeliver(deliveryId)));
+            return this.Ok(new JValue(await WebhookSender.Redeliver(deliveryId)));
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]

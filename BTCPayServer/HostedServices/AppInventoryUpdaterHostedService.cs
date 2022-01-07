@@ -37,7 +37,7 @@ namespace BTCPayServer.HostedServices
                         switch (Enum.Parse<AppType>(data.AppType))
                         {
                             case AppType.PointOfSale:
-                                var possettings = data.GetSettings<AppsController.PointOfSaleSettings>();
+                                var possettings = data.GetSettings<UIAppsController.PointOfSaleSettings>();
                                 return (Data: data, Settings: (object)possettings,
                                     Items: _appService.Parse(possettings.Template, possettings.Currency));
                             case AppType.Crowdfund:
@@ -69,7 +69,7 @@ namespace BTCPayServer.HostedServices
                     {
                         case AppType.PointOfSale:
 
-                            ((AppsController.PointOfSaleSettings)valueTuple.Settings).Template =
+                            ((UIAppsController.PointOfSaleSettings)valueTuple.Settings).Template =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;
                         case AppType.Crowdfund:

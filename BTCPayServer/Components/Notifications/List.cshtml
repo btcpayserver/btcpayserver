@@ -5,7 +5,7 @@
 <div id="NotificationsList">
     @foreach (var n in Model.Last5)
     {
-        <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@n.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
+        <a asp-action="NotificationPassThrough" asp-controller="UINotifications" asp-route-id="@n.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
             <div class="me-3">
                 <vc:icon symbol="note" />
             </div>

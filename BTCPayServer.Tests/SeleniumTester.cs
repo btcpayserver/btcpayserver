@@ -337,7 +337,8 @@ namespace BTCPayServer.Tests
 
         public void Logout()
         {
-            Driver.FindElement(By.Id("Logout")).Click();
+            Driver.FindElement(By.Id("Nav-Account")).Click();
+            Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
         public void Login(string user, string password)
@@ -424,6 +425,7 @@ namespace BTCPayServer.Tests
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
             Driver.FindElement(By.Id("Nav-Account")).Click();
+            Driver.FindElement(By.Id("Nav-ManageAccount")).Click();
             if (navPages != ManageNavPages.Index)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages.ToString()}")).Click();

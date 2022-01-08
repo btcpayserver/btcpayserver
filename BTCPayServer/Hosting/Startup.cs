@@ -140,6 +140,7 @@ namespace BTCPayServer.Hosting
             .AddRazorRuntimeCompilation()
             .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
+            ValidateControllerNameTransformer.Register(services);
 
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
@@ -268,7 +269,7 @@ namespace BTCPayServer.Hosting
                 PaymentRequestHub.Register(endpoints);
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller:validate=Home}/{action=Index}/{id?}");
             });
             app.UsePlugins();
         }

@@ -122,13 +122,13 @@ namespace BTCPayServer.Controllers.GreenField
                                     {
                                         Everything = aed.Everything,
                                         SpecificEvents = aed.SpecificEvents
-                                    }:
+                                    } :
                                     new AuthorizedWebhookEvents() { Everything = true },
-                AutomaticRedelivery = create.AutomaticRedelivery,                
+                AutomaticRedelivery = create.AutomaticRedelivery,
             };
         }
 
-        
+
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId?}")]
         public async Task<IActionResult> ListDeliveries(string storeId, string webhookId, string deliveryId, int? count = null)
         {

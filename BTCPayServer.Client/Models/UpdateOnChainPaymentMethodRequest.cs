@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.Models
 
         public UpdateOnChainPaymentMethodRequest()
         {
-            
+
         }
 
         public UpdateOnChainPaymentMethodRequest(bool enabled, string derivationScheme, string label, RootedKeyPath accountKeyPath)

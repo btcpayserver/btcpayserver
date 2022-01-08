@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;

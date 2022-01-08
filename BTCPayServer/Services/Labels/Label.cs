@@ -5,8 +5,8 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Labels
 {
-   
-    public abstract class Label: LabelData
+
+    public abstract class Label : LabelData
     {
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {

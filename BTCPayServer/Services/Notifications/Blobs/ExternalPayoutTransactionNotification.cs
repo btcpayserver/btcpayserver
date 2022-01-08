@@ -28,7 +28,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "External payout approval")};
+                    return new (string identifier, string name)[] { (TYPE, "External payout approval") };
                 }
             }
 

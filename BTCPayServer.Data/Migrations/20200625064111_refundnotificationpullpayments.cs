@@ -20,7 +20,7 @@ namespace BTCPayServer.Migrations
                 name: "CurrentRefundId",
                 table: "Invoices",
                 nullable: true,
-		maxLength: maxLength);
+        maxLength: maxLength);
 
             migrationBuilder.CreateTable(
                 name: "Notifications",

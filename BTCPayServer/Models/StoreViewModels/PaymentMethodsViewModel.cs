@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public List<StoreLightningNode> LightningNodes { get; set; }
         public bool HintWallet { get; set; }
         public bool HintLightning { get; set; }
-        
+
         [Display(Name = "Allow anyone to create invoice")]
         public bool AnyoneCanCreateInvoice { get; set; }
 
@@ -25,7 +25,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
         [Range(0, 100)]
         public double PaymentTolerance { get; set; }
-        
+
         [Display(Name = "Default currency")]
         [MaxLength(10)]
         public string DefaultCurrency { get; set; }

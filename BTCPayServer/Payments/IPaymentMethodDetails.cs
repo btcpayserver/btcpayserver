@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         decimal GetNextNetworkFee();
 
-        bool Activated {get;set;}
-        virtual string GetAdditionalDataPartialName()  => null;
+        bool Activated { get; set; }
+        virtual string GetAdditionalDataPartialName() => null;
     }
 }

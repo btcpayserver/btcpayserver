@@ -20,7 +20,7 @@ namespace BTCPayServer.Migrations
                     oldClrType: typeof(string));
             }
 
-	        migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Invoices_OrderId",
                 table: "Invoices",
                 column: "OrderId");

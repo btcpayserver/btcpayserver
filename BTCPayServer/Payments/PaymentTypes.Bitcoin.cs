@@ -1,11 +1,11 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
-using BTCPayServer.Client.Models;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
@@ -15,7 +15,7 @@ namespace BTCPayServer.Payments
     public class BitcoinPaymentType : PaymentType
     {
         public static BitcoinPaymentType Instance { get; } = new BitcoinPaymentType();
-        
+
         private BitcoinPaymentType() { }
 
         public override string ToPrettyString() => "On-Chain";

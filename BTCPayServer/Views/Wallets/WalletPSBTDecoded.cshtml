@@ -1,11 +1,12 @@
 ﻿@model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     var isReady = !Model.HasErrors;
     var isSignable = !isReady && Model.NBXSeedAvailable;
     var needsExport = !isSignable && !isReady;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
 }
 
 @section PageHeadContent {
@@ -49,7 +50,7 @@
 
 @if (isSignable)
 {
-    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" class="my-5">
+    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="my-5">
         <input type="hidden" asp-for="CryptoCode"/>
         <input type="hidden" asp-for="NBXSeedAvailable"/>
         <input type="hidden" asp-for="PSBT"/>
@@ -61,7 +62,7 @@
 } 
 else if (isReady)
 {
-    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@Context.GetRouteValue("walletId")" class="my-5">
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
         <input type="hidden" asp-for="SigningKey" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
@@ -97,7 +98,7 @@ else
         </h2>
         <div id="PSBTOptionsExportContent" class="accordion-collapse collapse @(needsExport ? "show" : "")" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
             <div class="accordion-body">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" class="mb-2">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
                     <input type="hidden" asp-for="CryptoCode"/>
                     <input type="hidden" asp-for="PSBT"/>
                     <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
@@ -146,7 +147,7 @@ else
             </h2>
             <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
                 <div class="accordion-body">
-                    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data" class="mb-2">
+                    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data" class="mb-2">
                         <div class="form-group">
                             <label for="ImportedPSBT" class="form-label">PSBT content</label>
                             <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
@@ -173,7 +174,7 @@ else
         </h2>
         <div id="PSBTOptionsAdvancedContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsAdvancedHeader" data-bs-parent="#PSBTOptions">
             <div class="accordion-body">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" class="mb-2">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
                     <input type="hidden" asp-for="CryptoCode"/>
                     <input type="hidden" asp-for="NBXSeedAvailable"/>
                     <input type="hidden" asp-for="PSBT"/>

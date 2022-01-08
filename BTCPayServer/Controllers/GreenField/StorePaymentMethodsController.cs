@@ -36,7 +36,8 @@ namespace BTCPayServer.Controllers.GreenField
             var storeBlob = Store.GetStoreBlob();
             var excludedPaymentMethods = storeBlob.GetExcludedPaymentMethods();
             var canModifyStore = (await _authorizationService.AuthorizeAsync(User, null,
-                new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;;
+                new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;
+            ;
             return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .Where(method =>
                     enabled is null || (enabled is false && excludedPaymentMethods.Match(method.PaymentId)))

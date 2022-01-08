@@ -4,7 +4,7 @@ using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
-    internal class JunkNotification: BaseNotification
+    internal class JunkNotification : BaseNotification
     {
         private const string TYPE = "junk";
         internal class Handler : NotificationHandler<JunkNotification>
@@ -14,7 +14,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "Junk")};
+                    return new (string identifier, string name)[] { (TYPE, "Junk") };
                 }
             }
 

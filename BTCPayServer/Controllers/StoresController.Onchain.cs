@@ -265,7 +265,7 @@ namespace BTCPayServer.Controllers
                 SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
                 SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
             };
-            
+
             if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
             {
                 ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");
@@ -399,7 +399,7 @@ namespace BTCPayServer.Controllers
                 UriScheme = derivation.Network.NBitcoinNetwork.UriScheme,
                 Label = derivation.Label,
                 SelectedSigningKey = derivation.SigningKey.ToString(),
-                NBXSeedAvailable = derivation.IsHotWallet && 
+                NBXSeedAvailable = derivation.IsHotWallet &&
                                    canUseHotWallet &&
                                    !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
                                        WellknownMetadataKeys.MasterHDKey)),
@@ -416,22 +416,22 @@ namespace BTCPayServer.Controllers
                 SpeedPolicy = store.SpeedPolicy,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
-                CanUseHotWallet = canUseHotWallet, 
-                CanUseRPCImport = rpcImport, 
+                CanUseHotWallet = canUseHotWallet,
+                CanUseRPCImport = rpcImport,
                 CanUsePayJoin = canUseHotWallet && store
                     .GetSupportedPaymentMethods(_NetworkProvider)
                     .OfType<DerivationSchemeSettings>()
                     .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet),
                 StoreName = store.StoreName,
-                
+
             };
 
             ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
             ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
-            
+
             return View(vm);
         }
-        
+
         [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
         public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
         {
@@ -446,7 +446,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             bool needUpdate = false;
             string errorMessage = null;
             if (derivation.Label != vm.Label)
@@ -454,7 +454,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 derivation.Label = vm.Label;
             }
-            
+
             var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
                 ? null
                 : new BitcoinExtPubKey(vm.SelectedSigningKey, derivation.Network.NBitcoinNetwork);
@@ -463,7 +463,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 derivation.SigningKey = signingKey;
             }
-            
+
             for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
             {
                 KeyPath accountKeyPath = null;
@@ -474,7 +474,7 @@ namespace BTCPayServer.Controllers
                     accountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath)
                         ? null
                         : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
-                
+
                     if (accountKeyPath != null && derivation.AccountKeySettings[i].AccountKeyPath != accountKeyPath)
                     {
                         needUpdate = true;
@@ -491,7 +491,7 @@ namespace BTCPayServer.Controllers
                     rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
                         ? (HDFingerprint?)null
                         : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
-                
+
                     if (rootFingerprint != null && derivation.AccountKeySettings[i].RootFingerprint != rootFingerprint)
                     {
                         needUpdate = true;
@@ -507,7 +507,7 @@ namespace BTCPayServer.Controllers
             if (needUpdate)
             {
                 store.SetSupportedPaymentMethod(derivation);
-                
+
                 await _Repo.UpdateStore(store);
 
                 if (string.IsNullOrEmpty(errorMessage))
@@ -522,7 +522,7 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
         }
-        
+
         [HttpPost("{storeId}/onchain/{cryptoCode}/settings/payment")]
         public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
         {
@@ -537,7 +537,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             bool needUpdate = false;
             if (store.SpeedPolicy != vm.SpeedPolicy)
             {
@@ -551,7 +551,7 @@ namespace BTCPayServer.Controllers
             blob.ShowRecommendedFee = vm.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
             blob.PayJoinEnabled = vm.PayJoinEnabled;
-            
+
             if (store.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -582,10 +582,10 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            
+
             return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
         }
-        
+
         [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
         public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
         {
@@ -600,13 +600,13 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             (bool canUseHotWallet, bool _) = await CanUseHotWallet();
             if (!canUseHotWallet)
             {
                 return NotFound();
             }
-            
+
             var client = _ExplorerProvider.GetExplorerClient(network);
             if (await GetSeed(client, derivation) != null)
             {
@@ -622,7 +622,7 @@ namespace BTCPayServer.Controllers
                 };
                 return this.RedirectToRecoverySeedBackup(recoveryVm);
             }
-            
+
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
@@ -642,7 +642,7 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            
+
             return View("Confirm", new ConfirmModel
             {
                 Title = $"Replace {network.CryptoCode} wallet",
@@ -794,7 +794,7 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
-        
+
         private async Task<string> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
         {
             return derivation.IsHotWallet &&
@@ -827,14 +827,14 @@ namespace BTCPayServer.Controllers
                 $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{additionalText}.</p>" +
                 $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {info}</p>";
         }
-        
+
         private string WalletReplaceWarning(bool isHotWallet)
         {
             return WalletWarning(isHotWallet,
                 "The current wallet will be replaced once you finish the setup of the new wallet. " +
                 "If you cancel the setup, the current wallet will stay active.");
         }
-        
+
         private string WalletRemoveWarning(bool isHotWallet, string cryptoCode)
         {
             return WalletWarning(isHotWallet,

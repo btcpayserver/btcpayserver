@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -106,18 +106,18 @@ namespace BTCPayServer.Services.Invoices
                 .Include(data => data.InvoiceData)
                 .Where(data => paymentIds.Contains(data.Id)).ToDictionaryAsync(data => data.Id);
             var eventsToSend = new List<InvoiceEvent>();
-            foreach (KeyValuePair<string,(PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
+            foreach (KeyValuePair<string, (PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
             {
                 var dbPayment = dbPayments[payment.Key];
                 var invBlob = dbPayment.InvoiceData.GetBlob(_btcPayNetworkProvider);
                 var dbPaymentEntity = dbPayment.GetBlob(_btcPayNetworkProvider);
                 var wasConfirmed = dbPayment.GetBlob(_btcPayNetworkProvider).GetCryptoPaymentData()
                     .PaymentConfirmed(dbPaymentEntity, invBlob.SpeedPolicy);
-                if (!wasConfirmed &&  payment.Value.Item2.PaymentConfirmed(payment.Value.entity, invBlob.SpeedPolicy))
+                if (!wasConfirmed && payment.Value.Item2.PaymentConfirmed(payment.Value.entity, invBlob.SpeedPolicy))
                 {
                     eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment.Value.entity });
                 }
-               
+
                 dbPayment.Accounted = payment.Value.entity.Accounted;
                 dbPayment.Blob = InvoiceRepository.ToBytes(payment.Value.entity, payment.Value.entity.Network);
             }

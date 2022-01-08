@@ -8,24 +8,25 @@ namespace BTCPayServer.Plugins.Shopify.ApiModels
         [JsonProperty("script_tag")]
         public ScriptTag ScriptTag { get; set; }
     }
-    
-    public class ScriptTag    {
+
+    public class ScriptTag
+    {
         [JsonProperty("id")]
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
         [JsonProperty("src")]
-        public string Src { get; set; } 
+        public string Src { get; set; }
 
         [JsonProperty("event")]
-        public string Event { get; set; } 
+        public string Event { get; set; }
 
         [JsonProperty("created_at")]
-        public DateTime CreatedAt { get; set; } 
+        public DateTime CreatedAt { get; set; }
 
         [JsonProperty("updated_at")]
-        public DateTime UpdatedAt { get; set; } 
+        public DateTime UpdatedAt { get; set; }
 
         [JsonProperty("display_scope")]
-        public string DisplayScope { get; set; } 
+        public string DisplayScope { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 window.copyToClipboard = function (e, data) {
     if (navigator.clipboard) {
         e.preventDefault();
-        const item = e.target;
+        const item = e.target.closest('[data-clipboard]');
         const confirm = item.querySelector('[data-clipboard-confirm]') || item;
         const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
         if (!confirm.dataset.clipboardInitialText) {

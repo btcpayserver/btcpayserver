@@ -1,8 +1,9 @@
 ﻿@model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
 }
 
 @section PageHeadContent {
@@ -41,7 +42,7 @@
         }
 
         <p>You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
-        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
+        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data">
             <div class="form-group">
                 <label asp-for="PSBT" class="form-label"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>

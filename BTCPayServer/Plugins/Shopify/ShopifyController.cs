@@ -28,7 +28,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.Shopify
 {
-    
+
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class ShopifyController : Controller
@@ -77,8 +77,8 @@ namespace BTCPayServer.Plugins.Shopify
             }
 
             string[] fileList = _btcPayServerOptions.Value.BundleJsCss
-                ? new[] {"bundles/shopify-bundle.min.js"}
-                : new[] {"modal/btcpay.js", "shopify/btcpay-shopify.js"};
+                ? new[] { "bundles/shopify-bundle.min.js" }
+                : new[] { "modal/btcpay.js", "shopify/btcpay-shopify.js" };
 
 
             foreach (var file in fileList)
@@ -111,7 +111,8 @@ namespace BTCPayServer.Plugins.Shopify
             var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await _invoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                OrderId = new[] {invoiceOrderId}, StoreId = new[] {storeId}
+                OrderId = new[] { invoiceOrderId },
+                StoreId = new[] { storeId }
             });
             matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
                     entity.GetInternalTags(ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX)
@@ -132,7 +133,7 @@ namespace BTCPayServer.Plugins.Shopify
 
             var firstInvoiceSettled =
                 matchedExistingInvoices.LastOrDefault(entity =>
-                    new[] {InvoiceStatusLegacy.Paid, InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed}
+                    new[] { InvoiceStatusLegacy.Paid, InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed }
                         .Contains(
                             entity.GetInvoiceState().Status));
 
@@ -180,7 +181,7 @@ namespace BTCPayServer.Plugins.Shopify
             if (shopify?.IntegratedAt.HasValue is true)
             {
                 if (string.IsNullOrEmpty(order?.Id) ||
-                    !new[] {"pending", "partially_paid"}.Contains(order.FinancialStatus))
+                    !new[] { "pending", "partially_paid" }.Contains(order.FinancialStatus))
                 {
                     return NotFound();
                 }
@@ -191,11 +192,11 @@ namespace BTCPayServer.Plugins.Shopify
                     {
                         Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,
                         Currency = order.PresentmentCurrency,
-                        Metadata = new JObject {["orderId"] = invoiceOrderId}
+                        Metadata = new JObject { ["orderId"] = invoiceOrderId }
                     }, store,
-                    Request.GetAbsoluteRoot(), new List<string>() {invoiceOrderId});
+                    Request.GetAbsoluteRoot(), new List<string>() { invoiceOrderId });
 
-                return Ok(new {invoiceId = invoice.Id, status = invoice.Status.ToString().ToLowerInvariant()});
+                return Ok(new { invoiceId = invoice.Id, status = invoice.Status.ToString().ToLowerInvariant() });
             }
 
             return NotFound();
@@ -207,7 +208,7 @@ namespace BTCPayServer.Plugins.Shopify
         {
             var blob = CurrentStore.GetStoreBlob();
 
-            return View( blob.GetShopifySettings());
+            return View(blob.GetShopifySettings());
         }
 
 
@@ -234,72 +235,72 @@ namespace BTCPayServer.Plugins.Shopify
                 catch (Exception)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "The provided Example Url was invalid.";
-                    return View( vm);
+                    return View(vm);
                 }
             }
 
             switch (command)
             {
                 case "ShopifySaveCredentials":
-                {
-                    var shopify = vm;
-                    var validCreds = shopify != null && shopify?.CredentialsPopulated() == true;
-                    if (!validCreds)
                     {
-                        TempData[WellKnownTempData.ErrorMessage] = "Please provide valid Shopify credentials";
-                        return View(vm);
-                    }
+                        var shopify = vm;
+                        var validCreds = shopify != null && shopify?.CredentialsPopulated() == true;
+                        if (!validCreds)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] = "Please provide valid Shopify credentials";
+                            return View(vm);
+                        }
 
-                    var apiClient = new ShopifyApiClient(_clientFactory, shopify.CreateShopifyApiCredentials());
-                    try
-                    {
-                        await apiClient.OrdersCount();
-                    }
-                    catch (ShopifyApiException)
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] =
-                            "Shopify rejected provided credentials, please correct values and try again";
-                        return View( vm);
-                    }
+                        var apiClient = new ShopifyApiClient(_clientFactory, shopify.CreateShopifyApiCredentials());
+                        try
+                        {
+                            await apiClient.OrdersCount();
+                        }
+                        catch (ShopifyApiException)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] =
+                                "Shopify rejected provided credentials, please correct values and try again";
+                            return View(vm);
+                        }
 
-                    var scopesGranted = await apiClient.CheckScopes();
-                    if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] =
-                            "Please grant the private app permissions for read_orders, write_orders";
-                        return View(vm);
+                        var scopesGranted = await apiClient.CheckScopes();
+                        if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] =
+                                "Please grant the private app permissions for read_orders, write_orders";
+                            return View(vm);
+                        }
+
+                        // everything ready, proceed with saving Shopify integration credentials
+                        shopify.IntegratedAt = DateTimeOffset.Now;
+
+                        var blob = CurrentStore.GetStoreBlob();
+                        blob.SetShopifySettings(shopify);
+                        if (CurrentStore.SetStoreBlob(blob))
+                        {
+                            await _storeRepository.UpdateStore(CurrentStore);
+                        }
+
+                        TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully updated";
+                        break;
                     }
-
-                    // everything ready, proceed with saving Shopify integration credentials
-                    shopify.IntegratedAt = DateTimeOffset.Now;
-
-                    var blob = CurrentStore.GetStoreBlob();
-                    blob.SetShopifySettings(shopify);
-                    if (CurrentStore.SetStoreBlob(blob))
-                    {
-                        await _storeRepository.UpdateStore(CurrentStore);
-                    }
-
-                    TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully updated";
-                    break;
-                }
                 case "ShopifyClearCredentials":
-                {
-                    var blob = CurrentStore.GetStoreBlob();
-                    blob.SetShopifySettings(null);
-                    if (CurrentStore.SetStoreBlob(blob))
                     {
-                        await _storeRepository.UpdateStore(CurrentStore);
-                    }
+                        var blob = CurrentStore.GetStoreBlob();
+                        blob.SetShopifySettings(null);
+                        if (CurrentStore.SetStoreBlob(blob))
+                        {
+                            await _storeRepository.UpdateStore(CurrentStore);
+                        }
 
-                    TempData[WellKnownTempData.SuccessMessage] = "Shopify integration credentials cleared";
-                    break;
-                }
+                        TempData[WellKnownTempData.SuccessMessage] = "Shopify integration credentials cleared";
+                        break;
+                    }
             }
 
-            return RedirectToAction(nameof(EditShopifyIntegration), new {storeId = CurrentStore.Id});
+            return RedirectToAction(nameof(EditShopifyIntegration), new { storeId = CurrentStore.Id });
         }
     }
-    
+
 }
 

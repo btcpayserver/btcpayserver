@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,8 @@ namespace BTCPayServer
     {
         static void Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "run")
+                args = args.Skip(1).ToArray(); // Hack to make dotnet watch work
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
             var processor = new ConsoleLoggerProcessor();
@@ -59,7 +62,8 @@ namespace BTCPayServer
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {
-                    logger.LogInformation("Listening on " + url);
+                    // Some tools such as dotnet watch parse this exact log to open the browser
+                    logger.LogInformation("Now listening on: " + url);
                 }
                 host.WaitForShutdown();
             }
@@ -68,7 +72,7 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(ex.Message))
                     logs.Configuration.LogError(ex.Message);
             }
-            catch(Exception e) when( PluginManager.IsExceptionByPlugin(e))
+            catch (Exception e) when (PluginManager.IsExceptionByPlugin(e))
             {
                 var pluginDir = new DataDirectories().Configure(conf).PluginDir;
                 PluginManager.DisablePlugin(pluginDir, e.Source);

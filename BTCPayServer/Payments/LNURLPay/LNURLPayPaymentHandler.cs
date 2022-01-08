@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -12,7 +13,6 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -67,23 +67,24 @@ namespace BTCPayServer.Payments.Lightning
 
                 return new LNURLPayPaymentMethodDetails()
                 {
-                    Activated = false, LightningSupportedPaymentMethod = lnSupported
+                    Activated = false,
+                    LightningSupportedPaymentMethod = lnSupported
                 };
             }
 
 
             var lnLightningSupportedPaymentMethod =
                 ((LNURLPayPaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).LightningSupportedPaymentMethod;
-                
+
             NodeInfo? nodeInfo = null;
             if (lnLightningSupportedPaymentMethod != null)
             {
                 nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
             }
-            
+
             return new LNURLPayPaymentMethodDetails
             {
-                Activated = true, 
+                Activated = true,
                 LightningSupportedPaymentMethod = lnLightningSupportedPaymentMethod,
                 BTCPayInvoiceId = paymentMethod.ParentEntity.Id,
                 Bech32Mode = supportedPaymentMethod.UseBech32Scheme,
@@ -110,8 +111,8 @@ namespace BTCPayServer.Payments.Lightning
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
             model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
             model.BtcAddress = model.InvoiceBitcoinUrl;
-            model.PeerInfo = ((LNURLPayPaymentMethodDetails) paymentMethod.GetPaymentMethodDetails()).NodeInfo;
-            if ( storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
+            model.PeerInfo = ((LNURLPayPaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).NodeInfo;
+            if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {
                 var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name);
                 satoshiCulture.NumberFormat.NumberGroupSeparator = " ";

@@ -1,8 +1,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies csp 
 @model PayButtonViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
     csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
 }
 
@@ -69,10 +68,13 @@
     </script>
 }
 
+<partial name="_StatusMessage" />
+
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+
 <div id="payButtonCtrl">
     <div class="row">
         <div class="col-lg-7">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="row">
                 <p>Configure your Pay Button, and the generated code will be displayed at the bottom of the page to copy into your project.</p>
                 <h4 class="mt-3 mb-3">General Settings</h4>

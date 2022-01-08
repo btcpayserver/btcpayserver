@@ -16,7 +16,7 @@ namespace BTCPayServer.Models.AppViewModels
                     Minimum,
                     Fixed
                 }
-                
+
                 public ItemPriceType Type { get; set; }
                 public string Formatted { get; set; }
                 public decimal? Value { get; set; }

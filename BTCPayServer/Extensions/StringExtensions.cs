@@ -12,7 +12,8 @@ namespace BTCPayServer
             {
                 return input.Substring(0, input.Length - suffixToRemove.Length);
             }
-            else return input;
+            else
+                return input;
         }
     }
 }

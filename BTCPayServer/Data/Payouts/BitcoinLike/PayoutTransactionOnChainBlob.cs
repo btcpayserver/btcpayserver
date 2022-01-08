@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
 {
-    public class PayoutTransactionOnChainBlob: IPayoutProof
+    public class PayoutTransactionOnChainBlob : IPayoutProof
     {
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 TransactionId { get; set; }

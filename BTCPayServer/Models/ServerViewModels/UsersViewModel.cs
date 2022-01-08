@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
-    public class UsersViewModel: BasePagingViewModel
+    public class UsersViewModel : BasePagingViewModel
     {
         public class UserViewModel
         {

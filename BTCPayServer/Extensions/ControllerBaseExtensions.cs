@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer
 {
-    // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPreferCookie"
+    // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPrefsCookie"
     public static class ControllerBaseExtension
     {
         public static T ParseListQuery<T>(this ControllerBase ctrl, T model) where T : BasePagingViewModel
@@ -34,7 +34,7 @@ namespace BTCPayServer
 
         private static T ProcessParse<T>(ControllerBase ctrl, T model, PropertyInfo prop) where T : BasePagingViewModel
         {
-            var prefCookie = parsePrefCookie(ctrl);
+            var prefCookie = ctrl.HttpContext.GetUserPrefsCookie();
 
             // If the user enter an empty searchTerm, then the variable will be null and not empty string
             // but we want searchTerm to be null only if the user is browsing the page via some link
@@ -46,7 +46,7 @@ namespace BTCPayServer
             if (searchTerm is null)
             {
                 var section = prop.GetValue(prefCookie) as ListQueryDataHolder;
-                if (section != null && !String.IsNullOrEmpty(section.SearchTerm))
+                if (section != null && !string.IsNullOrEmpty(section.SearchTerm))
                 {
                     model.SearchTerm = section.SearchTerm;
                     model.TimezoneOffset = section.TimezoneOffset ?? 0;
@@ -59,46 +59,6 @@ namespace BTCPayServer
             }
 
             return model;
-        }
-
-        private static UserPrefsCookie parsePrefCookie(ControllerBase ctrl)
-        {
-            var prefCookie = new UserPrefsCookie();
-            ctrl.Request.Cookies.TryGetValue(nameof(UserPrefsCookie), out var strPrefCookie);
-            if (!String.IsNullOrEmpty(strPrefCookie))
-            {
-                try
-                {
-                    prefCookie = JsonConvert.DeserializeObject<UserPrefsCookie>(strPrefCookie);
-                }
-                catch { /* ignore cookie deserialization failures */ }
-            }
-
-            return prefCookie;
-        }
-
-        class UserPrefsCookie
-        {
-            public ListQueryDataHolder InvoicesQuery { get; set; }
-
-            public ListQueryDataHolder PaymentRequestsQuery { get; set; }
-            public ListQueryDataHolder UsersQuery { get; set; }
-            public ListQueryDataHolder PayoutsQuery { get; set; }
-            public ListQueryDataHolder PullPaymentsQuery { get; set; }
-        }
-
-        class ListQueryDataHolder
-        {
-            public ListQueryDataHolder() { }
-
-            public ListQueryDataHolder(string searchTerm, int? timezoneOffset)
-            {
-                SearchTerm = searchTerm;
-                TimezoneOffset = timezoneOffset;
-            }
-
-            public int? TimezoneOffset { get; set; }
-            public string SearchTerm { get; set; }
         }
     }
 }

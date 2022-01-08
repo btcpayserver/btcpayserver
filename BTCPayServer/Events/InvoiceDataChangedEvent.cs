@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Events
 {

@@ -1,4 +1,4 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
+ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -8,7 +8,6 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
   <ItemGroup>
-
     <Compile Remove="Build\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
@@ -88,7 +87,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
 		<PackageReference Include="YamlDotNet" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.1" Condition="'$(RazorCompileOnBuild)' != 'true'" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
   </ItemGroup>
 
@@ -148,6 +147,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+    <Watch Include="Views\**\*.*"></Watch>
     <Content Update="Views\Apps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

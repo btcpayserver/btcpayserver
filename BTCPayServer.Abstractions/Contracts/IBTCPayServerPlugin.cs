@@ -28,5 +28,5 @@ namespace BTCPayServer.Abstractions.Contracts
             }
         }
     }
-    
+
 }

@@ -1,7 +1,7 @@
 @model WebhooksViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">

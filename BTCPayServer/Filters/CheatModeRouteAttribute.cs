@@ -1,10 +1,10 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Filters
 {

@@ -49,7 +49,7 @@ namespace BTCPayServer.Services
                     await ctx.SaveChangesAsync();
                 }
             }
-            _memoryCache.Set(GetCacheKey(name),obj);
+            _memoryCache.Set(GetCacheKey(name), obj);
             _EventAggregator.Publish(new SettingsChanged<T>()
             {
                 Settings = obj
@@ -60,7 +60,7 @@ namespace BTCPayServer.Services
         {
             name ??= obj.GetType().FullName ?? string.Empty;
             _memoryCache.Remove(GetCacheKey(name));
-            var settings = new SettingData {Id = name, Value = Serialize(obj)};
+            var settings = new SettingData { Id = name, Value = Serialize(obj) };
             ctx.Attach(settings);
             ctx.Entry(settings).State = EntityState.Modified;
             return settings;

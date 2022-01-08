@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
             var data = paymentRequest ?? new PaymentRequestData();
             data.StoreDataId = viewModel.StoreId;
             data.Archived = viewModel.Archived;
-            
+
             var blob = data.GetBlob();
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
@@ -229,7 +229,7 @@ namespace BTCPayServer.Controllers
                 amount = Math.Min(result.AmountDue, amount.Value);
             else
                 amount = result.AmountDue;
-            
+
             var pr = await _PaymentRequestRepository.FindPaymentRequest(payReqId, null, cancellationToken);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
@@ -251,11 +251,11 @@ namespace BTCPayServer.Controllers
                         Metadata = invoiceMetadata.ToJObject(),
                         Currency = blob.Currency,
                         Amount = amount.Value,
-                        Checkout = {RedirectURL = redirectUrl}
+                        Checkout = { RedirectURL = redirectUrl }
                     };
 
-                var additionalTags = new List<string> {PaymentRequestRepository.GetInternalTag(payReqId)};
-                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest,store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
+                var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(payReqId) };
+                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
 
                 if (redirectToInvoice)
                 {
@@ -279,7 +279,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            if (!result.AllowCustomPaymentAmounts) {
+            if (!result.AllowCustomPaymentAmounts)
+            {
                 return BadRequest("Not allowed to cancel this invoice");
             }
 
@@ -343,9 +344,9 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => _UserManager.GetUserId(User);
-        
+
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-        
+
         private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestData();
     }
 }

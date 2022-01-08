@@ -69,13 +69,13 @@
                                 }
                             </td>
                             <td style="text-align:right">
-                                <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
+                                <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-storeId="@store.Id">Invoices</a><span> - </span>
                                 <a asp-action="PullPayments" asp-controller="StorePullPayments" asp-route-storeId="@store.Id">Pull Payments</a>
                                 @if (store.IsOwner)
                                 {
                                     <span> - </span>
                                     <a asp-action="PaymentMethods" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
-                                    <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete</a><span> - </span>
+                                    <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@store.Name</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete</a>
                                 }
                             </td>
                         </tr>

@@ -42,21 +42,24 @@ namespace BTCPayServer.Services.Notifications
             {
                 var resp = await GetNotifications(new NotificationsQuery()
                 {
-                    Seen = false, Skip = 0, Take = 5, UserId = userId
+                    Seen = false,
+                    Skip = 0,
+                    Take = 5,
+                    UserId = userId
                 });
                 entry.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs));
-                var res = new NotificationSummaryViewModel() {Last5 = resp.Items, UnseenCount = resp.Count};
+                var res = new NotificationSummaryViewModel() { Last5 = resp.Items, UnseenCount = resp.Count };
                 entry.Value = res;
                 return res;
             });
         }
-        
+
         public void InvalidateNotificationCache(params string[] userIds)
         {
             foreach (var userId in userIds)
             {
                 _memoryCache.Remove(GetNotificationsCacheId(userId));
-                _eventAggregator.Publish(new UserNotificationsUpdatedEvent() {UserId = userId});
+                _eventAggregator.Publish(new UserNotificationsUpdatedEvent() { UserId = userId });
             }
         }
 
@@ -75,7 +78,7 @@ namespace BTCPayServer.Services.Notifications
                 Count: await queryables.withoutPaging.CountAsync());
         }
 
-        private ( IQueryable<NotificationData> withoutPaging, IQueryable<NotificationData> withPaging)
+        private (IQueryable<NotificationData> withoutPaging, IQueryable<NotificationData> withPaging)
             GetNotificationsQueryable(ApplicationDbContext dbContext, NotificationsQuery query)
         {
             var queryable = dbContext.Notifications.AsQueryable();
@@ -147,7 +150,7 @@ namespace BTCPayServer.Services.Notifications
             if (handler is null)
                 return null;
             var notification = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), handler.NotificationBlobType);
-            var obj = new NotificationViewModel {Id = data.Id, Created = data.Created, Seen = data.Seen};
+            var obj = new NotificationViewModel { Id = data.Id, Created = data.Created, Seen = data.Seen };
             handler.FillViewModel(notification, obj);
             return obj;
         }

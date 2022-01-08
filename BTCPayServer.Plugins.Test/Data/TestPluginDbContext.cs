@@ -10,7 +10,7 @@ namespace BTCPayServer.Plugins.Test
         private readonly bool _designTime;
 
         public DbSet<TestPluginData> TestPluginRecords { get; set; }
-        
+
         public TestPluginDbContext(DbContextOptions<TestPluginDbContext> options, bool designTime = false)
             : base(options)
         {

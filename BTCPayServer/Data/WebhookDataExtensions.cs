@@ -23,7 +23,7 @@ namespace BTCPayServer.Data
         }
     }
 
-    
+
     public class WebhookDeliveryBlob
     {
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

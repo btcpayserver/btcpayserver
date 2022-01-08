@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -31,7 +31,7 @@ namespace BTCPayServer.Security
             }
 
             var key = $"{Permission}_{PermissionResource}";
-            if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key,out var cachedResult))
+            if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key, out var cachedResult))
             {
                 var result = await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext.User,
                     PermissionResource,
@@ -45,7 +45,7 @@ namespace BTCPayServer.Security
             {
                 output.SuppressOutput();
             }
-            
+
         }
     }
 }

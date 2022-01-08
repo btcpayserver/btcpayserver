@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers.GreenField
             [FromQuery]
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
             DateTimeOffset? startDate = null,
-            [FromQuery] 
+            [FromQuery]
             [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
             DateTimeOffset? endDate = null,
             [FromQuery] string? textSearch = null,
@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers.GreenField
                 {
                     Skip = skip,
                     Take = take,
-                    StoreId = new[] {store.Id},
+                    StoreId = new[] { store.Id },
                     IncludeArchived = includeArchived,
                     StartDate = startDate,
                     EndDate = endDate,
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             return Ok(invoices.Select(ToModel));
         }
-        
+
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
@@ -283,7 +283,7 @@ namespace BTCPayServer.Controllers.GreenField
             await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
             return await GetInvoice(storeId, invoiceId);
         }
-        
+
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods")]
@@ -369,7 +369,7 @@ namespace BTCPayServer.Controllers.GreenField
                     };
                 }).ToArray();
         }
-        
+
         public static InvoicePaymentMethodDataModel.Payment ToPaymentModel(InvoiceEntity entity, PaymentEntity paymentEntity)
         {
             var data = paymentEntity.GetCryptoPaymentData();

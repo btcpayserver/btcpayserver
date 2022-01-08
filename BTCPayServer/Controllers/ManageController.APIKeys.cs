@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
 
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
-        
+
         [HttpGet("~/api-keys/authorize")]
         public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
@@ -104,11 +104,11 @@ namespace BTCPayServer.Controllers
             }
             if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
             {
-                
+
                 //check if there is an app identifier that matches and belongs to the current user
                 var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
                 {
-                    UserId = new[] {_userManager.GetUserId(User)}
+                    UserId = new[] { _userManager.GetUserId(User) }
                 });
                 foreach (var key in keys)
                 {
@@ -201,14 +201,19 @@ namespace BTCPayServer.Controllers
              * Go over each permission and associated store IDs and 
              * join them so that permission for a specific store is parsed correctly
              */
-            for (var i = 0; i < permissions.Length; i++) {
+            for (var i = 0; i < permissions.Length; i++)
+            {
                 var currPerm = permissions[i];
                 var storeIds = vm.PermissionValues[i].SpecificStores.ToArray();
-                if (storeIds.Length > 0) {
-                    for (var x = 0; x < storeIds.Length; x++) {
+                if (storeIds.Length > 0)
+                {
+                    for (var x = 0; x < storeIds.Length; x++)
+                    {
                         permissionsWithStoreIDs.Add($"{currPerm}:{storeIds[x]}");
                     }
-                } else {
+                }
+                else
+                {
                     permissionsWithStoreIDs.Add(currPerm);
                 }
             }
@@ -232,7 +237,8 @@ namespace BTCPayServer.Controllers
                     var command = commandParts.Length > 1 ? commandParts[1] : null;
                     var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
                     // Don't want to accidentally change mode for the user if they are explicitly performing some action
-                    if (isPerformingAnAction) {
+                    if (isPerformingAnAction)
+                    {
                         continue;
                     }
 
@@ -299,7 +305,7 @@ namespace BTCPayServer.Controllers
                     var key = command == "authorize"
                         ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.AbsoluteUri))
                         : await _apiKeyRepository.GetKey(viewModel.ApiKey);
-    
+
                     if (viewModel.RedirectUrl != null)
                     {
                         var permissions = key.GetBlob().Permissions;

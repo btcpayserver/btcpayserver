@@ -1,6 +1,6 @@
-﻿namespace BTCPayServer.Client.Models
+namespace BTCPayServer.Client.Models
 {
-    public class LNURLPayPaymentMethodData: LNURLPayPaymentMethodBaseData
+    public class LNURLPayPaymentMethodData : LNURLPayPaymentMethodBaseData
     {
         /// <summary>
         /// Whether the payment method is enabled
@@ -16,7 +16,7 @@
         {
         }
 
-        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled,  bool useBech32Scheme, bool enableForStandardInvoices)
+        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled, bool useBech32Scheme, bool enableForStandardInvoices)
         {
             Enabled = enabled;
             CryptoCode = cryptoCode;

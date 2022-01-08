@@ -814,7 +814,7 @@ namespace BTCPayServer.Controllers
             this.RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
-        
+
         [HttpGet("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsService(string hostname)
         {
@@ -826,7 +826,7 @@ namespace BTCPayServer.Controllers
                 new ConfirmModel("Delete dynamic DNS service",
                     $"Deleting the dynamic DNS service for <strong>{hostname}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
         }
-        
+
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsServicePost(string hostname)
         {
@@ -950,12 +950,12 @@ namespace BTCPayServer.Controllers
                 }
                 return RedirectToAction(nameof(SSHService));
             }
-            
+
             if (command is "disable")
             {
                 return RedirectToAction(nameof(SSHServiceDisable));
             }
-            
+
             return NotFound();
         }
 

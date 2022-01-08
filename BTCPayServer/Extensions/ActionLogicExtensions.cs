@@ -16,7 +16,7 @@ namespace BTCPayServer
     // It's much better that we extract those common methods then copy paste and maintain same code across codebase
     internal static class ActionLogicExtensions
     {
-        internal static async Task FirstAdminRegistered(this SettingsRepository settingsRepository, PoliciesSettings policies, 
+        internal static async Task FirstAdminRegistered(this SettingsRepository settingsRepository, PoliciesSettings policies,
             bool updateCheck, bool disableRegistrations, Logs logs)
         {
             if (updateCheck)

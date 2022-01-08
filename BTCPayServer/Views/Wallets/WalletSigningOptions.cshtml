@@ -2,9 +2,9 @@
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
-    Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", Context.GetStoreData().StoreName);
     var walletId = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
+    Layout = "_LayoutWizard";
+    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId.ToString());
 }
 
 @section Navbar {

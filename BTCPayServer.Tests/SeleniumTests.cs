@@ -150,7 +150,7 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
                 Assert.Contains("/login", s.Driver.Url);
 
-                s.Driver.Navigate().GoToUrl(s.Link("/invoices"));
+                s.GoToUrl("/invoices");
                 Assert.Contains("ReturnUrl=%2Finvoices", s.Driver.Url);
 
                 // We should be redirected to login
@@ -163,18 +163,17 @@ namespace BTCPayServer.Tests
                 Assert.EndsWith("/invoices", s.Driver.Url);
 
                 // Should not be able to reach server settings
-                s.Driver.Navigate().GoToUrl(s.Link("/server/users"));
+                s.GoToUrl("/server/users");
                 Assert.Contains("ReturnUrl=%2Fserver%2Fusers", s.Driver.Url);
+                s.GoToHome();
 
                 //Change Password & Log Out
-                s.GoToHome();
-                s.Driver.FindElement(By.Id("Nav-Account")).Click();
-                s.Driver.FindElement(By.Id("SectionNav-ChangePassword")).Click();
+                s.GoToProfile(ManageNavPages.ChangePassword);
                 s.Driver.FindElement(By.Id("OldPassword")).SendKeys("123456");
                 s.Driver.FindElement(By.Id("NewPassword")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("UpdatePassword")).Click();
-                s.Driver.FindElement(By.Id("Logout")).Click();
+                s.Logout();
                 s.Driver.AssertNoError();
 
                 //Log In With New Password
@@ -183,7 +182,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
                 Assert.True(s.Driver.PageSource.Contains("Stores"), "Can't Access Stores");
 
-                s.Driver.FindElement(By.Id("Nav-Account")).Click();
+                s.GoToProfile();
                 s.ClickOnAllSectionLinks();
 
                 //let's test invite link
@@ -417,7 +416,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 
                 // When logout out we should not be able to access store and invoice details
-                s.Driver.FindElement(By.Id("Logout")).Click();
+                s.Logout();
                 s.Driver.Navigate().GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);

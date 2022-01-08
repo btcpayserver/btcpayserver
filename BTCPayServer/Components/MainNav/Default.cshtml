@@ -217,30 +217,48 @@
             </ul>
         }
     </div>
-    <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
-        <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-            <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger  @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Theme) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
-                <vc:icon symbol="server-settings"/>
-                <span>Server Settings</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-Account">
-                <vc:icon symbol="account"/>
-                <span class="text-truncate" style="max-width:195px">@User.Identity.Name</span>
-            </a>
-        </li>
-        @if (!theme.CustomTheme)
-        {
-            <li class="nav-item">
-                <vc:theme-switch css-class="nav-link"/>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
+            <li class="nav-item" permission="@Policies.CanModifyServerSettings">
+                <a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Theme) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
+                    <vc:icon symbol="server-settings"/>
+                    <span>Server Settings</span>
+                </a>
             </li>
-        }
-        <li class="nav-item">
-            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" class="nav-link js-scroll-trigger" id="Logout">
-                <i class="fa fa-sign-out"></i>
-                <span>Logout</span>
-            </a>
-        </li>
-    </ul>
+            <li class="nav-item dropup">
+                <a class="nav-link js-scroll-trigger" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
+                    <vc:icon symbol="account"/>
+                    <span>Account</span>
+                </a>   
+                <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
+                    <li class="p-3">
+                        <strong class="d-block text-truncate" style="max-width:195px">@User.Identity.Name</strong>
+                        @if (User.IsInRole(Roles.ServerAdmin))
+                        {
+                            <div class="text-secondary">Administrator</div>
+                        }
+                    </li>
+                    @if (!theme.CustomTheme)
+                    {
+                        <li class="border-top py-1 px-3">
+                            <vc:theme-switch css-class="nav-link"/>
+                        </li>
+                    }
+                    <li class="border-top py-1 px-3">
+                        <a asp-area="" asp-controller="Manage" asp-action="Index" class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
+                            <vc:icon symbol="account"/>
+                            <span class="text-truncate" style="max-width:195px">Manage Account</span>
+                        </a>
+                    </li>
+                    <li class="border-top py-1 px-3">
+                        <a asp-area="" asp-controller="Account" asp-action="Logout" class="nav-link text-danger" id="Nav-Logout">
+                            <i class="fa fa-sign-out"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    }
 </nav>

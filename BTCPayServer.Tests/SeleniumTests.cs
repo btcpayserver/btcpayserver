@@ -1073,7 +1073,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
-            var x = s.Driver.PageSource;
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
             ReadOnlyCollection<IWebElement> txs;
             TestUtils.Eventually(() =>
@@ -1109,10 +1108,9 @@ namespace BTCPayServer.Tests
             //offline/external payout test
             s.Driver.FindElement(By.Id("NotificationsHandle")).Click();
             s.Driver.FindElement(By.CssSelector("#notificationsForm button")).Click();
-            
-            var newStore = s.CreateNewStore();
+
+            s.GoToStore(s.StoreId);
             s.GenerateWallet("BTC", "", true, true);
-            var newWalletId = new WalletId(newStore.storeId, "BTC");
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
@@ -1158,7 +1156,7 @@ namespace BTCPayServer.Tests
             var resp = await s.Server.CustomerLightningD.Pay(inv.BOLT11);
             Assert.Equal(PayResult.Ok, resp.Result);
 
-            newStore = s.CreateNewStore();
+            (string storeName, string storeId) newStore = s.CreateNewStore();
             s.AddLightningNode("BTC");
             //Currently an onchain wallet is required to use the Lightning payouts feature..
             s.GenerateWallet("BTC", "", true, true);

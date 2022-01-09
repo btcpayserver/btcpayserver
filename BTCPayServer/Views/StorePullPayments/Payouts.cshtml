@@ -83,7 +83,7 @@
         }
     </div>
 
-    <nav id="SectionNav" class="nav mb-4">
+    <nav id="SectionNav" class="nav mb-3">
         @foreach (var state in Model.PayoutStateCount)
         {
             <a id="@state.Key-view"
@@ -98,7 +98,7 @@
     
     @if (Model.Payouts.Any())
     {
-        <div class="table-responsive mt-n1">
+        <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="thead-inverse">
                     <tr>

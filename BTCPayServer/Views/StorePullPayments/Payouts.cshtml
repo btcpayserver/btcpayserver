@@ -142,7 +142,12 @@
                             </td>
                             @if (Model.PayoutState != PayoutState.AwaitingApproval)
                             {
-                                <th class="text-end">Transaction</th>
+                                <td class="text-end">
+                                    @if (!(pp.ProofLink is null))
+                                    {
+                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                    }
+                                </td>
                             }
                         </tr>
                     }

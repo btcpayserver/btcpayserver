@@ -19,8 +19,8 @@ namespace BTCPayServer.Data
 
         public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
-        
-        
+
+
         internal static void OnModelCreating(ModelBuilder builder)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

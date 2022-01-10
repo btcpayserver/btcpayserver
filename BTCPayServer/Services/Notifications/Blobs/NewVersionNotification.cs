@@ -3,7 +3,7 @@ using BTCPayServer.Models.NotificationViewModels;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
-    internal class NewVersionNotification:BaseNotification
+    internal class NewVersionNotification : BaseNotification
     {
         private const string TYPE = "newversion";
         internal class Handler : NotificationHandler<NewVersionNotification>
@@ -13,7 +13,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "New version")};
+                    return new (string identifier, string name)[] { (TYPE, "New version") };
                 }
             }
 
@@ -32,7 +32,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             Version = version;
         }
         public string Version { get; set; }
-        public override string Identifier  => TYPE;
+        public override string Identifier => TYPE;
         public override string NotificationType => TYPE;
     }
 }

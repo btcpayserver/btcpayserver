@@ -92,7 +92,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     ? new BoltInvoiceClaimDestination(destination, invoice)
                     : null;
 
-            if (result == null) return (null, "A valid BOLT11 invoice (with 30+ day expiry) or LNURL Pay or Lightning address was not provided.");
+            if (result == null)
+                return (null, "A valid BOLT11 invoice (with 30+ day expiry) or LNURL Pay or Lightning address was not provided.");
             if (validate && (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days < 30)
             {
                 return (null,
@@ -139,7 +140,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public async Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData)
         {
             var result = new List<PaymentMethodId>();
-            var methods =  storeData.GetEnabledPaymentMethods(_btcPayNetworkProvider).Where(id => id.PaymentId.PaymentType == LightningPaymentType.Instance).OfType<LightningSupportedPaymentMethod>();
+            var methods = storeData.GetEnabledPaymentMethods(_btcPayNetworkProvider).Where(id => id.PaymentId.PaymentType == LightningPaymentType.Instance).OfType<LightningSupportedPaymentMethod>();
             foreach (LightningSupportedPaymentMethod supportedPaymentMethod in methods)
             {
                 if (!supportedPaymentMethod.IsInternalNode)
@@ -150,11 +151,12 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                 foreach (UserStore storeDataUserStore in storeData.UserStores)
                 {
-                    if (!await _userService.IsAdminUser(storeDataUserStore.ApplicationUserId)) continue;
+                    if (!await _userService.IsAdminUser(storeDataUserStore.ApplicationUserId))
+                        continue;
                     result.Add(supportedPaymentMethod.PaymentId);
                     break;
                 }
-                
+
             }
 
             return result;

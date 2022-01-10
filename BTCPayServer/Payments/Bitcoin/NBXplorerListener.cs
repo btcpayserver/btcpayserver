@@ -157,7 +157,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                     {
                                         var key = output.Item1.ScriptPubKey.Hash + "#" +
                                                   network.CryptoCode.ToUpperInvariant();
-                                        var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new[] {key}))
+                                        var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new[] { key }))
                                             .FirstOrDefault();
                                         if (invoice != null)
                                         {
@@ -418,7 +418,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
-                btc.Activated && 
+                btc.Activated &&
                 btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {

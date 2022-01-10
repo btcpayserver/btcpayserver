@@ -12,7 +12,7 @@ namespace BTCPayServer.Services
         private static string CallToAction(string actionName, string actionLink)
         {
             string button = $"{BUTTON_HTML}".Replace("{button_description}", actionName, System.StringComparison.InvariantCulture);
-            button = button.Replace("{button_link}", actionLink, System.StringComparison.InvariantCulture);            
+            button = button.Replace("{button_link}", actionLink, System.StringComparison.InvariantCulture);
             return button;
         }
 
@@ -21,7 +21,7 @@ namespace BTCPayServer.Services
             emailSender.SendEmail(email, "Confirm your email",
                 $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
-        
+
         public static void SendSetPasswordConfirmation(this IEmailSender emailSender, string email, string link, bool newPassword)
         {
             var subject = $"{(newPassword ? "Set" : "Update")}  Password";

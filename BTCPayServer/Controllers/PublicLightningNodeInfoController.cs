@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(new ShowLightningNodeInfoViewModel
                 {
-                    Available = false, 
+                    Available = false,
                     CryptoCode = cryptoCode,
                     StoreName = store.StoreName
                 });

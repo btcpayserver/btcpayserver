@@ -26,7 +26,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "Payouts")};
+                    return new (string identifier, string name)[] { (TYPE, "Payouts") };
                 }
             }
 
@@ -35,7 +35,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 vm.Body = "A new payout is awaiting for approval";
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(StorePullPaymentsController.Payouts),
                     "StorePullPayments",
-                    new {storeId = notification.StoreId, paymentMethodId = notification.PaymentMethod }, _options.RootPath);
+                    new { storeId = notification.StoreId, paymentMethodId = notification.PaymentMethod }, _options.RootPath);
             }
         }
 

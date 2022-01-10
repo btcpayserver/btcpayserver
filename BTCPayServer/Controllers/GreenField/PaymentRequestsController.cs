@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers.GreenField
                 CustomCSSLink = blob.CustomCSSLink
             };
         }
-        
+
         private IActionResult PaymentRequestNotFound()
         {
             return this.CreateAPIError(404, "payment-request-not-found", "The payment request was not found");

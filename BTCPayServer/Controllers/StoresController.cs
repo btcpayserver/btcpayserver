@@ -379,7 +379,7 @@ namespace BTCPayServer.Controllers
                     };
                 }
             }).ToList();
-            
+
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
@@ -388,7 +388,7 @@ namespace BTCPayServer.Controllers
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
-            
+
             return View(vm);
         }
 
@@ -415,7 +415,7 @@ namespace BTCPayServer.Controllers
             vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
-        
+
         [HttpPost]
         [Route("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
@@ -504,7 +504,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        internal void AddPaymentMethods(StoreData store, StoreBlob storeBlob, 
+        internal void AddPaymentMethods(StoreData store, StoreBlob storeBlob,
             out List<StoreDerivationScheme> derivationSchemes, out List<StoreLightningNode> lightningNodes)
         {
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
@@ -544,10 +544,10 @@ namespace BTCPayServer.Controllers
 #endif
                         });
                         break;
-                    
+
                     case LNURLPayPaymentType lnurlPayPaymentType:
                         break;
-                    
+
                     case LightningPaymentType _:
                         var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         var isEnabled = !excludeFilters.Match(paymentMethodId) && lightning != null;
@@ -581,13 +581,13 @@ namespace BTCPayServer.Controllers
                 InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
                 DefaultCurrency = storeBlob.DefaultCurrency
             };
-            
-            AddPaymentMethods(store, storeBlob, 
+
+            AddPaymentMethods(store, storeBlob,
                 out var derivationSchemes, out var lightningNodes);
-            
+
             vm.DerivationSchemes = derivationSchemes;
             vm.LightningNodes = lightningNodes;
-            
+
             return View(vm);
         }
 
@@ -601,7 +601,7 @@ namespace BTCPayServer.Controllers
             blob.PaymentTolerance = model.PaymentTolerance;
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
-            
+
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -619,7 +619,7 @@ namespace BTCPayServer.Controllers
                 storeId = CurrentStore.Id
             });
         }
-        
+
         [HttpGet("{storeId}/settings")]
         public IActionResult GeneralSettings()
         {
@@ -634,7 +634,7 @@ namespace BTCPayServer.Controllers
                 StoreWebsite = store.StoreWebsite,
                 CanDelete = _Repo.CanDeleteStores()
             };
-            
+
             return View(vm);
         }
 
@@ -647,7 +647,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 CurrentStore.StoreName = model.StoreName;
             }
-            
+
             if (CurrentStore.StoreWebsite != model.StoreWebsite)
             {
                 needUpdate = true;
@@ -666,7 +666,7 @@ namespace BTCPayServer.Controllers
                 storeId = CurrentStore.Id
             });
         }
-        
+
         [HttpGet("{storeId}/delete")]
         public IActionResult DeleteStore(string storeId)
         {
@@ -737,7 +737,7 @@ namespace BTCPayServer.Controllers
                 model.EncodedApiKey = Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
             return View(model);
         }
-        
+
         [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeToken(string tokenId)
         {
@@ -746,7 +746,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{token.Label}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
-        
+
         [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
         {

@@ -142,7 +142,7 @@ namespace BTCPayServer.Tests
                     (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
                 authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true,  applicationDetails: (null, new Uri(callbackUrl))).ToString();
+                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, applicationDetails: (null, new Uri(callbackUrl))).ToString();
 
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
@@ -169,11 +169,11 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().GoToUrl(authUrl);
                 s.Driver.FindElement(By.Id("continue")).Click();
                 Assert.Equal(callbackUrl, s.Driver.Url);
-                
+
                 //same app but different redirect = nono
                 authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                     new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
-                
+
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.False(s.Driver.Url.StartsWith("https://international.com/callback"));
 

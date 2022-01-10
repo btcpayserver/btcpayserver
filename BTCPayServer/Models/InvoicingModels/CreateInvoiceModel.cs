@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.InvoicingModels
 {

@@ -20,7 +20,7 @@ COPY Build/Version.csproj Build/Version.csproj
 ARG CONFIGURATION_NAME=Release
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration ${CONFIGURATION_NAME}
 
-FROM mcr.microsoft.com/dotnet/6.0.1-bullseye-slim
+FROM mcr.microsoft.com/dotnet/aspnet:6.0.1-bullseye-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
     && rm -rf /var/lib/apt/lists/* 

@@ -1,8 +1,8 @@
 using System;
-using BTCPayServer.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
+using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using BTCPayServer.SSH;
 using Microsoft.Extensions.Configuration;
@@ -59,20 +59,20 @@ namespace BTCPayServer.Configuration
         public void LoadArgs(IConfiguration conf, Logs Logs)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
-            
+
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-          
-            
+
+
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
 
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
             TorServices = conf.GetOrDefault<string>("torservices", null)
-                ?.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries);
+                ?.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
             if (!string.IsNullOrEmpty(TorrcFile) && TorServices != null)
                 throw new ConfigException($"torrcfile or torservices should be provided, but not both");
 
@@ -145,7 +145,7 @@ namespace BTCPayServer.Configuration
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
             PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
-            RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r','\n','\t',' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
+            RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");

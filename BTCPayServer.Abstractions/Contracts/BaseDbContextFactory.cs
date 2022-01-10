@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
 namespace BTCPayServer.Abstractions.Contracts
 {
-    public abstract class BaseDbContextFactory<T> where T: DbContext
+    public abstract class BaseDbContextFactory<T> where T : DbContext
     {
         private readonly IOptions<DatabaseOptions> _options;
         private readonly string _schemaPrefix;
@@ -95,7 +95,7 @@ namespace BTCPayServer.Abstractions.Contracts
                     builder.UseMySql(_options.Value.ConnectionString, ServerVersion.AutoDetect(_options.Value.ConnectionString), o =>
                     {
                         o.EnableRetryOnFailure(10);
-                            
+
                         if (!string.IsNullOrEmpty(_schemaPrefix))
                         {
                             o.MigrationsHistoryTable(_schemaPrefix);
@@ -106,6 +106,6 @@ namespace BTCPayServer.Abstractions.Contracts
                     throw new ArgumentOutOfRangeException();
             }
         }
-        
+
     }
 }

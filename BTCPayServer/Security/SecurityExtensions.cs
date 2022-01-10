@@ -12,6 +12,7 @@ namespace BTCPayServer.Security
         {
             return scopes.All(s => context.User.HasClaim(c => c.Type.Equals("scope", StringComparison.InvariantCultureIgnoreCase) && c.Value.Split(' ').Contains(s)));
         }
+
         public static string GetImplicitStoreId(this HttpContext httpContext)
         {
             // 1. Check in the routeData

@@ -1,4 +1,4 @@
-﻿namespace BTCPayServer.Client.Models
+namespace BTCPayServer.Client.Models
 {
     public class LightningNetworkPaymentMethodBaseData
     {
@@ -7,7 +7,7 @@
         public bool DisableBOLT11PaymentOption { get; set; }
         public LightningNetworkPaymentMethodBaseData()
         {
-            
+
         }
     }
 }

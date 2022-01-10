@@ -5,8 +5,8 @@ namespace BTCPayServer.Models
     public class ConfirmModel
     {
         private const string ButtonClassDefault = "btn-danger";
-        
-        public ConfirmModel() {}
+
+        public ConfirmModel() { }
 
         public ConfirmModel(string title, string desc, string action = null, string buttonClass = ButtonClassDefault, string actionUrl = null)
         {

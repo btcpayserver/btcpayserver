@@ -5,7 +5,7 @@ namespace BTCPayServer.Models.WalletViewModels
     public class WalletSigningOptionsModel
     {
         public WalletSigningOptionsModel(
-            SigningContextModel signingContext, 
+            SigningContextModel signingContext,
             IDictionary<string, string> routeDataBack)
         {
             SigningContext = signingContext;

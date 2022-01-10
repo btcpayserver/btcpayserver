@@ -12,7 +12,7 @@ namespace BTCPayServer.Components.MainNav
         public List<StoreApp> Apps { get; set; }
         public bool AltcoinsBuild { get; set; }
     }
-    
+
     public class StoreApp
     {
         public string Id { get; set; }

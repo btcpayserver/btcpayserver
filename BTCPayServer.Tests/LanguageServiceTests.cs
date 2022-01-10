@@ -22,7 +22,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var languageService = tester.PayTester.GetService<LanguageService>();
-                
+
                 // Most common format. First option does not have a quality score. Others do in descending order.
                 // Result should be nl-NL (because the default weight is 1 for nl)
                 var lang1 = languageService.FindLanguageInAcceptLanguageHeader("nl,fr;q=0.7,en;q=0.5");

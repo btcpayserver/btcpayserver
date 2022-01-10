@@ -7,7 +7,7 @@
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
 @{
-    ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
     Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);

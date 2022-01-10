@@ -40,7 +40,8 @@ namespace BTCPayServer.Fido2
         }
         public string Verify(string code)
         {
-            if (!_memoryCache.TryGetValue(code, out var userId)) return null;
+            if (!_memoryCache.TryGetValue(code, out var userId))
+                return null;
             _memoryCache.Remove(GetCacheKey((string)userId));
             _memoryCache.Remove(code);
             return (string)userId;

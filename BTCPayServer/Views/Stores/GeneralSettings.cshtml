@@ -1,7 +1,7 @@
 @model GeneralSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.GeneralSettings, "General Settings", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.GeneralSettings, "General Settings", Context.GetStoreData().Id);
 }
 
 <div class="row">

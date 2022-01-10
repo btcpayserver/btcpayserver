@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using BTCPayServer.Services;
 
 namespace BTCPayServer.Controllers
 {
@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
             public int BlockCount { get; set; } = 1;
             public string CryptoCode { get; set; } = "BTC";
         }
-        
+
         [HttpPost]
         [Route("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
@@ -31,20 +31,20 @@ namespace BTCPayServer.Controllers
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
-            
+
             // TODO support altcoins, not just bitcoin
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
             var paymentMethodId = store.GetDefaultPaymentId() ?? store.GetEnabledPaymentIds(_NetworkProvider).FirstOrDefault(p => p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
             var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
             var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
             var BtcAmount = request.Amount;
-            
+
             try
             {
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var rate = paymentMethod.Rate;
                 var txid = cheater.CashCow.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
-                
+
                 // TODO The value of totalDue is wrong. How can we get the real total due? invoice.Price is only correct if this is the 2nd payment, not for a 3rd or 4th payment. 
                 var totalDue = invoice.Price;
                 return Ok(new
@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
                 });
             }
         }
-        
+
         [HttpPost]
         [Route("i/{invoiceId}/mine-blocks")]
         [CheatModeRoute]
@@ -73,13 +73,13 @@ namespace BTCPayServer.Controllers
             var blockRewardBitcoinAddress = cheater.CashCow.GetNewAddress();
             try
             {
-                if (request.BlockCount > 0) 
+                if (request.BlockCount > 0)
                 {
                     cheater.CashCow.GenerateToAddress(request.BlockCount, blockRewardBitcoinAddress);
                     return Ok(new
                     {
-                        SuccessMessage = "Mined "+request.BlockCount+" blocks"
-                    });                    
+                        SuccessMessage = "Mined " + request.BlockCount + " blocks"
+                    });
                 }
                 return BadRequest(new
                 {

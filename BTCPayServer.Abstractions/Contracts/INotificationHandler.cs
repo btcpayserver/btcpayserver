@@ -7,7 +7,7 @@ namespace BTCPayServer.Abstractions.Contracts
         public abstract string Identifier { get; }
         public abstract string NotificationType { get; }
     }
-    
+
     public interface INotificationHandler
     {
         string NotificationType { get; }
@@ -15,7 +15,7 @@ namespace BTCPayServer.Abstractions.Contracts
         public (string identifier, string name)[] Meta { get; }
         void FillViewModel(object notification, NotificationViewModel vm);
     }
-    
+
     public class NotificationViewModel
     {
         public string Id { get; set; }

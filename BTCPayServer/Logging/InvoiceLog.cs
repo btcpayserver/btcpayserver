@@ -23,7 +23,7 @@ namespace BTCPayServer.Logging
         {
             lock (_InvoiceLogs)
             {
-                _InvoiceLogs.Add(new InvoiceLog() { Timestamp = DateTimeOffset.UtcNow, Log = data, Severity = eventSeverity});
+                _InvoiceLogs.Add(new InvoiceLog() { Timestamp = DateTimeOffset.UtcNow, Log = data, Severity = eventSeverity });
             }
         }
 

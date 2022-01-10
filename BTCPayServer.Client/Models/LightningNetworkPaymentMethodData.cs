@@ -1,6 +1,6 @@
 namespace BTCPayServer.Client.Models
 {
-    public class LightningNetworkPaymentMethodData: LightningNetworkPaymentMethodBaseData
+    public class LightningNetworkPaymentMethodData : LightningNetworkPaymentMethodBaseData
     {
         /// <summary>
         /// Whether the payment method is enabled

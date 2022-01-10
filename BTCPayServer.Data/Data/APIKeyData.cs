@@ -8,10 +8,10 @@ namespace BTCPayServer.Data
         [MaxLength(50)]
         public string Id { get; set; }
 
-        [MaxLength(50)] 
+        [MaxLength(50)]
         public string StoreId { get; set; }
 
-        [MaxLength(50)] 
+        [MaxLength(50)]
         public string UserId { get; set; }
 
         public APIKeyType Type { get; set; } = APIKeyType.Legacy;

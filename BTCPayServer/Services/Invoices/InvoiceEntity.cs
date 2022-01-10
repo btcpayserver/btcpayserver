@@ -39,9 +39,9 @@ namespace BTCPayServer.Services.Invoices
             seria.ContractResolver = new CamelCasePropertyNamesContractResolver();
             MetadataSerializer = seria;
         }
-        
+
         [JsonIgnore]
-        public string OrderId 
+        public string OrderId
         {
             get => GetMetadata<string>("orderId");
             set => SetMetadata("orderId", value);
@@ -53,73 +53,86 @@ namespace BTCPayServer.Services.Invoices
             set => SetMetadata("orderUrl", value);
         }
         [JsonIgnore]
-        public string PaymentRequestId 
+        public string PaymentRequestId
         {
             get => GetMetadata<string>("paymentRequestId");
             set => SetMetadata("paymentRequestId", value);
         }
         [JsonIgnore]
-        public string BuyerName{
+        public string BuyerName
+        {
             get => GetMetadata<string>("buyerName");
             set => SetMetadata("buyerName", value);
         }
         [JsonIgnore]
-        public string BuyerEmail {
+        public string BuyerEmail
+        {
             get => GetMetadata<string>("buyerEmail");
             set => SetMetadata("buyerEmail", value);
         }
         [JsonIgnore]
-        public string BuyerCountry {
+        public string BuyerCountry
+        {
             get => GetMetadata<string>("buyerCountry");
             set => SetMetadata("buyerCountry", value);
         }
         [JsonIgnore]
-        public string BuyerZip {
+        public string BuyerZip
+        {
             get => GetMetadata<string>("buyerZip");
             set => SetMetadata("buyerZip", value);
         }
         [JsonIgnore]
-        public string BuyerState{
+        public string BuyerState
+        {
             get => GetMetadata<string>("buyerState");
             set => SetMetadata("buyerState", value);
         }
         [JsonIgnore]
-        public string BuyerCity {
+        public string BuyerCity
+        {
             get => GetMetadata<string>("buyerCity");
             set => SetMetadata("buyerCity", value);
         }
         [JsonIgnore]
-        public string BuyerAddress2{
+        public string BuyerAddress2
+        {
             get => GetMetadata<string>("buyerAddress2");
             set => SetMetadata("buyerAddress2", value);
         }
         [JsonIgnore]
-        public string BuyerAddress1 {
+        public string BuyerAddress1
+        {
             get => GetMetadata<string>("buyerAddress1");
             set => SetMetadata("buyerAddress1", value);
         }
         [JsonIgnore]
-        public string BuyerPhone {
+        public string BuyerPhone
+        {
             get => GetMetadata<string>("buyerPhone");
             set => SetMetadata("buyerPhone", value);
         }
         [JsonIgnore]
-        public string ItemDesc {
+        public string ItemDesc
+        {
             get => GetMetadata<string>("itemDesc");
             set => SetMetadata("itemDesc", value);
         }
         [JsonIgnore]
-        public string ItemCode{
+        public string ItemCode
+        {
             get => GetMetadata<string>("itemCode");
             set => SetMetadata("itemCode", value);
         }
         [JsonIgnore]
-        public bool? Physical {
+        public bool? Physical
+        {
             get => GetMetadata<bool?>("physical");
             set => SetMetadata("physical", value);
         }
         [JsonIgnore]
-        public decimal? TaxIncluded {
+        public decimal? TaxIncluded
+        {
             get => GetMetadata<decimal?>("taxIncluded");
             set => SetMetadata("taxIncluded", value);
         }
@@ -134,7 +147,8 @@ namespace BTCPayServer.Services.Invoices
 
         public T GetMetadata<T>(string propName)
         {
-            if (AdditionalData == null || !(AdditionalData.TryGetValue(propName, out var jt) is true)) return default;
+            if (AdditionalData == null || !(AdditionalData.TryGetValue(propName, out var jt) is true))
+                return default;
             if (jt.Type == JTokenType.Null)
                 return default;
             if (typeof(T) == typeof(string))
@@ -178,16 +192,16 @@ namespace BTCPayServer.Services.Invoices
                         data = JToken.FromObject(value);
                     }
                 }
-                catch (Exception )
+                catch (Exception)
                 {
                     data = JToken.FromObject(value);
                 }
-                
+
                 AdditionalData ??= new Dictionary<string, JToken>();
                 AdditionalData.AddOrReplace(propName, data);
             }
         }
-        
+
         public static InvoiceMetadata FromJObject(JObject jObject)
         {
             return jObject.ToObject<InvoiceMetadata>(MetadataSerializer);
@@ -1074,7 +1088,7 @@ namespace BTCPayServer.Services.Invoices
 
         private decimal GetTxFee()
         {
-            return GetPaymentMethodDetails()?.GetNextNetworkFee()?? 0m;
+            return GetPaymentMethodDetails()?.GetNextNetworkFee() ?? 0m;
         }
     }
 

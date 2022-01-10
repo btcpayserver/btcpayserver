@@ -38,7 +38,7 @@ namespace BTCPayServer.Models.AppViewModels
             var defaultAppType = AppType.PointOfSale.ToString();
             var choices = typeof(AppType).GetEnumNames().Select(o => new Format
             {
-                Name = typeof(AppType).DisplayName(o), 
+                Name = typeof(AppType).DisplayName(o),
                 Value = o
             }).ToArray();
             var chosen = choices.FirstOrDefault(f => f.Value == defaultAppType) ?? choices.FirstOrDefault();

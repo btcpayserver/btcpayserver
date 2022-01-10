@@ -1,10 +1,10 @@
 #nullable enable
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -15,11 +15,11 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet("{storeId}/integrations")]
         public IActionResult Integrations()
-        {            
+        {
             return View("Integrations", new IntegrationsViewModel());
         }
 
-        private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId) 
+        private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)
         {
             return (await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();
         }
@@ -29,20 +29,21 @@ namespace BTCPayServer.Controllers
         {
             var webhooks = await _Repo.GetWebhooks(CurrentStore.Id);
             return View(nameof(Webhooks), new WebhooksViewModel()
+            {
+                Webhooks = webhooks.Select(async w =>
                 {
-                    Webhooks = webhooks.Select(async w => {
-                        var lastDelivery = await LastDeliveryForWebhook(w.Id);
-                        var lastDeliveryBlob = lastDelivery?.GetBlob();
-                        
-                        return new WebhooksViewModel.WebhookViewModel()
-                        {
-                            Id = w.Id,
-                            Url = w.GetBlob().Url,
-                            LastDeliveryErrorMessage = lastDeliveryBlob?.ErrorMessage,
-                            LastDeliveryTimeStamp = lastDelivery?.Timestamp,
-                            LastDeliverySuccessful = lastDeliveryBlob == null ? true : lastDeliveryBlob.Status == WebhookDeliveryStatus.HttpSuccess,
-                        };
-                    } 
+                    var lastDelivery = await LastDeliveryForWebhook(w.Id);
+                    var lastDeliveryBlob = lastDelivery?.GetBlob();
+
+                    return new WebhooksViewModel.WebhookViewModel()
+                    {
+                        Id = w.Id,
+                        Url = w.GetBlob().Url,
+                        LastDeliveryErrorMessage = lastDeliveryBlob?.ErrorMessage,
+                        LastDeliveryTimeStamp = lastDelivery?.Timestamp,
+                        LastDeliverySuccessful = lastDeliveryBlob == null ? true : lastDeliveryBlob.Status == WebhookDeliveryStatus.HttpSuccess,
+                    };
+                }
                 ).Select(t => t.Result).ToArray()
             });
         }
@@ -135,9 +136,12 @@ namespace BTCPayServer.Controllers
         {
             var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type);
 
-            if (result.Success) {
+            if (result.Success)
+            {
                 TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully! Delivery ID is {result.DeliveryId}";
-            } else {
+            }
+            else
+            {
                 TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
             }
 

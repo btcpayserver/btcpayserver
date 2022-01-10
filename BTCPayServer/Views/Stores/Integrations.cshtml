@@ -1,7 +1,7 @@
 @model IntegrationsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().Id);
 }
 
 <div class="row">
@@ -12,7 +12,7 @@
         }
 
         <ul class="list-group mb-3">
-            <vc:ui-extension-point location="store-integrations-list"  model="@Model"></vc:ui-extension-point>
+            <vc:ui-extension-point location="store-integrations-list" model="@Model" />
         </ul>
 
         <h4 class="mt-5 mb-3">Other Integrations</h4>

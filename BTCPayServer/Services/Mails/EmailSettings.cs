@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using Newtonsoft.Json;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using MailKit.Net.Smtp;
 using MimeKit;
-using System.Threading.Tasks;
-using System.Threading;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
@@ -65,7 +67,7 @@ namespace BTCPayServer.Services.Mails
             }
 
             return new MimeMessage(
-                from : new[] { new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay) }, 
+                from: new[] { new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay) },
                 to: new[] { to },
                 subject,
                 bodyBuilder.ToMessageBody());
@@ -77,6 +79,13 @@ namespace BTCPayServer.Services.Mails
             using var connectCancel = new CancellationTokenSource(10000);
             try
             {
+                if (Extensions.IsLocalNetwork(Server))
+                {
+                    client.CheckCertificateRevocation = false;
+#pragma warning disable CA5359 // Do Not Disable Certificate Validation
+                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+#pragma warning restore CA5359 // Do Not Disable Certificate Validation
+                }
                 await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
                 await client.AuthenticateAsync(Login, Password, connectCancel.Token);
             }

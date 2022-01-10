@@ -28,7 +28,7 @@ namespace BTCPayServer
                 isAdmin = user.IsInRole(Roles.ServerAdmin);
             else if (claimUser.AuthenticationType == GreenFieldConstants.AuthenticationType)
                 isAdmin = (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings)).Succeeded;
-            return isAdmin ? (true, true) : 
+            return isAdmin ? (true, true) :
                    (policiesSettings?.AllowHotWalletForAll is true, policiesSettings?.AllowHotWalletRPCImportForAll is true);
         }
     }

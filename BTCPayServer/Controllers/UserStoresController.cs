@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -14,40 +15,36 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
-    public partial class UserStoresController : Controller
+    public class UserStoresController : Controller
     {
-        private readonly StoreRepository _Repo;
-        private readonly BTCPayNetworkProvider _NetworkProvider;
-        private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly StoreRepository _repo;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
-            BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository)
         {
-            _Repo = storeRepository;
-            _NetworkProvider = networkProvider;
-            _UserManager = userManager;
+            _repo = storeRepository;
+            _userManager = userManager;
         }
 
-        [HttpGet]
-        [Route("create")]
+        [HttpGet("create")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public IActionResult CreateStore()
         {
             return View();
         }
 
-        [HttpPost]
-        [Route("create")]
+        [HttpPost("create")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> CreateStore(CreateStoreViewModel vm)
         {
             if (!ModelState.IsValid)
             {
                 return View(vm);
             }
-            var store = await _Repo.CreateStore(GetUserId(), vm.Name);
+            var store = await _repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(StoresController.PaymentMethods), "Stores", new
@@ -62,6 +59,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public IActionResult DeleteStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
@@ -71,28 +69,30 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/me/delete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            await _Repo.RemoveStore(storeId, userId);
+            await _repo.RemoveStore(storeId, userId);
             TempData[WellKnownTempData.SuccessMessage] = "Store removed successfully";
             return RedirectToAction(nameof(ListStores));
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewStoreSettings)]
         public async Task<IActionResult> ListStores(
             string sortOrder = null,
             string sortOrderColumn = null
         )
         {
             StoresViewModel result = new StoresViewModel();
-            var stores = await _Repo.GetStoresByUserId(GetUserId());
-            if (sortOrder != null && sortOrderColumn != null) 
+            var stores = await _repo.GetStoresByUserId(GetUserId());
+            if (sortOrder != null && sortOrderColumn != null)
             {
-                stores = stores.OrderByDescending(store => 
+                stores = stores.OrderByDescending(store =>
                     {
                         switch (sortOrderColumn)
                         {
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers
                 result.Stores.Add(new StoresViewModel.StoreViewModel()
                 {
                     Id = store.Id,
-                    
+
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
                     IsOwner = store.Role == StoreRoles.Owner,
@@ -134,9 +134,6 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        private string GetUserId()
-        {
-            return _UserManager.GetUserId(User);
-        }
+        private string GetUserId() => _userManager.GetUserId(User);
     }
 }

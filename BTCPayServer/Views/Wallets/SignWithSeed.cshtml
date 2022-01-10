@@ -1,14 +1,15 @@
 @model SignWithSeedViewModel
 @{
+    var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign PSBT", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(WalletsNavPages.Send, "Sign PSBT", walletId);
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="GoBack">
+    <a asp-action="WalletPSBT" asp-route-walletId="@walletId" id="GoBack">
         <vc:icon symbol="back" />
     </a>
-    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+    <a asp-action="WalletSend" asp-route-walletId="@walletId" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }
@@ -39,7 +40,7 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<form method="post" asp-action="SignWithSeed" asp-route-walletId="@Context.GetRouteValue("walletId")">
+<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId">
     <partial name="SigningContext" for="SigningContext"/>
     <div class="form-group">
         <label asp-for="SeedOrKey" class="form-label"></label>

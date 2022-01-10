@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.PaymentMethods, "Enter your extended public key", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter your extended public key", Context.GetStoreData().Id);
 }
 
 @section Navbar {

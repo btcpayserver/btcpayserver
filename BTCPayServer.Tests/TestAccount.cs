@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -14,6 +15,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
@@ -23,8 +25,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
-using BTCPayServer.Payments.Lightning;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -141,7 +141,7 @@ namespace BTCPayServer.Tests
             modify(paymentMethods);
             await storeController.PaymentMethods(paymentMethods);
         }
-        
+
         public async Task ModifyWalletSettings(Action<WalletSettingsViewModel> modify)
         {
             var storeController = GetController<StoresController>();
@@ -150,7 +150,7 @@ namespace BTCPayServer.Tests
             modify(walletSettings);
             storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
-        
+
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
         {
             var storeController = GetController<StoresController>();
@@ -227,7 +227,7 @@ namespace BTCPayServer.Tests
 
             //this addresses an obscure issue where LockSubscription is unintentionally set to "true",
             //resulting in a large number of tests failing.  
-            if (account.RegisteredUserId == null) 
+            if (account.RegisteredUserId == null)
             {
                 var settings = parent.PayTester.GetService<SettingsRepository>();
                 var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
@@ -470,7 +470,7 @@ namespace BTCPayServer.Tests
         public TEvent AssertHasWebhookEvent<TEvent>(WebhookEventType eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
-            retry:
+retry:
             foreach (var evt in WebhookEvents)
             {
                 if (evt.Type == eventType)

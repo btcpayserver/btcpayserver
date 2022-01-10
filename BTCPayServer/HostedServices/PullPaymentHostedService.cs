@@ -289,7 +289,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
                 payout.State = PayoutState.AwaitingPayment;
-                
+
                 if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
@@ -382,7 +382,7 @@ namespace BTCPayServer.HostedServices
                         data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
                         ))
                     {
-                        
+
                         req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Duplicate));
                         return;
                     }

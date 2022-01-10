@@ -1,9 +1,9 @@
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using BTCPayServer.BIP78.Sender;
 
 namespace BTCPayServer.Payments.PayJoin
 {

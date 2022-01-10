@@ -74,7 +74,7 @@ namespace BTCPayServer.HostedServices
                     break;
                 case UserPasswordResetRequestedEvent userPasswordResetRequestedEvent2:
                     userPasswordResetRequestedEvent = userPasswordResetRequestedEvent2;
-                    passwordSetter:
+passwordSetter:
                     code = await _userManager.GeneratePasswordResetTokenAsync(userPasswordResetRequestedEvent.User);
                     var newPassword = await _userManager.HasPasswordAsync(userPasswordResetRequestedEvent.User);
                     callbackUrl = _generator.ResetPasswordCallbackLink(userPasswordResetRequestedEvent.User.Id, code,

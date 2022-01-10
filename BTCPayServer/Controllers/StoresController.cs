@@ -973,15 +973,10 @@ namespace BTCPayServer.Controllers
             return _UserManager.GetUserId(User);
         }
 
-        // TODO: Need to have talk about how architect default currency implementation
-        // For now we have also hardcoded USD for Store creation and then Invoice creation
-        const string DEFAULT_CURRENCY = "USD";
-
         [Route("{storeId}/paybutton")]
         public async Task<IActionResult> PayButton()
         {
             var store = CurrentStore;
-
             var storeBlob = store.GetStoreBlob();
             if (!storeBlob.AnyoneCanInvoice)
             {
@@ -993,7 +988,7 @@ namespace BTCPayServer.Controllers
             var model = new PayButtonViewModel
             {
                 Price = null,
-                Currency = DEFAULT_CURRENCY,
+                Currency = storeBlob.DefaultCurrency,
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.svg",

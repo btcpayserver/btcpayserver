@@ -331,6 +331,7 @@ namespace BTCPayServer.HostedServices
             request.Content = content;
             var deliveryBlob = ctx.Delivery.Blob is null ? new WebhookDeliveryBlob() : ctx.Delivery.GetBlob();
             deliveryBlob.Request = bytes;
+            deliveryBlob.SentTimestamp = DateTimeOffset.UtcNow;
             try
             {
                 using var response = await httpClient.SendAsync(request, CancellationToken);

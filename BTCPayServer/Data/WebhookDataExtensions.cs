@@ -31,6 +31,9 @@ namespace BTCPayServer.Data
         public int? HttpCode { get; set; }
         public string ErrorMessage { get; set; }
         public byte[] Request { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset? SentTimestamp { get; set; }
+
         public T ReadRequestAs<T>()
         {
             return JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(Request), HostedServices.WebhookNotificationManager.DefaultSerializerSettings);

@@ -16,14 +16,6 @@
             font-weight: bold;
         }
 
-        .wraptext200 {
-            max-width: 200px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            display: block;
-            white-space: nowrap;
-        }
-
         .pavpill {
             display: inline-block;
             padding: 0.3em 0.5em;
@@ -334,22 +326,22 @@
 
     @if (Model.Total > 0)
     {
-        <div class="table-responsive" style="clear:both">
+        <div style="clear:both"></div>
+        <div class="table-responsive">
             <table id="invoices" class="table table-hover">
                 <thead>
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
                             <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                        </th>
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
                             <a id="switchTimeFormat" href="#">
                                 <span class="fa fa-clock-o" title="Switch date format"></span>
                             </a>
                         </th>
-                        <th style="max-width: 180px;">OrderId</th>
-                        <th>InvoiceId</th>
-                        <th style="min-width: 150px;">Status</th>
+                        <th class="text-nowrap">Order Id</th>
+                        <th class="text-nowrap">Invoice Id</th>
+                        <th>Status</th>
                         <th class="text-end">Amount</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -366,17 +358,17 @@
                                     @invoice.Date.ToBrowserDate()
                                 </span>
                             </td>
-                            <td style="max-width: 180px;">
+                            <td style="max-width:120px;">
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {
-                                    <a href="@invoice.RedirectUrl" class="wraptext200" rel="noreferrer noopener">@invoice.OrderId</a>
+                                    <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
                                 }
                                 else
                                 {
                                     <span>@invoice.OrderId</span>
                                 }
                             </td>
-                            <td>@invoice.InvoiceId</td>
+                            <td class="text-break">@invoice.InvoiceId</td>
                             <td>
                                 @if (invoice.Details.Archived)
                                 {

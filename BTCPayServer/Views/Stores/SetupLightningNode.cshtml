@@ -53,6 +53,11 @@
             color: var(--btcpay-secondary);
             opacity: .5;
         }
+        
+        #LightningNodeTypeTablist label + input + label {
+            margin-left: var(--btcpay-space-m);
+        }
+        
         #LightningNodeTypeTabs ul {
             list-style: none;
             padding-left: 0;
@@ -75,7 +80,7 @@
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
         
         <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")">
-        <label class="ms-3" asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
 
         <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>
     </div>

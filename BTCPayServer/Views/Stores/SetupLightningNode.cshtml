@@ -35,9 +35,14 @@
             display: inline-block;
             padding: .75rem 2rem;
             color: var(--btcpay-primary);
-            font-weight:  var(--btcpay-font-weight-semibold);
+            font-weight: var(--btcpay-font-weight-semibold);
             border-radius: 1.5rem;
+            border: 1px solid var(--btcpay-secondary-border);
             cursor: pointer;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        #LightningNodeTypeTablist label:hover {
+            border-color: var(--btcpay-secondary-border-hover);
         }
         #LightningNodeTypeTablist input[disabled]:checked + label {
             background: var(--btcpay-secondary);
@@ -48,6 +53,11 @@
             color: var(--btcpay-secondary);
             opacity: .5;
         }
+        
+        #LightningNodeTypeTablist label + input + label {
+            margin-left: var(--btcpay-space-m);
+        }
+        
         #LightningNodeTypeTabs ul {
             list-style: none;
             padding-left: 0;

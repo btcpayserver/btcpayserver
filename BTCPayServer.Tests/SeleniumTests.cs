@@ -393,6 +393,7 @@ namespace BTCPayServer.Tests
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSectionLinks();
                 s.GoToInvoices();
+                Assert.Contains("There are no invoices matching your criteria.", s.Driver.PageSource);
                 var invoiceId = s.CreateInvoice();
                 s.FindAlertMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
@@ -412,6 +413,17 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
                 s.FindAlertMessage();
                 Assert.DoesNotContain("Unarchive", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);
+                s.GoToInvoices();
+                Assert.Contains(invoiceId, s.Driver.PageSource);
+                
+                // archive via list
+                s.Driver.FindElement(By.CssSelector($".selector[value=\"{invoiceId}\"]")).Click();
+                s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+                s.Driver.FindElement(By.Id("ActionsDropdownArchive")).Click();
+                Assert.Contains("1 invoice archived", s.FindAlertMessage().Text);
+                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+                Assert.Contains("The invoice has been unarchived", s.FindAlertMessage().Text);
                 s.GoToInvoices();
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 

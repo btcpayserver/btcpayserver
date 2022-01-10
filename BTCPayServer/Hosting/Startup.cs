@@ -122,6 +122,7 @@ namespace BTCPayServer.Hosting
                  if (!Configuration.GetOrDefault<bool>("nocsp", false))
                      o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
                  o.Filters.Add(new JsonHttpExceptionFilter());
+                 o.Filters.Add(new JsonObjectExceptionFilter());
              })
             .ConfigureApiBehaviorOptions(options =>
             {

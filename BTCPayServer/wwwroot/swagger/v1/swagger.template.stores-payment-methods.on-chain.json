@@ -360,13 +360,20 @@
                     }
                 ],
                 "description": "View addresses of a proposed payment method of the store",
-                "operationId": "StoreOnChainPaymentMethods_GetOnChainPaymentMethodPreview",
+                "operationId": "StoreOnChainPaymentMethods_POSTOnChainPaymentMethodPreview",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
+                                "type": "object",
+                                "properties": {
+                                    "derivationScheme": {
+                                        "type": "string",
+                                        "description": "The derivation scheme",
+                                        "example": "xpub..."
+                                    }
+                                }
                             }
                         }
                     },

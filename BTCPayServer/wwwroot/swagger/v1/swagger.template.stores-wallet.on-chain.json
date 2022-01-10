@@ -317,6 +317,9 @@
                     },
                     "404": {
                         "description": "The key is not found for this store/wallet"
+                    },
+                    "503": {
+                        "description": "You need to allow non-admins to use hotwallets for their stores (in /server/policies)"
                     }
                 },
                 "security": [

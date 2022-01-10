@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!_walletProvider.IsAvailable(network))
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} services are not currently available");
             }
 
@@ -59,13 +59,13 @@ namespace BTCPayServer.Controllers.GreenField
                 response = await client.GenerateWalletAsync(request);
                 if (response == null)
                 {
-                    return this.CreateAPIError("not-available",
+                    return this.CreateAPIError(503, "not-available",
                         $"{cryptoCode} services are not currently available");
                 }
             }
             catch (Exception e)
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} error: {e.Message}");
             }
 

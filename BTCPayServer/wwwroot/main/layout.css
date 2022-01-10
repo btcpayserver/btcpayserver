@@ -391,7 +391,7 @@
 
     #StoreSelector {
         order: 2;
-        margin-top: var(--btcpay-space-s);
+        margin-top: var(--btcpay-space-m);
         width: 100%;
     }
     
@@ -410,7 +410,8 @@
     }
 
     #mainContent > section {
-        padding: 4.65rem var(--btcpay-space-l);
+        /*padding: 4.65rem var(--btcpay-space-l);*/
+        padding: var(--btcpay-space-xl);
     }
 
     #mainContent > section > .container,
@@ -420,7 +421,7 @@
     }
     
     .btcpay-footer {
-        padding-left: var(--btcpay-space-l);
-        padding-right: var(--btcpay-space-l);
+        padding-left: var(--btcpay-space-xl);
+        padding-right: var(--btcpay-space-xl);
     }
 }

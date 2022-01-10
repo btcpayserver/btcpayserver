@@ -437,7 +437,7 @@ namespace BTCPayServer.Controllers
                 {
                     case "archive":
                         await _InvoiceRepository.MassArchive(selectedItems);
-                        TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice(s) archived.";
+                        TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} archived.";
 
                         break;
                 }

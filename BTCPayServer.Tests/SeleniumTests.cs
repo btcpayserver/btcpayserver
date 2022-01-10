@@ -421,10 +421,16 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
                 s.Driver.FindElement(By.Id("ActionsDropdownArchive")).Click();
                 Assert.Contains("1 invoice archived", s.FindAlertMessage().Text);
-                s.Driver.Navigate().GoToUrl(invoiceUrl);
-                s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
-                Assert.Contains("The invoice has been unarchived", s.FindAlertMessage().Text);
-                s.GoToInvoices();
+                Assert.DoesNotContain(invoiceId, s.Driver.PageSource);
+                
+                // unarchive via list
+                s.Driver.FindElement(By.Id("SearchOptionsToggle")).Click();
+                s.Driver.FindElement(By.Id("SearchOptionsIncludeArchived")).Click();
+                Assert.Contains(invoiceId, s.Driver.PageSource);
+                s.Driver.FindElement(By.CssSelector($".selector[value=\"{invoiceId}\"]")).Click();
+                s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+                s.Driver.FindElement(By.Id("ActionsDropdownUnarchive")).Click();
+                Assert.Contains("1 invoice unarchived", s.FindAlertMessage().Text);
                 Assert.Contains(invoiceId, s.Driver.PageSource);
 
                 // When logout out we should not be able to access store and invoice details

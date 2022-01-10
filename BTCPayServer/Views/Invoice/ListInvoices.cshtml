@@ -286,7 +286,7 @@
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}" id="SearchOptionsIncludeArchived">Archived Invoices</a>
             <div role="separator" class="dropdown-divider"></div>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
@@ -311,6 +311,10 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
                 <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive"><i class="fa fa-archive"></i> Archive</button>
+                @if (Model.IncludeArchived)
+                {
+                    <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive"><i class="fa fa-archive"></i> Unarchive</button>
+                }
             </div>
         </span>
         <span>

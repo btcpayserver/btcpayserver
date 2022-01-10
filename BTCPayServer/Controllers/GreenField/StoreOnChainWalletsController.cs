@@ -271,14 +271,14 @@ namespace BTCPayServer.Controllers.GreenField
                 return actionResult;
             if (network.ReadonlyWallet)
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} sending services are not currently available");
             }
 
             //This API is only meant for hot wallet usage for now. We can expand later when we allow PSBT manipulation.
             if (!(await CanUseHotWallet()).HotWallet)
             {
-                return Unauthorized();
+                return this.CreateAPIError(503, "not-available", $"You need to allow non-admins to use hotwallets for their stores (in /server/policies)");
             }
 
             var explorerClient = _explorerClientProvider.GetExplorerClient(cryptoCode);
@@ -425,7 +425,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (NotSupportedException)
             {
-                return this.CreateAPIError("not-available", "You need to update your version of NBXplorer");
+                return this.CreateAPIError(503, "not-available", "You need to update your version of NBXplorer");
             }
 
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
@@ -445,7 +445,7 @@ namespace BTCPayServer.Controllers.GreenField
                     WellknownMetadataKeys.MasterHDKey);
             if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} sending services are not currently available");
             }
 
@@ -538,7 +538,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!network.WalletSupported || !_btcPayWalletProvider.IsAvailable(network))
             {
-                actionResult = this.CreateAPIError("not-available",
+                actionResult = this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} services are not currently available");
                 return true;
             }
@@ -546,7 +546,7 @@ namespace BTCPayServer.Controllers.GreenField
             derivationScheme = GetDerivationSchemeSettings(cryptoCode);
             if (derivationScheme?.AccountDerivation is null)
             {
-                actionResult = this.CreateAPIError("not-available",
+                actionResult = this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} doesn't have any derivation scheme set");
                 return true;
             }

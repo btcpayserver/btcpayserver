@@ -171,6 +171,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 Id = data.Id,
                 Timestamp = data.Timestamp,
+                SentTimestamp = b.SentTimestamp,
                 Status = b.Status,
                 ErrorMessage = b.ErrorMessage,
                 HttpCode = b.HttpCode

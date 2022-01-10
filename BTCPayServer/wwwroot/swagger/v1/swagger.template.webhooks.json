@@ -488,7 +488,16 @@
                     },
                     "timestamp": {
                         "nullable": false,
-                        "description": "Timestamp of when the delivery got broadcasted",
+                        "description": "Timestamp of when the delivery got created.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "sentTimestamp": {
+                        "nullable": true,
+                        "description": "Timestamp of when the delivery got broadcasted. (Deliveries are queued to ensure orderly delivery, if the server is slow to respond, queued deliveries may be broadcasted late)",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/UnixTimestamp"

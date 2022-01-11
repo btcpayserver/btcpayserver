@@ -1029,6 +1029,68 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task MultiProcessingQueueTests()
+        {
+            MultiProcessingQueue q = new MultiProcessingQueue();
+            var q10 = Enqueue(q, "q1");
+            var q11 = Enqueue(q, "q1");
+            var q20 = Enqueue(q, "q2");
+            var q30 = Enqueue(q, "q3");
+            q10.AssertStarted();
+            q11.AssertStopped();
+            q20.AssertStarted();
+            q30.AssertStarted();
+            Assert.Equal(3, q.QueueCount);
+            q10.Done();
+            q10.AssertStopped();
+            q11.AssertStarted();
+            q20.AssertStarted();
+            Assert.Equal(3, q.QueueCount);
+            q30.Done();
+            q30.AssertStopped();
+            TestUtils.Eventually(() => Assert.Equal(2, q.QueueCount), 1000);
+            await q.Abort(default);
+            q11.AssertAborted();
+            q20.AssertAborted();
+            Assert.Equal(0, q.QueueCount);
+        }
+        class MultiProcessingQueueTest
+        {
+            public bool Started;
+            public bool Aborted;
+            public TaskCompletionSource Tcs;
+            public void Done() { Tcs.TrySetResult(); }
+
+            public void AssertStarted()
+            {
+                TestUtils.Eventually(() => Assert.True(Started), 1000);
+            }
+            public void AssertStopped()
+            {
+                TestUtils.Eventually(() => Assert.False(Started), 1000);
+            }
+            public void AssertAborted()
+            {
+                TestUtils.Eventually(() => Assert.True(Aborted), 1000);
+            }
+        }
+        private static MultiProcessingQueueTest Enqueue(MultiProcessingQueue q, string queueName)
+        {
+            MultiProcessingQueueTest t = new MultiProcessingQueueTest();
+            t.Tcs = new TaskCompletionSource();
+            q.Enqueue(queueName, async (cancellationToken) => {
+                t.Started = true;
+                try
+                {
+                    await t.Tcs.Task.WaitAsync(cancellationToken);
+                }
+                catch { t.Aborted = true; }
+                t.Started = false;
+            });
+            return t;
+        }
+
+        [Fact]
         public async Task CanScheduleBackgroundTasks()
         {
             BackgroundJobClient client = new BackgroundJobClient(BTCPayLogs);

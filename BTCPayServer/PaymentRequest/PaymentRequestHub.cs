@@ -182,7 +182,7 @@ namespace BTCPayServer.PaymentRequest
                 {
                     QueueExpiryTask(
                         updated.PaymentRequestId,
-                        expiry.Value,
+                        expiry.Value.UtcDateTime,
                         cancellationToken);
                 }
             }

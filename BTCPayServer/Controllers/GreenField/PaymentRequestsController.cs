@@ -84,7 +84,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return validationResult;
             }
-
+            request.Currency ??= StoreData.GetStoreBlob().DefaultCurrency;
             var pr = new PaymentRequestData()
             {
                 StoreDataId = storeId,
@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.GreenField
             pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
             return Ok(FromModel(pr));
         }
-
+        public Data.StoreData StoreData => HttpContext.GetStoreData();
         [HttpPut("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
         [Authorize(Policy = Policies.CanModifyPaymentRequests,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return validationResult;
             }
-
+            request.Currency ??= StoreData.GetStoreBlob().DefaultCurrency;
             var pr = await _paymentRequestRepository.FindPaymentRequests(
                 new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
             if (pr.Total == 0)
@@ -130,10 +130,11 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(data.Amount), "Please provide an amount greater than 0");
             }
 
-            if (string.IsNullOrEmpty(data.Currency) ||
+            if (!string.IsNullOrEmpty(data.Currency) &&
                 _currencyNameTable.GetCurrencyData(data.Currency, false) == null)
                 ModelState.AddModelError(nameof(data.Currency), "Invalid currency");
-
+            if (string.IsNullOrEmpty(data.Currency))
+                data.Currency = null;
             if (string.IsNullOrEmpty(data.Title))
                 ModelState.AddModelError(nameof(data.Title), "Title is required");
 

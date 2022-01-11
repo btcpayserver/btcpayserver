@@ -97,10 +97,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         public async Task<IActionResult> EditPaymentRequest(string payReqId, UpdatePaymentRequestViewModel viewModel)
         {
-            if (string.IsNullOrEmpty(viewModel.Currency) ||
+            if (!string.IsNullOrEmpty(viewModel.Currency) &&
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
-
+            if (string.IsNullOrEmpty(viewModel.Currency))
+                viewModel.Currency = null;
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
             if (paymentRequest == null && !string.IsNullOrEmpty(payReqId))
@@ -128,7 +129,7 @@ namespace BTCPayServer.Controllers
             blob.Description = viewModel.Description;
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
-            blob.Currency = viewModel.Currency;
+            blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;

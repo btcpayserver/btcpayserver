@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Amount = blob.Amount;
             Currency = blob.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate;
+            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
             Email = blob.Email;
             CustomCSSLink = blob.CustomCSSLink;
             EmbeddedCSS = blob.EmbeddedCSS;
@@ -88,7 +88,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Amount = blob.Amount;
             Currency = blob.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate;
+            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
             Email = blob.Email;
             EmbeddedCSS = blob.EmbeddedCSS;
             CustomCSSLink = blob.CustomCSSLink;

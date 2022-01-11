@@ -912,7 +912,7 @@ namespace BTCPayServer.Tests
                 //create payment request
 
                 //validation errors
-                await AssertValidationError(new[] { "Amount", "Currency" }, async () =>
+                await AssertValidationError(new[] { "Amount" }, async () =>
                 {
                     await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() { Title = "A" });
                 });

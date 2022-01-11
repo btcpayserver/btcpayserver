@@ -327,7 +327,7 @@
                         "type": "string",
                         "format": "ISO 4217 Currency code(BTC, EUR, USD, etc)",
                         "description": "The currency of the payment request. If empty, the store's default currency code will be used.",
-                        "nullable": false
+                        "nullable": true
                     },
                     "email": {
                         "type": "string",

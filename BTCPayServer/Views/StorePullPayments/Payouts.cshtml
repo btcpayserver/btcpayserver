@@ -19,7 +19,7 @@
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
-        
+
     }
     switch (Model.PayoutState)
     {
@@ -34,7 +34,6 @@
             stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
             break;
     }
-    
 }
 
 @section PageFootContent {
@@ -53,67 +52,55 @@
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <form method="post">
-    <input type="hidden" asp-for="PaymentMethodId"/>
-    <input type="hidden" asp-for="PayoutState"/>
-    <div class="row">
-        <div class="col-12">
-            <ul class="nav nav-pills  bg-tile mb-2" style="border-radius:4px; border: 1px solid var(--btcpay-body-border-medium)">
-                @foreach (var state in Model.PaymentMethods)
-                {
-                    <li class="nav-item py-0">
-                        <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
-                           asp-route-payoutState="@Model.PayoutState"
-                           asp-route-paymentMethodId="@state.ToString()"
-                           asp-route-pullPaymentId="@Model.PullPaymentId"
-                           class="nav-link me-1 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
-                           id="@state.ToString()-view"
-                           role="tab">
-                            @state.ToPrettyString()
-                        </a>
-                    </li>
-                }
-            </ul>
-            <ul class="nav nav-pills  bg-tile mb-2" style="border: 1px solid var(--btcpay-body-border-medium)">
-                @foreach (var state in Model.PayoutStateCount)
-                {
-                    <li class="nav-item py-0">
-                        <a id="@state.Key-view" 
-                           asp-action="Payouts" 
-                           asp-route-storeId="@Context.GetRouteValue("storeId")" 
-                           asp-route-payoutState="@state.Key" 
-                           asp-route-pullPaymentId="@Model.PullPaymentId" 
-                           asp-route-paymentMethodId="@Model.PaymentMethodId"
-                           class="nav-link me-1 @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
-                    </li>
-                }
-            </ul>
-           
-        </div>
+    <input type="hidden" asp-for="PaymentMethodId" />
+    <input type="hidden" asp-for="PayoutState" />
+    <div class="d-flex justify-content-between mb-4">
+        <ul class="nav nav-pills mb-1">
+            @foreach (var state in Model.PaymentMethods)
+            {
+                <li class="nav-item py-0">
+                    <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
+                       asp-route-payoutState="@Model.PayoutState"
+                       asp-route-paymentMethodId="@state.ToString()"
+                       asp-route-pullPaymentId="@Model.PullPaymentId"
+                       class="nav-link me-1 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       id="@state.ToString()-view"
+                       role="tab">@state.ToPrettyString()</a>
+                </li>
+            }
+        </ul>
         @if (Model.Payouts.Any() && stateActions.Any())
         {
-            <div class="col-12" permission="@Policies.CanModifyStoreSettings">
-                <div class="dropdown  mt-4 ms-xl-auto mt-xl-0">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">
-                                    Actions
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="@Model.PayoutState-actions">
-                                    @foreach (var action in stateActions)
-                                    {
-                                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="dropdown-item" role="button" value="@Model.PayoutState-@action.Action">@action.Text</button>
-                                    }
-                                </div>
-                            </div>
+            <div class="dropdown ms-xl-auto mt-xl-0" permission="@Policies.CanModifyStoreSettings">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">Actions</button>
+                <div class="dropdown-menu" aria-labelledby="@Model.PayoutState-actions">
+                    @foreach (var action in stateActions)
+                    {
+                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="dropdown-item" role="button" value="@Model.PayoutState-@action.Action">@action.Text</button>
+                    }
+                </div>
             </div>
-            
         }
     </div>
 
-    <div class="row">
-
-            @if (Model.Payouts.Any())
-            {
-                <table class="table table-hover table-responsive-lg">
-                    <thead class="thead-inverse">
+    <nav id="SectionNav" class="nav mb-3">
+        @foreach (var state in Model.PayoutStateCount)
+        {
+            <a id="@state.Key-view"
+               asp-action="Payouts"
+               asp-route-storeId="@Context.GetRouteValue("storeId")"
+               asp-route-payoutState="@state.Key"
+               asp-route-pullPaymentId="@Model.PullPaymentId"
+               asp-route-paymentMethodId="@Model.PaymentMethodId"
+               class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+        }
+    </nav>
+    
+    @if (Model.Payouts.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="thead-inverse">
                     <tr>
                         <th permission="@Policies.CanModifyStoreSettings">
                             <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
@@ -129,16 +116,16 @@
                             <th class="text-end">Transaction</th>
                         }
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     @for (int i = 0; i < Model.Payouts.Count; i++)
                     {
                         var pp = Model.Payouts[i];
                         <tr class="payout">
                             <td permission="@Policies.CanModifyStoreSettings">
                                 <span>
-                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected"/>
-                                    <input type="hidden" asp-for="Payouts[i].PayoutId"/>
+                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected" />
+                                    <input type="hidden" asp-for="Payouts[i].PayoutId" />
                                 </span>
                             </td>
                             <td>
@@ -147,10 +134,10 @@
                             <td class="mw-100">
                                 <span>@pp.PullPaymentName</span>
                             </td>
-                            <td  title="@pp.Destination">
+                            <td title="@pp.Destination">
                                 <span class="text-break">@pp.Destination</span>
                             </td>
-                            <td class="text-end">
+                            <td class="text-end text-nowrap">
                                 <span>@pp.Amount</span>
                             </td>
                             @if (Model.PayoutState != PayoutState.AwaitingApproval)
@@ -164,13 +151,13 @@
                             }
                         </tr>
                     }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p class="mb-0 py-4" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
-            }
-        <vc:pager view-model="Model"/>
-    </div>
+                </tbody>
+            </table>
+        </div>
+        <vc:pager view-model="Model" />
+    }
+    else
+    {
+        <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
+    }
 </form>

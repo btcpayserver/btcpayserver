@@ -1092,7 +1092,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
-            var x = s.Driver.PageSource;
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
             ReadOnlyCollection<IWebElement> txs;
             TestUtils.Eventually(() =>
@@ -1131,7 +1130,6 @@ namespace BTCPayServer.Tests
 
             var newStore = s.CreateNewStore();
             s.GenerateWallet("BTC", "", true, true);
-            var newWalletId = new WalletId(newStore.storeId, "BTC");
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();

@@ -446,7 +446,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task MassArchive(string[] invoiceIds)
+        public async Task MassArchive(string[] invoiceIds, bool archive = true)
         {
             using (var context = _applicationDbContextFactory.CreateContext())
             {
@@ -458,7 +458,7 @@ namespace BTCPayServer.Services.Invoices
 
                 foreach (InvoiceData invoice in items)
                 {
-                    invoice.Archived = true;
+                    invoice.Archived = archive;
                 }
 
                 await context.SaveChangesAsync();

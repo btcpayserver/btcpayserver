@@ -6,7 +6,7 @@
 }
 
 @section PageHeadContent {
-    <style type="text/css">
+    <style>
         .invoice-payments {
             padding-left: 2rem;
         }
@@ -14,14 +14,6 @@
         .invoice-payments h3 {
             font-size: 15px;
             font-weight: bold;
-        }
-
-        .wraptext200 {
-            max-width: 200px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            display: block;
-            white-space: nowrap;
         }
 
         .pavpill {
@@ -59,15 +51,22 @@
             background: #c94a47;
             color: #fff;
         }
-        
+
         .badge-processing {
             background: #f1c332;
             color: #000;
         }
-        
+
         .badge-settled {
             background: #329f80;
             color: #fff;
+        }
+        
+        /* pull mass action form up, so that it is besides the search form */
+        @@media (min-width: 992px) {
+            #MassAction {
+                margin-top: -4rem;
+            }
         }
     </style>
 }
@@ -102,7 +101,7 @@
                     alert("Invoice state update failed");
                 });
         })
-        
+
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
             const { invoiceId } = e.target.dataset;
@@ -135,7 +134,7 @@
                 $("#dtpStartDate").next().trigger("focus");
             }
         })
-                        
+
         function getDateStringWithOffset(hoursDiff) {
             var datenow = new Date();
             var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
@@ -150,7 +149,7 @@
             });
 
             $("#invoices")
-                .on("click", ".invoice-row .invoice-details-toggle", function(e) {
+                .on("click", ".invoice-row .invoice-details-toggle", function (e) {
                     e.preventDefault();
                     e.stopPropagation(true);
 
@@ -167,7 +166,7 @@
                         }
                     });
                 })
-                .on("click", ".invoice-row", function(e) {
+                .on("click", ".invoice-row", function (e) {
                     const $invoiceRow = $(e.currentTarget);
                     if (!$(e.target).is("a,.badge,.selector")) {
                         $invoiceRow.find(".selector").trigger("click");
@@ -196,94 +195,55 @@
     </a>
 </div>
 
-<partial name="InvoiceStatusChangePartial"/>
+<partial name="InvoiceStatusChangePartial" />
 
-<div class="row">
-    <div class="col-12 col-lg-6 mb-5 mb-lg-2 ms-auto">
-        <form asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
-            <input type="hidden" asp-for="Count"/>
-            <input asp-for="TimezoneOffset" type="hidden"/>
-            <div class="input-group">
-                <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
-                    <span class="fa fa-filter"></span>
-                </a>
-                <input asp-for="SearchTerm" class="form-control"/>
-                <button type="submit" class="btn btn-secondary" title="Search invoice">
-                    <span class="fa fa-search"></span> Search
+@* Custom Range Modal *@
+<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customRangeModalTitle">Filter invoices by Custom Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close" />
                 </button>
-                <button type="button" id="SearchOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
-                    <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
-                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   placeholder="Start Date" />
+                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">End Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   placeholder="End Date" />
+                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <span asp-validation-for="SearchTerm" class="text-danger"></span>
-        </form>
-
-        @* Custom Range Modal *@
-        <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="customRangeModalTitle">Filter invoices by Custom Range</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                            <vc:icon symbol="close" />
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group row">
-                            <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                        data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                        placeholder="Start Date" />
-                                    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                        <span class="fa fa-times"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">End Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                        data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                        placeholder="End Date" />
-                                    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                        <span class="fa fa-times"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row collapse" id="help">
-    <div class="col @(Model.Total > 0 ? "pt-3 pb-lg-5" : "")">
+<div id="help" class="row collapse">
+    <div class="col-xl-8 pb-3">
         <p>
             You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.
             Be sure to split your search parameters with comma, for example:<br />
@@ -304,17 +264,57 @@
         </ul>
     </div>
 </div>
+<form class="col-lg-6 col-xl-8 mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+    <input type="hidden" asp-for="Count" />
+    <input asp-for="TimezoneOffset" type="hidden" />
+    <div class="input-group">
+        <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
+            <span class="fa fa-filter"></span>
+        </a>
+        <input asp-for="SearchTerm" class="form-control" />
+        <button type="submit" class="btn btn-secondary" title="Search invoice">
+            <span class="fa fa-search"></span> Search
+        </button>
+        <button type="button" id="SearchOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
 
-@if (Model.Total > 0)
-{
-    <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
+        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}" id="SearchOptionsIncludeArchived">Archived Invoices</a>
+            <div role="separator" class="dropdown-divider"></div>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
+            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
+            <div role="separator" class="dropdown-divider"></div>
+            <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
+        </div>
+    </div>
+    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+</form>
+
+<form method="post" id="MassAction" asp-action="MassAction" class="">
+    <div class="d-inline-flex align-items-center pb-2 float-lg-end mb-2">
         <input type="hidden" name="storeId" value="@Model.StoreId" />
+        <a href="https://docs.btcpayserver.org/Accounting/" class="ms-2 ms-lg-0 me-lg-2 order-1 order-lg-0" target="_blank" rel="noreferrer noopener">
+            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+        </a>
         <span class="me-2">
             <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Actions
             </button>
             <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive"><i class="fa fa-archive"></i> Archive</button>
+                <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive"><i class="fa fa-archive"></i> Archive</button>
+                @if (Model.IncludeArchived)
+                {
+                    <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive"><i class="fa fa-archive"></i> Unarchive</button>
+                }
             </div>
         </span>
         <span>
@@ -326,139 +326,140 @@
                 <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
             </div>
         </span>
+    </div>
 
-        <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank" rel="noreferrer noopener">
-            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-        </a>
-
-        <table id="invoices" class="table table-hover table-responsive-md mt-4">
-            <thead>
-            <tr>
-                <th style="width:2rem;" class="only-for-js">
-                    <input id="selectAllCheckbox" type="checkbox" class="form-check-input"/>
-                </th>
-                <th style="min-width:90px;" class="col-md-auto">
-                    Date
-                    <a id="switchTimeFormat" href="#">
-                        <span class="fa fa-clock-o" title="Switch date format"></span>
-                    </a>
-                </th>
-                <th style="max-width: 180px;">OrderId</th>
-                <th>InvoiceId</th>
-                <th style="min-width: 150px;">Status</th>
-                <th style="text-align:right">Amount</th>
-                <th style="text-align:right">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var invoice in Model.Invoices)
-            {
-                <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
-                    <td class="only-for-js">
-                        <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId"/>
-                    </td>
-                    <td>
-                        <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
-                            @invoice.Date.ToBrowserDate()
-                        </span>
-                    </td>
-                    <td style="max-width: 180px;">
-                        @if (invoice.RedirectUrl != string.Empty)
-                        {
-                            <a href="@invoice.RedirectUrl" class="wraptext200" rel="noreferrer noopener">@invoice.OrderId</a>
-                        }
-                        else
-                        {
-                            <span>@invoice.OrderId</span>
-                        }
-                    </td>
-                    <td>@invoice.InvoiceId</td>
-                    <td>
-                        @if (invoice.Details.Archived)
-                        {
-                            <span class="badge bg-warning">archived</span>
-                        }
-                        @if (invoice.CanMarkStatus)
-                        {
-                            <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @invoice.Status.Status.ToModernStatus().ToString() @* @invoice.Status.ToString()  *@
-                                    @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
-                                    {
-                                        @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                        ;
-                                    }
+    @if (Model.Total > 0)
+    {
+        <div style="clear:both"></div>
+        <div class="table-responsive">
+            <table id="invoices" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:2rem;" class="only-for-js">
+                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
+                        <th style="min-width:90px;" class="col-md-auto">
+                            Date
+                            <a id="switchTimeFormat" href="#">
+                                <span class="fa fa-clock-o" title="Switch date format"></span>
+                            </a>
+                        </th>
+                        <th class="text-nowrap">Order Id</th>
+                        <th class="text-nowrap">Invoice Id</th>
+                        <th>Status</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
+                            <td class="only-for-js">
+                                <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId" />
+                            </td>
+                            <td>
+                                <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
+                                    @invoice.Date.ToBrowserDate()
                                 </span>
-                                <div class="dropdown-menu pull-right">
-                                    @if (invoice.CanMarkInvalid)
-                                    {
-                                        <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
-                                            Mark as invalid <span class="fa fa-times"></span>
-                                        </button>
-                                    }
-                                    @if (invoice.CanMarkSettled)
-                                    {
-                                        <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
-                                            Mark as settled <span class="fa fa-check-circle"></span>
-                                        </button>
-                                    }
+                            </td>
+                            <td style="max-width:120px;">
+                                @if (invoice.RedirectUrl != string.Empty)
+                                {
+                                    <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
+                                }
+                                else
+                                {
+                                    <span>@invoice.OrderId</span>
+                                }
+                            </td>
+                            <td class="text-break">@invoice.InvoiceId</td>
+                            <td>
+                                @if (invoice.Details.Archived)
+                                {
+                                    <span class="badge bg-warning">archived</span>
+                                }
+                                @if (invoice.CanMarkStatus)
+                                {
+                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                        <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.Status.Status.ToModernStatus().ToString() @* @invoice.Status.ToString()  *@
+                                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                            {
+                                                @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
+                                                ;
+                                            }
+                                        </span>
+                                        <div class="dropdown-menu pull-right">
+                                            @if (invoice.CanMarkInvalid)
+                                            {
+                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                    Mark as invalid <span class="fa fa-times"></span>
+                                                </button>
+                                            }
+                                            @if (invoice.CanMarkSettled)
+                                            {
+                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                    Mark as settled <span class="fa fa-check-circle"></span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                        @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
+                                        @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                        {
+                                            @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
+                                            ;
+                                        }
+                                    </span>
+                                }
+                                @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
+                                {
+                                    <span class="badge">@paymentType.GetBadge()</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">@invoice.AmountCurrency</td>
+                            <td class="text-end text-nowrap">
+                                @if (invoice.ShowCheckout)
+                                {
+                                    <span>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
+                                        @if (!invoice.CanMarkStatus)
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </span>
+                                }
+                                &nbsp;
+                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                <a class="only-for-js invoice-details-toggle" href="#">
+                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
+                            <td colspan="99" class="border-top-0">
+                                <div style="margin-left: 15px; margin-bottom: 0;">
+                                    @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                    <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
                                 </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
-                                @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
-                                {
-                                    @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                    ;
-                                }
-                            </span>
-                        }
-                        @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
-                        {
-                            <span class="badge">@paymentType.GetBadge()</span>
-                        }
-                    </td>
-                    <td style="text-align:right">@invoice.AmountCurrency</td>
-                    <td style="text-align:right">
-                        @if (invoice.ShowCheckout)
-                        {
-                            <span>
-                                <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
-                                <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
-                                @if (!invoice.CanMarkStatus)
-                                {
-                                    <span>-</span>
-                                }
-                            </span>
-                        }
-                        &nbsp;
-                        <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                        <a class="only-for-js invoice-details-toggle" href="#">
-                            <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
-                        </a>
-                    </td>
-                </tr>
-                <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
-                    <td colspan="99" class="border-top-0">
-                        <div style="margin-left: 15px; margin-bottom: 0;">
-                            @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                            <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)"/>
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-        <vc:pager view-model="Model"/>
-    </form>
-}
-else
-{
-    <p class="text-secondary mt-3">
-        There are no invoices matching your criteria.
-    </p>
-}
+        <vc:pager view-model="Model" />
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no invoices matching your criteria.
+        </p>
+    }
+</form>

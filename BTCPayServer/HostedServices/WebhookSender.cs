@@ -27,11 +27,11 @@ namespace BTCPayServer.HostedServices
     /// This class send webhook notifications
     /// It also make sure the events sent to a webhook are sent in order to the webhook
     /// </summary>
-    public class WebhookNotificationManager : EventHostedServiceBase
+    public class WebhookSender : EventHostedServiceBase
     {
         readonly Encoding UTF8 = new UTF8Encoding(false);
         public readonly static JsonSerializerSettings DefaultSerializerSettings;
-        static WebhookNotificationManager()
+        static WebhookSender()
         {
             DefaultSerializerSettings = WebhookEvent.DefaultSerializerSettings;
         }
@@ -60,7 +60,7 @@ namespace BTCPayServer.HostedServices
         public StoreRepository StoreRepository { get; }
         public IHttpClientFactory HttpClientFactory { get; }
 
-        public WebhookNotificationManager(EventAggregator eventAggregator,
+        public WebhookSender(EventAggregator eventAggregator,
             StoreRepository storeRepository,
             IHttpClientFactory httpClientFactory,
             Logs logs) : base(eventAggregator, logs)

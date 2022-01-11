@@ -227,7 +227,11 @@ namespace BTCPayServer.Tests
         /// <param name="derivationScheme"></param>
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
-            Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            if (Driver.PageSource.Contains($"id=\"Modify{cryptoCode}\""))
+            {
+                Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            }
+
             Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
             Driver.FindElement(By.Id("ImportXpubLink")).Click();
             Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
@@ -247,11 +251,14 @@ namespace BTCPayServer.Tests
         public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
         {
             cryptoCode ??= "BTC";
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            if (Driver.PageSource.Contains($"id=\"Modify-Lightning{cryptoCode}\""))
+            {
+                Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            }
 
             if (Driver.PageSource.Contains("id=\"SetupLightningNodeLink\""))
             {
-                Driver.FindElement(By.Id($"SetupLightningNodeLink")).Click();
+                Driver.FindElement(By.Id("SetupLightningNodeLink")).Click();
             }
 
             var connectionString = connectionType switch

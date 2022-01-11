@@ -435,22 +435,32 @@ namespace BTCPayServer.Tests
                 // verify that hints are displayed on the store page
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
-
+                
                 s.GoToStore();
                 Assert.Contains(storeName, s.Driver.PageSource);
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint),
                     "Lightning hint should be present at this point");
 
+                // verify steps for wallet setup are displayed correctly
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-StoreDone")).Displayed);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-Wallet")).Displayed);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-Lightning")).Displayed);
+
                 // setup onchain wallet
-                s.GoToStore();
+                s.Driver.FindElement(By.Id("SetupGuide-Wallet")).Click();
+                Thread.Sleep(10000);
                 s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains(onchainHint),
                     "Wallet hint not dismissed on derivation scheme add");
 
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-WalletDone")).Displayed);
+                
                 // setup offchain wallet
-                s.GoToStore();
+                s.Driver.FindElement(By.Id("SetupGuide-Lightning")).Click();
                 s.AddLightningNode();
                 s.Driver.AssertNoError();
                 var successAlert = s.FindAlertMessage();
@@ -459,6 +469,10 @@ namespace BTCPayServer.Tests
                     "Lightning hint should be dismissed at this point");
 
                 s.ClickOnAllSectionLinks();
+                
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-LightningDone")).Displayed);
+                
                 s.GoToInvoices();
                 Assert.Contains("There are no invoices matching your criteria.", s.Driver.PageSource);
                 var invoiceId = s.CreateInvoice();

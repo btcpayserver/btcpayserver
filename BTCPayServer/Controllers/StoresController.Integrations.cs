@@ -1,5 +1,6 @@
 #nullable enable
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -132,9 +133,9 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/webhooks/{webhookId}/test")]
-        public async Task<IActionResult> TestWebhook(string webhookId, TestWebhookViewModel viewModel)
+        public async Task<IActionResult> TestWebhook(string webhookId, TestWebhookViewModel viewModel, CancellationToken cancellationToken)
         {
-            var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type);
+            var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type, cancellationToken);
 
             if (result.Success)
             {

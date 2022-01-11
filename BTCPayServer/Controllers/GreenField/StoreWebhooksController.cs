@@ -26,14 +26,14 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class StoreWebhooksController : ControllerBase
     {
-        public StoreWebhooksController(StoreRepository storeRepository, WebhookNotificationManager webhookNotificationManager)
+        public StoreWebhooksController(StoreRepository storeRepository, WebhookSender webhookNotificationManager)
         {
             StoreRepository = storeRepository;
             WebhookNotificationManager = webhookNotificationManager;
         }
 
         public StoreRepository StoreRepository { get; }
-        public WebhookNotificationManager WebhookNotificationManager { get; }
+        public WebhookSender WebhookNotificationManager { get; }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId?}")]
         public async Task<IActionResult> ListWebhooks(string storeId, string webhookId)

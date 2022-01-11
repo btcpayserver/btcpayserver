@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             AppService appService,
-            WebhookNotificationManager webhookNotificationManager,
+            WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
             NBXplorerDashboard Dashboard)
         {
@@ -818,7 +818,7 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
-        public WebhookNotificationManager WebhookNotificationManager { get; }
+        public WebhookSender WebhookNotificationManager { get; }
         public IDataProtector DataProtector { get; }
 
         [HttpGet]

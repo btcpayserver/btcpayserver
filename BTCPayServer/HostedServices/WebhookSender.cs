@@ -27,11 +27,11 @@ namespace BTCPayServer.HostedServices
     /// This class send webhook notifications
     /// It also make sure the events sent to a webhook are sent in order to the webhook
     /// </summary>
-    public class WebhookNotificationManager : EventHostedServiceBase
+    public class WebhookSender : EventHostedServiceBase
     {
         readonly Encoding UTF8 = new UTF8Encoding(false);
         public readonly static JsonSerializerSettings DefaultSerializerSettings;
-        static WebhookNotificationManager()
+        static WebhookSender()
         {
             DefaultSerializerSettings = WebhookEvent.DefaultSerializerSettings;
         }
@@ -55,11 +55,12 @@ namespace BTCPayServer.HostedServices
                 WebhookBlob = webhookBlob;
             }
         }
-        Dictionary<string, Channel<WebhookDeliveryRequest>> _InvoiceEventsByWebhookId = new Dictionary<string, Channel<WebhookDeliveryRequest>>();
+
+        MultiProcessingQueue _processingQueue = new MultiProcessingQueue();
         public StoreRepository StoreRepository { get; }
         public IHttpClientFactory HttpClientFactory { get; }
 
-        public WebhookNotificationManager(EventAggregator eventAggregator,
+        public WebhookSender(EventAggregator eventAggregator,
             StoreRepository storeRepository,
             IHttpClientFactory httpClientFactory,
             Logs logs) : base(eventAggregator, logs)
@@ -124,7 +125,7 @@ namespace BTCPayServer.HostedServices
             return webhookEvent;
         }
 
-        public async Task<DeliveryResult> TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
+        public async Task<DeliveryResult> TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType, CancellationToken cancellationToken)
         {
             var delivery = NewDelivery(webhookId);
             var webhook = (await StoreRepository.GetWebhooks(storeId)).FirstOrDefault(w => w.Id == webhookId);
@@ -134,8 +135,7 @@ namespace BTCPayServer.HostedServices
                 delivery,
                 webhook.GetBlob()
             );
-
-            return await SendDelivery(deliveryRequest);
+            return await SendDelivery(deliveryRequest, cancellationToken);
         }
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -166,15 +166,7 @@ namespace BTCPayServer.HostedServices
 
         private void EnqueueDelivery(WebhookDeliveryRequest context)
         {
-            if (_InvoiceEventsByWebhookId.TryGetValue(context.WebhookId, out var channel))
-            {
-                if (channel.Writer.TryWrite(context))
-                    return;
-            }
-            channel = Channel.CreateUnbounded<WebhookDeliveryRequest>();
-            _InvoiceEventsByWebhookId.Add(context.WebhookId, channel);
-            channel.Writer.TryWrite(context);
-            _ = Process(context.WebhookId, channel);
+            _processingQueue.Enqueue(context.WebhookId, (cancellationToken) => Process(context, cancellationToken));
         }
 
         private WebhookInvoiceEvent GetWebhookEvent(WebhookEventType webhookEventType)
@@ -252,24 +244,21 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task Process(string id, Channel<WebhookDeliveryRequest> channel)
+        private async Task Process(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
         {
-            await foreach (var originalCtx in channel.Reader.ReadAllAsync())
+            try
             {
-                try
+                var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
+                if (wh is null || !ShouldDeliver(ctx.WebhookEvent.Type, wh))
+                    return;
+                var result = await SendAndSaveDelivery(ctx, cancellationToken);
+                if (ctx.WebhookBlob.AutomaticRedelivery &&
+                    !result.Success &&
+                    result.DeliveryId is string)
                 {
-                    var ctx = originalCtx;
-                    var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
-                    if (wh is null || !ShouldDeliver(ctx.WebhookEvent.Type, wh))
-                        continue;
-                    var result = await SendAndSaveDelivery(ctx);
-                    if (ctx.WebhookBlob.AutomaticRedelivery &&
-                        !result.Success &&
-                        result.DeliveryId is string)
+                    var originalDeliveryId = result.DeliveryId;
+                    foreach (var wait in new[]
                     {
-                        var originalDeliveryId = result.DeliveryId;
-                        foreach (var wait in new[]
-                        {
                             TimeSpan.FromSeconds(10),
                             TimeSpan.FromMinutes(1),
                             TimeSpan.FromMinutes(10),
@@ -279,27 +268,25 @@ namespace BTCPayServer.HostedServices
                             TimeSpan.FromMinutes(10),
                             TimeSpan.FromMinutes(10),
                         })
-                        {
-                            await Task.Delay(wait, CancellationToken);
-                            ctx = await CreateRedeliveryRequest(originalDeliveryId);
-                            // This may have changed
-                            if (ctx is null || !ctx.WebhookBlob.AutomaticRedelivery ||
-                                !ShouldDeliver(ctx.WebhookEvent.Type, ctx.WebhookBlob))
-                                break;
-                            result = await SendAndSaveDelivery(ctx);
-                            if (result.Success)
-                                break;
-                        }
+                    {
+                        await Task.Delay(wait, cancellationToken);
+                        ctx = (await CreateRedeliveryRequest(originalDeliveryId))!;
+                        // This may have changed
+                        if (ctx is null || !ctx.WebhookBlob.AutomaticRedelivery ||
+                            !ShouldDeliver(ctx.WebhookEvent.Type, ctx.WebhookBlob))
+                            return;
+                        result = await SendAndSaveDelivery(ctx, cancellationToken);
+                        if (result.Success)
+                            return;
                     }
                 }
-                catch when (CancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Logs.PayServer.LogError(ex, "Unexpected error when processing a webhook");
-                }
+            }
+            catch when (cancellationToken.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogError(ex, "Unexpected error when processing a webhook");
             }
         }
 
@@ -315,7 +302,7 @@ namespace BTCPayServer.HostedServices
             public string? ErrorMessage { get; set; }
         }
 
-        private async Task<DeliveryResult> SendDelivery(WebhookDeliveryRequest ctx)
+        private async Task<DeliveryResult> SendDelivery(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
         {
             var uri = new Uri(ctx.WebhookBlob.Url, UriKind.Absolute);
             var httpClient = GetClient(uri);
@@ -333,7 +320,7 @@ namespace BTCPayServer.HostedServices
             deliveryBlob.Request = bytes;
             try
             {
-                using var response = await httpClient.SendAsync(request, CancellationToken);
+                using var response = await httpClient.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     deliveryBlob.Status = WebhookDeliveryStatus.HttpError;
@@ -361,9 +348,9 @@ namespace BTCPayServer.HostedServices
         }
 
 
-        private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx)
+        private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
         {
-            var result = await SendDelivery(ctx);
+            var result = await SendDelivery(ctx, cancellationToken);
             await StoreRepository.AddWebhookDelivery(ctx.Delivery);
 
             return result;
@@ -384,6 +371,13 @@ namespace BTCPayServer.HostedServices
                 Timestamp = DateTimeOffset.UtcNow,
                 WebhookId = webhookId
             };
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            var stopping = _processingQueue.Abort(cancellationToken);
+            await base.StopAsync(cancellationToken);
+            await stopping;
         }
     }
 }

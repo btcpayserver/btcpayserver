@@ -33,7 +33,7 @@ namespace BTCPayServer.Data
         public byte[] Request { get; set; }
         public T ReadRequestAs<T>()
         {
-            return JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(Request), HostedServices.WebhookNotificationManager.DefaultSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(Request), HostedServices.WebhookSender.DefaultSerializerSettings);
         }
     }
     public class WebhookBlob
@@ -56,11 +56,11 @@ namespace BTCPayServer.Data
         }
         public static WebhookDeliveryBlob GetBlob(this WebhookDeliveryData webhook)
         {
-            return JsonConvert.DeserializeObject<WebhookDeliveryBlob>(ZipUtils.Unzip(webhook.Blob), HostedServices.WebhookNotificationManager.DefaultSerializerSettings);
+            return JsonConvert.DeserializeObject<WebhookDeliveryBlob>(ZipUtils.Unzip(webhook.Blob), HostedServices.WebhookSender.DefaultSerializerSettings);
         }
         public static void SetBlob(this WebhookDeliveryData webhook, WebhookDeliveryBlob blob)
         {
-            webhook.Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blob, Formatting.None, HostedServices.WebhookNotificationManager.DefaultSerializerSettings));
+            webhook.Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blob, Formatting.None, HostedServices.WebhookSender.DefaultSerializerSettings));
         }
     }
 }

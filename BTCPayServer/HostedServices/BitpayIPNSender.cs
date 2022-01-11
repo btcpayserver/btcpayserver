@@ -22,7 +22,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
-    public class InvoiceNotificationManager : IHostedService
+    public class BitpayIPNSender : IHostedService
     {
         readonly HttpClient _Client;
 
@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly StoreRepository _StoreRepository;
 
-        public InvoiceNotificationManager(
+        public BitpayIPNSender(
             IHttpClientFactory httpClientFactory,
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,

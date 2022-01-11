@@ -342,7 +342,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
-            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
+            services.AddSingleton<IHostedService, BitpayIPNSender>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();

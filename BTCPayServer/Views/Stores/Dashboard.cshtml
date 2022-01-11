@@ -1,6 +1,6 @@
-﻿@model StoreHomeViewModel;
+﻿@model StoreDashboardViewModel;
 @{
-    ViewData.SetActivePage(StoreNavPages.Home, Model.StoreName, Model.StoreId);
+    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var isReady = Model.WalletEnabled || Model.LightningEnabled;
 }
 

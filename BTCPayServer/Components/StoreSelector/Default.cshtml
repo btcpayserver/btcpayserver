@@ -16,7 +16,7 @@
                         }
                         else
                         {
-                            <a asp-controller="Stores" asp-action="Home" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                            <a asp-controller="Stores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
                         }
                     </li>
                 }

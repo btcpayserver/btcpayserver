@@ -1,6 +1,6 @@
 namespace BTCPayServer.Models.StoreViewModels;
 
-public class StoreHomeViewModel
+public class StoreDashboardViewModel
 {
     public string StoreId { get; set; }
     public string StoreName { get; set; }

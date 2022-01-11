@@ -138,7 +138,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("{storeId}")]
-        public IActionResult Home()
+        public IActionResult Dashboard()
         {
             var store = CurrentStore;
             var storeBlob = store.GetStoreBlob();
@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
             AddPaymentMethods(store, storeBlob,
                 out var derivationSchemes, out var lightningNodes);
             
-            var vm = new StoreHomeViewModel
+            var vm = new StoreDashboardViewModel
             {
 #if ALTCOINS
                 AltcoinsBuild = true,
@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers
                 StoreName = CurrentStore.StoreName
             };
             
-            return View("Home", vm);
+            return View("Dashboard", vm);
         }
 
         [HttpPost]

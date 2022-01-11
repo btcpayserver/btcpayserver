@@ -381,13 +381,8 @@
                                 @if (invoice.CanMarkStatus)
                                 {
                                     <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.Status.ToModernStatus().ToString() @* @invoice.Status.ToString()  *@
-                                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
-                                            {
-                                                @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                                ;
-                                            }
+                                        <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.Status.ToString()
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)

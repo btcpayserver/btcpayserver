@@ -350,6 +350,37 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
             }
         }
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreateInvoiceInUI()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.AddDerivationScheme();
+            s.GoToInvoices();
+            s.CreateInvoice();
+            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
+            s.Driver.Navigate().Refresh();
+
+            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
+
+            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+            Assert.Contains("Settled (marked)", s.Driver.PageSource);
+
+            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
+            s.Driver.Navigate().Refresh();
+
+            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]

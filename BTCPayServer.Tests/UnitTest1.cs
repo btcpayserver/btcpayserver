@@ -1985,7 +1985,7 @@ namespace BTCPayServer.Tests
                     Assert.Contains($",orderId,{invoice.Id},", paidresult.Content);
                     Assert.Contains($",On-Chain,BTC,0.0991,0.0001,5000.0", paidresult.Content);
                     Assert.Contains($",USD,5.00", paidresult.Content); // Seems hacky but some plateform does not render this decimal the same
-                    Assert.Contains("0,,\"Some \"\", description\",new (paidPartial),new,paidPartial",
+                    Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
                         paidresult.Content);
                 });
             }

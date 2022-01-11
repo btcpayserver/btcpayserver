@@ -248,7 +248,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
         protected JsonHttpException ErrorShouldBeAdminForInternalNode()
         {
-            return new JsonHttpException(this.CreateAPIError(403, "missing-permission", "The user should be admin to use the internal lightning node"));
+            return new JsonHttpException(this.CreateAPIPermissionError("btcpay.server.canuseinternallightningnode", "The user should be admin to use the internal lightning node"));
         }
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)

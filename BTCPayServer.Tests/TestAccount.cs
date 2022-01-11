@@ -520,5 +520,11 @@ retry:
                 Assert.Equal("paid", localInvoice.Status);
             });
         }
+
+        public async Task AddGuest(string userId)
+        {
+            var repo = this.parent.PayTester.GetService<StoreRepository>();
+            await repo.AddStoreUser(StoreId, userId, "Guest");
+        }
     }
 }

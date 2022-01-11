@@ -65,7 +65,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         } = new List<CryptoPayment>();
 
-        public string State
+        public InvoiceState State
         {
             get; set;
         }

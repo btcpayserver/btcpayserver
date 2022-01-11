@@ -862,7 +862,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public override string ToString()
         {
-            return ToString(Status) + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
+            return Status.ToModernStatus().ToString() + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
         }
     }
 

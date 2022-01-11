@@ -97,11 +97,10 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             statusClass: function (state) {
                 var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
                 switch (status) {
-                    case "confirmed":
-                    case "complete":
-                    case "paid":
+                    case "Settled":
+                    case "Processing":
                         return "success";
-                    case "expired":
+                    case "Expired":
                         switch (exceptionStatus) {
                             case "paidLate":
                             case "paidPartial":
@@ -110,7 +109,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                             default:
                                 return "danger";
                         }
-                    case "invalid":
+                    case "Invalid":
                         return "danger";
                     default:
                         return "warning";

@@ -608,6 +608,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(expectedError, err.APIError.Code);
             return err;
         }
+        private async Task<GreenFieldAPIException> AssertPermissionError(string expectedPermission, Func<Task> act)
+        {
+            var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await act());
+            var err2 = Assert.IsType<GreenfieldPermissionAPIError>(err.APIError);
+            Assert.Equal(expectedPermission, err2.MissingPermission);
+            return err;
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -1514,7 +1521,21 @@ namespace BTCPayServer.Tests
                 await client.GetLightningNodeInfo(user.StoreId, "BTC");
                 // But if not admin anymore, nope
                 await user.MakeAdmin(false);
-                await AssertAPIError("missing-permission", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
+                await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
+                // However, even as a guest, you should be able to create an invoice
+                var guest = tester.NewAccount();
+                guest.GrantAccess(false);
+                await user.AddGuest(guest.UserId);
+                client = await guest.CreateClient(Policies.CanCreateLightningInvoiceInStore);
+                await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+                {
+                    Amount = LightMoney.Satoshis(1000),
+                    Description = "lol",
+                    Expiry = TimeSpan.FromSeconds(600),
+                });
+                client = await guest.CreateClient(Policies.CanUseLightningNodeInStore);
+                // Can use lightning node is only granted to store's owner
+                await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
             }
         }
 

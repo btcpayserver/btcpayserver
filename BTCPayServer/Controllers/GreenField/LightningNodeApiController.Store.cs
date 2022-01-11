@@ -127,7 +127,7 @@ namespace BTCPayServer.Controllers.GreenField
             _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
             out var internalLightningNode))
             {
-                if (!User.IsInRole(Roles.ServerAdmin))
+                if (!User.IsInRole(Roles.ServerAdmin) && doingAdminThings)
                 {
                     throw ErrorShouldBeAdminForInternalNode();
                 }

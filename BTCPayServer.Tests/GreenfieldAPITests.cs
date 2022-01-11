@@ -1795,14 +1795,11 @@ namespace BTCPayServer.Tests
             {
                 await nonAdminUserClient.GetStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC");
             });
-            await Assert.ThrowsAsync<GreenFieldValidationException>(async () =>
-            {
-                await nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
+            await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
                 {
                     Enabled = method.Enabled,
                     ConnectionString = method.ConnectionString
-                });
-            });
+                }));
 
             settings = await tester.PayTester.GetService<SettingsRepository>().GetSettingAsync<PoliciesSettings>();
             settings.AllowLightningInternalNodeForAll = true;
@@ -1812,6 +1809,36 @@ namespace BTCPayServer.Tests
             {
                 Enabled = method.Enabled,
                 ConnectionString = method.ConnectionString
+            });
+
+            // NonAdmin can't set to internal node in AllowLightningInternalNodeForAll is false, but can do other connection string
+            settings = (await tester.PayTester.GetService<SettingsRepository>().GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            settings.AllowLightningInternalNodeForAll = false;
+            await tester.PayTester.GetService<SettingsRepository>().UpdateSetting(settings);
+            await nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
+            {
+                Enabled = true,
+                ConnectionString = "type=clightning;server=tcp://8.8.8.8"
+            });
+            await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
+            {
+                Enabled = true,
+                ConnectionString = "Internal Node"
+            }));
+            // NonAdmin add admin as owner of the store
+            await nonAdminUser.AddOwner(admin.UserId);
+            // Admin turn on Internal node
+            adminClient = await admin.CreateClient(Policies.CanModifyStoreSettings, Policies.CanUseInternalLightningNode);
+            var data = await adminClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
+            {
+                Enabled = method.Enabled,
+                ConnectionString = "Internal Node"
+            });
+            // Make sure that the nonAdmin can toggle enabled, ConnectionString unchanged.
+            await nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", new UpdateLightningNetworkPaymentMethodRequest()
+            {
+                Enabled = !data.Enabled,
+                ConnectionString = "Internal Node"
             });
         }
 

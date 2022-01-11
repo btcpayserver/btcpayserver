@@ -164,7 +164,7 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        private void SetNewStoreHints(ref StoreData storeData) 
+        private void SetNewStoreHints(ref StoreData storeData)
         {
             var blob = storeData.GetStoreBlob();
             blob.Hints = new Data.StoreBlob.StoreHints
@@ -191,14 +191,14 @@ namespace BTCPayServer.Services.Stores
                     ApplicationUserId = ownerId,
                     Role = StoreRoles.Owner,
                 };
-                
+
                 SetNewStoreHints(ref storeData);
 
                 ctx.Add(storeData);
                 ctx.Add(userStore);
                 await ctx.SaveChangesAsync();
             }
-        }        
+        }
 
         public async Task<StoreData> CreateStore(string ownerId, string name)
         {

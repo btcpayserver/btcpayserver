@@ -77,5 +77,7 @@ namespace BTCPayServer
 
             return null;
         }
+
+        internal bool ContainsFilter(string key) => Filters.ContainsKey(key);
     }
 }

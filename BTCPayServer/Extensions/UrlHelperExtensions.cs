@@ -15,14 +15,14 @@ namespace Microsoft.AspNetCore.Mvc
                 new { userId, code }, scheme, host, pathbase);
         }
 
-        public static string ResetPasswordCallbackLink(this LinkGenerator urlHelper, string userId, string code, string scheme,  HostString host, string pathbase)
+        public static string ResetPasswordCallbackLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(AccountController.SetPassword),
                 controller: "Account",
                 values: new { userId, code },
                 scheme: scheme,
-                host:host,
+                host: host,
                 pathBase: pathbase
             );
         }
@@ -36,12 +36,12 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
-        public static string AppLink(this LinkGenerator urlHelper, string appId,  string scheme, HostString host, string pathbase)
+        public static string AppLink(this LinkGenerator urlHelper, string appId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(AppsPublicController.RedirectToApp),
                 controller: "AppsPublic",
-                values: new {  appId },
+                values: new { appId },
                 scheme, host, pathbase);
         }
 
@@ -63,13 +63,13 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
-        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId,string pullPaymentId, string scheme, HostString host, string pathbase)
+        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, string scheme, HostString host, string pathbase)
         {
             WalletId.TryParse(walletIdOrStoreId, out var wallet);
             return urlHelper.GetUriByAction(
                 action: nameof(StorePullPaymentsController.Payouts),
                 controller: "StorePullPayments",
-                values: new {storeId= wallet?.StoreId?? walletIdOrStoreId , pullPaymentId},
+                values: new { storeId = wallet?.StoreId ?? walletIdOrStoreId, pullPaymentId },
                 scheme, host, pathbase);
         }
     }

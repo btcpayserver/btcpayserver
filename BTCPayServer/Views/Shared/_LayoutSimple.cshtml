@@ -1,4 +1,4 @@
-﻿@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
     Layout = null;
 }
@@ -9,8 +9,8 @@
     @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body>
-    <section class="content-wrapper @(ViewBag.TopSmallMargin != null ? "pt-4" : "")">
-        <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
+    <section class="content-wrapper">
+        @*Dummy navbar-brand, hackish way to keep test AssertNoError passing*@
         <div class="navbar-brand d-none"></div>
         <div class="container">
             @RenderBody()

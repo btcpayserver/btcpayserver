@@ -124,24 +124,20 @@
                     <td>
                         @if (Model.CanMarkStatus)
                         {
-                            <div class="dropdown">
+                            <div class="dropdown changeInvoiceStateToggle">
                                 <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     @Model.State
-                                    @if (Model.StatusException  != InvoiceExceptionStatus.None)
-                                    {
-                                        @String.Format("({0})", Model.StatusException.ToString());
-                                    }
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
                                     @if (Model.CanMarkInvalid)
                                     {
-                                        <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
+                                        <a class="dropdown-item changeInvoiceState" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
                                             Mark as invalid <span class="fa fa-times"></span>
                                         </a>
                                     }
                                     @if (Model.CanMarkSettled)
                                     {
-                                        <a class="dropdown-item" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
+                                        <a class="dropdown-item changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
                                             Mark as settled <span class="fa fa-check-circle"></span>
                                         </a>
                                     }
@@ -314,7 +310,7 @@
 
     @if (Model.Deliveries.Count != 0)
     {
-        <h3 class="mb-3">Webhook deliveries</h3>
+        <h3 class="mb-3 mt-4">Webhook deliveries</h3>
         <ul class="list-group mb-5">
             @foreach (var delivery in Model.Deliveries)
             {
@@ -369,7 +365,7 @@
             }
         </ul>
     }
-    <div class="row">
+    <div class="row mt-4">
         <div class="col-md-12">
             <h3 class="mb-0">Events</h3>
             <table class="table table-hover table-responsive-md">

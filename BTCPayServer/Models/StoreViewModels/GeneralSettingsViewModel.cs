@@ -5,10 +5,10 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class GeneralSettingsViewModel
     {
-        
+
         [Display(Name = "Store ID")]
         public string Id { get; set; }
-        
+
         [Display(Name = "Store Name")]
         [Required]
         [MaxLength(50)]
@@ -19,7 +19,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
-        
+
         public bool CanDelete { get; set; }
     }
 }

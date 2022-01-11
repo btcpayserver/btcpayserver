@@ -45,7 +45,7 @@ namespace BTCPayServer.Security.GreenField
             }
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId));
-            
+
             claims.AddRange((await _userManager.GetRolesAsync(key.User)).Select(s => new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
             claims.AddRange(Permission.ToPermissions(key.GetBlob().Permissions).Select(permission =>
                 new Claim(GreenFieldConstants.ClaimTypes.Permission, permission.ToString())));

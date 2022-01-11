@@ -114,8 +114,8 @@ namespace BTCPayServer
             s.Act = (o) => subscription(s, (T)o);
             return Subscribe(eventType, s);
         }
-        
-        public IEventAggregatorSubscription Subscribe(Type eventType,  Action<IEventAggregatorSubscription, object> subscription)
+
+        public IEventAggregatorSubscription Subscribe(Type eventType, Action<IEventAggregatorSubscription, object> subscription)
         {
             var s = new Subscription(this, eventType);
             s.Act = (o) => subscription(s, o);

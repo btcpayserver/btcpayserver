@@ -12,7 +12,7 @@ namespace BTCPayServer.Payments
 {
     public class LNURLPayPaymentType : LightningPaymentType
     {
-        public new static LNURLPayPaymentType Instance { get; } = new LNURLPayPaymentType();        
+        public new static LNURLPayPaymentType Instance { get; } = new LNURLPayPaymentType();
         public override string ToPrettyString() => "LNURL-Pay";
         public override string GetId() => "LNURLPAY";
         public override string ToStringNormalized() => "LNURLPAY";

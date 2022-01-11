@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -18,15 +18,15 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> GenerateOnChainWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
-            
+
             AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
 
             if (!_walletProvider.IsAvailable(network))
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} services are not currently available");
             }
-            
+
             var method = GetExistingBtcLikePaymentMethod(cryptoCode);
             if (method != null)
             {
@@ -59,13 +59,13 @@ namespace BTCPayServer.Controllers.GreenField
                 response = await client.GenerateWalletAsync(request);
                 if (response == null)
                 {
-                    return this.CreateAPIError("not-available",
+                    return this.CreateAPIError(503, "not-available",
                         $"{cryptoCode} services are not currently available");
                 }
             }
             catch (Exception e)
             {
-                return this.CreateAPIError("not-available",
+                return this.CreateAPIError(503, "not-available",
                     $"{cryptoCode} error: {e.Message}");
             }
 
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers.GreenField
                 rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic(), derivationSchemeSettings.PaymentId.ToStringNormalized());
             return Ok(result);
         }
-        
+
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
             return await _authorizationService.CanUseHotWallet(await _settingsRepository.GetPolicies(), User);

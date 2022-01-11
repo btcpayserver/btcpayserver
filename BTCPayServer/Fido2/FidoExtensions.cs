@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Fido2
 {
     public static class Fido2Extensions
-    { 
+    {
         public static Fido2CredentialBlob GetBlob(this Fido2Credential credential)
         {
             var result = credential.Blob == null
@@ -25,7 +25,7 @@ namespace BTCPayServer.Fido2
             return true;
         }
 
-        
-        
+
+
     }
 }

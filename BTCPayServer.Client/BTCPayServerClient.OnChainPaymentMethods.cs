@@ -63,7 +63,7 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/preview",
                     bodyPayload: paymentMethod,
-                    queryPayload: new Dictionary<string, object>() {{"offset", offset}, {"amount", amount}},
+                    queryPayload: new Dictionary<string, object>() { { "offset", offset }, { "amount", amount } },
                     method: HttpMethod.Post), token);
             return await HandleResponse<OnChainPaymentMethodPreviewResultData>(response);
         }
@@ -74,11 +74,11 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/preview",
-                    queryPayload: new Dictionary<string, object>() {{"offset", offset}, {"amount", amount}},
+                    queryPayload: new Dictionary<string, object>() { { "offset", offset }, { "amount", amount } },
                     method: HttpMethod.Get), token);
             return await HandleResponse<OnChainPaymentMethodPreviewResultData>(response);
         }
-        
+
         public virtual async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId,
             string cryptoCode, GenerateOnChainWalletRequest request,
             CancellationToken token = default)

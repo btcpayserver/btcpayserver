@@ -16,7 +16,7 @@ namespace BTCPayServer.Client
             var response =
                 await _httpClient.SendAsync(
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests",
-                        new Dictionary<string, object>() {{nameof(includeArchived), includeArchived}}), token);
+                        new Dictionary<string, object>() { { nameof(includeArchived), includeArchived } }), token);
             return await HandleResponse<IEnumerable<PaymentRequestData>>(response);
         }
 

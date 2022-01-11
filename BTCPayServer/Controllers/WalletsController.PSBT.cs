@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
@@ -13,7 +14,6 @@ using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using BTCPayServer.BIP78.Sender;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.PSBT = vm.SigningContext.PSBT = psbt.ToBase64();
-                vm.PSBTHex = psbt.ToHex();                
+                vm.PSBTHex = psbt.ToHex();
                 vm.Decoded = psbt.ToString();
                 await FetchTransactionDetails(derivationSchemeSettings, vm, network);
                 return View("WalletPSBTDecoded", vm);
@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
                     vm.Decoded = psbt.ToString();
                     await FetchTransactionDetails(derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
-                
+
                 case "save-psbt":
                     return FilePSBT(psbt, vm.FileName);
 
@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers
                         PSBT = psbt.ToBase64(),
                         FileName = vm.FileName
                     });
-                
+
                 case "combine":
                     ModelState.Remove(nameof(vm.PSBT));
                     return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel { OtherPSBT = psbt.ToBase64() });
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
                             SigningContext = new SigningContextModel(psbt)
                         });
                     }
-                
+
                 default:
                     var viewName = string.IsNullOrEmpty(vm.PSBT) ? "WalletPSBT" : "WalletPSBTDecoded";
                     return View(viewName, vm);
@@ -290,7 +290,7 @@ namespace BTCPayServer.Controllers
         {
             if (command == null)
                 return await WalletPSBT(walletId, vm);
-            
+
             PSBT psbt;
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             DerivationSchemeSettings derivationSchemeSettings;
@@ -300,7 +300,7 @@ namespace BTCPayServer.Controllers
                 derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                 if (derivationSchemeSettings == null)
                     return NotFound();
-                
+
                 await FetchTransactionDetails(derivationSchemeSettings, vm, network);
             }
             catch

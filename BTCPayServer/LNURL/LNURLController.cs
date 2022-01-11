@@ -26,8 +26,8 @@ using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json;
@@ -155,11 +155,11 @@ namespace BTCPayServer
                 public string StoreId { get; set; }
                 [Display(Name = "Invoice currency")]
                 public string CurrencyCode { get; set; }
-                
+
                 [Display(Name = "Min sats")]
                 [Range(1, double.PositiveInfinity)]
                 public decimal? Min { get; set; }
-                
+
                 [Display(Name = "Max sats")]
                 [Range(1, double.PositiveInfinity)]
                 public decimal? Max { get; set; }
@@ -340,7 +340,8 @@ namespace BTCPayServer
                 {
                     return BadRequest(new LNUrlStatusResponse
                     {
-                        Status = "ERROR", Reason = "Amount is out of bounds."
+                        Status = "ERROR",
+                        Reason = "Amount is out of bounds."
                     });
                 }
 
@@ -404,7 +405,9 @@ namespace BTCPayServer
                         paymentMethodDetails, pmi));
                     return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
                     {
-                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11
+                        Disposable = true,
+                        Routes = Array.Empty<string>(),
+                        Pr = paymentMethodDetails.BOLT11
                     });
                 }
 
@@ -419,7 +422,9 @@ namespace BTCPayServer
 
                     return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
                     {
-                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11
+                        Disposable = true,
+                        Routes = Array.Empty<string>(),
+                        Pr = paymentMethodDetails.BOLT11
                     });
                 }
 
@@ -439,7 +444,8 @@ namespace BTCPayServer
 
             return BadRequest(new LNUrlStatusResponse
             {
-                Status = "ERROR", Reason = "Invoice not in a valid payable state"
+                Status = "ERROR",
+                Reason = "Invoice not in a valid payable state"
             });
         }
 
@@ -458,7 +464,7 @@ namespace BTCPayServer
                 });
                 return RedirectToAction("PaymentMethods", "Stores", new { storeId });
             }
-            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>()  ??
+            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
                                            new LightningAddressSettings();
             if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
@@ -517,7 +523,7 @@ namespace BTCPayServer
                 {
                     ids = new[] { vm.Add.Username.ToLowerInvariant() };
                 }
-             
+
                 lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
                 vm.Add.StoreId = storeId;
                 lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);

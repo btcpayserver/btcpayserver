@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
             {
                 Is2faEnabled = user.TwoFactorEnabled,
                 RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
-                Credentials = await _fido2Service.GetCredentials( _userManager.GetUserId(User))
+                Credentials = await _fido2Service.GetCredentials(_userManager.GetUserId(User))
             };
 
             return View(model);
@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
 
-            return RedirectToAction(nameof(GenerateRecoveryCodes), new {confirm = false});
+            return RedirectToAction(nameof(GenerateRecoveryCodes), new { confirm = false });
         }
 
         public async Task<IActionResult> ResetAuthenticator()
@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
                 recoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10)).ToArray();
             }
 
-            var model = new GenerateRecoveryCodesViewModel {RecoveryCodes = recoveryCodes};
+            var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
             return View(model);
         }
 

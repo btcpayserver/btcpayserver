@@ -31,11 +31,11 @@ namespace BTCPayServer.Plugins.Shopify
                 {
                     return new Serializer(null).ToObject<ShopifySettings>(rawObj);
                 }
-                else if( rawS.Type == JTokenType.String)
+                else if (rawS.Type == JTokenType.String)
                 {
                     return new Serializer(null).ToObject<ShopifySettings>(rawS.Value<string>());
                 }
-                
+
             }
 
             return null;

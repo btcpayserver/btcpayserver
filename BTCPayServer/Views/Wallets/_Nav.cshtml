@@ -1,20 +1,25 @@
-@inject SignInManager<ApplicationUser> SignInManager
-@inject BTCPayNetworkProvider BtcPayNetworkProvider
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Client
+@inject BTCPayNetworkProvider _btcPayNetworkProvider
 @{
-    var wallet = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
-    var network = BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
+    var walletId = Context.GetRouteValue("walletId")?.ToString();
+    var storeId = Context.GetRouteValue("storeId")?.ToString();
+    var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
+    var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
+    var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
 }
 <nav id="SectionNav" class="nav">
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Transactions">Transactions</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@wallet" id="SectionNav-Transactions" permission="@Policies.CanModifyStoreSettings">Transactions</a>
     @if (!network.ReadonlyWallet)
     {
-        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Send">Send</a>
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-controller="Wallets" asp-action="WalletSend" asp-route-walletId="@wallet" id="SectionNav-Send" permission="@Policies.CanModifyStoreSettings">Send</a>
     }
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Receive)" asp-action="WalletReceive" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Receive">Receive</a>
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-Rescan">Rescan</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Receive)" asp-controller="Wallets" asp-action="WalletReceive" asp-route-walletId="@wallet" id="SectionNav-Receive" permission="@Policies.CanModifyStoreSettings">Receive</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-controller="Wallets" asp-action="WalletRescan" asp-route-walletId="@wallet" id="SectionNav-Rescan" permission="@Policies.CanModifyServerSettings">Rescan</a>
     @if (!network.ReadonlyWallet)
     {
-        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@Context.GetRouteValue("walletId")" id="SectionNav-PSBT">PSBT</a>
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-controller="Wallets" asp-action="WalletPSBT" asp-route-walletId="@wallet" id="SectionNav-PSBT" permission="@Policies.CanModifyStoreSettings">PSBT</a>
     }
-    <vc:ui-extension-point location="wallet-nav" model="@Model" />  
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Settings) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" asp-controller="Stores" asp-action="WalletSettings" asp-route-cryptoCode="@wallet.CryptoCode" asp-route-storeId="@wallet.StoreId" id="SectionNav-Settings" permission="@Policies.CanModifyStoreSettings">Settings</a>
+    <vc:ui-extension-point location="wallet-nav" model="@Model"/>
 </nav>

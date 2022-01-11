@@ -1,7 +1,7 @@
 @model LightningNodeViewModel
 @{
     Layout = "_LayoutWalletSetup.cshtml";
-    ViewData.SetActivePage(StoreNavPages.PaymentMethods, "Connect to a Lightning node", Context.GetStoreData().StoreName);
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, "Connect to a Lightning node", Context.GetStoreData().Id);
 }
 
 <header class="text-center">
@@ -35,9 +35,14 @@
             display: inline-block;
             padding: .75rem 2rem;
             color: var(--btcpay-primary);
-            font-weight:  var(--btcpay-font-weight-semibold);
+            font-weight: var(--btcpay-font-weight-semibold);
             border-radius: 1.5rem;
+            border: 1px solid var(--btcpay-secondary-border);
             cursor: pointer;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        #LightningNodeTypeTablist label:hover {
+            border-color: var(--btcpay-secondary-border-hover);
         }
         #LightningNodeTypeTablist input[disabled]:checked + label {
             background: var(--btcpay-secondary);
@@ -48,6 +53,11 @@
             color: var(--btcpay-secondary);
             opacity: .5;
         }
+        
+        #LightningNodeTypeTablist label + input + label {
+            margin-left: var(--btcpay-space-m);
+        }
+        
         #LightningNodeTypeTabs ul {
             list-style: none;
             padding-left: 0;
@@ -174,7 +184,7 @@
                                 The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
                             </p>
                             <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
-                            <pre class="mb-4">xxd -plain /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
+                            <pre class="mb-4">xxd -p -c 256 /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
                             <p class="mb-2">
                                 You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.<br/>
                                 The <code>certthumbprint</code> can be obtained using this command:

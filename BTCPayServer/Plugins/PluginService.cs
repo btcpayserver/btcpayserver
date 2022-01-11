@@ -133,7 +133,7 @@ namespace BTCPayServer.Plugins
             return PluginManager.GetPendingCommands(_dataDirectories.Value.PluginDir);
         }
 
-        public  void CancelCommands(string plugin)
+        public void CancelCommands(string plugin)
         {
             PluginManager.CancelCommands(_dataDirectories.Value.PluginDir, plugin);
         }

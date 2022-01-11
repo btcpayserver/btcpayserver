@@ -13,7 +13,7 @@ namespace BTCPayServer.Services.Invoices
 
         public static async Task<bool> ActivateInvoicePaymentMethod(this InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator, BTCPayNetworkProvider btcPayNetworkProvider, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            StoreData store,InvoiceEntity invoice, PaymentMethodId paymentMethodId)
+            StoreData store, InvoiceEntity invoice, PaymentMethodId paymentMethodId)
         {
             if (invoice.GetInvoiceState().Status != InvoiceStatusLegacy.New)
                 return false;

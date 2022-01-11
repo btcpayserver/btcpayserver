@@ -5,7 +5,7 @@ namespace BTCPayServer.Data
 {
     public class AddressClaimDestination : IBitcoinLikeClaimDestination
     {
-        public  BitcoinAddress _bitcoinAddress;
+        public BitcoinAddress _bitcoinAddress;
 
         public AddressClaimDestination(BitcoinAddress bitcoinAddress)
         {

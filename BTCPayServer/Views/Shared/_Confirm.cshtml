@@ -28,6 +28,7 @@
             $text.removeAttribute('hidden')
             $continue.setAttribute('disabled', 'disabled')
             $inputText.textContent = confirmInput
+            $input.setAttribute("autocomplete", "off");
             $input.addEventListener('input', event => {
                 event.target.value.trim() === confirmInput
                     ? $continue.removeAttribute('disabled')

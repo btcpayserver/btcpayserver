@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class PullPaymentsModel: BasePagingViewModel
+    public class PullPaymentsModel : BasePagingViewModel
     {
         public class PullPaymentModel
         {

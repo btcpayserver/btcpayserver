@@ -14,7 +14,7 @@ namespace BTCPayServer.Filters
         {
             if (context.Exception is NBitcoin.JsonConverters.JsonObjectException jsonObject)
             {
-                context.Result = new ObjectResult(new GreenfieldValidationError(jsonObject.Path, jsonObject.Message)) { StatusCode = 400 };
+                context.Result = new ObjectResult(new[] { new GreenfieldValidationError(jsonObject.Path, jsonObject.Message) }) { StatusCode = 422 };
                 context.ExceptionHandled = true;
             }
         }

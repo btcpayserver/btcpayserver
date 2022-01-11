@@ -12,6 +12,6 @@ namespace BTCPayServer.Client.Models
         }
 
         public string MissingPermission { get; }
-        
+
     }
 }

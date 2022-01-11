@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(2 + 1, psbtReady.Destinations.Count); // The fee is a destination
                 Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
                 Assert.Contains(psbtReady.Destinations, d => d.Positive);
-                
+
                 vmPSBT.PSBT = unsignedPSBT.ToBase64();
                 var combineVM = await walletController.WalletPSBT(walletId, vmPSBT, "combine").AssertViewModelAsync<WalletPSBTCombineViewModel>();
                 Assert.Equal(vmPSBT.PSBT, combineVM.OtherPSBT);

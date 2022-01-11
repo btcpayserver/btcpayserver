@@ -16,6 +16,7 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Stores;
 using ExchangeSharp;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
@@ -26,6 +27,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -34,52 +36,67 @@ namespace BTCPayServer.Controllers
     public class HomeController : Controller
     {
         private readonly ISettingsRepository _settingsRepository;
+        private readonly StoreRepository _storeRepository;
         private readonly IFileProvider _fileProvider;
-
-        public IHttpClientFactory HttpClientFactory { get; }
+        private IHttpClientFactory HttpClientFactory { get; }
+        private SignInManager<ApplicationUser> SignInManager { get; }
         public LanguageService LanguageService { get; }
-        SignInManager<ApplicationUser> SignInManager { get; }
 
         public HomeController(IHttpClientFactory httpClientFactory,
                               ISettingsRepository settingsRepository,
                               IWebHostEnvironment webHostEnvironment,
                               LanguageService languageService,
+                              StoreRepository storeRepository,
                               SignInManager<ApplicationUser> signInManager)
         {
             _settingsRepository = settingsRepository;
             HttpClientFactory = httpClientFactory;
             LanguageService = languageService;
+            _storeRepository = storeRepository;
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
         }
 
         [Route("")]
-        [DomainMappingConstraint()]
+        [DomainMappingConstraint]
         public async Task<IActionResult> Index()
         {
             if ((await _settingsRepository.GetTheme()).FirstRun)
             {
                 return RedirectToAction(nameof(AccountController.Register), "Account");
             }
+
             if (SignInManager.IsSignedIn(User))
+            {
+                var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
+                if (storeId != null)
+                {
+                    var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
+                    var store = await _storeRepository.FindStore(storeId, userId);
+                    if (store != null)
+                    {
+                        HttpContext.SetStoreData(store);
+                    }
+                }
                 return View("Home");
-            else
-                return Challenge();
+            }
+
+            return Challenge();
         }
 
         [Route("misc/lang")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Languages()
         {
-            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
 
-        
+
         [Route("misc/permissions")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Permissions()
         {
-            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
 
         [Route("swagger/v1/swagger.json")]
@@ -108,7 +125,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("recovery-seed-backup")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm)
         {
             return View("RecoverySeedBackup", vm);

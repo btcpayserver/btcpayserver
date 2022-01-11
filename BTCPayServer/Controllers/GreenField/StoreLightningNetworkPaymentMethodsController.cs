@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod is null
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.GetDisplayableConnectionString(), !excluded, 
+                    paymentMethod.GetDisplayableConnectionString(), !excluded,
                     paymentMethod.PaymentId.ToStringNormalized(), paymentMethod.DisableBOLT11PaymentOption);
         }
 

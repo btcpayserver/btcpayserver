@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -21,7 +21,7 @@ public class WordlistJsonConverter : JsonConverter
             {"PortugueseBrazil", Wordlist.PortugueseBrazil},
             {"Czech", Wordlist.Czech}
         };
-            
+
         _WordlistsReverse = _Wordlists.ToDictionary(kv => kv.Value, kv => kv.Key);
     }
 

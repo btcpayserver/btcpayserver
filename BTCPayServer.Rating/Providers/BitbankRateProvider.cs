@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
             var data = jobj.ContainsKey("data") ? jobj["data"] : null;
             if (jobj["success"]?.Value<int>() != 1)
             {
-                var errorCode = data is null? "Unknown": data["code"].Value<string>();
+                var errorCode = data is null ? "Unknown" : data["code"].Value<string>();
                 throw new Exception(
                     $"BitBank Rates API Error: {errorCode}. See https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md for more details.");
             }

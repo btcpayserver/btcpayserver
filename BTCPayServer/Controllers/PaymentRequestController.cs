@@ -97,10 +97,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         public async Task<IActionResult> EditPaymentRequest(string payReqId, UpdatePaymentRequestViewModel viewModel)
         {
-            if (string.IsNullOrEmpty(viewModel.Currency) ||
+            if (!string.IsNullOrEmpty(viewModel.Currency) &&
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
-
+            if (string.IsNullOrEmpty(viewModel.Currency))
+                viewModel.Currency = null;
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
             if (paymentRequest == null && !string.IsNullOrEmpty(payReqId))
@@ -121,14 +122,14 @@ namespace BTCPayServer.Controllers
             var data = paymentRequest ?? new PaymentRequestData();
             data.StoreDataId = viewModel.StoreId;
             data.Archived = viewModel.Archived;
-            
+
             var blob = data.GetBlob();
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
-            blob.Currency = viewModel.Currency;
+            blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
@@ -229,7 +230,7 @@ namespace BTCPayServer.Controllers
                 amount = Math.Min(result.AmountDue, amount.Value);
             else
                 amount = result.AmountDue;
-            
+
             var pr = await _PaymentRequestRepository.FindPaymentRequest(payReqId, null, cancellationToken);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
@@ -251,11 +252,11 @@ namespace BTCPayServer.Controllers
                         Metadata = invoiceMetadata.ToJObject(),
                         Currency = blob.Currency,
                         Amount = amount.Value,
-                        Checkout = {RedirectURL = redirectUrl}
+                        Checkout = { RedirectURL = redirectUrl }
                     };
 
-                var additionalTags = new List<string> {PaymentRequestRepository.GetInternalTag(payReqId)};
-                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest,store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
+                var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(payReqId) };
+                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
 
                 if (redirectToInvoice)
                 {
@@ -279,7 +280,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            if (!result.AllowCustomPaymentAmounts) {
+            if (!result.AllowCustomPaymentAmounts)
+            {
                 return BadRequest("Not allowed to cancel this invoice");
             }
 
@@ -343,9 +345,9 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => _UserManager.GetUserId(User);
-        
+
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-        
+
         private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestData();
     }
 }

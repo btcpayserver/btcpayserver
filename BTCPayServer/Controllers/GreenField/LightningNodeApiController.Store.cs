@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-            
+
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = HttpContext.GetStoreData();
             if (store == null || network == null)
@@ -127,7 +127,7 @@ namespace BTCPayServer.Controllers.GreenField
             _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
             out var internalLightningNode))
             {
-                if (!User.IsInRole(Roles.ServerAdmin))
+                if (!User.IsInRole(Roles.ServerAdmin) && doingAdminThings)
                 {
                     throw ErrorShouldBeAdminForInternalNode();
                 }

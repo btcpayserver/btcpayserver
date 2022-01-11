@@ -7,7 +7,16 @@
         <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
             @foreach (var option in Model.Options)
             {
-                <li><a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a></li>
+                <li>
+                    @if (option.WalletId != null)
+                    {
+                        <a asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                    }
+                </li>
             }
             <li><hr class="dropdown-divider"></li>
             <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorMenuItem-Create">Create Store</a></li>

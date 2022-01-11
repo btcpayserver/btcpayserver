@@ -10,17 +10,17 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
-using BTCPayServer.Storage.Services;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NicolasDorier.RateLimits;
-using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -41,8 +41,8 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
 
-        public UsersController(UserManager<ApplicationUser> userManager, 
-            RoleManager<IdentityRole> roleManager, 
+        public UsersController(UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             SettingsRepository settingsRepository,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
@@ -169,7 +169,8 @@ namespace BTCPayServer.Controllers.GreenField
                 if (!anyAdmin)
                 {
                     var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>();
-                    if (settings != null) {
+                    if (settings != null)
+                    {
                         settings.FirstRun = false;
                         await _settingsRepository.UpdateSetting(settings);
                     }
@@ -234,7 +235,8 @@ namespace BTCPayServer.Controllers.GreenField
         private async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
         {
             var isUserAdmin = await _userService.IsAdminUser(user);
-            if (!isUserAdmin) {
+            if (!isUserAdmin)
+            {
                 return false;
             }
 

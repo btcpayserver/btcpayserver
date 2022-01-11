@@ -6,8 +6,8 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
-using BTCPayServer.Common;
 using BTCPayServer.Client;
+using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Controllers.GreenField;
@@ -51,12 +51,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-using NBitcoin.RPC;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 #endif
@@ -226,7 +226,7 @@ namespace BTCPayServer.Hosting
                     var services = configuration.GetOrDefault<string>("externalservices", null);
                     if (services != null)
                     {
-                        foreach (var service in services.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
+                        foreach (var service in services.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
                             .Select(p => (p, SeparatorIndex: p.IndexOf(':', StringComparison.OrdinalIgnoreCase)))
                             .Where(p => p.SeparatorIndex != -1)
                             .Select(p => (Name: p.p.Substring(0, p.SeparatorIndex),
@@ -292,7 +292,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<WalletReceiveService>();
-            services.AddSingleton<IHostedService>( provider => provider.GetService<WalletReceiveService>());
+            services.AddSingleton<IHostedService>(provider => provider.GetService<WalletReceiveService>());
             services.TryAddSingleton<CurrencyNameTable>(CurrencyNameTable.Instance);
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
@@ -307,15 +307,15 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
-            services.AddSingleton<HostedServices.WebhookNotificationManager>();
-            services.AddSingleton<IHostedService, WebhookNotificationManager>(o => o.GetRequiredService<WebhookNotificationManager>());
-            services.AddHttpClient(WebhookNotificationManager.OnionNamedClient)
+            services.AddSingleton<HostedServices.WebhookSender>();
+            services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
+            services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
-            
+
 
             services.AddSingleton<IPayoutHandler, BitcoinLikePayoutHandler>();
             services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
-            
+
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
@@ -329,6 +329,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<LNURLPayPaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LNURLPayPaymentHandler>());
+            services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressNav",
+                "store-integrations-nav"));
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressOption",
                 "store-integrations-list"));
             services.AddSingleton<IHostedService, LightningListener>();
@@ -340,7 +342,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
-            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
+            services.AddSingleton<IHostedService, BitpayIPNSender>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
@@ -385,7 +387,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
-            
+
             //create a simple client which hooks up to the http scope
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
             //also provide a factory that can impersonate user/store id

@@ -57,7 +57,7 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<CreateWebhookResponse> CreateWebhook(string topic, string address, string format = "json")
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Post, $"webhooks.json");
-            req.Content = new StringContent(JsonConvert.SerializeObject(new {topic, address, format}), Encoding.UTF8,
+            req.Content = new StringContent(JsonConvert.SerializeObject(new { topic, address, format }), Encoding.UTF8,
                 "application/json");
             var strResp = await SendRequest(req);
 

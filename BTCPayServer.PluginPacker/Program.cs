@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -21,8 +21,8 @@ namespace BTCPayServer.PluginPacker
             var name = args[1];
             var outputDir = args[2];
             var outputFile = Path.Combine(outputDir, name);
-            var rootDLLPath = Path.Combine(directory, name +".dll");
-            if (!File.Exists(rootDLLPath) )
+            var rootDLLPath = Path.Combine(directory, name + ".dll");
+            if (!File.Exists(rootDLLPath))
             {
                 throw new Exception($"{rootDLLPath} could not be found");
             }
@@ -45,7 +45,7 @@ namespace BTCPayServer.PluginPacker
             File.WriteAllText(outputFile + ".btcpay.json", json);
             Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
         }
-        
+
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)
         {
             return assembly.GetTypes().Where(type =>

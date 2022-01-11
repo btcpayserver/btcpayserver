@@ -25,17 +25,18 @@
                 <input asp-for="Title" class="form-control" required />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Amount" class="form-label" data-required></label>
-                <input type="number" step="any" asp-for="Amount" class="form-control" required />
-                <span asp-validation-for="Amount" class="text-danger"></span>
+            <div class="d-flex justify-content-between">
+                <div class="form-group flex-fill me-4">
+                    <label asp-for="Amount" class="form-label" data-required></label>
+                    <input type="number" step="any" asp-for="Amount" class="form-control" required />
+                    <span asp-validation-for="Amount" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Currency" class="form-label"></label>
+                    <input asp-for="Currency" class="form-control" />
+                    <span asp-validation-for="Currency" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" class="form-control" />
-                <span asp-validation-for="Currency" class="text-danger"></span>
-            </div>
-
             <div class="form-group form-check">
                 <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="form-check-input" />
                 <label asp-for="AllowCustomPaymentAmounts" class="form-check-label"></label>
@@ -101,7 +102,9 @@
             </div>
             
             <div class="form-group mt-4">
-                <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+                <button type="submit" class="btn btn-primary" id="SaveButton">
+                    @(string.IsNullOrEmpty(Model.Id) ? "Create" : "Save")
+                </button>
                 @if (!string.IsNullOrEmpty(Model.Id))
                 {
                     <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewAppButton">View</a>
@@ -120,7 +123,6 @@
                         <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Unarchive</a>
                     }
                 }
-                <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" class="btn btn-link px-0 ms-3">Back to list</a>
             </div>
         </div>
     </div>

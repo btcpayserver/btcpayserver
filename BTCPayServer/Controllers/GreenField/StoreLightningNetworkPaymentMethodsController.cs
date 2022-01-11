@@ -129,15 +129,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
 
             LightningSupportedPaymentMethod? paymentMethod = null;
-            if (!string.IsNullOrEmpty(request!.ConnectionString))
+            var store = Store;
+            var storeBlob = store.GetStoreBlob();
+            var existing = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store);
+            if (existing == null || existing.ConnectionString != request.ConnectionString)
             {
                 if (request.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
                 {
                     if (!await CanUseInternalLightning())
                     {
-                        ModelState.AddModelError(nameof(request.ConnectionString),
-                            $"You are not authorized to use the internal lightning node");
-                        return this.CreateValidationError(ModelState);
+                        return this.CreateAPIPermissionError(Policies.CanUseInternalLightningNode, $"You are not authorized to use the internal lightning node. Either add '{Policies.CanUseInternalLightningNode}' to an API Key, or allow non-admin users to use the internal lightning node in the server settings.");
                     }
 
                     paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
@@ -176,9 +177,6 @@ namespace BTCPayServer.Controllers.GreenField
                     paymentMethod.SetLightningUrl(connectionString);
                 }
             }
-
-            var store = Store;
-            var storeBlob = store.GetStoreBlob();
             store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
             storeBlob.SetExcluded(paymentMethodId, !request.Enabled);
             store.SetStoreBlob(storeBlob);

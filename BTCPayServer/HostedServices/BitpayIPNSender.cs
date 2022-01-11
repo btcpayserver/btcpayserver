@@ -62,7 +62,7 @@ namespace BTCPayServer.HostedServices
             _StoreRepository = storeRepository;
         }
 
-        async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
+        async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification, bool sendMail)
         {
             var dto = invoice.EntityToDTO();
             var notification = new InvoicePaymentNotificationEventWrapper()
@@ -122,7 +122,7 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if ((invoice.ExtendedNotifications || invoiceEvent.Name != InvoiceEvent.Expired) && !String.IsNullOrEmpty(invoice.NotificationEmail))
+            if (sendMail && !String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -148,7 +148,7 @@ namespace BTCPayServer.HostedServices
         public async Task NotifyHttp(ScheduledJob job, CancellationToken cancellationToken)
         {
             bool reschedule = false;
-            var aggregatorEvent = new InvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name);
+            var aggregatorEvent = new InvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name, job.Notification.ExtendedNotification);
             try
             {
                 using HttpResponseMessage response = await SendNotification(job.Notification, cancellationToken);
@@ -256,6 +256,7 @@ namespace BTCPayServer.HostedServices
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
+                bool sendMail = true;
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
                 {
@@ -268,17 +269,22 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.Completed ||
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
-                        _ = Notify(invoice, e, false);
+                    {
+                        _ = Notify(invoice, e, false, sendMail);
+                        sendMail = false;
+                    }
                 }
 
                 if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    _ = Notify(invoice, e, false);
+                    _ = Notify(invoice, e, false, sendMail);
+                    sendMail = false;
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    _ = Notify(invoice, e, true);
+                    _ = Notify(invoice, e, true, sendMail);
+                    sendMail = false;
                 }
             }));
             return Task.CompletedTask;

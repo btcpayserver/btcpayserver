@@ -659,19 +659,26 @@ namespace BTCPayServer.Tests
                 var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
                 var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 Assert.NotNull(client);
+
+                TestLogs.LogInformation("Querying an clearnet site over tor");
                 var response = await client.GetAsync("https://check.torproject.org/");
                 response.EnsureSuccessStatusCode();
                 var result = await response.Content.ReadAsStringAsync();
                 Assert.DoesNotContain("You are not using Tor.", result);
                 Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
+
+                TestLogs.LogInformation("Querying a tor website");
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
                 result = await response.Content.ReadAsStringAsync();
                 Assert.Contains("Bitcoin", result);
 
+                TestLogs.LogInformation("...twice");
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
                 client.Dispose();
+
+                TestLogs.LogInformation("...three times, but with a new httpclient");
                 client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
@@ -21,6 +22,7 @@ namespace BTCPayServer
         {
             if (args.Length > 0 && args[0] == "run")
                 args = args.Skip(1).ToArray(); // Hack to make dotnet watch work
+
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
             var processor = new ConsoleLoggerProcessor();
@@ -41,10 +43,8 @@ namespace BTCPayServer
                 logs.Configure(null);
                 /////
 
-                host = new WebHostBuilder()
+                var builder = new WebHostBuilder()
                     .UseKestrel()
-                    .UseIISIntegration()
-                    .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseConfiguration(conf)
                     .ConfigureLogging(l =>
                     {
@@ -56,8 +56,21 @@ namespace BTCPayServer
                         l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
-                    .UseStartup<Startup>()
-                    .Build();
+                    .UseStartup<Startup>();
+
+                // When we run the app with dotnet run (typically in dev env), the wwwroot isn't in the same directory
+                // than this assembly.
+                // But when we use dotnet publish, the wwwroot is published alongside the assembly!
+                // This fix https://github.com/btcpayserver/btcpayserver/issues/1894
+                var defaultContentPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var defaultWebRoot = Path.Combine(defaultContentPath, "wwwroot");
+                var defaultWebRootExists = Directory.Exists(defaultWebRoot);
+                if (!defaultWebRootExists)
+                {
+                    // When we use dotnet run...
+                    builder.UseContentRoot(Directory.GetCurrentDirectory());
+                }
+                host = builder.Build();
                 host.StartWithTasksAsync().GetAwaiter().GetResult();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)

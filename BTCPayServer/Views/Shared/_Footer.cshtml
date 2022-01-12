@@ -1,0 +1,35 @@
+﻿@inject BTCPayServer.Services.BTCPayServerEnvironment _env
+
+<footer class="btcpay-footer">
+    <div class="container">
+        <div class="d-flex flex-wrap flex-column justify-content-between flex-xl-row py-1">
+            <div class="d-flex flex-wrap justify-content-center justify-content-xl-start mb-2 mb-xl-0">
+                <a href="https://github.com/btcpayserver/btcpayserver" class="d-flex align-items-center me-4" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="github"/>
+                    <span style="margin-left:.4rem">Github</span>
+                </a>
+                <a href="https://chat.btcpayserver.org/" class="d-flex align-items-center me-4" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="mattermost"/>
+                    <span style="margin-left:.4rem">Mattermost</span>
+                </a>
+                <a href="https://twitter.com/BtcpayServer" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="twitter"/>
+                    <span style="margin-left:.4rem">Twitter</span>
+                </a>
+                @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
+                {
+                    <a href="@_env.OnionUrl" class="d-flex align-items-center ms-4" target="_onion" rel="noreferrer noopener" role="button" data-clipboard="@_env.OnionUrl" style="min-width:9em;">
+                        <vc:icon symbol="onion"/>
+                        <span style="margin-left:.4rem" data-clipboard-confirm="Copied URL ✔">Copy Tor URL</span>
+                    </a>
+                }
+            </div>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="text-center text-xl-start">
+                    @_env.ToString()
+                </div>
+            }
+        </div>
+    </div>
+</footer>

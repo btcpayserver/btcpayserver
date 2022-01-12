@@ -35,7 +35,7 @@ namespace BTCPayServer.Hosting
             }
             else
             {
-                _InnerProvider = new BundleProvider();
+                _InnerProvider = new BundleProvider(hosting);
             }
         }
         public Bundle GetBundle(string name)

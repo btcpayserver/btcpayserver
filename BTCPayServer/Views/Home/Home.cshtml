@@ -32,7 +32,7 @@
 
 <h2>Welcome to your BTCPay Server</h2>
 
-@if (Model.HasStoreWithWallet)
+@if (Model.HasStore)
 {
     <div class="row">
         <div class="col-lg-8 col-xl-6 pt-3">
@@ -47,57 +47,13 @@ else
             <p class="lead text-secondary">To start accepting payments, set up a store and a wallet.</p>
         
             <div class="list-group mt-4" id="SetupGuide">
-                @if (!Model.HasStore)
-                {
-                    <a asp-controller="UserStores" asp-action="CreateStore" id="SetupGuide-Store" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <vc:icon symbol="new-store"/>
-                        <div class="content">
-                            <h5 class="mb-0">Create your store</h5>
-                        </div>
-                        <vc:icon symbol="caret-right"/>
-                    </a>
-                }
-                else
-                {
-                    <div class="list-group-item d-flex align-items-center" id="SetupGuide-StoreDone">
-                        <vc:icon symbol="done"/>
-                        <div class="content">
-                            <h5 class="mb-0 text-success">Create your store</h5>
-                        </div>
+                <a asp-controller="UserStores" asp-action="CreateStore" id="SetupGuide-Store" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <vc:icon symbol="new-store"/>
+                    <div class="content">
+                        <h5 class="mb-0">Create your store</h5>
                     </div>
-                }
-                    
-                @if (!Model.HasStore)
-                {
-                    <div class="list-group-item list-group-item-success d-flex align-items-center disabled" id="SetupGuide-Wallet">
-                        <vc:icon symbol="new-wallet"/>
-                        <div class="content">
-                            <h5 class="mb-0">Set up a wallet</h5>
-                        </div>
-                    </div>
-                }
-                else if (Model.StoreWithoutPaymentMethod != null)
-                {
-                    <a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.StoreWithoutPaymentMethod.Id" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <vc:icon symbol="new-wallet"/>
-                        <div class="content">
-                            <h5 class="mb-0">Set up a wallet</h5>
-                        </div>
-                        @if (Model.HasStore)
-                        {
-                            <vc:icon symbol="caret-right"/>
-                        }
-                    </a>
-                }
-                else
-                {
-                    <div class="list-group-item list-group-item-success d-flex align-items-center" id="SetupGuide-WalletDone">
-                        <vc:icon symbol="done"/>
-                        <div class="content">
-                            <h5 class="mb-0">Set up a wallet</h5>
-                        </div>
-                    </div>
-                }
+                    <vc:icon symbol="caret-right"/>
+                </a>
             </div>
         </div>
     </div>

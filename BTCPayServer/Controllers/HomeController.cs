@@ -84,42 +84,12 @@ namespace BTCPayServer.Controllers
                         HttpContext.SetStoreData(store);
                     }
                 }
+                
                 var stores = await _storeRepository.GetStoresByUserId(userId);
-                var storesWithWallet = stores
-                    .Where(store =>
-                    {
-                        var paymentMethods = store.GetSupportedPaymentMethods(_networkProvider).ToList();
-                        var hasWallet = paymentMethods
-                            .OfType<DerivationSchemeSettings>()
-                            .Any();
-                        var hasLightning = paymentMethods
-                            .OfType<LightningSupportedPaymentMethod>()
-                            .Any(method => method.PaymentId.PaymentType == LightningPaymentType.Instance);
-
-                        return hasWallet || hasLightning;
-                    })
-                    .ToList();
-                var storeWithoutPaymentMethod = storesWithWallet.Any()
-                    ? null
-                    : stores
-                        .FirstOrDefault(store =>
-                        {
-                            var paymentMethods = store.GetSupportedPaymentMethods(_networkProvider).ToList();
-                            var hasWallet = paymentMethods
-                                .OfType<DerivationSchemeSettings>()
-                                .Any();
-                            var hasLightning = paymentMethods
-                                .OfType<LightningSupportedPaymentMethod>()
-                                .Any(method => method.PaymentId.PaymentType == LightningPaymentType.Instance);
-
-                            return !hasWallet && !hasLightning;
-                        });
-
+                
                 var vm = new HomeViewModel
                 {
-                    HasStore = stores.Any(),
-                    HasStoreWithWallet = storesWithWallet.Any(),
-                    StoreWithoutPaymentMethod = storeWithoutPaymentMethod
+                    HasStore = stores.Any()
                 };
                 
                 return View("Home", vm);

@@ -283,6 +283,10 @@ namespace BTCPayServer.Tests
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             var expected = await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync();
             Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "clipboard.js", "clipboard.js");
+            expected = await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync();
+            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
         }
         string GetFileContent(params string[] path)
         {

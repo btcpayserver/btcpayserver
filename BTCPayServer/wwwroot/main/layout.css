@@ -416,6 +416,7 @@
     #mainContent > section > .container,
     .btcpay-footer > .container {
         margin: 0;
+        max-width: min(1140px, calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-l)) - 1rem)); /* 1rem for scrollbar */
     }
     
     .btcpay-footer {

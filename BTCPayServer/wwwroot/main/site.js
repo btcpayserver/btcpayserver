@@ -80,8 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    $('[data-clipboard]').on('click', window.copyToClipboard);
-
     $('[data-toggle="password"]').each(function () {
         var input = $(this);
         var eye_btn = $(this).parent().find('.input-group-text');

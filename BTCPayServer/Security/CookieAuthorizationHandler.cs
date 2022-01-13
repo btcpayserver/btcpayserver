@@ -127,20 +127,14 @@ namespace BTCPayServer.Security
                     if (isAdmin)
                         success = true;
                     break;
-                case Policies.CanViewInvoices:
-                    if (store == null || store.Role == StoreRoles.Owner || isAdmin)
-                        success = true;
-                    break;
                 case Policies.CanModifyStoreSettings:
-                    if (store != null && (store.Role == StoreRoles.Owner || isAdmin))
+                    if (store != null && (store.Role == StoreRoles.Owner))
                         success = true;
                     break;
+                case Policies.CanViewInvoices:
                 case Policies.CanViewStoreSettings:
-                    if (store != null || isAdmin)
-                        success = true;
-                    break;
                 case Policies.CanCreateInvoice:
-                    if (store != null || isAdmin)
+                    if (store != null)
                         success = true;
                     break;
                 case Policies.CanViewProfile:

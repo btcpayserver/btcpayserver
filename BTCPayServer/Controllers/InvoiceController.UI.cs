@@ -746,7 +746,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {

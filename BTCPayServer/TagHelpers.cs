@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using NBitcoin;
 using NBitcoin.Crypto;
@@ -145,22 +150,19 @@ namespace BTCPayServer.TagHelpers
 
     // Make sure that <svg><use href=/ are correctly working if rootpath is present
     [HtmlTargetElement("use", Attributes = "href")]
-    public class SVGUse : TagHelper
+    public class SVGUse : UrlResolutionTagHelper
     {
-        private string _RootPath;
+        private readonly IFileVersionProvider _fileVersionProvider;
 
-        public SVGUse(BTCPayServerOptions opts)
+        public SVGUse(IUrlHelperFactory urlHelperFactory, HtmlEncoder htmlEncoder, IFileVersionProvider fileVersionProvider):base(urlHelperFactory, htmlEncoder)
         {
-            _RootPath = opts.RootPath;
+            _fileVersionProvider = fileVersionProvider;
         }
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            if (string.IsNullOrEmpty(_RootPath) || _RootPath == "/")
-                return;
-            var attr = output.Attributes["href"];
-            if (!attr.Value.ToString().StartsWith("/", StringComparison.OrdinalIgnoreCase))
-                return;
-            output.Attributes.SetAttribute("href", $"{_RootPath}{attr.Value}");
+            var attr = output.Attributes["href"].Value.ToString();
+            attr = _fileVersionProvider.AddFileVersionToPath(ViewContext.HttpContext.Request.PathBase, attr);
+            output.Attributes.SetAttribute("href", attr);
         }
     }
 }

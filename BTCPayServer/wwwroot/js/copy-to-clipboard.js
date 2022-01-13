@@ -1,19 +1,35 @@
+const confirmCopy = (el, message) => {
+    el.innerText = message;
+    setTimeout(function () {
+        el.innerText = el.dataset.clipboardInitialText;
+    }, 2500);
+}
+
 window.copyToClipboard = function (e, data) {
-    if (navigator.clipboard) {
-        e.preventDefault();
-        const item = e.target.closest('[data-clipboard]');
-        const confirm = item.querySelector('[data-clipboard-confirm]') || item;
-        const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-        if (!confirm.dataset.clipboardInitialText) {
-            confirm.dataset.clipboardInitialText = confirm.innerText;
-            confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
-        }
-        navigator.clipboard.writeText(data).then(function () {
-            confirm.innerText = message;
-            setTimeout(function(){ confirm.innerText = confirm.dataset.clipboardInitialText; }, 2500);
-        });
-        item.blur();
+    e.preventDefault();
+    const item = e.target.closest('[data-clipboard]');
+    const confirm = item.querySelector('[data-clipboard-confirm]') || item;
+    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
+    if (!confirm.dataset.clipboardInitialText) {
+        confirm.dataset.clipboardInitialText = confirm.innerText;
+        confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
     }
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(data).then(function () {
+            confirmCopy(confirm, message);
+        });
+    } else {
+        const copyEl = document.createElement('textarea');
+        copyEl.style.position = 'absolute';
+        copyEl.style.opacity = '0';
+        copyEl.value = data;
+        document.body.appendChild(copyEl);
+        copyEl.select();
+        document.execCommand('copy');
+        copyEl.remove();
+        confirmCopy(confirm, message);
+    }
+    item.blur();
 }
 
 window.copyUrlToClipboard = function (e) {

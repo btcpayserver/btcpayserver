@@ -804,8 +804,13 @@ namespace BTCPayServer.Tests
             });
             Assert.Null(hook.Secret);
             AssertHook(fakeServer, hook);
-            var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
-            var delivery = Assert.Single(deliveries);
+            WebhookDeliveryData delivery = null;
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
+                delivery = Assert.Single(deliveries);
+            });
+            
             delivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, delivery.Id);
             Assert.NotNull(delivery);
             Assert.Equal(WebhookDeliveryStatus.HttpSuccess, delivery.Status);

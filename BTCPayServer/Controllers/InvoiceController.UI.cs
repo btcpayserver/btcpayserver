@@ -857,7 +857,7 @@ namespace BTCPayServer.Controllers
             if (!stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
             if (model?.StoreId != null)

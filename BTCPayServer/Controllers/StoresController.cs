@@ -701,7 +701,7 @@ namespace BTCPayServer.Controllers
         {
             await _Repo.DeleteStore(CurrentStore.Id);
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
-            return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         private IEnumerable<AvailableRateProvider> GetSupportedExchanges()
@@ -873,7 +873,7 @@ namespace BTCPayServer.Controllers
             if (!model.Stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to be owner of at least one store before pairing";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
             return View(model);
         }
@@ -932,7 +932,7 @@ namespace BTCPayServer.Controllers
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
             else
             {

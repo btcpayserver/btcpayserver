@@ -81,8 +81,9 @@
         <script>
             if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
                 const { host, protocol } = window.location;
-                const wsUri = `${protocol === "https:" ? "wss:" : "ws:"}//${host}@_linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")`;
-                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
+                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications", pathBase: this.Context.Request.PathBase)";
+				wsUri = (protocol === "https:" ? "wss:" : "ws:") + "//" + host + wsUri;
+                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications", pathBase: this.Context.Request.PathBase)";
                 try {
                     socket = new WebSocket(wsUri);
                     socket.onmessage = e => {

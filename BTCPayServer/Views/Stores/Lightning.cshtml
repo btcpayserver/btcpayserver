@@ -1,0 +1,76 @@
+@using BTCPayServer.Lightning
+@using BTCPayServer.Client
+@model LightningViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../Lightning/_Nav";
+    ViewData.SetActivePage(StoreNavPages.Lightning, $"{Model.CryptoCode} Lightning", Context.GetStoreData().Id);
+}
+
+@section PageHeadContent
+{
+    <style>
+        #Services svg { width: 3rem; height: 3rem; }
+    </style>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-xl-9">
+        <div class="mb-5">
+            <h4 class="mb-3">@ViewData["Title"]</h4>
+            <div class="mb-3">
+                <span class="me-2">@Model.LightningNodeType Node</span>
+                
+                @if (Model.LightningNodeType != LightningNodeType.Internal)
+                {
+                    <span class="me-2">
+                        @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
+                        {
+                            @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
+                            <span>(@cs.BaseUri)</span>
+                        }
+                        else
+                        {
+                            @Model.ConnectionString
+                        }
+                    </span>
+                }
+
+                <a class="text-secondary"
+                   asp-controller="PublicLightningNodeInfo"
+                   asp-action="ShowLightningNodeInfo"
+                   asp-route-cryptoCode="@Model.CryptoCode"
+                   asp-route-storeId="@Model.StoreId"
+                   target="_blank">
+                    Public Node Info
+                </a>
+            </div>
+            
+            @if (Model.Services.Any())
+            {
+                <div permission="@Policies.CanModifyServerSettings">
+                    <h5>Services</h5>
+                    <div id="Services" class="row">
+                        @foreach (var service in Model.Services)
+                        {
+                            @if (!string.IsNullOrEmpty(service.CryptoCode))
+                            {
+                                <a asp-controller="Server" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="col-4 text-center" id="@($"Service-{service.ServiceName}")">
+                                    <vc:icon symbol="@service.Type.ToLower()"/>
+                                    <h6>@service.DisplayName</h6>
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@service.Link" target="_blank" rel="noreferrer noopener" class="col-4 text-center" id="@($"Service-{service.ServiceName}")">
+                                    <vc:icon symbol="@service.Type.ToLower()"/>
+                                    <h6>@service.DisplayName</h6>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

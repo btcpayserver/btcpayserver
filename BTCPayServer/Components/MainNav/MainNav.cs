@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -23,7 +24,6 @@ namespace BTCPayServer.Components.MainNav
 {
     public class MainNav : ViewComponent
     {
-        private const string RootName = "Global";
         private readonly AppService _appService;
         private readonly StoreRepository _storeRepo;
         private readonly StoresController _storesController;
@@ -36,6 +36,11 @@ namespace BTCPayServer.Components.MainNav
             ExternalServiceTypes.Spark,
             ExternalServiceTypes.RTL,
             ExternalServiceTypes.ThunderHub
+        };
+        private readonly string[] _externalServiceNames =
+        {
+            "Lightning Terminal", 
+            "Tallycoin Connect"
         };
 
         public MainNav(
@@ -61,7 +66,7 @@ namespace BTCPayServer.Components.MainNav
             var store = ViewContext.HttpContext.GetStoreData();
             var services = _externalServiceOptions.Value.ExternalServices.ToList()
                 .Where(service => _externalServiceTypes.Contains(service.Type))
-                .Select(service => new AdditionalService
+                .Select(service => new AdditionalServiceViewModel
                 {
                     DisplayName = service.DisplayName,
                     ServiceName = service.ServiceName,
@@ -73,11 +78,12 @@ namespace BTCPayServer.Components.MainNav
             // other services
             foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
             {
-                if (key is "Lightning Terminal" or "Tallycoin Connect")
+                if (_externalServiceNames.Contains(key))
                 {
-                    services.Add(new AdditionalService
+                    services.Add(new AdditionalServiceViewModel
                     {
                         DisplayName = key,
+                        ServiceName = key,
                         Type = key.Replace(" ", ""),
                         Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
                     });

@@ -136,6 +136,29 @@ namespace BTCPayServer.Controllers
                 return this.HttpContext.GetStoreData();
             }
         }
+        
+        [HttpGet("{storeId}")]
+        public IActionResult Dashboard()
+        {
+            var store = CurrentStore;
+            var storeBlob = store.GetStoreBlob();
+
+            AddPaymentMethods(store, storeBlob,
+                out var derivationSchemes, out var lightningNodes);
+            
+            var vm = new StoreDashboardViewModel
+            {
+#if ALTCOINS
+                AltcoinsBuild = true,
+#endif
+                WalletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled),
+                LightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled),
+                StoreId = CurrentStore.Id,
+                StoreName = CurrentStore.StoreName
+            };
+            
+            return View("Dashboard", vm);
+        }
 
         [HttpPost]
         [Route("{storeId}/users")]
@@ -562,7 +585,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet("{storeId}")]
+        [HttpGet("{storeId}/payment-methods")]
         public IActionResult PaymentMethods()
         {
             var store = HttpContext.GetStoreData();
@@ -591,7 +614,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost("{storeId}")]
+        [HttpPost("{storeId}/payment-methods")]
         public async Task<IActionResult> PaymentMethods(PaymentMethodsViewModel model, string command = null)
         {
             bool needUpdate = false;

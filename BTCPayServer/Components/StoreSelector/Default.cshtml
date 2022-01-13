@@ -2,28 +2,35 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 <div id="StoreSelector">
-    <div id="StoreSelectorDropdown" class="dropdown only-for-js">
-        <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill @(Model.CurrentStoreId == null ? "text-secondary" :"")" type="button" data-bs-toggle="dropdown" aria-expanded="false">@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</button>
-        <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
-            @foreach (var option in Model.Options)
-            {
-                <li>
-                    @if (option.WalletId != null)
-                    {
-                        <a asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
-                    }
-                    else
-                    {
-                        <a asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
-                    }
-                </li>
-            }
-            <li><hr class="dropdown-divider"></li>
-            <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorMenuItem-Create">Create Store</a></li>
-        </ul>
-    </div>
-    <noscript>
-        <span class="h5 mb-0 me-2">@Model.CurrentDisplayName</span>
-        <a asp-controller="UserStores" asp-action="ListStores">Stores</a>
-    </noscript>
+    @if (Model.Options.Count > 0)
+    {
+        <div id="StoreSelectorDropdown" class="dropdown only-for-js">
+            <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill @(Model.CurrentStoreId == null ? "text-secondary" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</button>
+            <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
+                @foreach (var option in Model.Options)
+                {
+                    <li>
+                        @if (option.WalletId != null)
+                        {
+                            <a asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Stores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                        }
+                    </li>
+                }
+                <li><hr class="dropdown-divider"></li>
+                <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
+            </ul>
+        </div>
+        <noscript>
+            <span class="h5 mb-0 me-2">@Model.CurrentDisplayName</span>
+            <a asp-controller="UserStores" asp-action="ListStores">Stores</a>
+        </noscript>
+    }
+    else
+    {
+        <a asp-controller="UserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
+    }
 </div>

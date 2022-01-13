@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             var store = await _repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
-            return RedirectToAction(nameof(StoresController.PaymentMethods), "Stores", new
+            return RedirectToAction(nameof(StoresController.Dashboard), "Stores", new
             {
                 storeId = store.Id
             });
@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewStoreSettings)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> ListStores(
             string sortOrder = null,
             string sortOrderColumn = null

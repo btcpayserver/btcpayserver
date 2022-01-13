@@ -180,7 +180,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Email")).SendKeys(email);
                 s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
-                Assert.True(s.Driver.PageSource.Contains("Stores"), "Can't Access Stores");
 
                 s.GoToProfile();
                 s.ClickOnAllSectionLinks();
@@ -383,6 +382,30 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanSetupStoreViaGuide()
+        {
+            using (var s = CreateSeleniumTester())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser();
+                s.GoToUrl("/");
+                
+                Assert.False(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should not be present");
+                Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorCreate\""), "Store selector create button should be present");
+                
+                // verify steps for store creation are displayed correctly
+                s.Driver.FindElement(By.Id("SetupGuide-Store")).Click();
+                Assert.Contains("/stores/create", s.Driver.Url);
+
+                s.CreateNewStore();
+                s.GoToUrl("/");
+                
+                Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should be present");
+                Assert.False(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Setup guide should not be present");
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {
@@ -391,29 +414,40 @@ namespace BTCPayServer.Tests
                 s.Server.ActivateLightning();
                 await s.StartAsync();
                 var alice = s.RegisterNewUser(true);
-                (string storeName, _) = s.CreateNewStore();
+                (string storeName, string storeId) = s.CreateNewStore();
+                var storeUrl = $"/stores/{storeId}";
                 var onchainHint = "Set up your wallet to receive payments at your store.";
                 var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
                 // verify that hints are displayed on the store page
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
-
+                
                 s.GoToStore();
                 Assert.Contains(storeName, s.Driver.PageSource);
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint),
                     "Lightning hint should be present at this point");
 
+                // verify steps for wallet setup are displayed correctly
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-StoreDone")).Displayed);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-Wallet")).Displayed);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-Lightning")).Displayed);
+
                 // setup onchain wallet
-                s.GoToStore();
+                s.Driver.FindElement(By.Id("SetupGuide-Wallet")).Click();
+                Thread.Sleep(10000);
                 s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains(onchainHint),
                     "Wallet hint not dismissed on derivation scheme add");
 
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-WalletDone")).Displayed);
+                
                 // setup offchain wallet
-                s.GoToStore();
+                s.Driver.FindElement(By.Id("SetupGuide-Lightning")).Click();
                 s.AddLightningNode();
                 s.Driver.AssertNoError();
                 var successAlert = s.FindAlertMessage();
@@ -421,8 +455,11 @@ namespace BTCPayServer.Tests
                 Assert.False(s.Driver.PageSource.Contains(offchainHint),
                     "Lightning hint should be dismissed at this point");
 
-                var storeUrl = s.Driver.Url;
                 s.ClickOnAllSectionLinks();
+                
+                s.GoToStore(StoreNavPages.Dashboard);
+                Assert.True(s.Driver.FindElement(By.Id("SetupGuide-LightningDone")).Displayed);
+                
                 s.GoToInvoices();
                 Assert.Contains("There are no invoices matching your criteria.", s.Driver.PageSource);
                 var invoiceId = s.CreateInvoice();
@@ -466,7 +503,7 @@ namespace BTCPayServer.Tests
 
                 // When logout out we should not be able to access store and invoice details
                 s.Logout();
-                s.Driver.Navigate().GoToUrl(storeUrl);
+                s.GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
@@ -474,7 +511,7 @@ namespace BTCPayServer.Tests
 
                 // When logged in as different user we should not be able to access store and invoice details
                 var bob = s.RegisterNewUser();
-                s.Driver.Navigate().GoToUrl(storeUrl);
+                s.GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 s.AssertAccessDenied();
@@ -483,16 +520,16 @@ namespace BTCPayServer.Tests
 
                 // Let's add Bob as a guest to alice's store
                 s.LogIn(alice);
-                s.Driver.Navigate().GoToUrl(storeUrl + "/users");
+                s.GoToUrl(storeUrl + "/users");
                 s.Driver.FindElement(By.Id("Email")).SendKeys(bob + Keys.Enter);
                 Assert.Contains("User added successfully", s.Driver.PageSource);
                 s.Logout();
 
                 // Bob should not have access to store, but should have access to invoice
                 s.LogIn(bob);
-                s.Driver.Navigate().GoToUrl(storeUrl);
+                s.GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                s.GoToUrl(invoiceUrl);
                 s.Driver.AssertNoError();
 
                 // Alice should be able to delete the store
@@ -502,7 +539,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("DeleteStore")).Click();
                 s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
                 s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
-                s.Driver.Navigate().GoToUrl(storeUrl);
+                s.GoToUrl(storeUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
             }
         }

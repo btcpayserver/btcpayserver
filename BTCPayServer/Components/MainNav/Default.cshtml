@@ -28,91 +28,116 @@
                 <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
-                            @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
-                            {
-                                var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
-                                <li class="nav-item">
-                                    @if (isSetUp && scheme.WalletSupported)
-                                    {
-                                        <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId"class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
-                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
-                                            <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <a asp-area="" asp-controller="Stores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Modify{scheme.Crypto}")">
-                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
-                                            <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
-                                        </a>
-                                    }
-                                </li>
-                            }
-                            @foreach (var scheme in Model.LightningNodes)
-                            {
-                                var isSetUp = !string.IsNullOrWhiteSpace(scheme.Address);
-                                <li class="nav-item">
-                                    @if (isSetUp)
-                                    {
-                                        <a asp-area="" asp-controller="Stores" asp-action="LightningSettings" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
-                                            <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
-                                            <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <a asp-area="" asp-controller="Stores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
-                                            <span class="me-2 btcpay-status btcpay-status--disabled"></span>
-                                            <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
-                                        </a>
-                                    }
-                                    
-                                </li>
-                            }
+                            <li class="nav-item">
+                                <a asp-area="" asp-controller="Stores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
+                                    <vc:icon symbol="home"/>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="" asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.GeneralSettings) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Integrations) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
+                                    <vc:icon symbol="settings"/>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <header class="accordion-header" id="Nav-Payments-Header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
-                            Payments
-                            <vc:icon symbol="caret-down"/>
-                        </button>
+                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
+                    <header class="accordion-header" id="Nav-Wallets-Header">
+                        <div class="accordion-button">
+                            Wallets
+                        </div>
                     </header>
-                    <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
+                    <div id="Nav-Wallets" class="accordion-collapse" aria-labelledby="Nav-Wallets-Header">
                         <div class="accordion-body">
                             <ul class="navbar-nav">
-                                <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
-                                        <vc:icon symbol="invoice"/>
-                                        <span>Invoices</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
-                                        <vc:icon symbol="payment-1"/>
-                                        <span>Requests</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-area="" asp-controller="StorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-@(nameof(StoreNavPages.PullPayments))">
-                                        <vc:icon symbol="payment-2"/>
-                                        <span>Pull Payments</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-area="" asp-controller="StorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-@(nameof(StoreNavPages.Payouts))">
-                                        <vc:icon symbol="payment-2"/>
-                                        <span>Payouts</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-area="" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-@(nameof(StoreNavPages.PayButton))">
-                                        <vc:icon symbol="payment-2"/>
-                                        <span>Pay Button</span>
-                                    </a>
-                                </li>
+                                @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
+                                {
+                                    var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
+                                    <li class="nav-item">
+                                        @if (isSetUp && scheme.WalletSupported)
+                                        {
+                                            <a asp-area="" asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                                <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-area="" asp-controller="Stores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Modify{scheme.Crypto}")">
+                                                <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                            </a>
+                                        }
+                                    </li>
+                                }
+                                @foreach (var scheme in Model.LightningNodes)
+                                {
+                                    var isSetUp = !string.IsNullOrWhiteSpace(scheme.Address);
+                                    <li class="nav-item">
+                                        @if (isSetUp)
+                                        {
+                                            <a asp-area="" asp-controller="Stores" asp-action="LightningSettings" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                                <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-area="" asp-controller="Stores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                                <span class="me-2 btcpay-status btcpay-status--disabled"></span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
+                                            </a>
+                                        }
+                                        
+                                    </li>
+                                }
                             </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <header class="accordion-header" id="Nav-Payments-Header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
+                                Payments
+                                <vc:icon symbol="caret-down"/>
+                            </button>
+                        </header>
+                        <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
+                            <div class="accordion-body">
+                                <ul class="navbar-nav">
+                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                        <a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
+                                            <vc:icon symbol="invoice"/>
+                                            <span>Invoices</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                        <a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
+                                            <vc:icon symbol="payment-1"/>
+                                            <span>Requests</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-area="" asp-controller="StorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
+                                            <vc:icon symbol="payment-2"/>
+                                            <span>Pull Payments</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-area="" asp-controller="StorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
+                                            <vc:icon symbol="payment-2"/>
+                                            <span>Payouts</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                        <a asp-area="" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-PayButton">
+                                            <vc:icon symbol="payment-2"/>
+                                            <span>Pay Button</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,26 +186,6 @@
                                     <a asp-area="" asp-controller="Server" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
                                         <vc:icon symbol="new"/>
                                         <span>Add Plugin</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
-                    <header class="accordion-header" id="Nav-Manage-Header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Manage" aria-expanded="true" aria-controls="Nav-Manage">
-                            Manage
-                            <vc:icon symbol="caret-down"/>
-                        </button>
-                    </header>
-                    <div id="Nav-Manage" class="accordion-collapse collapse show" aria-labelledby="Nav-Manage-Header">
-                        <div class="accordion-body">
-                            <ul class="navbar-nav">
-                                <li class="nav-item">
-                                    <a asp-area="" asp-controller="Stores" asp-action="PaymentMethods" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.GeneralSettings) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
-                                        <vc:icon symbol="settings"/>
-                                        <span>Store Settings</span>
                                     </a>
                                 </li>
                             </ul>

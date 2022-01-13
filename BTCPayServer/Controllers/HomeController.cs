@@ -8,11 +8,14 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
+using BTCPayServer.Components.StoreSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -38,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly ISettingsRepository _settingsRepository;
         private readonly StoreRepository _storeRepository;
         private readonly IFileProvider _fileProvider;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private IHttpClientFactory HttpClientFactory { get; }
         private SignInManager<ApplicationUser> SignInManager { get; }
         public LanguageService LanguageService { get; }
@@ -47,11 +51,13 @@ namespace BTCPayServer.Controllers
                               IWebHostEnvironment webHostEnvironment,
                               LanguageService languageService,
                               StoreRepository storeRepository,
+                              BTCPayNetworkProvider networkProvider,
                               SignInManager<ApplicationUser> signInManager)
         {
             _settingsRepository = settingsRepository;
             HttpClientFactory = httpClientFactory;
             LanguageService = languageService;
+            _networkProvider = networkProvider;
             _storeRepository = storeRepository;
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
@@ -68,17 +74,25 @@ namespace BTCPayServer.Controllers
 
             if (SignInManager.IsSignedIn(User))
             {
+                var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
                 if (storeId != null)
                 {
-                    var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
                     var store = await _storeRepository.FindStore(storeId, userId);
                     if (store != null)
                     {
                         HttpContext.SetStoreData(store);
                     }
                 }
-                return View("Home");
+                
+                var stores = await _storeRepository.GetStoresByUserId(userId);
+                
+                var vm = new HomeViewModel
+                {
+                    HasStore = stores.Any()
+                };
+                
+                return View("Home", vm);
             }
 
             return Challenge();
@@ -90,7 +104,6 @@ namespace BTCPayServer.Controllers
         {
             return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
-
 
         [Route("misc/permissions")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]

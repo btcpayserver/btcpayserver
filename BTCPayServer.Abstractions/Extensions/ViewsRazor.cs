@@ -14,7 +14,7 @@ namespace BTCPayServer.Abstractions.Extensions
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {
-            SetActivePage(viewData, activePage.ToString(), activePage.GetType().Name, title, activeId);
+            SetActivePage(viewData, activePage.ToString(), activePage.GetType().ToString(), title, activeId);
         }
 
         public static void SetActivePage(this ViewDataDictionary viewData, string activePage, string category, string title = null, string activeId = null)
@@ -29,7 +29,7 @@ namespace BTCPayServer.Abstractions.Extensions
 
         public static void SetActiveCategory<T>(this ViewDataDictionary viewData, T activeCategory)
         {
-            viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
+            SetActiveCategory(viewData, activeCategory.ToString());
         }
 
         public static void SetActiveCategory(this ViewDataDictionary viewData, string activeCategory)
@@ -41,6 +41,7 @@ namespace BTCPayServer.Abstractions.Extensions
         {
             return IsActiveCategory(viewData, category.ToString(), id);
         }
+        
         public static string IsActiveCategory(this ViewDataDictionary viewData, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY))
@@ -57,8 +58,9 @@ namespace BTCPayServer.Abstractions.Extensions
         public static string IsActivePage<T>(this ViewDataDictionary viewData, T page, object id = null)
             where T : IConvertible
         {
-            return IsActivePage(viewData, page.ToString(), page.GetType().Name, id);
+            return IsActivePage(viewData, page.ToString(), page.GetType().ToString(), id);
         }
+        
         public static string IsActivePage(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_PAGE_KEY))

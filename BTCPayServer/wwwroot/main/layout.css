@@ -410,12 +410,13 @@
     }
 
     #mainContent > section {
-        padding: var(--btcpay-space-xl) var(--btcpay-space-l);
+        padding: 4.65rem var(--btcpay-space-l);
     }
 
     #mainContent > section > .container,
     .btcpay-footer > .container {
         margin: 0;
+        max-width: min(1140px, calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-l)) - 1rem)); /* 1rem for scrollbar */
     }
     
     .btcpay-footer {

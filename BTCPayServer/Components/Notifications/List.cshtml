@@ -1,0 +1,22 @@
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Components.Notifications.NotificationsViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+
+<div id="NotificationsList">
+    @foreach (var n in Model.Last5)
+    {
+        <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@n.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
+            <div class="me-3">
+                <vc:icon symbol="note" />
+            </div>
+            <div class="notification-item__content">
+                <div class="text-start text-wrap">
+                    @n.Body
+                </div>
+                <div class="text-start d-flex">
+                    <small class="text-muted" data-timeago-unixms="@n.Created.ToUnixTimeMilliseconds()">@n.Created.ToTimeAgo()</small>
+                </div>
+            </div>
+        </a>
+    }
+</div>

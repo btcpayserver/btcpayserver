@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Route("[controller]/[action]")]
     public class ErrorController : Controller
     {
+        [Route("/errors/{statusCode:int}")]
         public IActionResult Handle(int? statusCode = null)
         {
             if (Request.Headers.TryGetValue("Accept", out var v) && v.Any(v => v.Contains("text/html", StringComparison.OrdinalIgnoreCase)))
@@ -23,11 +23,6 @@ namespace BTCPayServer.Controllers
                 return View(statusCode);
             }
             return this.StatusCode(statusCode.Value);
-        }
-
-        public IActionResult Denied()
-        {
-            return Handle(403);
         }
     }
 }

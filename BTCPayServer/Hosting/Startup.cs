@@ -75,7 +75,7 @@ namespace BTCPayServer.Hosting
             services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
             {
                 opt.LoginPath = "/login";
-                opt.AccessDeniedPath = "/Error/Denied";
+                opt.AccessDeniedPath = "/errors/403";
                 opt.LogoutPath = "/logout";
             });
 
@@ -235,7 +235,7 @@ namespace BTCPayServer.Hosting
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
 
-            app.UseStatusCodePagesWithReExecute("/Error/Handle", "?statusCode={0}");
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             app.UsePayServer();
             app.UseRouting();

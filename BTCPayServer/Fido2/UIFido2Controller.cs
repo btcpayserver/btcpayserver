@@ -14,12 +14,12 @@ namespace BTCPayServer.Fido2
 {
     [Route("fido2")]
     [Authorize]
-    public class Fido2Controller : Controller
+    public class UIFido2Controller : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Fido2Service _fido2Service;
 
-        public Fido2Controller(UserManager<ApplicationUser> userManager, Fido2Service fido2Service)
+        public UIFido2Controller(UserManager<ApplicationUser> userManager, Fido2Service fido2Service)
         {
             _userManager = userManager;
             _fido2Service = fido2Service;

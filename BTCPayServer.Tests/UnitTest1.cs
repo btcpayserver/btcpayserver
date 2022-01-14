@@ -2305,7 +2305,7 @@ namespace BTCPayServer.Tests
                 })).ActionName);
 
             var listController = user.GetController<UIManageController>();
-            var manageController = user.GetController<Fido2Controller>();
+            var manageController = user.GetController<UIFido2Controller>();
 
             //by default no fido2 devices available
             Assert.Empty(Assert

@@ -13,13 +13,13 @@ using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
 
-namespace BTCPayServer.Security.GreenField
+namespace BTCPayServer.Security.Greenfield
 {
-    public class LocalGreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
+    public class LocalGreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
-            var succeed = context.User.Identity.AuthenticationType == $"Local{GreenFieldConstants.AuthenticationType}";
+            var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
 
             if (succeed)
             {
@@ -29,14 +29,14 @@ namespace BTCPayServer.Security.GreenField
         }
     }
 
-    public class GreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
+    public class GreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
 
     {
         private readonly HttpContext _HttpContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
 
-        public GreenFieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
+        public GreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository)
         {
@@ -48,7 +48,7 @@ namespace BTCPayServer.Security.GreenField
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
             PolicyRequirement requirement)
         {
-            if (context.User.Identity.AuthenticationType != GreenFieldConstants.AuthenticationType)
+            if (context.User.Identity.AuthenticationType != GreenfieldConstants.AuthenticationType)
                 return;
             var userid = _userManager.GetUserId(context.User);
             bool success = false;

@@ -469,7 +469,7 @@ namespace BTCPayServer.Tests
                         changeIndex = i;
                 }
 
-                var derivationSchemeSettings = alice.GetController<WalletsController>().GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
+                var derivationSchemeSettings = alice.GetController<UIWalletsController>().GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
                 var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
                 psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
                 using var fakeServer = new FakeServer();

@@ -1,0 +1,22 @@
+@using BTCPayServer.Lightning
+@model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.UILightningLikePayoutController.ResultVM>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Lightning Payout Result";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+@foreach (var item in Model)
+{
+    <div class="alert alert-@(item.Result == PayResult.Ok ? "success" : "danger") d-flex justify-content-between align-items-center mb-3" role="alert">
+        @if (item.Result == PayResult.Ok)
+        {
+            <div class="text-break me-3" title="@item.Destination">@item.Destination</div>
+        }
+        else
+        {
+            <div class="text-break me-3" title="@item.Destination">@item.Destination: @item.Message (@item.Result)</div>
+        }
+        <span class="badge fs-5">@(item.Result == PayResult.Ok ? "Sent" : "Failed")</span>
+    </div>
+}

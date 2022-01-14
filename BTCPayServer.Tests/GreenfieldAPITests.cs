@@ -602,15 +602,15 @@ namespace BTCPayServer.Tests
             return new DateTimeOffset(dateTimeOffset.Year, dateTimeOffset.Month, dateTimeOffset.Day, dateTimeOffset.Hour, dateTimeOffset.Minute, dateTimeOffset.Second, dateTimeOffset.Offset);
         }
 
-        private async Task<GreenFieldAPIException> AssertAPIError(string expectedError, Func<Task> act)
+        private async Task<GreenfieldAPIException> AssertAPIError(string expectedError, Func<Task> act)
         {
-            var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await act());
+            var err = await Assert.ThrowsAsync<GreenfieldAPIException>(async () => await act());
             Assert.Equal(expectedError, err.APIError.Code);
             return err;
         }
-        private async Task<GreenFieldAPIException> AssertPermissionError(string expectedPermission, Func<Task> act)
+        private async Task<GreenfieldAPIException> AssertPermissionError(string expectedPermission, Func<Task> act)
         {
-            var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await act());
+            var err = await Assert.ThrowsAsync<GreenfieldAPIException>(async () => await act());
             var err2 = Assert.IsType<GreenfieldPermissionAPIError>(err.APIError);
             Assert.Equal(expectedPermission, err2.MissingPermission);
             return err;
@@ -675,10 +675,10 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task<GreenFieldValidationException> AssertValidationError(string[] fields, Func<Task> act)
+        private async Task<GreenfieldValidationException> AssertValidationError(string[] fields, Func<Task> act)
         {
             var remainingFields = fields.ToHashSet();
-            var ex = await Assert.ThrowsAsync<GreenFieldValidationException>(act);
+            var ex = await Assert.ThrowsAsync<GreenfieldValidationException>(act);
             foreach (var field in fields)
             {
                 Assert.Contains(field, ex.ValidationErrors.Select(e => e.Path).ToArray());
@@ -690,7 +690,7 @@ namespace BTCPayServer.Tests
 
         private async Task AssertHttpError(int code, Func<Task> act)
         {
-            var ex = await Assert.ThrowsAsync<GreenFieldAPIException>(act);
+            var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
             Assert.Equal(code, ex.HttpCode);
         }
 
@@ -977,7 +977,7 @@ namespace BTCPayServer.Tests
                 var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
                     new CreatePaymentRequestRequest() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
 
-                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<PaymentRequestController>()
+                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
                     .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
                 var invoice = user.BitPay.GetInvoice(invoiceId);
                 await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
@@ -1332,7 +1332,7 @@ namespace BTCPayServer.Tests
                         }
                     });
                 Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
-                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
                 var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
                 Assert.Equal("it-IT", model.DefaultLang);
                 Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
@@ -1496,12 +1496,12 @@ namespace BTCPayServer.Tests
                 {
                     BOLT11 = merchantInvoice.BOLT11
                 });
-                await Assert.ThrowsAsync<GreenFieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+                await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
                 {
                     BOLT11 = "lol"
                 }));
 
-                var validationErr = await Assert.ThrowsAsync<GreenFieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+                var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
                 {
                     Amount = -1,
                     Expiry = TimeSpan.FromSeconds(-1),

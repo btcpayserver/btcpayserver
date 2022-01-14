@@ -3,9 +3,9 @@ using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
-    public static class GreenFieldUtils
+    public static class GreenfieldUtils
     {
         public static IActionResult CreateValidationError(this ControllerBase controller, ModelStateDictionary modelState)
         {

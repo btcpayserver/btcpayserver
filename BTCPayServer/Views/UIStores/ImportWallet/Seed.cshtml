@@ -1,0 +1,38 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter the wallet seed", Context.GetStoreData().Id);
+}
+
+@section Navbar {
+    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Manually enter your 12 or 24 word recovery seed.</p>
+</header>
+
+<div class="my-5">
+    @if (Model.CanUseHotWallet)
+    {
+        ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
+        ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+        ViewData.Add(nameof(Model.SupportSegwit), Model.SupportSegwit);
+        ViewData.Add(nameof(Model.SupportTaproot), Model.SupportTaproot);
+        ViewData.Add(nameof(Model.Method), Model.Method);
+
+        <partial name="_GenerateWalletForm" model="Model.SetupRequest" />
+    }
+    else
+    {
+        <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+    }
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

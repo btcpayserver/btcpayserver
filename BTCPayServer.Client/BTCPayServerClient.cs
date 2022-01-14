@@ -52,18 +52,18 @@ namespace BTCPayServer.Client
                 if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                 {
                     var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(await message.Content.ReadAsStringAsync());
-                    throw new GreenFieldValidationException(err);
+                    throw new GreenfieldValidationException(err);
                 }
                 if (message.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
                     var err = JsonConvert.DeserializeObject<Models.GreenfieldPermissionAPIError>(await message.Content.ReadAsStringAsync());
-                    throw new GreenFieldAPIException((int)message.StatusCode, err);
+                    throw new GreenfieldAPIException((int)message.StatusCode, err);
                 }
                 else
                 {
                     var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
                     if (err.Code != null)
-                        throw new GreenFieldAPIException((int)message.StatusCode, err);
+                        throw new GreenfieldAPIException((int)message.StatusCode, err);
                 }
             }
             message.EnsureSuccessStatusCode();

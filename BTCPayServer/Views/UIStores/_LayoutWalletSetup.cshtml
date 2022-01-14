@@ -1,0 +1,23 @@
+﻿@{
+    Layout = "_LayoutWizard";
+}
+
+@section PageHeadContent {
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
+@section Navbar {
+    @await RenderSectionAsync("Navbar", false)
+
+    <a asp-controller="UIStores" asp-action="PaymentMethods" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+}
+
+@RenderBody()
+
+

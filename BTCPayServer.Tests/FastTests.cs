@@ -1208,7 +1208,7 @@ namespace BTCPayServer.Tests
 
             testCases.ForEach(tuple =>
             {
-                Assert.Equal(tuple.expectedOutput, InvoiceController.PosDataParser.ParsePosData(tuple.input));
+                Assert.Equal(tuple.expectedOutput, UIInvoiceController.PosDataParser.ParsePosData(tuple.input));
             });
         }
         [Fact]

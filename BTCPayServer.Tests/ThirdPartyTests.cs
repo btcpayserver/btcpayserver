@@ -42,7 +42,7 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+                var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
                 var azureBlobStorageConfiguration = Assert.IsType<AzureBlobStorageConfiguration>(Assert
                     .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                     .Model);
@@ -362,7 +362,7 @@ namespace BTCPayServer.Tests
         private static async Task<decimal> CreateInvoice(ServerTester tester, TestAccount user, string exchange,
             string currency = "USD")
         {
-            var storeController = user.GetController<StoresController>();
+            var storeController = user.GetController<UIStoresController>();
             var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
             vm.PreferredExchange = exchange;
             await storeController.Rates(vm);

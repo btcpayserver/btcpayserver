@@ -45,7 +45,7 @@ namespace BTCPayServer
 
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
         {
-            endpoint = bip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
+            endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
             return endpoint != null;
         }
 
@@ -493,7 +493,7 @@ namespace BTCPayServer
         {
             var redirectVm = new PostRedirectViewModel
             {
-                AspController = "Home",
+                AspController = "UIHome",
                 AspAction = "RecoverySeedBackup",
                 Parameters =
                 {

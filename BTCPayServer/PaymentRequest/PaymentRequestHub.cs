@@ -20,7 +20,7 @@ namespace BTCPayServer.PaymentRequest
 {
     public class PaymentRequestHub : Hub
     {
-        private readonly PaymentRequestController _PaymentRequestController;
+        private readonly UIPaymentRequestController _PaymentRequestController;
         public const string InvoiceCreated = "InvoiceCreated";
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
@@ -28,7 +28,7 @@ namespace BTCPayServer.PaymentRequest
         public const string CancelInvoiceError = "CancelInvoiceError";
         public const string InvoiceCancelled = "InvoiceCancelled";
 
-        public PaymentRequestHub(PaymentRequestController paymentRequestController)
+        public PaymentRequestHub(UIPaymentRequestController paymentRequestController)
         {
             _PaymentRequestController = paymentRequestController;
         }

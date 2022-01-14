@@ -69,7 +69,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
-                var controller = user.GetController<StoresController>();
+                var controller = user.GetController<UIStoresController>();
                 var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(await controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
                 var response = await controller.SetLightningNodeEnabled(user.StoreId, cryptoCode, false);
@@ -200,7 +200,7 @@ namespace BTCPayServer.Tests
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", invoice.Status);
                 });
-                var wallet = tester.PayTester.GetController<WalletsController>();
+                var wallet = tester.PayTester.GetController<UIWalletsController>();
                 var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC,
                     new WalletSendModel()
                     {
@@ -310,7 +310,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
 
-                var controller = tester.PayTester.GetController<InvoiceController>(null);
+                var controller = tester.PayTester.GetController<UIInvoiceController>(null);
                 var checkout =
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
@@ -493,7 +493,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
 
-                var controller = tester.PayTester.GetController<InvoiceController>(null);
+                var controller = tester.PayTester.GetController<UIInvoiceController>(null);
                 var checkout =
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                         .GetAwaiter().GetResult()).Value;
@@ -555,7 +555,7 @@ namespace BTCPayServer.Tests
                     Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
                 });
 
-                controller = tester.PayTester.GetController<InvoiceController>(null);
+                controller = tester.PayTester.GetController<UIInvoiceController>(null);
                 checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
                     .GetAwaiter().GetResult()).Value;
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
@@ -608,7 +608,7 @@ namespace BTCPayServer.Tests
                 await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
-                var apps = user.GetController<AppsController>();
+                var apps = user.GetController<UIAppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
                 vm.AppName = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
@@ -639,7 +639,7 @@ donation:
                     .IsType<ViewResult>(apps.UpdatePointOfSale(app.Id)).Model);
                 Assert.Equal("hello", vmpos.Title);
 
-                var publicApps = user.GetController<AppsPublicController>();
+                var publicApps = user.GetController<UIAppsPublicController>();
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).Result).Model);
@@ -673,7 +673,7 @@ donation:
                 // testing custom amount
                 var action = Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 6.6m, null, null, null, null, "donation").Result);
-                Assert.Equal(nameof(InvoiceController.Checkout), action.ActionName);
+                Assert.Equal(nameof(UIInvoiceController.Checkout), action.ActionName);
                 invoices = user.BitPay.GetInvoices();
                 var donationInvoice = invoices.Single(i => i.Price == 6.6m);
                 Assert.NotNull(donationInvoice);
@@ -711,7 +711,7 @@ donation:
   custom: true
 ";
                     Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
-                    publicApps = user.GetController<AppsPublicController>();
+                    publicApps = user.GetController<UIAppsPublicController>();
                     vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).Result).Model);
                     Assert.Equal(test.Code, vmview.CurrencyCode);
@@ -768,7 +768,7 @@ noninventoryitem:
                 Assert.NotNull(inventoryItemInvoice);
 
                 //let's mark the inventoryitem invoice as invalid, this should return the item to back in stock
-                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
                 var appService = tester.PayTester.GetService<AppService>();
                 var eventAggregator = tester.PayTester.GetService<EventAggregator>();
                 Assert.IsType<JsonResult>(await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));

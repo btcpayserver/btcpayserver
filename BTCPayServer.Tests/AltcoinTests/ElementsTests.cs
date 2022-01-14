@@ -40,7 +40,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("USDT");
 
-                Assert.Equal(3, Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<WalletsController>().ListWallets()).Model).Wallets.Count);
+                Assert.Equal(3, Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<UIWalletsController>().ListWallets()).Model).Wallets.Count);
             }
         }
 

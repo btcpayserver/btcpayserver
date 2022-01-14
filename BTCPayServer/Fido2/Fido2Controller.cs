@@ -90,7 +90,7 @@ namespace BTCPayServer.Fido2
 
         private ActionResult RedirectToList()
         {
-            return RedirectToAction("TwoFactorAuthentication", "Manage");
+            return RedirectToAction("TwoFactorAuthentication", "UIManage");
         }
     }
 }

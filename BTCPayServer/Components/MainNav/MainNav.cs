@@ -22,7 +22,7 @@ namespace BTCPayServer.Components.MainNav
         private const string RootName = "Global";
         private readonly AppService _appService;
         private readonly StoreRepository _storeRepo;
-        private readonly StoresController _storesController;
+        private readonly UIStoresController _storesController;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -30,7 +30,7 @@ namespace BTCPayServer.Components.MainNav
         public MainNav(
             AppService appService,
             StoreRepository storeRepo,
-            StoresController storesController,
+            UIStoresController storesController,
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)

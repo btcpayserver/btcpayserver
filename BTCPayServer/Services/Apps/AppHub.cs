@@ -16,9 +16,9 @@ namespace BTCPayServer.Services.Apps
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
-        private readonly AppsPublicController _AppsPublicController;
+        private readonly UIAppsPublicController _AppsPublicController;
 
-        public AppHub(AppsPublicController appsPublicController)
+        public AppHub(UIAppsPublicController appsPublicController)
         {
             _AppsPublicController = appsPublicController;
         }

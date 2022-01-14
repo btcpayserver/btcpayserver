@@ -1,0 +1,90 @@
+﻿@using BTCPayServer.Abstractions.Contracts
+@model LoginViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject ISettingsRepository _settingsRepository
+@{
+    ViewData["Title"] = "Log in";
+    Layout = "_LayoutSimple";
+}
+
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        </a>
+
+        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
+
+        <partial name="_StatusMessage"/>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col account-form">
+        <div class="modal-content border-0 p-3">
+            <div class="modal-header border-0 py-2">
+                <h4 class="modal-title">Sign In</h4>
+            </div>
+            <div class="modal-body">
+                <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
+                    <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" required tabindex="1" autofocus/>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between">
+                                <label asp-for="Password" class="form-label"></label>
+                                <a asp-action="ForgotPassword" tabindex="5">Forgot password?</a>
+                            </div>
+                            <div class="input-group  d-flex">
+                                <input asp-for="Password" class="form-control" required tabindex="2"/>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mt-4">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton" tabindex="3"><span class="ps-3">Sign in</span></button>
+                                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan Login code with camera" tabindex="4"><i class="fa fa-camera"></i></button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+                <form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
+                    <input asp-for="LoginCode" type="hidden" class="form-control"/>
+                </form>
+                @if (!(await _settingsRepository.GetPolicies()).LockSubscription)
+                {
+                    <p class="text-center mt-2 mb-0">
+                        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
+    </div>
+</div>
+<partial name="CameraScanner"/>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            initCameraScanningApp("Scan login code", data => {
+                document.getElementById("LoginCode").value = data;
+                document.getElementById("logincode-form").submit();
+            }, "scanModal");
+        });
+    </script>
+}

@@ -12,21 +12,21 @@
                     <li>
                         @if (option.WalletId != null)
                         {
-                            <a asp-controller="Wallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
                         }
                         else
                         {
-                            <a asp-controller="Stores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
                         }
                     </li>
                 }
                 <li><hr class="dropdown-divider"></li>
-                <li><a asp-controller="UserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
             </ul>
         </div>
     }
     else
     {
-        <a asp-controller="UserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
+        <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
     }
 </div>

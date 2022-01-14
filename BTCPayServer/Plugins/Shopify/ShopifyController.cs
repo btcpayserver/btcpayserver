@@ -38,7 +38,7 @@ namespace BTCPayServer.Plugins.Shopify
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly StoreRepository _storeRepository;
         private readonly InvoiceRepository _invoiceRepository;
-        private readonly InvoiceController _invoiceController;
+        private readonly UIInvoiceController _invoiceController;
         private readonly IJsonHelper _jsonHelper;
         private readonly IHttpClientFactory _clientFactory;
 
@@ -47,7 +47,7 @@ namespace BTCPayServer.Plugins.Shopify
             IWebHostEnvironment webHostEnvironment,
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
-            InvoiceController invoiceController,
+            UIInvoiceController invoiceController,
             IJsonHelper jsonHelper,
             IHttpClientFactory clientFactory)
         {

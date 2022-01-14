@@ -10,7 +10,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.GreenField;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
@@ -24,7 +24,7 @@ using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
@@ -381,10 +381,10 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<RateFetcher>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddTransient<AccessTokenController>();
-            services.AddTransient<InvoiceController>();
-            services.AddTransient<AppsPublicController>();
-            services.AddTransient<PaymentRequestController>();
+            services.AddTransient<BitpayAccessTokenController>();
+            services.AddTransient<UIInvoiceController>();
+            services.AddTransient<UIAppsPublicController>();
+            services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
 

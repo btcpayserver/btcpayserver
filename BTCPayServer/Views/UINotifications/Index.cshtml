@@ -1,0 +1,161 @@
+@model BTCPayServer.Models.NotificationViewModels.IndexViewModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<partial name="_StatusMessage" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h2>@ViewData["Title"]</h2>
+    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary">
+        <span class="fa fa-cog"></span>
+        Settings                
+    </a>
+</div>
+@if (Model.Total > 0)
+{
+    <form method="post" asp-action="MassAction">
+        <div class="row button-row">
+            <div class="col-lg-6">
+                <span class="dropdown" style="display:none;" id="MassAction">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Actions
+                    </button>
+                    <div class="dropdown-menu">
+                        <button type="submit" class="dropdown-item" name="command" value="mark-seen"><i class="fa fa-eye"></i> Mark seen</button>
+                        <button type="submit" class="dropdown-item" name="command" value="mark-unseen"><i class="fa fa-eye-slash"></i> Mark unseen</button>
+                        <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
+                    </div>
+                </span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-hover table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th width="30px" class="only-for-js">
+                                @if (Model.Total > 0)
+                                {
+                                    <input name="selectedItems" id="selectAllCheckbox" type="checkbox" class="form-check-input" />
+                                }
+                            </th>
+                            <th width="190px">
+                                Date
+                                <a href="#" id="switchTimeFormat">
+                                    <span class="fa fa-clock-o" title="Switch date format"></span>
+                                </a>
+                            </th>
+                            <th>Message</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr data-guid="@item.Id" class="notification-row @(item.Seen ? "seen" : "")">
+                                <td class="only-for-js">
+                                    <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@item.Id" />
+                                </td>
+                                <td class="toggleRowCheckbox">
+                                    <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
+                                        @item.Created.ToBrowserDate()
+                                    </span>
+                                </td>
+                                <td class="toggleRowCheckbox">
+                                    @item.Body
+                                </td>
+                                <td class="text-end fw-normal">
+                                    @if (!String.IsNullOrEmpty(item.ActionLink))
+                                    {
+                                        <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
+                                        <span class="d-none d-md-inline-block"> - </span>
+                                    }
+                                    <button class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                        <span>Mark&nbsp;</span><span class="seen-text"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <vc:pager view-model="Model" />
+
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no notifications.
+    </p>
+}
+
+<style>
+    .notification-row.loading {
+        cursor: wait;
+        pointer-events: none;
+    }
+
+    .seen-text::after {
+        content: "seen";
+    }
+
+    tr.seen td .seen-text::after {
+        content: "unseen";
+    }
+
+    tr td {
+        font-weight: bold;
+    }
+
+    tr.seen td {
+        font-weight: normal;
+    }
+</style>
+
+@section PageFootContent {
+    <script type="text/javascript">
+        delegate('click', '#selectAllCheckbox', e => {
+            document.querySelectorAll('.notification-row .selector').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+            updateSelectors();
+        });
+
+        delegate('click', '.toggleRowCheckbox', e => {
+            const input = $(e.target).parents(".notification-row").find(".selector");
+            input.prop('checked', !input.prop("checked"));
+            updateSelectors();
+        })
+
+        delegate('click', '#switchTimeFormat', switchTimeFormat)
+
+        delegate('click', '.btn-toggle-seen', e => {
+            const row = $(e.target).parents(".notification-row").toggleClass("loading");
+            const guid = row.data("guid");
+            const url = "@Url.Action("FlipRead", "UINotifications", new { id = "placeholder" })".replace("placeholder", guid);
+            $.post(url, function (data) {
+                row.toggleClass("seen loading");
+            });
+            return false;
+        })
+
+        document.addEventListener("DOMContentLoaded", function () {
+            $(".selector").change(updateSelectors);
+            updateSelectors();
+        });
+
+        function updateSelectors() {
+            var count = $(".selector:checked").length;
+            if (count > 0) {
+                $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
+                $("#MassAction").show();
+            } else {
+                $("#MassAction").hide();
+            }
+        }
+    </script>
+}

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Security.Bitpay;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using CsvHelper.Configuration.Attributes;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +26,7 @@ namespace BTCPayServer
             bool isAdmin = false;
             if (claimUser.AuthenticationType == AuthenticationSchemes.Cookie)
                 isAdmin = user.IsInRole(Roles.ServerAdmin);
-            else if (claimUser.AuthenticationType == GreenFieldConstants.AuthenticationType)
+            else if (claimUser.AuthenticationType == GreenfieldConstants.AuthenticationType)
                 isAdmin = (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings)).Succeeded;
             return isAdmin ? (true, true) :
                    (policiesSettings?.AllowHotWalletForAll is true, policiesSettings?.AllowHotWalletRPCImportForAll is true);

@@ -1,0 +1,174 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
+using BTCPayServer.Security;
+using BTCPayServer.Services.PaymentRequests;
+using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
+
+namespace BTCPayServer.Controllers.Greenfield
+{
+    [ApiController]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
+    public class GreenfieldPaymentRequestsController : ControllerBase
+    {
+        private readonly PaymentRequestRepository _paymentRequestRepository;
+        private readonly CurrencyNameTable _currencyNameTable;
+
+        public GreenfieldPaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
+            CurrencyNameTable currencyNameTable)
+        {
+            _paymentRequestRepository = paymentRequestRepository;
+            _currencyNameTable = currencyNameTable;
+        }
+
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-requests")]
+        public async Task<ActionResult<IEnumerable<Client.Models.PaymentRequestData>>> GetPaymentRequests(string storeId, bool includeArchived = false)
+        {
+            var prs = await _paymentRequestRepository.FindPaymentRequests(
+                new PaymentRequestQuery() { StoreId = storeId, IncludeArchived = includeArchived });
+            return Ok(prs.Items.Select(FromModel));
+        }
+
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequest(string storeId, string paymentRequestId)
+        {
+            var pr = await _paymentRequestRepository.FindPaymentRequests(
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
+
+            if (pr.Total == 0)
+            {
+                return PaymentRequestNotFound();
+            }
+
+            return Ok(FromModel(pr.Items.First()));
+        }
+
+        [Authorize(Policy = Policies.CanModifyPaymentRequests,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
+        public async Task<IActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
+        {
+            var pr = await _paymentRequestRepository.FindPaymentRequests(
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId }, IncludeArchived = false });
+            if (pr.Total == 0)
+            {
+                return PaymentRequestNotFound();
+            }
+
+            var updatedPr = pr.Items.First();
+            updatedPr.Archived = true;
+            await _paymentRequestRepository.CreateOrUpdatePaymentRequest(updatedPr);
+            return Ok();
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payment-requests")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> CreatePaymentRequest(string storeId,
+            CreatePaymentRequestRequest request)
+        {
+            var validationResult = Validate(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+            request.Currency ??= StoreData.GetStoreBlob().DefaultCurrency;
+            var pr = new PaymentRequestData()
+            {
+                StoreDataId = storeId,
+                Status = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending,
+                Created = DateTimeOffset.UtcNow
+            };
+            pr.SetBlob(request);
+            pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
+            return Ok(FromModel(pr));
+        }
+        public Data.StoreData StoreData => HttpContext.GetStoreData();
+        [HttpPut("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> UpdatePaymentRequest(string storeId,
+            string paymentRequestId, [FromBody] UpdatePaymentRequestRequest request)
+        {
+            var validationResult = Validate(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+            request.Currency ??= StoreData.GetStoreBlob().DefaultCurrency;
+            var pr = await _paymentRequestRepository.FindPaymentRequests(
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
+            if (pr.Total == 0)
+            {
+                return PaymentRequestNotFound();
+            }
+
+            var updatedPr = pr.Items.First();
+            updatedPr.SetBlob(request);
+
+            return Ok(FromModel(await _paymentRequestRepository.CreateOrUpdatePaymentRequest(updatedPr)));
+        }
+
+        private IActionResult Validate(PaymentRequestBaseData data)
+        {
+            if (data is null)
+                return BadRequest();
+            if (data.Amount <= 0)
+            {
+                ModelState.AddModelError(nameof(data.Amount), "Please provide an amount greater than 0");
+            }
+
+            if (!string.IsNullOrEmpty(data.Currency) &&
+                _currencyNameTable.GetCurrencyData(data.Currency, false) == null)
+                ModelState.AddModelError(nameof(data.Currency), "Invalid currency");
+            if (string.IsNullOrEmpty(data.Currency))
+                data.Currency = null;
+            if (string.IsNullOrEmpty(data.Title))
+                ModelState.AddModelError(nameof(data.Title), "Title is required");
+
+            if (!string.IsNullOrEmpty(data.CustomCSSLink) && data.CustomCSSLink.Length > 500)
+                ModelState.AddModelError(nameof(data.CustomCSSLink), "CustomCSSLink is 500 chars max");
+
+            return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
+        }
+
+        private static Client.Models.PaymentRequestData FromModel(PaymentRequestData data)
+        {
+            var blob = data.GetBlob();
+            return new Client.Models.PaymentRequestData()
+            {
+                CreatedTime = data.Created,
+                Id = data.Id,
+                StoreId = data.StoreDataId,
+                Status = data.Status,
+                Archived = data.Archived,
+                Amount = blob.Amount,
+                Currency = blob.Currency,
+                Description = blob.Description,
+                Title = blob.Title,
+                ExpiryDate = blob.ExpiryDate,
+                Email = blob.Email,
+                AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts,
+                EmbeddedCSS = blob.EmbeddedCSS,
+                CustomCSSLink = blob.CustomCSSLink
+            };
+        }
+
+        private IActionResult PaymentRequestNotFound()
+        {
+            return this.CreateAPIError(404, "payment-request-not-found", "The payment request was not found");
+        }
+    }
+}

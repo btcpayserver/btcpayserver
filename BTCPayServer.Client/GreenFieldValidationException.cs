@@ -4,9 +4,9 @@ using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Client
 {
-    public class GreenFieldValidationException : Exception
+    public class GreenfieldValidationException : Exception
     {
-        public GreenFieldValidationException(Models.GreenfieldValidationError[] errors) : base(BuildMessage(errors))
+        public GreenfieldValidationException(Models.GreenfieldValidationError[] errors) : base(BuildMessage(errors))
         {
             ValidationErrors = errors;
         }

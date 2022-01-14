@@ -8,5 +8,5 @@
 }
 @if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
 {
-    <a class="nav-link @(isMonero ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="MoneroLikeStore">Monero</a>
+    <a class="nav-link @(isMonero ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="UIMoneroLikeStore">Monero</a>
 }

@@ -427,7 +427,6 @@ namespace BTCPayServer.Tests
         {
             if (storeId is null)
             {
-                var aaa = this.Driver.PageSource;
                 this.Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             }
             else

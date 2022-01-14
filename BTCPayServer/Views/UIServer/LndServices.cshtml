@@ -3,134 +3,129 @@
     ViewData.SetActivePage(ServerNavPages.Services, $"LND {Model.ConnectionType}");
 }
 
-<div class="row">
-    <div class="col-md-8">
-        <h3 class="mb-4">@ViewData["Title"]</h3>
-        <p>
-            BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.
-        </p>
+<h3 class="mb-4">@ViewData["Title"]</h3>
+<p>
+    BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.
+</p>
 
-        <h4 class="mb-3">Compatible wallets</h4>
+<h4 class="mb-3">Compatible wallets</h4>
+<div class="services-list">
+    @if (Model.Uri == null) // if GRPC
+    {
+        <a href="https://zaphq.io/" target="_blank" class="service" rel="noreferrer noopener">
+            <img src="~/img/zapwallet.jpg" asp-append-version="true" alt="Zap" />
+            <h6>Zap</h6>
+        </a>
+    }
+    else
+    {
+        <a href="https://lightningjoule.com/" target="_blank" class="service" rel="noreferrer noopener">
+            <img src="~/img/joule.png" asp-append-version="true" alt="Joule" />
+            <h6>Joule</h6>
+        </a>
+        <a href="https://github.com/ZeusLN/zeus" target="_blank" class="service" rel="noreferrer noopener">
+            <img src="~/img/zeus.jpg" asp-append-version="true" alt="Zeus" />
+            <h6>Zeus</h6>
+        </a>
+    }
+</div>
 
-        <div>
-            @if (Model.Uri == null) // if GRPC
-            {
-                <a href="https://zaphq.io/" target="_blank" class="d-inline-block me-3 text-center" rel="noreferrer noopener">
-                    <img src="~/img/zapwallet.jpg" width="100" height="100" asp-append-version="true" alt="Zap" />
-                    <div class="mt-2">Zap</div>
-                </a>
-            }
-            else
-            {
-                <a href="https://lightningjoule.com/" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
-                    <img src="~/img/joule.png" width="100" height="100" asp-append-version="true" alt="Joule" />
-                    <div class="mt-2">Joule</div>
-                </a>
-                <a href="https://github.com/ZeusLN/zeus" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
-                    <img src="~/img/zeus.jpg" width="100" height="100" asp-append-version="true" alt="Zeus" />
-                    <div class="mt-2">Zeus</div>
-                </a>
-            }
-        </div>
+<h4 class="mt-4 mb-3">QR Code connection</h4>
+<p>
+    You can use this QR Code to connect external software to your LND instance.<br/>
+    This QR Code is only valid for 10 minutes.
+</p>
 
-        <h4 class="mt-5 mb-3">QR Code connection</h4>
-        <p>
-            You can use this QR Code to connect external software to your LND instance.<br/>
-            This QR Code is only valid for 10 minutes.
-        </p>
-
-        @if (Model.QRCode == null)
-        {
-            <div class="form-group">
-                <form method="post">
-                    <button type="submit" class="btn btn-primary">Show QR Code</button>
-                </form>
-            </div>
-        }
-        else
-        {
-            <div class="form-group">
-                <div id="qrCode"></div>
-                <div id="qrCodeData" data-url="@Model.QRCode"></div>
-            </div>
-            <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a>.</p>
-            <div id="detailsQR" class="collapse">
-                <div class="form-group">
-                    <label asp-for="QRCode" class="form-label">QR Code data</label>
-                    <input asp-for="QRCode" class="form-control" readonly />
-                </div>
-                <p>
-                    Click <a href="@Model.QRCodeLink" target="_blank" rel="noreferrer noopener">here</a> to open the configuration file.
-                </p>
-            </div>
-        }
-
-        <h4 class="mt-5 mb-3">More details</h4>
-        <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a>.</p>
-
-        <div id="details" class="collapse">
-            @if (Model.Uri == null)
-            {
-                <div class="form-group">
-                    <label asp-for="Host" class="form-label"></label>
-                    <input asp-for="Host" readonly class="form-control"/>
-                </div>
-                <div class="form-group">
-                    <label asp-for="SSL" class="form-label"></label>
-                    <input asp-for="SSL" disabled type="checkbox" class="btcpay-toggle ms-2" />
-                </div>
-            }
-            else
-            {
-                <div class="form-group">
-                    <label asp-for="Uri" class="form-label"></label>
-                    <input asp-for="Uri" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.Macaroon != null)
-            {
-                <div class="form-group">
-                    <label asp-for="Macaroon" class="form-label"></label>
-                    <input asp-for="Macaroon" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.AdminMacaroon != null)
-            {
-                <div class="form-group">
-                    <label asp-for="AdminMacaroon" class="form-label"></label>
-                    <input asp-for="AdminMacaroon" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.InvoiceMacaroon != null)
-            {
-                <div class="form-group">
-                    <label asp-for="InvoiceMacaroon" class="form-label"></label>
-                    <input asp-for="InvoiceMacaroon" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.ReadonlyMacaroon != null)
-            {
-                <div class="form-group">
-                    <label asp-for="ReadonlyMacaroon" class="form-label"></label>
-                    <input asp-for="ReadonlyMacaroon" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.GRPCSSLCipherSuites != null)
-            {
-                <div class="form-group">
-                    <label asp-for="GRPCSSLCipherSuites" class="form-label"></label>
-                    <input asp-for="GRPCSSLCipherSuites" readonly class="form-control"/>
-                </div>
-            }
-            @if (Model.CertificateThumbprint != null)
-            {
-                <div class="form-group">
-                    <label asp-for="CertificateThumbprint" class="form-label"></label>
-                    <input asp-for="CertificateThumbprint" readonly class="form-control"/>
-                </div>
-            }
-        </div>
+@if (Model.QRCode == null)
+{
+    <div class="form-group">
+        <form method="post">
+            <button type="submit" class="btn btn-primary">Show QR Code</button>
+        </form>
     </div>
+}
+else
+{
+    <div class="form-group">
+        <div id="qrCode"></div>
+        <div id="qrCodeData" data-url="@Model.QRCode"></div>
+    </div>
+    <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a>.</p>
+    <div id="detailsQR" class="collapse">
+        <div class="form-group">
+            <label asp-for="QRCode" class="form-label">QR Code data</label>
+            <input asp-for="QRCode" class="form-control" readonly />
+        </div>
+        <p>
+            Click <a href="@Model.QRCodeLink" target="_blank" rel="noreferrer noopener">here</a> to open the configuration file.
+        </p>
+    </div>
+}
+
+<h4 class="mt-5 mb-3">More details</h4>
+<p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a>.</p>
+
+<div id="details" class="collapse">
+    @if (Model.Uri == null)
+    {
+        <div class="form-group">
+            <label asp-for="Host" class="form-label"></label>
+            <input asp-for="Host" readonly class="form-control"/>
+        </div>
+        <div class="form-group">
+            <label asp-for="SSL" class="form-label"></label>
+            <input asp-for="SSL" disabled type="checkbox" class="btcpay-toggle ms-2" />
+        </div>
+    }
+    else
+    {
+        <div class="form-group">
+            <label asp-for="Uri" class="form-label"></label>
+            <input asp-for="Uri" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.Macaroon != null)
+    {
+        <div class="form-group">
+            <label asp-for="Macaroon" class="form-label"></label>
+            <input asp-for="Macaroon" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.AdminMacaroon != null)
+    {
+        <div class="form-group">
+            <label asp-for="AdminMacaroon" class="form-label"></label>
+            <input asp-for="AdminMacaroon" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.InvoiceMacaroon != null)
+    {
+        <div class="form-group">
+            <label asp-for="InvoiceMacaroon" class="form-label"></label>
+            <input asp-for="InvoiceMacaroon" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.ReadonlyMacaroon != null)
+    {
+        <div class="form-group">
+            <label asp-for="ReadonlyMacaroon" class="form-label"></label>
+            <input asp-for="ReadonlyMacaroon" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.GRPCSSLCipherSuites != null)
+    {
+        <div class="form-group">
+            <label asp-for="GRPCSSLCipherSuites" class="form-label"></label>
+            <input asp-for="GRPCSSLCipherSuites" readonly class="form-control"/>
+        </div>
+    }
+    @if (Model.CertificateThumbprint != null)
+    {
+        <div class="form-group">
+            <label asp-for="CertificateThumbprint" class="form-label"></label>
+            <input asp-for="CertificateThumbprint" readonly class="form-control"/>
+        </div>
+    }
 </div>
 
 @section PageFootContent {

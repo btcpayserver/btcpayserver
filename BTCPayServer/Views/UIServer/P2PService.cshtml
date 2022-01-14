@@ -18,57 +18,53 @@
     </div>
 }
 
-<div class="row">
-    <div class="col-md-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All" class="text-danger"></div>
-        }
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
 
-        <h4 class="mb-3">Full node connection</h4>
-        <p>This page exposes information to connect remotely to your full node via the P2P protocol.</p>
+<h4 class="mb-3">Full node connection</h4>
+<p>This page exposes information to connect remotely to your full node via the P2P protocol.</p>
 
-        <h4 class="mb-3">Compatible wallets</h4>
-        <div>
-            <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
-                <img src="~/img/GreenWallet.png" width="100" height="100" asp-append-version="true" alt="Blockstream Green" />
-                <div class="mt-2">Blockstream Green</div>
-            </a>
-            <a href="https://www.wasabiwallet.io/" target="_blank" class="d-inline-block me-3 mb-3 text-center" rel="noreferrer noopener">
-                <img src="~/img/wasabi.png" width="100" height="100" asp-append-version="true" alt="Wasabi Wallet" />
-                <div class="mt-2">Wasabi Wallet</div>
-            </a>
-        </div>
+<h4 class="mb-3">Compatible wallets</h4>
+<div class="services-list">
+    <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank" class="service" rel="noreferrer noopener">
+        <img src="~/img/GreenWallet.png" asp-append-version="true" alt="Blockstream Green" />
+        <h6>Blockstream Green</h6>
+    </a>
+    <a href="https://www.wasabiwallet.io/" target="_blank" class="service" rel="noreferrer noopener">
+        <img src="~/img/wasabi.png" asp-append-version="true" alt="Wasabi Wallet" />
+        <h6>Wasabi Wallet</h6>
+    </a>
+</div>
 
-        <h4 class="mt-5 mb-3">QR Code connection</h4>
-        <p>You can use QR Code to connect to @Model.WalletName with compatible wallets.</p>
+<h4 class="mt-4 mb-3">QR Code connection</h4>
+<p>You can use QR Code to connect to @Model.WalletName with compatible wallets.</p>
 
+<div class="form-group">
+    @if (!Model.ShowQR)
+    {
         <div class="form-group">
-            @if (!Model.ShowQR)
-            {
-                <div class="form-group">
-                    <form method="get">
-                        <input type="hidden" asp-for="ShowQR" value="true" />
-                        <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
-                    </form>
-                </div>
-            }
-            else
-            {
-                <div class="form-group">
-                    <div id="qrCode"></div>
-                    <div id="qrCodeData" data-url="@Model.ServiceLink"></div>
-                </div>
-                <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
-                <div id="detailsQR" class="collapse">
-                    <div class="form-group">
-                        <label asp-for="ServiceLink" class="form-label">QR Code data</label>
-                        <input asp-for="ServiceLink" class="form-control" readonly />
-                    </div>
-                </div>
-            }
+            <form method="get">
+                <input type="hidden" asp-for="ShowQR" value="true" />
+                <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
+            </form>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="form-group">
+            <div id="qrCode"></div>
+            <div id="qrCodeData" data-url="@Model.ServiceLink"></div>
+        </div>
+        <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
+        <div id="detailsQR" class="collapse">
+            <div class="form-group">
+                <label asp-for="ServiceLink" class="form-label">QR Code data</label>
+                <input asp-for="ServiceLink" class="form-control" readonly />
+            </div>
+        </div>
+    }
 </div>
 
 @section PageFootContent {

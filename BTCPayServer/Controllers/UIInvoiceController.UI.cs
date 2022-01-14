@@ -500,21 +500,21 @@ namespace BTCPayServer.Controllers
                 var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider);
                 PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
                 PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
-                if (invoicePaymentId is PaymentMethodId)
+                if (invoicePaymentId is not null)
                 {
                     if (enabledPaymentIds.Contains(invoicePaymentId))
                         paymentMethodId = invoicePaymentId;
                 }
-                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                if (paymentMethodId is null && storePaymentId is not null)
                 {
                     if (enabledPaymentIds.Contains(storePaymentId))
                         paymentMethodId = storePaymentId;
                 }
-                if (paymentMethodId is null && invoicePaymentId is PaymentMethodId)
+                if (paymentMethodId is null && invoicePaymentId is not null)
                 {
                     paymentMethodId = invoicePaymentId.FindNearest(enabledPaymentIds);
                 }
-                if (paymentMethodId is null && storePaymentId is PaymentMethodId)
+                if (paymentMethodId is null && storePaymentId is not null)
                 {
                     paymentMethodId = storePaymentId.FindNearest(enabledPaymentIds);
                 }

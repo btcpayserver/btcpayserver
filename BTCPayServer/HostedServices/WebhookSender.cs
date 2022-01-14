@@ -254,7 +254,7 @@ namespace BTCPayServer.HostedServices
                 var result = await SendAndSaveDelivery(ctx, cancellationToken);
                 if (ctx.WebhookBlob.AutomaticRedelivery &&
                     !result.Success &&
-                    result.DeliveryId is string)
+                    result.DeliveryId is not null)
                 {
                     var originalDeliveryId = result.DeliveryId;
                     foreach (var wait in new[]

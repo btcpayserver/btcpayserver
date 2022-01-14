@@ -458,38 +458,36 @@ namespace BTCPayServer.Payments.Lightning
             try
             {
                 var lightningClient = _lightningClientFactory.Create(ConnectionString, _network);
-                using (var session = await lightningClient.Listen(cancellation))
+                using var session = await lightningClient.Listen(cancellation);
+                // Just in case the payment arrived after our last poll but before we listened.
+                await PollAllListenedInvoices(cancellation);
+                if (_ErrorAlreadyLogged)
                 {
-                    // Just in case the payment arrived after our last poll but before we listened.
-                    await PollAllListenedInvoices(cancellation);
-                    if (_ErrorAlreadyLogged)
+                    Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Could reconnect successfully to {ConnectionString.BaseUri}");
+                }
+                _ErrorAlreadyLogged = false;
+                while (!_ListenedInvoices.IsEmpty)
+                {
+                    var notification = await session.WaitInvoice(cancellation);
+                    if (!_ListenedInvoices.TryGetValue(notification.Id, out var listenedInvoice))
+                        continue;
+                    if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
+                        (notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11 ||
+                         BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash ==
+                         listenedInvoice.PaymentMethodDetails.GetPaymentHash(_network.NBitcoinNetwork)))
                     {
-                        Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Could reconnect successfully to {ConnectionString.BaseUri}");
-                    }
-                    _ErrorAlreadyLogged = false;
-                    while (!_ListenedInvoices.IsEmpty)
-                    {
-                        var notification = await session.WaitInvoice(cancellation);
-                        if (!_ListenedInvoices.TryGetValue(notification.Id, out var listenedInvoice))
-                            continue;
-                        if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
-                            (notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11 ||
-                             BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash ==
-                             listenedInvoice.PaymentMethodDetails.GetPaymentHash(_network.NBitcoinNetwork)))
+                        if (notification.Status == LightningInvoiceStatus.Paid &&
+                            notification.PaidAt.HasValue && notification.Amount != null)
                         {
-                            if (notification.Status == LightningInvoiceStatus.Paid &&
-                                notification.PaidAt.HasValue && notification.Amount != null)
+                            if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.GetId().PaymentType))
                             {
-                                if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.GetId().PaymentType))
-                                {
-                                    Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via notification ({listenedInvoice.InvoiceId})");
-                                }
-                                _ListenedInvoices.TryRemove(notification.Id, out var _);
+                                Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via notification ({listenedInvoice.InvoiceId})");
                             }
-                            else if (notification.Status == LightningInvoiceStatus.Expired)
-                            {
-                                _ListenedInvoices.TryRemove(notification.Id, out var _);
-                            }
+                            _ListenedInvoices.TryRemove(notification.Id, out var _);
+                        }
+                        else if (notification.Status == LightningInvoiceStatus.Expired)
+                        {
+                            _ListenedInvoices.TryRemove(notification.Id, out var _);
                         }
                     }
                 }

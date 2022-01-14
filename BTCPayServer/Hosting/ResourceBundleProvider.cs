@@ -20,17 +20,15 @@ namespace BTCPayServer.Hosting
             {
                 _BundlesByName = new Lazy<Dictionary<string, Bundle>>(() =>
                 {
-                    using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.bundleconfig.json"))
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        var content = reader.ReadToEnd();
-                        return JArray.Parse(content).OfType<JObject>()
-                               .Select(jobj => new Bundle()
-                               {
-                                   Name = jobj.Property("name", StringComparison.OrdinalIgnoreCase)?.Value.Value<string>() ?? jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>(),
-                                   OutputFileUrl = Path.Combine(hosting.ContentRootPath, jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>())
-                               }).ToDictionary(o => o.Name, o => o);
-                    }
+                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.bundleconfig.json");
+                    using var reader = new StreamReader(stream, Encoding.UTF8);
+                    var content = reader.ReadToEnd();
+                    return JArray.Parse(content).OfType<JObject>()
+                           .Select(jobj => new Bundle()
+                           {
+                               Name = jobj.Property("name", StringComparison.OrdinalIgnoreCase)?.Value.Value<string>() ?? jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>(),
+                               OutputFileUrl = Path.Combine(hosting.ContentRootPath, jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>())
+                           }).ToDictionary(o => o.Name, o => o);
                 }, true);
             }
             else

@@ -58,7 +58,7 @@ namespace BTCPayServer.Security.Greenfield
             {
                 if (Permission.TryParse(claim.Value, out var claimPermission))
                 {
-                    if (requireUnscoped && claimPermission.Scope is string)
+                    if (requireUnscoped && claimPermission.Scope is not null)
                         continue;
                     if (claimPermission.Contains(permission))
                     {

@@ -871,11 +871,9 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
-                    {
-                        var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
-                        vm.SSHKeyFileContent = result.Output;
-                    }
+                    using var sshClient = await _Options.SSHSettings.ConnectAsync();
+                    var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                    vm.SSHKeyFileContent = result.Output;
                 }
                 catch { }
             }
@@ -1106,17 +1104,13 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 try
                 {
-                    using (var fileStream = new FileStream(
+                    using var fileStream = new FileStream(
                         fi.FullName,
                         FileMode.Open,
                         FileAccess.Read,
-                        FileShare.ReadWrite))
-                    {
-                        using (var reader = new StreamReader(fileStream))
-                        {
-                            vm.Log = await reader.ReadToEndAsync();
-                        }
-                    }
+                        FileShare.ReadWrite);
+                    using var reader = new StreamReader(fileStream);
+                    vm.Log = await reader.ReadToEndAsync();
                 }
                 catch
                 {

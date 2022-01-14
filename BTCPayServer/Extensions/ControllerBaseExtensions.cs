@@ -40,7 +40,7 @@ namespace BTCPayServer
             // but we want searchTerm to be null only if the user is browsing the page via some link
             // NOT if the user entered some empty search
             var searchTerm = model.SearchTerm;
-            searchTerm = searchTerm is string ? searchTerm :
+            searchTerm = searchTerm is not null ? searchTerm :
                          ctrl.Request.Query.ContainsKey(nameof(searchTerm)) ? string.Empty :
                          null;
             if (searchTerm is null)

@@ -28,14 +28,12 @@ namespace BTCPayServer.Services
 
         public async Task UpdateInvoiceExpiry(string invoiceId, DateTimeOffset dateTimeOffset)
         {
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null)
-                    return;
-                // TODO change the expiry time. But how?
-                await ctx.SaveChangesAsync().ConfigureAwait(false);
-            }
+            using var ctx = _applicationDbContextFactory.CreateContext();
+            var invoiceData = await ctx.Invoices.FindAsync(invoiceId).ConfigureAwait(false);
+            if (invoiceData == null)
+                return;
+            // TODO change the expiry time. But how?
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
         }
 
         Task IHostedService.StartAsync(CancellationToken cancellationToken)

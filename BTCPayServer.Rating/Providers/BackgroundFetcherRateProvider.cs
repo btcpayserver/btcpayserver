@@ -95,7 +95,7 @@ namespace BTCPayServer.Services.Rates
             {
                 LastRequested = LastRequested
             };
-            if (_Latest is LatestFetch fetch && fetch.Latest is PairRate[])
+            if (_Latest is LatestFetch fetch && fetch.Latest is not null)
             {
                 state.LastUpdated = fetch.Updated;
                 state.Rates = fetch.Latest

@@ -44,21 +44,19 @@ namespace BTCPayServer.Services
         {
             ArgumentNullException.ThrowIfNull(transaction);
             ArgumentNullException.ThrowIfNull(network);
-            using (var db = _dbContextFactory.CreateContext())
+            using var db = _dbContextFactory.CreateContext();
+            db.PlannedTransactions.Add(new PlannedTransaction()
             {
-                db.PlannedTransactions.Add(new PlannedTransaction()
-                {
-                    Id = $"{network.CryptoCode}-{transaction.GetHash()}",
-                    BroadcastAt = broadcastTime,
-                    Blob = transaction.ToBytes()
-                });
-                try
-                {
-                    await db.SaveChangesAsync();
-                }
-                catch (DbUpdateException)
-                {
-                }
+                Id = $"{network.CryptoCode}-{transaction.GetHash()}",
+                BroadcastAt = broadcastTime,
+                Blob = transaction.ToBytes()
+            });
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
             }
         }
 

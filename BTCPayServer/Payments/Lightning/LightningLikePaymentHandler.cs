@@ -130,42 +130,40 @@ namespace BTCPayServer.Payments.Lightning
 
             try
             {
-                using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
+                using var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT);
+                var client = CreateLightningClient(supportedPaymentMethod, network);
+                LightningNodeInformation info;
+                try
                 {
-                    var client = CreateLightningClient(supportedPaymentMethod, network);
-                    LightningNodeInformation info;
-                    try
-                    {
-                        info = await client.GetInfo(cts.Token);
-                    }
-                    catch (OperationCanceledException) when (cts.IsCancellationRequested)
-                    {
-                        throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" +
-                                                                    (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
-                    }
-
-                    var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
-                        ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
-                        : info.NodeInfoList.Select(i => i).ToArray();
-
-                    // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
-                    // if (!nodeInfo.Any())
-                    // {
-                    //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
-                    // }
-
-                    var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
-                    if (blocksGap > 10)
-                    {
-                        throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
-                    }
-
-                    return nodeInfo;
+                    info = await client.GetInfo(cts.Token);
                 }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                {
+                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
+                }
+                catch (Exception ex)
+                {
+                    throw new PaymentMethodUnavailableException($"Error while connecting to the API: {ex.Message}" +
+                                                                (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
+                }
+
+                var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
+                    ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
+                    : info.NodeInfoList.Select(i => i).ToArray();
+
+                // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
+                // if (!nodeInfo.Any())
+                // {
+                //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
+                // }
+
+                var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
+                if (blocksGap > 10)
+                {
+                    throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
+                }
+
+                return nodeInfo;
             }
             catch (Exception e) when (!throws)
             {
@@ -197,9 +195,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (!Utils.TryParseEndpoint(nodeInfo.Host, nodeInfo.Port, out var endpoint))
                     throw new PaymentMethodUnavailableException($"Could not parse the endpoint {nodeInfo.Host}");
 
-                using (var tcp = await _socketFactory.ConnectAsync(endpoint, cancellation))
-                {
-                }
+                using var tcp = await _socketFactory.ConnectAsync(endpoint, cancellation);
             }
             catch (Exception ex)
             {

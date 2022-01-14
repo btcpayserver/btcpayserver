@@ -810,10 +810,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<string> ReadAllText(IFormFile file)
         {
-            using (var stream = new StreamReader(file.OpenReadStream()))
-            {
-                return await stream.ReadToEndAsync();
-            }
+            using var stream = new StreamReader(file.OpenReadStream());
+            return await stream.ReadToEndAsync();
         }
 
         private string WalletWarning(bool isHotWallet, string info)

@@ -19,7 +19,7 @@ namespace BTCPayServer.Client.JsonConverters
 
         public override void WriteJson(JsonWriter writer, [AllowNull] NodeInfo value, JsonSerializer serializer)
         {
-            if (value is NodeInfo)
+            if (value is not null)
                 writer.WriteValue(value.ToString());
         }
     }

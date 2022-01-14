@@ -220,3 +220,24 @@ svg.icon {
 svg.icon-note {
   color: var(--btcpay-neutral-500);
 }
+
+/* Services */
+.services-list {
+    display: flex;
+}
+
+.services-list .service {
+    --service-width: 100px;
+    flex: 0 0 var(--service-width);
+    margin: 0 var(--btcpay-space-l) var(--btcpay-space-l) 0;
+    text-align: center;
+}
+
+.services-list .service img {
+    width: var(--service-width);
+    height: var(--service-width);
+}
+
+.services-list .service h6 {
+    margin: var(--btcpay-space-m) 0 0 0;
+}

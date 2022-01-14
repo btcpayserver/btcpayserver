@@ -2,6 +2,7 @@
 @model LightningSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UILightning/_Nav";
     ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().Id);
 }
 
@@ -9,41 +10,35 @@
     <div class="col-lg-10 col-xl-9">
         <div class="mb-5">
             <h4 class="mb-3">@ViewData["Title"]</h4>
-            <table class="table table-borderless table-responsive-md">
-                <tbody>
-                <tr>
-                    <th class="w-150px">Node Type</th>
-                    <td class="text-break">
-                        <span class="me-3">@Model.LightningNodeType</span>
-                        <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink" class="text-secondary">
-                            Change connection
-                        </a>
-                    </td>
-                </tr>
+            <div class="text-break">
+                <span class="me-2">@Model.LightningNodeType Node</span>
                 @if (Model.LightningNodeType != LightningNodeType.Internal)
                 {
-                    if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
-                    {
-                        <tr>
-                            <th>Connection Type</th>
-                            <td>@typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())</td>
-                        </tr>
-                        <tr>
-                            <th>Base URI</th>
-                            <td>@cs.BaseUri</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        <tr>
-                            <th>Connection String</th>
-                            <td>@Model.ConnectionString</td>
-                        </tr>
-                    }
+                    <span class="me-2">
+                        @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
+                        {
+                            @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
+                            <span>(@cs.BaseUri)</span>
+                        }
+                        else
+                        {
+                            @Model.ConnectionString
+                        }
+                    </span>
                 }
-                </tbody>
-            </table>
-            
+
+                <a class="text-secondary me-2"
+                   asp-controller="UIPublicLightningNodeInfo"
+                   asp-action="ShowLightningNodeInfo"
+                   asp-route-cryptoCode="@Model.CryptoCode"
+                   asp-route-storeId="@Model.StoreId"
+                   target="_blank">
+                    Public Node Info
+                </a>
+                <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink" class="text-secondary">
+                    Change connection
+                </a>
+            </div>
             <form method="post" class="mt-n2 text-center">
                 <div class="text-start">
                     <h4 class="mt-5 mb-3">Payment</h4>

@@ -407,6 +407,11 @@ namespace BTCPayServer.Tests
         {
             GoToStore(StoreNavPages.PaymentMethods);
             Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
+            // if Lightning is already set up we need to navigate to the settings
+            if (Driver.PageSource.Contains("id=\"SectionNav-LightningSettings\""))
+            {
+                Driver.FindElement(By.Id("SectionNav-LightningSettings")).Click();
+            }
         }
 
         public void SelectStoreContext(string storeId)
@@ -431,7 +436,7 @@ namespace BTCPayServer.Tests
         {
             if (storeId is null)
             {
-                this.Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+                Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             }
             else
             {

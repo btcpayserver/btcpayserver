@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -38,8 +39,6 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class UIStoresController : Controller
     {
-        readonly RateFetcher _RateFactory;
-        public string CreatedStoreId { get; set; }
         public UIStoresController(
             IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
@@ -60,7 +59,8 @@ namespace BTCPayServer.Controllers
             AppService appService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
-            NBXplorerDashboard Dashboard)
+            NBXplorerDashboard Dashboard,
+            IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -82,18 +82,20 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
             _Dashboard = Dashboard;
+            _externalServiceOptions = externalServiceOptions;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
         readonly BTCPayServerEnvironment _BTCPayEnv;
         readonly IServiceProvider _ServiceProvider;
         readonly BTCPayNetworkProvider _NetworkProvider;
-        private readonly ExplorerClientProvider _ExplorerProvider;
         readonly BTCPayWalletProvider _WalletProvider;
         readonly BitpayAccessTokenController _TokenController;
         readonly StoreRepository _Repo;
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
+        readonly RateFetcher _RateFactory;
+        private readonly ExplorerClientProvider _ExplorerProvider;
         private readonly LanguageService _LangService;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
@@ -101,6 +103,8 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
         private readonly NBXplorerDashboard _Dashboard;
+        private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+        public string CreatedStoreId { get; set; }
 
         [TempData]
         public bool StoreNotConfigured

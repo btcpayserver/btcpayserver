@@ -78,7 +78,7 @@
                                     <li class="nav-item">
                                         @if (isSetUp)
                                         {
-                                            <a asp-area="" asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                            <a asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Lightning) @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                                 <span>@(Model.AltcoinsBuild ? $"{scheme.CryptoCode} " : "")Lightning</span>
                                             </a>

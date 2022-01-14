@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
 {
 
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
-    [Route("[controller]/[action]")]
+    [Route("account/{action:lowercase=Index}")]
     public partial class UIManageController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;

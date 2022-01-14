@@ -13,7 +13,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIManageController
     {
-        [HttpGet("notifications")]
+        [HttpGet("/notifications/settings")]
         public async Task<IActionResult> NotificationSettings([FromServices] IEnumerable<INotificationHandler> notificationHandlers)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
             return View(new NotificationSettingsViewModel() { DisabledNotifications = notifications });
         }
 
-        [HttpPost("notifications")]
+        [HttpPost("/notifications/settings")]
         public async Task<IActionResult> NotificationSettings(NotificationSettingsViewModel vm, string command)
         {
             var user = await _userManager.GetUserAsync(User);

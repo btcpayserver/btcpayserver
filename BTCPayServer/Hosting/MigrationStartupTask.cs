@@ -463,164 +463,154 @@ retry:
         private async Task ConvertConvertWalletKeyPathRoots()
         {
             bool save = false;
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
-                {
 #pragma warning disable CS0618 // Type or member is obsolete
-                    var blob = store.GetStoreBlob();
+                var blob = store.GetStoreBlob();
 
-                    if (blob.AdditionalData.TryGetValue("walletKeyPathRoots", out var walletKeyPathRootsJToken))
+                if (blob.AdditionalData.TryGetValue("walletKeyPathRoots", out var walletKeyPathRootsJToken))
+                {
+                    var walletKeyPathRoots = walletKeyPathRootsJToken.ToObject<Dictionary<string, string>>();
+
+                    if (!(walletKeyPathRoots?.Any() is true))
+                        continue;
+                    foreach (var scheme in store.GetSupportedPaymentMethods(_NetworkProvider)
+                        .OfType<DerivationSchemeSettings>())
                     {
-                        var walletKeyPathRoots = walletKeyPathRootsJToken.ToObject<Dictionary<string, string>>();
-
-                        if (!(walletKeyPathRoots?.Any() is true))
-                            continue;
-                        foreach (var scheme in store.GetSupportedPaymentMethods(_NetworkProvider)
-                            .OfType<DerivationSchemeSettings>())
+                        if (walletKeyPathRoots.TryGetValue(scheme.PaymentId.ToString().ToLowerInvariant(),
+                            out var root))
                         {
-                            if (walletKeyPathRoots.TryGetValue(scheme.PaymentId.ToString().ToLowerInvariant(),
-                                out var root))
-                            {
-                                scheme.AccountKeyPath = new NBitcoin.KeyPath(root);
-                                store.SetSupportedPaymentMethod(scheme);
-                                save = true;
-                            }
+                            scheme.AccountKeyPath = new NBitcoin.KeyPath(root);
+                            store.SetSupportedPaymentMethod(scheme);
+                            save = true;
                         }
-
-                        blob.AdditionalData.Remove("walletKeyPathRoots");
-                        store.SetStoreBlob(blob);
                     }
-#pragma warning restore CS0618 // Type or member is obsolete
+
+                    blob.AdditionalData.Remove("walletKeyPathRoots");
+                    store.SetStoreBlob(blob);
                 }
-                if (save)
-                    await ctx.SaveChangesAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
             }
+            if (save)
+                await ctx.SaveChangesAsync();
         }
 
         private async Task ConvertCrowdfundOldSettings()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var app in await ctx.Apps.Where(a => a.AppType == "Crowdfund").ToArrayAsync())
             {
-                foreach (var app in await ctx.Apps.Where(a => a.AppType == "Crowdfund").ToArrayAsync())
-                {
-                    var settings = app.GetSettings<Services.Apps.CrowdfundSettings>();
+                var settings = app.GetSettings<Services.Apps.CrowdfundSettings>();
 #pragma warning disable CS0618 // Type or member is obsolete
-                    if (settings.UseAllStoreInvoices)
+                if (settings.UseAllStoreInvoices)
 #pragma warning restore CS0618 // Type or member is obsolete
-                    {
-                        app.TagAllInvoices = true;
-                    }
+                {
+                    app.TagAllInvoices = true;
                 }
-                await ctx.SaveChangesAsync();
             }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigratePaymentMethodCriteria()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+                var blob = store.GetStoreBlob();
+
+                CurrencyValue onChainMinValue = null;
+                CurrencyValue lightningMaxValue = null;
+                if (blob.AdditionalData.TryGetValue("onChainMinValue", out var onChainMinValueJToken))
                 {
-                    var blob = store.GetStoreBlob();
-
-                    CurrencyValue onChainMinValue = null;
-                    CurrencyValue lightningMaxValue = null;
-                    if (blob.AdditionalData.TryGetValue("onChainMinValue", out var onChainMinValueJToken))
-                    {
-                        CurrencyValue.TryParse(onChainMinValueJToken.Value<string>(), out onChainMinValue);
-                        blob.AdditionalData.Remove("onChainMinValue");
-                    }
-                    if (blob.AdditionalData.TryGetValue("lightningMaxValue", out var lightningMaxValueJToken))
-                    {
-                        CurrencyValue.TryParse(lightningMaxValueJToken.Value<string>(), out lightningMaxValue);
-                        blob.AdditionalData.Remove("lightningMaxValue");
-                    }
-                    blob.PaymentMethodCriteria = store.GetEnabledPaymentIds(_NetworkProvider).Select(paymentMethodId =>
-                   {
-                       var matchedFromBlob =
-                           blob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
-                       return matchedFromBlob switch
-                       {
-                           null when paymentMethodId.PaymentType == LightningPaymentType.Instance &&
-                                     lightningMaxValue != null => new PaymentMethodCriteria()
-                                     {
-                                         Above = false,
-                                         PaymentMethod = paymentMethodId,
-                                         Value = lightningMaxValue
-                                     },
-                           null when paymentMethodId.PaymentType == BitcoinPaymentType.Instance &&
-                                     onChainMinValue != null => new PaymentMethodCriteria()
-                                     {
-                                         Above = true,
-                                         PaymentMethod = paymentMethodId,
-                                         Value = onChainMinValue
-                                     },
-                           _ => new PaymentMethodCriteria()
-                           {
-                               PaymentMethod = paymentMethodId,
-                               Above = matchedFromBlob?.Above ?? true,
-                               Value = matchedFromBlob?.Value
-                           }
-                       };
-                   }).ToList();
-
-                    store.SetStoreBlob(blob);
+                    CurrencyValue.TryParse(onChainMinValueJToken.Value<string>(), out onChainMinValue);
+                    blob.AdditionalData.Remove("onChainMinValue");
                 }
+                if (blob.AdditionalData.TryGetValue("lightningMaxValue", out var lightningMaxValueJToken))
+                {
+                    CurrencyValue.TryParse(lightningMaxValueJToken.Value<string>(), out lightningMaxValue);
+                    blob.AdditionalData.Remove("lightningMaxValue");
+                }
+                blob.PaymentMethodCriteria = store.GetEnabledPaymentIds(_NetworkProvider).Select(paymentMethodId =>
+               {
+                   var matchedFromBlob =
+                       blob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
+                   return matchedFromBlob switch
+                   {
+                       null when paymentMethodId.PaymentType == LightningPaymentType.Instance &&
+                                 lightningMaxValue != null => new PaymentMethodCriteria()
+                                 {
+                                     Above = false,
+                                     PaymentMethod = paymentMethodId,
+                                     Value = lightningMaxValue
+                                 },
+                       null when paymentMethodId.PaymentType == BitcoinPaymentType.Instance &&
+                                 onChainMinValue != null => new PaymentMethodCriteria()
+                                 {
+                                     Above = true,
+                                     PaymentMethod = paymentMethodId,
+                                     Value = onChainMinValue
+                                 },
+                       _ => new PaymentMethodCriteria()
+                       {
+                           PaymentMethod = paymentMethodId,
+                           Above = matchedFromBlob?.Above ?? true,
+                           Value = matchedFromBlob?.Value
+                       }
+                   };
+               }).ToList();
 
-                await ctx.SaveChangesAsync();
+                store.SetStoreBlob(blob);
             }
+
+            await ctx.SaveChangesAsync();
         }
 
         private async Task ConvertNetworkFeeProperty()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+                var blob = store.GetStoreBlob();
+                if (blob.AdditionalData.TryGetValue("networkFeeDisabled", out var networkFeeModeJToken))
                 {
-                    var blob = store.GetStoreBlob();
-                    if (blob.AdditionalData.TryGetValue("networkFeeDisabled", out var networkFeeModeJToken))
+                    var networkFeeMode = networkFeeModeJToken.ToObject<bool?>();
+                    if (networkFeeMode != null)
                     {
-                        var networkFeeMode = networkFeeModeJToken.ToObject<bool?>();
-                        if (networkFeeMode != null)
-                        {
-                            blob.NetworkFeeMode = networkFeeMode.Value ? NetworkFeeMode.Never : NetworkFeeMode.Always;
-                        }
-
-                        blob.AdditionalData.Remove("networkFeeDisabled");
-                        store.SetStoreBlob(blob);
+                        blob.NetworkFeeMode = networkFeeMode.Value ? NetworkFeeMode.Never : NetworkFeeMode.Always;
                     }
+
+                    blob.AdditionalData.Remove("networkFeeDisabled");
+                    store.SetStoreBlob(blob);
                 }
-                await ctx.SaveChangesAsync();
             }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task ConvertMultiplierToSpread()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+                var blob = store.GetStoreBlob();
+                decimal multiplier = 1.0m;
+                if (blob.AdditionalData.TryGetValue("rateRules", out var rateRulesJToken))
                 {
-                    var blob = store.GetStoreBlob();
-                    decimal multiplier = 1.0m;
-                    if (blob.AdditionalData.TryGetValue("rateRules", out var rateRulesJToken))
+                    var rateRules = new Serializer(null).ToObject<List<RateRule_Obsolete>>(rateRulesJToken.ToString());
+                    if (rateRules != null && rateRules.Count != 0)
                     {
-                        var rateRules = new Serializer(null).ToObject<List<RateRule_Obsolete>>(rateRulesJToken.ToString());
-                        if (rateRules != null && rateRules.Count != 0)
+                        foreach (var rule in rateRules)
                         {
-                            foreach (var rule in rateRules)
-                            {
-                                multiplier = rule.Apply(null, multiplier);
-                            }
+                            multiplier = rule.Apply(null, multiplier);
                         }
-
-                        blob.AdditionalData.Remove("rateRules");
-                        blob.Spread = Math.Min(1.0m, Math.Max(0m, -(multiplier - 1.0m)));
-                        store.SetStoreBlob(blob);
                     }
+
+                    blob.AdditionalData.Remove("rateRules");
+                    blob.Spread = Math.Min(1.0m, Math.Max(0m, -(multiplier - 1.0m)));
+                    store.SetStoreBlob(blob);
                 }
-                await ctx.SaveChangesAsync();
             }
+            await ctx.SaveChangesAsync();
         }
 
         public class RateRule_Obsolete
@@ -646,22 +636,20 @@ retry:
 
         private async Task DeprecatedLightningConnectionStringCheck()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
+            using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+                foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                 {
-                    foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
+                    var lightning = method.GetExternalLightningUrl();
+                    if (lightning?.IsLegacy is true)
                     {
-                        var lightning = method.GetExternalLightningUrl();
-                        if (lightning?.IsLegacy is true)
-                        {
-                            method.SetLightningUrl(lightning);
-                            store.SetSupportedPaymentMethod(method);
-                        }
+                        method.SetLightningUrl(lightning);
+                        store.SetSupportedPaymentMethod(method);
                     }
                 }
-                await ctx.SaveChangesAsync();
             }
+            await ctx.SaveChangesAsync();
         }
     }
 }

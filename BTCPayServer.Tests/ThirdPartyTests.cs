@@ -37,40 +37,38 @@ namespace BTCPayServer.Tests
         [FactWithSecret("AzureBlobStorageConnectionString")]
         public async Task CanUseAzureBlobStorage()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
-                var azureBlobStorageConfiguration = Assert.IsType<AzureBlobStorageConfiguration>(Assert
-                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
-                    .Model);
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
+            var azureBlobStorageConfiguration = Assert.IsType<AzureBlobStorageConfiguration>(Assert
+                .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
+                .Model);
 
-                azureBlobStorageConfiguration.ConnectionString = FactWithSecretAttribute.GetFromSecrets("AzureBlobStorageConnectionString");
-                azureBlobStorageConfiguration.ContainerName = "testscontainer";
-                Assert.IsType<ViewResult>(
-                    await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
-
-
-                var shouldBeRedirectingToAzureStorageConfigPage =
-                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
-                Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToAzureStorageConfigPage.ActionName);
-                Assert.Equal(StorageProvider.AzureBlobStorage,
-                    shouldBeRedirectingToAzureStorageConfigPage.RouteValues["provider"]);
-
-                //seems like azure config worked, let's see if the conn string was actually saved
-
-                Assert.Equal(azureBlobStorageConfiguration.ConnectionString, Assert
-                    .IsType<AzureBlobStorageConfiguration>(Assert
-                        .IsType<ViewResult>(
-                            await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
-                        .Model).ConnectionString);
+            azureBlobStorageConfiguration.ConnectionString = FactWithSecretAttribute.GetFromSecrets("AzureBlobStorageConnectionString");
+            azureBlobStorageConfiguration.ContainerName = "testscontainer";
+            Assert.IsType<ViewResult>(
+                await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
 
 
+            var shouldBeRedirectingToAzureStorageConfigPage =
+                Assert.IsType<RedirectToActionResult>(await controller.Storage());
+            Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToAzureStorageConfigPage.ActionName);
+            Assert.Equal(StorageProvider.AzureBlobStorage,
+                shouldBeRedirectingToAzureStorageConfigPage.RouteValues["provider"]);
 
-                await UnitTest1.CanUploadRemoveFiles(controller);
-            }
+            //seems like azure config worked, let's see if the conn string was actually saved
+
+            Assert.Equal(azureBlobStorageConfiguration.ConnectionString, Assert
+                .IsType<AzureBlobStorageConfiguration>(Assert
+                    .IsType<ViewResult>(
+                        await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
+                    .Model).ConnectionString);
+
+
+
+            await UnitTest1.CanUploadRemoveFiles(controller);
         }
 
         [Fact]
@@ -338,24 +336,22 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanUseExchangeSpecificRate()
         {
-            using (var tester = CreateServerTester())
-            {
-                tester.PayTester.MockRates = false;
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                await user.GrantAccessAsync();
-                user.RegisterDerivationScheme("BTC");
-                List<decimal> rates = new List<decimal>();
-                rates.Add(await CreateInvoice(tester, user, "coingecko"));
-                var bitflyer = await CreateInvoice(tester, user, "bitflyer", "JPY");
-                var bitflyer2 = await CreateInvoice(tester, user, "bitflyer", "JPY");
-                Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
-                rates.Add(bitflyer);
+            using var tester = CreateServerTester();
+            tester.PayTester.MockRates = false;
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+            List<decimal> rates = new List<decimal>();
+            rates.Add(await CreateInvoice(tester, user, "coingecko"));
+            var bitflyer = await CreateInvoice(tester, user, "bitflyer", "JPY");
+            var bitflyer2 = await CreateInvoice(tester, user, "bitflyer", "JPY");
+            Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
+            rates.Add(bitflyer);
 
-                foreach (var rate in rates)
-                {
-                    Assert.Single(rates.Where(r => r == rate));
-                }
+            foreach (var rate in rates)
+            {
+                Assert.Single(rates.Where(r => r == rate));
             }
         }
 

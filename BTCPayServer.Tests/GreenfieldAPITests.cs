@@ -60,47 +60,43 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task MissingPermissionTest()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                var clientWithWrongPermissions = await user.CreateClient(Policies.CanViewProfile);
-                var e = await AssertAPIError("missing-permission", () => clientWithWrongPermissions.CreateStore(new CreateStoreRequest() { Name = "mystore" }));
-                Assert.Equal("missing-permission", e.APIError.Code);
-                Assert.NotNull(e.APIError.Message);
-                GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
-                Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
-            }
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            var clientWithWrongPermissions = await user.CreateClient(Policies.CanViewProfile);
+            var e = await AssertAPIError("missing-permission", () => clientWithWrongPermissions.CreateStore(new CreateStoreRequest() { Name = "mystore" }));
+            Assert.Equal("missing-permission", e.APIError.Code);
+            Assert.NotNull(e.APIError.Message);
+            GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
+            Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task ApiKeysControllerTests()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                await user.MakeAdmin();
-                var client = await user.CreateClient(Policies.CanViewProfile);
-                var clientBasic = await user.CreateClient();
-                //Get current api key 
-                var apiKeyData = await client.GetCurrentAPIKeyInfo();
-                Assert.NotNull(apiKeyData);
-                Assert.Equal(client.APIKey, apiKeyData.ApiKey);
-                Assert.Single(apiKeyData.Permissions);
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            await user.MakeAdmin();
+            var client = await user.CreateClient(Policies.CanViewProfile);
+            var clientBasic = await user.CreateClient();
+            //Get current api key 
+            var apiKeyData = await client.GetCurrentAPIKeyInfo();
+            Assert.NotNull(apiKeyData);
+            Assert.Equal(client.APIKey, apiKeyData.ApiKey);
+            Assert.Single(apiKeyData.Permissions);
 
-                //a client using Basic Auth has no business here
-                await AssertHttpError(401, async () => await clientBasic.GetCurrentAPIKeyInfo());
+            //a client using Basic Auth has no business here
+            await AssertHttpError(401, async () => await clientBasic.GetCurrentAPIKeyInfo());
 
-                //revoke current api key
-                await client.RevokeCurrentAPIKeyInfo();
-                await AssertHttpError(401, async () => await client.GetCurrentAPIKeyInfo());
-                //a client using Basic Auth has no business here
-                await AssertHttpError(401, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
-            }
+            //revoke current api key
+            await client.RevokeCurrentAPIKeyInfo();
+            await AssertHttpError(401, async () => await client.GetCurrentAPIKeyInfo());
+            //a client using Basic Auth has no business here
+            await AssertHttpError(401, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -129,57 +125,53 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task SpecificCanModifyStoreCantCreateNewStore()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var acc = tester.NewAccount();
-                await acc.GrantAccessAsync();
-                var unrestricted = await acc.CreateClient();
-                var response = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "mystore" });
-                var apiKey = (await unrestricted.CreateAPIKey(new CreateApiKeyRequest() { Permissions = new[] { Permission.Create("btcpay.store.canmodifystoresettings", response.Id) } })).ApiKey;
-                var restricted = new BTCPayServerClient(unrestricted.Host, apiKey);
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            await acc.GrantAccessAsync();
+            var unrestricted = await acc.CreateClient();
+            var response = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "mystore" });
+            var apiKey = (await unrestricted.CreateAPIKey(new CreateApiKeyRequest() { Permissions = new[] { Permission.Create("btcpay.store.canmodifystoresettings", response.Id) } })).ApiKey;
+            var restricted = new BTCPayServerClient(unrestricted.Host, apiKey);
 
-                // Unscoped permission should be required for create store
-                await this.AssertHttpError(403, async () => await restricted.CreateStore(new CreateStoreRequest() { Name = "store2" }));
-                // Unrestricted should work fine
-                await unrestricted.CreateStore(new CreateStoreRequest() { Name = "store2" });
-                // Restricted but unscoped should work fine
-                apiKey = (await unrestricted.CreateAPIKey(new CreateApiKeyRequest() { Permissions = new[] { Permission.Create("btcpay.store.canmodifystoresettings") } })).ApiKey;
-                restricted = new BTCPayServerClient(unrestricted.Host, apiKey);
-                await restricted.CreateStore(new CreateStoreRequest() { Name = "store2" });
-            }
+            // Unscoped permission should be required for create store
+            await this.AssertHttpError(403, async () => await restricted.CreateStore(new CreateStoreRequest() { Name = "store2" }));
+            // Unrestricted should work fine
+            await unrestricted.CreateStore(new CreateStoreRequest() { Name = "store2" });
+            // Restricted but unscoped should work fine
+            apiKey = (await unrestricted.CreateAPIKey(new CreateApiKeyRequest() { Permissions = new[] { Permission.Create("btcpay.store.canmodifystoresettings") } })).ApiKey;
+            restricted = new BTCPayServerClient(unrestricted.Host, apiKey);
+            await restricted.CreateStore(new CreateStoreRequest() { Name = "store2" });
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteAPIKeyViaAPI()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            await acc.GrantAccessAsync();
+            var unrestricted = await acc.CreateClient();
+            var apiKey = await unrestricted.CreateAPIKey(new CreateApiKeyRequest()
             {
-                await tester.StartAsync();
-                var acc = tester.NewAccount();
-                await acc.GrantAccessAsync();
-                var unrestricted = await acc.CreateClient();
-                var apiKey = await unrestricted.CreateAPIKey(new CreateApiKeyRequest()
+                Label = "Hello world",
+                Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
+            });
+            Assert.Equal("Hello world", apiKey.Label);
+            var p = Assert.Single(apiKey.Permissions);
+            Assert.Equal(Policies.CanViewProfile, p.Policy);
+
+            var restricted = acc.CreateClientFromAPIKey(apiKey.ApiKey);
+            await AssertHttpError(403,
+                async () => await restricted.CreateAPIKey(new CreateApiKeyRequest()
                 {
-                    Label = "Hello world",
+                    Label = "Hello world2",
                     Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
-                });
-                Assert.Equal("Hello world", apiKey.Label);
-                var p = Assert.Single(apiKey.Permissions);
-                Assert.Equal(Policies.CanViewProfile, p.Policy);
+                }));
 
-                var restricted = acc.CreateClientFromAPIKey(apiKey.ApiKey);
-                await AssertHttpError(403,
-                    async () => await restricted.CreateAPIKey(new CreateApiKeyRequest()
-                    {
-                        Label = "Hello world2",
-                        Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
-                    }));
-
-                await unrestricted.RevokeAPIKey(apiKey.ApiKey);
-                await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
-            }
+            await unrestricted.RevokeAPIKey(apiKey.ApiKey);
+            await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -225,376 +217,371 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateUsersViaAPI()
         {
-            using (var tester = CreateServerTester(newDb: true))
+            using var tester = CreateServerTester(newDb: true);
+            tester.PayTester.DisableRegistration = true;
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertValidationError(new[] { "Email", "Password" },
+                async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
+            await AssertValidationError(new[] { "Password" },
+                async () => await unauthClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test@gmail.com" }));
+            // Pass too simple
+            await AssertValidationError(new[] { "Password" },
+                async () => await unauthClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "a" }));
+
+            // We have no admin, so it should work
+            var user1 = await unauthClient.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test@gmail.com", Password = "abceudhqw" });
+            Assert.Empty(user1.Roles);
+
+            // We have no admin, so it should work
+            var user2 = await unauthClient.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" });
+            Assert.Empty(user2.Roles);
+
+            // Duplicate email
+            await AssertValidationError(new[] { "Email" },
+                async () => await unauthClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" }));
+
+            // Let's make an admin
+            var admin = await unauthClient.CreateUser(new CreateApplicationUserRequest()
             {
-                tester.PayTester.DisableRegistration = true;
-                await tester.StartAsync();
-                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-                await AssertValidationError(new[] { "Email", "Password" },
-                    async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
-                await AssertValidationError(new[] { "Password" },
-                    async () => await unauthClient.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test@gmail.com" }));
-                // Pass too simple
-                await AssertValidationError(new[] { "Password" },
-                    async () => await unauthClient.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "a" }));
+                Email = "admin@gmail.com",
+                Password = "abceudhqw",
+                IsAdministrator = true
+            });
+            Assert.Contains("ServerAdmin", admin.Roles);
+            Assert.NotNull(admin.Created);
+            Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
 
-                // We have no admin, so it should work
-                var user1 = await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test@gmail.com", Password = "abceudhqw" });
-                Assert.Empty(user1.Roles);
+            // Creating a new user without proper creds is now impossible (unauthorized) 
+            // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
+            var ex = await AssertAPIError("unauthenticated",
+                async () => await unauthClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "afewfoiewiou" }));
+            Assert.Equal("New user creation isn't authorized to users who are not admin", ex.APIError.Message);
 
-                // We have no admin, so it should work
-                var user2 = await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" });
-                Assert.Empty(user2.Roles);
+            // But should be ok with subscriptions unlocked
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
+            await unauthClient.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "afewfoiewiou" });
 
-                // Duplicate email
-                await AssertValidationError(new[] { "Email" },
-                    async () => await unauthClient.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" }));
-
-                // Let's make an admin
-                var admin = await unauthClient.CreateUser(new CreateApplicationUserRequest()
+            // But it should be forbidden to create an admin without being authenticated
+            await AssertHttpError(401,
+                async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()
                 {
-                    Email = "admin@gmail.com",
-                    Password = "abceudhqw",
-                    IsAdministrator = true
-                });
-                Assert.Contains("ServerAdmin", admin.Roles);
-                Assert.NotNull(admin.Created);
-                Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
-
-                // Creating a new user without proper creds is now impossible (unauthorized) 
-                // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
-                var ex = await AssertAPIError("unauthenticated",
-                    async () => await unauthClient.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "afewfoiewiou" }));
-                Assert.Equal("New user creation isn't authorized to users who are not admin", ex.APIError.Message);
-
-                // But should be ok with subscriptions unlocked
-                var settings = tester.PayTester.GetService<SettingsRepository>();
-                await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
-                await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "afewfoiewiou" });
-
-                // But it should be forbidden to create an admin without being authenticated
-                await AssertHttpError(401,
-                    async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()
-                    {
-                        Email = "admin2@gmail.com",
-                        Password = "afewfoiewiou",
-                        IsAdministrator = true
-                    }));
-                await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = true });
-
-                var adminAcc = tester.NewAccount();
-                adminAcc.UserId = admin.Id;
-                adminAcc.IsAdmin = true;
-                var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
-
-                // We should be forbidden to create a new user without proper admin permissions
-                await AssertHttpError(403,
-                    async () => await adminClient.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" }));
-                await AssertAPIError("missing-permission",
-                    async () => await adminClient.CreateUser(new CreateApplicationUserRequest()
-                    {
-                        Email = "test4@gmail.com",
-                        Password = "afewfoiewiou",
-                        IsAdministrator = true
-                    }));
-
-                // However, should be ok with the unrestricted permissions of an admin
-                adminClient = await adminAcc.CreateClient(Policies.Unrestricted);
-                await adminClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" });
-                // Even creating new admin should be ok
-                await adminClient.CreateUser(new CreateApplicationUserRequest()
-                {
-                    Email = "admin4@gmail.com",
+                    Email = "admin2@gmail.com",
                     Password = "afewfoiewiou",
                     IsAdministrator = true
-                });
+                }));
+            await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = true });
 
-                var user1Acc = tester.NewAccount();
-                user1Acc.UserId = user1.Id;
-                user1Acc.IsAdmin = false;
-                var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
+            var adminAcc = tester.NewAccount();
+            adminAcc.UserId = admin.Id;
+            adminAcc.IsAdmin = true;
+            var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
 
-                // User1 trying to get server management would still fail to create user
-                await AssertHttpError(403,
-                    async () => await user1Client.CreateUser(
-                        new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" }));
+            // We should be forbidden to create a new user without proper admin permissions
+            await AssertHttpError(403,
+                async () => await adminClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" }));
+            await AssertAPIError("missing-permission",
+                async () => await adminClient.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = "test4@gmail.com",
+                    Password = "afewfoiewiou",
+                    IsAdministrator = true
+                }));
 
-                // User1 should be able to create user if subscription unlocked
-                await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
-                await user1Client.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" });
+            // However, should be ok with the unrestricted permissions of an admin
+            adminClient = await adminAcc.CreateClient(Policies.Unrestricted);
+            await adminClient.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" });
+            // Even creating new admin should be ok
+            await adminClient.CreateUser(new CreateApplicationUserRequest()
+            {
+                Email = "admin4@gmail.com",
+                Password = "afewfoiewiou",
+                IsAdministrator = true
+            });
 
-                // But not an admin
-                await AssertHttpError(403,
-                    async () => await user1Client.CreateUser(new CreateApplicationUserRequest()
-                    {
-                        Email = "admin8@gmail.com",
-                        Password = "afewfoiewiou",
-                        IsAdministrator = true
-                    }));
+            var user1Acc = tester.NewAccount();
+            user1Acc.UserId = user1.Id;
+            user1Acc.IsAdmin = false;
+            var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
 
-                // If we set DisableNonAdminCreateUserApi = true, it should always fail to create a user unless you are an admin
-                await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true });
-                await AssertHttpError(403,
-                    async () =>
-                        await unauthClient.CreateUser(
-                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
-                await AssertHttpError(403,
-                    async () =>
-                        await user1Client.CreateUser(
-                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
-                await adminClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" });
+            // User1 trying to get server management would still fail to create user
+            await AssertHttpError(403,
+                async () => await user1Client.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" }));
 
-            }
+            // User1 should be able to create user if subscription unlocked
+            await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
+            await user1Client.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" });
+
+            // But not an admin
+            await AssertHttpError(403,
+                async () => await user1Client.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = "admin8@gmail.com",
+                    Password = "afewfoiewiou",
+                    IsAdministrator = true
+                }));
+
+            // If we set DisableNonAdminCreateUserApi = true, it should always fail to create a user unless you are an admin
+            await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true });
+            await AssertHttpError(403,
+                async () =>
+                    await unauthClient.CreateUser(
+                        new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
+            await AssertHttpError(403,
+                async () =>
+                    await user1Client.CreateUser(
+                        new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
+            await adminClient.CreateUser(
+                new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" });
         }
 
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUsePullPaymentViaAPI()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            acc.Register();
+            acc.CreateStore();
+            var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+            var client = await acc.CreateClient();
+            var result = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
             {
-                await tester.StartAsync();
-                var acc = tester.NewAccount();
-                acc.Register();
-                acc.CreateStore();
-                var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
-                var client = await acc.CreateClient();
-                var result = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Test",
-                    Amount = 12.3m,
-                    Currency = "BTC",
-                    PaymentMethods = new[] { "BTC" }
-                });
+                Name = "Test",
+                Amount = 12.3m,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC" }
+            });
 
-                void VerifyResult()
-                {
-                    Assert.Equal("Test", result.Name);
-                    Assert.Null(result.Period);
-                    // If it contains ? it means that we are resolving an unknown route with the link generator
-                    Assert.DoesNotContain("?", result.ViewLink);
-                    Assert.False(result.Archived);
-                    Assert.Equal("BTC", result.Currency);
-                    Assert.Equal(12.3m, result.Amount);
-                }
-                VerifyResult();
-
-                var unauthenticated = new BTCPayServerClient(tester.PayTester.ServerUri);
-                result = await unauthenticated.GetPullPayment(result.Id);
-                VerifyResult();
-                await AssertHttpError(404, async () => await unauthenticated.GetPullPayment("lol"));
-                // Can't list pull payments unauthenticated
-                await AssertHttpError(401, async () => await unauthenticated.GetPullPayments(storeId));
-
-                var pullPayments = await client.GetPullPayments(storeId);
-                result = Assert.Single(pullPayments);
-                VerifyResult();
-
-                Thread.Sleep(1000);
-                var test2 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Test 2",
-                    Amount = 12.3m,
-                    Currency = "BTC",
-                    PaymentMethods = new[] { "BTC" }
-                });
-
-                TestLogs.LogInformation("Can't archive without knowing the walletId");
-                var ex = await AssertAPIError("missing-permission", async () => await client.ArchivePullPayment("lol", result.Id));
-                Assert.Equal("btcpay.store.canmanagepullpayments", ((GreenfieldPermissionAPIError)ex.APIError).MissingPermission);
-                TestLogs.LogInformation("Can't archive without permission");
-                await AssertAPIError("unauthenticated", async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
-                await client.ArchivePullPayment(storeId, result.Id);
-                result = await unauthenticated.GetPullPayment(result.Id);
-                Assert.True(result.Archived);
-                var pps = await client.GetPullPayments(storeId);
-                result = Assert.Single(pps);
-                Assert.Equal("Test 2", result.Name);
-                pps = await client.GetPullPayments(storeId, true);
-                Assert.Equal(2, pps.Length);
-                Assert.Equal("Test 2", pps[0].Name);
-                Assert.Equal("Test", pps[1].Name);
-
-                var payouts = await unauthenticated.GetPayouts(pps[0].Id);
-                Assert.Empty(payouts);
-
-                var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-                await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    Amount = 1_000_000m,
-                    PaymentMethod = "BTC",
-                }));
-
-                await this.AssertAPIError("archived", async () => await unauthenticated.CreatePayout(pps[1].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                }));
-
-                var payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                });
-
-                payouts = await unauthenticated.GetPayouts(pps[0].Id);
-                var payout2 = Assert.Single(payouts);
-                Assert.Equal(payout.Amount, payout2.Amount);
-                Assert.Equal(payout.Id, payout2.Id);
-                Assert.Equal(destination, payout2.Destination);
-                Assert.Equal(PayoutState.AwaitingApproval, payout.State);
-                Assert.Equal("BTC", payout2.PaymentMethod);
-                Assert.Equal("BTC", payout2.CryptoCode);
-                Assert.Null(payout.PaymentMethodAmount);
-
-                TestLogs.LogInformation("Can't overdraft");
-
-                var destination2 = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-                await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination2,
-                    Amount = 0.00001m,
-                    PaymentMethod = "BTC"
-                }));
-
-                TestLogs.LogInformation("Can't create too low payout");
-                await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination2,
-                    PaymentMethod = "BTC"
-                }));
-
-                TestLogs.LogInformation("Can archive payout");
-                await client.CancelPayout(storeId, payout.Id);
-                payouts = await unauthenticated.GetPayouts(pps[0].Id);
-                Assert.Empty(payouts);
-
-                payouts = await client.GetPayouts(pps[0].Id, true);
-                payout = Assert.Single(payouts);
-                Assert.Equal(PayoutState.Cancelled, payout.State);
-
-                TestLogs.LogInformation("Can create payout after cancelling");
-                payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                });
-
-                var start = RoundSeconds(DateTimeOffset.Now + TimeSpan.FromDays(7.0));
-                var inFuture = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Starts in the future",
-                    Amount = 12.3m,
-                    StartsAt = start,
-                    Currency = "BTC",
-                    PaymentMethods = new[] { "BTC" }
-                });
-                Assert.Equal(start, inFuture.StartsAt);
-                Assert.Null(inFuture.ExpiresAt);
-                await this.AssertAPIError("not-started", async () => await unauthenticated.CreatePayout(inFuture.Id, new CreatePayoutRequest()
-                {
-                    Amount = 1.0m,
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                }));
-
-                var expires = RoundSeconds(DateTimeOffset.Now - TimeSpan.FromDays(7.0));
-                var inPast = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Will expires",
-                    Amount = 12.3m,
-                    ExpiresAt = expires,
-                    Currency = "BTC",
-                    PaymentMethods = new[] { "BTC" }
-                });
-                await this.AssertAPIError("expired", async () => await unauthenticated.CreatePayout(inPast.Id, new CreatePayoutRequest()
-                {
-                    Amount = 1.0m,
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                }));
-
-                await this.AssertValidationError(new[] { "ExpiresAt" }, async () => await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Test 2",
-                    Amount = 12.3m,
-                    StartsAt = DateTimeOffset.UtcNow,
-                    ExpiresAt = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
-                }));
-
-
-                TestLogs.LogInformation("Create a pull payment with USD");
-                var pp = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Test USD",
-                    Amount = 5000m,
-                    Currency = "USD",
-                    PaymentMethods = new[] { "BTC" }
-                });
-
-                destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-                TestLogs.LogInformation("Try to pay it in BTC");
-                payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                });
-                await this.AssertAPIError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-                {
-                    Revision = -1
-                }));
-                await this.AssertAPIError("rate-unavailable", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-                {
-                    RateRule = "DONOTEXIST(BTC_USD)"
-                }));
-                payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-                {
-                    Revision = payout.Revision
-                });
-                Assert.Equal(PayoutState.AwaitingPayment, payout.State);
-                Assert.NotNull(payout.PaymentMethodAmount);
-                Assert.Equal(1.0m, payout.PaymentMethodAmount); // 1 BTC == 5000 USD in tests
-                await this.AssertAPIError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-                {
-                    Revision = payout.Revision
-                }));
-
-                // Create one pull payment with an amount of 9 decimals
-                var test3 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-                {
-                    Name = "Test 2",
-                    Amount = 12.303228134m,
-                    Currency = "BTC",
-                    PaymentMethods = new[] { "BTC" }
-                });
-                destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-                payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
-                {
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                });
-                payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
-                // The payout should round the value of the payment down to the network of the payment method
-                Assert.Equal(12.30322814m, payout.PaymentMethodAmount);
-                Assert.Equal(12.303228134m, payout.Amount);
-
-                await client.MarkPayoutPaid(storeId, payout.Id);
-                payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
-                Assert.Equal(PayoutState.Completed, payout.State);
-                await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
+            void VerifyResult()
+            {
+                Assert.Equal("Test", result.Name);
+                Assert.Null(result.Period);
+                // If it contains ? it means that we are resolving an unknown route with the link generator
+                Assert.DoesNotContain("?", result.ViewLink);
+                Assert.False(result.Archived);
+                Assert.Equal("BTC", result.Currency);
+                Assert.Equal(12.3m, result.Amount);
             }
+            VerifyResult();
+
+            var unauthenticated = new BTCPayServerClient(tester.PayTester.ServerUri);
+            result = await unauthenticated.GetPullPayment(result.Id);
+            VerifyResult();
+            await AssertHttpError(404, async () => await unauthenticated.GetPullPayment("lol"));
+            // Can't list pull payments unauthenticated
+            await AssertHttpError(401, async () => await unauthenticated.GetPullPayments(storeId));
+
+            var pullPayments = await client.GetPullPayments(storeId);
+            result = Assert.Single(pullPayments);
+            VerifyResult();
+
+            Thread.Sleep(1000);
+            var test2 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test 2",
+                Amount = 12.3m,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC" }
+            });
+
+            TestLogs.LogInformation("Can't archive without knowing the walletId");
+            var ex = await AssertAPIError("missing-permission", async () => await client.ArchivePullPayment("lol", result.Id));
+            Assert.Equal("btcpay.store.canmanagepullpayments", ((GreenfieldPermissionAPIError)ex.APIError).MissingPermission);
+            TestLogs.LogInformation("Can't archive without permission");
+            await AssertAPIError("unauthenticated", async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
+            await client.ArchivePullPayment(storeId, result.Id);
+            result = await unauthenticated.GetPullPayment(result.Id);
+            Assert.True(result.Archived);
+            var pps = await client.GetPullPayments(storeId);
+            result = Assert.Single(pps);
+            Assert.Equal("Test 2", result.Name);
+            pps = await client.GetPullPayments(storeId, true);
+            Assert.Equal(2, pps.Length);
+            Assert.Equal("Test 2", pps[0].Name);
+            Assert.Equal("Test", pps[1].Name);
+
+            var payouts = await unauthenticated.GetPayouts(pps[0].Id);
+            Assert.Empty(payouts);
+
+            var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+            await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                Amount = 1_000_000m,
+                PaymentMethod = "BTC",
+            }));
+
+            await this.AssertAPIError("archived", async () => await unauthenticated.CreatePayout(pps[1].Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                PaymentMethod = "BTC"
+            }));
+
+            var payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                PaymentMethod = "BTC"
+            });
+
+            payouts = await unauthenticated.GetPayouts(pps[0].Id);
+            var payout2 = Assert.Single(payouts);
+            Assert.Equal(payout.Amount, payout2.Amount);
+            Assert.Equal(payout.Id, payout2.Id);
+            Assert.Equal(destination, payout2.Destination);
+            Assert.Equal(PayoutState.AwaitingApproval, payout.State);
+            Assert.Equal("BTC", payout2.PaymentMethod);
+            Assert.Equal("BTC", payout2.CryptoCode);
+            Assert.Null(payout.PaymentMethodAmount);
+
+            TestLogs.LogInformation("Can't overdraft");
+
+            var destination2 = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+            await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+            {
+                Destination = destination2,
+                Amount = 0.00001m,
+                PaymentMethod = "BTC"
+            }));
+
+            TestLogs.LogInformation("Can't create too low payout");
+            await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+            {
+                Destination = destination2,
+                PaymentMethod = "BTC"
+            }));
+
+            TestLogs.LogInformation("Can archive payout");
+            await client.CancelPayout(storeId, payout.Id);
+            payouts = await unauthenticated.GetPayouts(pps[0].Id);
+            Assert.Empty(payouts);
+
+            payouts = await client.GetPayouts(pps[0].Id, true);
+            payout = Assert.Single(payouts);
+            Assert.Equal(PayoutState.Cancelled, payout.State);
+
+            TestLogs.LogInformation("Can create payout after cancelling");
+            payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                PaymentMethod = "BTC"
+            });
+
+            var start = RoundSeconds(DateTimeOffset.Now + TimeSpan.FromDays(7.0));
+            var inFuture = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Starts in the future",
+                Amount = 12.3m,
+                StartsAt = start,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC" }
+            });
+            Assert.Equal(start, inFuture.StartsAt);
+            Assert.Null(inFuture.ExpiresAt);
+            await this.AssertAPIError("not-started", async () => await unauthenticated.CreatePayout(inFuture.Id, new CreatePayoutRequest()
+            {
+                Amount = 1.0m,
+                Destination = destination,
+                PaymentMethod = "BTC"
+            }));
+
+            var expires = RoundSeconds(DateTimeOffset.Now - TimeSpan.FromDays(7.0));
+            var inPast = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Will expires",
+                Amount = 12.3m,
+                ExpiresAt = expires,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC" }
+            });
+            await this.AssertAPIError("expired", async () => await unauthenticated.CreatePayout(inPast.Id, new CreatePayoutRequest()
+            {
+                Amount = 1.0m,
+                Destination = destination,
+                PaymentMethod = "BTC"
+            }));
+
+            await this.AssertValidationError(new[] { "ExpiresAt" }, async () => await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test 2",
+                Amount = 12.3m,
+                StartsAt = DateTimeOffset.UtcNow,
+                ExpiresAt = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
+            }));
+
+
+            TestLogs.LogInformation("Create a pull payment with USD");
+            var pp = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test USD",
+                Amount = 5000m,
+                Currency = "USD",
+                PaymentMethods = new[] { "BTC" }
+            });
+
+            destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+            TestLogs.LogInformation("Try to pay it in BTC");
+            payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                PaymentMethod = "BTC"
+            });
+            await this.AssertAPIError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+            {
+                Revision = -1
+            }));
+            await this.AssertAPIError("rate-unavailable", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+            {
+                RateRule = "DONOTEXIST(BTC_USD)"
+            }));
+            payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+            {
+                Revision = payout.Revision
+            });
+            Assert.Equal(PayoutState.AwaitingPayment, payout.State);
+            Assert.NotNull(payout.PaymentMethodAmount);
+            Assert.Equal(1.0m, payout.PaymentMethodAmount); // 1 BTC == 5000 USD in tests
+            await this.AssertAPIError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+            {
+                Revision = payout.Revision
+            }));
+
+            // Create one pull payment with an amount of 9 decimals
+            var test3 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test 2",
+                Amount = 12.303228134m,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC" }
+            });
+            destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+            payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
+            {
+                Destination = destination,
+                PaymentMethod = "BTC"
+            });
+            payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
+            // The payout should round the value of the payment down to the network of the payment method
+            Assert.Equal(12.30322814m, payout.PaymentMethodAmount);
+            Assert.Equal(12.303228134m, payout.Amount);
+
+            await client.MarkPayoutPaid(storeId, payout.Id);
+            payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
+            Assert.Equal(PayoutState.Completed, payout.State);
+            await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
         }
 
         private DateTimeOffset RoundSeconds(DateTimeOffset dateTimeOffset)
@@ -620,59 +607,57 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoresControllerTests()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            await user.MakeAdmin();
+            var client = await user.CreateClient(Policies.Unrestricted);
+
+            //create store
+            var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
+
+            //update store
+            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" });
+            Assert.Equal("B", updatedStore.Name);
+            Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
+
+            //list stores
+            var stores = await client.GetStores();
+            var storeIds = stores.Select(data => data.Id);
+            var storeNames = stores.Select(data => data.Name);
+            Assert.NotNull(stores);
+            Assert.Equal(2, stores.Count());
+            Assert.Contains(newStore.Id, storeIds);
+            Assert.Contains(user.StoreId, storeIds);
+
+            //get store
+            var store = await client.GetStore(user.StoreId);
+            Assert.Equal(user.StoreId, store.Id);
+            Assert.Contains(store.Name, storeNames);
+
+            //remove store
+            await client.RemoveStore(newStore.Id);
+            await AssertHttpError(403, async () =>
             {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                await user.MakeAdmin();
-                var client = await user.CreateClient(Policies.Unrestricted);
+                await client.GetStore(newStore.Id);
+            });
+            Assert.Single(await client.GetStores());
 
-                //create store
-                var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
+            newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
+            var scopedClient =
+                await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
+            Assert.Single(await scopedClient.GetStores());
 
-                //update store
-                var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" });
-                Assert.Equal("B", updatedStore.Name);
-                Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
+            var noauth = await user.CreateClient(Array.Empty<string>());
+            await AssertAPIError("missing-permission", () => noauth.GetStores());
 
-                //list stores
-                var stores = await client.GetStores();
-                var storeIds = stores.Select(data => data.Id);
-                var storeNames = stores.Select(data => data.Name);
-                Assert.NotNull(stores);
-                Assert.Equal(2, stores.Count());
-                Assert.Contains(newStore.Id, storeIds);
-                Assert.Contains(user.StoreId, storeIds);
-
-                //get store
-                var store = await client.GetStore(user.StoreId);
-                Assert.Equal(user.StoreId, store.Id);
-                Assert.Contains(store.Name, storeNames);
-
-                //remove store
-                await client.RemoveStore(newStore.Id);
-                await AssertHttpError(403, async () =>
-                {
-                    await client.GetStore(newStore.Id);
-                });
-                Assert.Single(await client.GetStores());
-
-                newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
-                var scopedClient =
-                    await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
-                Assert.Single(await scopedClient.GetStores());
-
-                var noauth = await user.CreateClient(Array.Empty<string>());
-                await AssertAPIError("missing-permission", () => noauth.GetStores());
-
-                // We strip the user's Owner right, so the key should not work
-                using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
-                var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
-                storeEntity.Role = "Guest";
-                await ctx.SaveChangesAsync();
-                await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
-            }
+            // We strip the user's Owner right, so the key should not work
+            using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
+            var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
+            storeEntity.Role = "Guest";
+            await ctx.SaveChangesAsync();
+            await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
         }
 
         private async Task<GreenfieldValidationException> AssertValidationError(string[] fields, Func<Task> act)
@@ -698,66 +683,64 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task UsersControllerTests()
         {
-            using (var tester = CreateServerTester(newDb: true))
+            using var tester = CreateServerTester(newDb: true);
+            tester.PayTester.DisableRegistration = true;
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            await user.MakeAdmin();
+            var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
+            var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
+            var clientInsufficient = await user.CreateClient(Policies.CanModifyStoreSettings);
+            var clientBasic = await user.CreateClient();
+
+
+            var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
+            Assert.NotNull(apiKeyProfileUserData);
+            Assert.Equal(apiKeyProfileUserData.Id, user.UserId);
+            Assert.Equal(apiKeyProfileUserData.Email, user.RegisterDetails.Email);
+            Assert.Contains("ServerAdmin", apiKeyProfileUserData.Roles);
+
+            await AssertHttpError(403, async () => await clientInsufficient.GetCurrentUser());
+            await clientServer.GetCurrentUser();
+            await clientProfile.GetCurrentUser();
+            await clientBasic.GetCurrentUser();
+
+            await AssertHttpError(403, async () =>
+                await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com",
+                    Password = Guid.NewGuid().ToString()
+                }));
+
+            var newUser = await clientServer.CreateUser(new CreateApplicationUserRequest()
             {
-                tester.PayTester.DisableRegistration = true;
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                await user.MakeAdmin();
-                var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
-                var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
-                var clientInsufficient = await user.CreateClient(Policies.CanModifyStoreSettings);
-                var clientBasic = await user.CreateClient();
+                Email = $"{Guid.NewGuid()}@g.com",
+                Password = Guid.NewGuid().ToString()
+            });
+            Assert.NotNull(newUser);
 
+            var newUser2 = await clientBasic.CreateUser(new CreateApplicationUserRequest()
+            {
+                Email = $"{Guid.NewGuid()}@g.com",
+                Password = Guid.NewGuid().ToString()
+            });
+            Assert.NotNull(newUser2);
 
-                var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
-                Assert.NotNull(apiKeyProfileUserData);
-                Assert.Equal(apiKeyProfileUserData.Id, user.UserId);
-                Assert.Equal(apiKeyProfileUserData.Email, user.RegisterDetails.Email);
-                Assert.Contains("ServerAdmin", apiKeyProfileUserData.Roles);
-
-                await AssertHttpError(403, async () => await clientInsufficient.GetCurrentUser());
-                await clientServer.GetCurrentUser();
-                await clientProfile.GetCurrentUser();
-                await clientBasic.GetCurrentUser();
-
-                await AssertHttpError(403, async () =>
-                    await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
-                    {
-                        Email = $"{Guid.NewGuid()}@g.com",
-                        Password = Guid.NewGuid().ToString()
-                    }));
-
-                var newUser = await clientServer.CreateUser(new CreateApplicationUserRequest()
+            await AssertValidationError(new[] { "Email" }, async () =>
+                await clientServer.CreateUser(new CreateApplicationUserRequest()
                 {
-                    Email = $"{Guid.NewGuid()}@g.com",
+                    Email = $"{Guid.NewGuid()}",
                     Password = Guid.NewGuid().ToString()
-                });
-                Assert.NotNull(newUser);
+                }));
 
-                var newUser2 = await clientBasic.CreateUser(new CreateApplicationUserRequest()
-                {
-                    Email = $"{Guid.NewGuid()}@g.com",
-                    Password = Guid.NewGuid().ToString()
-                });
-                Assert.NotNull(newUser2);
+            await AssertValidationError(new[] { "Password" }, async () =>
+                await clientServer.CreateUser(
+                    new CreateApplicationUserRequest() { Email = $"{Guid.NewGuid()}@g.com", }));
 
-                await AssertValidationError(new[] { "Email" }, async () =>
-                    await clientServer.CreateUser(new CreateApplicationUserRequest()
-                    {
-                        Email = $"{Guid.NewGuid()}",
-                        Password = Guid.NewGuid().ToString()
-                    }));
-
-                await AssertValidationError(new[] { "Password" }, async () =>
-                    await clientServer.CreateUser(
-                        new CreateApplicationUserRequest() { Email = $"{Guid.NewGuid()}@g.com", }));
-
-                await AssertValidationError(new[] { "Email" }, async () =>
-                    await clientServer.CreateUser(
-                        new CreateApplicationUserRequest() { Password = Guid.NewGuid().ToString() }));
-            }
+            await AssertValidationError(new[] { "Email" }, async () =>
+                await clientServer.CreateUser(
+                    new CreateApplicationUserRequest() { Password = Guid.NewGuid().ToString() }));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -865,132 +848,126 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task HealthControllerTests()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
 
-                var apiHealthData = await unauthClient.GetHealth();
-                Assert.NotNull(apiHealthData);
-                Assert.True(apiHealthData.Synchronized);
-            }
+            var apiHealthData = await unauthClient.GetHealth();
+            Assert.NotNull(apiHealthData);
+            Assert.True(apiHealthData.Synchronized);
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task ServerInfoControllerTests()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-                await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
 
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                var clientBasic = await user.CreateClient();
-                var serverInfoData = await clientBasic.GetServerInfo();
-                Assert.NotNull(serverInfoData);
-                Assert.NotNull(serverInfoData.Version);
-                Assert.NotNull(serverInfoData.Onion);
-                Assert.True(serverInfoData.FullySynched);
-                Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
-                Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
-                Assert.NotNull(serverInfoData.SyncStatus);
-                Assert.Single(serverInfoData.SyncStatus.Select(s => s.CryptoCode == "BTC"));
-            }
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            var clientBasic = await user.CreateClient();
+            var serverInfoData = await clientBasic.GetServerInfo();
+            Assert.NotNull(serverInfoData);
+            Assert.NotNull(serverInfoData.Version);
+            Assert.NotNull(serverInfoData.Onion);
+            Assert.True(serverInfoData.FullySynched);
+            Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
+            Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
+            Assert.NotNull(serverInfoData.SyncStatus);
+            Assert.Single(serverInfoData.SyncStatus.Select(s => s.CryptoCode == "BTC"));
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task PaymentControllerTests()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            await user.MakeAdmin();
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
+
+            //create payment request
+
+            //validation errors
+            await AssertValidationError(new[] { "Amount" }, async () =>
             {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                await user.MakeAdmin();
-                var client = await user.CreateClient(Policies.Unrestricted);
-                var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
+                await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() { Title = "A" });
+            });
+            await AssertValidationError(new[] { "Amount" }, async () =>
+            {
+                await client.CreatePaymentRequest(user.StoreId,
+                    new CreatePaymentRequestRequest() { Title = "A", Currency = "BTC", Amount = 0 });
+            });
+            await AssertValidationError(new[] { "Currency" }, async () =>
+            {
+                await client.CreatePaymentRequest(user.StoreId,
+                    new CreatePaymentRequestRequest() { Title = "A", Currency = "helloinvalid", Amount = 1 });
+            });
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.CreatePaymentRequest(user.StoreId,
+                    new CreatePaymentRequestRequest() { Title = "A", Currency = "helloinvalid", Amount = 1 });
+            });
+            var newPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
+                new CreatePaymentRequestRequest() { Title = "A", Currency = "USD", Amount = 1 });
 
-                //create payment request
+            //list payment request
+            var paymentRequests = await viewOnly.GetPaymentRequests(user.StoreId);
 
-                //validation errors
-                await AssertValidationError(new[] { "Amount" }, async () =>
-                {
-                    await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() { Title = "A" });
-                });
-                await AssertValidationError(new[] { "Amount" }, async () =>
-                {
-                    await client.CreatePaymentRequest(user.StoreId,
-                        new CreatePaymentRequestRequest() { Title = "A", Currency = "BTC", Amount = 0 });
-                });
-                await AssertValidationError(new[] { "Currency" }, async () =>
-                {
-                    await client.CreatePaymentRequest(user.StoreId,
-                        new CreatePaymentRequestRequest() { Title = "A", Currency = "helloinvalid", Amount = 1 });
-                });
-                await AssertHttpError(403, async () =>
-                {
-                    await viewOnly.CreatePaymentRequest(user.StoreId,
-                        new CreatePaymentRequestRequest() { Title = "A", Currency = "helloinvalid", Amount = 1 });
-                });
-                var newPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                    new CreatePaymentRequestRequest() { Title = "A", Currency = "USD", Amount = 1 });
+            Assert.NotNull(paymentRequests);
+            Assert.Single(paymentRequests);
+            Assert.Equal(newPaymentRequest.Id, paymentRequests.First().Id);
 
-                //list payment request
-                var paymentRequests = await viewOnly.GetPaymentRequests(user.StoreId);
+            //get payment request
+            var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
+            Assert.Equal(newPaymentRequest.Title, paymentRequest.Title);
+            Assert.Equal(newPaymentRequest.StoreId, user.StoreId);
 
-                Assert.NotNull(paymentRequests);
-                Assert.Single(paymentRequests);
-                Assert.Equal(newPaymentRequest.Id, paymentRequests.First().Id);
+            //update payment request
+            var updateRequest = JObject.FromObject(paymentRequest).ToObject<UpdatePaymentRequestRequest>();
+            updateRequest.Title = "B";
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
+            });
+            await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
+            paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
+            Assert.Equal(updateRequest.Title, paymentRequest.Title);
 
-                //get payment request
-                var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
-                Assert.Equal(newPaymentRequest.Title, paymentRequest.Title);
-                Assert.Equal(newPaymentRequest.StoreId, user.StoreId);
+            //archive payment request
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
+            });
 
-                //update payment request
-                var updateRequest = JObject.FromObject(paymentRequest).ToObject<UpdatePaymentRequestRequest>();
-                updateRequest.Title = "B";
-                await AssertHttpError(403, async () =>
-                {
-                    await viewOnly.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
-                });
-                await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
-                paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
-                Assert.Equal(updateRequest.Title, paymentRequest.Title);
+            await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
+            Assert.DoesNotContain(paymentRequest.Id,
+                (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
 
-                //archive payment request
-                await AssertHttpError(403, async () =>
-                {
-                    await viewOnly.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
-                });
+            //let's test some payment stuff
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
+                new CreatePaymentRequestRequest() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
 
-                await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
-                Assert.DoesNotContain(paymentRequest.Id,
-                    (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
-
-                //let's test some payment stuff
-                await user.RegisterDerivationSchemeAsync("BTC");
-                var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                    new CreatePaymentRequestRequest() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
-
-                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
-                    .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
-                var invoice = user.BitPay.GetInvoice(invoiceId);
-                await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
-                {
-                    await tester.ExplorerNode.SendToAddressAsync(
-                        BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
-                });
-                await TestUtils.EventuallyAsync(async () =>
-                 {
-                     Assert.Equal(Invoice.STATUS_PAID, user.BitPay.GetInvoice(invoiceId).Status);
-                     Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
-                 });
-            }
+            var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
+                .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
+            var invoice = user.BitPay.GetInvoice(invoiceId);
+            await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
+            });
+            await TestUtils.EventuallyAsync(async () =>
+             {
+                 Assert.Equal(Invoice.STATUS_PAID, user.BitPay.GetInvoice(invoiceId).Status);
+                 Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
+             });
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1065,32 +1042,30 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanOverpayInvoice()
         {
-            using (var tester = CreateServerTester())
-            {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                await user.RegisterDerivationSchemeAsync("BTC");
-                var client = await user.CreateClient();
-                var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
-                var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
-                var method = methods.First();
-                var amount = method.Amount;
-                Assert.Equal(amount, method.Due);
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+            var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+            var method = methods.First();
+            var amount = method.Amount;
+            Assert.Equal(amount, method.Due);
 #pragma warning disable CS0618 // Type or member is obsolete
-                var btc = tester.NetworkProvider.BTC.NBitcoinNetwork;
+            var btc = tester.NetworkProvider.BTC.NBitcoinNetwork;
 #pragma warning restore CS0618 // Type or member is obsolete
-                await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(method.Destination, btc), Money.Coins(method.Due) + Money.Coins(1.0m));
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    invoice = await client.GetInvoice(user.StoreId, invoice.Id);
-                    Assert.True(invoice.Status == InvoiceStatus.Processing);
-                    methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
-                    method = methods.First();
-                    Assert.Equal(amount, method.Amount);
-                    Assert.Equal(-1.0m, method.Due);
-                    Assert.Equal(amount + 1.0m, method.TotalPaid);
-                });
-            }
+            await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(method.Destination, btc), Money.Coins(method.Due) + Money.Coins(1.0m));
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                invoice = await client.GetInvoice(user.StoreId, invoice.Id);
+                Assert.True(invoice.Status == InvoiceStatus.Processing);
+                methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+                method = methods.First();
+                Assert.Equal(amount, method.Amount);
+                Assert.Equal(-1.0m, method.Due);
+                Assert.Equal(amount + 1.0m, method.TotalPaid);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1440,108 +1415,106 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            user.GrantAccess(true);
+            user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
+
+            var merchant = tester.NewAccount();
+            merchant.GrantAccess(true);
+            merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
+            var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
+            var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
+            // The default client is using charge, so we should not be able to query channels
+            var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
+
+            var info = await client.GetLightningNodeInfo("BTC");
+            Assert.Single(info.NodeURIs);
+            Assert.NotEqual(0, info.BlockHeight);
+
+            await AssertAPIError("ligthning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
+            // Not permission for the store!
+            await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels(user.StoreId, "BTC"));
+            var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
             {
-                tester.ActivateLightning();
-                await tester.StartAsync();
-                await tester.EnsureChannelsSetup();
-                var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
+                Amount = LightMoney.Satoshis(1000),
+                Description = "lol",
+                Expiry = TimeSpan.FromSeconds(400),
+                PrivateRouteHints = false
+            });
+            var chargeInvoice = invoiceData;
+            Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
 
-                var merchant = tester.NewAccount();
-                merchant.GrantAccess(true);
-                merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
-                var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
-                var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
-                // The default client is using charge, so we should not be able to query channels
-                var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
+            client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
+            // Not permission for the server
+            await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels("BTC"));
 
-                var info = await client.GetLightningNodeInfo("BTC");
-                Assert.Single(info.NodeURIs);
-                Assert.NotEqual(0, info.BlockHeight);
+            var data = await client.GetLightningNodeChannels(user.StoreId, "BTC");
+            Assert.Equal(2, data.Count());
+            BitcoinAddress.Create(await client.GetLightningDepositAddress(user.StoreId, "BTC"), Network.RegTest);
 
-                await AssertAPIError("ligthning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
-                // Not permission for the store!
-                await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels(user.StoreId, "BTC"));
-                var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
-                {
-                    Amount = LightMoney.Satoshis(1000),
-                    Description = "lol",
-                    Expiry = TimeSpan.FromSeconds(400),
-                    PrivateRouteHints = false
-                });
-                var chargeInvoice = invoiceData;
-                Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
+            invoiceData = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+            {
+                Amount = LightMoney.Satoshis(1000),
+                Description = "lol",
+                Expiry = TimeSpan.FromSeconds(400),
+                PrivateRouteHints = false
+            });
 
-                client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
-                // Not permission for the server
-                await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels("BTC"));
+            Assert.NotNull(await client.GetLightningInvoice(user.StoreId, "BTC", invoiceData.Id));
 
-                var data = await client.GetLightningNodeChannels(user.StoreId, "BTC");
-                Assert.Equal(2, data.Count());
-                BitcoinAddress.Create(await client.GetLightningDepositAddress(user.StoreId, "BTC"), Network.RegTest);
+            await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+            {
+                BOLT11 = merchantInvoice.BOLT11
+            });
+            await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+            {
+                BOLT11 = "lol"
+            }));
 
-                invoiceData = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
-                {
-                    Amount = LightMoney.Satoshis(1000),
-                    Description = "lol",
-                    Expiry = TimeSpan.FromSeconds(400),
-                    PrivateRouteHints = false
-                });
+            var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+            {
+                Amount = -1,
+                Expiry = TimeSpan.FromSeconds(-1),
+                Description = null
+            }));
+            Assert.Equal(2, validationErr.ValidationErrors.Length);
 
-                Assert.NotNull(await client.GetLightningInvoice(user.StoreId, "BTC", invoiceData.Id));
+            var invoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
+            Assert.NotNull(invoice.PaidAt);
+            Assert.Equal(LightMoney.Satoshis(1000), invoice.Amount);
+            // Amount received might be bigger because of internal implementation shit from lightning
+            Assert.True(LightMoney.Satoshis(1000) <= invoice.AmountReceived);
 
-                await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
-                {
-                    BOLT11 = merchantInvoice.BOLT11
-                });
-                await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
-                {
-                    BOLT11 = "lol"
-                }));
-
-                var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
-                {
-                    Amount = -1,
-                    Expiry = TimeSpan.FromSeconds(-1),
-                    Description = null
-                }));
-                Assert.Equal(2, validationErr.ValidationErrors.Length);
-
-                var invoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
-                Assert.NotNull(invoice.PaidAt);
-                Assert.Equal(LightMoney.Satoshis(1000), invoice.Amount);
-                // Amount received might be bigger because of internal implementation shit from lightning
-                Assert.True(LightMoney.Satoshis(1000) <= invoice.AmountReceived);
-
-                info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
-                Assert.Single(info.NodeURIs);
-                Assert.NotEqual(0, info.BlockHeight);
+            info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
+            Assert.Single(info.NodeURIs);
+            Assert.NotEqual(0, info.BlockHeight);
 
 
-                // As admin, can use the internal node through our store.
-                await user.MakeAdmin(true);
-                await user.RegisterInternalLightningNodeAsync("BTC");
-                await client.GetLightningNodeInfo(user.StoreId, "BTC");
-                // But if not admin anymore, nope
-                await user.MakeAdmin(false);
-                await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
-                // However, even as a guest, you should be able to create an invoice
-                var guest = tester.NewAccount();
-                guest.GrantAccess(false);
-                await user.AddGuest(guest.UserId);
-                client = await guest.CreateClient(Policies.CanCreateLightningInvoiceInStore);
-                await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
-                {
-                    Amount = LightMoney.Satoshis(1000),
-                    Description = "lol",
-                    Expiry = TimeSpan.FromSeconds(600),
-                });
-                client = await guest.CreateClient(Policies.CanUseLightningNodeInStore);
-                // Can use lightning node is only granted to store's owner
-                await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
-            }
+            // As admin, can use the internal node through our store.
+            await user.MakeAdmin(true);
+            await user.RegisterInternalLightningNodeAsync("BTC");
+            await client.GetLightningNodeInfo(user.StoreId, "BTC");
+            // But if not admin anymore, nope
+            await user.MakeAdmin(false);
+            await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
+            // However, even as a guest, you should be able to create an invoice
+            var guest = tester.NewAccount();
+            guest.GrantAccess(false);
+            await user.AddGuest(guest.UserId);
+            client = await guest.CreateClient(Policies.CanCreateLightningInvoiceInStore);
+            await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+            {
+                Amount = LightMoney.Satoshis(1000),
+                Description = "lol",
+                Expiry = TimeSpan.FromSeconds(600),
+            });
+            client = await guest.CreateClient(Policies.CanUseLightningNodeInStore);
+            // Can use lightning node is only granted to store's owner
+            await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
         }
 
         [Fact(Timeout = TestTimeout)]

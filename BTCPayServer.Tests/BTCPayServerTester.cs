@@ -243,11 +243,9 @@ namespace BTCPayServer.Tests
         private async Task WaitSiteIsOperational()
         {
             _ = HttpClient.GetAsync("/").ConfigureAwait(false);
-            using (var cts = new CancellationTokenSource(20_000))
-            {
-                var synching = WaitIsFullySynched(cts.Token);
-                await Task.WhenAll(synching).ConfigureAwait(false);
-            }
+            using var cts = new CancellationTokenSource(20_000);
+            var synching = WaitIsFullySynched(cts.Token);
+            await Task.WhenAll(synching).ConfigureAwait(false);
             // Opportunistic call to wake up view compilation in debug mode, we don't need to await.
         }
 

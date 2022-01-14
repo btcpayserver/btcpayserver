@@ -209,53 +209,47 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<StoreData[]> GetOwnedStores(string userId)
         {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.UserStore
-                    .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                    .Select(u => u.StoreData)
-                    .ToArrayAsync();
-            }
+            using var ctx = _ContextFactory.CreateContext();
+            return await ctx.UserStore
+                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                .Select(u => u.StoreData)
+                .ToArrayAsync();
         }
 
         public async Task<bool> DeleteApp(AppData appData)
         {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                ctx.Apps.Add(appData);
-                ctx.Entry(appData).State = EntityState.Deleted;
-                return await ctx.SaveChangesAsync() == 1;
-            }
+            using var ctx = _ContextFactory.CreateContext();
+            ctx.Apps.Add(appData);
+            ctx.Entry(appData).State = EntityState.Deleted;
+            return await ctx.SaveChangesAsync() == 1;
         }
 
         public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false, string storeId = null)
         {
-            using (var ctx = _ContextFactory.CreateContext())
+            using var ctx = _ContextFactory.CreateContext();
+            var listApps = await ctx.UserStore
+                .Where(us =>
+                    (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
+                    (storeId == null || us.StoreDataId == storeId))
+                .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
+                    (us, app) =>
+                        new ListAppsViewModel.ListAppViewModel()
+                        {
+                            IsOwner = us.Role == StoreRoles.Owner,
+                            StoreId = us.StoreDataId,
+                            StoreName = us.StoreData.StoreName,
+                            AppName = app.Name,
+                            AppType = app.AppType,
+                            Id = app.Id
+                        })
+                .ToArrayAsync();
+
+            foreach (ListAppsViewModel.ListAppViewModel app in listApps)
             {
-                var listApps = await ctx.UserStore
-                    .Where(us =>
-                        (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
-                        (storeId == null || us.StoreDataId == storeId))
-                    .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
-                        (us, app) =>
-                            new ListAppsViewModel.ListAppViewModel()
-                            {
-                                IsOwner = us.Role == StoreRoles.Owner,
-                                StoreId = us.StoreDataId,
-                                StoreName = us.StoreData.StoreName,
-                                AppName = app.Name,
-                                AppType = app.AppType,
-                                Id = app.Id
-                            })
-                    .ToArrayAsync();
-
-                foreach (ListAppsViewModel.ListAppViewModel app in listApps)
-                {
-                    app.ViewStyle = await GetAppViewStyleAsync(app.Id, app.AppType);
-                }
-
-                return listApps;
+                app.ViewStyle = await GetAppViewStyleAsync(app.Id, app.AppType);
             }
+
+            return listApps;
         }
 
         public async Task<string> GetAppViewStyleAsync(string appId, string appType)
@@ -284,33 +278,29 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
         {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var query = ctx.Apps
-                    .Where(us => appIds.Contains(us.Id));
+            using var ctx = _ContextFactory.CreateContext();
+            var query = ctx.Apps
+                .Where(us => appIds.Contains(us.Id));
 
-                if (includeStore)
-                {
-                    query = query.Include(data => data.StoreData);
-                }
-                return await query.ToListAsync();
+            if (includeStore)
+            {
+                query = query.Include(data => data.StoreData);
             }
+            return await query.ToListAsync();
         }
 
         public async Task<AppData> GetApp(string appId, AppType? appType, bool includeStore = false)
         {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var query = ctx.Apps
-                    .Where(us => us.Id == appId &&
-                                 (appType == null || us.AppType == appType.ToString()));
+            using var ctx = _ContextFactory.CreateContext();
+            var query = ctx.Apps
+                .Where(us => us.Id == appId &&
+                             (appType == null || us.AppType == appType.ToString()));
 
-                if (includeStore)
-                {
-                    query = query.Include(data => data.StoreData);
-                }
-                return await query.FirstOrDefaultAsync();
+            if (includeStore)
+            {
+                query = query.Include(data => data.StoreData);
             }
+            return await query.FirstOrDefaultAsync();
         }
 
         public Task<StoreData> GetStore(AppData app)
@@ -525,39 +515,35 @@ namespace BTCPayServer.Services.Apps
         {
             if (userId == null || appId == null)
                 return null;
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var app = await ctx.UserStore
-                                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
-                   .FirstOrDefaultAsync();
-                if (app == null)
-                    return null;
-                if (type != null && type.Value.ToString() != app.AppType)
-                    return null;
-                return app;
-            }
+            using var ctx = _ContextFactory.CreateContext();
+            var app = await ctx.UserStore
+                            .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                            .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
+               .FirstOrDefaultAsync();
+            if (app == null)
+                return null;
+            if (type != null && type.Value.ToString() != app.AppType)
+                return null;
+            return app;
         }
 
         public async Task UpdateOrCreateApp(AppData app)
         {
-            using (var ctx = _ContextFactory.CreateContext())
+            using var ctx = _ContextFactory.CreateContext();
+            if (string.IsNullOrEmpty(app.Id))
             {
-                if (string.IsNullOrEmpty(app.Id))
-                {
-                    app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
-                    app.Created = DateTimeOffset.UtcNow;
-                    await ctx.Apps.AddAsync(app);
-                }
-                else
-                {
-                    ctx.Apps.Update(app);
-                    ctx.Entry(app).Property(data => data.Created).IsModified = false;
-                    ctx.Entry(app).Property(data => data.Id).IsModified = false;
-                    ctx.Entry(app).Property(data => data.AppType).IsModified = false;
-                }
-                await ctx.SaveChangesAsync();
+                app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
+                app.Created = DateTimeOffset.UtcNow;
+                await ctx.Apps.AddAsync(app);
             }
+            else
+            {
+                ctx.Apps.Update(app);
+                ctx.Entry(app).Property(data => data.Created).IsModified = false;
+                ctx.Entry(app).Property(data => data.Id).IsModified = false;
+                ctx.Entry(app).Property(data => data.AppType).IsModified = false;
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private static bool TryParseJson(string json, out JObject result)

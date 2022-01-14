@@ -29,35 +29,29 @@ namespace BTCPayServer.Storage.Services
                 filesQuery = new FilesQuery();
             }
 
-            using (var context = _ApplicationDbContextFactory.CreateContext())
-            {
-                return await context.Files
-                    .Include(file => file.ApplicationUser)
-                    .Where(file =>
-                        (!filesQuery.Id.Any() || filesQuery.Id.Contains(file.Id)) &&
-                        (!filesQuery.UserIds.Any() || filesQuery.UserIds.Contains(file.ApplicationUserId)))
-                    .OrderByDescending(file => file.Timestamp)
-                    .ToListAsync();
-            }
+            using var context = _ApplicationDbContextFactory.CreateContext();
+            return await context.Files
+                .Include(file => file.ApplicationUser)
+                .Where(file =>
+                    (!filesQuery.Id.Any() || filesQuery.Id.Contains(file.Id)) &&
+                    (!filesQuery.UserIds.Any() || filesQuery.UserIds.Contains(file.ApplicationUserId)))
+                .OrderByDescending(file => file.Timestamp)
+                .ToListAsync();
         }
 
         public async Task RemoveFile(StoredFile file)
         {
-            using (var context = _ApplicationDbContextFactory.CreateContext())
-            {
-                context.Attach(file);
-                context.Files.Remove(file);
-                await context.SaveChangesAsync();
-            }
+            using var context = _ApplicationDbContextFactory.CreateContext();
+            context.Attach(file);
+            context.Files.Remove(file);
+            await context.SaveChangesAsync();
         }
 
         public async Task AddFile(StoredFile storedFile)
         {
-            using (var context = _ApplicationDbContextFactory.CreateContext())
-            {
-                await context.AddAsync(storedFile);
-                await context.SaveChangesAsync();
-            }
+            using var context = _ApplicationDbContextFactory.CreateContext();
+            await context.AddAsync(storedFile);
+            await context.SaveChangesAsync();
         }
 
         public class FilesQuery

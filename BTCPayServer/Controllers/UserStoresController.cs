@@ -78,60 +78,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             await _repo.RemoveStore(storeId, userId);
             TempData[WellKnownTempData.SuccessMessage] = "Store removed successfully";
-            return RedirectToAction(nameof(ListStores));
-        }
-
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
-        public async Task<IActionResult> ListStores(
-            string sortOrder = null,
-            string sortOrderColumn = null
-        )
-        {
-            StoresViewModel result = new StoresViewModel();
-            var stores = await _repo.GetStoresByUserId(GetUserId());
-            if (sortOrder != null && sortOrderColumn != null)
-            {
-                stores = stores.OrderByDescending(store =>
-                    {
-                        switch (sortOrderColumn)
-                        {
-                            case nameof(store.StoreName):
-                                return store.StoreName;
-                            case nameof(store.StoreWebsite):
-                                return store.StoreWebsite;
-                            default:
-                                return store.Id;
-                        }
-                    }).ToArray();
-
-                switch (sortOrder)
-                {
-                    case "desc":
-                        ViewData[$"{sortOrderColumn}SortOrder"] = "asc";
-                        break;
-                    case "asc":
-                        stores = stores.Reverse().ToArray();
-                        ViewData[$"{sortOrderColumn}SortOrder"] = "desc";
-                        break;
-                }
-            }
-
-            for (int i = 0; i < stores.Length; i++)
-            {
-                var store = stores[i];
-                var blob = store.GetStoreBlob();
-                result.Stores.Add(new StoresViewModel.StoreViewModel()
-                {
-                    Id = store.Id,
-
-                    Name = store.StoreName,
-                    WebSite = store.StoreWebsite,
-                    IsOwner = store.Role == StoreRoles.Owner,
-                    HintWalletWarning = blob.Hints.Wallet && blob.Hints.Lightning
-                });
-            }
-            return View(result);
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         private string GetUserId() => _userManager.GetUserId(User);

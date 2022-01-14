@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers.GreenField;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Filters;

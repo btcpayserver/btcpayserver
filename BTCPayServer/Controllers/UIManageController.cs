@@ -7,7 +7,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;

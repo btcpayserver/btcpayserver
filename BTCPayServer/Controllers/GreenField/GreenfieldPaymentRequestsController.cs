@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

@@ -17,7 +17,7 @@ using NBitcoin;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

@@ -9,7 +9,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -27,7 +27,7 @@ using StoreData = BTCPayServer.Client.Models.StoreData;
 using StoreWebhookData = BTCPayServer.Client.Models.StoreWebhookData;
 using WebhookDeliveryData = BTCPayServer.Client.Models.WebhookDeliveryData;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
     public class BTCPayServerClientFactory : IBTCPayServerClientFactory
     {
@@ -107,18 +107,18 @@ namespace BTCPayServer.Controllers.GreenField
                 List<Claim> claims = new List<Claim>
                 {
                     new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, userId),
-                    new Claim(GreenFieldConstants.ClaimTypes.Permission,
+                    new Claim(GreenfieldConstants.ClaimTypes.Permission,
                         Permission.Create(Policies.Unrestricted).ToString())
                 };
                 claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
                     new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, GreenFieldConstants.AuthenticationType));
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType));
             }
             else
             {
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), $"Local{GreenFieldConstants.AuthenticationType}"));
+                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), $"Local{GreenfieldConstants.AuthenticationType}"));
             }
 
             if (storeIds?.Any() is true)
@@ -484,11 +484,11 @@ namespace BTCPayServer.Controllers.GreenField
             switch (result)
             {
                 case UnprocessableEntityObjectResult { Value: List<GreenfieldValidationError> validationErrors }:
-                    throw new GreenFieldValidationException(validationErrors.ToArray());
+                    throw new GreenfieldValidationException(validationErrors.ToArray());
                 case BadRequestObjectResult { Value: GreenfieldAPIError error }:
-                    throw new GreenFieldAPIException(400, error);
+                    throw new GreenfieldAPIException(400, error);
                 case NotFoundResult _:
-                    throw new GreenFieldAPIException(404, new GreenfieldAPIError("not-found", ""));
+                    throw new GreenfieldAPIException(404, new GreenfieldAPIError("not-found", ""));
                 default:
                     return;
             }

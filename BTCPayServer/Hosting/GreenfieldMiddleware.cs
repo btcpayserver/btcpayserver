@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -35,7 +35,7 @@ namespace BTCPayServer.Hosting
                 (httpContext.Response.StatusCode == 401 || httpContext.Response.StatusCode == 403))
             {
                 if (httpContext.Response.StatusCode == 403 &&
-                    httpContext.Items.TryGetValue(GreenFieldAuthorizationHandler.RequestedPermissionKey, out var p) &&
+                    httpContext.Items.TryGetValue(GreenfieldAuthorizationHandler.RequestedPermissionKey, out var p) &&
                     p is string policy)
                 {
                     var outputObj = new GreenfieldPermissionAPIError(policy);

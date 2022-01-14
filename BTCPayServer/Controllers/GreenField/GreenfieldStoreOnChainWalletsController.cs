@@ -28,7 +28,7 @@ using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -353,7 +353,7 @@ namespace BTCPayServer.Controllers.GreenField
                     request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
                         "Amount must be specified or destination must be a BIP21 payment link, and greater than 0", this);
                 }
-                if (request.ProceedWithPayjoin && bip21?.UnknowParameters?.ContainsKey(PayjoinClient.BIP21EndpointKey) is true)
+                if (request.ProceedWithPayjoin && bip21?.UnknownParameters?.ContainsKey(PayjoinClient.BIP21EndpointKey) is true)
                 {
                     payjoinOutputIndex = index;
                 }

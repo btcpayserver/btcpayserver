@@ -13,9 +13,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BTCPayServer.Security.GreenField
+namespace BTCPayServer.Security.Greenfield
 {
-    public class BasicAuthenticationHandler : AuthenticationHandler<GreenFieldAuthenticationOptions>
+    public class BasicAuthenticationHandler : AuthenticationHandler<GreenfieldAuthenticationOptions>
     {
         private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -23,7 +23,7 @@ namespace BTCPayServer.Security.GreenField
 
         public BasicAuthenticationHandler(
             IOptionsMonitor<IdentityOptions> identityOptions,
-            IOptionsMonitor<GreenFieldAuthenticationOptions> options,
+            IOptionsMonitor<GreenfieldAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
@@ -74,14 +74,14 @@ namespace BTCPayServer.Security.GreenField
             var claims = new List<Claim>()
             {
                 new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),
-                new Claim(GreenFieldConstants.ClaimTypes.Permission,
+                new Claim(GreenfieldConstants.ClaimTypes.Permission,
                     Permission.Create(Policies.Unrestricted).ToString())
             };
             claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s => new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
 
             return AuthenticateResult.Success(new AuthenticationTicket(
-                new ClaimsPrincipal(new ClaimsIdentity(claims, GreenFieldConstants.AuthenticationType)),
-                GreenFieldConstants.AuthenticationType));
+                new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType)),
+                GreenfieldConstants.AuthenticationType));
         }
     }
 }

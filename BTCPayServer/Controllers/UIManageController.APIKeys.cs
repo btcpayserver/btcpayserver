@@ -8,7 +8,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;

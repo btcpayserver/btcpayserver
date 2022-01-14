@@ -12,7 +12,7 @@ using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
-using BTCPayServer.Security.GreenField;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
@@ -22,7 +22,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NicolasDorier.RateLimits;
 
-namespace BTCPayServer.Controllers.GreenField
+namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers.GreenField
                 throw new JsonHttpException(this.StatusCode(401));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
+            var isAuth = User.Identity.AuthenticationType == GreenfieldConstants.AuthenticationType;
 
             // If registration are locked and that an admin exists, don't accept unauthenticated connection
             if (anyAdmin && policies.LockSubscription && !isAuth)

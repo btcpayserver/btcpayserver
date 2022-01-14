@@ -1,8 +1,8 @@
-namespace BTCPayServer.Security.GreenField
+namespace BTCPayServer.Security.Greenfield
 {
-    public static class GreenFieldConstants
+    public static class GreenfieldConstants
     {
-        public const string AuthenticationType = "GreenField";
+        public const string AuthenticationType = "Greenfield";
 
         public static class ClaimTypes
         {

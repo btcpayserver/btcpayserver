@@ -67,7 +67,8 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task RemoveWebhook(string id)
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, $"webhooks/{id}.json");
-            var strResp = await SendRequest(req);
+
+            await SendRequest(req);
         }
 
         public async Task<string[]> CheckScopes()

@@ -11,9 +11,9 @@ namespace BTCPayServer.Hosting
         public static void Register(IServiceCollection services)
         {
             services.AddRouting(opts =>
-            {
-                opts.ConstraintMap["validate"] = typeof(ValidateControllerNameTransformer);
-            });
+              {
+                  opts.ConstraintMap["validate"] = typeof(ValidateControllerNameTransformer);
+              });
             services.AddTransient<IApplicationModelProvider, ApplicitionModelProvider>();
             services.AddSingleton<ControllerNameList>();
         }

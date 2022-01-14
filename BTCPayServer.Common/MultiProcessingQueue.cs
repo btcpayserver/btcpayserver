@@ -16,7 +16,7 @@ namespace BTCPayServer
     /// </summary>
     public class MultiProcessingQueue
     {
-        Dictionary<string, ProcessingQueue> _Queues = new Dictionary<string, ProcessingQueue>();
+        readonly Dictionary<string, ProcessingQueue> _Queues = new Dictionary<string, ProcessingQueue>();
         class ProcessingQueue
         {
             internal Channel<ProcessingAction> Chan = Channel.CreateUnbounded<ProcessingAction>();
@@ -46,7 +46,8 @@ namespace BTCPayServer
                 }
             }
         }
-        CancellationTokenSource cts = new CancellationTokenSource();
+
+        readonly CancellationTokenSource cts = new CancellationTokenSource();
         bool stopped;
         public void Enqueue(string queueName, ProcessingAction act)
         {

@@ -321,7 +321,7 @@ namespace BTCPayServer.Controllers
                         {
                             proposedPayjoin.Settings.SigningOptions = new SigningOptions
                             {
-                                EnforceLowR = !(vm.SigningContext?.EnforceLowR is false)
+                                EnforceLowR = vm.SigningContext?.EnforceLowR is not false
                             };
                             var extKey = ExtKey.Parse(vm.SigningKey, network.NBitcoinNetwork);
                             proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,

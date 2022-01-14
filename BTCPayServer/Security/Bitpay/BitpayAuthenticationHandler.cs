@@ -20,15 +20,12 @@ namespace BTCPayServer.Security.Bitpay
 {
     public class BitpayAuthenticationHandler : AuthenticationHandler<BitpayAuthenticationOptions>
     {
-        readonly StoreRepository _StoreRepository;
         readonly TokenRepository _TokenRepository;
         public BitpayAuthenticationHandler(
             TokenRepository tokenRepository,
-            StoreRepository storeRepository,
             IOptionsMonitor<BitpayAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
         {
             _TokenRepository = tokenRepository;
-            _StoreRepository = storeRepository;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -44,7 +41,7 @@ namespace BTCPayServer.Security.Bitpay
             }
             else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
             {
-                var storeId = await GetStoreIdFromAuth(Context.Request.HttpContext, bitpayAuth.Authorization);
+                var storeId = await GetStoreIdFromAuth(bitpayAuth.Authorization);
                 if (storeId == null)
                     return AuthenticateResult.Fail("ApiKey authentication failed");
                 return Success(BitpayClaims.ApiKeyStoreId, storeId, BitpayAuthenticationTypes.ApiKeyAuthentication);
@@ -89,7 +86,7 @@ namespace BTCPayServer.Security.Bitpay
             return null;
         }
 
-        private async Task<string> GetStoreIdFromAuth(HttpContext httpContext, string auth)
+        private async Task<string> GetStoreIdFromAuth(string auth)
         {
             var splitted = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (splitted.Length != 2 || !splitted[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
@@ -97,7 +94,7 @@ namespace BTCPayServer.Security.Bitpay
                 return null;
             }
 
-            string apiKey = null;
+            string apiKey;
             try
             {
                 apiKey = Encoders.ASCII.EncodeData(Encoders.Base64.DecodeData(splitted[1]));

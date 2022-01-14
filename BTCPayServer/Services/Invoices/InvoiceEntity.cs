@@ -147,7 +147,7 @@ namespace BTCPayServer.Services.Invoices
 
         public T GetMetadata<T>(string propName)
         {
-            if (AdditionalData == null || !(AdditionalData.TryGetValue(propName, out var jt) is true))
+            if (AdditionalData == null || AdditionalData.TryGetValue(propName, out var jt) is not true)
                 return default;
             if (jt.Type == JTokenType.Null)
                 return default;
@@ -177,7 +177,7 @@ namespace BTCPayServer.Services.Invoices
             }
             if (value is null)
             {
-                AdditionalData?.Remove(propName);
+                (AdditionalData?.Remove(propName));
             }
             else
             {
@@ -1038,7 +1038,7 @@ namespace BTCPayServer.Services.Invoices
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
             decimal networkFeeAlreadyPaid = 0.0m;
-            _ = ParentEntity.GetPayments(true)
+            ParentEntity.GetPayments(true)
                 .Where(p => paymentPredicate(p))
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
@@ -1166,7 +1166,7 @@ namespace BTCPayServer.Services.Invoices
 
         public CryptoPaymentData GetCryptoPaymentData()
         {
-            CryptoPaymentData paymentData = null;
+            CryptoPaymentData paymentData;
 #pragma warning disable CS0618 // Type or member is obsolete
             if (string.IsNullOrEmpty(CryptoPaymentData))
             {

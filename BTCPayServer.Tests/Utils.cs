@@ -16,23 +16,21 @@ namespace BTCPayServer.Tests
         {
             lock (_portLock)
             {
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                while (true)
                 {
-                    while (true)
+                    try
                     {
-                        try
+                        var port = _nextPort++;
+                        socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
+                        return port;
+                    }
+                    catch (SocketException)
+                    {
+                        // Retry unless exhausted
+                        if (_nextPort == 65536)
                         {
-                            var port = _nextPort++;
-                            socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
-                            return port;
-                        }
-                        catch (SocketException)
-                        {
-                            // Retry unless exhausted
-                            if (_nextPort == 65536)
-                            {
-                                throw;
-                            }
+                            throw;
                         }
                     }
                 }

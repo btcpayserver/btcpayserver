@@ -173,8 +173,9 @@ namespace BTCPayServer.Logging
 
             logLevelColors = GetLogLevelConsoleColors(logLevel);
             logLevelString = GetLogLevelString(logLevel);
+
             // category and event id
-            var lenBefore = logBuilder.ToString().Length;
+            logBuilder.ToString().Length;
             logBuilder.Append(_loglevelPadding);
             logBuilder.Append(logName);
             logBuilder.Append(": ");
@@ -356,7 +357,7 @@ namespace BTCPayServer.Logging
             _outputTask = Task.Factory.StartNew(
                 ProcessLogQueue,
                 state: this,
-                cancellationToken: default(CancellationToken),
+                cancellationToken: default,
                 creationOptions: TaskCreationOptions.LongRunning, scheduler: TaskScheduler.Default);
         }
 

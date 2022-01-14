@@ -19,8 +19,7 @@ namespace BTCPayServer
         {
             if (!user.Identity.IsAuthenticated)
                 return (false, false);
-            var claimUser = user.Identity as ClaimsIdentity;
-            if (claimUser is null)
+            if (user.Identity is not ClaimsIdentity claimUser)
                 return (false, false);
 
             bool isAdmin = false;

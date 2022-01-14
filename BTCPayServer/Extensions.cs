@@ -68,7 +68,8 @@ namespace BTCPayServer
             var uri = connectionString.BaseUri;
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
-            if (!NBitcoin.Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
+
+            if (!NBitcoin.Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out _))
                 return false;
             return !Extensions.IsLocalNetwork(uri.DnsSafeHost);
         }
@@ -125,11 +126,9 @@ namespace BTCPayServer
             {
                 if (webSocket.State == WebSocketState.Open)
                 {
-                    using (CancellationTokenSource cts = new CancellationTokenSource())
-                    {
-                        cts.CancelAfter(5000);
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
-                    }
+                    using CancellationTokenSource cts = new CancellationTokenSource();
+                    cts.CancelAfter(5000);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
                 }
             }
             catch { }
@@ -144,7 +143,7 @@ namespace BTCPayServer
                 .Where(data => data != null);
         }
 
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default)
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes

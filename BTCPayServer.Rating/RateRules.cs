@@ -124,7 +124,7 @@ namespace BTCPayServer.Rating
         }
         public static bool TryParse(string str, out RateRules rules)
         {
-            return TryParse(str, out rules, out var unused);
+            return TryParse(str, out rules, out _);
         }
         public static bool TryParse(string str, out RateRules rules, out List<RateRulesErrors> errors)
         {
@@ -223,7 +223,7 @@ namespace BTCPayServer.Rating
                 if (currencyPair == null || !CurrencyPair.TryParse(currencyPair, out var pair))
                 {
                     Errors.Add(RateRulesErrors.InvalidCurrencyIdentifier);
-                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node.ToString()})");
+                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node})");
                 }
                 else
                 {
@@ -231,7 +231,7 @@ namespace BTCPayServer.Rating
                     if (rate == null)
                     {
                         Errors.Add(RateRulesErrors.RateUnavailable);
-                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair.ToString()})");
+                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair})");
                     }
                     else
                     {
@@ -417,7 +417,7 @@ namespace BTCPayServer.Rating
                 if (IsInvocation)
                 {
                     Errors.Add(RateRulesErrors.InvalidCurrencyIdentifier);
-                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node.ToString()})");
+                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node})");
                 }
                 IsInvocation = true;
                 _ExchangeName = node.Expression.ToString();

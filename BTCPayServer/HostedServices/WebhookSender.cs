@@ -56,7 +56,7 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        MultiProcessingQueue _processingQueue = new MultiProcessingQueue();
+        readonly MultiProcessingQueue _processingQueue = new MultiProcessingQueue();
         public StoreRepository StoreRepository { get; }
         public IHttpClientFactory HttpClientFactory { get; }
 
@@ -146,7 +146,7 @@ namespace BTCPayServer.HostedServices
                 foreach (var webhook in webhooks)
                 {
                     var webhookBlob = webhook.GetBlob();
-                    if (!(GetWebhookEvent(invoiceEvent) is WebhookInvoiceEvent webhookEvent))
+                    if (GetWebhookEvent(invoiceEvent) is not WebhookInvoiceEvent webhookEvent)
                         continue;
                     if (!ShouldDeliver(webhookEvent.Type, webhookBlob))
                         continue;
@@ -254,7 +254,7 @@ namespace BTCPayServer.HostedServices
                 var result = await SendAndSaveDelivery(ctx, cancellationToken);
                 if (ctx.WebhookBlob.AutomaticRedelivery &&
                     !result.Success &&
-                    result.DeliveryId is string)
+                    result.DeliveryId is not null)
                 {
                     var originalDeliveryId = result.DeliveryId;
                     foreach (var wait in new[]

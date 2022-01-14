@@ -83,7 +83,8 @@ namespace BTCPayServer.HostedServices
         {
             Logs = logs;
         }
-        Logs Logs;
+
+        readonly Logs Logs;
 
         public IDelay Delay { get; set; } = TaskDelay.Instance;
         public int GetExecutingCount()
@@ -131,7 +132,7 @@ namespace BTCPayServer.HostedServices
                     {
                         _Processing.Add(processing);
                     }
-                    _ = processing.ContinueWith(t =>
+                    processing.ContinueWith(t =>
                     {
                         if (t.IsFaulted)
                         {

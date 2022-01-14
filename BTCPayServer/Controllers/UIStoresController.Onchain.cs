@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                     storeBlob.SetExcluded(paymentMethodId, false);
                     storeBlob.Hints.Wallet = false;
-                    storeBlob.PayJoinEnabled = strategy.IsHotWallet && !(vm.SetupRequest?.PayJoinEnabled is false);
+                    storeBlob.PayJoinEnabled = strategy.IsHotWallet && vm.SetupRequest?.PayJoinEnabled is not false;
                     store.SetStoreBlob(storeBlob);
                 }
                 catch
@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
             if (checkResult != null)
             {
                 return checkResult;
@@ -316,7 +316,7 @@ namespace BTCPayServer.Controllers
 
             var result = await UpdateWallet(vm);
 
-            if (!ModelState.IsValid || !(result is RedirectToActionResult))
+            if (!ModelState.IsValid || result is not RedirectToActionResult)
                 return result;
 
             if (!isImport)
@@ -810,10 +810,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<string> ReadAllText(IFormFile file)
         {
-            using (var stream = new StreamReader(file.OpenReadStream()))
-            {
-                return await stream.ReadToEndAsync();
-            }
+            using var stream = new StreamReader(file.OpenReadStream());
+            return await stream.ReadToEndAsync();
         }
 
         private string WalletWarning(bool isHotWallet, string info)

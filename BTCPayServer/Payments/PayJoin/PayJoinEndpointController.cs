@@ -174,7 +174,6 @@ namespace BTCPayServer.Payments.PayJoin
                 rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
             }
 
-            FeeRate originalFeeRate = null;
             bool psbtFormat = true;
 
             if (PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
@@ -207,7 +206,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return BadRequest(CreatePayjoinError("original-psbt-rejected", $"This PSBT is insane ({errors[0]})"));
             }
-            if (!psbt.TryGetEstimatedFeeRate(out originalFeeRate))
+            if (!psbt.TryGetEstimatedFeeRate(out FeeRate originalFeeRate))
             {
                 return BadRequest(CreatePayjoinError("original-psbt-rejected",
                     "You need to provide Witness UTXO information to the PSBT."));

@@ -28,7 +28,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             foreach (var moneroLikeConfigurationItem in _moneroLikeConfiguration.MoneroLikeConfigurationItems)
             {
-                _ = StartLoop(_Cts.Token, moneroLikeConfigurationItem.Key);
+                StartLoop(_Cts.Token, moneroLikeConfigurationItem.Key);
             }
             return Task.CompletedTask;
         }

@@ -42,22 +42,20 @@ namespace BTCPayServer.Tests
 
         public async Task<JObject> GetNextRequest()
         {
-            using (CancellationTokenSource cancellation = new CancellationTokenSource(2000000))
+            using CancellationTokenSource cancellation = new CancellationTokenSource(2000000);
+            try
             {
-                try
+                JObject req = null;
+                while (!await _Requests.Reader.WaitToReadAsync(cancellation.Token) ||
+                    !_Requests.Reader.TryRead(out req))
                 {
-                    JObject req = null;
-                    while (!await _Requests.Reader.WaitToReadAsync(cancellation.Token) ||
-                        !_Requests.Reader.TryRead(out req))
-                    {
 
-                    }
-                    return req;
                 }
-                catch (TaskCanceledException)
-                {
-                    throw new Xunit.Sdk.XunitException("Callback to the webserver was expected, check if the callback url is accessible from internet");
-                }
+                return req;
+            }
+            catch (TaskCanceledException)
+            {
+                throw new Xunit.Sdk.XunitException("Callback to the webserver was expected, check if the callback url is accessible from internet");
             }
         }
 

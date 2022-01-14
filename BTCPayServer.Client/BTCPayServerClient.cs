@@ -24,9 +24,7 @@ namespace BTCPayServer.Client
 
         public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)
         {
-            if (btcpayHost == null)
-                throw new ArgumentNullException(nameof(btcpayHost));
-            _btcpayHost = btcpayHost;
+            _btcpayHost = btcpayHost ?? throw new ArgumentNullException(nameof(btcpayHost));
             _httpClient = httpClient ?? new HttpClient();
         }
         public BTCPayServerClient(Uri btcpayHost, string APIKey, HttpClient httpClient = null)
@@ -117,7 +115,7 @@ namespace BTCPayServer.Client
             T bodyPayload = default, HttpMethod method = null)
         {
             var request = CreateHttpRequest(path, queryPayload, method);
-            if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default(T)))
+            if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default))
             {
                 request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload), Encoding.UTF8, "application/json");
             }
@@ -131,7 +129,7 @@ namespace BTCPayServer.Client
                 uri.Query += "&";
 
             UriBuilder uriBuilder = uri;
-            if (!(keyValuePair.Value is string) &&
+            if (keyValuePair.Value is not string &&
                 keyValuePair.Value.GetType().GetInterfaces().Contains((typeof(IEnumerable))))
             {
                 foreach (var item in (IEnumerable)keyValuePair.Value)

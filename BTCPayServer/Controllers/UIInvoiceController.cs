@@ -315,7 +315,7 @@ namespace BTCPayServer.Controllers
             {
                 entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);
             }
-            _ = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 try
                 {

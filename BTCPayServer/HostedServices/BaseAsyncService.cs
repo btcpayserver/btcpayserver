@@ -10,7 +10,7 @@ namespace BTCPayServer.HostedServices
 {
     public abstract class BaseAsyncService : IHostedService
     {
-        private CancellationTokenSource _Cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _Cts = new CancellationTokenSource();
         protected Task[] _Tasks;
         public readonly Logs Logs;
         public BaseAsyncService(Logs logs)

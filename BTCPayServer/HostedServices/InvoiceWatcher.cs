@@ -278,7 +278,7 @@ namespace BTCPayServer.HostedServices
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _Loop = StartLoop(_Cts.Token);
-            _ = WaitPendingInvoices();
+            WaitPendingInvoices();
 
             leases.Add(_eventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
             {
@@ -294,7 +294,7 @@ namespace BTCPayServer.HostedServices
                 if (b.Name == InvoiceEvent.Created)
                 {
                     Watch(b.Invoice.Id);
-                    _ = Wait(b.Invoice.Id);
+                    Wait(b.Invoice.Id);
                 }
 
                 if (b.Name == InvoiceEvent.ReceivedPayment)
@@ -372,7 +372,7 @@ namespace BTCPayServer.HostedServices
                     catch (Exception ex) when (!cancellation.IsCancellationRequested)
                     {
                         Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
-                        _ = Task.Delay(10000, cancellation)
+                        Task.Delay(10000, cancellation)
                             .ContinueWith(t => Watch(invoiceId), TaskScheduler.Default);
                         break;
                     }

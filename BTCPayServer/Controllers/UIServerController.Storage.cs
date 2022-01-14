@@ -306,7 +306,7 @@ namespace BTCPayServer.Controllers
                 case FileSystemFileProviderService fileProviderService:
                     if (data.Provider != BTCPayServer.Storage.Models.StorageProvider.FileSystem)
                     {
-                        _ = await SaveStorageProvider(new FileSystemStorageConfiguration(),
+                        await SaveStorageProvider(new FileSystemStorageConfiguration(),
                             BTCPayServer.Storage.Models.StorageProvider.FileSystem);
                     }
 

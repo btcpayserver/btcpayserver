@@ -48,7 +48,7 @@ namespace BTCPayServer.Data
             }
             return blobInfo;
         }
-        static JsonSerializerSettings LabelSerializerSettings = new JsonSerializerSettings()
+        static readonly JsonSerializerSettings LabelSerializerSettings = new JsonSerializerSettings()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             Formatting = Formatting.None

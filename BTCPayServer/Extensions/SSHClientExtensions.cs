@@ -69,21 +69,21 @@ namespace BTCPayServer
                 try
                 {
                     sshCommand.BeginExecute(ar =>
-                    {
-                        try
-                        {
-                            sshCommand.EndExecute(ar);
-                            tcs.TrySetResult(CreateSSHCommandResult(sshCommand));
-                        }
-                        catch (Exception ex)
-                        {
-                            tcs.TrySetException(ex);
-                        }
-                        finally
-                        {
-                            sshCommand.Dispose();
-                        }
-                    });
+                      {
+                          try
+                          {
+                              sshCommand.EndExecute(ar);
+                              tcs.TrySetResult(CreateSSHCommandResult(sshCommand));
+                          }
+                          catch (Exception ex)
+                          {
+                              tcs.TrySetException(ex);
+                          }
+                          finally
+                          {
+                              sshCommand.Dispose();
+                          }
+                      });
                 }
                 catch (Exception ex) { tcs.TrySetException(ex); }
             })

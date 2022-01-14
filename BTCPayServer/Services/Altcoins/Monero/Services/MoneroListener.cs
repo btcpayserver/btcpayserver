@@ -63,14 +63,14 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 if (_moneroRpcProvider.IsAvailable(e.CryptoCode))
                 {
                     _logger.LogInformation($"{e.CryptoCode} just became available");
-                    _ = UpdateAnyPendingMoneroLikePayment(e.CryptoCode);
+                    UpdateAnyPendingMoneroLikePayment(e.CryptoCode);
                 }
                 else
                 {
                     _logger.LogInformation($"{e.CryptoCode} just became unavailable");
                 }
             }));
-            _ = WorkThroughQueue(_Cts.Token);
+            WorkThroughQueue(_Cts.Token);
             return Task.CompletedTask;
         }
 

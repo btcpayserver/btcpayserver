@@ -15,7 +15,7 @@
 		root["ClipboardJS"] = factory();
 })(this, function() {
 return /******/ (function() { // webpackBootstrap
-/******/ 	var __webpack_modules__ = ({
+/******/ 	var __webpack_modules_({
 
 /***/ 134:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
@@ -297,7 +297,7 @@ function clipboard_createClass(Constructor, protoProps, staticProps) { if (proto
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto_p; return o; }; return _setPrototypeOf(o, p); }
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
@@ -842,7 +842,7 @@ E.prototype = {
       callback.apply(ctx, arguments);
     };
 
-    listener._ = callback
+    listener.callback
     return this.on(name, listener, ctx);
   },
 
@@ -892,7 +892,7 @@ module.exports.TinyEmitter = E;
 /******/ 	});
 /************************************************************************/
 /******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
+/******/ 	var __webpack_module_cache_{};
 /******/ 	
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {

@@ -29,7 +29,7 @@ namespace BTCPayServer.Services
             {
                 if (item.Value.expiration < DateTimeOffset.UtcNow)
                 {
-                    _Map.TryRemove(item.Key, out var unused);
+                    _Map.TryRemove(item.Key, out _);
                 }
             }
         }

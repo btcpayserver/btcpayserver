@@ -181,7 +181,7 @@ namespace BTCPayServer.Services.Rates
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)
             {
-                if (!(json is JArray) && json["error"] is JArray error && error.Count != 0)
+                if (json is not JArray && json["error"] is JArray error && error.Count != 0)
                 {
                     throw new APIException(error[0].ToStringInvariant());
                 }

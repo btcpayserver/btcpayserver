@@ -461,7 +461,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (!(model.Outputs?.Any() is true))
+            if (model.Outputs?.Any() is not true)
             {
                 model.Outputs = new List<WalletSendModel.TransactionOutput>()
                 {
@@ -643,7 +643,7 @@ namespace BTCPayServer.Controllers
                     if (address is TaprootAddress)
                     {
                         var supportTaproot = _dashboard.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanSupportTaproot;
-                        if (!(supportTaproot is true))
+                        if (supportTaproot is not true)
                         {
                             ModelState.AddModelError(inputName, "You need to update your full node, and/or NBXplorer (Version >= 2.1.56) to be able to send to a taproot address.");
                         }
@@ -933,7 +933,7 @@ namespace BTCPayServer.Controllers
 
             psbt.Settings.SigningOptions = new SigningOptions()
             {
-                EnforceLowR = !(viewModel.SigningContext?.EnforceLowR is false)
+                EnforceLowR = viewModel.SigningContext?.EnforceLowR is not false
             };
             var changed = psbt.PSBTChanged(() => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
             if (!changed)
@@ -980,7 +980,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var vm = new RescanWalletModel();
-            vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused);
+
+            vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out _);
             vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
             vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);

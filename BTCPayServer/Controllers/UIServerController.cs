@@ -107,7 +107,8 @@ namespace BTCPayServer.Controllers
             if (!vm.CanUseSSH)
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
             vm.DNSDomain = this.Request.Host.Host;
-            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+
+            if (IPAddress.TryParse(vm.DNSDomain, out _))
                 vm.DNSDomain = null;
             return View(vm);
         }
@@ -250,7 +251,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(string.Empty, $"Connection problem ({message})");
                 return View(vm);
             }
-            _ = RunSSHCore(sshClient, $". /etc/profile.d/btcpay-env.sh && nohup {command} > /dev/null 2>&1 & disown");
+            RunSSHCore(sshClient, $". /etc/profile.d/btcpay-env.sh && nohup {command} > /dev/null 2>&1 & disown");
             return null;
         }
 
@@ -871,11 +872,9 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
-                    {
-                        var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
-                        vm.SSHKeyFileContent = result.Output;
-                    }
+                    using var sshClient = await _Options.SSHSettings.ConnectAsync();
+                    var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                    vm.SSHKeyFileContent = result.Output;
                 }
                 catch { }
             }
@@ -885,7 +884,7 @@ namespace BTCPayServer.Controllers
         async Task<bool> CanShowSSHService()
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>();
-            return !(policies?.DisableSSHService is true) &&
+            return policies?.DisableSSHService is not true &&
                    _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
         }
 
@@ -1106,17 +1105,13 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 try
                 {
-                    using (var fileStream = new FileStream(
+                    using var fileStream = new FileStream(
                         fi.FullName,
                         FileMode.Open,
                         FileAccess.Read,
-                        FileShare.ReadWrite))
-                    {
-                        using (var reader = new StreamReader(fileStream))
-                        {
-                            vm.Log = await reader.ReadToEndAsync();
-                        }
-                    }
+                        FileShare.ReadWrite);
+                    using var reader = new StreamReader(fileStream);
+                    vm.Log = await reader.ReadToEndAsync();
                 }
                 catch
                 {

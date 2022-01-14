@@ -965,7 +965,7 @@
      */
     function protoAugment (target, src) {
         /* eslint-disable no-proto */
-        target.__proto__ = src;
+        target.__proto_src;
         /* eslint-enable no-proto */
     }
 
@@ -3951,10 +3951,10 @@
             restoreActiveInstance();
             // update __vue__ reference
             if (prevEl) {
-                prevEl.__vue__ = null;
+                prevEl.__vue_null;
             }
             if (vm.$el) {
-                vm.$el.__vue__ = vm;
+                vm.$el.__vue_vm;
             }
             // if parent is an HOC, update its $el as well
             if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
@@ -4006,7 +4006,7 @@
             vm.$off();
             // remove __vue__ reference
             if (vm.$el) {
-                vm.$el.__vue__ = null;
+                vm.$el.__vue_null;
             }
             // release circular reference (#6759)
             if (vm.$vnode) {
@@ -9033,7 +9033,7 @@
     extend(Vue.options.components, platformComponents);
 
     // install platform patch function
-    Vue.prototype.__patch__ = inBrowser ? patch : noop;
+    Vue.prototype.__patch_inBrowser ? patch : noop;
 
     // public mount method
     Vue.prototype.$mount = function (

@@ -83,7 +83,7 @@
         configurable: true
       }
     });
-    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto_superClass;
   };
 
   var possibleConstructorReturn = function (self, call) {
@@ -278,7 +278,7 @@
    * @param {object} Component definition
    */
   function registerComponent(Vue, name, def) {
-    Vue._bootstrap_vue_components_ = Vue._bootstrap_vue_components_ || {};
+    Vue._bootstrap_vue_componentsVue._bootstrap_vue_components_ || {};
     var loaded = Vue._bootstrap_vue_components_[name];
     if (!loaded && def && name) {
       Vue._bootstrap_vue_components_[name] = true;
@@ -305,7 +305,7 @@
    * @param {object} Directive definition
    */
   function registerDirective(Vue, name, def) {
-    Vue._bootstrap_vue_directives_ = Vue._bootstrap_vue_directives_ || {};
+    Vue._bootstrap_vue_directivesVue._bootstrap_vue_directives_ || {};
     var loaded = Vue._bootstrap_vue_directives_[name];
     if (!loaded && def && name) {
       Vue._bootstrap_vue_directives_[name] = true;
@@ -13419,7 +13419,7 @@
    * @memberOf Hash
    */
   function hashClear() {
-    this.__data__ = nativeCreate ? nativeCreate(null) : {};
+    this.__data_nativeCreate ? nativeCreate(null) : {};
   }
 
   /**
@@ -13517,7 +13517,7 @@
    * @memberOf ListCache
    */
   function listCacheClear() {
-    this.__data__ = [];
+    this.__data_[];
   }
 
   /**
@@ -13629,7 +13629,7 @@
    * @memberOf MapCache
    */
   function mapCacheClear() {
-    this.__data__ = {
+    this.__data_{
       'hash': new Hash(),
       'map': new (Map || ListCache)(),
       'string': new Hash()

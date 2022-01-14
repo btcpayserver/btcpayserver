@@ -39,7 +39,7 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        MultiProcessingQueue _Queue = new MultiProcessingQueue();
+        readonly MultiProcessingQueue _Queue = new MultiProcessingQueue();
         readonly IBackgroundJobClient _JobClient;
         readonly EventAggregator _EventAggregator;
         readonly InvoiceRepository _InvoiceRepository;
@@ -270,20 +270,20 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
                     {
-                        _ = Notify(invoice, e, false, sendMail);
+                        Notify(invoice, e, false, sendMail);
                         sendMail = false;
                     }
                 }
 
                 if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    _ = Notify(invoice, e, false, sendMail);
+                    Notify(invoice, e, false, sendMail);
                     sendMail = false;
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    _ = Notify(invoice, e, true, sendMail);
+                    Notify(invoice, e, true, sendMail);
                     sendMail = false;
                 }
             }));

@@ -60,11 +60,11 @@ namespace BTCPayServer
                 Dispose();
             }
         }
-        public Task<T> WaitNext<T>(CancellationToken cancellation = default(CancellationToken))
+        public Task<T> WaitNext<T>(CancellationToken cancellation = default)
         {
             return WaitNext<T>(o => true, cancellation);
         }
-        public async Task<T> WaitNext<T>(Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        public async Task<T> WaitNext<T>(Func<T, bool> predicate, CancellationToken cancellation = default)
         {
             TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
             using var subscription = Subscribe<T>((a, b) => { if (predicate(b)) { tcs.TrySetResult(b); a.Unsubscribe(); } });
@@ -152,7 +152,7 @@ namespace BTCPayServer
 
         public IEventAggregatorSubscription SubscribeAsync<T>(Func<T, Task> subscription)
         {
-            return Subscribe(new Action<IEventAggregatorSubscription, T>((sub, t) => _ = subscription(t)));
+            return Subscribe(new Action<IEventAggregatorSubscription, T>((sub, t) => subscription(t)));
         }
         public IEventAggregatorSubscription Subscribe<T>(Action<T> subscription)
         {

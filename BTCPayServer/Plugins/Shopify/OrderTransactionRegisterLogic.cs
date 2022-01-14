@@ -14,7 +14,7 @@ namespace BTCPayServer.Plugins.Shopify
             _client = client;
         }
 
-        private static string[] _keywords = new[] { "bitcoin", "btc", "btcpayserver", "btcpay server" };
+        private static readonly string[] _keywords = new[] { "bitcoin", "btc", "btcpayserver", "btcpay server" };
         public async Task<TransactionsCreateResp> Process(string orderId, string invoiceId, string currency, string amountCaptured, bool success)
         {
             currency = currency.ToUpperInvariant().Trim();

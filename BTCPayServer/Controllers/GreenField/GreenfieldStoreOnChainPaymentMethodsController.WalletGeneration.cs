@@ -18,8 +18,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GenerateOnChainWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
-
-            AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
+            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
 
             if (!_walletProvider.IsAvailable(network))
             {

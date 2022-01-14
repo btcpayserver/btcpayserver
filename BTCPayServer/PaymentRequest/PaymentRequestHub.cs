@@ -72,7 +72,7 @@ namespace BTCPayServer.PaymentRequest
                 await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString(), false);
             switch (result)
             {
-                case OkObjectResult okObjectResult:
+                case OkObjectResult:
                     await Clients.Group(Context.Items["pr-id"].ToString()).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
 
@@ -191,17 +191,17 @@ namespace BTCPayServer.PaymentRequest
         private void QueueExpiryTask(string paymentRequestId, DateTime expiry, CancellationToken cancellationToken)
         {
             Task.Run(async () =>
-            {
-                var delay = expiry - DateTime.UtcNow;
-                if (delay > TimeSpan.Zero)
-                    await Task.Delay(delay, cancellationToken);
-                await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);
-            }, cancellationToken);
+              {
+                  var delay = expiry - DateTime.UtcNow;
+                  if (delay > TimeSpan.Zero)
+                      await Task.Delay(delay, cancellationToken);
+                  await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);
+              }, cancellationToken);
         }
 
         private async Task InfoUpdated(string paymentRequestId)
         {
-            var req = await _PaymentRequestService.GetPaymentRequest(paymentRequestId);
+            var req = await _PaymentRequestService.GetPaymentRequest(paymentRequestId, null);
             if (req != null)
             {
                 await _HubContext.Clients.Group(paymentRequestId)

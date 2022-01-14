@@ -206,7 +206,7 @@ namespace BTCPayServer.Hosting
                                 if (connectionString.IsLegacy)
                                 {
                                     logs.Configuration.LogWarning(
-                                        $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
+                                        $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString}'");
                                 }
                                 options.InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                             }

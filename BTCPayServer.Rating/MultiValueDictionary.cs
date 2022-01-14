@@ -614,8 +614,7 @@ namespace BTCPayServer
         {
             if (key == null)
                 throw new ArgumentNullException("key");
-            InnerCollectionView collection;
-            if (!dictionary.TryGetValue(key, out collection))
+            if (!dictionary.TryGetValue(key, out InnerCollectionView collection))
             {
                 collection = new InnerCollectionView(key, NewCollectionFactory());
                 dictionary.Add(key, collection);
@@ -643,8 +642,7 @@ namespace BTCPayServer
             if (values == null)
                 throw new ArgumentNullException("values");
 
-            InnerCollectionView collection;
-            if (!dictionary.TryGetValue(key, out collection))
+            if (!dictionary.TryGetValue(key, out InnerCollectionView collection))
             {
                 collection = new InnerCollectionView(key, NewCollectionFactory());
                 dictionary.Add(key, collection);
@@ -668,8 +666,7 @@ namespace BTCPayServer
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            InnerCollectionView collection;
-            if (dictionary.TryGetValue(key, out collection) && dictionary.Remove(key))
+            if (dictionary.TryGetValue(key, out _) && dictionary.Remove(key))
             {
                 version++;
                 return true;
@@ -696,8 +693,7 @@ namespace BTCPayServer
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            InnerCollectionView collection;
-            if (dictionary.TryGetValue(key, out collection) && collection.RemoveValue(value))
+            if (dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.RemoveValue(value))
             {
                 if (collection.Count == 0)
                     dictionary.Remove(key);
@@ -720,8 +716,7 @@ namespace BTCPayServer
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            InnerCollectionView collection;
-            return (dictionary.TryGetValue(key, out collection) && collection.Contains(value));
+            return (dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.Contains(value));
         }
 
         /// <summary>
@@ -808,8 +803,7 @@ namespace BTCPayServer
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            InnerCollectionView collection;
-            var success = dictionary.TryGetValue(key, out collection);
+            var success = dictionary.TryGetValue(key, out InnerCollectionView collection);
             value = collection;
             return success;
         }
@@ -853,8 +847,7 @@ namespace BTCPayServer
                 if (key == null)
                     throw new ArgumentNullException("key");
 
-                InnerCollectionView collection;
-                if (dictionary.TryGetValue(key, out collection))
+                if (dictionary.TryGetValue(key, out InnerCollectionView collection))
                     return collection;
                 else
                     throw new KeyNotFoundException();
@@ -915,7 +908,7 @@ namespace BTCPayServer
             {
                 this.multiValueDictionary = multiValueDictionary;
                 this.version = multiValueDictionary.version;
-                this.current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
+                this.current = default;
                 this.enumerator = multiValueDictionary.dictionary.GetEnumerator();
                 this.state = EnumerationState.BeforeFirst;
                 ;
@@ -966,7 +959,7 @@ namespace BTCPayServer
                 }
                 else
                 {
-                    current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
+                    current = default;
                     state = EnumerationState.AfterLast;
                     return false;
                 }
@@ -982,7 +975,7 @@ namespace BTCPayServer
                     throw new InvalidOperationException("Properties.Resources.InvalidOperation_EnumFailedVersion");
                 enumerator.Dispose();
                 enumerator = multiValueDictionary.dictionary.GetEnumerator();
-                current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
+                current = default;
                 state = EnumerationState.BeforeFirst;
             }
 

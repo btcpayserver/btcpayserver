@@ -6,10 +6,8 @@ namespace BTCPayServer.Client
     {
         public GreenfieldAPIException(int httpCode, Models.GreenfieldAPIError error) : base(error.Message)
         {
-            if (error == null)
-                throw new ArgumentNullException(nameof(error));
             HttpCode = httpCode;
-            APIError = error;
+            APIError = error ?? throw new ArgumentNullException(nameof(error));
         }
         public Models.GreenfieldAPIError APIError { get; }
         public int HttpCode { get; set; }

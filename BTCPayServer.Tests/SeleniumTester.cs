@@ -152,9 +152,9 @@ namespace BTCPayServer.Tests
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             Driver.WaitForElement(By.Id("Create")).Click();
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.GeneralSettings.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.GeneralSettings}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -377,11 +377,11 @@ namespace BTCPayServer.Tests
                 // FIXME: Review and optimize this once we decided on where which items belong
                 try
                 {
-                    Driver.FindElement(By.Id($"StoreNav-{storeNavPage.ToString()}")).Click();
+                    Driver.FindElement(By.Id($"StoreNav-{storeNavPage}")).Click();
                 }
                 catch (NoSuchElementException)
                 {
-                    Driver.FindElement(By.Id($"SectionNav-{storeNavPage.ToString()}")).Click();
+                    Driver.FindElement(By.Id($"SectionNav-{storeNavPage}")).Click();
                 }
             }
         }
@@ -441,7 +441,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Nav-ManageAccount")).Click();
             if (navPages != ManageNavPages.Index)
             {
-                Driver.FindElement(By.Id($"SectionNav-{navPages.ToString()}")).Click();
+                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }
         }
 
@@ -479,7 +479,7 @@ namespace BTCPayServer.Tests
             currencyEl.Clear();
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
-            if (defaultPaymentMethod is string)
+            if (defaultPaymentMethod is not null)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
             if (requiresRefundEmail is bool)
                 new SelectElement(Driver.FindElement(By.Name("RequiresRefundEmail"))).SelectByValue(requiresRefundEmail == true ? "1" : "2");

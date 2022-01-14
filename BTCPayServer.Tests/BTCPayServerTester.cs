@@ -42,7 +42,7 @@ namespace BTCPayServer.Tests
 
         public ILoggerProvider LoggerProvider { get; }
 
-        ILog TestLogs;
+        readonly ILog TestLogs;
         public BTCPayServerTester(ILog testLogs, ILoggerProvider loggerProvider, string scope)
         {
             this.LoggerProvider = loggerProvider;
@@ -167,14 +167,14 @@ namespace BTCPayServer.Tests
                     .ConfigureServices(s =>
                     {
                         s.AddLogging(l =>
-                        {
-                            l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
-                            l.SetMinimumLevel(LogLevel.Information)
-                            .AddFilter("Microsoft", LogLevel.Error)
-                            .AddFilter("Hangfire", LogLevel.Error)
-                            .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
-                            .AddProvider(LoggerProvider);
-                        });
+                          {
+                              l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
+                              l.SetMinimumLevel(LogLevel.Information)
+                              .AddFilter("Microsoft", LogLevel.Error)
+                              .AddFilter("Hangfire", LogLevel.Error)
+                              .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
+                              .AddProvider(LoggerProvider);
+                          });
                     })
                     .ConfigureServices(services =>
                     {
@@ -242,12 +242,10 @@ namespace BTCPayServer.Tests
         MockRateProvider coinAverageMock;
         private async Task WaitSiteIsOperational()
         {
-            _ = HttpClient.GetAsync("/").ConfigureAwait(false);
-            using (var cts = new CancellationTokenSource(20_000))
-            {
-                var synching = WaitIsFullySynched(cts.Token);
-                await Task.WhenAll(synching).ConfigureAwait(false);
-            }
+            HttpClient.GetAsync("/").ConfigureAwait(false);
+            using var cts = new CancellationTokenSource(20_000);
+            var synching = WaitIsFullySynched(cts.Token);
+            await synching.ConfigureAwait(false);
             // Opportunistic call to wake up view compilation in debug mode, we don't need to await.
         }
 

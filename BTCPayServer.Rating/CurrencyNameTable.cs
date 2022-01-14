@@ -146,8 +146,7 @@ namespace BTCPayServer.Services.Rates
         public CurrencyData GetCurrencyData(string currency, bool useFallback)
         {
             ArgumentNullException.ThrowIfNull(currency);
-            CurrencyData result;
-            if (!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
+            if (!_Currencies.TryGetValue(currency.ToUpperInvariant(), out CurrencyData result))
             {
                 if (useFallback)
                 {

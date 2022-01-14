@@ -127,7 +127,7 @@ namespace BTCPayServer.Controllers
             var email = user.Email;
             if (model.Email != email)
             {
-                if (!(await _userManager.FindByEmailAsync(model.Email) is null))
+                if (await _userManager.FindByEmailAsync(model.Email) is not null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "The email address is already in use with an other account.";
                     return RedirectToAction(nameof(Index));

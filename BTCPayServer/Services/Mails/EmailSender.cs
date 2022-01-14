@@ -30,12 +30,10 @@ namespace BTCPayServer.Services.Mails
                     Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                     return;
                 }
-                using (var smtp = await emailSettings.CreateSmtpClient())
-                {
-                    var mail = emailSettings.CreateMailMessage(new MailboxAddress(email, email), subject, message, true);
-                    await smtp.SendAsync(mail, cancellationToken);
-                    await smtp.DisconnectAsync(true, cancellationToken);
-                }
+                using var smtp = await emailSettings.CreateSmtpClient();
+                var mail = emailSettings.CreateMailMessage(new MailboxAddress(email, email), subject, message, true);
+                await smtp.SendAsync(mail, cancellationToken);
+                await smtp.DisconnectAsync(true, cancellationToken);
             }, TimeSpan.Zero);
         }
 

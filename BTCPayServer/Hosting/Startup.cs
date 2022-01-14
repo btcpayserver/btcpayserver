@@ -37,16 +37,13 @@ namespace BTCPayServer.Hosting
 {
     public class Startup
     {
-        public Startup(IConfiguration conf, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration conf, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
-            _Env = env;
             LoggerFactory = loggerFactory;
             Logs = new Logs();
             Logs.Configure(loggerFactory);
         }
-
-        readonly IWebHostEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;
@@ -64,25 +61,25 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             services.Configure<AuthenticationOptions>(opts =>
-            {
-                opts.DefaultAuthenticateScheme = null;
-                opts.DefaultChallengeScheme = null;
-                opts.DefaultForbidScheme = null;
-                opts.DefaultScheme = IdentityConstants.ApplicationScheme;
-                opts.DefaultSignInScheme = null;
-                opts.DefaultSignOutScheme = null;
-            });
+              {
+                  opts.DefaultAuthenticateScheme = null;
+                  opts.DefaultChallengeScheme = null;
+                  opts.DefaultForbidScheme = null;
+                  opts.DefaultScheme = IdentityConstants.ApplicationScheme;
+                  opts.DefaultSignInScheme = null;
+                  opts.DefaultSignOutScheme = null;
+              });
             services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
-            {
-                opt.LoginPath = "/login";
-                opt.AccessDeniedPath = "/errors/403";
-                opt.LogoutPath = "/logout";
-            });
+              {
+                  opt.LoginPath = "/login";
+                  opt.AccessDeniedPath = "/errors/403";
+                  opt.LogoutPath = "/logout";
+              });
 
             services.Configure<SecurityStampValidatorOptions>(opts =>
-            {
-                opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
-            });
+              {
+                  opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
+              });
 
             services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
@@ -100,15 +97,15 @@ namespace BTCPayServer.Hosting
             var descriptor = services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
             services.Remove(descriptor);
             services.AddScoped(provider =>
-            {
-                var httpContext = provider.GetService<IHttpContextAccessor>();
-                return new Fido2Configuration()
-                {
-                    ServerName = "BTCPay Server",
-                    Origin = $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}",
-                    ServerDomain = httpContext.HttpContext.Request.Host.Host
-                };
-            });
+              {
+                  var httpContext = provider.GetService<IHttpContextAccessor>();
+                  return new Fido2Configuration()
+                  {
+                      ServerName = "BTCPay Server",
+                      Origin = $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}",
+                      ServerDomain = httpContext.HttpContext.Request.Host.Host
+                  };
+              });
             services.AddScoped<Fido2Service>();
             services.AddSingleton<UserLoginCodeService>();
 
@@ -145,24 +142,24 @@ namespace BTCPayServer.Hosting
 
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.AllowedForNewUsers = true;
-                options.Password.RequireUppercase = false;
-            });
+              {
+                  options.Password.RequireDigit = false;
+                  options.Password.RequiredLength = 6;
+                  options.Password.RequireLowercase = false;
+                  options.Password.RequireNonAlphanumeric = false;
+                  options.Password.RequireUppercase = false;
+                  options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                  options.Lockout.MaxFailedAccessAttempts = 5;
+                  options.Lockout.AllowedForNewUsers = true;
+                  options.Password.RequireUppercase = false;
+              });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
             bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
             bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
             services.Configure<KestrelServerOptions>(kestrel =>
-            {
-                kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
+              {
+                  kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
             });
             if (hasCertPath || useDefaultCertificate)
             {
@@ -170,37 +167,36 @@ namespace BTCPayServer.Hosting
                 int bindPort = Configuration.GetOrDefault<int>("port", 443);
 
                 services.Configure<KestrelServerOptions>(kestrel =>
-                {
-                    if (hasCertPath && !File.Exists(httpsCertificateFilePath))
-                    {
+                  {
+                      if (hasCertPath && !File.Exists(httpsCertificateFilePath))
+                      {
                         // Note that by design this is a fatal error condition that will cause the process to exit.
                         throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
-                    }
-                    if (hasCertPath && useDefaultCertificate)
-                    {
-                        throw new ConfigException($"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
-                    }
+                      }
+                      if (hasCertPath && useDefaultCertificate)
+                      {
+                          throw new ConfigException($"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
+                      }
 
-                    kestrel.Listen(bindAddress, bindPort, l =>
-                    {
-                        if (hasCertPath)
-                        {
-                            Logs.Configuration.LogInformation($"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
-                            l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
-                        }
-                        else
-                        {
-                            Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
-                            l.UseHttps();
-                        }
-                    });
-                });
+                      kestrel.Listen(bindAddress, bindPort, l =>
+                      {
+                          if (hasCertPath)
+                          {
+                              Logs.Configuration.LogInformation($"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
+                              l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                          }
+                          else
+                          {
+                              Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
+                              l.UseHttps();
+                          }
+                      });
+                  });
             }
         }
         public void Configure(
             IApplicationBuilder app,
             IWebHostEnvironment env,
-            IServiceProvider prov,
             BTCPayServerOptions options,
             IOptions<DataDirectories> dataDirectories,
             ILoggerFactory loggerFactory)
@@ -209,17 +205,17 @@ namespace BTCPayServer.Hosting
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, dataDirectories);
+                ConfigureCore(app, env, dataDirectories);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
-                {
-                    ConfigureCore(appChild, env, prov, dataDirectories);
-                });
+                  {
+                      ConfigureCore(appChild, env, dataDirectories);
+                  });
             }
         }
-        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories)
+        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IOptions<DataDirectories> dataDirectories)
         {
             if (env.IsDevelopment())
             {
@@ -265,13 +261,13 @@ namespace BTCPayServer.Hosting
                 Secure = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
             });
             app.UseEndpoints(endpoints =>
-            {
-                AppHub.Register(endpoints);
-                PaymentRequestHub.Register(endpoints);
-                endpoints.MapRazorPages();
-                endpoints.MapControllers();
-                endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action=Index}/{id?}");
-            });
+              {
+                  AppHub.Register(endpoints);
+                  PaymentRequestHub.Register(endpoints);
+                  endpoints.MapRazorPages();
+                  endpoints.MapControllers();
+                  endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action=Index}/{id?}");
+              });
             app.UsePlugins();
         }
     }

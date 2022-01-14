@@ -59,13 +59,11 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
-            using (var delayCancel = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
-            {
-                var delay = Task.Delay(Period, delayCancel.Token);
-                var changed = SettingsRepository.WaitSettingsChanged<DynamicDnsSettings>(Cancellation);
-                await Task.WhenAny(delay, changed);
-                delayCancel.Cancel();
-            }
+            using var delayCancel = CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+            var delay = Task.Delay(Period, delayCancel.Token);
+            var changed = SettingsRepository.WaitSettingsChanged<DynamicDnsSettings>(Cancellation);
+            await Task.WhenAny(delay, changed);
+            delayCancel.Cancel();
         }
     }
 }

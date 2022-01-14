@@ -152,7 +152,7 @@ namespace BTCPayServer.Fido2
             await using var dbContext = _contextFactory.CreateContext();
             var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
-            if (!(user?.Fido2Credentials?.Any() is true))
+            if (user?.Fido2Credentials?.Any() is not true)
             {
                 return null;
             }

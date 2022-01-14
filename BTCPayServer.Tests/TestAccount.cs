@@ -299,9 +299,9 @@ namespace BTCPayServer.Tests
             var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
             await parent.WaitForEvent<NewOnChainTransactionEvent>(async () =>
-            {
-                await cashCow.SendToAddressAsync(address, value);
-            });
+              {
+                  await cashCow.SendToAddressAsync(address, value);
+              });
             int i = 0;
             while (i < 30)
             {
@@ -321,7 +321,7 @@ namespace BTCPayServer.Tests
 
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)
         {
-            var cashCow = parent.ExplorerNode;
+            parent.ExplorerNode;
             var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
             return address;
@@ -329,7 +329,7 @@ namespace BTCPayServer.Tests
 
         public async Task<PSBT> Sign(PSBT psbt)
         {
-            var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>()
+            parent.PayTester.GetService<BTCPayWalletProvider>()
                 .GetWallet(psbt.Network.NetworkSet.CryptoCode);
             var explorerClient = parent.PayTester.GetService<ExplorerClientProvider>()
                 .GetExplorerClient(psbt.Network.NetworkSet.CryptoCode);
@@ -434,17 +434,15 @@ namespace BTCPayServer.Tests
 
         class WebhookListener : IDisposable
         {
-            private Client.Models.StoreWebhookData _wh;
-            private FakeServer _server;
+            private readonly FakeServer _server;
             private readonly List<WebhookInvoiceEvent> _webhookEvents;
-            private CancellationTokenSource _cts;
-            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<WebhookInvoiceEvent> webhookEvents)
+            private readonly CancellationTokenSource _cts;
+            public WebhookListener(FakeServer server, List<WebhookInvoiceEvent> webhookEvents)
             {
-                _wh = wh;
                 _server = server;
                 _webhookEvents = webhookEvents;
                 _cts = new CancellationTokenSource();
-                _ = Listen(_cts.Token);
+                Listen(_cts.Token);
             }
 
             async Task Listen(CancellationToken cancellation)
@@ -500,13 +498,14 @@ retry:
             FakeServer server = new FakeServer();
             await server.Start();
             var client = await CreateClient(Policies.CanModifyStoreWebhooks);
-            var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
+
+            await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
             {
                 AutomaticRedelivery = false,
                 Url = server.ServerUri.AbsoluteUri
             });
 
-            parent.Resources.Add(new WebhookListener(wh, server, WebhookEvents));
+            parent.Resources.Add(new WebhookListener(server, WebhookEvents));
         }
 
         public async Task PayInvoice(string invoiceId)

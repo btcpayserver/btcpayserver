@@ -106,7 +106,7 @@ namespace BTCPayServer.Tests
             var compose1 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.yml"));
             var compose2 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.altcoins.yml"));
 
-            List<DockerImage> GetImages(string content)
+            static List<DockerImage> GetImages(string content)
             {
                 List<DockerImage> images = new List<DockerImage>();
                 foreach (var line in content.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -542,7 +542,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void DeterministicUTXOSorter()
         {
-            UTXO CreateRandomUTXO()
+            static UTXO CreateRandomUTXO()
             {
                 return new UTXO() { Outpoint = new OutPoint(RandomUtils.GetUInt256(), RandomUtils.GetUInt32() % 0xff) };
             }
@@ -673,7 +673,7 @@ namespace BTCPayServer.Tests
                     TorrcFile = null,
                     TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 }), BTCPayLogs);
-            await Task.WhenAll(tor.StartAsync(CancellationToken.None));
+            await tor.StartAsync(CancellationToken.None);
 
             var btcpayS = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
             Assert.Null(btcpayS.Network);
@@ -828,7 +828,7 @@ namespace BTCPayServer.Tests
                 ChainName.Mainnet);
             Assert.Equal(new Uri("http://toto.onion/test"), expanded.Server);
             await Assert.ThrowsAsync<SecurityException>(() =>
-                connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, ChainName.Mainnet));
+                  connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, ChainName.Mainnet));
             await connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, ChainName.Testnet);
 
             // Make sure absolute paths are not expanded
@@ -841,9 +841,9 @@ namespace BTCPayServer.Tests
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};macaroondirectorypath=pouet",
                 out connStr, out error));
             await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
-                connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, ChainName.Mainnet));
+                  connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, ChainName.Mainnet));
             await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
-                connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, ChainName.Mainnet));
+                  connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, ChainName.Mainnet));
             await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, ChainName.Mainnet);
 
             var macaroonDirectory = CreateDirectory();
@@ -976,9 +976,9 @@ namespace BTCPayServer.Tests
         {
             Assert.True(SSH.SSHFingerprint.TryParse("4e343c6fc6cfbf9339c02d06a151e1dd", out var unused));
             Assert.Equal("4e:34:3c:6f:c6:cf:bf:93:39:c0:2d:06:a1:51:e1:dd", unused.ToString());
-            Assert.True(SSH.SSHFingerprint.TryParse("4e:34:3c:6f:c6:cf:bf:93:39:c0:2d:06:a1:51:e1:dd", out unused));
-            Assert.True(SSH.SSHFingerprint.TryParse("SHA256:Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w", out unused));
-            Assert.True(SSH.SSHFingerprint.TryParse("SHA256:Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w=", out unused));
+            Assert.True(SSH.SSHFingerprint.TryParse("4e:34:3c:6f:c6:cf:bf:93:39:c0:2d:06:a1:51:e1:dd", out _));
+            Assert.True(SSH.SSHFingerprint.TryParse("SHA256:Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w", out _));
+            Assert.True(SSH.SSHFingerprint.TryParse("SHA256:Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w=", out _));
             Assert.True(SSH.SSHFingerprint.TryParse("Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w=", out unused));
             Assert.Equal("SHA256:Wl7CdRgT4u5T7yPMsxSrlFP+HIJJWwidGkzphJ8di5w", unused.ToString());
 
@@ -1023,9 +1023,9 @@ namespace BTCPayServer.Tests
             Assert.Equal("1 USD", result.ToString());
             Assert.True(CurrencyValue.TryParse("1.501 usd", out result));
             Assert.Equal("1.50 USD", result.ToString());
-            Assert.False(CurrencyValue.TryParse("1.501 WTFF", out result));
-            Assert.False(CurrencyValue.TryParse("1,501 usd", out result));
-            Assert.False(CurrencyValue.TryParse("1.501", out result));
+            Assert.False(CurrencyValue.TryParse("1.501 WTFF", out _));
+            Assert.False(CurrencyValue.TryParse("1,501 usd", out _));
+            Assert.False(CurrencyValue.TryParse("1.501", out _));
         }
 
         [Fact]
@@ -1265,8 +1265,9 @@ namespace BTCPayServer.Tests
             builder.AppendLine("BTC_X = Coinbase(BTC_X);");
             builder.AppendLine("X_X = CoinAverage(X_X) * 1.02");
 
-            Assert.False(RateRules.TryParse("DPW*&W&#hdi&#&3JJD", out var rules));
-            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
+            Assert.False(RateRules.TryParse("DPW*&W&#hdi&#&3JJD", out _));
+
+            Assert.True(RateRules.TryParse(builder.ToString(), out RateRules rules));
             Assert.Equal(
                 "// Some cool comments\n" +
                 "DOGE_X = DOGE_BTC * BTC_X * 1.1;\n" +
@@ -1459,7 +1460,7 @@ namespace BTCPayServer.Tests
         public void NumericJsonConverterTests(string culture)
         {
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
-            JsonReader Get(string val)
+            static JsonReader Get(string val)
             {
                 return new JsonTextReader(new StringReader(val));
             }
@@ -1482,13 +1483,13 @@ namespace BTCPayServer.Tests
             Assert.Equal((double)1.2, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(double), null, null));
             Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(double?), null, null));
             Assert.Throws<JsonSerializationException>(() =>
-            {
-                jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
-            });
+              {
+                  jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
+              });
             Assert.Throws<JsonSerializationException>(() =>
-            {
-                jsonConverter.ReadJson(Get("null"), typeof(double), null, null);
-            });
+              {
+                  jsonConverter.ReadJson(Get("null"), typeof(double), null, null);
+              });
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal), null, null));
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));
@@ -1645,7 +1646,7 @@ namespace BTCPayServer.Tests
             var strat = Assert.IsType<MultisigDerivationStrategy>(Assert.IsType<P2SHDerivationStrategy>(parsedDescriptor.Item1).Inner);
             Assert.True(strat.IsLegacy);
             Assert.Equal(1, strat.RequiredSignatures);
-            Assert.Equal(2, strat.Keys.Count());
+            Assert.Equal(2, strat.Keys.Count);
             Assert.False(strat.LexicographicOrder);
             Assert.Equal("1-of-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]-[keeporder]", parsedDescriptor.Item1.ToString());
 
@@ -1656,7 +1657,7 @@ namespace BTCPayServer.Tests
             strat = Assert.IsType<MultisigDerivationStrategy>(Assert.IsType<P2WSHDerivationStrategy>(parsedDescriptor.Item1).Inner);
             Assert.False(strat.IsLegacy);
             Assert.Equal(1, strat.RequiredSignatures);
-            Assert.Equal(2, strat.Keys.Count());
+            Assert.Equal(2, strat.Keys.Count);
             Assert.False(strat.LexicographicOrder);
             Assert.Equal("1-of-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[keeporder]", parsedDescriptor.Item1.ToString());
 
@@ -1668,7 +1669,7 @@ namespace BTCPayServer.Tests
             strat = Assert.IsType<MultisigDerivationStrategy>(Assert.IsType<P2WSHDerivationStrategy>(Assert.IsType<P2SHDerivationStrategy>(parsedDescriptor.Item1).Inner).Inner);
             Assert.False(strat.IsLegacy);
             Assert.Equal(1, strat.RequiredSignatures);
-            Assert.Equal(2, strat.Keys.Count());
+            Assert.Equal(2, strat.Keys.Count);
             Assert.False(strat.LexicographicOrder);
             Assert.Equal("1-of-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[keeporder]-[p2sh]", parsedDescriptor.Item1.ToString());
 
@@ -1754,7 +1755,7 @@ namespace BTCPayServer.Tests
             // LTC might have over paid due to BTC paying above what it should (round 1 satoshi up)
             Assert.True(accounting.DueUncapped < Money.Zero);
 
-            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out var accounting2);
+            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out _);
             Assert.Equal(btc.CryptoCode, paymentMethod.CryptoCode);
 #pragma warning restore CS0618
         }

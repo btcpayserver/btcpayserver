@@ -72,12 +72,12 @@ namespace BTCPayServer.Abstractions.Contracts
             {
                 case DatabaseType.Sqlite:
                     builder.UseSqlite(_options.Value.ConnectionString, o =>
-                    {
-                        if (!string.IsNullOrEmpty(_schemaPrefix))
-                        {
-                            o.MigrationsHistoryTable(_schemaPrefix);
-                        }
-                    });
+                      {
+                          if (!string.IsNullOrEmpty(_schemaPrefix))
+                          {
+                              o.MigrationsHistoryTable(_schemaPrefix);
+                          }
+                      });
                     break;
                 case DatabaseType.Postgres:
                     builder
@@ -93,14 +93,14 @@ namespace BTCPayServer.Abstractions.Contracts
                     break;
                 case DatabaseType.MySQL:
                     builder.UseMySql(_options.Value.ConnectionString, ServerVersion.AutoDetect(_options.Value.ConnectionString), o =>
-                    {
-                        o.EnableRetryOnFailure(10);
+                      {
+                          o.EnableRetryOnFailure(10);
 
-                        if (!string.IsNullOrEmpty(_schemaPrefix))
-                        {
-                            o.MigrationsHistoryTable(_schemaPrefix);
-                        }
-                    });
+                          if (!string.IsNullOrEmpty(_schemaPrefix))
+                          {
+                              o.MigrationsHistoryTable(_schemaPrefix);
+                          }
+                      });
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

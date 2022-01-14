@@ -22,10 +22,10 @@ namespace BTCPayServer.Plugins.Test
             services.AddSingleton<TestPluginService>();
             services.AddSingleton<TestPluginDbContextFactory>();
             services.AddDbContext<TestPluginDbContext>((provider, o) =>
-            {
-                var factory = provider.GetRequiredService<TestPluginDbContextFactory>();
-                factory.ConfigureBuilder(o);
-            });
+              {
+                  var factory = provider.GetRequiredService<TestPluginDbContextFactory>();
+                  factory.ConfigureBuilder(o);
+              });
         }
 
         public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)

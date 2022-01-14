@@ -103,7 +103,7 @@ namespace BTCPayServer.Services.Wallets
             });
         }
 
-        public async Task<TransactionResult> GetTransactionAsync(uint256 txId, bool includeOffchain = false, CancellationToken cancellation = default(CancellationToken))
+        public async Task<TransactionResult> GetTransactionAsync(uint256 txId, bool includeOffchain = false, CancellationToken cancellation = default)
         {
             ArgumentNullException.ThrowIfNull(txId);
             var tx = await _Client.GetTransactionAsync(txId, cancellation);
@@ -151,7 +151,8 @@ namespace BTCPayServer.Services.Wallets
         {
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
             _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
-            _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
+
+            _FetchingUTXOs.TryRemove(strategy.ToString(), out _);
         }
 
         readonly ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
@@ -245,7 +246,7 @@ namespace BTCPayServer.Services.Wallets
 
 
 
-        public async Task<ReceivedCoin[]> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<ReceivedCoin[]> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default)
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             return (await GetUTXOChanges(derivationStrategy, cancellation))
@@ -262,7 +263,7 @@ namespace BTCPayServer.Services.Wallets
                           }).ToArray();
         }
 
-        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default)
         {
             return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
             {

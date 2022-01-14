@@ -208,7 +208,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null)
                 throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
-            if (!(network.SupportLightning is true))
+            if (network.SupportLightning is not true)
                 throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code doesn't support lightning"));
             return network;
         }

@@ -14,7 +14,7 @@ namespace BTCPayServer.Payments
     /// </summary>
     public static class PaymentTypes
     {
-        private static PaymentType[] _paymentTypes =
+        private static readonly PaymentType[] _paymentTypes =
         {
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS

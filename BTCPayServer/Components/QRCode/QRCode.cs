@@ -9,7 +9,7 @@ namespace BTCPayServer.Components.QRCode
 {
     public class QRCode : ViewComponent
     {
-        private static QRCodeGenerator qrGenerator = new QRCodeGenerator();
+        private static readonly QRCodeGenerator qrGenerator = new QRCodeGenerator();
 
 
         public IViewComponentResult Invoke(string data)

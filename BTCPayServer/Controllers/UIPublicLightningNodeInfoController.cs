@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
     {
         public class NodeData
         {
-            string _connection;
+            readonly string _connection;
             public NodeData(NodeInfo nodeInfo)
             {
                 _connection = nodeInfo.ToString();

@@ -100,9 +100,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var es6_promise_dist_es6_promise_auto_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var es6_promise_dist_es6_promise_auto_js__WEBPACK_IMPORTED_MODULE_0___webpack_require__(1);
 /* harmony import */ var es6_promise_dist_es6_promise_auto_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(es6_promise_dist_es6_promise_auto_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_1___webpack_require__(3);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "VERSION", function() { return _index__WEBPACK_IMPORTED_MODULE_1__["VERSION"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "AbortError", function() { return _index__WEBPACK_IMPORTED_MODULE_1__["AbortError"]; });
@@ -1394,44 +1394,44 @@ module.exports = g;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VERSION", function() { return VERSION; });
-/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4);
+/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0___webpack_require__(4);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "AbortError", function() { return _Errors__WEBPACK_IMPORTED_MODULE_0__["AbortError"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HttpError", function() { return _Errors__WEBPACK_IMPORTED_MODULE_0__["HttpError"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "TimeoutError", function() { return _Errors__WEBPACK_IMPORTED_MODULE_0__["TimeoutError"]; });
 
-/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1___webpack_require__(5);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HttpClient", function() { return _HttpClient__WEBPACK_IMPORTED_MODULE_1__["HttpClient"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HttpResponse", function() { return _HttpClient__WEBPACK_IMPORTED_MODULE_1__["HttpResponse"]; });
 
-/* harmony import */ var _DefaultHttpClient__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
+/* harmony import */ var _DefaultHttpClient__WEBPACK_IMPORTED_MODULE_2___webpack_require__(6);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "DefaultHttpClient", function() { return _DefaultHttpClient__WEBPACK_IMPORTED_MODULE_2__["DefaultHttpClient"]; });
 
-/* harmony import */ var _HubConnection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
+/* harmony import */ var _HubConnection__WEBPACK_IMPORTED_MODULE_3___webpack_require__(9);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HubConnection", function() { return _HubConnection__WEBPACK_IMPORTED_MODULE_3__["HubConnection"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HubConnectionState", function() { return _HubConnection__WEBPACK_IMPORTED_MODULE_3__["HubConnectionState"]; });
 
-/* harmony import */ var _HubConnectionBuilder__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(15);
+/* harmony import */ var _HubConnectionBuilder__WEBPACK_IMPORTED_MODULE_4___webpack_require__(15);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HubConnectionBuilder", function() { return _HubConnectionBuilder__WEBPACK_IMPORTED_MODULE_4__["HubConnectionBuilder"]; });
 
-/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(14);
+/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_5___webpack_require__(14);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MessageType", function() { return _IHubProtocol__WEBPACK_IMPORTED_MODULE_5__["MessageType"]; });
 
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_6___webpack_require__(8);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LogLevel", function() { return _ILogger__WEBPACK_IMPORTED_MODULE_6__["LogLevel"]; });
 
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(17);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_7___webpack_require__(17);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "HttpTransportType", function() { return _ITransport__WEBPACK_IMPORTED_MODULE_7__["HttpTransportType"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "TransferFormat", function() { return _ITransport__WEBPACK_IMPORTED_MODULE_7__["TransferFormat"]; });
 
-/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(13);
+/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_8___webpack_require__(13);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "NullLogger", function() { return _Loggers__WEBPACK_IMPORTED_MODULE_8__["NullLogger"]; });
 
-/* harmony import */ var _JsonHubProtocol__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(22);
+/* harmony import */ var _JsonHubProtocol__WEBPACK_IMPORTED_MODULE_9___webpack_require__(22);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "JsonHubProtocol", function() { return _JsonHubProtocol__WEBPACK_IMPORTED_MODULE_9__["JsonHubProtocol"]; });
 
 // Copyright (c) .NET Foundation. All rights reserved.
@@ -1464,7 +1464,7 @@ __webpack_require__.r(__webpack_exports__);
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto_b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
     return function (d, b) {
         extendStatics(d, b);
@@ -1488,7 +1488,7 @@ var HttpError = /** @class */ (function (_super) {
         _this.statusCode = statusCode;
         // Workaround issue in Typescript compiler
         // https://github.com/Microsoft/TypeScript/issues/13965#issuecomment-278570200
-        _this.__proto__ = trueProto;
+        _this.__proto_trueProto;
         return _this;
     }
     return HttpError;
@@ -1509,7 +1509,7 @@ var TimeoutError = /** @class */ (function (_super) {
         _this = _super.call(this, errorMessage) || this;
         // Workaround issue in Typescript compiler
         // https://github.com/Microsoft/TypeScript/issues/13965#issuecomment-278570200
-        _this.__proto__ = trueProto;
+        _this.__proto_trueProto;
         return _this;
     }
     return TimeoutError;
@@ -1530,7 +1530,7 @@ var AbortError = /** @class */ (function (_super) {
         _this = _super.call(this, errorMessage) || this;
         // Workaround issue in Typescript compiler
         // https://github.com/Microsoft/TypeScript/issues/13965#issuecomment-278570200
-        _this.__proto__ = trueProto;
+        _this.__proto_trueProto;
         return _this;
     }
     return AbortError;
@@ -1603,14 +1603,14 @@ var HttpClient = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DefaultHttpClient", function() { return DefaultHttpClient; });
-/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4);
-/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _XhrHttpClient__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
+/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0___webpack_require__(4);
+/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1___webpack_require__(5);
+/* harmony import */ var _XhrHttpClient__WEBPACK_IMPORTED_MODULE_2___webpack_require__(7);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto_b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
     return function (d, b) {
         extendStatics(d, b);
@@ -1674,14 +1674,14 @@ var DefaultHttpClient = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "XhrHttpClient", function() { return XhrHttpClient; });
-/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4);
-/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8);
+/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_0___webpack_require__(4);
+/* harmony import */ var _HttpClient__WEBPACK_IMPORTED_MODULE_1___webpack_require__(5);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2___webpack_require__(8);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto_b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
     return function (d, b) {
         extendStatics(d, b);
@@ -1806,10 +1806,10 @@ var LogLevel;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HubConnectionState", function() { return HubConnectionState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HubConnection", function() { return HubConnection; });
-/* harmony import */ var _HandshakeProtocol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
-/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(14);
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(12);
+/* harmony import */ var _HandshakeProtocol__WEBPACK_IMPORTED_MODULE_0___webpack_require__(10);
+/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_1___webpack_require__(14);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2___webpack_require__(8);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_3___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -1821,7 +1821,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -1835,7 +1835,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -2333,8 +2333,8 @@ var HubConnection = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HandshakeProtocol", function() { return HandshakeProtocol; });
-/* harmony import */ var _TextMessageFormat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12);
+/* harmony import */ var _TextMessageFormat__WEBPACK_IMPORTED_MODULE_0___webpack_require__(11);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_1___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -2439,8 +2439,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return Subject; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SubjectSubscription", function() { return SubjectSubscription; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ConsoleLogger", function() { return ConsoleLogger; });
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8);
-/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0___webpack_require__(8);
+/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_1___webpack_require__(13);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -2452,7 +2452,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -2466,7 +2466,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -2724,11 +2724,11 @@ var MessageType;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HubConnectionBuilder", function() { return HubConnectionBuilder; });
-/* harmony import */ var _HttpConnection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(16);
-/* harmony import */ var _HubConnection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
-/* harmony import */ var _JsonHubProtocol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22);
-/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(13);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12);
+/* harmony import */ var _HttpConnection__WEBPACK_IMPORTED_MODULE_0___webpack_require__(16);
+/* harmony import */ var _HubConnection__WEBPACK_IMPORTED_MODULE_1___webpack_require__(9);
+/* harmony import */ var _JsonHubProtocol__WEBPACK_IMPORTED_MODULE_2___webpack_require__(22);
+/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_3___webpack_require__(13);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_4___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -2809,13 +2809,13 @@ function isLogger(logger) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HttpConnection", function() { return HttpConnection; });
-/* harmony import */ var _DefaultHttpClient__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(17);
-/* harmony import */ var _LongPollingTransport__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(18);
-/* harmony import */ var _ServerSentEventsTransport__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(20);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12);
-/* harmony import */ var _WebSocketTransport__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(21);
+/* harmony import */ var _DefaultHttpClient__WEBPACK_IMPORTED_MODULE_0___webpack_require__(6);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_1___webpack_require__(8);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_2___webpack_require__(17);
+/* harmony import */ var _LongPollingTransport__WEBPACK_IMPORTED_MODULE_3___webpack_require__(18);
+/* harmony import */ var _ServerSentEventsTransport__WEBPACK_IMPORTED_MODULE_4___webpack_require__(20);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_5___webpack_require__(12);
+/* harmony import */ var _WebSocketTransport__WEBPACK_IMPORTED_MODULE_6___webpack_require__(21);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -2827,7 +2827,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -2841,7 +2841,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -3301,11 +3301,11 @@ var TransferFormat;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LongPollingTransport", function() { return LongPollingTransport; });
-/* harmony import */ var _AbortController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(19);
-/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8);
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(17);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12);
+/* harmony import */ var _AbortController__WEBPACK_IMPORTED_MODULE_0___webpack_require__(19);
+/* harmony import */ var _Errors__WEBPACK_IMPORTED_MODULE_1___webpack_require__(4);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_2___webpack_require__(8);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_3___webpack_require__(17);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_4___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -3317,7 +3317,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -3331,7 +3331,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -3643,9 +3643,9 @@ var AbortController = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ServerSentEventsTransport", function() { return ServerSentEventsTransport; });
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8);
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(17);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0___webpack_require__(8);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_1___webpack_require__(17);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_2___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -3657,7 +3657,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -3671,7 +3671,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -3806,9 +3806,9 @@ var ServerSentEventsTransport = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "WebSocketTransport", function() { return WebSocketTransport; });
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8);
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(17);
-/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_0___webpack_require__(8);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_1___webpack_require__(17);
+/* harmony import */ var _Utils__WEBPACK_IMPORTED_MODULE_2___webpack_require__(12);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -3820,7 +3820,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    var { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
@@ -3834,7 +3834,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
                 case 5: _.label++; y = op[1]; op = [0]; continue;
                 case 7: op = _.ops.pop(); _.trys.pop(); continue;
                 default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { 0; continue; }
                     if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
                     if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
                     if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
@@ -3970,11 +3970,11 @@ var WebSocketTransport = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "JsonHubProtocol", function() { return JsonHubProtocol; });
-/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
-/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
-/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(17);
-/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(13);
-/* harmony import */ var _TextMessageFormat__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(11);
+/* harmony import */ var _IHubProtocol__WEBPACK_IMPORTED_MODULE_0___webpack_require__(14);
+/* harmony import */ var _ILogger__WEBPACK_IMPORTED_MODULE_1___webpack_require__(8);
+/* harmony import */ var _ITransport__WEBPACK_IMPORTED_MODULE_2___webpack_require__(17);
+/* harmony import */ var _Loggers__WEBPACK_IMPORTED_MODULE_3___webpack_require__(13);
+/* harmony import */ var _TextMessageFormat__WEBPACK_IMPORTED_MODULE_4___webpack_require__(11);
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 

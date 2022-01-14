@@ -22,10 +22,10 @@ namespace BTCPayServer.Data
                    .HasOne(o => o.StoreData)
                    .WithMany(i => i.PairedSINs).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<PairedSINData>(b =>
-            {
-                b.HasIndex(o => o.SIN);
-                b.HasIndex(o => o.StoreDataId);
-            });
+              {
+                  b.HasIndex(o => o.SIN);
+                  b.HasIndex(o => o.StoreDataId);
+              });
         }
     }
 }

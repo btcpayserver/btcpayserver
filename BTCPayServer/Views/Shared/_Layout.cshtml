@@ -1,11 +1,11 @@
 @using BTCPayServer.Abstractions.Contracts
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
+@inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
 @inject ISettingsRepository _settingsRepository
 @inject LinkGenerator _linkGenerator
 
 @{
-    var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
     var notificationDisabled = (await _settingsRepository.GetPolicies()).DisableInstantNotifications;
     if (!notificationDisabled)
     {
@@ -23,15 +23,11 @@
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column">
     <div id="mainMenuHead" class="d-flex flex-lg-wrap align-items-center justify-content-between py-2 px-3 py-lg-3 px-lg-4">
-        <a href="~/" class="navbar-brand py-2 js-scroll-trigger">
-            <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="logo"><use href="@logoSrc#small" class="logo-small" /><use href="@logoSrc#large" class="logo-large" /></svg>
-            @if (_env.NetworkType != NBitcoin.ChainName.Mainnet)
-            {
-                <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
-            }
-        </a>
         <vc:store-selector />
-        <vc:notifications appearance="Dropdown" />
+        @if (_signInManager.IsSignedIn(User))
+        {
+            <vc:notifications appearance="Dropdown"/>
+        }
         <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span>Menu</span>
         </button>

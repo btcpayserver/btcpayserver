@@ -382,11 +382,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SetupGuide-Store")).Click();
             Assert.Contains("/stores/create", s.Driver.Url);
 
-            s.CreateNewStore();
+            (_, string storeId) = s.CreateNewStore();
+            
+            // should redirect to store
             s.GoToUrl("/");
 
+            Assert.Contains($"/stores/{storeId}", s.Driver.Url);
             Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should be present");
-            Assert.False(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Setup guide should not be present");
+            Assert.True(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Store setup guide should be present");
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -503,6 +506,7 @@ namespace BTCPayServer.Tests
 
             // Let's add Bob as a guest to alice's store
             s.LogIn(alice);
+            s.Driver.AssertNoError();
             s.GoToUrl(storeUrl + "/users");
             s.Driver.FindElement(By.Id("Email")).SendKeys(bob + Keys.Enter);
             Assert.Contains("User added successfully", s.Driver.PageSource);
@@ -518,6 +522,7 @@ namespace BTCPayServer.Tests
             // Alice should be able to delete the store
             s.Logout();
             s.LogIn(alice);
+            s.Driver.AssertNoError();
             s.GoToStore(StoreNavPages.GeneralSettings);
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");

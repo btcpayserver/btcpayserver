@@ -23,10 +23,6 @@
             flex: 1;
             padding: 1rem 0;
         }
-        
-        #NotificationsRecent .notification {
-            padding: var(--btcpay-space-s) var(--btcpay-space-m) !important;
-        }
     </style>
 }
 
@@ -34,19 +30,11 @@
 
 <h2>Welcome to your BTCPay Server</h2>
 
-@if (Model.HasStore)
-{
-    <div class="row">
-        <div class="col-lg-8 col-xl-6 pt-3">
-            <vc:notifications appearance="Recent" />
-        </div>
-    </div>
-}
-else
+@if (!Model.HasStore)
 {
     <div class="row">
         <div class="col-lg-9 col-xl-6">
-            <p class="lead text-secondary">To start accepting payments, set up a store and a wallet.</p>
+            <p class="lead text-secondary">To start accepting payments, set up a store.</p>
         
             <div class="list-group mt-4" id="SetupGuide">
                 <a asp-controller="UIUserStores" asp-action="CreateStore" id="SetupGuide-Store" class="list-group-item list-group-item-action d-flex align-items-center">

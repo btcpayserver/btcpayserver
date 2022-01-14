@@ -23,7 +23,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
-            s.Driver.AssertNoError();
         }
 
         public static void AssertNoError(this IWebDriver driver)

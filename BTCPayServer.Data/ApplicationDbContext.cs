@@ -34,7 +34,6 @@ namespace BTCPayServer.Data
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
         public DbSet<APIKeyData> ApiKeys { get; set; }
         public DbSet<AppData> Apps { get; set; }
-        
         public DbSet<CustodianAccountData> CustodianAccount { get; set; }
         public DbSet<StoredFile> Files { get; set; }
         public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data;
 
@@ -30,5 +31,10 @@ public class CustodianAccountData
         
         builder.Entity<APIKeyData>()
             .HasIndex(o => o.StoreId);
+    }
+
+    public class CustodianAccountBlob
+    {
+        public JObject config;
     }
 }

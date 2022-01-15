@@ -381,6 +381,7 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
             var client = _ExplorerProvider.GetExplorerClient(network);
 
@@ -389,6 +390,7 @@ namespace BTCPayServer.Controllers
                 StoreId = storeId,
                 CryptoCode = cryptoCode,
                 WalletId = new WalletId(storeId, cryptoCode),
+                Enabled = !excludeFilters.Match(derivation.PaymentId),
                 Network = network,
                 IsHotWallet = derivation.IsHotWallet,
                 Source = derivation.Source,
@@ -447,8 +449,19 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            bool needUpdate = false;
+            var storeBlob = store.GetStoreBlob();
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
+            var currentlyEnabled = !excludeFilters.Match(derivation.PaymentId);
+            bool enabledChanged = currentlyEnabled != vm.Enabled;
+            bool needUpdate = enabledChanged;
             string errorMessage = null;
+            
+            if (enabledChanged)
+            {
+                storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
+                store.SetStoreBlob(storeBlob);
+            }
+            
             if (derivation.Label != vm.Label)
             {
                 needUpdate = true;
@@ -466,8 +479,8 @@ namespace BTCPayServer.Controllers
 
             for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
             {
-                KeyPath accountKeyPath = null;
-                HDFingerprint? rootFingerprint = null;
+                KeyPath accountKeyPath;
+                HDFingerprint? rootFingerprint;
 
                 try
                 {
@@ -512,7 +525,14 @@ namespace BTCPayServer.Controllers
 
                 if (string.IsNullOrEmpty(errorMessage))
                 {
-                    TempData[WellKnownTempData.SuccessMessage] = "Wallet settings successfully updated";
+                    var successMessage = "Wallet settings successfully updated.";
+                    if (enabledChanged)
+                    {
+                        _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                        successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
+                    }
+                
+                    TempData[WellKnownTempData.SuccessMessage] = successMessage;
                 }
                 else
                 {

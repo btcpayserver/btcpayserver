@@ -37,6 +37,7 @@
 }
 
 #mainNav {
+    --btcpay-scrollbar-color: var(--btcpay-neutral-400);
     height: calc(100vh - var(--mobile-header-height));
     overflow-y: auto;
     padding-top: var(--btcpay-space-m);

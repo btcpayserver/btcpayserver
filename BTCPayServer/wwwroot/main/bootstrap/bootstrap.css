@@ -9806,6 +9806,29 @@ fieldset:disabled .btn {
     display: none !important;
   }
 }
+/* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
+* {
+    --btcpay-scrollbar-width: .375rem;
+    --btcpay-scrollbar-color: var(--btcpay-neutral-500);
+    --btcpay-scrollbar-bg: transparent;
+    scrollbar-width: var(--btcpay-scrollbar-width);
+    scrollbar-color: var(--btcpay-scrollbar-color) var(--btcpay-scrollbar-bg);
+}
+
+*::-webkit-scrollbar {
+    width: var(--btcpay-scrollbar-width);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--btcpay-scrollbar-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--btcpay-scrollbar-color);
+    border-radius: 1rem;
+    border: 1rem solid var(--btcpay-scrollbar-bg);
+}
+
 html {
   position: relative;
   min-height: 100%;
@@ -10288,6 +10311,7 @@ label + input.btcpay-toggle {
   filter: none;
   opacity: 0.5;
 }
+
 /* Bootstrap Responsive Helper */
 html[data-devenv]:before {
     display: inline-block;

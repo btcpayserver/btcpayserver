@@ -5,12 +5,15 @@ namespace BTCPayServer.Data;
 
 public class CustodianAccountData
 {
+    [Required]
     [MaxLength(50)]
     public string Id { get; set; }
 
+    [Required]
     [MaxLength(50)]
     public string StoreId { get; set; }
     
+    [Required]
     [MaxLength(50)]
     public string CustodianCode { get; set; }
     

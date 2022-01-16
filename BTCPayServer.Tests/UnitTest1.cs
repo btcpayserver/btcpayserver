@@ -441,11 +441,11 @@ namespace BTCPayServer.Tests
                 new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                 "save", "BTC").GetAwaiter().GetResult());
 
-            storeResponse = storeController.PaymentMethods();
+            storeResponse = storeController.LightningSettings(user.StoreId, "BTC").GetAwaiter().GetResult();
             var storeVm =
-                Assert.IsType<PaymentMethodsViewModel>(Assert
+                Assert.IsType<LightningSettingsViewModel>(Assert
                     .IsType<ViewResult>(storeResponse).Model);
-            Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
+            Assert.NotEmpty(storeVm.ConnectionString);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

@@ -600,20 +600,12 @@ namespace BTCPayServer.Controllers
             var vm = new PaymentMethodsViewModel
             {
                 Id = store.Id,
-                HintWallet = storeBlob.Hints.Wallet,
-                HintLightning = storeBlob.Hints.Lightning,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
                 DefaultCurrency = storeBlob.DefaultCurrency
             };
-
-            AddPaymentMethods(store, storeBlob,
-                out var derivationSchemes, out var lightningNodes);
-
-            vm.DerivationSchemes = derivationSchemes;
-            vm.LightningNodes = lightningNodes;
 
             return View(vm);
         }

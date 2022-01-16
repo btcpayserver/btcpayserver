@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
-                return RedirectToAction(nameof(PaymentMethods), new { storeId = vm.StoreId });
+                return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
             }
             return ConfirmAddresses(vm, strategy);
         }
@@ -708,40 +708,6 @@ namespace BTCPayServer.Controllers
                 DescriptionHtml = true,
                 Action = "Remove"
             });
-        }
-
-        [HttpPost("{storeId}/onchain/{cryptoCode}/status")]
-        public async Task<IActionResult> SetWalletEnabled(string storeId, string cryptoCode, bool enabled)
-        {
-            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
-            if (checkResult != null)
-            {
-                return checkResult;
-            }
-
-            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            if (derivation == null)
-            {
-                return NotFound();
-            }
-
-            var wallet = _WalletProvider.GetWallet(network);
-            if (wallet == null)
-            {
-                return NotFound();
-            }
-
-            var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            var storeBlob = store.GetStoreBlob();
-            storeBlob.SetExcluded(paymentMethodId, !enabled);
-            store.SetStoreBlob(storeBlob);
-            await _Repo.UpdateStore(store);
-            _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
-
-            TempData[WellKnownTempData.SuccessMessage] =
-                $"{network.CryptoCode} on-chain payments are now {(enabled ? "enabled" : "disabled")} for this store.";
-
-            return RedirectToAction(nameof(PaymentMethods), new { storeId });
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]

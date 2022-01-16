@@ -12,7 +12,7 @@
             {
                 <div asp-validation-summary="All" class="text-danger"></div>
             }
-            <h4 class="mb-3">Invoice Settings</h4>
+            <h3 class="mb-3">Invoice Settings</h3>
             @if (Model.PaymentMethods.Any())
             {
                 <div class="form-group mb-4">
@@ -27,7 +27,7 @@
                             var criteria = Model.PaymentMethodCriteria[index];
                             <tr>
                                 <td class="border-0 ps-0 align-middle">
-                                    <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
+                                    <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
                                     @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                                 </td>
                                 <td class="border-0">
@@ -36,7 +36,7 @@
                                     </select>
                                 </td>
                                 <td class="border-0">
-                                    <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
+                                    <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;" />
                                 </td>
                             </tr>
                         }
@@ -44,7 +44,7 @@
                 </div>
             }
             <div class="form-check my-1">
-                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
+                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
                 <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
             </div>
             <div class="form-check my-1">
@@ -56,10 +56,11 @@
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
 
-            <h4 class="mt-5 mb-3">Appearance</h4>
+
+            <h3 class="mt-5 mb-3">Language</h3>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input"/>
+                    <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
                     <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
                     <p class="form-text text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
                 </div>
@@ -68,9 +69,11 @@
                 <label asp-for="DefaultLang" class="form-label"></label>
                 <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
             </div>
+
+            <h3 class="mt-5 mb-3">Appearance</h3>
             <div class="form-group">
                 <label asp-for="HtmlTitle" class="form-label"></label>
-                <input asp-for="HtmlTitle" class="form-control"/>
+                <input asp-for="HtmlTitle" class="form-control" />
                 <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -78,7 +81,7 @@
                 <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
-                <input asp-for="CustomLogo" class="form-control"/>
+                <input asp-for="CustomLogo" class="form-control" />
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -86,7 +89,7 @@
                 <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
-                <input asp-for="CustomCSS" class="form-control"/>
+                <input asp-for="CustomCSS" class="form-control" />
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
                 <p class="form-text text-muted">
                     Bundled Themes:

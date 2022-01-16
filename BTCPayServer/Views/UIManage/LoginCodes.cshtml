@@ -1,8 +1,8 @@
 @model string
 @{
-    ViewData.SetActivePage(ManageNavPages.LoginCodes, "Login codes");
+    ViewData.SetActivePage(ManageNavPages.LoginCodes, "Login Codes");
 }
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h3 class="mb-3">@ViewData["Title"]</h3>
 <p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
 <div class="d-inline-flex flex-column qr-container" style="width:256px">
     <vc:qr-code data="@Model" /> 

@@ -23,6 +23,8 @@
     var sortByAsc = "Sort by ascending...";
 }
 
+<h3 class="mb-4">@ViewData["Title"]</h3>
+
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
     <form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)">
         <div class="input-group mb-2">

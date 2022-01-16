@@ -4,7 +4,7 @@
 @{
     ViewData.SetActivePage(ManageNavPages.Notifications, "Notification Settings");
 }
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h3 class="mb-3">@ViewData["Title"]</h3>
 
 <form method="post" asp-action="NotificationSettings">
     @if (Model.All)

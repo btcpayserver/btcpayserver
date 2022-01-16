@@ -262,13 +262,13 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/{paymentMethod}/address": {
-            "post": {
+        "/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address": {
+            "get": {
                 "tags": [
                     "Store Custodian Account"
                 ],
-                "summary": "Get deposit address for custodian",
-                "description": "Get an on-chain deposit address for the custodian",
+                "summary": "Get a deposit address for custodian",
+                "description": "Get a new deposit address for the custodian using the specified payment method (network + crypto code).",
                 "parameters": [
                     {
                         "name": "storeId",

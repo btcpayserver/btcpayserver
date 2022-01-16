@@ -34,8 +34,13 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ListCustodians()
         {
-            // TODO how to format as a prettier JSON??
-            return Ok(_custodianRegistry.getAll());
+            var all = _custodianRegistry.getAll().Values.ToList().Select(ToModel);
+            return Ok(all);
+        }
+
+        private CustodianData ToModel(ICustodian custodian)
+        {
+            return new CustodianData(custodian);
         }
 
     }

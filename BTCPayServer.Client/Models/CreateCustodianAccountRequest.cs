@@ -1,6 +1,11 @@
+using Newtonsoft.Json.Linq;
+
 namespace BTCPayServer.Client.Models
 {
-    public class CreateCustodianAccountRequest : CustodianAccountBaseData
+    public class CreateCustodianAccountRequest
     {
+        public string CustodianCode { get; set; }
+
+        public JObject Config { get; set; }
     }
 }

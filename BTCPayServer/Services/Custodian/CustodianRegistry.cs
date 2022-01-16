@@ -10,7 +10,7 @@ public class CustodianRegistry
     {
         _custodians = new Dictionary<string, ICustodian>();
 
-        // TODO We should add a hook here so plugins can register their own custodians!
+        // TODO Dispatch event so plugins can register their own custodians!
         register(Kraken.getInstance());
 
         // TODO register a dummy custodian when/for running tests

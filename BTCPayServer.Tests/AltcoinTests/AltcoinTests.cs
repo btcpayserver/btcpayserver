@@ -100,7 +100,7 @@ namespace BTCPayServer.Tests
                 onchainSettingsModel.Enabled = false;
                 response = controller.UpdateWalletSettings(onchainSettingsModel).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.Payment();
+                response = controller.WalletSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
                 onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
                 Assert.NotNull(onchainSettingsModel?.DerivationScheme);
                 Assert.False(onchainSettingsModel.Enabled);

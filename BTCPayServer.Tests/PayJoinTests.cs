@@ -289,7 +289,8 @@ namespace BTCPayServer.Tests
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
-                s.GoToWalletSettings(receiver.storeId, cryptoCode);
+                s.GoToStore(receiver.storeId);
+                s.GoToWalletSettings(cryptoCode);
                 Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                 var sender = s.CreateNewStore();

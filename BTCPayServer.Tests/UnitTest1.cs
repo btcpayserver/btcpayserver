@@ -275,11 +275,11 @@ namespace BTCPayServer.Tests
 
             // Set tolerance to 50%
             var stores = user.GetController<UIStoresController>();
-            var response = stores.PaymentMethods();
-            var vm = Assert.IsType<PaymentMethodsViewModel>(Assert.IsType<ViewResult>(response).Model);
+            var response = stores.Payment();
+            var vm = Assert.IsType<PaymentViewModel>(Assert.IsType<ViewResult>(response).Model);
             Assert.Equal(0.0, vm.PaymentTolerance);
             vm.PaymentTolerance = 50.0;
-            Assert.IsType<RedirectToActionResult>(stores.PaymentMethods(vm).Result);
+            Assert.IsType<RedirectToActionResult>(stores.Payment(vm).Result);
 
             var invoice = user.BitPay.CreateInvoice(
                 new Invoice()
@@ -417,7 +417,7 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             user.GrantAccess(true);
             var storeController = user.GetController<UIStoresController>();
-            var storeResponse = storeController.PaymentMethods();
+            var storeResponse = storeController.Payment();
             Assert.IsType<ViewResult>(storeResponse);
             Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 

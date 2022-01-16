@@ -100,7 +100,7 @@ namespace BTCPayServer.Tests
                 onchainSettingsModel.Enabled = false;
                 response = controller.UpdateWalletSettings(onchainSettingsModel).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.PaymentMethods();
+                response = controller.Payment();
                 onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
                 Assert.NotNull(onchainSettingsModel?.DerivationScheme);
                 Assert.False(onchainSettingsModel.Enabled);
@@ -430,7 +430,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore(StoreNavPages.PaymentMethods);
+                s.GoToStore(StoreNavPages.Payment);
                 s.AddDerivationScheme("LTC");
                 s.AddLightningNode(LightningConnectionType.CLightning);
                 //there should be three now

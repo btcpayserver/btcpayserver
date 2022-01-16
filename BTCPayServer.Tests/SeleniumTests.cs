@@ -409,7 +409,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
             Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
 
-            s.GoToStore(StoreNavPages.PaymentMethods);
+            s.GoToStore(StoreNavPages.Payment);
             Assert.Contains(storeName, s.Driver.PageSource);
             Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
             Assert.True(s.Driver.PageSource.Contains(offchainHint),
@@ -794,7 +794,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(server.ServerUri.AbsoluteUri, s.Driver.PageSource);
 
             TestLogs.LogInformation("Let's see if we can generate an event");
-            s.GoToStore(StoreNavPages.PaymentMethods);
+            s.GoToStore(StoreNavPages.Payment);
             s.AddDerivationScheme();
             s.CreateInvoice();
             var request = await server.GetNextRequest();
@@ -916,7 +916,7 @@ namespace BTCPayServer.Tests
             receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-            s.GoToStore(storeId, StoreNavPages.PaymentMethods);
+            s.GoToStore(storeId, StoreNavPages.Payment);
             s.GenerateWallet(cryptoCode, "", true);
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.FindElement(By.Id("SectionNav-Receive")).Click();
@@ -932,7 +932,7 @@ namespace BTCPayServer.Tests
             var result =
                 await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
             Assert.True(result.IsWatchOnly);
-            s.GoToStore(storeId, StoreNavPages.PaymentMethods);
+            s.GoToStore(storeId, StoreNavPages.Payment);
             var mnemonic = s.GenerateWallet(cryptoCode, "", true, true);
 
             //lets import and save private keys
@@ -1305,7 +1305,7 @@ namespace BTCPayServer.Tests
 
             s.RegisterNewUser(true);
             s.CreateNewStore();
-            s.GoToStore(StoreNavPages.PaymentMethods);
+            s.GoToStore(StoreNavPages.Payment);
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
@@ -1348,7 +1348,7 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
-            s.GoToStore(StoreNavPages.PaymentMethods);
+            s.GoToStore(StoreNavPages.Payment);
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             // LNURL is false by default
@@ -1561,7 +1561,7 @@ namespace BTCPayServer.Tests
             //ensure ln address is not available as Lightning is not enable
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
 
-            s.GoToStore(s.StoreId, StoreNavPages.PaymentMethods);
+            s.GoToStore(s.StoreId, StoreNavPages.Payment);
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             //ensure ln address is not available as lnurl is not configured
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));

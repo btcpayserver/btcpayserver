@@ -589,15 +589,15 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet("{storeId}/payment-methods")]
-        public IActionResult PaymentMethods()
+        [HttpGet("{storeId}/payment")]
+        public IActionResult Payment()
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
-            var vm = new PaymentMethodsViewModel
+            var vm = new PaymentViewModel
             {
                 Id = store.Id,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
@@ -610,8 +610,8 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost("{storeId}/payment-methods")]
-        public async Task<IActionResult> PaymentMethods(PaymentMethodsViewModel model, string command = null)
+        [HttpPost("{storeId}/payment")]
+        public async Task<IActionResult> Payment(PaymentViewModel model, string command = null)
         {
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
@@ -633,7 +633,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
             }
 
-            return RedirectToAction(nameof(PaymentMethods), new
+            return RedirectToAction(nameof(Payment), new
             {
                 storeId = CurrentStore.Id
             });

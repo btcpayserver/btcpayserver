@@ -3,7 +3,7 @@ using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
-    public class PaymentMethodsViewModel
+    public class PaymentViewModel
     {
         public string Id { get; set; }
 

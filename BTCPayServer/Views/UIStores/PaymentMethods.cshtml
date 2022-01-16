@@ -13,7 +13,7 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
         <div class="mb-5">
-            <h4 class="mb-3">Wallet</h4>
+            <h3 class="mb-3">Wallet</h3>
             @if (Model.HintWallet)
             {
                 <p>Set up your wallet to receive payments at your store.</p>
@@ -105,7 +105,7 @@
         </div>
 
         <div class="mb-5">
-            <h4 class="mb-3">Lightning</h4>
+            <h3 class="mb-3">Lightning</h3>
             @if (Model.HintLightning)
             {
                 <p>A connection to a Lightning node is required to receive Lightning payments.</p>
@@ -184,7 +184,7 @@
         </div>
 
         <form method="post">
-            <h4 class="mb-3">Payment</h4>
+            <h3 class="mb-3">Payment</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
                 <input asp-for="DefaultCurrency" class="form-control" style="max-width:10ch;" />
@@ -231,7 +231,7 @@
                 <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
             </div>
             
-            <button name="command" type="submit" class="btn btn-primary px-4" value="Save" id="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary px-4 mt-3" value="Save" id="Save">Save</button>
         </form>
     </div>
 </div>

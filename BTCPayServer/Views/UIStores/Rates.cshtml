@@ -6,7 +6,7 @@
 
 <div class="row">
     <div class="col-lg-8">
-        <h4 class="mb-3">@ViewData["Title"]</h4>
+        <h3 class="mb-3">@ViewData["Title"]</h3>
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>
@@ -175,7 +175,7 @@
                 </div>
                 <span asp-validation-for="Spread" class="text-danger"></span>
             </div>
-            <h4 class="mt-5 mb-3">Testing</h4>
+            <h3 class="mt-5 mb-3">Testing</h3>
             
             <div class="form-group">
                 <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
@@ -184,16 +184,15 @@
                     <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
-            </div>
-                    
+            </div>  
                 
-            <h4 class="mt-5 mb-3">Default Currency Pairs</h4>
+            <h3 class="mt-5 mb-3">Default Currency Pairs</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="BitpayRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-primary mt-3" value="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save">Save</button>
         </form>
     </div>
 </div>

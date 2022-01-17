@@ -1714,13 +1714,13 @@ retry:
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
-            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Configured", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
-            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);
-            s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+            s.Driver.FindElement(By.Id("ResetPassword")).Click();
             s.FindAlertMessage();
             Assert.DoesNotContain("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);

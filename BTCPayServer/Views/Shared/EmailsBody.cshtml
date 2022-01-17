@@ -71,12 +71,12 @@
                     <label asp-for="Settings.Password" class="form-label"></label>
                     <div class="input-group">
                         <input value="Configured" type="text" readonly class="form-control"/>
-                        <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
+                        <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword">Reset</button>
                     </div>
                 }
             </div>
             <input asp-for="PasswordSet" type="hidden"/>
-            <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>
+            <button type="submit" class="btn btn-primary mt-2" name="command" value="Save" id="Save">Save</button>
         </div>
     </div>
     <div class="row">
@@ -90,7 +90,7 @@
                 <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test">Send Test Email</button>
+            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test">Send Test Email</button>
         </div>
     </div>
 </form>

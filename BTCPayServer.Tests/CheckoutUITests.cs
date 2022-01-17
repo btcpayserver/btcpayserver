@@ -186,8 +186,7 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.AddLightningNode();
-            s.GoToStore();
-            s.Driver.FindElement(By.Id("Modify-LightningBTC")).Click();
+            s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
@@ -205,7 +204,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
-            s.GoToStore();
+            s.GoToStore(StoreNavPages.PaymentMethods);
             s.AddDerivationScheme();
             var invoiceId = s.CreateInvoice(0.001m, "BTC", "a@x.com");
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);

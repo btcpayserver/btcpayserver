@@ -16,6 +16,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.Scripting.Parser;
@@ -429,7 +430,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore();
+                s.GoToStore(StoreNavPages.PaymentMethods);
                 s.AddDerivationScheme("LTC");
                 s.AddLightningNode(LightningConnectionType.CLightning);
                 //there should be three now

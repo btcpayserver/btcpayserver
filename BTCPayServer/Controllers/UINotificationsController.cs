@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewNotificationsForUser)]
-    [Route("[controller]/[action]")]
+    [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
         private readonly BTCPayServerEnvironment _env;

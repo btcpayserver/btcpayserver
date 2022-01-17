@@ -1072,342 +1072,340 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.MakeAdmin();
+            await user.SetupWebhook();
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+
+            //create
+
+            //validation errors
+            await AssertValidationError(new[] { nameof(CreateInvoiceRequest.Amount), $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentTolerance)}", $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentMethods)}[0]" }, async () =>
             {
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                await user.GrantAccessAsync();
-                await user.MakeAdmin();
-                await user.SetupWebhook();
-                var client = await user.CreateClient(Policies.Unrestricted);
-                var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+                await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions() { PaymentTolerance = -2, PaymentMethods = new[] { "jasaas_sdsad" } } });
+            });
 
-                //create
-
-                //validation errors
-                await AssertValidationError(new[] { nameof(CreateInvoiceRequest.Amount), $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentTolerance)}", $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentMethods)}[0]" }, async () =>
-               {
-                   await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions() { PaymentTolerance = -2, PaymentMethods = new[] { "jasaas_sdsad" } } });
-               });
-
-                await AssertHttpError(403, async () =>
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
+            });
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var newInvoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
                 {
-                    await viewOnly.CreateInvoice(user.StoreId,
-                        new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
-                });
-                await user.RegisterDerivationSchemeAsync("BTC");
-                var newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest()
+                    Currency = "USD",
+                    Amount = 1,
+                    Metadata = JObject.Parse("{\"itemCode\": \"testitem\", \"orderId\": \"testOrder\"}"),
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
-                        Currency = "USD",
-                        Amount = 1,
-                        Metadata = JObject.Parse("{\"itemCode\": \"testitem\", \"orderId\": \"testOrder\"}"),
-                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
-                        {
-                            RedirectAutomatically = true,
-                            RequiresRefundEmail = true
-                        },
-                        AdditionalSearchTerms = new string[] { "Banana" }
-                    });
-                Assert.True(newInvoice.Checkout.RedirectAutomatically);
-                Assert.True(newInvoice.Checkout.RequiresRefundEmail);
-                Assert.Equal(user.StoreId, newInvoice.StoreId);
-                //list 
-                var invoices = await viewOnly.GetInvoices(user.StoreId);
-
-                Assert.NotNull(invoices);
-                Assert.Single(invoices);
-                Assert.Equal(newInvoice.Id, invoices.First().Id);
-
-                invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
-                Assert.NotNull(invoices);
-                Assert.Single(invoices);
-                Assert.Equal(newInvoice.Id, invoices.First().Id);
-
-                invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "apples");
-                Assert.NotNull(invoices);
-                Assert.Empty(invoices);
-
-                //list Filtered
-                var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, startDate: DateTimeOffset.Now.AddHours(-1),
-                    endDate: DateTimeOffset.Now.AddHours(1));
-
-                Assert.NotNull(invoicesFiltered);
-                Assert.Single(invoicesFiltered);
-                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
-
-
-                Assert.NotNull(invoicesFiltered);
-                Assert.Single(invoicesFiltered);
-                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
-
-                //list Yesterday
-                var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-2),
-                    endDate: DateTimeOffset.Now.AddDays(-1));
-                Assert.NotNull(invoicesYesterday);
-                Assert.Empty(invoicesYesterday);
-
-                // Error, startDate and endDate inverted
-                await AssertValidationError(new[] { "startDate", "endDate" },
-                    () => viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-1),
-                    endDate: DateTimeOffset.Now.AddDays(-2)));
-
-                await AssertValidationError(new[] { "startDate" },
-                    () => viewOnly.SendHttpRequest<Client.Models.InvoiceData[]>($"api/v1/stores/{user.StoreId}/invoices", new Dictionary<string, object>()
-                    {
-                        { "startDate", "blah" }
-                    }));
-
-
-                //list Existing OrderId
-                var invoicesExistingOrderId =
-                     await viewOnly.GetInvoices(user.StoreId, orderId: new[] { newInvoice.Metadata["orderId"].ToString() });
-                Assert.NotNull(invoicesExistingOrderId);
-                Assert.Single(invoicesFiltered);
-                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
-
-                //list NonExisting OrderId
-                var invoicesNonExistingOrderId =
-                    await viewOnly.GetInvoices(user.StoreId, orderId: new[] { "NonExistingOrderId" });
-                Assert.NotNull(invoicesNonExistingOrderId);
-                Assert.Empty(invoicesNonExistingOrderId);
-
-                //list Existing Status
-                var invoicesExistingStatus =
-                    await viewOnly.GetInvoices(user.StoreId, status: new[] { newInvoice.Status });
-                Assert.NotNull(invoicesExistingStatus);
-                Assert.Single(invoicesExistingStatus);
-                Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
-
-                //list NonExisting Status
-                var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
-                    status: new[] { BTCPayServer.Client.Models.InvoiceStatus.Invalid });
-                Assert.NotNull(invoicesNonExistingStatus);
-                Assert.Empty(invoicesNonExistingStatus);
-
-
-                //get
-                var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-                Assert.Equal(newInvoice.Metadata, invoice.Metadata);
-                var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
-                Assert.Single(paymentMethods);
-                var paymentMethod = paymentMethods.First();
-                Assert.Equal("BTC", paymentMethod.PaymentMethod);
-                Assert.Equal("BTC", paymentMethod.CryptoCode);
-                Assert.Empty(paymentMethod.Payments);
-
-
-                //update
-                newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
-                Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
-                Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
-                await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
-                {
-                    Status = InvoiceStatus.Settled
+                        RedirectAutomatically = true,
+                        RequiresRefundEmail = true
+                    },
+                    AdditionalSearchTerms = new string[] { "Banana" }
                 });
-                newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+            Assert.True(newInvoice.Checkout.RedirectAutomatically);
+            Assert.True(newInvoice.Checkout.RequiresRefundEmail);
+            Assert.Equal(user.StoreId, newInvoice.StoreId);
+            //list 
+            var invoices = await viewOnly.GetInvoices(user.StoreId);
 
-                Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
-                Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
-                newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
-                await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
+            Assert.NotNull(invoices);
+            Assert.Single(invoices);
+            Assert.Equal(newInvoice.Id, invoices.First().Id);
+
+            invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
+            Assert.NotNull(invoices);
+            Assert.Single(invoices);
+            Assert.Equal(newInvoice.Id, invoices.First().Id);
+
+            invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "apples");
+            Assert.NotNull(invoices);
+            Assert.Empty(invoices);
+
+            //list Filtered
+            var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
+                orderId: null, status: null, startDate: DateTimeOffset.Now.AddHours(-1),
+                endDate: DateTimeOffset.Now.AddHours(1));
+
+            Assert.NotNull(invoicesFiltered);
+            Assert.Single(invoicesFiltered);
+            Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
+
+            Assert.NotNull(invoicesFiltered);
+            Assert.Single(invoicesFiltered);
+            Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
+            //list Yesterday
+            var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
+                orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-2),
+                endDate: DateTimeOffset.Now.AddDays(-1));
+            Assert.NotNull(invoicesYesterday);
+            Assert.Empty(invoicesYesterday);
+
+            // Error, startDate and endDate inverted
+            await AssertValidationError(new[] { "startDate", "endDate" },
+                () => viewOnly.GetInvoices(user.StoreId,
+                orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-1),
+                endDate: DateTimeOffset.Now.AddDays(-2)));
+
+            await AssertValidationError(new[] { "startDate" },
+                () => viewOnly.SendHttpRequest<Client.Models.InvoiceData[]>($"api/v1/stores/{user.StoreId}/invoices", new Dictionary<string, object>()
                 {
-                    Status = InvoiceStatus.Invalid
-                });
+                    { "startDate", "blah" }
+                }));
 
-                newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
 
-                Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
-                Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
-                await AssertHttpError(403, async () =>
-                {
-                    await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
-                        new UpdateInvoiceRequest()
-                        {
-                            Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
-                        });
-                });
-                invoice = await client.UpdateInvoice(user.StoreId, invoice.Id,
+            //list Existing OrderId
+            var invoicesExistingOrderId =
+                    await viewOnly.GetInvoices(user.StoreId, orderId: new[] { newInvoice.Metadata["orderId"].ToString() });
+            Assert.NotNull(invoicesExistingOrderId);
+            Assert.Single(invoicesFiltered);
+            Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
+            //list NonExisting OrderId
+            var invoicesNonExistingOrderId =
+                await viewOnly.GetInvoices(user.StoreId, orderId: new[] { "NonExistingOrderId" });
+            Assert.NotNull(invoicesNonExistingOrderId);
+            Assert.Empty(invoicesNonExistingOrderId);
+
+            //list Existing Status
+            var invoicesExistingStatus =
+                await viewOnly.GetInvoices(user.StoreId, status: new[] { newInvoice.Status });
+            Assert.NotNull(invoicesExistingStatus);
+            Assert.Single(invoicesExistingStatus);
+            Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
+
+            //list NonExisting Status
+            var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
+                status: new[] { BTCPayServer.Client.Models.InvoiceStatus.Invalid });
+            Assert.NotNull(invoicesNonExistingStatus);
+            Assert.Empty(invoicesNonExistingStatus);
+
+
+            //get
+            var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+            Assert.Equal(newInvoice.Metadata, invoice.Metadata);
+            var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
+            Assert.Single(paymentMethods);
+            var paymentMethod = paymentMethods.First();
+            Assert.Equal("BTC", paymentMethod.PaymentMethod);
+            Assert.Equal("BTC", paymentMethod.CryptoCode);
+            Assert.Empty(paymentMethod.Payments);
+
+
+            //update
+            newInvoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+            Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+            Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
+            await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
+            {
+                Status = InvoiceStatus.Settled
+            });
+            newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+
+            Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+            Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
+            newInvoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+            await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
+            {
+                Status = InvoiceStatus.Invalid
+            });
+
+            newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+
+            Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
+            Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
                     new UpdateInvoiceRequest()
                     {
                         Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
                     });
-
-                Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
-                Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
-
-                //also test the the metadata actually got saved
-                invoice = await client.GetInvoice(user.StoreId, invoice.Id);
-                Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
-                Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
-
-                //archive 
-                await AssertHttpError(403, async () =>
+            });
+            invoice = await client.UpdateInvoice(user.StoreId, invoice.Id,
+                new UpdateInvoiceRequest()
                 {
-                    await viewOnly.ArchiveInvoice(user.StoreId, invoice.Id);
+                    Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
                 });
 
-                await client.ArchiveInvoice(user.StoreId, invoice.Id);
-                Assert.DoesNotContain(invoice.Id,
-                    (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+            Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
+            Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
 
-                //unarchive
-                await client.UnarchiveInvoice(user.StoreId, invoice.Id);
-                Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
+            //also test the the metadata actually got saved
+            invoice = await client.GetInvoice(user.StoreId, invoice.Id);
+            Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
+            Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
+
+            //archive 
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnly.ArchiveInvoice(user.StoreId, invoice.Id);
+            });
+
+            await client.ArchiveInvoice(user.StoreId, invoice.Id);
+            Assert.DoesNotContain(invoice.Id,
+                (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+
+            //unarchive
+            await client.UnarchiveInvoice(user.StoreId, invoice.Id);
+            Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
 
 
-                foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
+            foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
+            {
+                var inv = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
+                await user.PayInvoice(inv.Id);
+                await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
                 {
-                    var inv = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
-                    await user.PayInvoice(inv.Id);
-                    await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
-                    {
-                        Status = marked
-                    });
-                    var result = await client.GetInvoice(user.StoreId, inv.Id);
-                    if (marked == InvoiceStatus.Settled)
-                    {
-                        Assert.Equal(InvoiceStatus.Settled, result.Status);
-                        user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
-                            o =>
-                            {
-                                Assert.Equal(inv.Id, o.InvoiceId);
-                                Assert.True(o.ManuallyMarked);
-                            });
-                    }
-                    if (marked == InvoiceStatus.Invalid)
-                    {
-                        Assert.Equal(InvoiceStatus.Invalid, result.Status);
-                        var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
-                            o =>
-                            {
-                                Assert.Equal(inv.Id, o.InvoiceId);
-                                Assert.True(o.ManuallyMarked);
-                            });
-                        Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
-                    }
-                }
-
-
-                newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest()
-                    {
-                        Currency = "USD",
-                        Amount = 1,
-                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
-                        {
-                            DefaultLanguage = "it-it ",
-                            RedirectURL = "http://toto.com/lol"
-                        }
-                    });
-                Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
-                var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
-                var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
-                Assert.Equal("it-IT", model.DefaultLang);
-                Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
-
-                var langs = tester.PayTester.GetService<LanguageService>();
-                foreach (var match in new[] { "it", "it-IT", "it-LOL" })
-                {
-                    Assert.Equal("it-IT", langs.FindLanguage(match).Code);
-                }
-                foreach (var match in new[] { "pt-BR" })
-                {
-                    Assert.Equal("pt-BR", langs.FindLanguage(match).Code);
-                }
-                foreach (var match in new[] { "en", "en-US" })
-                {
-                    Assert.Equal("en", langs.FindLanguage(match).Code);
-                }
-                foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
-                {
-                    Assert.Equal("pt-PT", langs.FindLanguage(match).Code);
-                }
-
-                //payment method activation tests
-                var store = await client.GetStore(user.StoreId);
-                Assert.False(store.LazyPaymentMethods);
-                store.LazyPaymentMethods = true;
-                store = await client.UpdateStore(store.Id,
-                    JObject.FromObject(store).ToObject<UpdateStoreRequest>());
-                Assert.True(store.LazyPaymentMethods);
-
-                invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 1, Currency = "USD" });
-                paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
-                Assert.Single(paymentMethods);
-                Assert.False(paymentMethods.First().Activated);
-                await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id,
-                    paymentMethods.First().PaymentMethod);
-                paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
-                Assert.Single(paymentMethods);
-                Assert.True(paymentMethods.First().Activated);
-
-                var invoiceWithdefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest()
-                    {
-                        Currency = "USD",
-                        Amount = 100,
-                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
-                        {
-                            PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
-                            DefaultPaymentMethod = "BTC_LightningLike"
-                        }
-                    });
-                Assert.Equal("BTC_LightningLike", invoiceWithdefaultPaymentMethodLN.Checkout.DefaultPaymentMethod);
-
-                var invoiceWithdefaultPaymentMethodOnChain = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest()
-                    {
-                        Currency = "USD",
-                        Amount = 100,
-                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
-                        {
-                            PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
-                            DefaultPaymentMethod = "BTC"
-                        }
-                    });
-                Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
-
-                store = await client.GetStore(user.StoreId);
-                store.LazyPaymentMethods = false;
-                store = await client.UpdateStore(store.Id,
-                    JObject.FromObject(store).ToObject<UpdateStoreRequest>());
-
-
-                //let's see the overdue amount 
-                invoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest()
-                    {
-                        Currency = "BTC",
-                        Amount = 0.0001m,
-                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
-                        {
-                            PaymentMethods = new[] { "BTC" },
-                            DefaultPaymentMethod = "BTC"
-                        }
-                    });
-                var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
-                Assert.Equal(0.0001m, pm.Due);
-
-                await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
-                {
-                    await tester.ExplorerNode.SendToAddressAsync(
-                        BitcoinAddress.Create(pm.Destination, tester.ExplorerClient.Network.NBitcoinNetwork),
-                        new Money(0.0002m, MoneyUnit.BTC));
+                    Status = marked
                 });
-                await TestUtils.EventuallyAsync(async () =>
+                var result = await client.GetInvoice(user.StoreId, inv.Id);
+                if (marked == InvoiceStatus.Settled)
                 {
-                    var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
-                    Assert.Single(pm.Payments);
-                    Assert.Equal(-0.0001m, pm.Due);
-                });
+                    Assert.Equal(InvoiceStatus.Settled, result.Status);
+                    user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
+                        o =>
+                        {
+                            Assert.Equal(inv.Id, o.InvoiceId);
+                            Assert.True(o.ManuallyMarked);
+                        });
+                }
+                if (marked == InvoiceStatus.Invalid)
+                {
+                    Assert.Equal(InvoiceStatus.Invalid, result.Status);
+                    var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
+                        o =>
+                        {
+                            Assert.Equal(inv.Id, o.InvoiceId);
+                            Assert.True(o.ManuallyMarked);
+                        });
+                    Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
+                }
             }
+
+
+            newInvoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
+                {
+                    Currency = "USD",
+                    Amount = 1,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        DefaultLanguage = "it-it ",
+                        RedirectURL = "http://toto.com/lol"
+                    }
+                });
+            Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
+            var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
+            var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
+            Assert.Equal("it-IT", model.DefaultLang);
+            Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
+
+            var langs = tester.PayTester.GetService<LanguageService>();
+            foreach (var match in new[] { "it", "it-IT", "it-LOL" })
+            {
+                Assert.Equal("it-IT", langs.FindLanguage(match).Code);
+            }
+            foreach (var match in new[] { "pt-BR" })
+            {
+                Assert.Equal("pt-BR", langs.FindLanguage(match).Code);
+            }
+            foreach (var match in new[] { "en", "en-US" })
+            {
+                Assert.Equal("en", langs.FindLanguage(match).Code);
+            }
+            foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
+            {
+                Assert.Equal("pt-PT", langs.FindLanguage(match).Code);
+            }
+
+            //payment method activation tests
+            var store = await client.GetStore(user.StoreId);
+            Assert.False(store.LazyPaymentMethods);
+            store.LazyPaymentMethods = true;
+            store = await client.UpdateStore(store.Id,
+                JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+            Assert.True(store.LazyPaymentMethods);
+
+            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 1, Currency = "USD" });
+            paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
+            Assert.Single(paymentMethods);
+            Assert.False(paymentMethods.First().Activated);
+            await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id,
+                paymentMethods.First().PaymentMethod);
+            paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
+            Assert.Single(paymentMethods);
+            Assert.True(paymentMethods.First().Activated);
+
+            var invoiceWithdefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
+                {
+                    Currency = "USD",
+                    Amount = 100,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
+                        DefaultPaymentMethod = "BTC_LightningLike"
+                    }
+                });
+            Assert.Equal("BTC_LightningLike", invoiceWithdefaultPaymentMethodLN.Checkout.DefaultPaymentMethod);
+
+            var invoiceWithdefaultPaymentMethodOnChain = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
+                {
+                    Currency = "USD",
+                    Amount = 100,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        PaymentMethods = new[] { "BTC", "BTC-LightningNetwork" },
+                        DefaultPaymentMethod = "BTC"
+                    }
+                });
+            Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
+
+            store = await client.GetStore(user.StoreId);
+            store.LazyPaymentMethods = false;
+            store = await client.UpdateStore(store.Id,
+                JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+
+
+            //let's see the overdue amount 
+            invoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
+                {
+                    Currency = "BTC",
+                    Amount = 0.0001m,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        PaymentMethods = new[] { "BTC" },
+                        DefaultPaymentMethod = "BTC"
+                    }
+                });
+            var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+            Assert.Equal(0.0001m, pm.Due);
+
+            await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(pm.Destination, tester.ExplorerClient.Network.NBitcoinNetwork),
+                    new Money(0.0002m, MoneyUnit.BTC));
+            });
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+                Assert.Single(pm.Payments);
+                Assert.Equal(-0.0001m, pm.Due);
+            });
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

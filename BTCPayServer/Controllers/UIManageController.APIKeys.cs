@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
                 DescriptionHtml = true,
                 Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
                 Action = "Delete",
-                ActionUrl = Url.ActionLink(nameof(DeleteAPIKeyPost), values: new { id })
+                ActionName = nameof(DeleteAPIKeyPost)
             });
         }
 

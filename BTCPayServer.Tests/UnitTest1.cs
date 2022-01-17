@@ -569,7 +569,7 @@ namespace BTCPayServer.Tests
             bool paid = false;
             bool confirmed = false;
             bool completed = false;
-            while (!completed || !confirmed)
+            while (!completed || !confirmed || !receivedPayment)
             {
                 var request = await callbackServer.GetNextRequest();
                 if (request.ContainsKey("event"))
@@ -584,7 +584,9 @@ namespace BTCPayServer.Tests
                             receivedPayment = true;
                             break;
                         case InvoiceEvent.PaidInFull:
-                            Assert.True(receivedPayment);
+                            // TODO, we should check that ReceivedPayment is sent after PaidInFull
+                            // for now, we can't ensure this because the ReceivedPayment events isn't sent by the
+                            // InvoiceWatcher, contrary to all other events
                             tester.ExplorerNode.Generate(6);
                             paid = true;
                             break;

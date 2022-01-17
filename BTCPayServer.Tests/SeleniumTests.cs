@@ -274,11 +274,11 @@ namespace BTCPayServer.Tests
         {
             using var s = CreateSeleniumTester();
             await s.StartAsync();
-            s.RegisterNewUser(isAdmin: true);
+            s.RegisterNewUser(true);
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
             if (s.Driver.PageSource.Contains("Configured"))
             {
-                s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+                s.Driver.FindElement(By.Id("ResetPassword")).Submit();
                 s.FindAlertMessage();
             }
             CanSetupEmailCore(s);
@@ -1709,18 +1709,17 @@ retry:
         {
             s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
             s.Driver.FindElement(By.CssSelector("#quick-fill .dropdown-menu .dropdown-item:first-child")).Click();
-
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);
-            s.Driver.FindElement(By.Id("ResetPassword")).Click();
+            s.Driver.FindElement(By.Id("ResetPassword")).SendKeys(Keys.Enter);
             s.FindAlertMessage();
             Assert.DoesNotContain("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);

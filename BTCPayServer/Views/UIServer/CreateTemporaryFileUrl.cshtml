@@ -4,7 +4,7 @@
     ViewData.SetActivePage(ServerNavPages.Services, $"Create temporary file link");
 }
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
     <div class="col-lg-6">
@@ -28,7 +28,7 @@
                 <span asp-validation-for="TimeAmount" class="text-danger"></span>
                 <span asp-validation-for="TimeType" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary" name="command" value="Generate">Generate</button>
+            <button type="submit" class="btn btn-primary mt-2" name="command" value="Generate">Generate</button>
         </form>
     </div>
 </div>

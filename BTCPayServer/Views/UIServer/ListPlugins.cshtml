@@ -121,7 +121,7 @@
 
 @if (Model.Installed.Any())
 {
-    <h2 class="mb-4">Installed Plugins</h2>
+    <h3 class="mb-4">Installed Plugins</h3>
     <div class="row mb-4">
         @foreach (var plugin in Model.Installed)
         {
@@ -241,7 +241,7 @@
 
 @if (availableAndNotInstalled.Any())
 {
-    <h2 class="mb-4">Available Plugins</h2>
+    <h3 class="mb-4">Available Plugins</h3>
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {

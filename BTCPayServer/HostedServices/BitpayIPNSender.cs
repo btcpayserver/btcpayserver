@@ -270,20 +270,20 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
                     {
-                        _ = Notify(invoice, e, false, sendMail);
+                        await Notify(invoice, e, false, sendMail);
                         sendMail = false;
                     }
                 }
 
                 if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    _ = Notify(invoice, e, false, sendMail);
+                    await Notify(invoice, e, false, sendMail);
                     sendMail = false;
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    _ = Notify(invoice, e, true, sendMail);
+                    await Notify(invoice, e, true, sendMail);
                     sendMail = false;
                 }
             }));

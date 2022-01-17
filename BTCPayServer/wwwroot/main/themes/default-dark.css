@@ -16,7 +16,6 @@
   --btcpay-body-bg-medium: var(--btcpay-neutral-800);
   --btcpay-body-bg-striped: var(--btcpay-neutral-800);
   --btcpay-body-bg-hover: var(--btcpay-neutral-950);
-  --btcpay-body-bg-active: var(--btcpay-neutral-700);
   --btcpay-body-bg-rgb: 41, 41, 41;
   --btcpay-body-border-light: var(--btcpay-neutral-800);
   --btcpay-body-border-medium: var(--btcpay-neutral-700);
@@ -24,7 +23,6 @@
   --btcpay-body-text-rgb: 255, 255, 255;
   --btcpay-form-text-label: var(--btcpay-neutral-300);
   --btcpay-header-bg: var(--btcpay-bg-dark);
-  --btcpay-header-link-active: var(--btcpay-primary);
   --btcpay-nav-link: var(--btcpay-neutral-500);
   --btcpay-nav-link-accent: var(--btcpay-neutral-300);
   --btcpay-nav-link-active: var(--btcpay-white);

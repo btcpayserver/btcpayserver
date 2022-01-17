@@ -1,8 +1,3 @@
-
-if (detectFIDOSupport() && makeAssertionOptions){
-    login(makeAssertionOptions);
-}
-
 async function login(makeAssertionOptions) {
     const challenge = makeAssertionOptions.challenge.replace(/-/g, "+").replace(/_/g, "/");
     makeAssertionOptions.challenge = Uint8Array.from(atob(challenge), c => c.charCodeAt(0));
@@ -55,4 +50,23 @@ async function verifyAssertionWithServer(assertedCredential) {
     document.getElementById("fidoForm").submit();
 }
 
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (detectFIDOSupport() && makeAssertionOptions) {
+        if (isSafari()) {
+            const infoMessage= document.getElementById("info-message");
+            infoMessage.classList.add("d-none");
+            const startButton = document.getElementById("btn-start");
+            startButton.addEventListener("click", ev => {
+                login(makeAssertionOptions);
+                infoMessage.classList.remove("d-none");
+                startButton.classList.add("d-none");
+            });
+            startButton.classList.remove("d-none");
+        } else {
+            login(makeAssertionOptions);
+        }
+    }
+})
 

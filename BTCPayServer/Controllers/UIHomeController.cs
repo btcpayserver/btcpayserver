@@ -82,7 +82,9 @@ namespace BTCPayServer.Controllers
                     var store = await _storeRepository.FindStore(storeId, userId);
                     if (store != null)
                     {
-                        return RedirectToAction("Dashboard", "UIStores", new { storeId });
+                        return store.Role == StoreRoles.Owner 
+                            ? RedirectToAction("Dashboard", "UIStores", new { storeId }) 
+                            : RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
                     }
                 }
                 

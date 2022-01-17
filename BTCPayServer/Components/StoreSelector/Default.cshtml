@@ -14,15 +14,24 @@
             <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
         }
     }
+
+    private string StoreName(string title)
+    {
+        return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
+    }
 }
 
 @if (Model.CurrentStoreId == null)
 {
     <a href="~/" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
 }
-else
+else if (Model.CurrentStoreIsOwner)
 {
     <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+}
+else
+{
+    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
 }
 
 <div id="StoreSelector">
@@ -34,13 +43,17 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.WalletId != null)
+                        @if (option.IsOwner && option.WalletId != null)
                         {
-                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@(string.IsNullOrEmpty(option.Text) ? "Unnamed Store" : option.Text)</a>
+                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
+                        }
+                        else if (option.IsOwner)
+                        {
+                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                         }
                         else
                         {
-                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@(string.IsNullOrEmpty(option.Text) ? "Unnamed Store" : option.Text)</a>
+                            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                         }
                     </li>
                 }

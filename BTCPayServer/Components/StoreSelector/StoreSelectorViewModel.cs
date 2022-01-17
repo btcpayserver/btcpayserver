@@ -15,5 +15,6 @@ namespace BTCPayServer.Components.StoreSelector
         public string Text { get; set; }
         public string Value { get; set; }
         public WalletId WalletId { get; set; }
+        public bool IsGuest { get; set; }
     }
 }

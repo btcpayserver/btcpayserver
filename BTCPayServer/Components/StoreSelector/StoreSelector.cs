@@ -43,7 +43,8 @@ namespace BTCPayServer.Components.StoreSelector
                         Text = store.StoreName,
                         Value = store.Id,
                         Selected = store.Id == currentStore?.Id,
-                        WalletId = walletId
+                        WalletId = store.Role == StoreRoles.Owner ? walletId : null,
+                        IsGuest = store.Role == StoreRoles.Guest
                     };
                 })
                 .ToList();

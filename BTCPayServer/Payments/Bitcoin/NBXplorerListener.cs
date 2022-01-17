@@ -80,25 +80,25 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             _RunningTask = new TaskCompletionSource<bool>();
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            leases.Add(_Aggregator.SubscribeAsync<Events.NBXplorerStateChangedEvent>(async nbxplorerEvent =>
+            leases.Add(_Aggregator.Subscribe<Events.NBXplorerStateChangedEvent>(nbxplorerEvent =>
             {
                 if (nbxplorerEvent.NewState == NBXplorerState.Ready)
                 {
                     var wallet = _Wallets.GetWallet(nbxplorerEvent.Network);
                     if (_Wallets.IsAvailable(wallet.Network))
                     {
-                        await Listen(wallet);
+                        _ = Listen(wallet);
                     }
                 }
             }));
 
-            _ListenPoller = new Timer(async s =>
+            _ListenPoller = new Timer(s =>
             {
                 foreach (var wallet in _Wallets.GetWallets())
                 {
                     if (_Wallets.IsAvailable(wallet.Network))
                     {
-                        await Listen(wallet);
+                        _ =  Listen(wallet);
                     }
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);

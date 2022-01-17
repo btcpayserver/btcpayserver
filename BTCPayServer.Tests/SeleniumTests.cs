@@ -143,8 +143,8 @@ namespace BTCPayServer.Tests
             s.Driver.AssertNoError();
             Assert.Contains("/login", s.Driver.Url);
 
-            s.GoToUrl("/UIManage/Index");
-            Assert.Contains("ReturnUrl=%2FUIManage%2FIndex", s.Driver.Url);
+            s.GoToUrl("/account");
+            Assert.Contains("ReturnUrl=%2Faccount", s.Driver.Url);
 
             // We should be redirected to login
             //Same User Can Log Back In
@@ -153,7 +153,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             // We should be redirected to invoice
-            Assert.EndsWith("/UIManage/Index", s.Driver.Url);
+            Assert.EndsWith("/account", s.Driver.Url);
 
             // Should not be able to reach server settings
             s.GoToUrl("/server/users");

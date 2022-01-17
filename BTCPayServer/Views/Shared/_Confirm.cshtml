@@ -1,5 +1,4 @@
 @model ConfirmModel
-
 <div class="modal fade" id="ConfirmModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <partial name="ConfirmModal" model="Model" />
 </div>
@@ -19,8 +18,8 @@
         const action = $target.dataset.action || ($target.nodeName === 'A'
             ? $target.getAttribute('href')
             : $target.form.getAttribute('action'))
-        
-        if ($form) $form.setAttribute('action', action)
+
+        if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
         if (title) $title.textContent = title
         if (description) $description.innerHTML = description
         if (confirm) $continue.textContent = confirm

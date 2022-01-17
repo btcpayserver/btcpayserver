@@ -1070,8 +1070,7 @@ namespace BTCPayServer.Tests
             );
         }
 
-        // [Fact(Timeout = TestTimeout)]
-        [Fact()]
+        [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanSaveKeyPathForOnChainPayments()
         {

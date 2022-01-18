@@ -59,7 +59,7 @@
 </div>
 
 <script>
-function initCameraScanningApp(title, onDataSubmit, modalId) {
+function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = false) {
 	const isModal = !!modalId;
 
 	Vue.component('scanner-wrap', {
@@ -87,7 +87,8 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 				camera: 0,
 				cameraOff: true,
 				cameras: ["auto"],
-				decoder: null
+				decoder: null,
+				submitOnScan
 			}
 		},
 		mounted() {
@@ -114,11 +115,13 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		        } else {
 		            this.camera++;
 		        }
-		        
 		    },
 			setQrData (qrData) {
 				this.qrData = qrData;
 				this.cameraOff = !!qrData;
+                if (this.qrData && this.submitOnScan) {
+                    this.submitData();
+                }
 			},
 			retry() {
 				this.cameraOff = true;

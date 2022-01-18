@@ -110,3 +110,7 @@ function value(selector) {
     }
     return el.value;
 }
+function isSafari(){
+    //https://stackoverflow.com/a/23522755/275504
+    return  /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+}

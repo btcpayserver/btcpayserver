@@ -1,8 +1,3 @@
-
-if (detectFIDOSupport() && makeCredentialOptions){
-   register(makeCredentialOptions);
-}
-
 async function register(makeCredentialOptions) {
     console.log("Credential Options Object", makeCredentialOptions);
     // Turn the challenge back into the accepted format of padded base64
@@ -65,3 +60,21 @@ async function registerNewCredential(newCredential) {
     document.getElementById("data").value = JSON.stringify(data);
     document.getElementById("registerForm").submit();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (detectFIDOSupport() && makeCredentialOptions) {
+        if (isSafari()) {
+            const infoMessage= document.getElementById("info-message");
+            infoMessage.classList.add("d-none");
+            const startButton = document.getElementById("btn-start");
+            startButton.addEventListener("click", ev => {
+                register(makeCredentialOptions);
+                infoMessage.classList.remove("d-none");
+                startButton.classList.add("d-none");
+            });
+            startButton.classList.remove("d-none");
+        } else {
+            register(makeCredentialOptions);
+        }
+    }
+})

@@ -4,8 +4,8 @@
 }
 
 <form asp-action="CreateResponse" id="registerForm">
-    <input type="hidden" name="data" id="data" />
-    <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName")? ViewData["CredentialName"] : string.Empty)" />
+    <input type="hidden" name="data" id="data"/>
+    <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName") ? ViewData["CredentialName"] : string.Empty)"/>
 </form>
 <div class="row">
     <div class="col-lg-8">
@@ -13,6 +13,7 @@
             <span id="spinner" class="fa fa-spinner fa-spin float-end me-3 fido-running" style="font-size:2.5em"></span>
             <span>Insert your security device into your computer's USB port. If it has a button, tap on it.</span>
         </div>
+        <button id="btn-start" class="btn btn-primary btn-lg w-100 d-none" type="button">Start</button>
         <p id="error-message" class="d-none alert alert-danger"></p>
         <a id="btn-retry" class="btn btn-secondary d-none">Retry</a>
     </div>
@@ -23,5 +24,5 @@
     // send to server for registering
     window.makeCredentialOptions = @Json.Serialize(Model);
 </script>
-<script src="~/js/webauthn/helpers.js" ></script>
-<script src="~/js/webauthn/register.js" ></script>
+<script src="~/js/webauthn/helpers.js"></script>
+<script src="~/js/webauthn/register.js"></script>

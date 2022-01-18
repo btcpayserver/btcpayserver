@@ -23,7 +23,6 @@ async function login(makeAssertionOptions) {
     }
 }
 
-
 /**
  * Sends the credential to the the FIDO2 server for assertion
  * @param {any} assertedCredential
@@ -50,14 +49,11 @@ async function verifyAssertionWithServer(assertedCredential) {
     document.getElementById("fidoForm").submit();
 }
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
     if (detectFIDOSupport() && makeAssertionOptions) {
+        const infoMessage = document.getElementById("info-message");
+        const startButton = document.getElementById("btn-start");
         if (isSafari()) {
-            const infoMessage= document.getElementById("info-message");
-            infoMessage.classList.add("d-none");
-            const startButton = document.getElementById("btn-start");
             startButton.addEventListener("click", ev => {
                 login(makeAssertionOptions);
                 infoMessage.classList.remove("d-none");
@@ -65,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             startButton.classList.remove("d-none");
         } else {
+            infoMessage.classList.remove("d-none");
             login(makeAssertionOptions);
         }
     }

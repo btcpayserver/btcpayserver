@@ -1,5 +1,5 @@
 async function register(makeCredentialOptions) {
-    console.log("Credential Options Object", makeCredentialOptions);
+    console.debug("Credential Options Object", makeCredentialOptions);
     // Turn the challenge back into the accepted format of padded base64
     makeCredentialOptions.challenge = coerceToArrayBuffer(makeCredentialOptions.challenge);
     // Turn ID into a UInt8Array Buffer for some reason
@@ -12,10 +12,8 @@ async function register(makeCredentialOptions) {
 
     if (makeCredentialOptions.authenticatorSelection.authenticatorAttachment == null) makeCredentialOptions.authenticatorSelection.authenticatorAttachment = undefined;
 
-    console.log("Credential Options Formatted", makeCredentialOptions);
-
-
-    console.log("Creating PublicKeyCredential...");
+    console.debug("Credential Options Formatted", makeCredentialOptions);
+    console.debug("Creating PublicKeyCredential...");
 
     let newCredential;
     try {
@@ -28,14 +26,13 @@ async function register(makeCredentialOptions) {
         return;
     }
 
-    console.log("PublicKeyCredential Created", newCredential);
+    console.debug("PublicKeyCredential Created", newCredential);
 
     try {
         registerNewCredential(newCredential);
 
     } catch (e) {
         showErrorAlert(err.message ? err.message : err);
-        
     }
 }
 
@@ -63,10 +60,9 @@ async function registerNewCredential(newCredential) {
 
 document.addEventListener('DOMContentLoaded', () => {
     if (detectFIDOSupport() && makeCredentialOptions) {
+        const infoMessage = document.getElementById("info-message");
+        const startButton = document.getElementById("btn-start");
         if (isSafari()) {
-            const infoMessage= document.getElementById("info-message");
-            infoMessage.classList.add("d-none");
-            const startButton = document.getElementById("btn-start");
             startButton.addEventListener("click", ev => {
                 register(makeCredentialOptions);
                 infoMessage.classList.remove("d-none");
@@ -74,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             startButton.classList.remove("d-none");
         } else {
+            infoMessage.classList.remove("d-none");
             register(makeCredentialOptions);
         }
     }

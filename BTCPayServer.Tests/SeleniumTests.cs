@@ -382,11 +382,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SetupGuide-Store")).Click();
             Assert.Contains("/stores/create", s.Driver.Url);
 
-            s.CreateNewStore();
+            (_, string storeId) = s.CreateNewStore();
+            
+            // should redirect to store
             s.GoToUrl("/");
 
+            Assert.Contains($"/stores/{storeId}", s.Driver.Url);
             Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should be present");
-            Assert.False(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Setup guide should not be present");
+            Assert.True(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Store setup guide should be present");
         }
 
         [Fact(Timeout = TestTimeout)]

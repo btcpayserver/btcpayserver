@@ -1,5 +1,38 @@
+@inject BTCPayServer.Services.BTCPayServerEnvironment _env
+@inject SignInManager<ApplicationUser> _signInManager
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
+
+@functions {
+    @* ReSharper disable once CSharpWarnings::CS1998 *@
+    private async Task LogoContent()
+    {
+        var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
+        <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="logo"><use href="@logoSrc#small" class="logo-small" /><use href="@logoSrc#large" class="logo-large" /></svg>
+        @if (_env.NetworkType != NBitcoin.ChainName.Mainnet)
+        {
+            <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
+        }
+    }
+
+    private string StoreName(string title)
+    {
+        return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
+    }
+}
+
+@if (Model.CurrentStoreId == null)
+{
+    <a href="~/" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+}
+else if (Model.CurrentStoreIsOwner)
+{
+    <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+}
+else
+{
+    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+}
 
 <div id="StoreSelector">
     @if (Model.Options.Count > 0)
@@ -10,13 +43,17 @@
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.WalletId != null)
+                        @if (option.IsOwner && option.WalletId != null)
                         {
-                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
+                        }
+                        else if (option.IsOwner)
+                        {
+                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                         }
                         else
                         {
-                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@option.Text</a>
+                            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                         }
                     </li>
                 }
@@ -25,7 +62,7 @@
             </ul>
         </div>
     }
-    else
+    else if (_signInManager.IsSignedIn(User))
     {
         <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
     }

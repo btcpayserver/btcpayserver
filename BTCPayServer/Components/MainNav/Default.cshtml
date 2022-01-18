@@ -43,13 +43,13 @@
                         </ul>
                     </div>
                 </div>
-                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
-                    <header class="accordion-header" id="Nav-Wallets-Header">
+                <div class="accordion-item">
+                    <header class="accordion-header" id="Nav-Wallets-Header" permission="@Policies.CanModifyStoreSettings">
                         <div class="accordion-button">
                             Wallets
                         </div>
                     </header>
-                    <div id="Nav-Wallets" class="accordion-collapse" aria-labelledby="Nav-Wallets-Header">
+                    <div id="Nav-Wallets" class="accordion-collapse" aria-labelledby="Nav-Wallets-Header" permission="@Policies.CanModifyStoreSettings">
                         <div class="accordion-body">
                             <ul class="navbar-nav">
                                 @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
@@ -106,7 +106,7 @@
                         <div id="Nav-Payments" class="accordion-collapse collapse show" aria-labelledby="Nav-Payments-Header">
                             <div class="accordion-body">
                                 <ul class="navbar-nav">
-                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                    <li class="nav-item" permission="@Policies.CanViewInvoices">
                                         <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
                                             <vc:icon symbol="invoice"/>
                                             <span>Invoices</span>
@@ -118,13 +118,13 @@
                                             <span>Requests</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                         <a asp-area="" asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
                                             <vc:icon symbol="payment-2"/>
                                             <span>Pull Payments</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                         <a asp-area="" asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
                                             <vc:icon symbol="payment-2"/>
                                             <span>Payouts</span>

@@ -78,14 +78,23 @@ namespace BTCPayServer.Controllers
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
                 if (storeId != null)
                 {
+                    // verify store exists and redirect to it
                     var store = await _storeRepository.FindStore(storeId, userId);
                     if (store != null)
                     {
-                        HttpContext.SetStoreData(store);
+                        return store.Role == StoreRoles.Owner 
+                            ? RedirectToAction("Dashboard", "UIStores", new { storeId }) 
+                            : RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
                     }
                 }
                 
                 var stores = await _storeRepository.GetStoresByUserId(userId);
+                if (stores.Any())
+                {
+                    // redirect to first store
+                    storeId = stores.First().Id;
+                    return RedirectToAction("Dashboard", "UIStores", new { storeId });
+                }
                 
                 var vm = new HomeViewModel
                 {

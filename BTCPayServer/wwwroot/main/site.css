@@ -71,39 +71,6 @@ h2 small .fa-question-circle-o {
     font-size: var(--btcpay-font-size-l);
 }
 
-/* Section Navigation */
-#SectionNav {
-    --border-size: 2px;
-    
-    width: 100%;
-    margin-top: calc(var(--btcpay-space-s) * -1);
-    margin-bottom: var(--btcpay-space-l);
-    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
-}
-
-#SectionNav .nav-link {
-    color: var(--btcpay-nav-link);
-    margin-right: var(--btcpay-space-l);
-    margin-bottom: calc(var(--border-size) * -1);
-    border-bottom: var(--border-size) solid transparent;
-    padding: var(--btcpay-space-m) 0;
-    font-weight: var(--btcpay-font-weight-semibold);
-}
-
-#SectionNav .nav-link:last-child {
-    margin-right: 0;
-}
-
-#SectionNav .nav-link:hover {
-    color: var(--btcpay-nav-link-accent);
-}
-
-#SectionNav .nav-link.active {
-    color: var(--btcpay-nav-link-active);
-    border-bottom-color: var(--btcpay-nav-border-active);
-    background: var(--btcpay-nav-bg-active);
-}
-
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;

@@ -17,9 +17,7 @@
 
 @if (ViewBag.ShowMenu)
 {
-    <nav class="nav">
-        <partial name="@ViewData["NavPartialName"].ToString()" />
-    </nav>
+    <partial name="@ViewData["NavPartialName"].ToString()" />
 }
 
 <partial name="_StatusMessage" />

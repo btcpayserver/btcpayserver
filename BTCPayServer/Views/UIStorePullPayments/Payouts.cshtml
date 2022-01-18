@@ -83,17 +83,19 @@
         }
     </div>
 
-    <nav id="SectionNav" class="nav mb-3">
-        @foreach (var state in Model.PayoutStateCount)
-        {
-            <a id="@state.Key-view"
-               asp-action="Payouts"
-               asp-route-storeId="@Context.GetRouteValue("storeId")"
-               asp-route-payoutState="@state.Key"
-               asp-route-pullPaymentId="@Model.PullPaymentId"
-               asp-route-paymentMethodId="@Model.PaymentMethodId"
-               class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
-        }
+    <nav id="SectionNav" class="mb-3">
+        <div class="nav">
+            @foreach (var state in Model.PayoutStateCount)
+            {
+                <a id="@state.Key-view"
+                   asp-action="Payouts"
+                   asp-route-storeId="@Context.GetRouteValue("storeId")"
+                   asp-route-payoutState="@state.Key"
+                   asp-route-pullPaymentId="@Model.PullPaymentId"
+                   asp-route-paymentMethodId="@Model.PaymentMethodId"
+                   class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+            }
+        </div>
     </nav>
     
     @if (Model.Payouts.Any())

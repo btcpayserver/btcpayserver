@@ -115,7 +115,7 @@
                 <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
                 <span asp-validation-for="PerksTemplate" class="text-danger"></span>
             </div>
-            <h4 class="mt-5 mb-4">Contributions</h4>
+            <h3 class="mt-5 mb-4">Contributions</h3>
             <div class="form-check mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
@@ -136,7 +136,7 @@
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
-            <h4 class="mt-5 mb-4">Crowdfund Behavior</h4>
+            <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
             <div class="form-group">
                 <label asp-for="NotificationUrl" class="form-label"></label>
                 <input asp-for="NotificationUrl" class="form-control" />
@@ -147,7 +147,7 @@
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
-            <h4 class="mt-5 mb-4">Sound</h4>
+            <h3 class="mt-5 mb-4">Sound</h3>
             <div class="form-group mb-3">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
@@ -162,7 +162,7 @@
                     <span asp-validation-for="Sounds" class="text-danger"></span>
                 </div>
             </div>
-            <h4 class="mt-5 mb-4">Animation</h4>
+            <h3 class="mt-5 mb-4">Animation</h3>
             <div class="form-group mb-3">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
@@ -177,7 +177,7 @@
                     <span asp-validation-for="AnimationColors" class="text-danger"></span>
                 </div>
             </div>
-            <h4 class="mt-5 mb-4">Discussion</h4>
+            <h3 class="mt-5 mb-4">Discussion</h3>
             <div class="form-group mb-3">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
@@ -193,7 +193,7 @@
                 </div>
             </div>
 
-            <h4 class="mt-5 mb-2">Additional Options</h4>
+            <h3 class="mt-5 mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
@@ -251,7 +251,7 @@
     </div>
 </form>
 
-<h4 class="mt-5 mb-3">Other actions</h4>
+<h3 class="mt-5 mb-4">Other Actions</h3>
 <div id="danger-zone">
     <a id="DeleteApp" class="btn btn-outline-danger mb-5" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>

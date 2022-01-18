@@ -2,7 +2,7 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
-        <h4 class="mt-5 mb-4">@Model.title </h4>
+        <h3 class="mt-5 mb-4">@Model.title </h3>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)

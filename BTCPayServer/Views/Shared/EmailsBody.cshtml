@@ -3,7 +3,7 @@
 <div class="row">
     <div class="col-lg-6">
         <div class="d-flex align-items-center justify-content-between mb-4">
-            <h2 class="mb-0">@ViewData["Title"]</h2>
+            <h3 class="mb-0">@ViewData["Title"]</h3>
             <div class="dropdown only-for-js" id="quick-fill">
                 <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
                     Quick Fill
@@ -71,18 +71,18 @@
                     <label asp-for="Settings.Password" class="form-label"></label>
                     <div class="input-group">
                         <input value="Configured" type="text" readonly class="form-control"/>
-                        <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
+                        <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword">Reset</button>
                     </div>
                 }
             </div>
             <input asp-for="PasswordSet" type="hidden"/>
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+            <button type="submit" class="btn btn-primary mt-2" name="command" value="Save" id="Save">Save</button>
         </div>
     </div>
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
-                <h4 class="mt-5 mb-3">Testing</h4>
+                <h3 class="mt-5 mb-3">Testing</h3>
                 <p>
                     To test your settings, enter an email address below.
                 </p>
@@ -90,7 +90,7 @@
                 <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test">Send Test Email</button>
+            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test">Send Test Email</button>
         </div>
     </div>
 </form>

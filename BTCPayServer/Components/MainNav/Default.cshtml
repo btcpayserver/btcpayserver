@@ -35,7 +35,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="UIStores" asp-action="PaymentMethods" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.GeneralSettings) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Integrations) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
+                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.General) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Integrations) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>
                                 </a>
@@ -232,7 +232,7 @@
                 </a>
             </li>
             <li class="nav-item dropup">
-                <a class="nav-link js-scroll-trigger" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
+                <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="account"/>
                     <span>Account</span>
                 </a>   

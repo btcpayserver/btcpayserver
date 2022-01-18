@@ -6,6 +6,7 @@
 
 <div class="row">
     <div class="col-lg-8">
+        <h3 class="mb-0 mb-4">@ViewData["Title"]</h3>
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>
@@ -15,7 +16,7 @@
             <vc:ui-extension-point location="store-integrations-list" model="@Model" />
         </ul>
 
-        <h4 class="mt-5 mb-3">Other Integrations</h4>
+        <h3 class="mt-5 mb-3">Other Integrations</h3>
         <p>Take a look at documentation for the list of other integrations we support and the directions on how to enable them:</p>
         <ul>
             <li><a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank" rel="noreferrer noopener">WooCommerce</a></li>

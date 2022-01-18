@@ -1,7 +1,7 @@
 @model GeneralSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.GeneralSettings, "General Settings", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
 }
 
 <div class="row">
@@ -11,7 +11,7 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
         <form method="post">
-            <h4 class="mb-3">General</h4>
+            <h3 class="mb-3">General</h3>
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
                 <input asp-for="Id" readonly class="form-control" />
@@ -27,10 +27,9 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
             
-            <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save Store Settings</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
         </form>
-
-        <h4 class="mt-5 mb-3">Services</h4>
+        <h3 class="mt-5 mb-3">Services</h3>
         <div class="table-responsive-md">
             <table class="table table-hover mt-1 mb-5">
                 <thead>
@@ -53,12 +52,11 @@
                 </tbody>
             </table>
         </div>
-
         @if (Model.CanDelete)
         {
-            <h4 class="mt-5 mb-3">Other actions</h4>
+            <h3 class="mt-5 mb-3">Additional Actions</h3>
             <div id="danger-zone">
-                <a id="DeleteStore" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Model.StoreName</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
+                <a id="DeleteStore" class="btn btn-outline-danger mb-5 mt-2" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Model.StoreName</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
             </div>
         }
     </div>

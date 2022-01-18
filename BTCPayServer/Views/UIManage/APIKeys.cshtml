@@ -3,16 +3,19 @@
 @{
     ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
 }
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">@ViewData["Title"]</h3>
+    <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">
+        <span class="fa fa-plus"></span>
+        Generate Key
+    </a>
+</div>
 <p>
     The <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay
     Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/Development/GreenFieldExample/" rel="noreferrer noopener">use case examples</a>).
     For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "UIHome")#section/Authentication" target="_blank" rel="noreferrer noopener">API authentication docs</a>.
 </p>
-<a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">
-    <span class="fa fa-plus"></span>
-    Generate Key
-</a>
+
 @if (Model.ApiKeyDatas.Any())
 {
     <table class="table table-lg">

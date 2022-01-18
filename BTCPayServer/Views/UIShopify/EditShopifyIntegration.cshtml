@@ -28,7 +28,7 @@
             <input class="form-control" id="exampleUrl" name="exampleUrl">
         </div>
 
-        <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Connect to Shopify</button>
+        <button name="command" type="submit" class="btn btn-primary mt-3" value="ShopifySaveCredentials">Connect to Shopify</button>
     }
     else
     {
@@ -77,7 +77,7 @@
             Started: @Model.IntegratedAt.Value.ToBrowserDate()
         </p>
 
-        <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">
+        <button name="command" type="submit" class="btn btn-danger mt-3" value="ShopifyClearCredentials">
             Stop Shopify calls and clear credentials
         </button>
     }

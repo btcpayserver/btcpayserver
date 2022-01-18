@@ -47,7 +47,7 @@
             </div>
         </div>
         <div class="col-lg-6">
-            <h4 class="mt-5 mb-4">Appearance</h4>
+            <h3 class="mt-5 mb-4">Appearance</h3>
             <div class="form-group">
                 <label asp-for="DefaultView" class="form-label" data-required></label>
                 <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
@@ -67,7 +67,7 @@
                 <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
             </div>
             <section id="discounts" class="p-0">
-                <h4 class="mt-5 mb-4">Discounts</h4>
+                <h3 class="mt-5 mb-4">Discounts</h3>
                 <div class="form-check mb-4">
                     <input asp-for="ShowDiscount" type="checkbox" class="form-check-input" />
                     <label asp-for="ShowDiscount" class="form-check-label"></label>
@@ -78,7 +78,7 @@
                 </div>
             </section>
             <section id="custom-payments" class="p-0">
-                <h4 class="mt-5 mb-4">Custom Payments</h4>
+                <h3 class="mt-5 mb-4">Custom Payments</h3>
                 <div class="form-group mb-4 d-flex align-items-center">
                     <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
                     <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
@@ -93,7 +93,7 @@
                 </div>
             </section>
             <section id="tips" class="p-0">
-                <h4 class="mt-5 mb-4">Tips</h4>
+                <h3 class="mt-5 mb-4">Tips</h3>
                 <div class="form-group mb-4 d-flex align-items-center">
                     <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                     <label asp-for="EnableTips" class="form-label mb-0"></label>
@@ -114,7 +114,7 @@
             </section>
         </div>
         <div class="col-lg-9">
-            <h4 class="mt-5 mb-2">Additional Options</h4>
+            <h3 class="mt-5 mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
@@ -252,7 +252,7 @@
     </div>
 </form>
 
-<h4 class="mt-5 mb-3">Other actions</h4>
+<h3 class="mt-5 mb-4">Other Actions</h3>
 <div id="danger-zone">
     <a id="DeleteApp" class="btn btn-outline-danger mb-5" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>

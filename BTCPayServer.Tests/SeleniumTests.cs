@@ -274,11 +274,11 @@ namespace BTCPayServer.Tests
         {
             using var s = CreateSeleniumTester();
             await s.StartAsync();
-            s.RegisterNewUser(isAdmin: true);
+            s.RegisterNewUser(true);
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
             if (s.Driver.PageSource.Contains("Configured"))
             {
-                s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+                s.Driver.FindElement(By.Id("ResetPassword")).Submit();
                 s.FindAlertMessage();
             }
             CanSetupEmailCore(s);
@@ -406,7 +406,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
             Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
 
-            s.GoToStore();
+            s.GoToStore(StoreNavPages.PaymentMethods);
             Assert.Contains(storeName, s.Driver.PageSource);
             Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
             Assert.True(s.Driver.PageSource.Contains(offchainHint),
@@ -518,7 +518,7 @@ namespace BTCPayServer.Tests
             // Alice should be able to delete the store
             s.Logout();
             s.LogIn(alice);
-            s.GoToStore(StoreNavPages.GeneralSettings);
+            s.GoToStore(StoreNavPages.General);
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -791,7 +791,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(server.ServerUri.AbsoluteUri, s.Driver.PageSource);
 
             TestLogs.LogInformation("Let's see if we can generate an event");
-            s.GoToStore();
+            s.GoToStore(StoreNavPages.PaymentMethods);
             s.AddDerivationScheme();
             s.CreateInvoice();
             var request = await server.GetNextRequest();
@@ -840,7 +840,7 @@ namespace BTCPayServer.Tests
             server.Done();
 
             TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
-            s.GoToStore(StoreNavPages.GeneralSettings);
+            s.GoToStore(StoreNavPages.General);
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -913,7 +913,7 @@ namespace BTCPayServer.Tests
             receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-            s.GoToStore(storeId);
+            s.GoToStore(storeId, StoreNavPages.PaymentMethods);
             s.GenerateWallet(cryptoCode, "", true);
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.FindElement(By.Id("SectionNav-Receive")).Click();
@@ -929,7 +929,7 @@ namespace BTCPayServer.Tests
             var result =
                 await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
             Assert.True(result.IsWatchOnly);
-            s.GoToStore(storeId);
+            s.GoToStore(storeId, StoreNavPages.PaymentMethods);
             var mnemonic = s.GenerateWallet(cryptoCode, "", true, true);
 
             //lets import and save private keys
@@ -1302,7 +1302,7 @@ namespace BTCPayServer.Tests
 
             s.RegisterNewUser(true);
             s.CreateNewStore();
-            s.GoToStore();
+            s.GoToStore(StoreNavPages.PaymentMethods);
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
@@ -1345,7 +1345,7 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
-            s.GoToStore();
+            s.GoToStore(StoreNavPages.PaymentMethods);
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             // LNURL is false by default
@@ -1539,7 +1539,7 @@ namespace BTCPayServer.Tests
             //ensure ln address is not available as Lightning is not enable
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
 
-            s.GoToStore(s.StoreId);
+            s.GoToStore(s.StoreId, StoreNavPages.PaymentMethods);
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             //ensure ln address is not available as lnurl is not configured
             s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
@@ -1709,18 +1709,17 @@ retry:
         {
             s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
             s.Driver.FindElement(By.CssSelector("#quick-fill .dropdown-menu .dropdown-item:first-child")).Click();
-
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
-            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
-            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);
-            s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+            s.Driver.FindElement(By.Id("ResetPassword")).SendKeys(Keys.Enter);
             s.FindAlertMessage();
             Assert.DoesNotContain("Configured", s.Driver.PageSource);
             Assert.Contains("test_fix", s.Driver.PageSource);

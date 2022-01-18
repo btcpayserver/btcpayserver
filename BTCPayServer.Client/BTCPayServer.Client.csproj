@@ -14,7 +14,7 @@
         <RepositoryType>git</RepositoryType>
     </PropertyGroup>
   <PropertyGroup>
-    <Version Condition=" '$(Version)' == '' ">1.5.0</Version>
+    <Version Condition=" '$(Version)' == '' ">1.6.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

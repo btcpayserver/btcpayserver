@@ -14,7 +14,6 @@ using BTCPayServer.PaymentRequest;
 using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Custodian;
 using BTCPayServer.Storage;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
@@ -112,11 +111,6 @@ namespace BTCPayServer.Hosting
                 };
             });
             services.AddScoped<Fido2Service>();
-            services.AddSingleton<CustodianRegistry>();
-            
-            // TODO Should we keep this here? Other repositories are not listed here, but if I don't put this line, it doesn't work.
-            services.AddSingleton<CustodianAccountRepository>();
-
             services.AddSingleton<UserLoginCodeService>();
 			services.AddSingleton<LnurlAuthService>();
 			services.AddSingleton<LightningAddressService>();

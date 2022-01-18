@@ -37,14 +37,14 @@
         </a>
     </div>
     
-    @if (Model.Services.Any())
+    @if (Model.Services != null && Model.Services.Any())
     {
         <div permission="@Policies.CanModifyServerSettings" class="mt-4">
             <h5 class="mb-3">Services</h5>
             <div id="Services" class="services-list">
                 @foreach (var service in Model.Services)
                 {
-                    @if (!string.IsNullOrEmpty(service.CryptoCode))
+                    @if (string.IsNullOrEmpty(service.Link))
                     {
                         <a asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
                             <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />

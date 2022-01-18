@@ -245,10 +245,12 @@ namespace BTCPayServer.Tests
         {
             AddLightningNode(null, null, true);
         }
+        
         public void AddLightningNode(LightningConnectionType? connectionType = null, bool test = true)
         {
             AddLightningNode(null, connectionType, test);
         }
+        
         public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
         {
             cryptoCode ??= "BTC";

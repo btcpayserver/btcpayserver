@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Components.MainNav;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -35,40 +34,45 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            
-            var services = _externalServiceOptions.Value.ExternalServices.ToList()
-                .Where(service => _externalServiceTypes.Contains(service.Type))
-                .Select(service => new AdditionalServiceViewModel
-                {
-                    DisplayName = service.DisplayName,
-                    ServiceName = service.ServiceName,
-                    CryptoCode = service.CryptoCode,
-                    Type = service.Type.ToString()
-                })
-                .ToList();
-            
-            // other services
-            foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
-            {
-                if (_externalServiceNames.Contains(key))
-                {
-                    services.Add(new AdditionalServiceViewModel
-                    {
-                        DisplayName = key,
-                        ServiceName = key,
-                        Type = key.Replace(" ", ""),
-                        Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
-                    });
-                }
-            }
 
             var vm = new LightningViewModel
             {
                 CryptoCode = cryptoCode,
-                StoreId = storeId,
-                Services = services
+                StoreId = storeId
             };
             await SetExistingValues(store, vm);
+
+            if (vm.LightningNodeType == LightningNodeType.Internal)
+            {
+                var services = _externalServiceOptions.Value.ExternalServices.ToList()
+                    .Where(service => _externalServiceTypes.Contains(service.Type))
+                    .Select(service => new AdditionalServiceViewModel
+                    {
+                        DisplayName = service.DisplayName,
+                        ServiceName = service.ServiceName,
+                        CryptoCode = service.CryptoCode,
+                        Type = service.Type.ToString()
+                    })
+                    .ToList();
+            
+                // other services
+                foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+                {
+                    if (_externalServiceNames.Contains(key))
+                    {
+                        services.Add(new AdditionalServiceViewModel
+                        {
+                            DisplayName = key,
+                            ServiceName = key,
+                            Type = key.Replace(" ", ""),
+                            Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
+                        });
+                    }
+                }
+
+                vm.Services = services;
+            }
+            
             return View(vm);
         }
         

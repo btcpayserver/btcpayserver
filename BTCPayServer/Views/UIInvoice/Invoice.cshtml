@@ -14,33 +14,29 @@
 
 @section PageFootContent {
     <script>
+        const alertClasses = { "Settled (marked)": 'success', "Invalid (marked)": 'danger' }
+        
         function changeInvoiceState(invoiceId, newState) {
-            var toggleButton = $("#markStatusDropdownMenuButton");
+            console.log(invoiceId, newState)
+            const toggleButton = $("#markStatusDropdownMenuButton");
             toggleButton.attr("disabled", "disabled");
 
-            $.post(invoiceId + "/changestate/" + newState)
-                .done(function (data) {
-                    var alertClassModifier = {
-                        "settled (marked)": 'success',
-                        "invalid (marked)": 'danger'
-                    }[data.statusString];
-                    var statusHtml = "<span class='fs-6 fw-normal badge bg-" + alertClassModifier + "'>" + data.statusString + " <span class='fa fa-check'></span></span>"
-                    toggleButton.replaceWith(statusHtml);
+            $.post(`${invoiceId}/changestate/${newState}`)
+                .done(({ statusString }) => {
+                    const alertClass = alertClasses[statusString];
+                    toggleButton.replaceWith(`<span class="fs-6 fw-normal badge bg-${alertClass}">${statusString} <span class="fa fa-check"></span></span>`);
                 })
                 .fail(function () {
                     toggleButton.removeAttr("disabled");
                     alert("Invoice state update failed");
                 });
         }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            $("[data-change-invoice-status-button]").click(function (e) {
-                var id = e.currentTarget.getAttribute('data-id');
-                var status = e.currentTarget.getAttribute('data-status');
-                
-                changeInvoiceState(id, status);
-            });
-        });
+        
+        delegate('click', '[data-change-invoice-status-button]', e => {
+            const button = e.target.closest('[data-change-invoice-status-button]')
+            const { id, status } = button.dataset
+            changeInvoiceState(id, status)
+        })
     </script>
 }
 

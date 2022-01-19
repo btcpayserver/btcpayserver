@@ -5330,7 +5330,7 @@ fieldset:disabled .btn {
   width: 100%;
   color: var(--btcpay-body-text);
   pointer-events: auto;
-  background-color: var(--btcpay-black);
+  background-color: var(--btcpay-bg-tile);
   background-clip: padding-box;
   border: 1px solid var(--btcpay-body-border-medium);
   border-radius: 0.3rem;
@@ -6087,7 +6087,7 @@ fieldset:disabled .btn {
 }
 
 .offcanvas-backdrop.show {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .offcanvas-header {

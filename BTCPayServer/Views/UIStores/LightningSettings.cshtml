@@ -10,7 +10,7 @@
     <div class="col-lg-10 col-xl-9">
         <div class="mb-5">
             <h4 class="mb-3">@ViewData["Title"]</h4>
-            <div class="text-break">
+            <div class="text-break mb-3">
                 <span class="me-2">@Model.LightningNodeType Node</span>
                 @if (Model.LightningNodeType != LightningNodeType.Internal)
                 {
@@ -39,6 +39,19 @@
                     Change connection
                 </a>
             </div>
+            
+            <form method="post"
+                  asp-action="SetLightningNodeEnabled"
+                  asp-route-cryptoCode="@Model.CryptoCode"
+                  asp-route-storeId="@Model.StoreId"
+                  class="d-flex align-items-center"
+                  style="min-width:7rem">
+                <button type="submit" class="btcpay-toggle me-2 @if (Model.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(Model.Enabled ? "false" : "true")" id="@($"{Model.CryptoCode}LightningEnabled")">@(Model.Enabled ? "Disable" : "Enable")</button>
+                <span>
+                    Enabled
+                </span>
+            </form>
+            
             <form method="post" class="mt-n2 text-center">
                 <div class="text-start">
                     <h4 class="mt-5 mb-3">Payment</h4>

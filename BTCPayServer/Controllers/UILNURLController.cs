@@ -463,7 +463,7 @@ namespace BTCPayServer
                     Message = "LNURL is required for lightning addresses but has not yet been enabled.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction("PaymentMethods", "UIStores", new { storeId });
+                return RedirectToAction("Payment", "UIStores", new { storeId });
             }
             var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
                                            new LightningAddressSettings();

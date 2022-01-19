@@ -70,42 +70,42 @@ namespace BTCPayServer.Tests
 
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
+                // Setup Lightning
                 var controller = user.GetController<UIStoresController>();
                 var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(await controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
                 var response = await controller.SetLightningNodeEnabled(user.StoreId, cryptoCode, false);
                 Assert.IsType<RedirectToActionResult>(response);
 
-                // Get enabled state from overview action
-                PaymentMethodsViewModel paymentMethodsModel;
-                response = controller.PaymentMethods();
-                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
-                var lnNode = paymentMethodsModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
-                Assert.NotNull(lnNode);
-                Assert.False(lnNode.Enabled);
+                // Get enabled state from settings
+                LightningSettingsViewModel lnSettingsModel;
+                response = controller.LightningSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                lnSettingsModel = (LightningSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.NotNull(lnSettingsModel?.ConnectionString);
+                Assert.False(lnSettingsModel.Enabled);
 
+                // Setup wallet
                 WalletSetupViewModel setupVm;
                 var storeId = user.StoreId;
                 response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new WalletSetupRequest());
                 Assert.IsType<ViewResult>(response);
 
-                // Get enabled state from overview action
-                response = controller.PaymentMethods();
-                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
-                var derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
-                Assert.NotNull(derivationScheme);
-                Assert.True(derivationScheme.Enabled);
+                // Get enabled state from settings
+                response = controller.WalletSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                var onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.NotNull(onchainSettingsModel?.DerivationScheme);
+                Assert.True(onchainSettingsModel.Enabled);
 
                 // Disable wallet
-                response = controller.SetWalletEnabled(storeId, cryptoCode, false).GetAwaiter().GetResult();
+                onchainSettingsModel.Enabled = false;
+                response = controller.UpdateWalletSettings(onchainSettingsModel).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.PaymentMethods();
-                paymentMethodsModel = (PaymentMethodsViewModel)Assert.IsType<ViewResult>(response).Model;
-                derivationScheme = paymentMethodsModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
-                Assert.NotNull(derivationScheme);
-                Assert.False(derivationScheme.Enabled);
+                response = controller.WalletSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.NotNull(onchainSettingsModel?.DerivationScheme);
+                Assert.False(onchainSettingsModel.Enabled);
 
-                var oldScheme = derivationScheme.Value;
+                var oldScheme = onchainSettingsModel.DerivationScheme;
 
                 invoice = await user.BitPay.CreateInvoiceAsync(
                     new Invoice
@@ -430,7 +430,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore(StoreNavPages.PaymentMethods);
+                s.GoToStore(StoreNavPages.Payment);
                 s.AddDerivationScheme("LTC");
                 s.AddLightningNode(LightningConnectionType.CLightning);
                 //there should be three now

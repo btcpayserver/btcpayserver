@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
@@ -155,7 +156,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.PaymentMethods.ToString()}")).Click();
+            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.Payment.ToString()}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -164,7 +165,7 @@ namespace BTCPayServer.Tests
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             var isImport = !string.IsNullOrEmpty(seed);
-            Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            GoToWalletSettings(cryptoCode);
 
             // Replace previous wallet case
             if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
@@ -228,10 +229,7 @@ namespace BTCPayServer.Tests
         /// <param name="derivationScheme"></param>
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
-            if (Driver.PageSource.Contains($"id=\"Modify{cryptoCode}\""))
-            {
-                Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            }
+            GoToWalletSettings(cryptoCode);
 
             Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
             Driver.FindElement(By.Id("ImportXpubLink")).Click();
@@ -254,11 +252,7 @@ namespace BTCPayServer.Tests
         public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
         {
             cryptoCode ??= "BTC";
-            if (Driver.PageSource.Contains($"id=\"Modify-Lightning{cryptoCode}\""))
-            {
-                Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            }
-
+            Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
             if (Driver.PageSource.Contains("id=\"SetupLightningNodeLink\""))
             {
                 Driver.FindElement(By.Id("SetupLightningNodeLink")).Click();
@@ -392,22 +386,18 @@ namespace BTCPayServer.Tests
             }
         }
         
-        public void GoToWalletSettings(string storeId, string cryptoCode = "BTC")
+        public void GoToWalletSettings(string cryptoCode = "BTC")
         {
-            try
+            Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            if (Driver.PageSource.Contains("id=\"SectionNav-Settings\""))
             {
-                GoToStore(storeId, StoreNavPages.PaymentMethods);
-                Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            }
-            catch (NoSuchElementException)
-            {
-                GoToWallet(new WalletId(storeId, cryptoCode), WalletsNavPages.Settings);
+                Driver.FindElement(By.Id("SectionNav-Settings")).Click();
             }
         }
 
         public void GoToLightningSettings(string cryptoCode = "BTC")
         {
-            GoToStore(StoreNavPages.PaymentMethods);
+            GoToStore(StoreNavPages.Payment);
             Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
             // if Lightning is already set up we need to navigate to the settings
             if (Driver.PageSource.Contains("id=\"SectionNav-LightningSettings\""))

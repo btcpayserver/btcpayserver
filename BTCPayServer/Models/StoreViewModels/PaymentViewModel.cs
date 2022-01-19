@@ -1,16 +1,11 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
-    public class PaymentMethodsViewModel
+    public class PaymentViewModel
     {
         public string Id { get; set; }
-        public List<StoreDerivationScheme> DerivationSchemes { get; set; }
-        public List<StoreLightningNode> LightningNodes { get; set; }
-        public bool HintWallet { get; set; }
-        public bool HintLightning { get; set; }
 
         [Display(Name = "Allow anyone to create invoice")]
         public bool AnyoneCanCreateInvoice { get; set; }

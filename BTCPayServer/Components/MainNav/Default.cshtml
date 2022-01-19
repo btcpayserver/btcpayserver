@@ -35,7 +35,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.PaymentMethods) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.General) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Integrations) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
+                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.Payment) @ViewData.IsActivePage(StoreNavPages.Rates) @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance) @ViewData.IsActivePage(StoreNavPages.General) @ViewData.IsActivePage(StoreNavPages.Tokens) @ViewData.IsActivePage(StoreNavPages.Users) @ViewData.IsActivePage(StoreNavPages.Integrations) @ViewData.IsActivePage(StoreNavPages.Webhooks)" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>
                                 </a>
@@ -65,7 +65,7 @@
                                         }
                                         else
                                         {
-                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Modify{scheme.Crypto}")">
+                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "disabled")"></span>
                                                 <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
                                             </a>

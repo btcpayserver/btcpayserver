@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
-                return RedirectToAction(nameof(PaymentMethods), new { storeId = vm.StoreId });
+                return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
             }
             return ConfirmAddresses(vm, strategy);
         }
@@ -362,7 +362,7 @@ namespace BTCPayServer.Controllers
 
             TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
-            return RedirectToAction(nameof(PaymentMethods), new { storeId });
+            return RedirectToAction(nameof(Payment), new { storeId });
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
@@ -381,6 +381,7 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
             var client = _ExplorerProvider.GetExplorerClient(network);
 
@@ -389,6 +390,7 @@ namespace BTCPayServer.Controllers
                 StoreId = storeId,
                 CryptoCode = cryptoCode,
                 WalletId = new WalletId(storeId, cryptoCode),
+                Enabled = !excludeFilters.Match(derivation.PaymentId),
                 Network = network,
                 IsHotWallet = derivation.IsHotWallet,
                 Source = derivation.Source,
@@ -447,8 +449,19 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            bool needUpdate = false;
+            var storeBlob = store.GetStoreBlob();
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
+            var currentlyEnabled = !excludeFilters.Match(derivation.PaymentId);
+            bool enabledChanged = currentlyEnabled != vm.Enabled;
+            bool needUpdate = enabledChanged;
             string errorMessage = null;
+            
+            if (enabledChanged)
+            {
+                storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
+                store.SetStoreBlob(storeBlob);
+            }
+            
             if (derivation.Label != vm.Label)
             {
                 needUpdate = true;
@@ -466,8 +479,8 @@ namespace BTCPayServer.Controllers
 
             for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
             {
-                KeyPath accountKeyPath = null;
-                HDFingerprint? rootFingerprint = null;
+                KeyPath accountKeyPath;
+                HDFingerprint? rootFingerprint;
 
                 try
                 {
@@ -512,7 +525,14 @@ namespace BTCPayServer.Controllers
 
                 if (string.IsNullOrEmpty(errorMessage))
                 {
-                    TempData[WellKnownTempData.SuccessMessage] = "Wallet settings successfully updated";
+                    var successMessage = "Wallet settings successfully updated.";
+                    if (enabledChanged)
+                    {
+                        _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                        successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
+                    }
+                
+                    TempData[WellKnownTempData.SuccessMessage] = successMessage;
                 }
                 else
                 {
@@ -690,40 +710,6 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost("{storeId}/onchain/{cryptoCode}/status")]
-        public async Task<IActionResult> SetWalletEnabled(string storeId, string cryptoCode, bool enabled)
-        {
-            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
-            if (checkResult != null)
-            {
-                return checkResult;
-            }
-
-            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            if (derivation == null)
-            {
-                return NotFound();
-            }
-
-            var wallet = _WalletProvider.GetWallet(network);
-            if (wallet == null)
-            {
-                return NotFound();
-            }
-
-            var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            var storeBlob = store.GetStoreBlob();
-            storeBlob.SetExcluded(paymentMethodId, !enabled);
-            store.SetStoreBlob(storeBlob);
-            await _Repo.UpdateStore(store);
-            _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
-
-            TempData[WellKnownTempData.SuccessMessage] =
-                $"{network.CryptoCode} on-chain payments are now {(enabled ? "enabled" : "disabled")} for this store.";
-
-            return RedirectToAction(nameof(PaymentMethods), new { storeId });
-        }
-
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
         public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
         {
@@ -748,7 +734,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"On-Chain payment for {network.CryptoCode} has been removed.";
 
-            return RedirectToAction(nameof(PaymentMethods), new { storeId });
+            return RedirectToAction(nameof(Payment), new { storeId });
         }
 
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)

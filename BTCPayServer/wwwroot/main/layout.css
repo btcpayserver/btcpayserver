@@ -391,6 +391,10 @@
         transform: translate(-50%, -50%) rotate(-45deg);
     }
 
+    #mainContent {
+        z-index: 0;
+    }
+
     #mainContent > section {
         padding: var(--btcpay-space-m) 0 var(--btcpay-space-xl);
     }

@@ -1,0 +1,65 @@
+@using BTCPayServer.Lightning
+@using BTCPayServer.Client
+@model LightningViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UILightning/_Nav";
+    ViewData.SetActivePage(StoreNavPages.Lightning, $"{Model.CryptoCode} Lightning", Context.GetStoreData().Id);
+}
+
+<div class="mb-5">
+    <h4 class="mb-3">@ViewData["Title"]</h4>
+    <div class="mb-3">
+        <span class="me-2">@Model.LightningNodeType Node</span>
+        
+        @if (Model.LightningNodeType != LightningNodeType.Internal)
+        {
+            <span class="me-2">
+                @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
+                {
+                    @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
+                    <span>(@cs.BaseUri)</span>
+                }
+                else
+                {
+                    @Model.ConnectionString
+                }
+            </span>
+        }
+
+        <a class="text-secondary"
+           asp-controller="UIPublicLightningNodeInfo"
+           asp-action="ShowLightningNodeInfo"
+           asp-route-cryptoCode="@Model.CryptoCode"
+           asp-route-storeId="@Model.StoreId"
+           target="_blank">
+            Public Node Info
+        </a>
+    </div>
+    
+    @if (Model.Services != null && Model.Services.Any())
+    {
+        <div permission="@Policies.CanModifyServerSettings" class="mt-4">
+            <h5 class="mb-3">Services</h5>
+            <div id="Services" class="services-list">
+                @foreach (var service in Model.Services)
+                {
+                    @if (string.IsNullOrEmpty(service.Link))
+                    {
+                        <a asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
+                            <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                            <h6>@service.DisplayName</h6>
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@service.Link" target="_blank" rel="noreferrer noopener" class="service" id="@($"Service-{service.ServiceName}")">
+                            <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                            <h6>@service.DisplayName</h6>
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>

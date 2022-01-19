@@ -2,9 +2,11 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -15,7 +17,66 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
+        private readonly ExternalServiceTypes[] _externalServiceTypes =
+        {
+            ExternalServiceTypes.Spark,
+            ExternalServiceTypes.RTL,
+            ExternalServiceTypes.ThunderHub
+        };
+        private readonly string[] _externalServiceNames =
+        {
+            "Lightning Terminal"
+        };
+        
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> Lightning(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var vm = new LightningViewModel
+            {
+                CryptoCode = cryptoCode,
+                StoreId = storeId
+            };
+            await SetExistingValues(store, vm);
+
+            if (vm.LightningNodeType == LightningNodeType.Internal)
+            {
+                var services = _externalServiceOptions.Value.ExternalServices.ToList()
+                    .Where(service => _externalServiceTypes.Contains(service.Type))
+                    .Select(service => new AdditionalServiceViewModel
+                    {
+                        DisplayName = service.DisplayName,
+                        ServiceName = service.ServiceName,
+                        CryptoCode = service.CryptoCode,
+                        Type = service.Type.ToString()
+                    })
+                    .ToList();
+            
+                // other services
+                foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+                {
+                    if (_externalServiceNames.Contains(key))
+                    {
+                        services.Add(new AdditionalServiceViewModel
+                        {
+                            DisplayName = key,
+                            ServiceName = key,
+                            Type = key.Replace(" ", ""),
+                            Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
+                        });
+                    }
+                }
+
+                vm.Services = services;
+            }
+            
+            return View(vm);
+        }
+        
+        [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
         public async Task<IActionResult> SetupLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -31,7 +92,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost("{storeId}/lightning/{cryptoCode}")]
+        [HttpPost("{storeId}/lightning/{cryptoCode}/setup")]
         public async Task<IActionResult> SetupLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;

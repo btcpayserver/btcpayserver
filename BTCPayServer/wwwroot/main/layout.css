@@ -254,7 +254,6 @@
 
 #SectionNav .nav-link {
     color: var(--btcpay-nav-link);
-    margin-right: var(--btcpay-space-l);
     border-bottom: var(--border-size) solid transparent;
     padding: var(--btcpay-space-m) 0;
     font-weight: var(--btcpay-font-weight-semibold);
@@ -435,6 +434,7 @@
     }
 
     #SectionNav .nav-link {
+        margin-right: 1.5rem;
         padding: var(--btcpay-space-s) 0;
     }
 }
@@ -501,6 +501,7 @@
     }
 
     #SectionNav .nav-link {
+        margin-right: var(--btcpay-space-l);
         margin-bottom: calc(var(--border-size) * -1);
         padding: var(--btcpay-space-m) 0;
     }

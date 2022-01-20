@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, $"Update Point of Sale: {Model.AppName}", Model.Id);
+    ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 }
 
 <partial name="_StatusMessage" />

@@ -171,6 +171,21 @@
 }
 
 /* Theme Switch */
+#mainNav .btcpay-theme-switch {
+    width: 100%;
+    justify-content: space-between;
+}
+
+#mainNav .btcpay-theme-switch svg {
+    order: 1;
+    margin: 0 !important;
+}
+
+#mainNav .btcpay-theme-switch span {
+    order: 0;
+    margin: 0;
+}
+
 .btcpay-theme-switch {
     display: inline-flex;
     align-items: center;
@@ -184,7 +199,7 @@
     width: 1rem;
 }
 
-.btcpay-theme-switch svg[class="d-inline-block"] + span {
+.btcpay-theme-switch svg ~ span {
     margin-left: var(--btcpay-space-xs);
 }
 

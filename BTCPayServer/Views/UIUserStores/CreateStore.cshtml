@@ -19,6 +19,16 @@
                 <input asp-for="Name" class="form-control" required />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="DefaultCurrency" class="form-label" data-required></label>
+                <input asp-for="DefaultCurrency" class="form-control" style="max-width:10ch;" />
+                <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PreferredExchange" class="form-label" data-required></label>
+                <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-auto"></select>
+                <span asp-validation-for="PreferredExchange" class="text-danger"></span>
+            </div>
             <div class="form-group mt-4">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create" />
             </div>

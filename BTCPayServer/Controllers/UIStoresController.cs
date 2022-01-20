@@ -104,7 +104,6 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly NBXplorerDashboard _Dashboard;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
-        public string CreatedStoreId { get; set; }
 
         [TempData]
         public bool StoreNotConfigured

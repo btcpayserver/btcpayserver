@@ -1,3 +1,5 @@
+using System;
+
 namespace BTCPayServer.Rating
 {
     public enum RateSource
@@ -25,5 +27,13 @@ namespace BTCPayServer.Rating
             Url = url;
             Source = source;
         }
+        
+        public string DisplayName => 
+            Source switch
+            {
+                RateSource.Direct => Name,
+                RateSource.Coingecko => $"{Name} (via CoinGecko)",
+                _ => throw new NotSupportedException(Source.ToString())
+            };
     }
 }

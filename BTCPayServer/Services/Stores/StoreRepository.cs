@@ -186,10 +186,14 @@ namespace BTCPayServer.Services.Stores
             await ctx.SaveChangesAsync();
         }
 
-        public async Task<StoreData> CreateStore(string ownerId, string name)
+        public async Task<StoreData> CreateStore(string ownerId, string name, string defaultCurrency, string preferredExchange)
         {
-            var store = new StoreData() { StoreName = name };
-            SetNewStoreHints(ref store);
+            var store = new StoreData { StoreName = name };
+            var blob = store.GetStoreBlob();
+            blob.DefaultCurrency = defaultCurrency;
+            blob.PreferredExchange = preferredExchange;
+            store.SetStoreBlob(blob);
+            
             await CreateStore(ownerId, store);
             return store;
         }

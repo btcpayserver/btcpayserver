@@ -18,6 +18,8 @@ namespace BTCPayServer.Data
 {
     public class StoreBlob
     {
+        public static string StandardDefaultCurrency = "USD";
+        
         public StoreBlob()
         {
             InvoiceExpiration = TimeSpan.FromMinutes(15);
@@ -27,8 +29,7 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
         }
-
-
+        
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
@@ -45,7 +46,7 @@ namespace BTCPayServer.Data
         {
             get
             {
-                return string.IsNullOrEmpty(_DefaultCurrency) ? "USD" : _DefaultCurrency;
+                return string.IsNullOrEmpty(_DefaultCurrency) ? StandardDefaultCurrency : _DefaultCurrency;
             }
             set
             {

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -5,12 +7,13 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Security;
+using BTCPayServer.Rating;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
@@ -20,20 +23,30 @@ namespace BTCPayServer.Controllers
     {
         private readonly StoreRepository _repo;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RateFetcher _rateFactory;
+        public string CreatedStoreId { get; set; }
 
         public UIUserStoresController(
             UserManager<ApplicationUser> userManager,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            RateFetcher rateFactory)
         {
             _repo = storeRepository;
             _userManager = userManager;
+            _rateFactory = rateFactory;
         }
 
         [HttpGet("create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public IActionResult CreateStore()
         {
-            return View();
+            var vm = new CreateStoreViewModel
+            {
+                DefaultCurrency = StoreBlob.StandardDefaultCurrency,
+                Exchanges = GetExchangesSelectList(CoinGeckoRateProvider.CoinGeckoName)
+            };
+
+            return View(vm);
         }
 
         [HttpPost("create")]
@@ -42,20 +55,18 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
             {
+                vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
                 return View(vm);
             }
-            var store = await _repo.CreateStore(GetUserId(), vm.Name);
+            
+            var store = await _repo.CreateStore(GetUserId(), vm.Name, vm.DefaultCurrency, vm.PreferredExchange);
             CreatedStoreId = store.Id;
+                
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
             {
                 storeId = store.Id
             });
-        }
-
-        public string CreatedStoreId
-        {
-            get; set;
         }
 
         [HttpGet("{storeId}/me/delete")]
@@ -82,5 +93,14 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => _userManager.GetUserId(User);
+        
+        private SelectList GetExchangesSelectList(string selected) {
+            var exchanges = _rateFactory.RateProviderFactory
+                .GetSupportedExchanges()
+                .Where(r => !string.IsNullOrWhiteSpace(r.Name))
+                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase);
+            var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
+            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.Name), chosen.Id);
+        }
     }
 }

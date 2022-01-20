@@ -250,6 +250,12 @@
 /* Section Navigation / Subnav */
 #SectionNav {
     --border-size: 2px;
+    margin-bottom: var(--btcpay-space-l);
+    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+}
+
+#SectionNav .nav {
+    margin-bottom: calc(var(--border-size) * -1);
 }
 
 #SectionNav .nav-link {
@@ -402,18 +408,17 @@
     #SectionNav {
         --scroll-indicator-spacing: var(--btcpay-space-m);
         position: relative;
-        margin: 0 calc(var(--scroll-indicator-spacing) * -1) var(--btcpay-space-m);
-        padding: 0 var(--scroll-indicator-spacing);
     }
 
     #SectionNav .nav {
-        --btcpay-scrollbar-width: 0;
+        --btcpay-scrollbar-width: none;
         --btcpay-scrollbar-color: transparent;
 
         flex-wrap: nowrap;
-        overflow-x: auto;
+        overflow: auto visible;
         -webkit-overflow-scrolling: touch;
-        margin: 0 calc(var(--scroll-indicator-spacing) * -1) var(--btcpay-space-m);
+        margin-left: calc(var(--scroll-indicator-spacing) * -1);
+        margin-right: calc(var(--scroll-indicator-spacing) * -1);
         padding: 0 var(--scroll-indicator-spacing);
     }
 
@@ -423,23 +428,23 @@
         content: '';
         position: absolute;
         top: 0;
-        bottom: 0;
+        bottom: calc(var(--border-size) * -1);
         width: var(--btcpay-space-m);
     }
 
     #SectionNav:before {
         background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(255,255,255, 0));
-        left: 0;
+        left: calc(var(--scroll-indicator-spacing) * -1);
     }
 
     #SectionNav:after {
         background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(255,255,255, 0));
-        right: 0;
+        right: calc(var(--scroll-indicator-spacing) * -1);
     }
 
     #SectionNav .nav-link {
         margin-right: 1.5rem;
-        padding: var(--btcpay-space-s) 0;
+        border-bottom-color: var(--btcpay-body-border-light);
     }
 }
 
@@ -499,14 +504,17 @@
         padding-right: var(--btcpay-space-xl);
     }
 
-    #SectionNav {
-        margin-bottom: var(--btcpay-space-l);
+    #SectionNav .nav {
+        margin-top: calc(var(--btcpay-space-m) * -1);
+    }
+
+    #SectionNav .nav {
         border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
     }
 
     #SectionNav .nav-link {
+        margin-top: var(--btcpay-space-m);
         margin-right: var(--btcpay-space-l);
         margin-bottom: calc(var(--border-size) * -1);
-        padding: var(--btcpay-space-m) 0;
     }
 }

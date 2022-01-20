@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data;
@@ -18,8 +19,10 @@ public class CustodianAccountData
     [MaxLength(50)]
     public string CustodianCode { get; set; }
     
+    [JsonIgnore]
     public byte[] Blob { get; set; }
     
+    [JsonIgnore]
     public StoreData StoreData { get; set; }
     
     internal static void OnModelCreating(ModelBuilder builder)

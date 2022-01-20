@@ -1,19 +1,19 @@
 using System.Collections.Generic;
+using System.Net.Http;
 
-namespace BTCPayServer.Services.Custodian;
+namespace BTCPayServer.Services.Custodian.Client;
 
 public class CustodianRegistry
 {
     private IDictionary<string, ICustodian> _custodians;
 
-    public CustodianRegistry()
+    public CustodianRegistry(IHttpClientFactory httpClientFactory)
     {
         _custodians = new Dictionary<string, ICustodian>();
 
-        // TODO Dispatch event so plugins can register their own custodians!
-        register(Kraken.getInstance());
-
-        // TODO register a dummy custodian when/for running tests
+        // TODO Dispatch event so plugins can register their own custodians?
+        // TODO register a dummy custodian when/for running tests?
+        register(new KrakenClient(httpClientFactory));
     }
 
     public void register(ICustodian custodian)

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace BTCPayServer.Services.Custodian
+namespace BTCPayServer.Services.Custodian.Client
 {
     public class CustodianAccountRepository
     {

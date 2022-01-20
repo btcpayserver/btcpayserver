@@ -28,6 +28,12 @@ namespace BTCPayServer.Client
         public const string CanCreateUser = "btcpay.server.cancreateuser";
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
+        public const string CanViewCustodianAccounts = "btcpay.store.canviewcustodianaccounts";
+        public const string CanCreateCustodianAccounts = "btcpay.store.cancreatecustodianaccounts";
+        public const string CanModifyCustodianAccounts = "btcpay.store.canmodifycustodianaccounts";
+        public const string CanDepositToCustodianAccounts = "btcpay.store.candeposittocustodianaccount";
+        public const string CanWithdrawFromCustodianAccounts = "btcpay.store.canwithdrawfromcustodianaccount";
+        public const string CanTradeCustodianAccount = "btcpay.store.cantradecustodianaccount";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
         {
@@ -55,6 +61,12 @@ namespace BTCPayServer.Client
                 yield return CanUseLightningNodeInStore;
                 yield return CanCreateLightningInvoiceInStore;
                 yield return CanManagePullPayments;
+                yield return CanViewCustodianAccounts;
+                yield return CanCreateCustodianAccounts;
+                yield return CanModifyCustodianAccounts;
+                yield return CanDepositToCustodianAccounts;
+                yield return CanWithdrawFromCustodianAccounts;
+                yield return CanTradeCustodianAccount;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -184,6 +196,10 @@ namespace BTCPayServer.Client
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
                 case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:
                 case Policies.CanUseInternalLightningNode when this.Policy == Policies.CanModifyServerSettings:
+                case Policies.CanViewCustodianAccounts when this.Policy == Policies.CanModifyCustodianAccounts:
+                case Policies.CanViewCustodianAccounts when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanCreateCustodianAccounts when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanModifyCustodianAccounts when this.Policy == Policies.CanModifyStoreSettings:
                     return true;
                 default:
                     return false;

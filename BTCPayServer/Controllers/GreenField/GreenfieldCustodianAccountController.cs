@@ -6,7 +6,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Services.Custodian;
+using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/store/{storeId}/custodian-account")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewCustodianAccounts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ListCustodianAccount(string storeId)
         {
             var store = HttpContext.GetStoreData();
@@ -44,14 +44,32 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var custodianAccounts =_custodianAccountRepository.FindByStoreId(storeId);
+            var r = custodianAccounts.Result.Select(ToModel);
             
-            // TODO add field "assetBalances" and fill with data from the API. 
+            // TODO fill in the "assetBalances"
+
+            foreach (var custodianAccount in r)
+            {
+                var custodianCode = custodianAccount.CustodianCode;
+                custodianAccount.AssetBalances =
+                    _custodianRegistry.getAll()[custodianCode].GetAssetBalances(custodianAccount);
+            }
             
-            return Ok(custodianAccounts);
+            return Ok(r);
+        }
+
+        private CustodianAccountResponse ToModel(CustodianAccountData custodianAccount)
+        {
+            var r = new CustodianAccountResponse();
+            r.Id = custodianAccount.Id;
+            r.CustodianCode = custodianAccount.CustodianCode;
+            r.StoreId = custodianAccount.StoreId;
+            r.Config = custodianAccount.GetBlob().config;
+            return r;
         }
 
         [HttpPost("~/api/v1/store/{storeId}/custodian-account")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanCreateCustodianAccounts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateCustodianAccount(string storeId, CreateCustodianAccountRequest request)
         {
             request ??= new CreateCustodianAccountRequest();
@@ -77,7 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
          
         [HttpDelete("~/api/v1/custodian-account/{id}", Order = 1)]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanModifyCustodianAccounts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> DeleteCustodianAccount(string id)
         {
             //TODO implement
@@ -100,18 +118,24 @@ namespace BTCPayServer.Controllers.Greenfield
         // }
 
         [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, CreateCustodianAccountRequest request)
+        [Authorize(Policy = Policies.CanDepositToCustodianAccounts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod, CreateCustodianAccountRequest request)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId);
             var custodian = _custodianRegistry.getAll()[custodianAccount.Result.CustodianCode];
 
             if (custodian is ICanDeposit)
             {
-                var result = custodian.GetDepositAddress();
-                return OK(result);
+                var result = ((ICanDeposit) custodian).GetDepositAddress(paymentMethod);
+                return Ok(result);
             }
+            return this.CreateAPIError(400, "deposit-payment-method-not-supported",
+                $"Deposits to \"{custodian.getName()}\" are not supported using \"{paymentMethod}\".");
         }
+        
+        // TODO trade endpoint
+        
+        // TODO withdraw endpoint
     }
     
     

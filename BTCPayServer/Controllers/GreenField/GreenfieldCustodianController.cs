@@ -6,7 +6,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Services.Custodian;
+using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;

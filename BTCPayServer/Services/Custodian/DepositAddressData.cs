@@ -1,4 +1,4 @@
-namespace BTCPayServer.Services.Custodian;
+namespace BTCPayServer.Services.Custodian.Client;
 
 public class DepositAddressData
 {

@@ -156,7 +156,7 @@
 }
 
 #StoreSelectorToggle span {
-    margin: 0 auto 0 var(--btcpay-space-xs);
+    margin: 0 auto 0 var(--btcpay-space-s);
 }
 
 #StoreSelectorToggle:hover,

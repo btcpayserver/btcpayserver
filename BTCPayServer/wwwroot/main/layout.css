@@ -422,6 +422,10 @@
         padding: 0 var(--scroll-indicator-spacing);
     }
 
+    #SectionNav .nav::-webkit-scrollbar {
+        display: none;
+    }
+
     /* Horizontal scroll indicators */
     #SectionNav:before,
     #SectionNav:after {
@@ -433,12 +437,12 @@
     }
 
     #SectionNav:before {
-        background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(255,255,255, 0));
+        background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
         left: calc(var(--scroll-indicator-spacing) * -1);
     }
 
     #SectionNav:after {
-        background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(255,255,255, 0));
+        background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
         right: calc(var(--scroll-indicator-spacing) * -1);
     }
 

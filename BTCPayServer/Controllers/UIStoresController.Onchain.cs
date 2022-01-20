@@ -362,7 +362,7 @@ namespace BTCPayServer.Controllers
 
             TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(GeneralSettings), new { storeId });
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
@@ -734,7 +734,7 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] =
                 $"On-Chain payment for {network.CryptoCode} has been removed.";
 
-            return RedirectToAction(nameof(Payment), new { storeId });
+            return RedirectToAction(nameof(GeneralSettings), new { storeId });
         }
 
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)

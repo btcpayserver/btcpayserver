@@ -24,14 +24,13 @@
     {
         supported = null;
     }
-    
 }
 
 @if (supported is null)
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
         LNURL is not enabled on your store, which this print feature relies on.
-        <a asp-action="Payment" asp-controller="UIStores" asp-route-storeId="@Model.Store.Id" class="alert-link p-0">
+        <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="alert-link p-0">
             Enable LNURL
         </a>
     </div>

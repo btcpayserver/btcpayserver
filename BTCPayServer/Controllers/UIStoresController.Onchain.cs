@@ -163,7 +163,6 @@ namespace BTCPayServer.Controllers
                     await wallet.TrackAsync(strategy.AccountDerivation);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                     storeBlob.SetExcluded(paymentMethodId, false);
-                    storeBlob.Hints.Wallet = false;
                     storeBlob.PayJoinEnabled = strategy.IsHotWallet && !(vm.SetupRequest?.PayJoinEnabled is false);
                     store.SetStoreBlob(storeBlob);
                 }

@@ -170,8 +170,6 @@ namespace BTCPayServer.Data
         public EmailSettings EmailSettings { get; set; }
         public bool PayJoinEnabled { get; set; }
 
-        public StoreHints Hints { get; set; }
-
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 
@@ -179,12 +177,6 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         public TimeSpan RefundBOLT11Expiration { get; set; }
-
-        public class StoreHints
-        {
-            public bool Wallet { get; set; }
-            public bool Lightning { get; set; }
-        }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

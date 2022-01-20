@@ -10245,6 +10245,12 @@ input[type=number].hide-number-spin {
 .btcpay-status--enabled:before {
   background-color: #00B634;
 }
+.btcpay-status--pending {
+     background-color: rgba(255, 192, 67, .3);
+ }
+.btcpay-status--pending:before {
+    background-color: #FFC043;
+}
 .btcpay-status--disabled {
   background-color: rgba(251, 56, 61, .3);
 }

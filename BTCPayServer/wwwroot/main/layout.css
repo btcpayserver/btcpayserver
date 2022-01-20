@@ -75,6 +75,17 @@
     transition-duration: var(--btcpay-transition-duration-fast);
 }
 
+#mainNav .navbar-nav > li.nav-item .nav-link .icon {
+    flex-shrink: 0;
+}
+
+#mainNav .navbar-nav > li.nav-item .nav-link span {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #mainNav .navbar-nav > li.nav-item .nav-link:focus,
 #mainNav .navbar-nav > li.nav-item .nav-link:hover {
     color: var(--btcpay-header-link-accent);

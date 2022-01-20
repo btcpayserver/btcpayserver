@@ -38,7 +38,11 @@ else
     @if (Model.Options.Count > 0)
     {
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
-            <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill @(Model.CurrentStoreId == null ? "text-secondary" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</button>
+            <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "text-secondary" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <vc:icon symbol="store"/>
+                <span>@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</span>
+                <vc:icon symbol="caret-down"/>
+            </button>
             <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
                 @foreach (var option in Model.Options)
                 {

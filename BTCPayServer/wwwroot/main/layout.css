@@ -16,6 +16,7 @@
     --button-width: 40px;
     --button-height: 40px;
     --button-padding: 7px;
+    --icon-size: 1.5rem;
     
     height: var(--header-height);
     z-index: 1;
@@ -43,16 +44,10 @@
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav .nav-item i.fa,
 #mainNav .nav-item svg.icon {
-    font-size: 1.125rem;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: var(--icon-size);
+    height: var(--icon-size);
     margin-right: var(--btcpay-space-xs);
-}
-
-#mainNav .nav-item i.fa {
-    padding: .15rem 0 0 var(--btcpay-space-xs);
 }
 
 #mainNav .accordion-button {
@@ -139,8 +134,36 @@
 }
 
 #StoreSelectorToggle {
+    display: flex;
+    align-items: center;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--btcpay-header-link);
+}
+
+#StoreSelectorToggle::after {
+    content: none;
+}
+
+#StoreSelectorToggle .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    transition: color 0.15s ease-in-out;
+}
+
+#StoreSelectorToggle .icon.icon-caret-down {
+    color: var(--btcpay-body-text-muted);
+}
+
+#StoreSelectorToggle span {
+    margin: 0 auto 0 var(--btcpay-space-xs);
+}
+
+#StoreSelectorToggle:hover,
+#StoreSelectorToggle:focus,
+#StoreSelectorToggle:hover .icon,
+#StoreSelectorToggle:focus .icon {
+    color: var(--btcpay-header-link-accent);
 }
 
 #StoreSelectorMenu {

@@ -10003,6 +10003,15 @@ textarea.w-auto {
   flex-grow: 0 !important;
 }
 
+/* Prevent form zoom on mobile Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+    input.form-control,
+    textarea.form-control,
+    select.form-select {
+        font-size: var(--btcpay-root-font-size);
+    }
+}
+
 /* Fix for small table showing unnecessary scrollbars */
 .table-responsive .table-sm {
   width: 100% !important;
@@ -10338,3 +10347,4 @@ html[data-devenv]:before {
 @media (min-width: 992px) and (max-width: 1199px) { html[data-devenv]:before { content: 'LG'; } }
 @media (min-width: 1200px) { html[data-devenv]:before { content: 'XL'; } }
 @media print { html[data-devenv]:before { content: none; } }
+

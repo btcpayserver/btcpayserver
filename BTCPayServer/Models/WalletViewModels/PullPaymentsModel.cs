@@ -52,7 +52,7 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "Payment Methods")]
         public IEnumerable<string> PaymentMethods { get; set; }
         public IEnumerable<SelectListItem> PaymentMethodItems { get; set; }
-        [Display(Name = "If lightning is activated, do not accept BOLT11 invoices with expiration less than …")]
+        [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
         [Range(1, 365 * 10)]
         public long BOLT11Expiration { get; set; } = 30;
     }

@@ -285,7 +285,8 @@ namespace BTCPayServer.Controllers
                     {
                         Name = $"Refund {invoice.Id}",
                         PaymentMethodIds = new[] { paymentMethodId },
-                        StoreId = invoice.StoreId
+                        StoreId = invoice.StoreId,
+                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
                     };
                     switch (model.SelectedRefundOption)
                     {

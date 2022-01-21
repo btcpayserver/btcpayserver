@@ -386,6 +386,9 @@ namespace BTCPayServer.Tests
 
             // BTC crash by 50%
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m / 2.0m, 5100.0m / 2.0m));
+            s.GoToStore(StoreNavPages.Payment);
+            s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
+            s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("refundlink")).Click();
             if (multiCurrency)
@@ -408,6 +411,11 @@ namespace BTCPayServer.Tests
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("refundlink")).Click();
             Assert.Contains("pull-payments", s.Driver.Url);
+            var client = await user.CreateClient();
+            var ppid = s.Driver.Url.Split('/').Last();
+            var pps = await client.GetPullPayments(user.StoreId);
+            var pp = Assert.Single(pps, p => p.Id == ppid);
+            Assert.Equal(TimeSpan.FromDays(5.0), pp.BOLT11Expiration);
         }
 
         [Fact(Timeout = TestTimeout)]

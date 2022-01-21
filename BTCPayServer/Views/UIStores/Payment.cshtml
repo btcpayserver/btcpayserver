@@ -57,7 +57,14 @@
                 </div>
                 <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
             </div>
-            
+            <div class="form-group">
+                <label asp-for="BOLT11Expiration" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                    <span class="input-group-text">days</span>
+                </div>
+                <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
+            </div>
             <button name="command" type="submit" class="btn btn-primary px-4 mt-3" value="Save" id="Save">Save</button>
         </form>
     </div>

@@ -203,7 +203,7 @@ namespace BTCPayServer.Hosting
                 {
                     continue;
                 }
-                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, false);
+                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination);
                 payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();

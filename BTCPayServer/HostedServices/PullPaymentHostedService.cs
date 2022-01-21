@@ -34,6 +34,7 @@ namespace BTCPayServer.HostedServices
         public string EmbeddedCSS { get; set; }
         public PaymentMethodId[] PaymentMethodIds { get; set; }
         public TimeSpan? Period { get; set; }
+        public TimeSpan? BOLT11Expiration { get; set; }
     }
     public class PullPaymentHostedService : BaseAsyncService
     {
@@ -113,7 +114,8 @@ namespace BTCPayServer.HostedServices
                     CustomCSSLink = create.CustomCSSLink,
                     Email = null,
                     EmbeddedCSS = create.EmbeddedCSS,
-                }
+                },
+                BOLT11Expiration = create.BOLT11Expiration ?? TimeSpan.FromDays(30.0)
             });
             ctx.PullPayments.Add(o);
             await ctx.SaveChangesAsync();
@@ -296,7 +298,7 @@ namespace BTCPayServer.HostedServices
                 var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
                 if (payoutHandler is null)
                     throw new InvalidOperationException($"No payout handler for {paymentMethod}");
-                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, false);
+                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
                 decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
                 {

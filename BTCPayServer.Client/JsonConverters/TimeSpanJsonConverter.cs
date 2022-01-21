@@ -29,6 +29,17 @@ namespace BTCPayServer.Client.JsonConverters
                 return TimeSpan.FromMinutes(value);
             }
         }
+        public class Days : TimeSpanJsonConverter
+        {
+            protected override long ToLong(TimeSpan value)
+            {
+                return (long)value.TotalDays;
+            }
+            protected override TimeSpan ToTimespan(long value)
+            {
+                return TimeSpan.FromDays(value);
+            }
+        }
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(TimeSpan) || objectType == typeof(TimeSpan?);

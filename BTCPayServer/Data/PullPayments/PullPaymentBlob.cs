@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
@@ -18,6 +19,12 @@ namespace BTCPayServer.Data
         public PullPaymentView View { get; set; } = new PullPaymentView();
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         public TimeSpan? Period { get; set; }
+
+        [DefaultValue(typeof(TimeSpan), "30.00:00:00")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        public TimeSpan BOLT11Expiration { get; set; }
+
 
         [JsonProperty(ItemConverterType = typeof(PaymentMethodIdJsonConverter))]
         public PaymentMethodId[] SupportedPaymentMethods { get; set; }

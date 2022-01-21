@@ -81,6 +81,13 @@
                                         "nullable": true,
                                         "description": "The length of each period in seconds."
                                     },
+                                    "BOLT11Expiration": {
+                                        "type": "string",
+                                        "example": 30,
+                                        "default": 30,
+                                        "nullable": true,
+                                        "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
+                                    },
                                     "startsAt": {
                                         "type": "integer",
                                         "format": "unix timestamp in seconds",
@@ -656,6 +663,11 @@
                         "example": 604800,
                         "nullable": true,
                         "description": "The length of each period in seconds"
+                    },
+                    "BOLT11Expiration": {
+                        "type": "string",
+                        "example": 30,
+                        "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
                     },
                     "archived": {
                         "type": "boolean",

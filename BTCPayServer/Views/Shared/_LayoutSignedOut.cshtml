@@ -1,0 +1,59 @@
+﻿@{
+    Layout = "_LayoutSimple";
+    ViewBag.ShowLeadText ??= false;
+}
+
+@section PageHeadContent {
+    <style>
+        .account-form {
+            max-width: 35em;
+            margin: 0 auto var(--btcpay-space-xl);
+            padding: 2rem;
+            background: var(--btcpay-bg-tile);
+            border-radius: var(--btcpay-border-radius);
+        }
+        
+        .account-form h4 {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        </a>
+
+        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
+        @if (ViewBag.ShowLeadText)
+        {
+            <p class="lead">
+                <span class="d-sm-block">A self-hosted, open-source cryptocurrency payment processor.</span>
+                <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
+            </p>
+        }
+
+        <partial name="_StatusMessage"/>
+    </div>
+</div>
+
+<div class="account-form">
+    <h4>@ViewData["Title"]</h4>
+    @RenderBody()
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
+    </div>
+</div>
+
+
+

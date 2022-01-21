@@ -5352,7 +5352,7 @@ fieldset:disabled .btn {
 }
 
 .modal-backdrop.show {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .modal-header {
@@ -6066,7 +6066,7 @@ fieldset:disabled .btn {
   max-width: 100%;
   color: var(--btcpay-body-text);
   visibility: hidden;
-  background-color: var(--btcpay-bg-tile);
+  background-color: var(--btcpay-black);
   background-clip: padding-box;
   outline: 0;
   transition: transform 0.3s ease-in-out;
@@ -6079,7 +6079,7 @@ fieldset:disabled .btn {
   z-index: 1040;
   width: 100vw;
   height: 100vh;
-  background-color: var(--btcpay-bg-tile);
+  background-color: var(--btcpay-black);
 }
 
 .offcanvas-backdrop.fade {
@@ -10311,7 +10311,6 @@ label + input.btcpay-toggle {
   filter: none;
   opacity: 0.5;
 }
-
 /* Bootstrap Responsive Helper */
 html[data-devenv]:before {
     display: inline-block;

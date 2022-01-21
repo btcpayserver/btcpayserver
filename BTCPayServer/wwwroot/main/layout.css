@@ -247,6 +247,39 @@
     top: var(--btcpay-space-xs) !important;
 }
 
+/* Section Navigation / Subnav */
+#SectionNav {
+    --border-size: 2px;
+    margin-bottom: var(--btcpay-space-l);
+    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+}
+
+#SectionNav .nav {
+    margin-bottom: calc(var(--border-size) * -1);
+}
+
+#SectionNav .nav-link {
+    color: var(--btcpay-nav-link);
+    border-bottom: var(--border-size) solid transparent;
+    padding: var(--btcpay-space-m) 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+    white-space: nowrap;
+}
+
+#SectionNav .nav-link:last-child {
+    margin-right: 0;
+}
+
+#SectionNav .nav-link:hover {
+    color: var(--btcpay-nav-link-accent);
+}
+
+#SectionNav .nav-link.active {
+    color: var(--btcpay-nav-link-active);
+    border-bottom-color: var(--btcpay-nav-border-active);
+    background: var(--btcpay-nav-bg-active);
+}
+
 /* Footer */
 .btcpay-footer {
     font-size: var(--btcpay-font-size-s);
@@ -364,8 +397,58 @@
         transform: translate(-50%, -50%) rotate(-45deg);
     }
 
+    #mainContent {
+        z-index: 0;
+    }
+
     #mainContent > section {
-        padding: var(--btcpay-space-l) 0 var(--btcpay-space-xl);
+        padding: var(--btcpay-space-m) 0 var(--btcpay-space-xl);
+    }
+
+    #SectionNav {
+        --scroll-indicator-spacing: var(--btcpay-space-m);
+        position: relative;
+    }
+
+    #SectionNav .nav {
+        --btcpay-scrollbar-width: none;
+        --btcpay-scrollbar-color: transparent;
+
+        flex-wrap: nowrap;
+        overflow: auto visible;
+        -webkit-overflow-scrolling: touch;
+        margin-left: calc(var(--scroll-indicator-spacing) * -1);
+        margin-right: calc(var(--scroll-indicator-spacing) * -1);
+        padding: 0 var(--scroll-indicator-spacing);
+    }
+
+    #SectionNav .nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Horizontal scroll indicators */
+    #SectionNav:before,
+    #SectionNav:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: calc(var(--border-size) * -1);
+        width: var(--btcpay-space-m);
+    }
+
+    #SectionNav:before {
+        background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+        left: calc(var(--scroll-indicator-spacing) * -1);
+    }
+
+    #SectionNav:after {
+        background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+        right: calc(var(--scroll-indicator-spacing) * -1);
+    }
+
+    #SectionNav .nav-link {
+        margin-right: 1.5rem;
+        border-bottom-color: var(--btcpay-body-border-light);
     }
 }
 
@@ -397,7 +480,7 @@
     }
     
     #mainMenuToggle,
-    .offcanvas-backdrop{
+    .offcanvas-backdrop {
         display: none !important;
     }
 
@@ -411,7 +494,7 @@
     }
 
     #mainContent > section {
-        padding: 5rem var(--btcpay-space-xl);
+        padding: 4.5rem var(--btcpay-space-xl);
     }
 
     #mainContent > section > .container,
@@ -423,5 +506,19 @@
     .btcpay-footer {
         padding-left: var(--btcpay-space-xl);
         padding-right: var(--btcpay-space-xl);
+    }
+
+    #SectionNav .nav {
+        margin-top: calc(var(--btcpay-space-m) * -1);
+    }
+
+    #SectionNav .nav {
+        border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+    }
+
+    #SectionNav .nav-link {
+        margin-top: var(--btcpay-space-m);
+        margin-right: var(--btcpay-space-l);
+        margin-bottom: calc(var(--border-size) * -1);
     }
 }

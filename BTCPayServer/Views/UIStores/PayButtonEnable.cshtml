@@ -1,9 +1,16 @@
-﻿@{
+@{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
 }
 
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
+<div class="alert alert-warning alert-dismissible mb-5" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+        <b>Warning: This feature should not be activated on a BTCPay Server store processing commercial transactions.</b><br /><br />
+		By activating this feature, a malicious user can trick your server into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.
+</div>
 <div class="row">
     <div class="col-md-10">
         <p>
@@ -12,7 +19,7 @@
         </p>
         <form method="post">
             @Html.Hidden("EnableStore", true)
-            <button name="command" type="submit" value="save" class="btn btn-primary">
+            <button name="command" id="enable-pay-button" type="submit" value="save" class="btn btn-primary">
                 Enable
             </button>
         </form>

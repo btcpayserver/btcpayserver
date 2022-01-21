@@ -992,6 +992,17 @@ namespace BTCPayServer.Controllers
             return _UserManager.GetUserId(User);
         }
 
+        [HttpPost("{storeId}/disable-anyone-can-pay")]
+        public async Task<IActionResult> DisableAnyoneCanCreateInvoice(string storeId)
+        {
+            var blob = CurrentStore.GetStoreBlob();
+            blob.AnyoneCanInvoice = false;
+            CurrentStore.SetStoreBlob(blob);
+            TempData[WellKnownTempData.SuccessMessage] = "Feature disabled";
+            await _Repo.UpdateStore(CurrentStore);
+            return RedirectToAction(nameof(Payment), new { storeId = storeId });
+        }
+
         [Route("{storeId}/paybutton")]
         public async Task<IActionResult> PayButton()
         {

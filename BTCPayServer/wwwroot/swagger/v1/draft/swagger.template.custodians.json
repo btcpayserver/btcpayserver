@@ -126,7 +126,7 @@
                         "name": "assetBalances",
                         "in": "query",
                         "required": false,
-                        "description": "Set to true if you want the result to include the assetBalances. This will make the call slower or could cause the call to fail if the asset balances cannot be loaded (i.e. due to a bad API key).",
+                        "description": "Enable if you want the result to include the 'assetBalances' field. This will make the call slower or could cause the call to fail if the asset balances cannot be loaded (i.e. due to a bad API key).",
                         "schema": {
                             "type": "boolean",
                             "default": false
@@ -139,7 +139,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/CustodianAccountData"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CustodianAccountData"
+                                    }
                                 }
                             }
                         }
@@ -204,6 +207,59 @@
                         "Store Custodian Account"
                     ],
                     "summary": "Delete a store custodian account"
+                }
+            }
+        },
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}": {
+            "get": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Get store custodian account",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "assetBalances",
+                        "in": "query",
+                        "required": false,
+                        "description": "Enable if you want the result to include the 'assetBalances' field. This will make the call slower or could cause the call to fail if the asset balances cannot be loaded (i.e. due to a bad API key).",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the requested custodian account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianAccountData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the store's custodian accounts"
+                    }
                 }
             }
         },
@@ -563,7 +619,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "accountId": {
+                    "id": {
                         "type": "string",
                         "description": "The unique code of the customer's account with this custodian. The format depends on the custodian."
                     },

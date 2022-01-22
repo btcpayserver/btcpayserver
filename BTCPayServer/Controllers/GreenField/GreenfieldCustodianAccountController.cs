@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/store/{storeId}/custodian-account")]
         [Authorize(Policy = Policies.CanViewCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> ListCustodianAccount(string storeId,[FromQuery] bool assetBalances = false)
+        public async Task<IActionResult> ListCustodianAccount(string storeId, [FromQuery] bool assetBalances = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -59,6 +59,35 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return Ok(r);
+        }
+
+
+        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
+        [Authorize(Policy = Policies.CanViewCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId, [FromQuery] bool assetBalances = false)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return this.CreateAPIError(404, "store-not-found", "The store was not found");
+            }
+
+            var custodianAccountData = _custodianAccountRepository.FindById(accountId).Result;
+            if (custodianAccountData == null)
+            {
+                return NotFound();
+            }
+            var custodianAccount = ToModel(custodianAccountData);
+            if (custodianAccount != null && assetBalances)
+            {
+                // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
+                var custodianCode = custodianAccount.CustodianCode;
+                var custodian = _custodianRegistry.getAll()[custodianCode];
+                var balances = await custodian.GetAssetBalances(custodianAccount);
+                custodianAccount.AssetBalances = balances;
+            }
+            return Ok(custodianAccount);
         }
 
         private CustodianAccountResponse ToModel(CustodianAccountData custodianAccount)

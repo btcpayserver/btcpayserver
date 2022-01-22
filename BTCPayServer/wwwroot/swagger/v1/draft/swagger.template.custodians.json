@@ -190,7 +190,7 @@
                     "security": [
                         {
                             "API Key": [
-                                "TODO"
+                                "btcpay.store.canviewcustodianaccounts"
                             ],
                             "Basic": []
                         }
@@ -321,7 +321,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "TODO"
+                            "btcpay.store.cantradecustodianaccounts"
                         ],
                         "Basic": []
                     }
@@ -395,7 +395,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "TODO"
+                            "btcpay.store.candeposittocustodianaccounts"
                         ],
                         "Basic": []
                     }
@@ -481,7 +481,7 @@
                 "security": [
                     {
                         "API Key": [
-                            "TODO"
+                            "btcpay.store.canwithdrawfromcustodianaccounts"
                         ],
                         "Basic": []
                     }

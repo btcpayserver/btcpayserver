@@ -121,6 +121,16 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "assetBalances",
+                        "in": "query",
+                        "required": false,
+                        "description": "Set to true if you want the result to include the assetBalances. This will make the call slower or could cause the call to fail if the asset balances cannot be loaded (i.e. due to a bad API key).",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     }
                 ],
                 "responses": {

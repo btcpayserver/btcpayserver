@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Services.Custodian.Client;
@@ -26,5 +27,5 @@ public interface ICustodian
     /**
      * Get a list of assets and their qty in custody.
      */
-    public Dictionary<string, decimal> GetAssetBalances(CustodianAccountResponse custodianAccountData);
+    public Task<Dictionary<string, decimal>> GetAssetBalances(CustodianAccountResponse custodianAccountData);
 }

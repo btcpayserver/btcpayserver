@@ -51,8 +51,9 @@ namespace BTCPayServer.Controllers.Greenfield
             foreach (var custodianAccount in r)
             {
                 var custodianCode = custodianAccount.CustodianCode;
-                custodianAccount.AssetBalances =
-                    _custodianRegistry.getAll()[custodianCode].GetAssetBalances(custodianAccount);
+                var custodian = _custodianRegistry.getAll()[custodianCode];
+                var balances = await custodian.GetAssetBalances(custodianAccount);
+                custodianAccount.AssetBalances = balances;
             }
             
             return Ok(r);

@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
-using Microsoft.AspNetCore.Http;
+using BTCPayServer.Services.Custodian.Client.Exception;
+using Microsoft.AspNetCore.WebUtilities;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 
@@ -45,33 +47,29 @@ public class KrakenClient : ICustodian, ICanDeposit
         return new string[] { "XBTEUR", "XBTUSD", "LTCEUR", "LTCUSD" };
     }
 
-    public Dictionary<string, decimal> GetAssetBalances(CustodianAccountResponse custodianAccountResponse)
+    public async Task<Dictionary<string, decimal>> GetAssetBalances(CustodianAccountResponse custodianAccountResponse)
     {
         // TODO the use of "CustodianAccountResponse" is sloppy. We should prolly use the Model or Data class
-        // TODO Test this...
         var apiKey = custodianAccountResponse.Config["apiKey"].ToString();
         var privateKey = custodianAccountResponse.Config["privateKey"].ToString();
 
-        var data = QueryPrivate("Balance", null, apiKey, privateKey, new CancellationToken());
-
-        var r = new Dictionary<string, decimal>();
-        return r;
-
-        //  $result = $this->_api->QueryPrivate('Balance');
-        // $r = [];
-        //
-        // if (isset($result['result'])) {
-        //
-        //     $coins = $result['result'];
-        //     foreach ($coins as $key => $value) {
-        //
-        //         if (bccomp($value, 0) > 0 || $key == 'ZEUR') {
-        //             $r[$key] = $value;
-        //         }
-        //     }
-        //
-        // }
-        // return $r;
+        var data = await QueryPrivate("Balance", null, apiKey, privateKey, new CancellationToken());
+        var balances = data["result"];
+        if (balances is JObject)
+        {
+            var r = new Dictionary<string, decimal>();
+            var balancesJObject = (JObject)balances;
+            foreach (var keyValuePair in balancesJObject)
+            {
+                if (keyValuePair.Value != null)
+                {
+                    decimal amount = Convert.ToDecimal(keyValuePair.Value.ToString(), CultureInfo.InvariantCulture);
+                    r.Add(keyValuePair.Key, amount);
+                }
+            }
+            return r;
+        }
+        return null;
     }
 
     public DepositAddressData GetDepositAddress(string paymentMethod)
@@ -89,22 +87,13 @@ public class KrakenClient : ICustodian, ICanDeposit
         throw new NotImplementedException("Only BTC-OnChain is implemented right now.");
     }
 
-    /**
-     * Query private methods
-     *
-     * @param string $method method path
-     * @param array $request request parameters
-     * @return array request result on success
-     * @throws KrakenAPIException
-     */
     private async Task<JObject> QueryPrivate(string method, Dictionary<string, string>? param, string apiKey,
         string privateKey, CancellationToken cancellationToken)
     {
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        long nonce = now.ToUnixTimeMilliseconds();
+        string nonce = now.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture) + "000";
 
-        // build the POST data string
-        var postData = new QueryString();
+        var postData = new Dictionary<string, string>();
         if (param != null)
         {
             foreach (KeyValuePair<string, string> keyValuePair in param)
@@ -112,76 +101,60 @@ public class KrakenClient : ICustodian, ICanDeposit
                 postData.Add(keyValuePair.Key, keyValuePair.Value);
             }
         }
-        postData.Add("nonce", nonce.ToString(CultureInfo.InvariantCulture));
 
+        postData.Add("nonce", nonce);
 
-        var postDataString = postData.ToString();
-
-
-        // set API key and sign the message
+        var postDataString = QueryHelpers.AddQueryString("", postData).Remove(0, 1);
         var path = "/0/private/" + method;
-        var url = "https://api.kraken.com/" + path;
+        var url = "https://api.kraken.com" + path;
+        var decodedSecret = Convert.FromBase64String(privateKey);
 
-        var hmac256 = new System.Security.Cryptography.HMACSHA256();
-        var hmac512 = new System.Security.Cryptography.HMACSHA512(Encoding.UTF8.GetBytes(privateKey));
-
-        // From PHP code: hash_hmac('sha512', $path . hash('sha256', $request['nonce'] . $postdata, true), base64_decode($this->secret), true);
+        var sha256 = SHA256.Create();
+        var hmac512 = new System.Security.Cryptography.HMACSHA512(decodedSecret);
 
         var unhashed1 = nonce.ToString(CultureInfo.InvariantCulture) + postDataString;
-        var hash1 = Encoders.Hex.EncodeData(hmac256.ComputeHash(Encoding.UTF8.GetBytes(unhashed1)));
+        var hash1 = sha256.ComputeHash(Encoding.UTF8.GetBytes(unhashed1));
+        var pathBytes = Encoding.UTF8.GetBytes(path);
 
-        var unhashed2 = path + hash1;
-        var signature = Encoders.Hex.EncodeData(hmac512.ComputeHash(Encoding.UTF8.GetBytes(unhashed2)));
+        byte[] unhashed2 = new byte[path.Length + hash1.Length];
+        System.Buffer.BlockCopy(pathBytes, 0, unhashed2, 0, pathBytes.Length);
+        System.Buffer.BlockCopy(hash1, 0, unhashed2, pathBytes.Length, hash1.Length);
 
-        var signatureBytes = Encoding.UTF8.GetBytes(signature);
-        var apiSign = Convert.ToBase64String(signatureBytes);
+        var signature = hmac512.ComputeHash(unhashed2);
+        var apiSign = Convert.ToBase64String(signature);
 
         HttpRequestMessage request = new HttpRequestMessage();
-        //webRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Encoders.Base64.EncodeData(new UTF8Encoding(false).GetBytes($"{builder.UserName}:{builder.Password}")));
-
         request.Method = HttpMethod.Post;
         request.Headers.Add("API-Key", apiKey);
         request.Headers.Add("API-Sign", apiSign);
-        //request.Headers.TryAddWithoutValidation("User-Agent", $"BTCPayServer/{GetVersion()}");
         request.Headers.Add("User-Agent", $"BTCPayServer/{GetVersion()}");
-        //
-        // byte[] byteArray = Encoding.UTF8.GetBytes(postDataString);
-        //
-        // using var reqStream = request.();
-        // reqstream.Write(byteArray, 0, byteArray.Length);
-        //
-        // using var response = request.GetResponse();
-
         request.RequestUri = new Uri(url, UriKind.Absolute);
         request.Content =
-            new StringContent(postDataString, new UTF8Encoding(false),
-                "application/x-www-form-urlencoded; charset=utf-8");
+            new StringContent(postDataString, new UTF8Encoding(false), "application/x-www-form-urlencoded");
 
         using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(0.5));
 
         var response = await _client.SendAsync(request, cts.Token);
-        var r = JObject.Parse(response.Content.ToString());
-        return r;
+        var responseString = response.Content.ReadAsStringAsync().Result;
+        var r = JObject.Parse(responseString);
 
-        // make request
-        // curl_setopt($this->curl, CURLOPT_URL, $this->url . $path);
-        // curl_setopt($this->curl, CURLOPT_POSTFIELDS, $postdata);
-        // curl_setopt($this->curl, CURLOPT_HTTPHEADER, $headers);
-        // $result = curl_exec($this->curl);
-        // if($result===false)
-        // throw new KrakenAPIException('CURL error: ' . curl_error($this->curl));
-        //
-        // // decode results
-        // $data = json_decode($result, true);
-        // if(!is_array($data))
-        // throw new KrakenAPIException('JSON decode error: '.$result);
-        //
-        // return $data;
+        var errorMessage = r["error"];
+        if (errorMessage is JArray)
+        {
+            var errorMessageArray = ((JArray)errorMessage);
+            if (errorMessageArray.Count > 0)
+            {
+                throw new KrakenApiException(errorMessageArray[0].ToString());
+            }
+        }
+
+        return r;
     }
 
     private string GetVersion()
     {
+        // TODO this was a copy-paste of somewhere else. Should be put this method somewhere accessible to all?
         return typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()
             .Version;
     }

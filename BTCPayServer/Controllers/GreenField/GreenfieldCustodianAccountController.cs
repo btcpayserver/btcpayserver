@@ -44,10 +44,10 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var custodianAccounts =_custodianAccountRepository.FindByStoreId(storeId);
-            var r = custodianAccounts.Result.Select(ToModel);
+            var r = custodianAccounts.Result.Select(ToModel).ToList();
             
             // TODO fill in the "assetBalances"
-
+            
             foreach (var custodianAccount in r)
             {
                 var custodianCode = custodianAccount.CustodianCode;

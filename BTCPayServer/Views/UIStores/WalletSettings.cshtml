@@ -123,7 +123,7 @@
                         </div>
                     }
                 }
-                <button type="submit" class="btn btn-primary" id="SaveWalletSettings">Save Wallet Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings">Save Wallet Settings</button>
             </form>
             
             <h4 class="mt-5 mb-3">Payment</h4>
@@ -173,12 +173,12 @@
                     <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
                     <p class="form-text text-muted mb-0">Fee will be shown for BTC and LTC onchain payments only.</p>
                 </div>
-                <div class="form-group mt-2 mb-4">
+                <div class="form-group mt-2">
                     <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
                     <input asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="width:8ch" />
                     <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary" id="SavePaymentSettings">Save Payment Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SavePaymentSettings">Save Payment Settings</button>
             </form>
         </div>
     </div>

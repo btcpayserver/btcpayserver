@@ -34,12 +34,12 @@
                             Lightning Node
                         </h2>
                         <h3 class="card-title text-center">
+                            <small class="text-@(Model.Available ? "success" : "danger")">
+                                <span class="fa fa-circle"></span>
+                            </small>
                             <span>
                                 @(Model.Available ? "Online" : "Unavailable")
                             </span>
-                            <small class="text-@(Model.Available ? "success" : "danger")" >
-                                <span class="fa fa-circle"></span>
-                            </small>
                         </h3>
                         @if (Model.Available)
                         {

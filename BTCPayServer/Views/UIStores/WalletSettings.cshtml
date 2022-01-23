@@ -16,9 +16,8 @@
 <div class="row">
     <div class="col-lg-10 col-xl-9">
         <div class="mb-5">
-            <h4 class="mb-3">@ViewData["Title"]</h4>
+            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="mb-3 d-flex align-items-center">
-                <span class="me-2">Type:</span>
                 <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
                 
                 <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
@@ -92,7 +91,7 @@
                 }
                 @for (var i = 0; i < Model.AccountKeys.Count; i++)
                 {
-                    <h5 class="mt-5">Account key @i</h5>
+                    <h4 class="mt-5">Account key @i</h4>
                     <div class="form-group">
                         <div class="d-flex align-items-center justify-content-between">
                             <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
@@ -126,7 +125,7 @@
                 <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings">Save Wallet Settings</button>
             </form>
             
-            <h4 class="mt-5 mb-3">Payment</h4>
+            <h3 class="mt-5 mb-4">Payment</h3>
             <form method="post" asp-action="UpdatePaymentSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
                 @if (Model.CanUsePayJoin)
                 {

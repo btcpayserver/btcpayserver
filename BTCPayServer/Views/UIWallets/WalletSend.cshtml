@@ -30,7 +30,7 @@
 
 <div class="row">
     <div class="col-lg-8 col-xl-7 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
-        <h4 class="mb-3">@ViewData["Title"]</h4>
+        <h3 class="mb-3">@ViewData["Title"]</h3>
         <form method="post" asp-action="WalletSend" asp-route-walletId="@walletId">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="FiatDivisibility" />

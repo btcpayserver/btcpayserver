@@ -58,7 +58,7 @@
     <template id="template-price-input" csp-allow>
     function handlePriceInput(event) {
         event.preventDefault();
-		const root = event.target.closest('.btcpay-form');
+        const root = event.target.closest('.btcpay-form');
         const price = parseInt(event.target.dataset.price);
         if (isNaN(event.target.value)) root.querySelector('.btcpay-input-price').value = price;
         const min = parseInt(event.target.getAttribute('min')) || 1;

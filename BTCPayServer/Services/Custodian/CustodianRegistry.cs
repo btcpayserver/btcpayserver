@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Net.Http;
+using BTCPayServer.Services.Custodian.Client.Kraken;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Services.Custodian.Client;

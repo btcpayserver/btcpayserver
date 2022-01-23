@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Custodian.Client;
+namespace BTCPayServer.Services.Custodian.Client.Kraken;
 
 public class KrakenClient : ICustodian, ICanDeposit
 {

@@ -1,4 +1,6 @@
-namespace BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Services.Custodian.Client;
+
+namespace BTCPayServer.Services.Custodian;
 
 public interface ICanDeposit
 {

@@ -6,6 +6,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -139,16 +140,6 @@ namespace BTCPayServer.Controllers.Greenfield
             // return this.CreateAPIError("custodian-account-not-found", "This custodian account does not exist");
         }
 
-        // private static CustodianAccountData FromModel(CustodianAccountData data)
-        // {
-        //     return new CustodianAccountData()
-        //     {
-        //         Permissions = Permission.ToPermissions(data.GetBlob().Permissions).ToArray(),
-        //         ApiKey = data.Id,
-        //         Label = data.Label ?? string.Empty
-        //     };
-        // }
-
         [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
         [Authorize(Policy = Policies.CanDepositToCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -158,18 +149,42 @@ namespace BTCPayServer.Controllers.Greenfield
             var custodianAccount = _custodianAccountRepository.FindById(accountId);
             var custodian = _custodianRegistry.getAll()[custodianAccount.Result.CustodianCode];
 
-            if (custodian is ICanDeposit)
+            if (custodian is ICanDeposit depositableCustodian)
             {
-                var result = ((ICanDeposit)custodian).GetDepositAddress(paymentMethod);
+                var result = depositableCustodian.GetDepositAddress(paymentMethod);
                 return Ok(result);
             }
 
             return this.CreateAPIError(400, "deposit-payment-method-not-supported",
                 $"Deposits to \"{custodian.getName()}\" are not supported using \"{paymentMethod}\".");
         }
+        
+        // [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/market")]
+        // [Authorize(Policy = Policies.CanTradeCustodianAccount,
+        //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        // public async Task<IActionResult> Trade(string storeId, string accountId,
+        //     TradeRequestData request)
+        // {
+        //     var custodianAccount = _custodianAccountRepository.FindById(accountId);
+        //     var custodian = _custodianRegistry.getAll()[custodianAccount.Result.CustodianCode];
+        //
+        //     if (custodian is ICanDeposit depositableCustodian)
+        //     {
+        //         var result = depositableCustodian.GetDepositAddress(paymentMethod);
+        //         return Ok(result);
+        //     }
+        //
+        //     return this.CreateAPIError(400, "deposit-payment-method-not-supported",
+        //         $"Deposits to \"{custodian.getName()}\" are not supported using \"{paymentMethod}\".");
+        // }
 
-        // TODO trade endpoint
+        
 
         // TODO withdraw endpoint
+    }
+
+    public class TradeRequestData
+    {
+        
     }
 }

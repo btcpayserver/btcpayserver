@@ -73,7 +73,7 @@
     <template id="template-price-slider" csp-allow>
     function handleSliderChange(event) {
         event.preventDefault();
-		const root = event.target.closest('.btcpay-form');
+        const root = event.target.closest('.btcpay-form');
         const el = root.querySelector('.btcpay-input-price');
         const price = parseInt(el.value);
         const min = parseInt(event.target.getAttribute('min')) || 1;

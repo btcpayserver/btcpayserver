@@ -263,13 +263,13 @@
                 }
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade": {
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade/market": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
                 ],
-                "summary": "Trade one asset for another.",
-                "description": "Trade one asset for another. A suitable asset pair will automatically be selected. If no asset pair is available, the call will fail.",
+                "summary": "Trade one asset for another",
+                "description": "Trade one asset for another using a market order (=instant purchase with instant result or failure). A suitable asset pair will automatically be selected. If no asset pair is available, the call will fail.",
                 "parameters": [
                     {
                         "name": "storeId",
@@ -668,11 +668,6 @@
                         "description": "The asset you want.",
                         "required": true
                     },
-                    "tradeType": {
-                        "type": "string",
-                        "description": "The type of trade. Currently only \"market\" is supported, meaning an instant purchase with instant result or failure.",
-                        "required": true
-                    },
                     "qty": {
                         "oneOf": [
                             {
@@ -690,7 +685,6 @@
                 "example": {
                     "fromAsset": "BTC",
                     "toAsset": "USD",
-                    "tradeType": "market",
                     "qty": "50%"
                 }
             },

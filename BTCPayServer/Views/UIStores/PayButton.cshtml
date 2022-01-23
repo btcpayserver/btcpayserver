@@ -41,7 +41,7 @@
     <template id="template-price-buttons" csp-allow>
     function handlePlusMinus(event) {
         event.preventDefault();
-		const root = event.target.closest('.btcpay-form');
+        const root = event.target.closest('.btcpay-form');
         const el = root.querySelector('.btcpay-input-price');
         const step = parseInt(event.target.dataset.step) || 1;
         const min = parseInt(event.target.dataset.min) || 1;

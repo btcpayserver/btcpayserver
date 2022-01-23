@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -10,8 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Custodian.Client.Exception;
+using ExchangeSharp;
 using Microsoft.AspNetCore.WebUtilities;
-using NBitcoin.DataEncoders;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Custodian.Client;
@@ -19,10 +19,12 @@ namespace BTCPayServer.Services.Custodian.Client;
 public class KrakenClient : ICustodian, ICanDeposit
 {
     private readonly HttpClient _client;
+    private readonly IMemoryCache _memoryCache;
 
-    public KrakenClient(IHttpClientFactory httpClientFactory)
+    public KrakenClient(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
     {
         _client = httpClientFactory.CreateClient();
+        _memoryCache = memoryCache;
     }
 
     public string getCode()
@@ -41,10 +43,63 @@ public class KrakenClient : ICustodian, ICanDeposit
         return new string[] { "BTC", "LTC" };
     }
 
-    public string[]? getTradableAssetPairs()
+    public async Task<string[]> getTradableAssetPairs()
     {
-        // TODO use API to get a full list.
-        return new string[] { "XBTEUR", "XBTUSD", "LTCEUR", "LTCUSD" };
+        return await _memoryCache.GetOrCreateAsync("KrakenTradableAssetPairs", async entry =>
+        {
+            var url = "https://api.kraken.com/0/public/AssetPairs";
+
+            HttpRequestMessage request = createHttpClient();
+            request.Method = HttpMethod.Get;
+            request.RequestUri = new Uri(url, UriKind.Absolute);
+
+            var cancellationToken = createCancelationToken();
+            var response = await _client.SendAsync(request, cancellationToken);
+            var responseString = response.Content.ReadAsStringAsync().Result;
+            var data = JObject.Parse(responseString);
+
+            var errorMessage = data["error"];
+            if (errorMessage is JArray errorMessageArray)
+            {
+                if (errorMessageArray.Count > 0)
+                {
+                    throw new APIException(errorMessageArray[0].ToString());
+                }
+            }
+
+            var list = new List<string>();
+            var resultList = data["result"];
+            if (resultList is JObject resultListObj)
+            {
+                foreach (KeyValuePair<string,JToken?> keyValuePair in resultListObj)
+                {
+                    list.Add(keyValuePair.Key);
+                }
+            }
+            var listArray = list.ToArray();
+
+            entry.SetAbsoluteExpiration(TimeSpan.FromHours(24));
+            entry.Value = listArray;
+            return listArray;
+        });
+    }
+
+    private CancellationToken createCancelationToken(int timeout = 30)
+    {
+        var cancellationToken = new CancellationToken();
+        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(timeout));
+        return cancellationToken;
+    }
+
+    private HttpRequestMessage createHttpClient()
+    {
+        HttpRequestMessage request = new HttpRequestMessage();
+        
+        // TODO should we advertise ourselves like this? We're doing it on other parts of the code too!
+        request.Headers.Add("User-Agent", $"BTCPayServer/{GetVersion()}");
+        
+        return request;
     }
 
     public async Task<Dictionary<string, decimal>> GetAssetBalances(CustodianAccountResponse custodianAccountResponse)
@@ -53,7 +108,8 @@ public class KrakenClient : ICustodian, ICanDeposit
         var apiKey = custodianAccountResponse.Config["apiKey"].ToString();
         var privateKey = custodianAccountResponse.Config["privateKey"].ToString();
 
-        var data = await QueryPrivate("Balance", null, apiKey, privateKey, new CancellationToken());
+        var cancellationToken = createCancelationToken();
+        var data = await QueryPrivate("Balance", null, apiKey, privateKey, cancellationToken);
         var balances = data["result"];
         if (balances is JObject)
         {
@@ -110,7 +166,7 @@ public class KrakenClient : ICustodian, ICanDeposit
         var decodedSecret = Convert.FromBase64String(privateKey);
 
         var sha256 = SHA256.Create();
-        var hmac512 = new System.Security.Cryptography.HMACSHA512(decodedSecret);
+        var hmac512 = new HMACSHA512(decodedSecret);
 
         var unhashed1 = nonce.ToString(CultureInfo.InvariantCulture) + postDataString;
         var hash1 = sha256.ComputeHash(Encoding.UTF8.GetBytes(unhashed1));
@@ -123,11 +179,10 @@ public class KrakenClient : ICustodian, ICanDeposit
         var signature = hmac512.ComputeHash(unhashed2);
         var apiSign = Convert.ToBase64String(signature);
 
-        HttpRequestMessage request = new HttpRequestMessage();
+        HttpRequestMessage request = createHttpClient();
         request.Method = HttpMethod.Post;
         request.Headers.Add("API-Key", apiKey);
         request.Headers.Add("API-Sign", apiSign);
-        request.Headers.Add("User-Agent", $"BTCPayServer/{GetVersion()}");
         request.RequestUri = new Uri(url, UriKind.Absolute);
         request.Content =
             new StringContent(postDataString, new UTF8Encoding(false), "application/x-www-form-urlencoded");

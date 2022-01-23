@@ -22,7 +22,7 @@ public interface ICustodian
     /**
      * A list of tradable asset pairs, or NULL if the custodian cannot trade/convert assets. if thr asset pair contains fiat, fiat is always put last. If both assets are a cyrptocode or both are fiat, the pair is written alphabetically. Always in uppercase. Example: ["BTC/EUR","BTC/USD", "EUR/USD", "BTC/ETH",...]
      */
-    public string[]? getTradableAssetPairs();
+    public Task<string[]> getTradableAssetPairs();
 
     /**
      * Get a list of assets and their qty in custody.

@@ -562,7 +562,7 @@
     }
 
     #mainContent > section {
-        padding: 4.5rem var(--btcpay-space-xl);
+        padding: 5rem var(--btcpay-space-xl);
     }
 
     #mainContent > section,
@@ -585,7 +585,7 @@
     }
 
     #SectionNav .nav-link {
-        margin-top: var(--btcpay-space-m);
+        margin-top: var(--btcpay-space-s);
         margin-right: var(--btcpay-space-l);
         margin-bottom: calc(var(--border-size) * -1);
     }

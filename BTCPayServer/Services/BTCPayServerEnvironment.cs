@@ -83,12 +83,12 @@ namespace BTCPayServer.Services
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();
-            txt.Append(CultureInfo.InvariantCulture, $"@Copyright BTCPayServer v{Version}");
+            txt.Append(CultureInfo.InvariantCulture, $"© BTCPay Server v{Version}");
             if (AltcoinsVersion)
-                txt.Append($" (altcoins)");
+                txt.Append(" (Altcoins)");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
-                txt.Append(CultureInfo.InvariantCulture, $" Environment: {Environment.EnvironmentName} Build: {Build}");
+                txt.Append(CultureInfo.InvariantCulture, $" Environment: {Environment.EnvironmentName} ({Build})");
             }
             return txt.ToString();
         }

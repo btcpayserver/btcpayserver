@@ -358,7 +358,6 @@
     :root {
         --header-height: var(--mobile-header-height);
     }
-
     
     #mainMenu {
         position: fixed;

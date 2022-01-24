@@ -10249,19 +10249,19 @@ input[type=number].hide-number-spin {
   height: 9px;
 }
 .btcpay-status--enabled {
-  background-color: rgba(0, 182, 52, .3);
+  background-color: rgba(0, 182, 52, .25);
 }
 .btcpay-status--enabled:before {
   background-color: #00B634;
 }
 .btcpay-status--pending {
-     background-color: rgba(255, 192, 67, .3);
- }
+  background-color: rgba(143, 151, 158, .25);
+}
 .btcpay-status--pending:before {
-    background-color: #FFC043;
+  background-color: var(--btcpay-neutral-500);
 }
 .btcpay-status--disabled {
-  background-color: rgba(251, 56, 61, .3);
+  background-color: rgba(251, 56, 61, .25);
 }
 .btcpay-status--disabled:before {
   background-color: #FB383D;

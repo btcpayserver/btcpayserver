@@ -62,7 +62,7 @@
               document.getElementById("authform").submit();
           }
         }
-        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "LNURLAuth", new { userId = Model.UserId })), true);
+        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "UILNURLAuth", new { userId = Model.UserId })), true);
         request.send(new FormData());
     }
     check();

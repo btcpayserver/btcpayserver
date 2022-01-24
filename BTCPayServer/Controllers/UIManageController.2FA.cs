@@ -189,7 +189,7 @@ namespace BTCPayServer.Controllers
                 case Fido2Credential.CredentialType.FIDO2:
                     return RedirectToAction("Create", "UIFido2", new { name });
                 case Fido2Credential.CredentialType.LNURLAuth:
-                    return RedirectToAction("Create", "LNURLAuth", new { name });
+                    return RedirectToAction("Create", "UILNURLAuth", new { name });
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }

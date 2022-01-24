@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 <div id="app" class="l-pos-wrapper" v-cloak>
-    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy ref="form">
         <div class="l-pos-header bg-primary py-3 px-3">
             @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
             {
@@ -26,8 +26,8 @@
 
         <div class="l-pos-controls mt-2">
             <div class="btn btn-outline-secondary btn-lg mb-0" v-on:click="clearTotal">Clear</div>
-            <button class="btn btn-primary btn-lg mb-0" id="pay-button" type="submit">
-                <div class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status" hidden>
+            <button class="btn btn-primary btn-lg mb-0" id="pay-button" type="submit" v-on:click="payButtonClicked" v-bind:disabled="payButtonLoading">
+                <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
                 <b>Pay</b>
@@ -84,35 +84,3 @@
     </div>
 </div>
 
-<script>
-    const _ = () => {
-        const spinner = document.getElementById('pay-button-spinner');
-        const button = document.getElementById('pay-button');
-
-        return {
-            setLoading: () => {
-                spinner.removeAttribute('hidden');
-                button.setAttribute('disabled', 'disabled');
-            },
-            removeLoading: () => {
-                spinner.setAttribute('hidden', 'hidden');
-                button.removeAttribute('disabled');
-            },
-        }
-    };
-
-    window.addEventListener('pageshow', () => {
-        document.querySelector('[data-buy]').addEventListener('submit',  () => {
-            _().setLoading();
-        });
-    });
-
-    /**
-     * We want to remove the loading state when page is transitioned
-     * so that if we come back by pressing the back button and the page
-     * is cached button state is back to the original version
-     */
-    window.addEventListener('pagehide', () => {
-        _().removeLoading();
-    });
-</script>

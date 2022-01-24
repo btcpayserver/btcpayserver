@@ -28,15 +28,13 @@
             <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto">
                 <div class="card border-0">
                     <div class="card-body p-4">
-                        <h1 class="card-title text-center">@Model.StoreName</h1>
+                        <h1 class="card-title text-center mt-3">@Model.StoreName</h1>
                         <h3 class="card-subtitle text-center text-secondary my-3">
                             <span>@Model.CryptoCode</span>
                             Lightning Node
                         </h3>
-                        <h4 class="card-title text-center">
-                            <small class="text-@(Model.Available ? "success" : "danger")">
-                                <span class="fa fa-circle"></span>
-                            </small>
+                        <h4 class="text-center">
+                            <span class="me-1 btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")"></span>
                             <span>
                                 @(Model.Available ? "Online" : "Unavailable")
                             </span>

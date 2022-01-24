@@ -1,17 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitpayClient;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -36,9 +42,117 @@ namespace BTCPayServer.Controllers
         {
             if (invoice == null)
                 throw new BitpayHttpException(400, "Invalid invoice");
-            return await _InvoiceController.CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+            return await CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+        }
+        
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(BitpayCreateInvoiceRequest invoice,
+            StoreData store, string serverUrl, List<string> additionalTags = null,
+            CancellationToken cancellationToken = default)
+        {
+            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken);
+            var resp = entity.EntityToDTO();
+            return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        {
+            var storeBlob = store.GetStoreBlob();
+            var entity = _InvoiceRepository.CreateNewInvoice();
+            entity.ExpirationTime = invoice.ExpirationTime is DateTimeOffset v ? v : entity.InvoiceTime + storeBlob.InvoiceExpiration;
+            entity.MonitoringExpiration = entity.ExpirationTime + storeBlob.MonitoringExpiration;
+            if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
+            {
+                throw new BitpayHttpException(400, "The expirationTime is set too soon");
+            }
+            entity.Metadata.OrderId = invoice.OrderId;
+            entity.Metadata.PosData = invoice.PosData;
+            entity.ServerUrl = serverUrl;
+            entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
+            entity.ExtendedNotifications = invoice.ExtendedNotifications;
+            entity.NotificationURLTemplate = invoice.NotificationURL;
+            entity.NotificationEmail = invoice.NotificationEmail;
+            if (additionalTags != null)
+                entity.InternalTags.AddRange(additionalTags);
+            FillBuyerInfo(invoice, entity);
+
+            var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
+            var price = invoice.Price;
+
+            entity.Metadata.ItemCode = invoice.ItemCode;
+            entity.Metadata.ItemDesc = invoice.ItemDesc;
+            entity.Metadata.Physical = invoice.Physical;
+            entity.Metadata.TaxIncluded = invoice.TaxIncluded;
+            entity.Currency = invoice.Currency;
+            if (price is decimal vv)
+            {
+                entity.Price = vv;
+                entity.Type = InvoiceType.Standard;
+            }
+            else
+            {
+                entity.Price = 0m;
+                entity.Type = InvoiceType.TopUp;
+            }
+
+            entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
+            entity.RedirectAutomatically =
+                invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
+            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
+            entity.SpeedPolicy = UIInvoiceController.ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
+
+            IPaymentFilter excludeFilter = null;
+            if (invoice.PaymentCurrencies?.Any() is true)
+            {
+                invoice.SupportedTransactionCurrencies ??=
+                    new Dictionary<string, InvoiceSupportedTransactionCurrency>();
+                foreach (string paymentCurrency in invoice.PaymentCurrencies)
+                {
+                    invoice.SupportedTransactionCurrencies.TryAdd(paymentCurrency,
+                        new InvoiceSupportedTransactionCurrency() { Enabled = true });
+                }
+            }
+            if (invoice.SupportedTransactionCurrencies != null && invoice.SupportedTransactionCurrencies.Count != 0)
+            {
+                var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies
+                                                            .Where(c => c.Value.Enabled)
+                                                            .Select(c => PaymentMethodId.TryParse(c.Key, out var p) ? p : null)
+                                                            .Where(c => c != null)
+                                                            .ToHashSet();
+                excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
+            }
+            entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
+            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
+            return await _InvoiceController.CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, false);
+        }
+               
+               private void FillBuyerInfo(BitpayCreateInvoiceRequest req, InvoiceEntity invoiceEntity)
+               {
+                   var buyerInformation = invoiceEntity.Metadata;
+                   buyerInformation.BuyerAddress1 = req.BuyerAddress1;
+                   buyerInformation.BuyerAddress2 = req.BuyerAddress2;
+                   buyerInformation.BuyerCity = req.BuyerCity;
+                   buyerInformation.BuyerCountry = req.BuyerCountry;
+                   buyerInformation.BuyerEmail = req.BuyerEmail;
+                   buyerInformation.BuyerName = req.BuyerName;
+                   buyerInformation.BuyerPhone = req.BuyerPhone;
+                   buyerInformation.BuyerState = req.BuyerState;
+                   buyerInformation.BuyerZip = req.BuyerZip;
+                   var buyer = req.Buyer;
+                   if (buyer == null)
+                       return;
+                   buyerInformation.BuyerAddress1 ??= buyer.Address1;
+                   buyerInformation.BuyerAddress2 ??= buyer.Address2;
+                   buyerInformation.BuyerCity ??= buyer.City;
+                   buyerInformation.BuyerCountry ??= buyer.country;
+                   buyerInformation.BuyerEmail ??= buyer.email;
+                   buyerInformation.BuyerName ??= buyer.Name;
+                   buyerInformation.BuyerPhone ??= buyer.phone;
+                   buyerInformation.BuyerState ??= buyer.State;
+                   buyerInformation.BuyerZip ??= buyer.zip;
+               }
+
+        
         [HttpGet]
         [Route("invoices/{id}")]
         public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id)

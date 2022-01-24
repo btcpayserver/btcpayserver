@@ -185,7 +185,7 @@ namespace BTCPayServer.Plugins.Shopify
                 }
 
                 //we create the invoice at due amount provided from order page or full amount if due amount is bigger than order amount
-                var invoice = await _invoiceController.CreateInvoiceCoreRaw(
+                var invoice = await _invoiceController.CreateInvoiceCore(
                     new CreateInvoiceRequest()
                     {
                         Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,

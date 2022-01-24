@@ -3,8 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Stores;
@@ -58,23 +60,28 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View();
 
-            DataWrapper<InvoiceResponse> invoice = null;
+            InvoiceEntity invoice = null;
             try
             {
-                invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                 {
-                    Price = model.Price,
+                    Amount = model.Price,
+                    Type = model.Price is null? InvoiceType.TopUp: InvoiceType.Standard,
                     Currency = model.Currency,
-                    ItemDesc = model.CheckoutDesc,
-                    OrderId = model.OrderId,
-                    NotificationEmail = model.NotifyEmail,
-                    NotificationURL = model.ServerIpn,
-                    RedirectURL = model.BrowserRedirect,
-                    FullNotifications = true,
-                    DefaultPaymentMethod = model.DefaultPaymentMethod
+                    Checkout = new InvoiceDataBase.CheckoutOptions()
+                    {
+                        RedirectURL = model.BrowserRedirect,
+                        DefaultPaymentMethod = model.DefaultPaymentMethod
+                    },
+                    Metadata = new InvoiceMetadata()
+                    {
+                        ItemDesc = model.CheckoutDesc,
+                        OrderId = model.OrderId,
+                    }.ToJObject()
+                    
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
             }
-            catch (BitpayHttpException e)
+            catch (Exception e)
             {
                 ModelState.AddModelError("Store", e.Message);
                 if (model.JsonResponse)
@@ -85,22 +92,24 @@ namespace BTCPayServer.Controllers
                 return View();
             }
 
+
+            var url = Request.GetAbsoluteUri(Url.Action("Checkout", "UIInvoice", new {invoiceId = invoice.Id}));
             if (model.JsonResponse)
             {
                 return Json(new
                 {
-                    InvoiceId = invoice.Data.Id,
-                    InvoiceUrl = invoice.Data.Url
+                    InvoiceId = invoice.Id,
+                    InvoiceUrl = url
                 });
             }
 
             if (string.IsNullOrEmpty(model.CheckoutQueryString))
             {
-                return Redirect(invoice.Data.Url);
+                return Redirect(url);
             }
 
             var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);
-            var uriBuilder = new UriBuilder(invoice.Data.Url);
+            var uriBuilder = new UriBuilder(url);
             var paramValues = HttpUtility.ParseQueryString(uriBuilder.Query);
             paramValues.Add(additionalParamValues);
             uriBuilder.Query = paramValues.ToString();

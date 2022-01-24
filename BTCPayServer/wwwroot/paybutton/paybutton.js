@@ -29,7 +29,7 @@ var dictionary = {
     en: {
         attributes: {
             price: 'Price', checkoutDesc: 'Checkout Description', orderId: 'Order Id',
-            serverIpn: 'Server IPN', notifyEmail: 'Send Email Notifications', browserRedirect: 'Browser Redirect',
+            browserRedirect: 'Browser Redirect',
             payButtonImageUrl: "Pay Button Image Url"
         }
     }
@@ -112,16 +112,13 @@ function inputChanges(event, buttonSize) {
     
     if (app) {
         if (srvModel.orderId) html += addInput("orderId", srvModel.orderId);
-        if (srvModel.serverIpn) html += addInput("notificationUrl", srvModel.serverIpn);
         if (srvModel.browserRedirect) html += addInput("redirectUrl", srvModel.browserRedirect);
         if (srvModel.appChoiceKey) html += addInput("choiceKey", srvModel.appChoiceKey);
     } else {
         if (srvModel.useModal) html += addInput("jsonResponse", true);
         if (srvModel.orderId) html += addInput("orderId", srvModel.orderId);
         if (srvModel.checkoutDesc) html += addInput("checkoutDesc", srvModel.checkoutDesc);
-        if (srvModel.serverIpn) html += addInput("serverIpn", srvModel.serverIpn);
         if (srvModel.browserRedirect) html += addInput("browserRedirect", srvModel.browserRedirect);
-        if (srvModel.notifyEmail) html += addInput("notifyEmail", srvModel.notifyEmail);
         if (srvModel.checkoutQueryString) html += addInput("checkoutQueryString", srvModel.checkoutQueryString);
     }
 

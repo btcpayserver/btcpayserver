@@ -31,11 +31,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         [Display(Name = "Featured Image URL")]
         public string MainImageUrl { get; set; }
-
-        [Display(Name = "Callback Notification URL")]
-        [Uri]
-        public string NotificationUrl { get; set; }
-
         [Required]
         [Display(Name = "Make Crowdfund Public")]
         public bool Enabled { get; set; }

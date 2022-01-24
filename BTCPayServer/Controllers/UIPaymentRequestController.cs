@@ -261,7 +261,7 @@ namespace BTCPayServer.Controllers
                     };
 
                 var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(payReqId) };
-                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
+                var newInvoice = await _InvoiceController.CreateInvoiceCore(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
 
                 if (redirectToInvoice)
                 {

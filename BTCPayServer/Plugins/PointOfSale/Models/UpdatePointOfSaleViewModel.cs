@@ -36,12 +36,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool EnableTips { get; set; }
         public string Example1 { get; internal set; }
         public string Example2 { get; internal set; }
-        public string ExampleCallback { get; internal set; }
         public string InvoiceUrl { get; internal set; }
-
-        [Display(Name = "Callback Notification URL")]
-        [Uri]
-        public string NotificationUrl { get; set; }
         [Display(Name = "Redirect URL")]
         [Uri]
         public string RedirectUrl { get; set; }

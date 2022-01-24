@@ -32,11 +32,7 @@ namespace BTCPayServer.Plugins.PayButton.Models
         public bool FitButtonInline { get; set; }
 
         [Url]
-        public string ServerIpn { get; set; }
-        [Url]
         public string BrowserRedirect { get; set; }
-        [MailboxAddress]
-        public string NotifyEmail { get; set; }
 
         public string StoreId { get; set; }
         public string CheckoutQueryString { get; set; }

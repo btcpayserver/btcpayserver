@@ -1075,27 +1075,28 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var result = await CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var result = await CreateInvoiceCore(new CreateInvoiceRequest()
                 {
-                    Price = model.Amount,
+                    Amount = model.Amount,
+                    Type = model.Amount is null? InvoiceType.TopUp: InvoiceType.Standard,
                     Currency = model.Currency,
-                    PosData = model.PosData,
-                    OrderId = model.OrderId,
-                    //RedirectURL = redirect + "redirect",
-                    NotificationURL = model.NotificationUrl,
-                    ItemDesc = model.ItemDesc,
-                    FullNotifications = true,
-                    BuyerEmail = model.BuyerEmail,
-                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
+                    Checkout = new InvoiceDataBase.CheckoutOptions()
                     {
-                        Enabled = true
-                    }),
-                    DefaultPaymentMethod = model.DefaultPaymentMethod,
-                    NotificationEmail = model.NotificationEmail,
-                    ExtendedNotifications = model.NotificationEmail != null,
-                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? store.GetStoreBlob().RequiresRefundEmail
-                        : model.RequiresRefundEmail == RequiresRefundEmail.On
+                        PaymentMethods = model.SupportedTransactionCurrencies?.ToArray(),
+                        DefaultPaymentMethod = model.DefaultPaymentMethod,
+                        RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
+                            ? store.GetStoreBlob().RequiresRefundEmail
+                            : model.RequiresRefundEmail == RequiresRefundEmail.On
+                    },
+                    Metadata = new InvoiceMetadata()
+                    {
+                        PosData = model.PosData,
+                        OrderId = model.OrderId,
+                        ItemDesc = model.ItemDesc,
+                        BuyerEmail = model.BuyerEmail,
+                    }.ToJObject()
+                    
+                    
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

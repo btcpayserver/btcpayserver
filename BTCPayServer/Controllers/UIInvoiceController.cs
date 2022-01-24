@@ -294,7 +294,7 @@ namespace BTCPayServer.Controllers
                     .Select(o =>
                         (SupportedPaymentMethod: o.SupportedPaymentMethod,
                             PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler,
-                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis)))
+                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis, lazyPaymentMethods)))
                     .ToList())
                 {
                     var paymentMethod = await o.PaymentMethod;
@@ -375,7 +375,7 @@ namespace BTCPayServer.Controllers
             IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetworkBase network,
             InvoiceEntity entity,
             StoreData store, InvoiceLogs logs,
-            HashSet<PaymentMethodId> invoicePaymentMethods)
+            HashSet<PaymentMethodId> invoicePaymentMethods, bool? lazyPaymentMethods = null)
         {
             try
             {
@@ -383,7 +383,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
 
                 object? preparePayment;
-                if (storeBlob.LazyPaymentMethods)
+                if ((lazyPaymentMethods??storeBlob.LazyPaymentMethods))
                 {
                     preparePayment = null;
                 }
@@ -460,7 +460,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
+        public static SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
         {
             if (transactionSpeed == null)
                 return defaultPolicy;
@@ -474,30 +474,6 @@ namespace BTCPayServer.Controllers
             return policy;
         }
 
-        private void FillBuyerInfo(BitpayCreateInvoiceRequest req, InvoiceEntity invoiceEntity)
-        {
-            var buyerInformation = invoiceEntity.Metadata;
-            buyerInformation.BuyerAddress1 = req.BuyerAddress1;
-            buyerInformation.BuyerAddress2 = req.BuyerAddress2;
-            buyerInformation.BuyerCity = req.BuyerCity;
-            buyerInformation.BuyerCountry = req.BuyerCountry;
-            buyerInformation.BuyerEmail = req.BuyerEmail;
-            buyerInformation.BuyerName = req.BuyerName;
-            buyerInformation.BuyerPhone = req.BuyerPhone;
-            buyerInformation.BuyerState = req.BuyerState;
-            buyerInformation.BuyerZip = req.BuyerZip;
-            var buyer = req.Buyer;
-            if (buyer == null)
-                return;
-            buyerInformation.BuyerAddress1 ??= buyer.Address1;
-            buyerInformation.BuyerAddress2 ??= buyer.Address2;
-            buyerInformation.BuyerCity ??= buyer.City;
-            buyerInformation.BuyerCountry ??= buyer.country;
-            buyerInformation.BuyerEmail ??= buyer.email;
-            buyerInformation.BuyerName ??= buyer.Name;
-            buyerInformation.BuyerPhone ??= buyer.phone;
-            buyerInformation.BuyerState ??= buyer.State;
-            buyerInformation.BuyerZip ??= buyer.zip;
-        }
+        
     }
 }

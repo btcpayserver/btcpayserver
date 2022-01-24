@@ -22,7 +22,13 @@
     z-index: 1;
 }
 
-#mainMenuHead .mainMenuButton  {
+#mainMenuHead  {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#mainMenuHead .mainMenuButton {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -353,6 +359,10 @@
         --header-height: var(--mobile-header-height);
     }
 
+    #mainMenuHead  {
+        padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    }
+
     #mainNav {
         position: fixed;
         top: var(--mobile-header-height);
@@ -511,6 +521,11 @@
         left: 0;
         width: var(--sidebar-width);
         height: 100vh;
+    }
+
+    #mainMenuHead {
+        flex-wrap: wrap;
+        padding: var(--btcpay-space-m) 1.5rem;
     }
 
     #mainNav {

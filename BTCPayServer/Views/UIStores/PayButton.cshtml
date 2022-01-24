@@ -41,7 +41,8 @@
     <template id="template-price-buttons" csp-allow>
     function handlePlusMinus(event) {
         event.preventDefault();
-        const el = document.querySelector('#btcpay-input-price');
+        const root = event.target.closest('.btcpay-form');
+        const el = root.querySelector('.btcpay-input-price');
         const step = parseInt(event.target.dataset.step) || 1;
         const min = parseInt(event.target.dataset.min) || 1;
         const max = parseInt(event.target.dataset.max);
@@ -57,8 +58,9 @@
     <template id="template-price-input" csp-allow>
     function handlePriceInput(event) {
         event.preventDefault();
+        const root = event.target.closest('.btcpay-form');
         const price = parseInt(event.target.dataset.price);
-        if (isNaN(event.target.value)) document.querySelector('#btcpay-input-price').value = price;
+        if (isNaN(event.target.value)) root.querySelector('.btcpay-input-price').value = price;
         const min = parseInt(event.target.getAttribute('min')) || 1;
         const max = parseInt(event.target.getAttribute('max'));
         if (event.target.value < min) {
@@ -71,7 +73,8 @@
     <template id="template-price-slider" csp-allow>
     function handleSliderChange(event) {
         event.preventDefault();
-        const el = document.querySelector('#btcpay-input-price');
+        const root = event.target.closest('.btcpay-form');
+        const el = root.querySelector('.btcpay-input-price');
         const price = parseInt(el.value);
         const min = parseInt(event.target.getAttribute('min')) || 1;
         const max = parseInt(event.target.getAttribute('max'));
@@ -80,11 +83,11 @@
         } else if (price > max) {
             el.value = max;
         } 
-        document.querySelector('#btcpay-input-range').value = el.value;
+        root.querySelector('.btcpay-input-range').value = el.value;
     }
     
     function handleSliderInput(event) {
-        document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value;
+        event.target.closest('.btcpay-form').querySelector('.btcpay-input-price').value = event.target.value;
     }
     </template>
     
@@ -431,7 +434,11 @@
         .btcpay-form select:hover {
             border-color: #ccc;
         }
-        #btcpay-input-price {
+        .btcpay-form option {
+            color: #000;
+            background: rgba(0,0,0,.1);
+        }
+        .btcpay-input-price {
             -moz-appearance: textfield;
             border: none;
             box-shadow: none;
@@ -443,8 +450,8 @@
             background: #fff;
         }
         
-        #btcpay-input-price::-webkit-outer-spin-button,
-        #btcpay-input-price::-webkit-inner-spin-button {
+        .btcpay-input-price::-webkit-outer-spin-button,
+        .btcpay-input-price::-webkit-inner-spin-button {
           -webkit-appearance: none;
           margin: 0;
         }

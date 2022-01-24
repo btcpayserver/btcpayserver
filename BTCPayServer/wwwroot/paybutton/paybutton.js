@@ -204,12 +204,12 @@ function addPlusMinusButton(type, step, min, max) {
 
 function addInputPrice(name, price, widthInput, min = 0, max = 'none', step = 'any', onChange = null) {
     if (!price) price = min
-    return `      <input id="btcpay-input-price" type="number" name="${esc(name)}" min="${min}" max="${max}" step="${step}" value="${price}" data-price="${price}" style="width:${widthInput};" oninput="handlePriceInput(event);return false"${onChange ? ` onchange="${onChange}"` : ''} />\n`;
+    return `      <input class="btcpay-input-price" type="number" name="${esc(name)}" min="${min}" max="${max}" step="${step}" value="${price}" data-price="${price}" style="width:${widthInput};" oninput="handlePriceInput(event);return false"${onChange ? ` onchange="${onChange}"` : ''} />\n`;
 }
 
 function addSlider(price, min, max, step, width) {
     if (!price) price = min
-    return `    <input id="btcpay-input-range" type="range" class="btcpay-input-range" min="${min}" max="${max}" step="${step}" value="${price}" style="width:${width};margin-bottom:15px;" oninput="handleSliderInput(event);return false" />\n`;
+    return `    <input type="range" class="btcpay-input-range" min="${min}" max="${max}" step="${step}" value="${price}" style="width:${width};margin-bottom:15px;" oninput="handleSliderInput(event);return false" />\n`;
 }
 
 function addSelectCurrency(currency) {

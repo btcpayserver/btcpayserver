@@ -1253,6 +1253,14 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void KitchenSinkTest()
+        {
+            var b = JsonConvert.DeserializeObject<PullPaymentBlob>("{}");
+            Assert.Equal(TimeSpan.FromDays(30.0), b.BOLT11Expiration);
+            var aaa = JsonConvert.SerializeObject(b);
+        }
+
+        [Fact]
         public void CanParseRateRules()
         {
             // Check happy path

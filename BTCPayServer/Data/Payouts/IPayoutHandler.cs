@@ -14,7 +14,18 @@ public interface IPayoutHandler
     public bool CanHandle(PaymentMethodId paymentMethod);
     public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination);
     //Allows payout handler to parse payout destinations on its own
-    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, bool validate);
+    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination);
+    public (bool valid, string error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob pullPaymentBlob);
+    public async Task<(IClaimDestination destination, string error)> ParseAndValidateClaimDestination(PaymentMethodId paymentMethodId, string destination, PullPaymentBlob pullPaymentBlob)
+    {
+        var res = await ParseClaimDestination(paymentMethodId, destination);
+        if (res.destination is null)
+            return res;
+        var res2 = ValidateClaimDestination(res.destination, pullPaymentBlob);
+        if (!res2.valid)
+            return (null, res2.error);
+        return res;
+    }
     public IPayoutProof ParseProof(PayoutData payout);
     //Allows you to subscribe the main pull payment hosted service to events and prepare the handler 
     void StartBackgroundCheck(Action<Type[]> subscribe);

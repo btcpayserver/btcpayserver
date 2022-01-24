@@ -355,8 +355,16 @@
 }
 
 @media (max-width: 991px) {
-    #mainMenu {
+    :root {
         --header-height: var(--mobile-header-height);
+    }
+
+    
+    #mainMenu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
     }
 
     #mainMenuHead  {
@@ -461,6 +469,7 @@
     }
 
     #mainContent > section {
+        margin-top: var(--header-height);
         padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-xl);
     }
 
@@ -512,9 +521,11 @@
 }
 
 @media (min-width: 992px) {
-    #mainMenu {
+    :root {
         --header-height: var(--desktop-header-height);
-
+    }
+    
+    #mainMenu {
         position: fixed;
         top: 0;
         bottom: 0;

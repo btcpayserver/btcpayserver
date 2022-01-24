@@ -1,8 +1,3 @@
-/* Set scroll padding so that anchors don't disappear underneath the fixed navbar */ 
-html {
-    scroll-padding-top: 5rem;
-}
-
 /* General and site-wide Bootstrap modifications */
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 600;

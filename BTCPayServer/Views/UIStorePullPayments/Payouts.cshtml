@@ -55,7 +55,7 @@
     <input type="hidden" asp-for="PaymentMethodId" />
     <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
-        <ul class="nav nav-pills mb-1">
+        <ul class="nav mb-1">
             @foreach (var state in Model.PaymentMethods)
             {
                 <li class="nav-item py-0">
@@ -63,7 +63,7 @@
                        asp-route-payoutState="@Model.PayoutState"
                        asp-route-paymentMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="nav-link me-1 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">@state.ToPrettyString()</a>
                 </li>

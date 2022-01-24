@@ -43,14 +43,17 @@
                         </h3>
                         @if (Model.Available)
                         {
-                            @if (Model.NodeInfo.Length > 1)
+                            @if (Model.NodeInfo.Length > 0)
                             {
-                                <ul class="nav nav-pills justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
+                                <ul class="nav justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
                                     @for (int i = 0; i < Model.NodeInfo.Length; i++)
                                     {
                                         var nodeInfo = Model.NodeInfo[i];
                                         <li class="nav-item" role="presentation">
-                                            <button class="nav-link w-100px @(i == 0 ? "active" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
+                                            <button class="btcpay-pill @(i == 0 ? "active" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="btcpay-pill @(i == 0 ? "" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
                                         </li>
                                     }
                                 </ul>

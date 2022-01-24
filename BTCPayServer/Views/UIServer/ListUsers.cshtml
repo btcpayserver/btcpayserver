@@ -40,54 +40,55 @@
         Add User
     </a>
 </div>
-
-<table class="table table-hover">
-    <thead>
-    <tr>
-        <th>
-            <a
-                asp-action="ListUsers"
-                asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
-                class="text-nowrap"
-                title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
-            >
-                Email
-                <span class="fa @(sortIconClass)" />
-            </a>
-        </th>
-        <th>Created</th>
-        <th>Verified</th>
-        <th class="text-end">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var user in Model.Users)
-    {
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
         <tr>
-            <td class="d-flex align-items-center">
-                <span class="me-2">@user.Email</span>
-                @foreach (var role in user.Roles)
-                {
-                    <span class="badge bg-info">@Model.Roles[role]</span>
-                }
-            </td>
-            <td>@user.Created?.ToBrowserDate()</td>
-            <td class="text-center">
-                @if (user.Verified)
-                {
-                    <span class="text-success fa fa-check"></span>
-                }
-                else
-                {
-                    <span class="text-danger fa fa-times"></span>
-                }
-            </td>
-            <td class="text-end">
-                <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
-            </td>
+            <th>
+                <a
+                    asp-action="ListUsers"
+                    asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
+                    class="text-nowrap"
+                    title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
+                >
+                    Email
+                    <span class="fa @(sortIconClass)" />
+                </a>
+            </th>
+            <th>Created</th>
+            <th>Verified</th>
+            <th class="text-end">Actions</th>
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td class="d-flex align-items-center">
+                    <span class="me-2">@user.Email</span>
+                    @foreach (var role in user.Roles)
+                    {
+                        <span class="badge bg-info">@Model.Roles[role]</span>
+                    }
+                </td>
+                <td>@user.Created?.ToBrowserDate()</td>
+                <td class="text-center">
+                    @if (user.Verified)
+                    {
+                        <span class="text-success fa fa-check"></span>
+                    }
+                    else
+                    {
+                        <span class="text-danger fa fa-times"></span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
 
 <vc:pager view-model="Model"></vc:pager>

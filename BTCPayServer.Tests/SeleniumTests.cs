@@ -505,9 +505,21 @@ namespace BTCPayServer.Tests
             s.GoToUrl(invoiceUrl);
             s.Driver.AssertNoError();
 
-            // Alice should be able to delete the store
             s.Logout();
             s.LogIn(alice);
+
+            // Check if we can enable the payment button
+            s.GoToStore(StoreNavPages.PayButton);
+            s.Driver.FindElement(By.Id("enable-pay-button")).Click();
+            s.Driver.FindElement(By.Id("disable-pay-button")).Click();
+            s.FindAlertMessage();
+            Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
+            s.Driver.SetCheckbox(By.Id("AnyoneCanCreateInvoice"), true);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            s.FindAlertMessage();
+            Assert.True(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
+
+            // Alice should be able to delete the store
             s.GoToStore(StoreNavPages.General);
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");

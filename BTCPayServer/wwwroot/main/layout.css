@@ -461,7 +461,7 @@
     }
 
     #mainContent > section {
-        padding: var(--btcpay-space-m) 0 var(--btcpay-space-xl);
+        padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-xl);
     }
 
     #SectionNav {
@@ -557,14 +557,18 @@
         margin-left: var(--sidebar-width);
     }
 
+    #mainContent pre {
+        max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
+    }
+
     #mainContent > section {
         padding: 4.5rem var(--btcpay-space-xl);
     }
 
-    #mainContent > section > .container,
+    #mainContent > section,
     .btcpay-footer > .container {
         margin: 0;
-        max-width: min(1140px, calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem)); /* 1rem for scrollbar */
+        max-width: none;
     }
     
     .btcpay-footer {

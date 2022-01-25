@@ -1002,7 +1002,7 @@ namespace BTCPayServer.Controllers
             CurrentStore.SetStoreBlob(blob);
             TempData[WellKnownTempData.SuccessMessage] = "Feature disabled";
             await _Repo.UpdateStore(CurrentStore);
-            return RedirectToAction(nameof(Payment), new { storeId = storeId });
+            return RedirectToAction(nameof(PayButton), new { storeId = storeId });
         }
 
         [Route("{storeId}/paybutton")]

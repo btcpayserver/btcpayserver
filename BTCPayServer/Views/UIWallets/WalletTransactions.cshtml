@@ -72,10 +72,10 @@
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">@ViewData["Title"]</h4>
+    <h3 class="mb-0">@ViewData["Title"]</h3>
     <form method="post" asp-action="WalletActions" asp-route-walletId="@Context.GetRouteValue("walletId")">
         <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle py-1 px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Actions
             </button>
             <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">

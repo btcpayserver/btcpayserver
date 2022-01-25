@@ -2,10 +2,10 @@
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Rescan, "Rescan wallet", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Rescan, "Rescan Wallet", walletId);
 }
 
-<h4 class="mb-3">@ViewData["Title"]</h4>
+<h3 class="mb-3">@ViewData["Title"]</h3>
 
 @if (!Model.Ok)
 {
@@ -85,7 +85,7 @@ else if (!Model.Progress.HasValue)
                     <label asp-for="BatchSize" class="form-label"></label>
                     <input asp-for="BatchSize" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
-                <button type="submit" class="btn btn-primary">Start scan</button>
+                <button type="submit" class="btn btn-primary mt-2">Start scan</button>
             </form>
         </div>
     </div>

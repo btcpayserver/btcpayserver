@@ -513,11 +513,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("enable-pay-button")).Click();
             s.Driver.FindElement(By.Id("disable-pay-button")).Click();
             s.FindAlertMessage();
-            s.GoToStore(StoreNavPages.Payment);
+            s.GoToStore(StoreNavPages.General);
             Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
             s.Driver.SetCheckbox(By.Id("AnyoneCanCreateInvoice"), true);
             s.Driver.FindElement(By.Id("Save")).Click();
-            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\998356609\lol.png");
             s.FindAlertMessage();
             Assert.True(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
 

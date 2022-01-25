@@ -14,12 +14,12 @@
 <p>Scan the QR code with your Lightning wallet to link it to your user account.</p>
 
 <div id="info-message" class="d-inline-block">
-    <ul class="nav nav-pills justify-content-center my-2">
+    <ul class="nav justify-content-center my-2">
         @for (int i = 0; i < formats.Count; i++)
         {
             var mode = formats.ElementAt(i);
             <li class="nav-item">
-                <a class="nav-link @(i == 0 ? "active" : "")"
+                <a class="btcpay-pill @(i == 0 ? "active" : "")"
                    data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
                    href="#">
                     @mode.Key

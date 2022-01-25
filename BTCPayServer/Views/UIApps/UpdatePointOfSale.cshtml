@@ -2,12 +2,12 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, $"Update Point of Sale: {Model.AppName}", Model.Id);
+    ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 }
 
 <partial name="_StatusMessage" />
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <form method="post">
     <input type="hidden" asp-for="StoreId" />

@@ -234,7 +234,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-9 mt-2 mb-5">
+        <div class="col-lg-9 mt-2">
             <div class="d-grid gap-3 d-md-block">
                 <button type="submit" class="btn btn-primary me-md-2"  id="SaveSettings">Save Settings</button>
                 <div class="btn-group me-md-2">
@@ -254,7 +254,7 @@
 
 <h3 class="mt-5 mb-4">Other Actions</h3>
 <div id="danger-zone">
-    <a id="DeleteApp" class="btn btn-outline-danger mb-5" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

@@ -1,16 +1,26 @@
 @using BTCPayServer.Configuration
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Plugins
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel 
 @inject BTCPayServerOptions BTCPayServerOptions
 @{
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
-    var availableAndNotInstalled = Model.Available
+
+    var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant()))
-        .OrderBy(plugin => plugin.Identifier)
+        .GroupBy(plugin => plugin.Identifier)
         .ToList();
 
+    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
+    foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
+    {
+        var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
+        availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? ordered.FirstOrDefault());
+    }
+    
+    
     bool DependentOn(string plugin)
     {
         foreach (var installedPlugin in Model.Installed)
@@ -125,8 +135,10 @@
     <div class="row mb-4">
         @foreach (var plugin in Model.Installed)
         {
-            var matchedAvailable = Model.Available.SingleOrDefault(availablePlugin => availablePlugin.Identifier == plugin.Identifier);
-            var updateAvailable = !plugin.SystemPlugin && matchedAvailable != null && plugin.Version < matchedAvailable.Version;
+            var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
+           
+            var x = matchedAvailable.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? matchedAvailable.FirstOrDefault();
+            var updateAvailable = !plugin.SystemPlugin && matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
@@ -142,7 +154,7 @@
                                 else if (updateAvailable)
                                 {
                                     <div class="badge bg-info ms-2">
-                                        @matchedAvailable.Version available
+                                        @x.Version available
                                     </div>
                                 }
                             </h5>
@@ -179,12 +191,12 @@
                             @if (updateAvailable)
                             {
                                 <div class="tab-pane" id="@tabId-update">
-                                    <p class="card-text">@matchedAvailable.Description</p>
-                                    @if (matchedAvailable.Dependencies.Any())
+                                    <p class="card-text">@x.Description</p>
+                                    @if (x.Dependencies.Any())
                                     {
                                         <h5 class="text-muted">Dependencies</h5>
                                         <ul class="list-group list-group-flush">
-                                            @foreach (var dependency in matchedAvailable.Dependencies)
+                                            @foreach (var dependency in x.Dependencies)
                                             {
                                                 <li class="list-group-item p-2">
                                                     @dependency
@@ -203,7 +215,7 @@
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(matchedAvailable.Dependencies)) || !DependentOn(plugin.Identifier)))
+                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier)))
                     {
                         <div class="card-footer border-0 pb-3 d-flex">
                             @if (pendingAction)
@@ -214,9 +226,9 @@
                             }
                             else
                             {
-                                @if (updateAvailable && DependenciesMet(matchedAvailable.Dependencies))
+                                @if (updateAvailable && DependenciesMet(x.Dependencies))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="me-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-path="@x.Path" asp-route-update="true" class="me-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
@@ -245,6 +257,7 @@
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
+            
             var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
             
@@ -301,7 +314,7 @@
                             @* Don't show the "Install" button if plugin has been disabled *@
                             @if (!disabled)
                             {
-                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-path="@plugin.Path">
                                     <button type="submit" class="btn btn-primary">Install</button>
                                 </form>
                             }

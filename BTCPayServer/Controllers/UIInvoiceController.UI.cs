@@ -899,7 +899,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id })}' class='alert-link'>set up a payment method</a> first",
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
                     AllowDismiss = false
                 });
                 return View(model);

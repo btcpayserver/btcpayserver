@@ -57,7 +57,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 : LightningLikePayoutHandlerClearnetNamedClient);
         }
 
-        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, bool validate)
+        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
         {
             destination = destination.Trim();
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
@@ -93,12 +93,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     : null;
 
             if (result == null)
-                return (null, "A valid BOLT11 invoice (with 30+ day expiry) or LNURL Pay or Lightning address was not provided.");
-            if (validate && (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days < 30)
-            {
-                return (null,
-                    $"The BOLT11 invoice must have an expiry date of at least 30 days from submission (Provided was only {(invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days}).");
-            }
+                return (null, "A valid BOLT11 invoice or LNURL Pay or Lightning address was not provided.");
             if (invoice.ExpiryDate.UtcDateTime < DateTime.UtcNow)
             {
                 return (null,
@@ -106,6 +101,19 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
 
             return (result, null);
+        }
+
+        public (bool valid, string error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob pullPaymentBlob)
+        {
+            if (claimDestination is not BoltInvoiceClaimDestination bolt)
+                return (true, null);
+            var invoice = bolt.PaymentRequest;
+            if ((invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow) < pullPaymentBlob.BOLT11Expiration)
+            {
+                return (false,
+                    $"The BOLT11 invoice must have an expiry date of at least {(long)pullPaymentBlob.BOLT11Expiration.TotalDays} days from submission (Provided was only {(invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days}).");
+            }
+            return (true, null);
         }
 
         public IPayoutProof ParseProof(PayoutData payout)

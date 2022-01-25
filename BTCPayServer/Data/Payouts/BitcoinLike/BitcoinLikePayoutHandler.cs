@@ -68,7 +68,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
     }
 
-    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, bool validate)
+    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
     {
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
         destination = destination.Trim();
@@ -86,6 +86,11 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             return Task.FromResult<(IClaimDestination, string)>(
                 (null, "A valid address was not provided"));
         }
+    }
+
+    public (bool valid, string error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob pullPaymentBlob)
+    {
+        return (true, null);
     }
 
     public IPayoutProof ParseProof(PayoutData payout)
@@ -251,7 +256,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             var blob = payout.GetBlob(_jsonSerializerSettings);
             if (payout.GetPaymentMethodId() != paymentMethodId)
                 continue;
-            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination, false);
+            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination);
             switch (claim.destination)
             {
                 case UriClaimDestination uriClaimDestination:

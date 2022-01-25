@@ -26,34 +26,6 @@
             color: var(--btcpay-warning);
         }
         #save { min-width: 7rem; }
-        #LightningNodeTypeTablist input { display: none; }
-        #LightningNodeTypeTablist input:checked + label {
-            color: var(--btcpay-body-text-active);
-            background: var(--btcpay-body-bg-active);
-            border-color: var(--btcpay-body-bg-active);
-        }
-        #LightningNodeTypeTablist label {
-            display: inline-block;
-            padding: .75rem 2rem;
-            color: var(--btcpay-body-link);
-            font-weight: var(--btcpay-font-weight-semibold);
-            border-radius: 1.5rem;
-            border: 1px solid var(--btcpay-secondary-border);
-            cursor: pointer;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        #LightningNodeTypeTablist input:not(:checked):not([disabled]) + label:hover {
-            border-color: var(--btcpay-secondary-border-hover);
-        }
-        #LightningNodeTypeTablist input[disabled] + label {
-            color: var(--btcpay-body-text-muted);
-            border-color: var(--btcpay-secondary-border);
-            background: transparent;
-            opacity: .5;
-        }
-        #LightningNodeTypeTablist label + input + label {
-            margin-left: var(--btcpay-space-m);
-        }
         #LightningNodeTypeTabs ul {
             list-style: none;
             padding-left: 0;
@@ -71,7 +43,7 @@
 }
 
 <form method="post" class="mt-n2 text-center">
-    <div id="LightningNodeTypeTablist" class="nav nav-pills align-items-center justify-content-center mb-3" role="tablist">
+    <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">
         <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" disabled="@(!Model.CanUseInternalNode)">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
         

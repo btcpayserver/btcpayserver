@@ -604,7 +604,8 @@ namespace BTCPayServer.Controllers
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
-                DefaultCurrency = storeBlob.DefaultCurrency
+                DefaultCurrency = storeBlob.DefaultCurrency,
+                BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays
             };
 
             return View(vm);
@@ -620,6 +621,7 @@ namespace BTCPayServer.Controllers
             blob.PaymentTolerance = model.PaymentTolerance;
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
+            blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
 
             if (CurrentStore.SetStoreBlob(blob))
             {
@@ -990,6 +992,17 @@ namespace BTCPayServer.Controllers
             if (User.Identity.AuthenticationType != AuthenticationSchemes.Cookie)
                 return null;
             return _UserManager.GetUserId(User);
+        }
+
+        [HttpPost("{storeId}/disable-anyone-can-pay")]
+        public async Task<IActionResult> DisableAnyoneCanCreateInvoice(string storeId)
+        {
+            var blob = CurrentStore.GetStoreBlob();
+            blob.AnyoneCanInvoice = false;
+            CurrentStore.SetStoreBlob(blob);
+            TempData[WellKnownTempData.SuccessMessage] = "Feature disabled";
+            await _Repo.UpdateStore(CurrentStore);
+            return RedirectToAction(nameof(Payment), new { storeId = storeId });
         }
 
         [Route("{storeId}/paybutton")]

@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), $"Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination, true);
+            var destination = await payoutHandler?.ParseAndValidateClaimDestination(paymentMethodId, vm.Destination, ppBlob);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(vm.Destination), destination.error ?? "Invalid destination with selected payment method");

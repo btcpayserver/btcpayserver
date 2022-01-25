@@ -97,6 +97,7 @@
                     <a href="#" class="setTheme" data-theme="dark">Dark</a> |
                     <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
                 </p>
+                @await Component.InvokeAsync("UiExtensionPoint", new { location = "invoice-checkout-theme-options", model = Model })
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>

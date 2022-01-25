@@ -174,6 +174,11 @@ namespace BTCPayServer.Data
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 
+        [DefaultValue(typeof(TimeSpan), "30.00:00:00")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        public TimeSpan RefundBOLT11Expiration { get; set; }
+
         public class StoreHints
         {
             public bool Wallet { get; set; }

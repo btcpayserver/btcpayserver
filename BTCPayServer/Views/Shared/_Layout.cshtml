@@ -22,7 +22,7 @@
 </head>
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column">
-    <div id="mainMenuHead" class="d-flex flex-lg-wrap align-items-center justify-content-between py-2 px-3 py-lg-3 px-lg-4">
+    <div id="mainMenuHead">
         <vc:store-selector />
         @if (_signInManager.IsSignedIn(User))
         {
@@ -61,9 +61,7 @@
         </div>
     }
     <section>
-        <div class="container">
-            @RenderBody()
-        </div>
+        @RenderBody()
     </section>
     
     <partial name="_Footer"/>

@@ -2,7 +2,7 @@
 @using System.Globalization
 @model UpdateCrowdfundViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, $"Update Crowdfund: {Model.AppName}", Model.AppId);
+    ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
 }
 
 @section PageHeadContent {
@@ -16,7 +16,7 @@
 
 <partial name="_StatusMessage" />
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <form method="post">
     <input type="hidden" asp-for="StoreId" />

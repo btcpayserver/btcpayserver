@@ -99,6 +99,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
+            if (request.BOLT11Expiration <= TimeSpan.Zero)
+            {
+                ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
+            }
             PaymentMethodId?[]? paymentMethods = null;
             if (request.PaymentMethods is { } paymentMethodsStr)
             {
@@ -127,6 +131,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 StartsAt = request.StartsAt,
                 ExpiresAt = request.ExpiresAt,
                 Period = request.Period,
+                BOLT11Expiration = request.BOLT11Expiration,
                 Name = request.Name,
                 Amount = request.Amount,
                 Currency = request.Currency,
@@ -150,6 +155,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Currency = ppBlob.Currency,
                 Period = ppBlob.Period,
                 Archived = pp.Archived,
+                BOLT11Expiration = ppBlob.BOLT11Expiration,
                 ViewLink = _linkGenerator.GetUriByAction(
                                 nameof(UIPullPaymentController.ViewPullPayment),
                                 "UIPullPayment",
@@ -245,7 +251,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (pp is null)
                 return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
-            var destination = await payoutHandler.ParseClaimDestination(paymentMethodId, request!.Destination, true);
+            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, request!.Destination, ppBlob);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");

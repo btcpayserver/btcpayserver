@@ -138,7 +138,7 @@
     <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
 
     <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
-        <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger px-4 mt-3" value="Save">Disable payment button</button>
+        <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
     </form>
 </div>
 <div id="payButtonCtrl">

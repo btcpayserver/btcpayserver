@@ -170,29 +170,32 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <header class="accordion-header" id="Nav-Plugins-Header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
-                            Plugins
-                            <vc:icon symbol="caret-down"/>
-                        </button>
-                    </header>
-                    <div id="Nav-Plugins" class="accordion-collapse collapse show" aria-labelledby="Nav-Plugins-Header">
-                        <div class="accordion-body">
-                            <ul class="navbar-nav">
-                                <vc:ui-extension-point location="header-nav" model="@Model"/>
-                                <vc:ui-extension-point location="store-integrations-nav" model="@Model" />
-                                <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                    <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
-                                        <vc:icon symbol="new"/>
-                                        <span>Add Plugin</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+            }
+            <div class="accordion-item">
+                <header class="accordion-header" id="Nav-Plugins-Header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
+                        Plugins
+                        <vc:icon symbol="caret-down"/>
+                    </button>
+                </header>
+                <div id="Nav-Plugins" class="accordion-collapse collapse show" aria-labelledby="Nav-Plugins-Header">
+                    <div class="accordion-body">
+                        <ul class="navbar-nav">
+                            <vc:ui-extension-point location="header-nav" model="@Model"/>
+                            @if (Model.Store != null)
+                            {
+                                <vc:ui-extension-point location="store-integrations-nav" model="@Model"/>
+                            }
+                            <li class="nav-item" permission="@Policies.CanModifyServerSettings">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
+                                    <vc:icon symbol="new"/>
+                                    <span>Add Plugin</span>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-            }
+            </div>
             <script>
                 const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')
                 const collapsed = navCollapsed ? JSON.parse(navCollapsed) : []

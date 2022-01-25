@@ -122,7 +122,7 @@
                         }
                         else if (device.Type == Fido2Credential.CredentialType.LNURLAuth)
                         {
-                            <a asp-controller="LNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
                         }
                     </div>
                 }

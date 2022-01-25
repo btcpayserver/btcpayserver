@@ -1,3 +1,8 @@
+/* Set scroll padding so that anchors don't disappear underneath the fixed navbar */ 
+html {
+    scroll-padding-top: 5rem;
+}
+
 /* General and site-wide Bootstrap modifications */
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-weight: 600;
@@ -66,6 +71,39 @@ h2 small .fa-question-circle-o {
     font-size: var(--btcpay-font-size-l);
 }
 
+/* Section Navigation */
+#SectionNav {
+    --border-size: 2px;
+    
+    width: 100%;
+    margin-top: calc(var(--btcpay-space-s) * -1);
+    margin-bottom: var(--btcpay-space-l);
+    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+}
+
+#SectionNav .nav-link {
+    color: var(--btcpay-nav-link);
+    margin-right: var(--btcpay-space-l);
+    margin-bottom: calc(var(--border-size) * -1);
+    border-bottom: var(--border-size) solid transparent;
+    padding: var(--btcpay-space-m) 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+#SectionNav .nav-link:last-child {
+    margin-right: 0;
+}
+
+#SectionNav .nav-link:hover {
+    color: var(--btcpay-nav-link-accent);
+}
+
+#SectionNav .nav-link.active {
+    color: var(--btcpay-nav-link-active);
+    border-bottom-color: var(--btcpay-nav-border-active);
+    background: var(--btcpay-nav-bg-active);
+}
+
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -111,6 +149,10 @@ h2 small .fa-question-circle-o {
     flex: 0 0 24px;
     height: 24px;
     align-self: center;
+}
+
+.account-form {
+    max-width: 36em;
 }
 
 .content-wrapper {
@@ -171,9 +213,8 @@ h2 small .fa-question-circle-o {
 
 svg.icon {
     display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0 !important;
+    width: 16px;
+    height: 16px;
 }
 
 svg.icon-note {

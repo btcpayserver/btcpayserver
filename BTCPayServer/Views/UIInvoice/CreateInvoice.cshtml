@@ -27,7 +27,7 @@
 
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
     <div class="col-lg-6">
@@ -55,7 +55,7 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Currency" class="form-label"></label>
-                    <input asp-for="Currency" currency-selection class="form-control" />
+                    <input asp-for="Currency" class="form-control" />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
              </div>

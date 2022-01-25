@@ -2,12 +2,12 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
+    ViewData.SetActivePage(AppsNavPages.Update, $"Update Point of Sale: {Model.AppName}", Model.Id);
 }
 
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <form method="post">
     <input type="hidden" asp-for="StoreId" />
@@ -27,7 +27,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" currency-selection class="form-control" placeholder="Use store's default settings" />
+                <input asp-for="Currency" class="form-control" placeholder="Use store's default settings" />
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>

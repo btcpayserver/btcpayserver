@@ -190,7 +190,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 foreach (var payoutData in payoutDatas)
                 {
                     var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
-                    var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination);
+                    var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination, false);
                     try
                     {
                         switch (claim.destination)

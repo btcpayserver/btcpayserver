@@ -8,13 +8,13 @@
 }
 
 <div class="mb-5">
-    <h3 class="mb-3">@ViewData["Title"]</h3>
+    <h4 class="mb-3">@ViewData["Title"]</h4>
     <div class="mb-3">
-        <span class="me-3">@Model.LightningNodeType Node</span>
+        <span class="me-2">@Model.LightningNodeType Node</span>
         
         @if (Model.LightningNodeType != LightningNodeType.Internal)
         {
-            <span class="me-3">
+            <span class="me-2">
                 @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
                 {
                     @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
@@ -27,7 +27,7 @@
             </span>
         }
 
-        <a
+        <a class="text-secondary"
            asp-controller="UIPublicLightningNodeInfo"
            asp-action="ShowLightningNodeInfo"
            asp-route-cryptoCode="@Model.CryptoCode"
@@ -40,7 +40,7 @@
     @if (Model.Services != null && Model.Services.Any())
     {
         <div permission="@Policies.CanModifyServerSettings" class="mt-4">
-            <h3 class="mb-3">Services</h3>
+            <h5 class="mb-3">Services</h5>
             <div id="Services" class="services-list">
                 @foreach (var service in Model.Services)
                 {

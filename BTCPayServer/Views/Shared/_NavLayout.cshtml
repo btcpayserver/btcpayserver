@@ -1,4 +1,3 @@
-@using NBitcoin
 @{
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
@@ -18,13 +17,9 @@
 
 @if (ViewBag.ShowMenu)
 {
-    <partial name="@ViewData["NavPartialName"].ToString()" />
-    <script>
-        (function () {
-            const activeEl = document.querySelector('#SectionNav .nav .active')
-            if (activeEl) activeEl.scrollIntoView({ inline: 'center' })
-        })()
-    </script>
+    <nav class="nav">
+        <partial name="@ViewData["NavPartialName"].ToString()" />
+    </nav>
 }
 
 <partial name="_StatusMessage" />

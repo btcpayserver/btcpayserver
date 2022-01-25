@@ -1,9 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using LNURL;
@@ -18,14 +16,14 @@ using NBitcoin.DataEncoders;
 namespace BTCPayServer
 {
     [Route("lnurlauth")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
-    public class UILNURLAuthController : Controller
+    [Authorize]
+    public class LNURLAuthController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly LnurlAuthService _lnurlAuthService;
         private readonly LinkGenerator _linkGenerator;
 
-        public UILNURLAuthController(UserManager<ApplicationUser> userManager, LnurlAuthService lnurlAuthService,
+        public LNURLAuthController(UserManager<ApplicationUser> userManager, LnurlAuthService lnurlAuthService,
             LinkGenerator linkGenerator)
         {
             _userManager = userManager;
@@ -73,7 +71,7 @@ namespace BTCPayServer
 
             return View(new Uri(_linkGenerator.GetUriByAction(
                 action: nameof(CreateResponse),
-                controller: "UILNURLAuth",
+                controller: "LNURLAuth",
                 values: new
                 {
                     userId,

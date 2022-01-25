@@ -257,8 +257,8 @@ namespace BTCPayServer.Controllers
                     RememberMe = rememberMe,
                     UserId = user.Id,
                     LNURLEndpoint = new Uri(_linkGenerator.GetUriByAction(
-                    action: nameof(UILNURLAuthController.LoginResponse),
-                    controller: "UILNURLAuth",
+                    action: nameof(LNURLAuthController.LoginResponse),
+                    controller: "LNURLAuth",
                     values: new { userId = user.Id, action="login", tag="login", k1= Encoders.Hex.EncodeData(r)  }, Request.Scheme, Request.Host, Request.PathBase))
                 };
             }

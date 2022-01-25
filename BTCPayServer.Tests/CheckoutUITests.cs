@@ -204,7 +204,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
-            s.GoToStore(StoreNavPages.Payment);
+            s.GoToStore();
             s.AddDerivationScheme();
             var invoiceId = s.CreateInvoice(0.001m, "BTC", "a@x.com");
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);

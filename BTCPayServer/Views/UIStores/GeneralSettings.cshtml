@@ -5,7 +5,7 @@
 }
 
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-lg-10 col-xl-8">
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>
@@ -27,8 +27,64 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
             
+            <h3 class="mt-5 mb-3">Payment</h3>
+            <div class="form-group">
+                <label asp-for="DefaultCurrency" class="form-label"></label>
+                <input asp-for="DefaultCurrency" class="form-control" currency-selection style="max-width:10ch;" />
+                <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-2"/>
+                <label asp-for="AnyoneCanCreateInvoice" class="form-label mb-0 me-1"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+            </div>
+            <div class="form-group mt-4">
+                <label asp-for="NetworkFeeMode" class="form-label"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+                <select asp-for="NetworkFeeMode" class="form-select">
+                    <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
+                    <option value="Always">... on every payment</option>
+                    <option value="Never">Never add network fee</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="InvoiceExpiration" class="form-label"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+                <div class="input-group">
+                    <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;"/>
+                    <span class="input-group-text">minutes</span>
+                </div>
+                <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PaymentTolerance" class="form-label"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+                <div class="input-group">
+                    <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;"/>
+                    <span class="input-group-text">percent</span>
+                </div>
+                <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BOLT11Expiration" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                    <span class="input-group-text">days</span>
+                </div>
+                <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
+            </div>
+            
             <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
         </form>
+        
         <h3 class="mt-5 mb-3">Services</h3>
         <div class="table-responsive-md">
             <table class="table table-hover mt-1 mb-5">

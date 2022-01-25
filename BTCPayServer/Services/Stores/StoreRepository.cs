@@ -152,17 +152,6 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        private void SetNewStoreHints(ref StoreData storeData)
-        {
-            var blob = storeData.GetStoreBlob();
-            blob.Hints = new Data.StoreBlob.StoreHints
-            {
-                Wallet = true,
-                Lightning = true
-            };
-            storeData.SetStoreBlob(blob);
-        }
-
         public async Task CreateStore(string ownerId, StoreData storeData)
         {
             if (!string.IsNullOrEmpty(storeData.Id))
@@ -179,17 +168,19 @@ namespace BTCPayServer.Services.Stores
                 Role = StoreRoles.Owner,
             };
 
-            SetNewStoreHints(ref storeData);
-
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
         }
 
-        public async Task<StoreData> CreateStore(string ownerId, string name)
+        public async Task<StoreData> CreateStore(string ownerId, string name, string defaultCurrency, string preferredExchange)
         {
-            var store = new StoreData() { StoreName = name };
-            SetNewStoreHints(ref store);
+            var store = new StoreData { StoreName = name };
+            var blob = store.GetStoreBlob();
+            blob.DefaultCurrency = defaultCurrency;
+            blob.PreferredExchange = preferredExchange;
+            store.SetStoreBlob(blob);
+            
             await CreateStore(ownerId, store);
             return store;
         }

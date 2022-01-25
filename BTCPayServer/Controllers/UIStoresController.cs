@@ -104,7 +104,6 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly NBXplorerDashboard _Dashboard;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
-        public string CreatedStoreId { get; set; }
 
         [TempData]
         public bool StoreNotConfigured
@@ -589,58 +588,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet("{storeId}/payment")]
-        public IActionResult Payment()
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var storeBlob = store.GetStoreBlob();
-            var vm = new PaymentViewModel
-            {
-                Id = store.Id,
-                NetworkFeeMode = storeBlob.NetworkFeeMode,
-                AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
-                PaymentTolerance = storeBlob.PaymentTolerance,
-                InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
-                DefaultCurrency = storeBlob.DefaultCurrency,
-                BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays
-            };
-
-            return View(vm);
-        }
-
-        [HttpPost("{storeId}/payment")]
-        public async Task<IActionResult> Payment(PaymentViewModel model, string command = null)
-        {
-            bool needUpdate = false;
-            var blob = CurrentStore.GetStoreBlob();
-            blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
-            blob.NetworkFeeMode = model.NetworkFeeMode;
-            blob.PaymentTolerance = model.PaymentTolerance;
-            blob.DefaultCurrency = model.DefaultCurrency;
-            blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
-            blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
-
-            if (CurrentStore.SetStoreBlob(blob))
-            {
-                needUpdate = true;
-            }
-
-            if (needUpdate)
-            {
-                await _Repo.UpdateStore(CurrentStore);
-
-                TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
-            }
-
-            return RedirectToAction(nameof(Payment), new
-            {
-                storeId = CurrentStore.Id
-            });
-        }
-
         [HttpGet("{storeId}/settings")]
         public IActionResult GeneralSettings()
         {
@@ -648,11 +595,18 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
+            var storeBlob = store.GetStoreBlob();
             var vm = new GeneralSettingsViewModel
             {
                 Id = store.Id,
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
+                NetworkFeeMode = storeBlob.NetworkFeeMode,
+                AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
+                PaymentTolerance = storeBlob.PaymentTolerance,
+                InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
+                DefaultCurrency = storeBlob.DefaultCurrency,
+                BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
                 CanDelete = _Repo.CanDeleteStores()
             };
 
@@ -673,6 +627,19 @@ namespace BTCPayServer.Controllers
             {
                 needUpdate = true;
                 CurrentStore.StoreWebsite = model.StoreWebsite;
+            }
+            
+            var blob = CurrentStore.GetStoreBlob();
+            blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
+            blob.NetworkFeeMode = model.NetworkFeeMode;
+            blob.PaymentTolerance = model.PaymentTolerance;
+            blob.DefaultCurrency = model.DefaultCurrency;
+            blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
+            blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
+            
+            if (CurrentStore.SetStoreBlob(blob))
+            {
+                needUpdate = true;
             }
 
             if (needUpdate)
@@ -1002,7 +969,7 @@ namespace BTCPayServer.Controllers
             CurrentStore.SetStoreBlob(blob);
             TempData[WellKnownTempData.SuccessMessage] = "Feature disabled";
             await _Repo.UpdateStore(CurrentStore);
-            return RedirectToAction(nameof(Payment), new { storeId = storeId });
+            return RedirectToAction(nameof(GeneralSettings), new { storeId });
         }
 
         [Route("{storeId}/paybutton")]

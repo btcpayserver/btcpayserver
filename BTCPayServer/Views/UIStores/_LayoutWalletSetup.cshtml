@@ -13,7 +13,7 @@
 @section Navbar {
     @await RenderSectionAsync("Navbar", false)
 
-    <a asp-controller="UIStores" asp-action="Payment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
+    <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }

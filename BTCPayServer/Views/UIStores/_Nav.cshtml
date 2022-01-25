@@ -3,7 +3,6 @@
 <nav id="SectionNav">
     <div class="nav">
         <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.General))" class="nav-link @ViewData.IsActivePage(StoreNavPages.General)" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Context.GetRouteValue("storeId")">General</a>
-        <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Payment))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payment)" asp-controller="UIStores" asp-action="Payment" asp-route-storeId="@Context.GetRouteValue("storeId")">Payment</a>
         <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Rates))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Rates)" asp-controller="UIStores" asp-action="Rates" asp-route-storeId="@Context.GetRouteValue("storeId")">Rates</a>
         <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.CheckoutAppearance))" class="nav-link @ViewData.IsActivePage(StoreNavPages.CheckoutAppearance)" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Context.GetRouteValue("storeId")">Checkout Appearance</a>
         <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Tokens))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Tokens)" asp-controller="UIStores" asp-action="ListTokens" asp-route-storeId="@Context.GetRouteValue("storeId")">Access Tokens</a>

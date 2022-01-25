@@ -2,12 +2,13 @@
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @{
     var store = Context.GetStoreData();
+    var cryptoCode = "BTC";
     var isLightningEnabled = store.IsLightningEnabled(BTCPayNetworkProvider);
     var isLNUrlEnabled = store.IsLNUrlEnabled(BTCPayNetworkProvider);
     var possible =
         isLightningEnabled &&
         isLNUrlEnabled &&
-        store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().Any(type => type.CryptoCode == "BTC");
+        store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().Any(type => type.CryptoCode == cryptoCode);
 }
 <li class="list-group-item bg-tile" id="lightning-address-option">
     <div class="d-flex align-items-center">
@@ -30,7 +31,7 @@
             {
                 if (!isLightningEnabled)
                 {
-                    <a asp-action="Payment" asp-controller="UIStores" asp-route-storeId="@store.Id" class="btn btn-link p-0">
+                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@cryptoCode" asp-route-storeId="@store.Id" class="btn btn-link p-0">
                         You need to setup Lightning first
                     </a>
                 }

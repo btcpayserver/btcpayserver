@@ -18,6 +18,8 @@ namespace BTCPayServer.Data
 {
     public class StoreBlob
     {
+        public static string StandardDefaultCurrency = "USD";
+        
         public StoreBlob()
         {
             InvoiceExpiration = TimeSpan.FromMinutes(15);
@@ -27,8 +29,7 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
         }
-
-
+        
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
@@ -45,7 +46,7 @@ namespace BTCPayServer.Data
         {
             get
             {
-                return string.IsNullOrEmpty(_DefaultCurrency) ? "USD" : _DefaultCurrency;
+                return string.IsNullOrEmpty(_DefaultCurrency) ? StandardDefaultCurrency : _DefaultCurrency;
             }
             set
             {
@@ -169,8 +170,6 @@ namespace BTCPayServer.Data
         public EmailSettings EmailSettings { get; set; }
         public bool PayJoinEnabled { get; set; }
 
-        public StoreHints Hints { get; set; }
-
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 
@@ -178,12 +177,6 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         public TimeSpan RefundBOLT11Expiration { get; set; }
-
-        public class StoreHints
-        {
-            public bool Wallet { get; set; }
-            public bool Lightning { get; set; }
-        }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

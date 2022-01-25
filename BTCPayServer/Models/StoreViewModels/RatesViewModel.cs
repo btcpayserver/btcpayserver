@@ -16,27 +16,15 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Rule { get; set; }
             public bool Error { get; set; }
         }
+        
         public void SetExchangeRates(IEnumerable<AvailableRateProvider> supportedList, string preferredExchange)
         {
             var defaultStore = preferredExchange ?? CoinGeckoRateProvider.CoinGeckoName;
-            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.SourceId, GetName(a), a.Url, a.Source)).ToArray();
+            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.SourceId, a.DisplayName, a.Url, a.Source)).ToArray();
             var chosen = supportedList.FirstOrDefault(f => f.Id == defaultStore) ?? supportedList.FirstOrDefault();
             Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.Name), chosen);
-            PreferredExchange = chosen.Id;
-            RateSource = chosen.Url;
-        }
-
-        private string GetName(AvailableRateProvider a)
-        {
-            switch (a.Source)
-            {
-                case Rating.RateSource.Direct:
-                    return a.Name;
-                case Rating.RateSource.Coingecko:
-                    return $"{a.Name} (via CoinGecko)";
-                default:
-                    throw new NotSupportedException(a.Source.ToString());
-            }
+            PreferredExchange = chosen?.Id;
+            RateSource = chosen?.Url;
         }
 
         public List<TestResultViewModel> TestRateRules { get; set; }
@@ -56,19 +44,11 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Add Exchange Rate Spread")]
         [Range(0.0, 100.0)]
-        public double Spread
-        {
-            get;
-            set;
-        }
+        public double Spread { get; set; }
 
         [Display(Name = "Preferred Price Source")]
         public string PreferredExchange { get; set; }
 
-        public string RateSource
-        {
-            get;
-            set;
-        }
+        public string RateSource { get; set; }
     }
 }

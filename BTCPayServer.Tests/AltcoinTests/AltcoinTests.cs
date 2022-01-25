@@ -386,7 +386,7 @@ namespace BTCPayServer.Tests
 
             // BTC crash by 50%
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m / 2.0m, 5100.0m / 2.0m));
-            s.GoToStore(StoreNavPages.Payment);
+            s.GoToStore();
             s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
             s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
             s.GoToInvoice(invoice.Id);
@@ -438,7 +438,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
                 s.GoToHome();
-                s.GoToStore(StoreNavPages.Payment);
+                s.GoToStore();
                 s.AddDerivationScheme("LTC");
                 s.AddLightningNode(LightningConnectionType.CLightning);
                 //there should be three now

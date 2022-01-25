@@ -133,13 +133,13 @@ namespace BTCPayServer.Tests
             });
         }
 
-        public async Task ModifyPayment(Action<PaymentViewModel> modify)
+        public async Task ModifyPayment(Action<GeneralSettingsViewModel> modify)
         {
             var storeController = GetController<UIStoresController>();
-            var response = storeController.Payment();
-            PaymentViewModel payment = (PaymentViewModel)((ViewResult)response).Model;
-            modify(payment);
-            await storeController.Payment(payment);
+            var response = storeController.GeneralSettings();
+            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model;
+            modify(settings);
+            await storeController.GeneralSettings(settings);
         }
 
         public async Task ModifyWalletSettings(Action<WalletSettingsViewModel> modify)

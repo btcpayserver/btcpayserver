@@ -156,7 +156,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.Payment.ToString()}")).Click();
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
@@ -397,7 +396,6 @@ namespace BTCPayServer.Tests
 
         public void GoToLightningSettings(string cryptoCode = "BTC")
         {
-            GoToStore(StoreNavPages.Payment);
             Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
             // if Lightning is already set up we need to navigate to the settings
             if (Driver.PageSource.Contains("id=\"SectionNav-LightningSettings\""))

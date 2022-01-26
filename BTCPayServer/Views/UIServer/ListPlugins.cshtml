@@ -111,14 +111,14 @@
 
 @if (Model.Disabled.Any())
 {
-    <div class="alert alert-danger mb-5">
+    <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
        <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">View disabled plugins</button>
     </div>
 }
 @if (Model.Commands.Any())
 {
-    <div class="alert alert-info mb-5">
+    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
         You need to restart BTCPay Server in order to update your active plugins.
         @if (Model.CanShowRestart)
         {
@@ -149,11 +149,11 @@
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
-                                    <div class="badge bg-secondary ms-2">System plugin</div>
+                                    <div class="badge bg-secondary ms-3">System plugin</div>
                                 }
                                 else if (updateAvailable)
                                 {
-                                    <div class="badge bg-info ms-2">
+                                    <div class="badge bg-info ms-3">
                                         @x.Version available
                                     </div>
                                 }
@@ -161,8 +161,8 @@
                             @if (updateAvailable)
                             {
                                 <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link px-0 small text-info show active">Show current version</a>
-                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link px-0 small text-info">Show update information</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link px-3 small text-info show active">Show current version</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link px-3 small text-info">Show update information</a>
                                 </span>
                             }
                         </div>
@@ -333,8 +333,9 @@
 }
 
 <div class="mb-4">
-    <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
-        Upload plugin
+    <h3 class="mb-4">Upload Plugin</h3>
+    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
+        Upload Plugin
     </button>
     <div class="row collapse" id="manual-upload">
         <div class="col col-12 col-lg-6 mb-4">
@@ -357,39 +358,41 @@
 
 @if (Model.Commands.Any())
 {
-    <div class="mb-4">
-        <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
-            Pending actions
-        </button>
-        <div class="row collapse" id="pending-actions">
-            <div class="col col-12 col-lg-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Pending actions</h4>
-                        <ul class="list-group list-group-flush">
-                            @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
-                            {
-                                <li class="list-group-item p-2">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 me-3">@extComm.Key</span>
-                                        <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </div>
+<div class="mb-4">
+    <h3 class="mb-4">Pending Action</h3>
+    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
+        Pending Actions
+    </button>
+    <div class="row collapse" id="pending-actions">
+        <div class="col col-12 col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Pending actions</h4>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                        {
+                            <li class="list-group-item p-2">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                    <span class="my-2 me-3">@extComm.Key</span>
+                                    <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
+                                        <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                    </form>
+                                </div>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
+</div>
 }
 @if (Model.Disabled.Any())
 {
     <div class="mb-4">
-        <button class="btn btn-link text-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">
-            Disabled plugins
+        <h3 class="mb-4">Disabled Plugins</h3>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">
+            Disabled Plugins
         </button>
         <div class="row collapse" id="disabled-plugins">
             <div class="col col-12 col-lg-6 mb-4">
@@ -400,7 +403,7 @@
                             @foreach (var d in Model.Disabled)
                             {
                                 <li class="list-group-item px-0">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between mx-3">
                                         <span class="my-2 me-3">@d</span>
                                         <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
                                             <button type="submit" class="btn btn-outline-secondary">Uninstall</button>

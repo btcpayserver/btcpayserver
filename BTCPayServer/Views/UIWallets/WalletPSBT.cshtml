@@ -23,7 +23,7 @@
     </script>
 }
 
-<h4 class="mb-3">@ViewData["Title"]</h4>
+<h3 class="mb-3">@ViewData["Title"]</h3>
 
 <div class="row">
     <div class="col-lg-10">
@@ -53,8 +53,8 @@
                 <input asp-for="UploadedPSBTFile" type="file" class="form-control">
             </div>
             <div class="d-flex">
-                <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode PSBT</button>
-                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+                <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode">Decode PSBT</button>
+                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
             </div>
         </form>
 

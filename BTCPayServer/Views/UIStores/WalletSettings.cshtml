@@ -16,14 +16,13 @@
 <div class="row">
     <div class="col-lg-10 col-xl-9">
         <div class="mb-5">
-            <h4 class="mb-3">@ViewData["Title"]</h4>
+            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="mb-3 d-flex align-items-center">
-                <span class="me-2">Type:</span>
                 <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
                 
                 <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
                     <div class="dropdown">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle py-1 px-3" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Actions
                         </button>
                         <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
@@ -92,11 +91,11 @@
                 }
                 @for (var i = 0; i < Model.AccountKeys.Count; i++)
                 {
-                    <h5 class="mt-5">Account key @i</h5>
+                    <h4 class="mt-5 mb-3">Account Key @i</h4>
                     <div class="form-group">
                         <div class="d-flex align-items-center justify-content-between">
                             <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
-                            <button type="button" class="d-inline-block ms-2 btn text-secondary btn-link p-0 mb-2" data-account-key="@i" title="">
+                            <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i" title="">
                                 <span class="fa fa-qrcode"></span> Show export QR
                             </button>
                         </div>
@@ -123,10 +122,10 @@
                         </div>
                     }
                 }
-                <button type="submit" class="btn btn-primary" id="SaveWalletSettings">Save Wallet Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings">Save Wallet Settings</button>
             </form>
             
-            <h4 class="mt-5 mb-3">Payment</h4>
+            <h3 class="mt-5 mb-4">Payment</h3>
             <form method="post" asp-action="UpdatePaymentSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
                 @if (Model.CanUsePayJoin)
                 {
@@ -173,12 +172,12 @@
                     <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
                     <p class="form-text text-muted mb-0">Fee will be shown for BTC and LTC onchain payments only.</p>
                 </div>
-                <div class="form-group mt-2 mb-4">
+                <div class="form-group mt-2">
                     <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
                     <input asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="width:8ch" />
                     <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary" id="SavePaymentSettings">Save Payment Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SavePaymentSettings">Save Payment Settings</button>
             </form>
         </div>
     </div>

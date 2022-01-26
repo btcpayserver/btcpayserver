@@ -30,7 +30,7 @@
 
 <div class="row">
     <div class="col-lg-8 col-xl-7 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
-        <h4 class="mb-3">@ViewData["Title"]</h4>
+        <h3 class="mb-3">@ViewData["Title"]</h3>
         <form method="post" asp-action="WalletSend" asp-route-walletId="@walletId">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="FiatDivisibility" />
@@ -151,7 +151,7 @@
                 <span id="FeeRate-Error" class="text-danger"></span>
                 @if (Model.RecommendedSatoshiPerByte.Any())
                 {
-                    <div class="text-start mt-2 d-flex align-items-sm-center flex-column flex-sm-row">
+                    <div class="text-start mt-4 d-flex align-items-sm-center flex-column flex-sm-row">
                         <span class="text-secondary me-3">
                             Confirm in the next
                         </span>
@@ -181,7 +181,7 @@
             }
 
             <div class="my-4">
-                <button class="btn btn-link text-secondary p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+                <button class="btn btn-link text-primary p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                     Advanced settings
                 </button>
                 <div id="AdvancedSettings" class="collapse">
@@ -231,8 +231,8 @@
             </div>
             <div class="form-group d-flex mt-2">
                 <button type="submit" id="SignTransaction" name="command" value="@(Model.NBXSeedAvailable ? "nbx-seed" : "sign")" class="btn btn-primary">Sign transaction</button>
-                <button type="button" id="bip21parse" class="ms-2 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-                <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
+                <button type="button" id="bip21parse" class="ms-3 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
+                <button type="button" id="scanqrcode" class="ms-3 btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>
         </form>
     </div>

@@ -28,32 +28,27 @@
             <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto">
                 <div class="card border-0">
                     <div class="card-body p-4">
-                        <h1 class="card-title text-center">@Model.StoreName</h1>
-                        <h2 class="card-subtitle text-center text-secondary my-3">
+                        <h1 class="card-title text-center mt-3">@Model.StoreName</h1>
+                        <h2 class="h3 card-subtitle text-center text-secondary my-3">
                             <span>@Model.CryptoCode</span>
                             Lightning Node
                         </h2>
-                        <h3 class="card-title text-center">
+                        <h4 class="text-center">
+                            <span class="me-1 btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")"></span>
                             <span>
                                 @(Model.Available ? "Online" : "Unavailable")
                             </span>
-                            <small class="text-@(Model.Available ? "success" : "danger")" >
-                                <span class="fa fa-circle"></span>
-                            </small>
-                        </h3>
+                        </h4>
                         @if (Model.Available)
                         {
-                            @if (Model.NodeInfo.Length > 0)
+                            @if (Model.NodeInfo.Length > 1)
                             {
-                                <ul class="nav justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
+                                <ul class="nav nav-pills justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
                                     @for (int i = 0; i < Model.NodeInfo.Length; i++)
                                     {
                                         var nodeInfo = Model.NodeInfo[i];
                                         <li class="nav-item" role="presentation">
-                                            <button class="btcpay-pill @(i == 0 ? "active" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
-                                        </li>
-                                        <li class="nav-item" role="presentation">
-                                            <button class="btcpay-pill @(i == 0 ? "" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
+                                            <button class="nav-link w-100px @(i == 0 ? "active" : "")" id="nodeInfo-tab-@nodeInfo.Id" data-bs-toggle="pill" data-bs-target="#nodeInfo-@nodeInfo.Id" type="button" role="tab" aria-controls="nodeInfo-@nodeInfo.Id" aria-selected="true">@(Model.NodeInfo[i].IsTor ? "Tor" : "Clearnet")</button>
                                         </li>
                                     }
                                 </ul>
@@ -63,7 +58,7 @@
                                 {
                                     var nodeInfo = Model.NodeInfo[i];
                                     <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@nodeInfo.Id" role="tabpanel" aria-labelledby="nodeInfo-tab-@nodeInfo.Id">
-                                        <div class="qr-container my-3">
+                                        <div class="qr-container my-4">
                                             <img alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage"/>
                                             <vc:qr-code data="@nodeInfo.ToString()"/>
                                         </div>

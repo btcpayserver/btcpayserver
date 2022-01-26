@@ -59,6 +59,12 @@ hr.primary {
     }
 }
 
+@media (min-width: 1400px) {
+    .col-xxl-constrain {
+        max-width: 1280px;
+    }
+}
+
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;

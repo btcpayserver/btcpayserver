@@ -14,7 +14,7 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="AppName" class="form-label" data-required></label>
                 <input asp-for="AppName" class="form-control" required />
@@ -31,14 +31,14 @@
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>
-        <div class="col-lg-9">
+        <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
-        <div class="col-lg-12">
+        <div class="col-xxl-constrain">
             <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
             <div class="form-group">
                 <label asp-for="Template" class="form-label"></label>
@@ -46,7 +46,7 @@
                 <span asp-validation-for="Template" class="text-danger"></span>
             </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-4">Appearance</h3>
             <div class="form-group">
                 <label asp-for="DefaultView" class="form-label" data-required></label>
@@ -113,7 +113,7 @@
                 </div>
             </section>
         </div>
-        <div class="col-lg-9">
+        <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">

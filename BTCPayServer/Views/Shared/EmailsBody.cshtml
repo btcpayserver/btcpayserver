@@ -1,7 +1,7 @@
 @model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-xl-8 col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <div class="dropdown only-for-js" id="quick-fill">
@@ -22,7 +22,7 @@
 
 <form method="post" autocomplete="off">
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-xl-8 col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All" class="text-danger"></div>
@@ -80,7 +80,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <h3 class="mt-5 mb-3">Testing</h3>
                 <p>

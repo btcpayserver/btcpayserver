@@ -1,4 +1,3 @@
-@using BTCPayServer.Storage.Models
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "Storage");
@@ -6,15 +5,14 @@
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
-@if (Model.ShowChangeWarning)
-{
-    <div class="alert alert-danger mb-4">
-        If you change your configured storage provider, your current files will become inaccessible. 
-    </div>
-}
-
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-xl-8 col-xxl-constrain">
+        @if (Model.ShowChangeWarning)
+        {
+            <div class="alert alert-danger mb-4">
+                If you change your configured storage provider, your current files will become inaccessible. 
+            </div>
+        }
         <form method="post">
             @if (!ViewContext.ModelState.IsValid)
             {
@@ -22,7 +20,7 @@
             }
             <div class="form-group">
                 <label asp-for="Provider" class="form-label"></label>
-                <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-select"></select>
+                <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-select w-auto"></select>
             </div>
             <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Next</button>
         </form>

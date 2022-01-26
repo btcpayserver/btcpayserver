@@ -4,7 +4,7 @@
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
 }
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-xl-8 col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">

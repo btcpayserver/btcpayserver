@@ -328,6 +328,7 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<bool> DeleteStore(string storeId)
         {
+            int retry = 0;
             using var ctx = _ContextFactory.CreateContext();
             if (!ctx.Database.SupportDropForeignKey())
                 return false;
@@ -341,8 +342,23 @@ namespace BTCPayServer.Services.Stores
             foreach (var w in webhooks)
                 ctx.Webhooks.Remove(w);
             ctx.Stores.Remove(store);
-            await ctx.SaveChangesAsync();
+            retry:
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsDeadlock(ex) && retry < 5)
+            {
+                await Task.Delay(100);
+                retry++;
+                goto retry;
+            }
             return true;
+        }
+
+        private static bool IsDeadlock(DbUpdateException ex)
+        {
+            return ex.InnerException is Npgsql.PostgresException postgres && postgres.SqlState == "40P01";
         }
 
         public bool CanDeleteStores()

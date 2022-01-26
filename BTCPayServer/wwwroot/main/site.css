@@ -200,3 +200,19 @@ svg.icon-note {
 .services-list .service h6 {
     margin: var(--btcpay-space-m) 0 0 0;
 }
+
+/* Setup Guide */
+#SetupGuide {
+    max-width: 30em;
+}
+
+#SetupGuide .list-group-item .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 1rem;
+}
+
+#SetupGuide .list-group-item .content {
+    flex: 1;
+    padding: 1rem 0;
+}

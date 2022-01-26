@@ -65,9 +65,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.tipTotal = null;
                 this.tipTotalNumeric = 0;
             },
-            payButtonClicked: function() {
+            handleFormSubmit: function() {
                 this.payButtonLoading = true;
-                this.$refs.form.submit();
             },
             unsetPayButtonLoading: function() {
                 this.payButtonLoading = false;

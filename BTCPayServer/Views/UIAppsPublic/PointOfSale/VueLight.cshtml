@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 <div id="app" class="l-pos-wrapper" v-cloak>
-    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy ref="form">
+    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit">
         <div class="l-pos-header bg-primary py-3 px-3">
             @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
             {
@@ -26,7 +26,7 @@
 
         <div class="l-pos-controls mt-2">
             <div class="btn btn-outline-secondary btn-lg mb-0" v-on:click="clearTotal">Clear</div>
-            <button class="btn btn-primary btn-lg mb-0" id="pay-button" type="submit" v-on:click="payButtonClicked" v-bind:disabled="payButtonLoading">
+            <button class="btn btn-primary btn-lg mb-0" id="pay-button" type="submit" v-bind:disabled="payButtonLoading">
                 <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                     <span class="sr-only">Loading...</span>
                 </div>

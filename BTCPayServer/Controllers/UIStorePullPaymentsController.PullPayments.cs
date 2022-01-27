@@ -129,6 +129,7 @@ namespace BTCPayServer.Controllers
             await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
             {
                 Name = model.Name,
+                Description = model.Description,
                 Amount = model.Amount,
                 Currency = model.Currency,
                 StoreId = storeId,

@@ -10,6 +10,7 @@ namespace BTCPayServer.Data
     public class PullPaymentBlob
     {
         public string Name { get; set; }
+        public string Description { get; set; }
         public string Currency { get; set; }
         public int Divisibility { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]

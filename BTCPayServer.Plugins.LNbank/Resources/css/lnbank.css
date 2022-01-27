@@ -18,6 +18,23 @@ main header h2 {
     margin-bottom: 0;
 }
 
+main section > .container {
+    margin: 0;
+    padding: 0;
+}
+
+@media (max-width: 1399px) {
+    main section > .container {
+        max-width: none !important;
+    }
+}
+
+main section .row .table {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 main p {
     max-width: 40em;
 }

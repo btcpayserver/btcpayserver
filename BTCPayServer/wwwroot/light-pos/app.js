@@ -15,8 +15,16 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 tipTotalNumeric: 0,
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
-                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C']
+                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'],
+                payButtonLoading: false,
             }
+        },
+        created: function() {
+            /** We need to unset state in case user clicks the browser back button */
+            window.addEventListener('pagehide', this.unsetPayButtonLoading);
+        },
+        destroyed: function() {
+            window.removeEventListener('pagehide', this.unsetPayButtonLoading);
         },
         computed: {
             Currency: function(){
@@ -56,6 +64,12 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.payTotalNumeric = 0;
                 this.tipTotal = null;
                 this.tipTotalNumeric = 0;
+            },
+            handleFormSubmit: function() {
+                this.payButtonLoading = true;
+            },
+            unsetPayButtonLoading: function() {
+                this.payButtonLoading = false;
             },
             buttonClicked: function(key) {
                 var payTotal = this.payTotal;

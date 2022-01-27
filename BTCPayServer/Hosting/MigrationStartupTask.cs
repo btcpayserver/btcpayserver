@@ -169,12 +169,27 @@ namespace BTCPayServer.Hosting
                     settings.AddInitialUserBlob = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.LighingAddressSettingRename)
+                {
+                    await MigrateLighingAddressSettingRename();
+                    settings.LighingAddressSettingRename = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateLighingAddressSettingRename()
+        {
+           var old = await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
+           if (old is not null)
+           {
+              await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
+           }
         }
 
         private async Task AddInitialUserBlob()

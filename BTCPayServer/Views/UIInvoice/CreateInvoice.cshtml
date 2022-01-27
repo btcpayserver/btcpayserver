@@ -30,7 +30,7 @@
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             @if (Model.StoreId != null)

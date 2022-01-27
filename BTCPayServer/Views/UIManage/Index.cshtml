@@ -3,43 +3,46 @@
     ViewData.SetActivePage(ManageNavPages.Index, "Update your account");
 }
 <h3 class="mb-4">@ViewData["Title"]</h3>
-<form method="post">
-    @if (!ViewContext.ModelState.IsValid)
-    {
-        <div asp-validation-summary="All" class="text-danger"></div>
-    }
-    <div class="form-group row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="Username" class="form-label"></label>
-            <input asp-for="Username" class="form-control" disabled/>
+
+<div class="col-xxl-constrain col-xl-8">
+    <form method="post">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
+        <div class="form-group row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Username" class="form-label"></label>
+                <input asp-for="Username" class="form-control" disabled />
+            </div>
         </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control"/>
-            <span asp-validation-for="Email" class="text-danger"></span>
+        <div class="form-group row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3 d-flex align-items-end">
+                @if (Model.IsEmailConfirmed)
+                {
+                    <span class="badge bg-success p-2 my-1">
+                        <span class="fa fa-check"></span>
+                        confirmed
+                    </span>
+                }
+                else
+                {
+                    <button asp-action="SendVerificationEmail" class="btn btn-secondary">Send verification email</button>
+                }
+            </div>
         </div>
-        <div class="col-md-6 mb-3 d-flex align-items-end">
-            @if (Model.IsEmailConfirmed)
-            {
-                <span class="badge bg-success p-2 my-1">
-                    <span class="fa fa-check"></span>
-                    confirmed
-                </span>
-            }
-            else
-            {
-                <button asp-action="SendVerificationEmail" class="btn btn-secondary">Send verification email</button>
-            }
+        <button type="submit" id="save" class="btn btn-primary">Save</button>
+        <h3 class="mt-5 mb-4">Delete Account</h3>
+        <div id="danger-zone">
+            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete Account</a>
         </div>
-    </div>
-    <button type="submit" id="save" class="btn btn-primary">Save</button>
-    <h3 class="mt-5 mb-4">Delete Account</h3>
-    <div id="danger-zone">
-        <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete Account</a>
-    </div>
-</form>
+    </form>
+</div>
 
 <partial name="_Confirm"
          model="@(new ConfirmModel("Delete user", "The user will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your user.", "Delete", actionName: nameof(BTCPayServer.Controllers.UIManageController.DeleteUserPost)))"/>

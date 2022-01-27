@@ -5,7 +5,7 @@
 }
 
 <div class="row">
-    <div class="col-lg-10 col-xl-8">
+    <div class="col-xxl-constrain col-xl-8">
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>
@@ -45,7 +45,7 @@
                 <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
-                <select asp-for="NetworkFeeMode" class="form-select">
+                <select asp-for="NetworkFeeMode" class="form-select w-auto">
                     <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
                     <option value="Always">... on every payment</option>
                     <option value="Never">Never add network fee</option>

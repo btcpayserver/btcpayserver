@@ -21,7 +21,7 @@
 
 <form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-xl-8 col-xxl-constrain">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Title" class="form-label" data-required></label>
@@ -66,13 +66,14 @@
                 </p>
             </div>
         </div>
-        <div class="col-lg-9">
+        <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            
+        </div>
+        <div class="col-xl-8 col-xxl-constrain">
             <h4 class="mt-5 mb-2">Additional Options</h4>
             <div class="form-group">
                 <div class="accordion" id="additional">

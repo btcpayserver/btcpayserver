@@ -136,11 +136,10 @@
         @foreach (var plugin in Model.Installed)
         {
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
-           
             var x = matchedAvailable.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? matchedAvailable.FirstOrDefault();
             var updateAvailable = !plugin.SystemPlugin && matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
-            <div class="col col-12 col-lg-6 mb-4">
+            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
@@ -257,11 +256,10 @@
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
-            
             var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
             
-            <div class="col col-12 col-lg-6 mb-4">
+            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
@@ -338,7 +336,7 @@
         Upload Plugin
     </button>
     <div class="row collapse" id="manual-upload">
-        <div class="col col-12 col-lg-6 mb-4">
+        <div class="col col-xl-6 mb-4">
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Add plugin manually</h4>

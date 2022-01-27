@@ -130,36 +130,34 @@
 <partial name="_StatusMessage" />
 
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-<div class="alert alert-warning alert-dismissible mb-4" role="alert">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-        <vc:icon symbol="close" />
-    </button>
-    <p><strong>Warning:</strong> This feature should not be activated on a BTCPay Server store processing commercial transactions.</p>
-    <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
-	<p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore">create a separate store</a> before using the payment button.</p>
-    <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
-        <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
-    </form>
-</div>
 <div id="payButtonCtrl">
     <div class="row">
-        <div class="col-lg-7">
-            <div class="row">
-                <p>Configure your Pay Button, and the generated code will be displayed at the bottom of the page to copy into your project.</p>
-                <h4 class="mt-3 mb-3">General Settings</h4>
-                <div class="form-group col-md-8">
-                    <label class="form-label" for="price">Price</label>
-                    <input name="price" type="text" class="form-control" id="price"
-                           v-model="srvModel.price" v-on:change="inputChanges"
-                           v-validate="'decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
-                    <small class="text-danger">{{ errors.first('price') }}</small>
-                </div>
-                <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
-                    <label class="form-label" for="currency">Currency</label>
-                    <input name="currency" type="text" class="form-control" id="currency"
-                           v-model="srvModel.currency" v-on:change="inputChanges"
-                           :class="{'is-invalid': errors.has('currency') }">
-                </div>
+        <div class="col-xl-8">
+            <div class="alert alert-warning alert-dismissible mb-4" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
+                <p><strong>Warning:</strong> This feature should not be activated on a BTCPay Server store processing commercial transactions.</p>
+                <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
+                <p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore">create a separate store</a> before using the payment button.</p>
+                <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
+                    <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
+                </form>
+            </div>
+            <p>Configure your Pay Button, and the generated code will be displayed at the bottom of the page to copy into your project.</p>
+            <h4 class="mt-3 mb-3">General Settings</h4>
+            <div class="form-group col-md-8">
+                <label class="form-label" for="price">Price</label>
+                <input name="price" type="text" class="form-control" id="price"
+                       v-model="srvModel.price" v-on:change="inputChanges"
+                       v-validate="'decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
+                <small class="text-danger">{{ errors.first('price') }}</small>
+            </div>
+            <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
+                <label class="form-label" for="currency">Currency</label>
+                <input name="currency" type="text" class="form-control" id="currency"
+                       v-model="srvModel.currency" v-on:change="inputChanges"
+                       :class="{'is-invalid': errors.has('currency') }">
             </div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="description">Checkout Description</label>
@@ -176,7 +174,7 @@
 
     <h4 class="mt-5 mb-3">Display Options</h4>
     <div class="row">
-        <div class="col-lg-7">
+        <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <div class="form-check" v-if="!srvModel.appIdEndpoint">
                     <input id="useModal" type="checkbox" v-model="srvModel.useModal" v-on:change="inputChanges" class="form-check-input"/>
@@ -275,7 +273,7 @@
                 </div>
             </template>
         </div>
-        <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="col-xl-4 mt-4 mt-xl-0">
             <h5 class="mb-3">Preview</h5>
             <div id="preview"></div>
             <div v-show="!srvModel.appIdEndpoint">
@@ -287,7 +285,7 @@
 
     <h4 class="mt-5 mb-3">Payment Notifications</h4>
     <div class="row">
-        <div class="col-lg-7">
+        <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <label class="form-label" for="server-ipn">Server IPN</label>
                 <input name="serverIpn" type="text" class="form-control" id="server-ipn"
@@ -324,7 +322,7 @@
 
     <h4 class="mt-5 mb-3">Advanced Options</h4>
     <div class="row" v-if="!srvModel.appIdEndpoint">
-        <div class="col-lg-7">
+        <div class="col-xl-8 col-xxl-constrain">
             <p>
                 Specify additional query string parameters that should be appended to the checkout page once the invoice is created.
                 For example, <code>lang=da-DK</code> would load the checkout page in Danish by default.
@@ -340,7 +338,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-7">
+        <div class="col-xl-8 col-xxl-constrain">
             <p>Link this Pay Button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting.</p>
             <div class="form-group">
                 <label class="form-label" for="app-as-endpoint">Use App As Endpoint</label>
@@ -363,7 +361,7 @@
     <h4 class="mt-5 mb-3">Generated Code</h4>
 
     <div class="row" v-show="!errors.any()">
-        <div class="col-lg-12">
+        <div class="col-xxl-8">
             <pre><code id="mainCode" class="html"></code></pre>
             <button class="btn btn-primary" data-clipboard-target="#mainCode">
                 <i class="fa fa-copy"></i> Copy Code
@@ -371,7 +369,7 @@
         </div>
     </div>
     <div class="row" v-show="errors.any()">
-        <div class="col-lg-12 text-danger">
+        <div class="col-xl-8 col-xxl-constrain text-danger">
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>

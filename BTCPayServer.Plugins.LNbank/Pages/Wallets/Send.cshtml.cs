@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Plugins.LNbank.Data.Models;
@@ -11,77 +12,75 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
+namespace BTCPayServer.Plugins.LNbank.Pages.Wallets;
+
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
+public class SendModel : BasePageModel
 {
-    
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public class SendModel : BasePageModel
+    public Wallet Wallet { get; set; }
+    public BOLT11PaymentRequest Bolt11 { get; set; }
+    [BindProperty]
+    [DisplayName("Payment Request")]
+    [Required]
+    public string PaymentRequest { get; set; }
+    public string ErrorMessage { get; set; }
+
+    public SendModel(
+        UserManager<ApplicationUser> userManager, 
+        WalletService walletService) : base(userManager, walletService) {}
+
+    public async Task<IActionResult> OnGet(string walletId)
     {
-        public Wallet Wallet { get; set; }
-        public BOLT11PaymentRequest Bolt11 { get; set; }
-        [BindProperty]
-        [DisplayName("Payment Request")]
-        [Required]
-        public string PaymentRequest { get; set; }
-        public string ErrorMessage { get; set; }
+        Wallet = await WalletService.GetWallet(new WalletQuery {
+            UserId = UserId,
+            WalletId = walletId,
+            IncludeTransactions = true
+        });
 
-        public SendModel(
-            UserManager<ApplicationUser> userManager, 
-            WalletService walletService) : base(userManager, walletService) {}
+        if (Wallet == null) return NotFound();
 
-        public async Task<IActionResult> OnGet(string walletId)
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostDecodeAsync(string walletId)
+    {
+        Wallet = await WalletService.GetWallet(new WalletQuery {
+            UserId = UserId,
+            WalletId = walletId,
+            IncludeTransactions = true
+        });
+
+        if (Wallet == null) return NotFound();
+        if (!ModelState.IsValid) return Page();
+
+        Bolt11 = WalletService.ParsePaymentRequest(PaymentRequest);
+
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostConfirmAsync(string walletId)
+    {
+        Wallet = await WalletService.GetWallet(new WalletQuery {
+            UserId = UserId,
+            WalletId = walletId,
+            IncludeTransactions = true
+        });
+
+        if (Wallet == null) return NotFound();
+        if (!ModelState.IsValid) return Page();
+
+        Bolt11 = WalletService.ParsePaymentRequest(PaymentRequest);
+
+        try
         {
-            Wallet = await WalletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = walletId,
-                IncludeTransactions = true
-            });
-
-            if (Wallet == null) return NotFound();
-
-            return Page();
+            await WalletService.Send(Wallet, Bolt11, PaymentRequest);
+            return RedirectToPage("./Index", new { walletId });
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
         }
 
-        public async Task<IActionResult> OnPostDecodeAsync(string walletId)
-        {
-            Wallet = await WalletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = walletId,
-                IncludeTransactions = true
-            });
-
-            if (Wallet == null) return NotFound();
-            if (!ModelState.IsValid) return Page();
-
-            Bolt11 = WalletService.ParsePaymentRequest(PaymentRequest);
-
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostConfirmAsync(string walletId)
-        {
-            Wallet = await WalletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = walletId,
-                IncludeTransactions = true
-            });
-
-            if (Wallet == null) return NotFound();
-            if (!ModelState.IsValid) return Page();
-
-            Bolt11 = WalletService.ParsePaymentRequest(PaymentRequest);
-
-            try
-            {
-                await WalletService.Send(Wallet, Bolt11, PaymentRequest);
-                return RedirectToPage("./Index", new { walletId });
-            }
-            catch (Exception exception)
-            {
-                ErrorMessage = exception.Message;
-            }
-
-            return Page();
-        }
+        return Page();
     }
 }

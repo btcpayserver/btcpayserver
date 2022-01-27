@@ -6,27 +6,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Plugins.LNbank.Pages.Transactions
+namespace BTCPayServer.Plugins.LNbank.Pages.Transactions;
+
+[AllowAnonymous]
+public class ShareModel : BasePageModel
 {
-    [AllowAnonymous]
-    public class ShareModel : BasePageModel
+    public Transaction Transaction { get; set; }
+
+    public ShareModel(
+        UserManager<ApplicationUser> userManager, 
+        WalletService walletService) : base(userManager, walletService) {}
+
+    public async Task<IActionResult> OnGetAsync(string transactionId)
     {
-        public Transaction Transaction { get; set; }
-
-        public ShareModel(
-            UserManager<ApplicationUser> userManager, 
-            WalletService walletService) : base(userManager, walletService) {}
-
-        public async Task<IActionResult> OnGetAsync(string transactionId)
+        Transaction = await WalletService.GetTransaction(new TransactionQuery
         {
-            Transaction = await WalletService.GetTransaction(new TransactionQuery
-            {
-                TransactionId = transactionId
-            });
+            TransactionId = transactionId
+        });
 
-            if (Transaction == null || Transaction.IsExpired) return NotFound();
+        if (Transaction == null || Transaction.IsExpired) return NotFound();
 
-            return Page();
-        }
+        return Page();
     }
 }

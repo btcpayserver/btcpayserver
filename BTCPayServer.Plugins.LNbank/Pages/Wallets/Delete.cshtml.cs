@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.LNbank.Data.Models;
 using BTCPayServer.Plugins.LNbank.Services.Wallets;
@@ -7,42 +8,41 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Plugins.LNbank.Pages.Wallets
+namespace BTCPayServer.Plugins.LNbank.Pages.Wallets;
+
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
+public class DeleteModel : BasePageModel
 {
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public class DeleteModel : BasePageModel
+    public Wallet Wallet { get; set; }
+
+    public DeleteModel(
+        UserManager<ApplicationUser> userManager, 
+        WalletService walletService) : base(userManager, walletService) {}
+
+    public async Task<IActionResult> OnGetAsync(string walletId)
     {
-        public Wallet Wallet { get; set; }
+        Wallet = await WalletService.GetWallet(new WalletQuery {
+            UserId = UserId,
+            WalletId = walletId,
+            IncludeTransactions = true
+        });
 
-        public DeleteModel(
-            UserManager<ApplicationUser> userManager, 
-            WalletService walletService) : base(userManager, walletService) {}
+        if (Wallet == null) return NotFound();
 
-        public async Task<IActionResult> OnGetAsync(string walletId)
-        {
-            Wallet = await WalletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = walletId,
-                IncludeTransactions = true
-            });
+        return Page();
+    }
 
-            if (Wallet == null) return NotFound();
+    public async Task<IActionResult> OnPostAsync(string walletId)
+    {
+        Wallet = await WalletService.GetWallet(new WalletQuery {
+            UserId = UserId,
+            WalletId = walletId
+        });
 
-            return Page();
-        }
+        if (Wallet == null) return NotFound();
 
-        public async Task<IActionResult> OnPostAsync(string walletId)
-        {
-            Wallet = await WalletService.GetWallet(new WalletQuery {
-                UserId = UserId,
-                WalletId = walletId
-            });
+        await WalletService.RemoveWallet(Wallet);
 
-            if (Wallet == null) return NotFound();
-
-            await WalletService.RemoveWallet(Wallet);
-
-            return RedirectToPage("./Index");
-        }
+        return RedirectToPage("./Index");
     }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+### Bug fixes:
+
+* Fix: Existing Lightning addresses were not loaded (#3367 #3368) @Kukks
+
 ## 1.4.0
 
 BTCPay Server started in August 2017 and meanwhile has been evolving incrementally thanks to the feedback of the community.

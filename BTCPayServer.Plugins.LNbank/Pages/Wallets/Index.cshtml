@@ -4,8 +4,10 @@
 @model BTCPayServer.Plugins.LNbank.Pages.Wallets.IndexModel
 
 @{
-    ViewData.SetActivePage(LNbankNavPages.Wallets, "Your wallets");
+    ViewData.SetActivePage(LNbankNavPages.Wallets, "Your LNbank wallets");
 }
+
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 @if (Model.Wallets.Any())
 {
@@ -31,7 +33,7 @@
         @if (Model.SelectedWallet != null)
         {
             <div class="col-12 col-lg-9">
-                <header class="d-flex align-items-center justify-content-between mb-3">
+                <header>
                     <div class="d-flex align-items-center me-3">
                         <h2 class="d-inline-block me-2">@Model.SelectedWallet.Name</h2>
                         <a asp-page="./Details" asp-route-walletId="@Model.SelectedWallet.WalletId" class="text-secondary d-inline-flex align-items-center mx-1">

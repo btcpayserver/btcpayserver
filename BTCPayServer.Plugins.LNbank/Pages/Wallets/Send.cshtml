@@ -6,12 +6,10 @@
     ViewData.SetActivePage(LNbankNavPages.Send, "Send");
 }
 
-<header class="mb-3">
-    <h1 class="d-inline-block me-2">
-        @ViewData["Title"]
-        <span class="badge bg-info d-inline-block ms-2 py-2 px-3">@Model.Wallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
-    </h1>
-</header>
+<h2 class="mt-1 mb-4">
+    @ViewData["Title"]
+    <span class="badge bg-info d-inline-block ms-2 py-2 px-3">@Model.Wallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
+</h2>
 
 @if (!ModelState.IsValid)
 {

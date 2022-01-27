@@ -5,8 +5,8 @@
     ViewData.SetActivePage(LNbankNavPages.Wallets, Model.Wallet.Name);
 }
 
-<header class="d-flex align-items-center justify-content-between mb-3">
-    <h1>@ViewData["Title"]</h1>
+<header>
+    <h2>@ViewData["Title"]</h2>
     <div>
         <a asp-page="./Edit" asp-route-walletId="@Model.Wallet.WalletId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1">
             <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#edit"></use></svg>

@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
+@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Maintenance, "Maintenance");
 }
@@ -9,7 +9,7 @@
     <div class="row mb-5">
     <div class="col-xl-8 col-xxl-constrain">
             <h4 class="mb-2">Domain name</h4>
-            <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/Deployment/ChangeDomain/" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
+            <p>You can change the domain name of your server by following <a href="https://docs.zeuspay.org/Deployment/ChangeDomain/" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
 
             <div class="d-flex">
                 <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
@@ -20,7 +20,7 @@
             </div>
 
             <h4 class="mt-5 mb-2">Update</h4>
-            <p>Update to the latest version of BTCPay Server.</p>
+            <p>Update to the latest version of ZEUSPay.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
@@ -28,7 +28,7 @@
             </div>
 
             <h4 class="mt-5 mb-2">Restart</h4>
-            <p>Restart BTCPay Server and related services.</p>
+            <p>Restart ZEUSPay and related services.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>

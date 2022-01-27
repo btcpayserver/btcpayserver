@@ -1,4 +1,4 @@
-﻿@model ListTransactionsViewModel
+@model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
@@ -91,9 +91,9 @@
 </div>
 
 <p class="mb-0">
-    If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
+    If ZEUSPay shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
     <br/>
-    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
+    If some transactions appear in ZEUSPay, but are missing in another wallet, <a href="https://docs.zeuspay.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
 </p>
 
 @if (Model.Transactions.Any())

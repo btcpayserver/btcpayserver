@@ -137,7 +137,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
-                <p><strong>Warning:</strong> This feature should not be activated on a BTCPay Server store processing commercial transactions.</p>
+                <p><strong>Warning:</strong> This feature should not be activated on a ZEUSPay store processing commercial transactions.</p>
                 <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
                 <p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.</p>
                 <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">

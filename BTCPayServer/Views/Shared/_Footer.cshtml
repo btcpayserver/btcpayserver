@@ -1,18 +1,18 @@
-﻿@inject BTCPayServer.Services.BTCPayServerEnvironment _env
+@inject BTCPayServer.Services.BTCPayServerEnvironment _env
 
 <footer class="btcpay-footer">
     <div class="container">
-        <div class="d-flex flex-wrap flex-column justify-content-between flex-xl-row py-2">
-            <div class="d-flex flex-wrap justify-content-center justify-content-xl-start mb-3 mb-xl-0">
-                <a href="https://github.com/btcpayserver/btcpayserver" class="d-flex align-items-center m-3 m-sm-0 me-sm-4" target="_blank" rel="noreferrer noopener">
+        <div class="d-flex flex-wrap flex-column justify-content-between flex-xl-row py-1">
+            <div class="d-flex flex-wrap justify-content-center justify-content-xl-start mb-2 mb-xl-0">
+                <a href="https://github.com/zeus-pay/btcpayserver" class="d-flex align-items-center m-3 m-sm-0 me-sm-4" target="_blank" rel="noreferrer noopener">
                     <vc:icon symbol="github"/>
                     <span style="margin-left:.4rem">Github</span>
                 </a>
-                <a href="https://chat.btcpayserver.org/" class="d-flex align-items-center m-3 m-sm-0 me-sm-4" target="_blank" rel="noreferrer noopener">
+                <a href="https://chat.zeuspay.org/" class="d-flex align-items-center m-3 m-sm-0 me-sm-4" target="_blank" rel="noreferrer noopener">
                     <vc:icon symbol="mattermost"/>
                     <span style="margin-left:.4rem">Mattermost</span>
                 </a>
-                <a href="https://twitter.com/BtcpayServer" class="d-flex align-items-center m-3 m-sm-0" target="_blank" rel="noreferrer noopener">
+                <a href="https://twitter.com/zeuspay" class="d-flex align-items-center m-3 m-sm-0" target="_blank" rel="noreferrer noopener">
                     <vc:icon symbol="twitter"/>
                     <span style="margin-left:.4rem">Twitter</span>
                 </a>
@@ -26,9 +26,9 @@
             </div>
             @if (User.Identity.IsAuthenticated)
             {
-                <div class="text-center">
+                <!-- <div class="text-center">
                     @_env.ToString()
-                </div>
+                </div> -->
             }
         </div>
     </div>

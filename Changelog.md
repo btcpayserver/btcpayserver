@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.2
+
+### Bug fixes:
+
+* Newly created guest cannot login (#3373) @dennisreimann
+* Guest users shouldn't see Payouts menu item @NicolasDorier
+* Add plugins link in server nav @Kukks
+
 ## 1.4.1
 
 ### Bug fixes:

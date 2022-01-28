@@ -29,7 +29,7 @@
 <partial name="CameraScanner"/>
 
 <div class="row">
-    <div class="col-lg-8 col-xl-7 @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
+    <div class="col-xl-8 col-xxl-constrain @(!Model.InputSelection && Model.Outputs.Count == 1 ? "transaction-output-form" : "")">
         <h3 class="mb-3">@ViewData["Title"]</h3>
         <form method="post" asp-action="WalletSend" asp-route-walletId="@walletId">
             <input type="hidden" asp-for="InputSelection" />

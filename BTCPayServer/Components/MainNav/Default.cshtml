@@ -124,7 +124,7 @@
                                             <span>Pull Payments</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item" permission="@Policies.CanViewStoreSettings">
+                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                         <a asp-area="" asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
                                             <vc:icon symbol="payouts"/>
                                             <span>Payouts</span>

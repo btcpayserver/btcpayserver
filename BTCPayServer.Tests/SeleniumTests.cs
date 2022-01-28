@@ -55,6 +55,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
+            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
             s.Driver.FindElement(By.LinkText("Services")).Click();
 
             TestLogs.LogInformation("Let's check if we can access the logs");

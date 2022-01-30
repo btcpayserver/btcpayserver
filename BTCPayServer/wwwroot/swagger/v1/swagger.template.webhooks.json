@@ -33,7 +33,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -82,7 +82,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -135,7 +135,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -183,7 +183,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -206,7 +206,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -266,7 +266,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -327,7 +327,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -389,7 +389,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -450,7 +450,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []

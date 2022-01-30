@@ -22,7 +22,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [],
+                        "API_Key": [],
                         "Basic": []
                     }
                 ]

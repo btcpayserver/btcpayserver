@@ -196,17 +196,6 @@
                 ],
                 "summary": "Delete a webhook",
                 "description": "Delete a webhook",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/WebhookDataBase"
-                            }
-                        }
-                    },
-                    "required": true,
-                    "x-position": 1
-                },
                 "responses": {
                     "200": {
                         "description": "The webhook has been deleted"

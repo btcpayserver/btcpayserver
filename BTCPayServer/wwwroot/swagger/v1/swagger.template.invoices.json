@@ -421,63 +421,6 @@
                         "Basic": []
                     }
                 ]
-            },
-            "delete": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Archive invoice",
-                "description": "Archives the specified invoice.",
-                "operationId": "Invoices_ArchiveInvoice",
-                "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to remove",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The invoice has been archived"
-                    },
-                    "400": {
-                        "description": "A list of errors that occurred when archiving the invoice",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden to archive the specified invoice"
-                    },
-                    "404": {
-                        "description": "The key is not found for this invoice"
-                    }
-                },
-                "security": [
-                    {
-                        "API Key": [
-                            "btcpay.store.canmodifyinvoices"
-                        ],
-                        "Basic": []
-                    }
-                ]
             }
         },
         "/api/v1/stores/{storeId}/invoices/{invoiceId}/status": {

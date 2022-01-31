@@ -883,9 +883,12 @@ namespace BTCPayServer.Controllers
 
         private SelectList GetPaymentMethodsSelectList()
         {
-            return new SelectList(_paymentMethodHandlerDictionary.Distinct().SelectMany(handler =>
-                    handler.GetSupportedPaymentMethods()
-                        .Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))),
+            var store = GetCurrentStore();
+            var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
+
+            return new SelectList(store.GetSupportedPaymentMethods(_NetworkProvider)
+                        .Where(s => !excludeFilter.Match(s.PaymentId))
+                        .Select(method => new SelectListItem(method.PaymentId.ToPrettyString(), method.PaymentId.ToString())),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));
         }

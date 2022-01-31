@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.2
+
+### Bug fixes:
+
+* Newly created guest cannot login (#3373) @dennisreimann
+* Guest users shouldn't see Payouts menu item @NicolasDorier
+* Add plugins link in server nav @Kukks
+
+## 1.4.1
+
+### Bug fixes:
+
+* Fix: Existing Lightning addresses were not loaded (#3367 #3368) @Kukks
+
 ## 1.4.0
 
 BTCPay Server started in August 2017 and meanwhile has been evolving incrementally thanks to the feedback of the community.

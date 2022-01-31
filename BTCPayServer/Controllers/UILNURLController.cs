@@ -178,11 +178,16 @@ namespace BTCPayServer
             }
         }
 
+        private async Task<LightningAddressSettings> GetSettings()
+        {
+            return await _settingsRepository.GetSettingAsync<LightningAddressSettings>(nameof(LightningAddressSettings)) ??
+                   new LightningAddressSettings();
+        }
+
         [HttpGet("~/.well-known/lnurlp/{username}")]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
-            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
-                                           new LightningAddressSettings();
+            var lightningAddressSettings = await GetSettings();
             if (!lightningAddressSettings.Items.TryGetValue(username.ToLowerInvariant(), out var item))
             {
                 return NotFound("Unknown username");
@@ -465,8 +470,7 @@ namespace BTCPayServer
                 });
                 return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
             }
-            var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
-                                           new LightningAddressSettings();
+            var lightningAddressSettings = await GetSettings();
             if (lightningAddressSettings.StoreToItemMap.TryGetValue(storeId, out var addresses))
             {
                 return View(new EditLightningAddressVM
@@ -504,8 +508,7 @@ namespace BTCPayServer
                 {
                     return View(vm);
                 }
-                var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
-                                               new LightningAddressSettings();
+                var lightningAddressSettings = await GetSettings();
                 if (lightningAddressSettings.Items.ContainsKey(vm.Add.Username.ToLowerInvariant()))
                 {
                     vm.AddModelError(addressVm => addressVm.Add.Username, "Username is already taken", this);
@@ -528,7 +531,7 @@ namespace BTCPayServer
                 lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
                 vm.Add.StoreId = storeId;
                 lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
-                await _settingsRepository.UpdateSetting(lightningAddressSettings);
+                await _settingsRepository.UpdateSetting(lightningAddressSettings, nameof(LightningAddressSettings));
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
@@ -540,8 +543,7 @@ namespace BTCPayServer
 
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                var lightningAddressSettings = await _settingsRepository.GetSettingAsync<LightningAddressSettings>() ??
-                                               new LightningAddressSettings();
+                var lightningAddressSettings = await  GetSettings();
                 var index = int.Parse(
                     command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
                     CultureInfo.InvariantCulture);
@@ -551,7 +553,7 @@ namespace BTCPayServer
                     addresses = addresses.Where(s => s != addressToRemove).ToArray();
                     lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, addresses);
                     lightningAddressSettings.Items.TryRemove(addressToRemove, out _);
-                    await _settingsRepository.UpdateSetting(lightningAddressSettings);
+                    await _settingsRepository.UpdateSetting(lightningAddressSettings, nameof(LightningAddressSettings));
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,

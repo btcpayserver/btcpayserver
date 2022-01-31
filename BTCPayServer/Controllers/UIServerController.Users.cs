@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers
                 {
                     // return
                     return View("Confirm", new ConfirmModel("Delete admin",
-                        "Unable to proceed: As the user <strong>{user.Email}</strong> is the last admin, it cannot be removed."));
+                        $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last admin, it cannot be removed."));
                 }
 
                 return View("Confirm", new ConfirmModel("Delete admin",

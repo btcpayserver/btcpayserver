@@ -913,6 +913,17 @@ namespace BTCPayServer.Controllers
                 var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
                 if (store == null)
                     return NotFound();
+
+                if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = "BTC", storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
+                        AllowDismiss = false
+                    });
+                }
+
                 HttpContext.SetStoreData(store);
             }
 
@@ -946,7 +957,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = "BTC", storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
                     AllowDismiss = false
                 });
                 return View(model);

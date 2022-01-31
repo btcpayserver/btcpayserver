@@ -19,7 +19,7 @@
     --icon-size: 1.5rem;
     
     height: var(--header-height);
-    z-index: 1;
+    z-index: 9999999;
 }
 
 #mainMenuHead  {

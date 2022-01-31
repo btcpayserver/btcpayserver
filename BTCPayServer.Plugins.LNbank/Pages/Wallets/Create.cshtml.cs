@@ -7,6 +7,7 @@ using BTCPayServer.Plugins.LNbank.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace BTCPayServer.Plugins.LNbank.Pages.Wallets;
 
@@ -14,6 +15,8 @@ namespace BTCPayServer.Plugins.LNbank.Pages.Wallets;
 public class CreateModel : BasePageModel
 {
     public Wallet Wallet { get; set; }
+    [FromQuery]
+    public string ReturnUrl { get; set; }
 
     public CreateModel(
         UserManager<ApplicationUser> userManager, 
@@ -36,6 +39,12 @@ public class CreateModel : BasePageModel
         if (!await TryUpdateModelAsync(Wallet, "wallet", w => w.Name)) return Page();
             
         await WalletService.AddOrUpdateWallet(Wallet);
+        
+        if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+        {
+            return Redirect(ReturnUrl + $"?LNbankWallet={Wallet.WalletId}");
+        }
+        
         return RedirectToPage("./Index", new { walletId = Wallet.WalletId });
     }
 }

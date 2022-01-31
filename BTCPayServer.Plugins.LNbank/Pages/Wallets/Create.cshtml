@@ -11,6 +11,7 @@
     <div class="col-xl-8">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input asp-for="ReturnUrl" type="hidden" />
             <div class="form-group">
                 <label asp-for="Wallet.Name" class="form-label"></label>
                 <input asp-for="Wallet.Name" class="form-control" required />

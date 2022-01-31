@@ -1,13 +1,15 @@
-﻿@model PostRedirectViewModel
-@{ 
-    Layout = null;
+@model PostRedirectViewModel
+@{
+	Layout = null;
 
-    var routeData = Context.GetRouteData();
-    var routeParams = new Dictionary<string, string>();
-    if (routeData != null)
-    {
-        routeParams["walletId"] = routeData.Values["walletId"]?.ToString();
-    }
+	var routeData = Context.GetRouteData();
+	var routeParams = new Dictionary<string, string>();
+	if (routeData != null)
+	{
+		routeParams["walletId"] = routeData.Values["walletId"]?.ToString();
+		if (routeParams["walletId"] is null)
+			routeParams["walletId"] = Model.Parameters.Where(p => p.Key == "walletId").Select(p => p.Value).FirstOrDefault();
+	}
     var action = Model.FormUrl ?? Url.Action(Model.AspAction, Model.AspController, routeParams);
 }
 

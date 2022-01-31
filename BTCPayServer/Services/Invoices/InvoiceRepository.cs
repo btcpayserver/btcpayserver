@@ -585,7 +585,7 @@ namespace BTCPayServer.Services.Invoices
             }
             if (invoice.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetpaymentMethodId().ToString()).ToHashSet();
+                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId().ToString()).ToHashSet();
             }
             if (invoice.Events != null)
             {

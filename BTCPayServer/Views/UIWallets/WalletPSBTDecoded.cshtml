@@ -1,4 +1,4 @@
-﻿@model WalletPSBTViewModel
+@model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
@@ -56,7 +56,7 @@
         <input type="hidden" asp-for="PSBT"/>
         <input type="hidden" asp-for="FileName"/>
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
-            <button type="submit" id="SignTransaction" name="command" value="nbx-seed" class="btn btn-primary">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
         </div>
     </form>
 } 

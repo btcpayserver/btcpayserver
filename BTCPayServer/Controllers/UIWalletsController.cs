@@ -723,17 +723,16 @@ namespace BTCPayServer.Controllers
             {
                 PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
-                ChangeAddress = psbtResponse.ChangeAddress?.ToString()
+                ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
+                PSBT = psbt.ToHex()
             };
-
-            var res = await TryHandleSigningCommands(walletId, psbt, command, signingContext, nameof(WalletSend));
-            if (res != null)
-            {
-                return res;
-            }
-
             switch (command)
             {
+                case "sign":
+                    return await WalletSign(walletId, new WalletPSBTViewModel()
+                    {
+                        SigningContext = signingContext
+                    });
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
@@ -1067,6 +1066,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletActions(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string command,
+            string[] selectedTransactions,
             CancellationToken cancellationToken = default)
         {
             var derivationScheme = GetDerivationSchemeSettings(walletId);
@@ -1075,6 +1075,30 @@ namespace BTCPayServer.Controllers
 
             switch (command)
             {
+                case "cpfp":
+                    {
+                        selectedTransactions ??= Array.Empty<string>();
+                        if (selectedTransactions.Length == 0)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] = $"No transaction selected";
+                            return RedirectToAction(nameof(WalletTransactions), new { walletId });
+                        }
+                        var parameters = new List<KeyValuePair<string, string>>();
+                        parameters.Add(new KeyValuePair<string, string>("walletId", walletId.ToString()));
+                        int i = 0;
+                        foreach (var tx in selectedTransactions)
+                        {
+                            parameters.Add(new KeyValuePair<string, string>($"transactionHashes[{i}]", tx));
+                            i++;
+                        }
+                        parameters.Add(new KeyValuePair<string, string>("returnUrl", Url.Action(nameof(WalletTransactions), new { walletId })));
+                        return View("PostRedirect", new PostRedirectViewModel
+                        {
+                            AspController = "UIWallets",
+                            AspAction = nameof(UIWalletsController.WalletCPFP),
+                            Parameters = parameters
+                        });
+                    }
                 case "prune":
                     {
                         var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);

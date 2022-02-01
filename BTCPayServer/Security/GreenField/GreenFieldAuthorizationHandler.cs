@@ -38,13 +38,7 @@ namespace BTCPayServer.Security.Greenfield
                 var newUser = new ClaimsPrincipal(new ClaimsIdentity(context.User.Claims,
                     $"{GreenfieldConstants.AuthenticationType}"));
                 var newContext = new AuthorizationHandlerContext(context.Requirements, newUser, null);
-                return new GreenfieldAuthorizationHandler(
-                    context.Resource is null
-                        ? _httpContextAccessor
-                        : new HttpContextAccessor()
-                        {
-                            HttpContext = (HttpContext)context.Resource
-                        }, _userManager, _storeRepository).HandleAsync(newContext);
+                return new GreenfieldAuthorizationHandler(_httpContextAccessor, _userManager, _storeRepository).HandleAsync(newContext);
             }
             
             var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";

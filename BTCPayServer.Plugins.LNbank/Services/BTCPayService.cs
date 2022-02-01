@@ -19,9 +19,9 @@ namespace BTCPayServer.Plugins.LNbank.Services
             _clientFactory = clientFactory;
         }
 
-        public async Task<LightningInvoiceData> CreateLightningInvoice(string userId, LightningInvoiceCreateRequest req)
+        public async Task<LightningInvoiceData> CreateLightningInvoice(LightningInvoiceCreateRequest req)
         {
-            var client = await Client(userId);
+            var client = await Client();
             return await client.CreateLightningInvoice(CryptoCode, new CreateLightningInvoiceRequest
             {
                 Amount = req.Amount,
@@ -29,9 +29,10 @@ namespace BTCPayServer.Plugins.LNbank.Services
                 Expiry = req.Expiry
             });
         }
-        public async Task PayLightningInvoice(string userId, LightningInvoicePayRequest req)
+        
+        public async Task PayLightningInvoice(LightningInvoicePayRequest req)
         {
-            var client = await Client(userId);
+            var client = await Client();
             await client.PayLightningInvoice(CryptoCode, new PayLightningInvoiceRequest
             {
                 BOLT11 = req.PaymentRequest
@@ -40,43 +41,43 @@ namespace BTCPayServer.Plugins.LNbank.Services
 
         public async Task<LightningInvoiceData> GetLightningInvoice(string invoiceId, CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             return await client.GetLightningInvoice(CryptoCode, invoiceId, cancellationToken);
         }
 
         public async Task<LightningNodeInformationData> GetLightningNodeInfo(CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             return await client.GetLightningNodeInfo(CryptoCode, cancellationToken);
         }
 
         public async Task<IEnumerable<LightningChannelData>> ListLightningChannels(CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             return await client.GetLightningNodeChannels(CryptoCode, cancellationToken);
         }
 
         public async Task<string> GetLightningDepositAddress(CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             return await client.GetLightningDepositAddress(CryptoCode, cancellationToken);
         }
 
         public async Task OpenLightningChannel(OpenLightningChannelRequest req, CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             await client.OpenLightningChannel(CryptoCode, req, cancellationToken);
         }
 
         public async Task ConnectToLightningNode(ConnectToNodeRequest req, CancellationToken cancellationToken = default)
         {
-            var client = await Client(null);
+            var client = await Client();
             await client.ConnectToLightningNode(CryptoCode, req, cancellationToken);
         }
 
-        private async Task<BTCPayServerClient> Client(string userId)
+        private async Task<BTCPayServerClient> Client()
         {
-            return await _clientFactory.Create(userId, new string[0]);
+            return await _clientFactory.Create(null, new string[0]);
         }
     }
 }

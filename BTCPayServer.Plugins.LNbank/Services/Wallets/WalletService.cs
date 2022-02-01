@@ -99,7 +99,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             await using var dbContext = _dbContextFactory.CreateContext();
             if (amount <= 0) throw new ArgumentException(nameof(amount));
 
-            var data = await _btcpayService.CreateLightningInvoice(wallet.UserId, new LightningInvoiceCreateRequest
+            var data = await _btcpayService.CreateLightningInvoice(new LightningInvoiceCreateRequest
             {
                 Amount = amount,
                 Description = description,
@@ -116,6 +116,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 PaymentRequest = data.BOLT11,
                 Description = description?? descriptionHash.ToString()
             });
+            
             await dbContext.SaveChangesAsync();
 
             return entry.Entity;
@@ -157,8 +158,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             }
             else
             {
-                await _btcpayService.PayLightningInvoice(wallet.UserId,
-                                    new LightningInvoicePayRequest {PaymentRequest = paymentRequest});
+                await _btcpayService.PayLightningInvoice(new LightningInvoicePayRequest {PaymentRequest = paymentRequest});
             }
             
             var executionStrategy = dbContext.Database.CreateExecutionStrategy();

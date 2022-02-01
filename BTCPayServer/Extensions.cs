@@ -115,6 +115,15 @@ namespace BTCPayServer
                    tempData.Peek(WellKnownTempData.ErrorMessage) ??
                    tempData.Peek("StatusMessageModel")) != null;
         }
+
+        public static bool HasErrorMessage(this ITempDataDictionary tempData)
+        {
+            return (
+                tempData.Peek("StatusMessageModel") != null &&
+                tempData.GetStatusMessageModel().Severity == StatusMessageModel.StatusSeverity.Error
+            );
+        }
+
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
         {
             return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));

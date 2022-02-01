@@ -8,9 +8,9 @@
 }
 
 <header>
-    <h2>@ViewData["Title"]</h2>
+    <h2 id="LNbank-TransactionDescription">@ViewData["Title"]</h2>
     <div>
-        <a asp-page="./Edit" asp-route-walletId="@Model.WalletId" asp-route-transactionId="@Model.Transaction.TransactionId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1">
+        <a asp-page="./Edit" asp-route-walletId="@Model.WalletId" asp-route-transactionId="@Model.Transaction.TransactionId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1" id="LNbank-EditTransaction">
             <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#edit"></use></svg>
             Edit
         </a>
@@ -20,37 +20,37 @@
 <div class="mb-4">
     @if (Model.Transaction.IsPaid)
     {
-        <h2 class="text-@(Model.Transaction.AmountSettled > 0 ? "success" : "danger")">
+        <h3 id="LNbank-TransactionSettled" class="text-@(Model.Transaction.AmountSettled > 0 ? "success" : "danger")">
             @Model.Transaction.AmountSettled.ToUnit(LightMoneyUnit.Satoshi)
             sats
             @Model.Transaction.Status
-        </h2>
-        <h3 class="h4 text-muted">
+        </h3>
+        <h4 class="h4 text-muted">
             Paid
             <time datetime="@Model.Transaction.PaidAt?.ToString("o", CultureInfo.InvariantCulture)">
                 @Model.Transaction.PaidAt?.ToTimeAgo()
             </time>
-        </h3>
+        </h4>
     }
     else
     {
-        <h2 class="text-@(Model.Transaction.IsExpired ? "info" : "warning")">
+        <h3 id="LNbank-TransactionAmount" class="text-@(Model.Transaction.IsExpired ? "info" : "warning")">
             @Model.Transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
             sats
             @Model.Transaction.Status
-        </h2>
-        <h3 class="h4 text-muted">
+        </h3>
+        <h4 class="h4 text-muted">
             @(Model.Transaction.IsExpired ? "Expired" : "Expires")
             <time datetime="@Model.Transaction.ExpiresAt.ToString("o", CultureInfo.InvariantCulture)">
                 @Model.Transaction.ExpiresAt.ToTimeAgo()
             </time>
-        </h3>
+        </h4>
 
         @if (!Model.Transaction.IsExpired)
         {
             <div class="mt-4">
-                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest">Copy payment request</button>
-                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })">Copy public share URL</button>
+                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest" id="LNbank-CopyPaymentRequest">Copy payment request</button>
+                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })" id="LNbank-CopyShareUrl">Copy public share URL</button>
             </div>
             
             <div class="qrcode my-4">
@@ -75,5 +75,5 @@
 </div>
 
 <p>
-    <a asp-page="/Wallets/Index" asp-route-walletId="@Model.WalletId" class="text-secondary">Back to Wallet</a>
+    <a asp-page="/Wallets/Index" asp-route-walletId="@Model.WalletId" class="text-secondary" id="LNbank-Back">Back to Wallet</a>
 </p>

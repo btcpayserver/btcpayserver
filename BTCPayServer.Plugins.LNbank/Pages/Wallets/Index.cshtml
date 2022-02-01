@@ -13,11 +13,11 @@
 {
     <div class="row">
         <div class="col-12 col-xl-3 mb-5 mb-xl-0">
-            <div class="nav flex-column nav-pills mb-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <div class="nav flex-column nav-pills mb-3" id="LNbank-Wallets" role="tablist" aria-orientation="vertical">
                 @foreach (var wallet in Model.Wallets)
                 {
                     <a asp-route-walletId="@wallet.WalletId" role="tab" class="nav-link d-flex justify-content-between align-items-center @(wallet == Model.SelectedWallet ? "active" : "")" aria-selected="@(wallet == Model.SelectedWallet ? "true" : "false")">
-                        @wallet.Name
+                        <span class="wallet-name">@wallet.Name</span>
                         <span class="badge bg-light">
                             @wallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats
                         </span>
@@ -25,7 +25,7 @@
                 }
             </div>
 
-            <a asp-page="./Create" class="text-secondary d-inline-flex align-items-center ps-3">
+            <a asp-page="./Create" class="text-secondary d-inline-flex align-items-center ps-3" id="LNbank-CreateWallet">
                 Create a wallet
                 <svg role="img" class="ms-1"><use href="/Resources/img/icon-sprite.svg#wallet"></use></svg>
             </a>
@@ -36,19 +36,19 @@
                 <header class="flex-wrap mb-0">
                     <div class="flex-grow-1 d-flex align-items-center mb-3">
                         <h3 class="d-inline-block mb-0 me-2">@Model.SelectedWallet.Name</h3>
-                        <a asp-page="./Details" asp-route-walletId="@Model.SelectedWallet.WalletId" class="text-secondary d-inline-flex align-items-center mx-1">
+                        <a asp-page="./Details" asp-route-walletId="@Model.SelectedWallet.WalletId" class="text-secondary d-inline-flex align-items-center mx-1" id="LNbank-WalletDetails">
                             <svg role="img"><use href="/Resources/img/icon-sprite.svg#info"></use></svg>
                         </a>
                         <h4 class="d-inline-flex ms-auto mb-0 me-2">
-                            <span class="badge bg-info" style="padding:.75rem;">@Model.SelectedWallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
+                            <span class="badge bg-info" style="padding:.75rem;" id="LNbank-WalletBalance">@Model.SelectedWallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
                         </h4>
                     </div>
                     <div class="d-flex align-items-stretch mb-3">
-                        <a asp-page="./Send" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center me-2">
+                        <a asp-page="./Send" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center me-2" id="LNbank-WalletSend">
                             <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#send"></use></svg>
                             Send
                         </a>
-                        <a asp-page="./Receive" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center">
+                        <a asp-page="./Receive" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center" id="LNbank-WalletReceive">
                             <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#receive"></use></svg>
                             Receive
                         </a>
@@ -66,12 +66,12 @@
                                 <th class="text-end">Settled</th>
                             </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="LNbank-WalletTransactions">
                             @foreach (var transaction in Model.Transactions)
                             {
                                 <tr>
                                     <td>
-                                        <a asp-page="/Transactions/Details" asp-route-walletId="@Model.SelectedWallet.WalletId" asp-route-transactionId="@transaction.TransactionId">
+                                        <a asp-page="/Transactions/Details" asp-route-walletId="@Model.SelectedWallet.WalletId" asp-route-transactionId="@transaction.TransactionId" class="transaction-details">
                                             <time datetime="@transaction.CreatedAt.ToString("o", CultureInfo.InvariantCulture)">
                                                 @transaction.CreatedAt.ToTimeAgo()
                                             </time>
@@ -80,20 +80,20 @@
                                     <td>
                                         @transaction.Description
                                     </td>
-                                    <td class="text-nowrap text-end">
+                                    <td class="text-nowrap text-end transaction-amount">
                                         @transaction.Amount.ToUnit(LightMoneyUnit.Satoshi)
                                         sats
                                     </td>
                                     <td class="text-nowrap text-end">
                                         @if (transaction.IsPaid)
                                         {
-                                            <span class="text-@(transaction.AmountSettled > 0 ? "success" : "danger")">
+                                            <span class="text-@(transaction.AmountSettled > 0 ? "success" : "danger") transaction-settled">
                                                 @transaction.AmountSettled.ToUnit(LightMoneyUnit.Satoshi) sats
                                             </span>
                                         }
                                         else
                                         {
-                                            <span class="text-@(transaction.IsExpired ? "info" : "warning")">
+                                            <span class="text-@(transaction.IsExpired ? "info" : "warning") transaction-status">
                                                 @transaction.Status
                                             </span>
                                         }
@@ -106,7 +106,7 @@
                 }
                 else
                 {
-                    <p>There are no transactions, yet.</p>
+                    <p id="LNbank-WalletTransactions">There are no transactions, yet.</p>
                 }
             </div>
         }

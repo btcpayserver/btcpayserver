@@ -41,12 +41,12 @@
                 <span asp-validation-for="Amount" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create invoice" class="btn btn-primary" />
+                <input type="submit" value="Create invoice" class="btn btn-primary" id="LNbank-CreateInvoice" />
             </div>
         </form>
     </div>
 </div>
 
 <p class="mt-3">
-    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>
+    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary" id="LNbank-Back">Back to Wallet</a>
 </p>

@@ -6,7 +6,7 @@
 }
 
 <header>
-    <h2>@ViewData["Title"]</h2>
+    <h2 id="LNbank-WalletName">@ViewData["Title"]</h2>
     <div>
         <a asp-page="./Edit" asp-route-walletId="@Model.Wallet.WalletId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1">
             <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#edit"></use></svg>
@@ -20,7 +20,7 @@
     <dt class="col-sm-3 col-xl-2">
         @Html.DisplayNameFor(model => model.Wallet.WalletId)
     </dt>
-    <dd class="col-sm-9 col-xl-10">
+    <dd class="col-sm-9 col-xl-10" id="LNbank-WalletId">
         @Model.Wallet.WalletId
     </dd>
     @foreach (var accessKey in Model.Wallet.AccessKeys)
@@ -28,7 +28,7 @@
         <dt class="col-sm-3 col-xl-2">
             Access Key
         </dt>
-        <dd class="col-sm-9 col-xl-10">
+        <dd class="col-sm-9 col-xl-10" id="LNbank-WalletAccessKey">
             @accessKey.Key
         </dd>
     }
@@ -41,5 +41,5 @@
 </dl>
 
 <p>
-    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>
+    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary" id="LNbank-Back">Back to Wallet</a>
 </p>

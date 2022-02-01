@@ -38,7 +38,7 @@
                     <span asp-validation-for="PaymentRequest" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="LNbank-Decode">
                         Decode payment request
                     </button>
                 </div>
@@ -58,20 +58,20 @@
                         <dt class="col-sm-2">
                             Description
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-10" id="LNbank-Description">
                             @Model.Bolt11.ShortDescription
                         </dd>
                         <dt class="col-sm-2">
                             Amount
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-10" id="LNbank-Amount">
                             @Model.Bolt11.MinimumAmount.ToUnit(LightMoneyUnit.Satoshi)
                             sats
                         </dd>
                     </dl>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="LNbank-Send">
                         Send @(Model.Bolt11.MinimumAmount.ToUnit(LightMoneyUnit.Satoshi)) sats
                     </button>
                 </div>
@@ -81,5 +81,5 @@
 </div>
 
 <p class="mt-3">
-    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary">Back to Wallet</a>
+    <a asp-page="./Index" asp-route-walletId="@Model.Wallet.WalletId" class="text-secondary" id="LNbank-Back">Back to Wallet</a>
 </p>

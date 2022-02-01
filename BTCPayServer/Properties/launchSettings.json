@@ -96,9 +96,12 @@
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
-        "BTCPAY_CHEATMODE": "true"
-      },
-      "applicationUrl": "https://localhost:14142/"
-    }
+        "BTCPAY_CHEATMODE": "true",
+        "BTCPAY_ZEC_DAEMON_URI": "http://localhost:8090",
+        "BTCPAY_ZEC_WALLET_DAEMON_URI": "http://localhost:8001",
+        "BTCPAY_ZEC_WALLET_DAEMON_WALLETDIR": "/"
+      }
+    },
+    "applicationUrl": "https://localhost:14142/"    
   }
 }

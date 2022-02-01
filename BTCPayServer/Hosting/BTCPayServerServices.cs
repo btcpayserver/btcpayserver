@@ -59,6 +59,7 @@ using NicolasDorier.RateLimits;
 using Serilog;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
+using BTCPayServer.Services.Altcoins.Zcash;
 #endif
 namespace BTCPayServer.Hosting
 {
@@ -89,6 +90,7 @@ namespace BTCPayServer.Hosting
             services.AddPayJoinServices();
 #if ALTCOINS
             services.AddMoneroLike();
+            services.AddZcashLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());

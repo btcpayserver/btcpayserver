@@ -10,11 +10,11 @@
 <div class="mb-5">
     <h3 class="mb-3">@ViewData["Title"]</h3>
     <div class="mb-3">
-        <span class="me-3">@Model.LightningNodeType Node</span>
+        <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
         
         @if (Model.LightningNodeType != LightningNodeType.Internal)
         {
-            <span class="me-3">
+            <span class="me-3" id="CustomNodeInfo">
                 @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
                 {
                     @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
@@ -32,7 +32,8 @@
            asp-action="ShowLightningNodeInfo"
            asp-route-cryptoCode="@Model.CryptoCode"
            asp-route-storeId="@Model.StoreId"
-           target="_blank">
+           target="_blank"
+           id="PublicNodeInfo">
             Public Node Info
         </a>
     </div>

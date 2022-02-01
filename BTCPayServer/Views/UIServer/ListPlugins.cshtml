@@ -20,7 +20,6 @@
         availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? ordered.FirstOrDefault());
     }
     
-    
     bool DependentOn(string plugin)
     {
         foreach (var installedPlugin in Model.Installed)
@@ -140,7 +139,7 @@
             var updateAvailable = !plugin.SystemPlugin && matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
-                <div class="card h-100">
+                <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
                         <div class="d-flex flex-wrap align-items-center mb-2">
@@ -260,7 +259,7 @@
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
             
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
-                <div class="card h-100">
+                <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="text-muted d-flex align-items-center mt-1">

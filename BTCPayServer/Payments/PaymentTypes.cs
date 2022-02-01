@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero.Payments;
-using BTCPayServer.Services.Altcoins.Zcash.Payments;
 #endif
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
@@ -19,7 +18,7 @@ namespace BTCPayServer.Payments
         {
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS
-            MoneroLike, ZcashLike,
+            MoneroLike,
 #endif
         };
         /// <summary>
@@ -40,10 +39,6 @@ namespace BTCPayServer.Payments
         /// Monero payment
         /// </summary>
         public static MoneroPaymentType MoneroLike => MoneroPaymentType.Instance;
-        /// <summary>
-        /// Zcash payment
-        /// </summary>
-        public static ZcashPaymentType ZcashLike => ZcashPaymentType.Instance;
 #endif
 
         public static bool TryParse(string paymentType, out PaymentType type)

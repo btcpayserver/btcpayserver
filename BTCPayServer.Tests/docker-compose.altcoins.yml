@@ -57,7 +57,6 @@ services:
       - sshd
       - tor
       - monero_wallet
-      - zcash_wallet
 
   sshd:
     build:
@@ -386,17 +385,6 @@ services:
           - "19444:19444"
       volumes:
           - "elementsd_liquid_datadir:/data"
-
-  zcash_wallet:
-    image: hhanh00/zcash-walletd
-    environment:
-      VK: zxviews # Replace with your viewing key
-      BIRTH_HEIGHT: 1500000 # Replace with your wallet birth height
-    ports:
-      - "8000:8000"
-    volumes:
-      - "zcash_wallet_datadir:/data"
-
 volumes:
     sshd_datadir:
     bitcoin_datadir:
@@ -410,4 +398,3 @@ volumes:
     torrcdir:
     tor_servicesdir:
     monero_data:
-    zcash_wallet_datadir:

@@ -6,6 +6,10 @@
     ViewData.SetActivePage(LNbankNavPages.Send, "Send");
 }
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
 <h2 class="mt-1 mb-4">
     @ViewData["Title"]
     <span class="badge bg-info d-inline-block ms-2 py-2 px-3">@Model.Wallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
@@ -29,9 +33,9 @@
             @if (Model.Bolt11 == null)
             {
                 <div class="form-group">
-                    <label asp-for="PaymentRequest" class="form-label"></label>
+                    <label asp-for="PaymentRequest" class="form-label" data-required></label>
                     <textarea asp-for="PaymentRequest" class="form-control" rows="5"></textarea>
-                    <small asp-validation-for="PaymentRequest" class="form-text text-danger"></small>
+                    <span asp-validation-for="PaymentRequest" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">

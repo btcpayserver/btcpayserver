@@ -23,6 +23,7 @@ public class ReceiveModel : BasePageModel
     [BindProperty]
     [DisplayName("Amount in sats")]
     [Required]
+    [Range(1, 2100000000000)]
     public long Amount { get; set; }
     public string ErrorMessage { get; set; }
 

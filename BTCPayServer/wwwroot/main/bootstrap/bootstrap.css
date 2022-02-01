@@ -4952,7 +4952,7 @@ fieldset:disabled .btn {
 }
 
 .alert-link {
-  font-weight: 700;
+  font-weight: var(--btcpay-font-weight-normal);
 }
 
 .alert-dismissible {
@@ -10733,6 +10733,10 @@ ul:not([class]) li {
   width: unset;
   height: 1px;
   background: none;
+}
+
+.alert-link {
+  text-decoration: underline;
 }
 
 .alert-dismissible .btn-close {

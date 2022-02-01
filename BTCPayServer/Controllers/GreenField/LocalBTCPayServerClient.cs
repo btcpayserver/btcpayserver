@@ -113,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
                     new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType));
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, $"Local{GreenfieldConstants.AuthenticationType}WithUser"));
             }
             else
             {

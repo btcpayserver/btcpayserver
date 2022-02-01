@@ -4,14 +4,14 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PreserveCompilationContext>false</PreserveCompilationContext>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
-    <AssemblyVersion>1.0.2</AssemblyVersion>
+    <AssemblyVersion>1.0.3</AssemblyVersion>
     <Title>LNbank</Title>
     <Authors>d11n</Authors>
     <Description>Use the BTCPay Server Lightning node in custodial mode and give users access via custodial layer 3 wallets.</Description>
     <PackageProjectUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dennisreimann/btcpayserver/tree/lnbank</RepositoryUrl>
     <LangVersion>10</LangVersion>
-    <PackageVersion>1.0.2</PackageVersion>
+    <PackageVersion>1.0.3</PackageVersion>
 
   </PropertyGroup>
   <ItemGroup>

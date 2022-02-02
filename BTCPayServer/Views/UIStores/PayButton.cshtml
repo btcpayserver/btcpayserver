@@ -139,7 +139,7 @@
                 </button>
                 <p><strong>Warning:</strong> This feature should not be activated on a BTCPay Server store processing commercial transactions.</p>
                 <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
-                <p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore">create a separate store</a> before using the payment button.</p>
+                <p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.</p>
                 <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
                     <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
                 </form>

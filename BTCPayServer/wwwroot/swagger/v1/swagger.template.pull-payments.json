@@ -41,7 +41,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []
@@ -140,7 +140,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []
@@ -213,7 +213,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []
@@ -441,7 +441,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []
@@ -463,7 +463,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []
@@ -524,7 +524,7 @@
                 "tags": [ "Pull payments (Management)" ],
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmanagepullpayments"
                         ],
                         "Basic": []

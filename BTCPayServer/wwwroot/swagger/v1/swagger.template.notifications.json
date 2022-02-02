@@ -54,7 +54,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.user.canmanagenotificationsforuser",
                             "btcpay.user.canviewnotificationsforuser"
                         ],
@@ -102,7 +102,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.user.canmanagenotificationsforuser",
                             "btcpay.user.canviewnotificationsforuser"
                         ],
@@ -148,7 +148,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.user.canmanagenotificationsforuser"
                         ],
                         "Basic": []
@@ -196,7 +196,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.user.canmanagenotificationsforuser"
                         ],
                         "Basic": []

@@ -31,7 +31,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canviewpaymentrequests"
                         ],
                         "Basic": []
@@ -91,7 +91,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifypaymentrequests"
                         ],
                         "Basic": []
@@ -143,7 +143,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canviewpaymentrequests"
                         ],
                         "Basic": []
@@ -196,7 +196,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [ "btcpay.store.canmodifypaymentrequests"],
+                        "API_Key": [ "btcpay.store.canmodifypaymentrequests"],
                         "Basic": []
                     }
                 ]
@@ -261,7 +261,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifypaymentrequests"
                         ],
                         "Basic": []

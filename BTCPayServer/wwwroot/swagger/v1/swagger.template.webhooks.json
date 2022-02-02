@@ -744,7 +744,7 @@
                             },
                             "payment": {
                                 "description": "Details about the payment",
-                                "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                "$ref": "#/components/schemas/Payment"
                             }
                         }
                     }

@@ -386,6 +386,10 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.GoToInvoices();
+            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+            // Should give us an error message if we try to create an invoice before adding a wallet
+            Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();

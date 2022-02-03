@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,12 +11,9 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.Models;
@@ -56,7 +52,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
-        private readonly IServiceProvider _serviceProvider;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
             IOptionsMonitor<IdentityOptions> identityOptions,
@@ -78,8 +73,7 @@ namespace BTCPayServer.Controllers.Greenfield
             GreenfieldStoreWebhooksController storeWebhooksController,
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             UIHomeController homeController,
-            GreenfieldStorePaymentMethodsController storePaymentMethodsController,
-            IServiceProvider serviceProvider)
+            GreenfieldStorePaymentMethodsController storePaymentMethodsController)
         {
             _storeRepository = storeRepository;
             _identityOptions = identityOptions;
@@ -102,7 +96,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
             _homeController = homeController;
             _storePaymentMethodsController = storePaymentMethodsController;
-            _serviceProvider = serviceProvider;
         }
 
         public async Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
@@ -120,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
                     new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, $"Local{GreenfieldConstants.AuthenticationType}WithUser"));
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType));
             }
             else
             {
@@ -139,7 +132,6 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return new LocalBTCPayServerClient(
-                _serviceProvider,
                 _chainPaymentMethodsController,
                 _storeOnChainWalletsController,
                 _healthController,
@@ -184,9 +176,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
 
-        public LocalBTCPayServerClient(
-            IServiceProvider serviceProvider,
-            GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
+        public LocalBTCPayServerClient(GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
             GreenfieldStoreOnChainWalletsController storeOnChainWalletsController,
             GreenfieldHealthController healthController,
             GreenfieldPaymentRequestsController paymentRequestController,
@@ -233,56 +223,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
                 lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController
             };
-
-            var authoverride = new DefaultAuthorizationService(
-                serviceProvider.GetRequiredService<IAuthorizationPolicyProvider>(),
-                new AuthHandlerProvider(
-                    serviceProvider.GetRequiredService<StoreRepository>(), 
-                    serviceProvider.GetRequiredService<UserManager<ApplicationUser>>(),
-                    httpContextAccessor
-                ),
-                serviceProvider.GetRequiredService<ILogger<DefaultAuthorizationService>>(),
-                serviceProvider.GetRequiredService<IAuthorizationHandlerContextFactory>(),
-                serviceProvider.GetRequiredService<IAuthorizationEvaluator>(),
-                serviceProvider.GetRequiredService<IOptions<AuthorizationOptions>>()
-
-
-            );
-            
-            
             foreach (var controller in controllers)
             {
                 controller.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
-                var authInterface = typeof(IAuthorizationService);
-                foreach (FieldInfo fieldInfo in controller.GetType().GetFields().Where(info => authInterface.IsAssignableFrom(info.FieldType)))
-                {
-                    fieldInfo.SetValue(controller, authoverride);
-                }
             }
         }
 
-        class AuthHandlerProvider : IAuthorizationHandlerProvider
-        {
-            private readonly IHttpContextAccessor _httpContextAccessor;
-
-
-            private readonly UserManager<ApplicationUser> _userManager;
-            private readonly StoreRepository _storeRepository;
-
-            public AuthHandlerProvider(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor)
-            {
-                _storeRepository = storeRepository;
-                _userManager = userManager;
-                _httpContextAccessor = httpContextAccessor;
-            }
-            public Task<IEnumerable<IAuthorizationHandler>> GetHandlersAsync(AuthorizationHandlerContext context)
-            {
-                return Task.FromResult<IEnumerable<IAuthorizationHandler>>(new IAuthorizationHandler[]
-                {
-                    new LocalGreenfieldAuthorizationHandler(_httpContextAccessor, _userManager, _storeRepository)
-                });
-            }
-        }
         protected override HttpRequestMessage CreateHttpRequest(string path,
             Dictionary<string, object> queryPayload = null, HttpMethod method = null)
         {

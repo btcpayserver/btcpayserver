@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -18,29 +17,8 @@ namespace BTCPayServer.Security.Greenfield
 {
     public class LocalGreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly StoreRepository _storeRepository;
-
-        public LocalGreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
-            UserManager<ApplicationUser> userManager,
-            StoreRepository storeRepository)
-        {
-            _httpContextAccessor = httpContextAccessor;
-            _userManager = userManager;
-            _storeRepository = storeRepository;
-        }
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
-            var withuser  = context.User.Identity?.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}WithUser";
-            if (withuser)
-            {
-                var newUser = new ClaimsPrincipal(new ClaimsIdentity(context.User.Claims,
-                    $"{GreenfieldConstants.AuthenticationType}"));
-                var newContext = new AuthorizationHandlerContext(context.Requirements, newUser, null);
-                return new GreenfieldAuthorizationHandler(_httpContextAccessor, _userManager, _storeRepository).HandleAsync(newContext);
-            }
-            
             var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
 
             if (succeed)

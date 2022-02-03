@@ -33,7 +33,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -82,7 +82,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -135,7 +135,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -183,7 +183,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -196,6 +196,17 @@
                 ],
                 "summary": "Delete a webhook",
                 "description": "Delete a webhook",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookDataBase"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
                 "responses": {
                     "200": {
                         "description": "The webhook has been deleted"
@@ -206,7 +217,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -266,7 +277,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -327,7 +338,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -389,7 +400,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -450,7 +461,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.store.webhooks.canmodifywebhooks"
                         ],
                         "Basic": []
@@ -733,7 +744,7 @@
                             },
                             "payment": {
                                 "description": "Details about the payment",
-                                "$ref": "#/components/schemas/Payment"
+                                "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
                             }
                         }
                     }

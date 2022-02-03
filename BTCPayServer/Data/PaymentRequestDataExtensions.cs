@@ -1,4 +1,3 @@
-using System;
 using BTCPayServer.Client.Models;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -11,17 +10,8 @@ namespace BTCPayServer.Data
         {
             var result = paymentRequestData.Blob == null
                 ? new PaymentRequestBaseData()
-                : ParseBlob(paymentRequestData.Blob);
+                : JObject.Parse(ZipUtils.Unzip(paymentRequestData.Blob)).ToObject<PaymentRequestBaseData>();
             return result;
-        }
-
-        private static PaymentRequestBaseData ParseBlob(byte[] blob)
-        {
-            var jobj = JObject.Parse(ZipUtils.Unzip(blob));
-            // Fixup some legacy payment requests
-            if (jobj["expiryDate"].Type == JTokenType.Date)
-                jobj["expiryDate"] = new JValue(NBitcoin.Utils.DateTimeToUnixTime(jobj["expiryDate"].Value<DateTime>()));
-            return jobj.ToObject<PaymentRequestBaseData>();
         }
 
         public static bool SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBaseData blob)

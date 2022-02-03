@@ -425,11 +425,6 @@ namespace BTCPayServer
             return prefCookie;
         }
 
-        public static void DeleteUserPrefsCookie(this HttpContext ctx)
-        {
-            ctx.Response.Cookies.Delete(nameof(UserPrefsCookie));
-        }
-
         private static void SetCurrentStoreId(this HttpContext ctx, string storeId)
         {
             var prefCookie = ctx.GetUserPrefsCookie();

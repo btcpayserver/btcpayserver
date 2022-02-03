@@ -22,7 +22,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.user.canviewprofile"
                         ],
                         "Basic": []
@@ -43,7 +43,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.user.candeleteuser"
                         ],
                         "Basic": []
@@ -121,7 +121,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [
+                        "API Key": [
                             "btcpay.server.cancreateuser"
                         ],
                         "Basic": []

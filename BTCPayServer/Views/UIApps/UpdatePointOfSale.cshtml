@@ -5,9 +5,17 @@
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 }
 
-<partial name="_StatusMessage" />
+<div class="sticky-header-setup"></div>
+<header class="sticky-header d-sm-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <div class="d-flex gap-2 mt-3 mt-sm-0">
+        <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+        <a class="btn btn-secondary" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View</a>
+        <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+    </div>
+</header>
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 <form method="post">
     <input type="hidden" asp-for="StoreId" />
@@ -239,23 +247,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-9 mt-2">
-            <div class="d-grid gap-3 d-md-block">
-                <button type="submit" class="btn btn-primary me-md-2"  id="SaveSettings">Save Settings</button>
-                <div class="btn-group me-md-2">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm"
-                       target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
-                </div>
-                <div class="btn-group">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View Point of Sale</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id"
-                       target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                 </div>
             </div>
         </div>

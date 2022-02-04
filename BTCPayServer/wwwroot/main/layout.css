@@ -357,6 +357,9 @@
 @media (max-width: 991px) {
     :root {
         --header-height: var(--mobile-header-height);
+
+        /* Prevent anchors from disappearing underneath the fixed header */
+        scroll-padding: var(--header-height);
     }
     
     #mainMenu {

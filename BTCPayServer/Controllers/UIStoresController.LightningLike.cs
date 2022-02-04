@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
@@ -206,6 +207,13 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
+            if (lightning == null) 
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Need to connect to a Lightning node before adjusting its settings.";
+
+                return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
+            }
+            
             var vm = new LightningSettingsViewModel
             {
                 CryptoCode = cryptoCode,
@@ -359,7 +367,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+        private LightningSupportedPaymentMethod? GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_NetworkProvider)

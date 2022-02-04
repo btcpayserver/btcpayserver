@@ -103,16 +103,16 @@ namespace BTCPayServer.Controllers
 
             vm.CanUseInternalNode = await CanUseInternalLightning();
 
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            if (vm.CryptoCode == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 
+            var network = _ExplorerProvider.GetNetwork(vm.CryptoCode);
             var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
 
-            LightningSupportedPaymentMethod paymentMethod = null;
+            LightningSupportedPaymentMethod? paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
                 if (!await CanUseInternalLightning())
@@ -226,8 +226,7 @@ namespace BTCPayServer.Controllers
             };
             await SetExistingValues(store, vm);
 
-            var lnSet = lightning != null;
-            if (lnSet)
+            if (lightning != null)
             {
                 vm.DisableBolt11PaymentMethod = lightning.DisableBOLT11PaymentOption;
             }
@@ -259,13 +258,13 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            if (vm.CryptoCode == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 
+            var network = _ExplorerProvider.GetNetwork(vm.CryptoCode);
             var needUpdate = false;
             var blob = store.GetStoreBlob();
             blob.LightningDescriptionTemplate = vm.LightningDescriptionTemplate ?? string.Empty;
@@ -277,7 +276,8 @@ namespace BTCPayServer.Controllers
             var lnurlId = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LNURLPay);
             blob.SetExcluded(lnurlId, !vm.LNURLEnabled);
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
-            if (lightning.DisableBOLT11PaymentOption != disableBolt11PaymentMethod)
+            // Going to mark "lightning" as non-null here assuming that if we are POSTing here it's because we have a Lightning Node set-up
+            if (lightning!.DisableBOLT11PaymentOption != disableBolt11PaymentMethod)
             {
                 needUpdate = true;
                 lightning.DisableBOLT11PaymentOption = disableBolt11PaymentMethod;
@@ -323,10 +323,10 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
-            if (network == null)
+            if (cryptoCode == null)
                 return NotFound();
-
+                
+            var network = _ExplorerProvider.GetNetwork(cryptoCode);
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
             if (lightning == null)
                 return NotFound();
@@ -355,8 +355,7 @@ namespace BTCPayServer.Controllers
             vm.CanUseInternalNode = await CanUseInternalLightning();
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
 
-            var lnSet = lightning != null;
-            if (lnSet)
+            if (lightning != null)
             {
                 vm.LightningNodeType = lightning.IsInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
@@ -375,7 +374,7 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
-        private LNURLPaySupportedPaymentMethod GetExistingLNURLSupportedPaymentMethod(string cryptoCode, StoreData store)
+        private LNURLPaySupportedPaymentMethod? GetExistingLNURLSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var existing = store.GetSupportedPaymentMethods(_NetworkProvider)

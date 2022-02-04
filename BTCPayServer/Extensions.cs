@@ -118,10 +118,7 @@ namespace BTCPayServer
 
         public static bool HasErrorMessage(this ITempDataDictionary tempData)
         {
-            return (
-                tempData.Peek("StatusMessageModel") != null &&
-                tempData.GetStatusMessageModel().Severity == StatusMessageModel.StatusSeverity.Error
-            );
+            return GetStatusMessageModel(tempData)?.Severity == StatusMessageModel.StatusSeverity.Error;
         }
 
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)

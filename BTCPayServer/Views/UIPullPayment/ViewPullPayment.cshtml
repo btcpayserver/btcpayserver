@@ -119,7 +119,7 @@
                                     <span class="text-nowrap">@Model.ResetIn</span>
                                 </p>
                             }
-                            @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
+                            @if (!string.IsNullOrEmpty(Model.Description))
                             {
                                 <div class="mt-4">@Safe.Raw(Model.Description)</div>
                             }

@@ -209,7 +209,7 @@ namespace BTCPayServer.Controllers
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
             if (lightning == null) 
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"Need to connect to a Lightning node before adjusting its settings.";
+                TempData[WellKnownTempData.ErrorMessage] = $"You need to connect to a Lightning node before adjusting its settings.";
 
                 return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
             }

@@ -21,7 +21,7 @@
         <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
         @if (Model.ModelWithMinimumData)
         {
-            <a class="btn btn-secondary" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View</a>
+            <a target="_blank" class="btn btn-secondary" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View</a>
         }
         <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     </div>

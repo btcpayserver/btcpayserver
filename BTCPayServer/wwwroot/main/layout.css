@@ -350,7 +350,7 @@
     z-index: 1020;
     background: var(--btcpay-body-bg);
     padding-top: var(--content-padding-top);
-    padding-bottom: var(--btcpay-space-m);
+    padding-bottom: var(--btcpay-space-l);
 }
 
 .sticky-header #SectionNav {

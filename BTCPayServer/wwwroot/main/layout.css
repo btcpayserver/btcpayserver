@@ -357,6 +357,10 @@
 @media (max-width: 991px) {
     :root {
         --header-height: var(--mobile-header-height);
+        --content-padding-top: var(--btcpay-space-m);
+
+        /* Prevent anchors from disappearing underneath the fixed header */
+        scroll-padding: calc(var(--header-height) + var(--content-padding-top));
     }
     
     #mainMenu {
@@ -469,7 +473,7 @@
 
     #mainContent > section {
         margin-top: var(--header-height);
-        padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-xl);
+        padding: var(--content-padding-top) var(--btcpay-space-m) var(--btcpay-space-xl);
     }
 
     #SectionNav {

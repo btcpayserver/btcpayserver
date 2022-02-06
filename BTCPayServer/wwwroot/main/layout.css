@@ -354,7 +354,7 @@
 }
 
 .sticky-header #SectionNav {
-    margin-bottom: calc(var(--btcpay-space-m) * -1);
+    margin-bottom: calc(var(--btcpay-space-l) * -1);
 }
 
 /* Footer */

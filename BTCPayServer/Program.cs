@@ -31,17 +31,13 @@ namespace BTCPayServer
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
             Logs logs = new Logs();
+            logs.Configure(loggerFactory);
             IConfiguration conf = null;
             try
             {
-                // This is the only way that LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
                 conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
                 if (conf == null)
                     return;
-                logs.Configure(loggerFactory);
-                new BTCPayServerOptions().LoadArgs(conf, logs);
-                logs.Configure(null);
-                /////
 
                 var builder = new WebHostBuilder()
                     .UseKestrel()

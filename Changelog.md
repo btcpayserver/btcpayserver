@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.3
+
+### Bug fixes:
+
+* Ensure the swagger doc is semantically correct (#3390) @ubolator
+* Fix crashes with some plugins (#3401) @Kukks
+* Fix crash of payment request list (#3392) @NicolasDorier
+* Reference correct payment type definition for webhook events in Swagger docs @ubolator
+* Fix pay button type comparison (#3403) @dennisreimann
+* No JS error in crowdfund if canvas unavailable @NicolasDorier
+* Bump z-index on header (#3393, #3377) @ubolator
+
+### Improvements:
+
+* Delete user preferences cookie on logout (#3379) @dennisreimann
+* Pay Button Alert: Add missing alert-link classes (#3397)
+* Fix pay button type comparison (#3403 #3403) @dennisreimann
+* Various CSS UI adjustment @dstrukt
+
 ## 1.4.2
 
 ### Bug fixes:

@@ -1,7 +1,7 @@
 @model (string templateId, string title)
 
 <div id="template-editor-app" v-cloak>
-    <div class="form-group">
+    <div class="form-group mb-0">
         <h3 class="mt-5 mb-4">@Model.title </h3>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {

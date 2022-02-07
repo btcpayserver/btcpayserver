@@ -45,7 +45,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canviewstoresettings"
                         ],
                         "Basic": []

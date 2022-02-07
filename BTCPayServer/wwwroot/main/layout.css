@@ -120,8 +120,8 @@
 }
 
 #mainContent > section {
-    padding: 0;
     flex: 1;
+    padding: var(--content-padding-top) var(--content-padding-horizontal) var(--content-padding-bottom);
 }
 
 #StoreSelector {
@@ -335,6 +335,28 @@
     background: var(--btcpay-nav-bg-active);
 }
 
+/* Sticky Header: The <div class="sticky-header-setup"></div> needs to be included once
+   before the first sticky-header on the page. The sticky-header has a padding-top so
+   that it does not scroll underneath the fixed header on mobile. The sticky-header-setup
+   negates that padding with a negative margin, so that everything fits in the end. */
+.sticky-header-setup {
+    margin-top: calc(var(--content-padding-top) * -1);
+}
+
+.sticky-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background: var(--btcpay-body-bg);
+    padding-top: var(--content-padding-top);
+    padding-bottom: var(--btcpay-space-l);
+}
+
+.sticky-header #SectionNav {
+    margin-bottom: calc(var(--btcpay-space-l) * -1);
+}
+
 /* Footer */
 .btcpay-footer {
     font-size: var(--btcpay-font-size-s);
@@ -357,6 +379,12 @@
 @media (max-width: 991px) {
     :root {
         --header-height: var(--mobile-header-height);
+        --content-padding-top: calc(var(--header-height) + var(--btcpay-space-m));
+        --content-padding-bottom: var(--btcpay-space-xl);
+        --content-padding-horizontal: var(--btcpay-space-m);
+
+        /* Prevent anchors from disappearing underneath the fixed header */
+        scroll-padding: var(--content-padding-top);
     }
     
     #mainMenu {
@@ -467,11 +495,6 @@
         z-index: 0;
     }
 
-    #mainContent > section {
-        margin-top: var(--header-height);
-        padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-xl);
-    }
-
     #SectionNav {
         --scroll-indicator-spacing: var(--btcpay-space-m);
         position: relative;
@@ -522,6 +545,9 @@
 @media (min-width: 992px) {
     :root {
         --header-height: var(--desktop-header-height);
+        --content-padding-top: 5rem;
+        --content-padding-bottom: 5rem;
+        --content-padding-horizontal: var(--btcpay-space-xl);
     }
     
     #mainMenu {
@@ -569,10 +595,6 @@
 
     #mainContent pre {
         max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
-    }
-
-    #mainContent > section {
-        padding: 5rem var(--btcpay-space-xl);
     }
 
     #mainContent > section,

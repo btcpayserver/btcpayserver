@@ -46,13 +46,13 @@ function getScripts(srvModel) {
         const modal = document.getElementById('template-modal')
         scripts.push(unesc(modal.innerHTML))
     }
-    if (srvModel.buttonType === '1') {
+    if (srvModel.buttonType == '1') {
         const priceButtons = document.getElementById('template-price-buttons')
         const priceInput = document.getElementById('template-price-input')
         scripts.push(unesc(priceButtons.innerHTML))
         scripts.push(unesc(priceInput.innerHTML))
     }
-    if (srvModel.buttonType === '2') {
+    if (srvModel.buttonType == '2') {
         const priceSlider = document.getElementById('template-price-slider')
         const priceInput = document.getElementById('template-price-input')
         scripts.push(unesc(priceSlider.innerHTML))
@@ -103,7 +103,7 @@ function inputChanges(event, buttonSize) {
     
     var html =
         // Styles
-        getStyles('template-paybutton-styles') + (srvModel.buttonType === '2' ? getStyles('template-slider-styles') : '') +
+        getStyles('template-paybutton-styles') + (srvModel.buttonType == '2' ? getStyles('template-slider-styles') : '') +
         // Form
         '<form method="POST"' + (srvModel.useModal ? ' onsubmit="onBTCPayFormSubmit(event);return false"' : '') + ' action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
             addInput("storeId", srvModel.storeId);
@@ -124,12 +124,12 @@ function inputChanges(event, buttonSize) {
     }
 
     // Fixed amount: Add price and currency as hidden inputs
-    if (srvModel.buttonType === '0') {
+    if (srvModel.buttonType == '0') {
         if (srvModel.price) html += addInput(priceInputName, srvModel.price);
         if (allowCurrencySelection) html += addInput("currency", srvModel.currency);
     }
     // Custom amount
-    else if (srvModel.buttonType === '1') {
+    else if (srvModel.buttonType == '1') {
         html += '  <div class="btcpay-custom-container">\n    <div class="btcpay-custom">\n';
         html += srvModel.simpleInput ? '' : addPlusMinusButton("-", srvModel.step, srvModel.min, srvModel.max);
         html += addInputPrice(priceInputName, srvModel.price, widthInput, srvModel.min, srvModel.max, srvModel.step);
@@ -139,7 +139,7 @@ function inputChanges(event, buttonSize) {
         html += '  </div>\n';
     }
     // Slider
-    else if (srvModel.buttonType === '2') {
+    else if (srvModel.buttonType == '2') {
         const step = srvModel.step === 'any' ? 1 : srvModel.step;
         const min = srvModel.min == null ? 1 : parseInt(srvModel.min);
         const max = srvModel.max == null ? null : parseInt(srvModel.max);

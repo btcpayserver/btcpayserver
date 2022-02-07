@@ -605,6 +605,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
+            HttpContext.DeleteUserPrefsCookie();
             _logger.LogInformation("User logged out.");
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }

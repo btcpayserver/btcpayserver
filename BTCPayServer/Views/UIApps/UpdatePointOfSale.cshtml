@@ -5,11 +5,23 @@
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 }
 
-<partial name="_StatusMessage" />
-
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-
 <form method="post">
+    <div class="sticky-header-setup"></div>
+    <header class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+            <a class="btn btn-secondary" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp" target="app_@Model.AppId">View</a>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+        </div>
+    </header>
+    <script>
+        const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
+        document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
+    </script>
+
+    <partial name="_StatusMessage" />
+
     <input type="hidden" asp-for="StoreId" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -31,21 +43,27 @@
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>
+    </div>
+    <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
-            <div class="form-group">
+            <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
+    </div>
+    <div class="row">
         <div class="col-xxl-constrain">
             <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
-            <div class="form-group">
+            <div class="form-group mb-0">
                 <label asp-for="Template" class="form-label"></label>
                 <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                 <span asp-validation-for="Template" class="text-danger"></span>
             </div>
         </div>
+    </div>
+    <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-4">Appearance</h3>
             <div class="form-group">
@@ -94,18 +112,18 @@
             </section>
             <section id="tips" class="p-0">
                 <h3 class="mt-5 mb-4">Tips</h3>
-                <div class="form-group mb-4 d-flex align-items-center">
+                <div class="form-group d-flex align-items-center mb-0">
                     <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                     <label asp-for="EnableTips" class="form-label mb-0"></label>
                     <span asp-validation-for="EnableTips" class="text-danger"></span>
                 </div>
                 <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
-                    <div class="form-group">
+                    <div class="form-group pt-3">
                         <label asp-for="CustomTipText" class="form-label" data-required></label>
                         <input asp-for="CustomTipText" class="form-control" required />
                         <span asp-validation-for="CustomTipText" class="text-danger"></span>
                     </div>
-                    <div class="form-group mb-0 pb-3">
+                    <div class="form-group mb-0">
                         <label asp-for="CustomTipPercentages" class="form-label"></label>
                         <input asp-for="CustomTipPercentages" class="form-control" />
                         <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
@@ -113,6 +131,8 @@
                 </div>
             </section>
         </div>
+    </div>
+    <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-2">Additional Options</h3>
             <div class="form-group">
@@ -196,13 +216,11 @@
                                 <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                 <pre class="p-3">@Model.ExampleCallback</pre>
                                 <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
-                                <p>
-                                    <ul>
-                                        <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
-                                        <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
-                                        <li>You can then ship your order</li>
-                                    </ul>
-                                </p>
+                                <ul>
+                                    <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
+                                    <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
+                                    <li>You can then ship your order</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -231,21 +249,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-9 mt-2">
-            <div class="d-grid gap-3 d-md-block">
-                <button type="submit" class="btn btn-primary me-md-2"  id="SaveSettings">Save Settings</button>
-                <div class="btn-group me-md-2">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm"
-                       target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
-                </div>
-                <div class="btn-group">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View Point of Sale</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id"
-                       target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                 </div>
             </div>
         </div>
@@ -322,7 +325,7 @@
         </div>
     </script>
     <script>
-        var posStyleSelector = document.getElementById('DefaultView');
+        const posStyleSelector = document.getElementById('DefaultView');
         posStyleSelector.addEventListener('change', function(e) {
             handleStyleSelected(e.target.value);
         });
@@ -352,7 +355,7 @@
 
         /** Show/hide discounts section */
 
-        var discountsSection = document.getElementById('discounts');
+        const discountsSection = document.getElementById('discounts');
 
         function hideDiscountsSection() {
             hideElement(discountsSection);
@@ -366,7 +369,7 @@
 
         /** Show/hide button text section */
 
-        var buttonPriceTextSection = document.getElementById('button-price-text');
+        const buttonPriceTextSection = document.getElementById('button-price-text');
 
         function hideButtonPriceTextSection() {
             hideElement(buttonPriceTextSection);
@@ -380,7 +383,7 @@
 
         /** Show/hide custom payments amount seciton */
 
-        var customPaymentAmountSection = document.getElementById('custom-payments');
+        const customPaymentAmountSection = document.getElementById('custom-payments');
 
         function hideCustomPaymentAmountSection() {
            hideElement(customPaymentAmountSection);
@@ -394,7 +397,7 @@
 
         /** Show/hide tips seciton */
 
-        var tipsSection = document.getElementById('tips');
+        const tipsSection = document.getElementById('tips');
 
         function hideTipsSection() {
            hideElement(tipsSection);

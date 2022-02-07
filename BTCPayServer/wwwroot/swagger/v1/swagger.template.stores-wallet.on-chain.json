@@ -49,7 +49,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -116,7 +116,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canviewstoresettings"
                         ],
                         "Basic": []
@@ -183,7 +183,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -231,7 +231,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -324,7 +324,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -397,7 +397,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -463,7 +463,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -523,7 +523,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []

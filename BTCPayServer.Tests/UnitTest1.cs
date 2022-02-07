@@ -193,7 +193,7 @@ namespace BTCPayServer.Tests
 
             JObject json = JObject.Parse(sresp);
 
-            Assert.Equal(description, json["components"]["securitySchemes"]["API Key"]["description"].Value<string>());
+            Assert.Equal(description, json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>());
         }
 
         private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)

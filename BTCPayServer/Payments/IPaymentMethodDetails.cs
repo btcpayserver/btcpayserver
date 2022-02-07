@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace BTCPayServer.Payments
 {
     /// <summary>
@@ -19,5 +21,6 @@ namespace BTCPayServer.Payments
 
         bool Activated { get; set; }
         virtual string GetAdditionalDataPartialName() => null;
+        virtual Dictionary<string,object> GetAdditionalData() => new();
     }
 }

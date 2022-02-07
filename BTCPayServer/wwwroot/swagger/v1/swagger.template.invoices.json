@@ -1140,6 +1140,10 @@
                     "activated": {
                         "type": "boolean",
                         "description": "If the payment method is activated (when lazy payments option is enabled"
+                    },
+                    "additionalData": {
+                        "type": "object",
+                        "description": "Additional data provided by the payment method."
                     }
                 }
             },

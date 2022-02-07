@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
@@ -11,6 +12,7 @@ namespace BTCPayServer.Payments
 
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney GeneratedBoltAmount { get; set; }
+
         public string BTCPayInvoiceId { get; set; }
         public bool Bech32Mode { get; set; }
 
@@ -30,6 +32,22 @@ namespace BTCPayServer.Payments
             }
 
             return "LNURL/AdditionalPaymentMethodDetails";
+        }
+
+        public override Dictionary<string, object> GetAdditionalData()
+        {
+            var result = base.GetAdditionalData();
+            if (!string.IsNullOrEmpty(ProvidedComment))
+            {
+                result.TryAdd(nameof(ProvidedComment), ProvidedComment);
+            }
+
+            if (!string.IsNullOrEmpty(ConsumedLightningAddress))
+            {
+                result.TryAdd(nameof(ConsumedLightningAddress), ConsumedLightningAddress);
+            }
+
+            return result;
         }
     }
 }

@@ -48,7 +48,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
 
             TestLogs.LogInformation("Checking admin permissions");
-            
             //not an admin, so this permission should not show
             Assert.DoesNotContain("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
             await user.MakeAdmin();
@@ -58,14 +57,12 @@ namespace BTCPayServer.Tests
             s.GoToProfile(ManageNavPages.APIKeys);
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
             Assert.Contains("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
-            
             //server management should show now
             s.Driver.SetCheckbox(By.Id("btcpay.server.canmodifyserversettings"), true);
             s.Driver.SetCheckbox(By.Id("btcpay.store.canmodifystoresettings"), true);
             s.Driver.SetCheckbox(By.Id("btcpay.user.canviewprofile"), true);
             s.Driver.FindElement(By.Id("Generate")).Click();
             var superApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
-            
             TestLogs.LogInformation("Checking super admin key");
             
             //this api key has access to everything

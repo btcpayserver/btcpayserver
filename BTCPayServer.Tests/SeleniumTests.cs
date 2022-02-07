@@ -1584,7 +1584,6 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-            var cryptoCode = "BTC";
             s.RegisterNewUser(true);
             //ln address tests
             s.CreateNewStore();

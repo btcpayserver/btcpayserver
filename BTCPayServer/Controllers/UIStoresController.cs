@@ -777,7 +777,7 @@ namespace BTCPayServer.Controllers
             var tokenRequest = new TokenRequest()
             {
                 Label = model.Label,
-                Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
+                Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey).Compress())
             };
 
             string pairingCode = null;

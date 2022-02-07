@@ -14,11 +14,26 @@
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js" asp-append-version="true"></bundle>
 }
 
-<partial name="_StatusMessage" />
-
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-
 <form method="post">
+    <div class="sticky-header-setup"></div>
+    <header class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
+            @if (Model.ModelWithMinimumData)
+            {
+                <a class="btn btn-secondary" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId" id="ViewApp" target="app_@Model.AppId">View</a>
+            }
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+        </div>
+    </header>
+    <script>
+        const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
+        document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
+    </script>
+
+    <partial name="_StatusMessage" />
+
     <input type="hidden" asp-for="StoreId" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -123,6 +138,7 @@
                 <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
                 <span asp-validation-for="PerksTemplate" class="text-danger"></span>
             </div>
+        
             <h3 class="mt-5 mb-4">Contributions</h3>
             <div class="form-check mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
@@ -144,6 +160,7 @@
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
+            
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
             <div class="form-group">
                 <label asp-for="NotificationUrl" class="form-label"></label>
@@ -155,9 +172,9 @@
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
+            
             <h3 class="mt-5 mb-4">Sound</h3>
             <div class="form-group mb-0">
-                <div class="form-group d-flex align-items-center mb-0">
                 <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
                 <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
                 <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
@@ -169,9 +186,9 @@
                     <span asp-validation-for="Sounds" class="text-danger"></span>
                 </div>
             </div>
+            
             <h3 class="mt-5 mb-4">Animation</h3>
             <div class="form-group mb-3">
-                <div class="form-group d-flex align-items-center mb-0">
                 <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
                 <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
                 <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
@@ -183,9 +200,9 @@
                     <span asp-validation-for="AnimationColors" class="text-danger"></span>
                 </div>
             </div>
+            
             <h3 class="mt-5 mb-4">Discussion</h3>
             <div class="form-group mb-3">
-                <div class="form-group d-flex align-items-center mb-0">
                 <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
                 <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
                 <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
@@ -232,27 +249,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-9 mt-2">
-            <div class="d-grid gap-3 d-md-block">
-                <button type="submit" class="btn btn-primary me-md-2" id="SaveSettings">Save Settings</button>
-                <div class="btn-group me-md-2">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm"
-                       target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
-                </div>
-                @if (Model.ModelWithMinimumData)
-                {
-                    <div class="btn-group">
-                        <a class="btn btn-secondary flex-grow-1" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View Crowdfund</a>
-                        <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId"
-                           target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
-                    </div>
-                }
-                            
             </div>
         </div>
     </div>

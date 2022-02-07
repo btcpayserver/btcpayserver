@@ -135,6 +135,15 @@ retry:
         }
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
+            // Try fast path
+            try
+            {
+                driver.FindElement(selector).Click();
+                return;
+            }
+            catch { }
+
+            // Sometimes, selenium complain, so we enter hack territory
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
             wait.UntilJsIsReady();
 
@@ -158,22 +167,8 @@ retry:
         public static void SetCheckbox(this IWebDriver driver, By selector, bool value)
         {
             var element = driver.FindElement(selector);
-            if ((value && !element.Selected) || (!value && element.Selected))
-            {
-                try
-                {
-                    driver.WaitForAndClick(selector);
-                }
-                catch (ElementClickInterceptedException)
-                {
-                    element.SendKeys(" ");
-                }
-            }
-
             if (value != element.Selected)
-            {
-                driver.SetCheckbox(selector, value);
-            }
+                driver.WaitForAndClick(selector);
         }
     }
 }

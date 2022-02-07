@@ -10617,25 +10617,25 @@ fieldset:disabled .btn {
 }
 /* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
 * {
-    --btcpay-scrollbar-width: .375rem;
-    --btcpay-scrollbar-color: var(--btcpay-neutral-500);
-    --btcpay-scrollbar-bg: transparent;
-    scrollbar-width: var(--btcpay-scrollbar-width);
-    scrollbar-color: var(--btcpay-scrollbar-color) var(--btcpay-scrollbar-bg);
+  --btcpay-scrollbar-width: .375rem;
+  --btcpay-scrollbar-color: var(--btcpay-neutral-500);
+  --btcpay-scrollbar-bg: transparent;
+  scrollbar-width: var(--btcpay-scrollbar-width);
+  scrollbar-color: var(--btcpay-scrollbar-color) var(--btcpay-scrollbar-bg);
 }
 
 *::-webkit-scrollbar {
-    width: var(--btcpay-scrollbar-width);
+  width: var(--btcpay-scrollbar-width);
 }
 
 *::-webkit-scrollbar-track {
-    background: var(--btcpay-scrollbar-bg);
+  background: var(--btcpay-scrollbar-bg);
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: var(--btcpay-scrollbar-color);
-    border-radius: 1rem;
-    border: 1rem solid var(--btcpay-scrollbar-bg);
+  background-color: var(--btcpay-scrollbar-color);
+  border-radius: 1rem;
+  border: 1rem solid var(--btcpay-scrollbar-bg);
 }
 
 html {
@@ -10901,149 +10901,59 @@ input[type=number].hide-number-spin {
   color: var(--btcpay-danger);
 }
 
+/* Custom space utils, as Bootstrap has a different spacing scale for > M */
+.pt-l { padding-top: var(--btcpay-space-l); }
+.pt-xl { padding-top: var(--btcpay-space-xl); }
+.pb-l { padding-bottom: var(--btcpay-space-l); }
+.pb-xl { padding-bottom: var(--btcpay-space-xl); }
+.mt-l { margin-top: var(--btcpay-space-l); }
+.mt-xl { margin-top: var(--btcpay-space-xl); }
+.mb-l { margin-bottom: var(--btcpay-space-l); }
+.mb-xl { margin-bottom: var(--btcpay-space-xl); }
+
 /* Negative margin utils (only include bare minimum) */
-
-.mt-n1 {
-  margin-top: -0.25rem !important;
-}
-
-.mt-n2 {
-  margin-top: -0.5rem !important;
-}
-
-.mt-n3 {
-  margin-top: -1rem !important;
-}
-
-.mt-n4 {
-  margin-top: -1.5rem !important;
-}
-
-.mt-n5 {
-  margin-top: -3rem !important;
-}
-
-.me-n1 {
-  margin-right: -0.25rem !important;
-}
-
-.me-n2 {
-  margin-right: -0.5rem !important;
-}
-
-.me-n3 {
-  margin-right: -1rem !important;
-}
-
-.me-n4 {
-  margin-right: -1.5rem !important;
-}
-
-.me-n5 {
-  margin-right: -3rem !important;
-}
-
-.mb-n1 {
-  margin-bottom: -0.25rem !important;
-}
-
-.mb-n2 {
-  margin-bottom: -0.5rem !important;
-}
-
-.mb-n3 {
-  margin-bottom: -1rem !important;
-}
-
-.mb-n4 {
-  margin-bottom: -1.5rem !important;
-}
-
-.mb-n5 {
-  margin-bottom: -3rem !important;
-}
-
-.ms-n1 {
-  margin-left: -0.25rem !important;
-}
-
-.ms-n2 {
-  margin-left: -0.5rem !important;
-}
-
-.ms-n3 {
-  margin-left: -1rem !important;
-}
-
-.ms-n4 {
-  margin-left: -1.5rem !important;
-}
-
-.ms-n5 {
-  margin-left: -3rem !important;
-}
+.mt-n1 { margin-top: -0.25rem !important; }
+.mt-n2 { margin-top: -0.5rem !important; }
+.mt-n3 { margin-top: -1rem !important; }
+.mt-n4 { margin-top: -1.5rem !important; }
+.mt-n5 { margin-top: -3rem !important; }
+.me-n1 { margin-right: -0.25rem !important; }
+.me-n2 { margin-right: -0.5rem !important; }
+.me-n3 { margin-right: -1rem !important; }
+.me-n4 { margin-right: -1.5rem !important; }
+.me-n5 { margin-right: -3rem !important; }
+.mb-n1 { margin-bottom: -0.25rem !important; }
+.mb-n2 { margin-bottom: -0.5rem !important; }
+.mb-n3 { margin-bottom: -1rem !important; }
+.mb-n4 { margin-bottom: -1.5rem !important; }
+.mb-n5 { margin-bottom: -3rem !important; }
+.ms-n1 { margin-left: -0.25rem !important; }
+.ms-n2 { margin-left: -0.5rem !important; }
+.ms-n3 { margin-left: -1rem !important; }
+.ms-n4 { margin-left: -1.5rem !important; }
+.ms-n5 { margin-left: -3rem !important; }
 
 @media (min-width: 992px) {
-  .mt-lg-n1 {
-    margin-top: -0.25rem !important;
-  }
-  .mt-lg-n2 {
-    margin-top: -0.5rem !important;
-  }
-  .mt-lg-n3 {
-    margin-top: -1rem !important;
-  }
-  .mt-lg-n4 {
-    margin-top: -1.5rem !important;
-  }
-  .mt-lg-n5 {
-    margin-top: -3rem !important;
-  }
-  .me-lg-n1 {
-    margin-right: -0.25rem !important;
-  }
-  .me-lg-n2 {
-    margin-right: -0.5rem !important;
-  }
-  .me-lg-n3 {
-    margin-right: -1rem !important;
-  }
-  .me-lg-n4 {
-    margin-right: -1.5rem !important;
-  }
-  .me-lg-n5 {
-    margin-right: -3rem !important;
-  }
-  .mb-lg-n1 {
-    margin-bottom: -0.25rem !important;
-  }
-  .mb-lg-n2 {
-    margin-bottom: -0.5rem !important;
-  }
-  .mb-lg-n3 {
-    margin-bottom: -1rem !important;
-  }
-  .mb-lg-n4 {
-    margin-bottom: -1.5rem !important;
-  }
-  .mb-lg-n5 {
-    margin-bottom: -3rem !important;
-  }
-  .ms-lg-n1 {
-    margin-left: -0.25rem !important;
-  }
-  .ms-lg-n2 {
-    margin-left: -0.5rem !important;
-  }
-  .ms-lg-n3 {
-    margin-left: -1rem !important;
-  }
-  .ms-lg-n4 {
-    margin-left: -1.5rem !important;
-  }
-  .ms-lg-n5 {
-    margin-left: -3rem !important;
-  }
+  .mt-lg-n1 { margin-top: -0.25rem !important; }
+  .mt-lg-n2 { margin-top: -0.5rem !important; }
+  .mt-lg-n3 { margin-top: -1rem !important; }
+  .mt-lg-n4 { margin-top: -1.5rem !important; }
+  .mt-lg-n5 { margin-top: -3rem !important; }
+  .me-lg-n1 { margin-right: -0.25rem !important; }
+  .me-lg-n2 { margin-right: -0.5rem !important; }
+  .me-lg-n3 { margin-right: -1rem !important; }
+  .me-lg-n4 { margin-right: -1.5rem !important; }
+  .me-lg-n5 { margin-right: -3rem !important; }
+  .mb-lg-n1 { margin-bottom: -0.25rem !important; }
+  .mb-lg-n2 { margin-bottom: -0.5rem !important; }
+  .mb-lg-n3 { margin-bottom: -1rem !important; }
+  .mb-lg-n4 { margin-bottom: -1.5rem !important; }
+  .mb-lg-n5 { margin-bottom: -3rem !important; }
+  .ms-lg-n1 { margin-left: -0.25rem !important; }
+  .ms-lg-n2 { margin-left: -0.5rem !important; }
+  .ms-lg-n3 { margin-left: -1rem !important; }
+  .ms-lg-n4 { margin-left: -1.5rem !important; }
+  .ms-lg-n5 { margin-left: -3rem !important; }
 }
 
 .btcpay-pills input {

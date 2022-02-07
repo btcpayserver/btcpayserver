@@ -5,11 +5,23 @@
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 }
 
-<partial name="_StatusMessage" />
-
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-
 <form method="post">
+    <div class="sticky-header-setup"></div>
+    <header class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+            <a class="btn btn-secondary" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp" target="app_@Model.AppId">View</a>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+        </div>
+    </header>
+    <script>
+        const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
+        document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
+    </script>
+
+    <partial name="_StatusMessage" />
+
     <input type="hidden" asp-for="StoreId" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -204,13 +216,11 @@
                                 <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                 <pre class="p-3">@Model.ExampleCallback</pre>
                                 <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
-                                <p>
-                                    <ul>
-                                        <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
-                                        <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
-                                        <li>You can then ship your order</li>
-                                    </ul>
-                                </p>
+                                <ul>
+                                    <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
+                                    <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
+                                    <li>You can then ship your order</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -239,23 +249,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-9 mt-2">
-            <div class="d-grid gap-3 d-md-block">
-                <button type="submit" class="btn btn-primary me-md-2"  id="SaveSettings">Save Settings</button>
-                <div class="btn-group me-md-2">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-searchterm="@Model.SearchTerm"
-                       target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
-                </div>
-                <div class="btn-group">
-                    <a class="btn btn-secondary flex-grow-1" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View Point of Sale</a>
-                    <a class="btn btn-secondary px-3 flex-grow-0" asp-action="ViewPointOfSale" asp-controller="UIAppsPublic" asp-route-appId="@Model.Id"
-                       target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
                 </div>
             </div>
         </div>
@@ -332,7 +325,7 @@
         </div>
     </script>
     <script>
-        var posStyleSelector = document.getElementById('DefaultView');
+        const posStyleSelector = document.getElementById('DefaultView');
         posStyleSelector.addEventListener('change', function(e) {
             handleStyleSelected(e.target.value);
         });
@@ -362,7 +355,7 @@
 
         /** Show/hide discounts section */
 
-        var discountsSection = document.getElementById('discounts');
+        const discountsSection = document.getElementById('discounts');
 
         function hideDiscountsSection() {
             hideElement(discountsSection);
@@ -376,7 +369,7 @@
 
         /** Show/hide button text section */
 
-        var buttonPriceTextSection = document.getElementById('button-price-text');
+        const buttonPriceTextSection = document.getElementById('button-price-text');
 
         function hideButtonPriceTextSection() {
             hideElement(buttonPriceTextSection);
@@ -390,7 +383,7 @@
 
         /** Show/hide custom payments amount seciton */
 
-        var customPaymentAmountSection = document.getElementById('custom-payments');
+        const customPaymentAmountSection = document.getElementById('custom-payments');
 
         function hideCustomPaymentAmountSection() {
            hideElement(customPaymentAmountSection);
@@ -404,7 +397,7 @@
 
         /** Show/hide tips seciton */
 
-        var tipsSection = document.getElementById('tips');
+        const tipsSection = document.getElementById('tips');
 
         function hideTipsSection() {
            hideElement(tipsSection);

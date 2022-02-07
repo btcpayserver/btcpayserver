@@ -16,3 +16,7 @@
         </div>
     </nav>
 </header>
+<script>
+    const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
+    document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
+</script>

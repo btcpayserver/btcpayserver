@@ -349,7 +349,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
-        public void Login(string user, string password)
+        public void LogIn(string user, string password)
         {
             Driver.FindElement(By.Id("Email")).SendKeys(user);
             Driver.FindElement(By.Id("Password")).SendKeys(password);

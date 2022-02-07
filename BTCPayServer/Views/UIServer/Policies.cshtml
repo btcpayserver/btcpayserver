@@ -121,7 +121,7 @@
         <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select w-auto"></select>
         @if (!Model.DomainToAppMapping.Any())
         {
-            <button type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
+            <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
         }
     </div>
 
@@ -129,7 +129,7 @@
     {
         <h5 class="mt-5 mb-0">
             Domain to app mapping
-            <button type="submit" name="command" value="add-domain" class="btn btn-secondary btn-sm ms-2">Add domain mapping</button>
+            <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-secondary btn-sm ms-2">Add domain mapping</button>
         </h5>
         <div class="list-group list-group-flush mb-2">
             @for (var index = 0; index < Model.DomainToAppMapping.Count; index++)
@@ -201,7 +201,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    <button id="SaveButton" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
 
 @section PageFootContent {

@@ -43,7 +43,7 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             await user.MakeAdmin(false);
             s.GoToLogin();
-            s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToProfile(ManageNavPages.APIKeys);
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
 
@@ -53,7 +53,7 @@ namespace BTCPayServer.Tests
             await user.MakeAdmin();
             s.Logout();
             s.GoToLogin();
-            s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToProfile(ManageNavPages.APIKeys);
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
             Assert.Contains("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
@@ -196,7 +196,7 @@ namespace BTCPayServer.Tests
             await user.MakeAdmin(false);
             s.Logout();
             s.GoToLogin();
-            s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToProfile(ManageNavPages.APIKeys);
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
             int checkedPermissionCount = 0;

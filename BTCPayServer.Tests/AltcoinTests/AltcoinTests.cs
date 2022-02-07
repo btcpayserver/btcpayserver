@@ -350,7 +350,7 @@ namespace BTCPayServer.Tests
                 var user = s.Server.NewAccount();
                 await user.GrantAccessAsync();
                 s.GoToLogin();
-                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 user.RegisterDerivationScheme("BTC");
                 await s.Server.ExplorerNode.GenerateAsync(1);
 

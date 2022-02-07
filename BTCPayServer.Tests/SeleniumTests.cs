@@ -112,7 +112,7 @@ namespace BTCPayServer.Tests
             await u2.MakeAdmin(false);
 
             s.GoToLogin();
-            s.Login(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
+            s.LogIn(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
             s.GoToProfile();
             s.Driver.FindElement(By.Id("Email")).Clear();
             s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
@@ -576,11 +576,10 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
-            using var s = CreateSeleniumTester();
+            using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
-            s.RegisterNewUser();
+            var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
-
             s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
             s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
             s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Point of Sale");
@@ -614,9 +613,46 @@ namespace BTCPayServer.Tests
 
             s.Driver.Url = posBaseUrl + "/cart";
             Assert.True(s.Driver.PageSource.Contains("Cart"), "Cart PoS not showing correct view");
-            
-            s.Driver.Close();
-            s.Driver.SwitchTo().Window(windows[0]);
+
+            // Let's set change the root app
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Policies);
+            s.Driver.ScrollTo(By.Id("RootAppId"));
+            var select = new SelectElement(s.Driver.FindElement(By.Id("RootAppId")));
+            select.SelectByText("Point of", true);
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.FindAlertMessage();
+
+            s.Logout();
+            s.GoToLogin();
+            s.LogIn(userId);
+            // Make sure after login, we are not redirected to the PoS
+            Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
+            // We are only if explicitely going to /
+            s.GoToUrl("/");
+            Assert.Contains("Tea shop", s.Driver.PageSource);
+            s.Driver.Navigate().Back();
+
+            // Let's check with domain mapping as well.
+            s.GoToServer(ServerNavPages.Policies);
+            s.Driver.ScrollTo(By.Id("RootAppId"));
+            select = new SelectElement(s.Driver.FindElement(By.Id("RootAppId")));
+            select.SelectByText("None", true);
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.ScrollTo(By.Id("RootAppId"));
+            s.Driver.FindElement(By.Id("AddDomainButton")).Click();
+            s.Driver.FindElement(By.Id("DomainToAppMapping_0__Domain")).SendKeys(new Uri(s.Driver.Url, UriKind.Absolute).DnsSafeHost);
+            select = new SelectElement(s.Driver.FindElement(By.Id("DomainToAppMapping_0__AppId")));
+            select.SelectByText("Point of", true);
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+
+            s.Logout();
+            s.LogIn(userId);
+            // Make sure after login, we are not redirected to the PoS
+            Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
+            // We are only if explicitely going to /
+            s.GoToUrl("/");
+            Assert.Contains("Tea shop", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1718,7 +1754,7 @@ retry:
            TestUtils.Eventually(() => s.FindAlertMessage());
             
             s.Logout();
-            s.Login(user, "123456");
+            s.LogIn(user, "123456");
             var section = s.Driver.FindElement(By.Id("lnurlauth-section"));
             links = section.FindElements(By.CssSelector(".tab-content a")).Select(element => element.GetAttribute("href"));
             Assert.Equal(2,links.Count());

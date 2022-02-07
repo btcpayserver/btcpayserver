@@ -1,5 +1,7 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,32 +35,37 @@ namespace BTCPayServer.Services.Labels
             foreach (var label in transactionInfo.Labels)
             {
                 walletBlobInfo.LabelColors.TryGetValue(label.Value.Text, out var color);
-                yield return CreateLabel(label.Value, color, request);
+                var labels = CreateLabel(label.Value, color, request);
+
+                foreach (ColoredLabel coloredLabel in labels)
+                {
+                    yield return coloredLabel;
+
+                }
             }
         }
 
         public IEnumerable<ColoredLabel> GetWalletColoredLabels(WalletBlobInfo walletBlobInfo, HttpRequest request)
         {
-            foreach (var kv in walletBlobInfo.LabelColors)
-            {
-                yield return CreateLabel(new RawLabel() { Text = kv.Key }, kv.Value, request);
-            }
+            return walletBlobInfo.LabelColors.SelectMany(kv => CreateLabel(new RawLabel() { Text = kv.Key }, kv.Value, request));
         }
 
         const string DefaultColor = "#000";
-        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string? color, HttpRequest request)
+        private List<ColoredLabel> CreateLabel(LabelData uncoloredLabel, string? color, HttpRequest request)
         {
+            var result = new List<ColoredLabel>();
             ArgumentNullException.ThrowIfNull(uncoloredLabel);
             color ??= DefaultColor;
 
-            ColoredLabel coloredLabel = new ColoredLabel
-            {
-                Text = uncoloredLabel.Text,
-                Color = color,
-                TextColor = TextColor(color)
-            };
+            
             if (uncoloredLabel is ReferenceLabel refLabel)
             {
+                ColoredLabel coloredLabel = new ColoredLabel()
+                {
+                    Text = uncoloredLabel.Text,
+                    Color = color,
+                    TextColor = TextColor(color)
+                };
                 var refInLabel = string.IsNullOrEmpty(refLabel.Reference) ? string.Empty : $"({refLabel.Reference})";
                 switch (uncoloredLabel.Type)
                 {
@@ -87,18 +94,59 @@ namespace BTCPayServer.Services.Labels
                             : _linkGenerator.InvoiceLink(refLabel.Reference, request.Scheme, request.Host, request.PathBase);
                         break;
                 }
+                result.Add(coloredLabel);
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip =
-                    $"Paid a payout{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
-                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
-                    ? null
-                    : _linkGenerator.PayoutLink(payoutLabel.WalletId,
-                        payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
-                        request.PathBase);
+                if (payoutLabel.PullPaymentToPayouts?.Any() is true)
+                {
+                    result.AddRange(payoutLabel.PullPaymentToPayouts.Select(pullPaymentPayout => new ColoredLabel()
+                    {
+                        Text = uncoloredLabel.Text,
+                        Color = color,
+                        TextColor = TextColor(color),
+                        Tooltip =
+                            $"Paid {pullPaymentPayout.Value.Count} payout{(pullPaymentPayout.Value.Count == 1 ? "" : "s")}{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}",
+                        Link = string.IsNullOrEmpty(payoutLabel.WalletId)
+                            ? null
+                            : _linkGenerator.PayoutLink(payoutLabel.WalletId,
+                                pullPaymentPayout.Key, PayoutState.Completed, request.Scheme, request.Host,
+                                request.PathBase)
+                    }));
+                }
+                else
+                {
+                    ColoredLabel coloredLabel = new()
+                    {
+                        Text = uncoloredLabel.Text,
+                        Color = color,
+                        TextColor = TextColor(color),
+                        Tooltip =
+                            $"Paid a payout{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}",
+                        Link = string.IsNullOrEmpty(payoutLabel.WalletId)
+                            ? null
+                            : _linkGenerator.PayoutLink(payoutLabel.WalletId,
+                                payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
+                                request.PathBase)
+                    };
+                    
+                    result.Add(coloredLabel);
+                }
+                
             }
-            return coloredLabel;
+            else
+            {
+                ColoredLabel coloredLabel = new ColoredLabel()
+                {
+                    Text = uncoloredLabel.Text,
+                    Color = color,
+                    TextColor = TextColor(color)
+                };
+                
+                result.Add(coloredLabel);
+            }
+
+            return result;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md

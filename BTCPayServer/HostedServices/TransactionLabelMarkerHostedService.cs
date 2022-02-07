@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -23,7 +25,8 @@ namespace BTCPayServer.HostedServices
         private readonly EventAggregator _eventAggregator;
         private readonly WalletRepository _walletRepository;
 
-        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository,
+            Logs logs) :
             base(eventAggregator, logs)
         {
             _eventAggregator = eventAggregator;
@@ -93,6 +96,17 @@ namespace BTCPayServer.HostedServices
                         {
                             update = true;
                         }
+                        else if (updateTransactionLabel.UpdaterIfAlreadyExists is not null)
+                        {
+                            var result =
+                                updateTransactionLabel.UpdaterIfAlreadyExists.Invoke(
+                                    walletTransactionInfo.Labels[label.label.Text], label.label);
+                            if (result.Item2)
+                            {
+                                walletTransactionInfo.Labels[label.label.Text] = result.Item1;
+                                update = true;
+                            }
+                        }
                     }
 
                     if (update)
@@ -123,6 +137,8 @@ namespace BTCPayServer.HostedServices
             TransactionLabels = new Dictionary<uint256, List<(string color, Label label)>>();
             TransactionLabels.Add(txId, colorLabels);
         }
+
+        public Func<LabelData, LabelData, (LabelData, bool)> UpdaterIfAlreadyExists { get; set; }
         public static (string color, Label label) PayjoinLabelTemplate()
         {
             return ("#51b13e", new RawLabel("payjoin"));
@@ -148,10 +164,70 @@ namespace BTCPayServer.HostedServices
 
         public static (string color, Label label) PayoutTemplate(string payoutId, string pullPaymentId, string walletId)
         {
+            return PayoutTemplate(
+                new Dictionary<string, HashSet<string>>() { { pullPaymentId ?? string.Empty, new HashSet<string>() { payoutId } } },
+                walletId);
+        }
+        
+        
+        public static  (LabelData, bool) UpdaterIfAlreadyExistsForPayouts(LabelData data, LabelData labelData)
+        {
+            if (data is not PayoutLabel currentLabel || labelData is not PayoutLabel proposedLabel) return (data, false);
+            var concatList = new Dictionary<string, HashSet<string>>();
+
+
+            void AppendPayoutsToExistingList(string pullPaymentId, params string[] payoutIds)
+            {
+                if (concatList.TryGetValue(pullPaymentId, out var existingValue))
+                {
+                    existingValue.AddRange(payoutIds);
+                    concatList[pullPaymentId] = existingValue;
+                }
+                else
+                {
+                    concatList.Add(pullPaymentId,payoutIds.ToHashSet());
+                }
+                    
+            }
+
+            if (proposedLabel.PayoutId is not null)
+            {
+                var key = proposedLabel.PullPaymentId ?? string.Empty;
+                AppendPayoutsToExistingList(key, proposedLabel.PayoutId);
+                proposedLabel.PayoutId = null;
+                proposedLabel.PullPaymentId = null;
+            }
+
+            if (currentLabel.PayoutId is not null)
+            {
+                var key = currentLabel.PullPaymentId ?? string.Empty;
+                AppendPayoutsToExistingList(key, currentLabel.PayoutId);
+                currentLabel.PayoutId = null;
+                currentLabel.PullPaymentId = null;
+            }
+
+
+            if (currentLabel.PullPaymentToPayouts?.Any() is true)
+                foreach (var currentLabelPullPaymentToPayout in currentLabel.PullPaymentToPayouts)
+                {
+                    AppendPayoutsToExistingList(currentLabelPullPaymentToPayout.Key, currentLabelPullPaymentToPayout.Value.ToArray());
+                }
+
+            if (proposedLabel.PullPaymentToPayouts?.Any() is true)
+                foreach (var proposedLabelPullPaymentToPayout in proposedLabel.PullPaymentToPayouts)
+                {
+                    AppendPayoutsToExistingList(proposedLabelPullPaymentToPayout.Key, proposedLabelPullPaymentToPayout.Value.ToArray());
+                }
+
+            currentLabel.PullPaymentToPayouts = concatList;
+            return (currentLabel, true);
+        }
+
+        public static (string color, Label label) PayoutTemplate(Dictionary<string, HashSet<string>> pullPaymentToPayouts, string walletId)
+        {
             return ("#3F88AF", new PayoutLabel()
             {
-                PayoutId = payoutId,
-                PullPaymentId = pullPaymentId,
+                PullPaymentToPayouts = pullPaymentToPayouts,
                 WalletId = walletId
             });
         }

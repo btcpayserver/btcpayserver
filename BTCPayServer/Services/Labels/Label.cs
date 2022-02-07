@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,9 +17,11 @@ namespace BTCPayServer.Services.Labels
         }
         static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
         {
-            if (payoutLabel.PayoutId is null)
+            if (payoutLabel.PullPaymentToPayouts is null && payoutLabel.PayoutId is null)
+            {
                 payoutLabel.PayoutId = jObj["id"].Value<string>();
-            FixLegacy(jObj, (Label)payoutLabel);
+                FixLegacy(jObj, (Label)payoutLabel);
+            }
         }
         static void FixLegacy(JObject jObj, Label label)
         {
@@ -111,8 +114,12 @@ namespace BTCPayServer.Services.Labels
             Type = "payout";
             Text = "payout";
         }
-        public string PayoutId { get; set; }
         public string WalletId { get; set; }
+        [Obsolete]
+        public string PayoutId { get; set; }
+        [Obsolete]
         public string PullPaymentId { get; set; }
+        public Dictionary<string, HashSet<string>> PullPaymentToPayouts { get; set; }
+        
     }
 }

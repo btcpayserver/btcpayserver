@@ -13,6 +13,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Mvc;
@@ -411,7 +412,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 var walletId = new WalletId(payout.StoreDataId, newTransaction.CryptoCode);
                 _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                    UpdateTransactionLabel.PayoutTemplate(payout.Id, payout.PullPaymentDataId, walletId.ToString())));
+                    UpdateTransactionLabel.PayoutTemplate(payout.Id, payout.PullPaymentDataId, walletId.ToString()))
+                    {
+                        UpdaterIfAlreadyExists = UpdateTransactionLabel.UpdaterIfAlreadyExistsForPayouts
+                    });
             }
             else
             {

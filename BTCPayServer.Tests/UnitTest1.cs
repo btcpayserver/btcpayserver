@@ -762,7 +762,7 @@ namespace BTCPayServer.Tests
                 await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
 
             transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                .IsType<ViewResult>(await walletController.WalletTransactions(walletId)).Model);
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);

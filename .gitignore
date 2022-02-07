@@ -299,3 +299,4 @@ BTCPayServer/wwwroot/bundles/*
 BTCPayServer/testpwd
 .DS_Store
 Packed Plugins
+Plugins/packed

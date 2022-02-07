@@ -2111,5 +2111,64 @@ namespace BTCPayServer.Tests
 
 
         }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreUsersAPITest()
+        {
+            
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
+
+            var users = await client.GetStoreUsers(user.StoreId);
+            var storeuser = Assert.Single(users);
+            Assert.Equal(user.UserId,storeuser.UserId);
+            Assert.Equal(StoreRoles.Owner,storeuser.Role);
+
+            var user2= tester.NewAccount();
+            await user2.GrantAccessAsync(false);
+
+            var user2Client =await  user2.CreateClient(Policies.CanModifyStoreSettings);
+
+            //test no access to api when unrelated to store at all
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.GetStoreUsers(user.StoreId));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.RemoveStoreUser(user.StoreId, user.UserId));
+
+            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = StoreRoles.Guest, UserId = user2.UserId });
+            
+            //test no access to api when only a guest
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.GetStoreUsers(user.StoreId));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.RemoveStoreUser(user.StoreId, user.UserId));
+
+            await user2Client.GetStore(user.StoreId);
+            
+            await client.RemoveStoreUser(user.StoreId, user2.UserId);
+            await AssertHttpError(403, async () =>
+                await user2Client.GetStore(user.StoreId));
+            
+            
+            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = StoreRoles.Owner, UserId = user2.UserId });
+            await AssertAPIError("duplicate-store-user-role",async ()=>
+                await client.AddStoreUser(user.StoreId, 
+                    new StoreUserData() { Role = StoreRoles.Owner, UserId = user2.UserId }));
+            await user2Client.RemoveStoreUser(user.StoreId, user.UserId);
+
+            
+            //test no access to api when unrelated to store at all
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.GetStoreUsers(user.StoreId));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
+
+            await AssertAPIError("store-user-role-orphaned", async () => await user2Client.RemoveStoreUser(user.StoreId, user2.UserId));
+
+        }
+        
     }
 }

@@ -34,6 +34,7 @@ namespace BTCPayServer.Client.Models
         public string PaymentMethod { get; set; }
 
         public string CryptoCode { get; set; }
+        public Dictionary<string, object> AdditionalData { get; set; }
 
         public class Payment
         {

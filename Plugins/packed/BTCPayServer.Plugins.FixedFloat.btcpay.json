@@ -1,0 +1,1 @@
+{"Identifier":"BTCPayServer.Plugins.FixedFloat","Name":"FixedFloat","Version":"1.0.1.0","Description":"Allows you to embed a FixedFloat conversion screen to allow customers to pay with altcoins.","SystemPlugin":false,"Dependencies":[{"Identifier":"BTCPayServer","Condition":"\u003E=1.4.0.0"}]}

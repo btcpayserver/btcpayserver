@@ -1,0 +1,1 @@
+{"Identifier":"BTCPayServer.Plugins.SideShift","Name":"SideShift","Version":"1.0.3.0","Description":"Allows you to embed a SideShift conversion screen to allow customers to pay with altcoins.","SystemPlugin":false,"Dependencies":[{"Identifier":"BTCPayServer","Condition":"\u003E=1.4.0.0"}]}

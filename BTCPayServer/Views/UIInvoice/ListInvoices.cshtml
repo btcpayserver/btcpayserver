@@ -327,10 +327,9 @@
             </div>
         </span>
     </div>
-
+    <div style="clear:both"></div>
     @if (Model.Total > 0)
     {
-        <div style="clear:both"></div>
         <div class="table-responsive">
             <table id="invoices" class="table table-hover">
                 <thead>
@@ -403,11 +402,10 @@
                                 else
                                 {
                                     <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
+                                        @invoice.Status.Status.ToModernStatus().ToString()
                                         @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
                                         {
-                                            @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                            ;
+                                            @($"({invoice.Status.ExceptionStatus.ToString()})")
                                         }
                                     </span>
                                 }

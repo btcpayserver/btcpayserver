@@ -651,7 +651,25 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.Status != null && queryObject.Status.Length > 0)
             {
-                var statusSet = queryObject.Status.ToHashSet().ToArray();
+                HashSet<string> statusSet = new HashSet<string>();
+                // We make sure here that the old filters still work
+                foreach (var status in queryObject.Status.Select(s => s.ToLowerInvariant()))
+                {
+                    if (status == "paid")
+                        statusSet.Add("processing");
+                    if (status == "processing")
+                        statusSet.Add("paid");
+                    if (status == "confirmed")
+                    {
+                        statusSet.Add("complete");
+                        statusSet.Add("settled");
+                    }
+                    if (status == "settled")
+                    {
+                        statusSet.Add("complete");
+                        statusSet.Add("confirmed");
+                    }
+                }
                 query = query.Where(i => statusSet.Contains(i.Status));
             }
 

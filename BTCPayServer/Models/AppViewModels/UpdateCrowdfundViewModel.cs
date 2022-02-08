@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [Display(Name = "Make Crowdfund Public")]
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; }
 
         [Required]
         [Display(Name = "Enable background animations on new payments")]
@@ -44,11 +44,11 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [Display(Name = "Enable sounds on new payments")]
-        public bool SoundsEnabled { get; set; } = true;
+        public bool SoundsEnabled { get; set; }
 
         [Required]
         [Display(Name = "Enable Disqus Comments")]
-        public bool DisqusEnabled { get; set; } = true;
+        public bool DisqusEnabled { get; set; }
 
         [Display(Name = "Disqus Shortname")]
         public string DisqusShortname { get; set; }

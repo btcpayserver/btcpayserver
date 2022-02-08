@@ -21,8 +21,8 @@ namespace BTCPayServer.Services.Apps
         public string Tagline { get; set; }
         public string EmbeddedCSS { get; set; }
         public string PerksTemplate { get; set; }
-        public bool DisqusEnabled { get; set; } = false;
-        public bool SoundsEnabled { get; set; } = true;
+        public bool DisqusEnabled { get; set; }
+        public bool SoundsEnabled { get; set; }
         public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; } = true;
         public int ResetEveryAmount { get; set; } = 1;

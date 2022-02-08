@@ -20,7 +20,7 @@ public class CustodianRegistry
 
     public void register(ICustodian custodian)
     {
-        _custodians.Add(custodian.getCode(), custodian);
+        _custodians.Add(custodian.GetCode(), custodian);
     }
 
     public IDictionary<string, ICustodian> getAll()

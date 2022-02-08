@@ -1,20 +1,13 @@
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Security;
-using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
-using NBitcoin.DataEncoders;
-using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -46,18 +39,27 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var custodianAccounts = _custodianAccountRepository.FindByStoreId(storeId);
-            var r = custodianAccounts.Result.Select(ToModel).ToList();
+            var r = custodianAccounts.Result;
 
-            if (assetBalances)
+            CustodianAccountResponse[] responses = new CustodianAccountResponse[r.Length];
+            for (int i = 0; i < r.Length; i++)
             {
-                foreach (var custodianAccount in r)
+                var custodianAccountData = r[i];
+                var custodianAccount = ToModel(custodianAccountData);
+
+                if (assetBalances)
                 {
                     var custodianCode = custodianAccount.CustodianCode;
                     var custodian = _custodianRegistry.getAll()[custodianCode];
-                    var balances = await custodian.GetAssetBalances(custodianAccount);
+                    var balances = await custodian.GetAssetBalances(custodianAccount.Config);
                     custodianAccount.AssetBalances = balances;
                 }
+
+                responses[i] = custodianAccount;
             }
+
+            //.Select(ToModel).ToList();
+
 
             return Ok(r);
         }
@@ -66,7 +68,8 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
         [Authorize(Policy = Policies.CanViewCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId, [FromQuery] bool assetBalances = false)
+        public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId,
+            [FromQuery] bool assetBalances = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -79,15 +82,17 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return NotFound();
             }
+
             var custodianAccount = ToModel(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {
                 // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
                 var custodianCode = custodianAccount.CustodianCode;
                 var custodian = _custodianRegistry.getAll()[custodianCode];
-                var balances = await custodian.GetAssetBalances(custodianAccount);
+                var balances = await custodian.GetAssetBalances(custodianAccount.Config);
                 custodianAccount.AssetBalances = balances;
             }
+
             return Ok(custodianAccount);
         }
 
@@ -115,7 +120,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var custodianAccount = new CustodianAccountData()
             {
-                CustodianCode = custodian.getCode(), StoreId = storeId,
+                CustodianCode = custodian.GetCode(), StoreId = storeId,
             };
             var newBlob = new CustodianAccountData.CustodianAccountBlob();
             newBlob.config = request.Config;
@@ -156,35 +161,53 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return this.CreateAPIError(400, "deposit-payment-method-not-supported",
-                $"Deposits to \"{custodian.getName()}\" are not supported using \"{paymentMethod}\".");
+                $"Deposits to \"{custodian.GetName()}\" are not supported using \"{paymentMethod}\".");
         }
-        
-        // [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/market")]
-        // [Authorize(Policy = Policies.CanTradeCustodianAccount,
-        //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        // public async Task<IActionResult> Trade(string storeId, string accountId,
-        //     TradeRequestData request)
-        // {
-        //     var custodianAccount = _custodianAccountRepository.FindById(accountId);
-        //     var custodian = _custodianRegistry.getAll()[custodianAccount.Result.CustodianCode];
-        //
-        //     if (custodian is ICanDeposit depositableCustodian)
-        //     {
-        //         var result = depositableCustodian.GetDepositAddress(paymentMethod);
-        //         return Ok(result);
-        //     }
-        //
-        //     return this.CreateAPIError(400, "deposit-payment-method-not-supported",
-        //         $"Deposits to \"{custodian.getName()}\" are not supported using \"{paymentMethod}\".");
-        // }
 
-        
+        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/market")]
+        [Authorize(Policy = Policies.CanTradeCustodianAccount,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> Trade(string storeId, string accountId,
+            TradeRequestData request)
+        {
+            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
+
+            if (custodian is ICanTrade tradableCustodian)
+            {
+                var result = tradableCustodian.TradeMarket(request.fromAsset, request.toAsset, request.qty, custodianAccount.GetBlob().config);
+                return Ok(result);
+            }
+
+            return this.CreateAPIError(400, "market-trade-not-supported",
+                $"Placing market orders on \"{custodian.GetName()}\" is not supported.");
+        }
+
+        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/{tradeId}")]
+        [Authorize(Policy = Policies.CanTradeCustodianAccount,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId)
+        {
+            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
+
+            if (custodian is ICanTrade tradableCustodian)
+            {
+                var result = await tradableCustodian.GetTradeInfo(tradeId, custodianAccount.GetBlob().config);
+                return Ok(result);
+            }
+
+            return this.CreateAPIError(400, "fetching-trade-info-not-supported",
+                $"Fetching past trade info on \"{custodian.GetName()}\" is not supported.");
+        }
 
         // TODO withdraw endpoint
     }
 
     public class TradeRequestData
     {
-        
+        public string fromAsset { set; get; }
+        public string toAsset { set; get; }
+        public decimal qty { set; get; }
     }
 }

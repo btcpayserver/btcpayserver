@@ -1,4 +1,4 @@
-using BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Services.Custodian;
 
@@ -9,4 +9,6 @@ public interface ICanDeposit
      * The result can be a string in different formats like a bitcoin address or even a LN invoice.
      */
     public DepositAddressData GetDepositAddress(string paymentMethod);
+
+    public string[] GetDepositablePaymentMethods();
 }

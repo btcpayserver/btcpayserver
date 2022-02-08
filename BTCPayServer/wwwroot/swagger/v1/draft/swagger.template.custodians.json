@@ -521,9 +521,14 @@
                                 "format": "url",
                                 "nullable": false
                             },
-                            "supportedAssets": {
+                            "depositableAssets": {
                                 "type": "array",
-                                "description": "A list of asset (crypto or fiat) the custodian can store. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
+                                "description": "A list of asset (crypto or fiat) you can deposit on the custodian. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
+                                "nullable": false
+                            },
+                            "withdrawableAssets": {
+                                "type": "array",
+                                "description": "A list of asset (crypto or fiat) you can withdraw from the custodian. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
                                 "nullable": false
                             },
                             "tradeableAssetPairs": {
@@ -706,10 +711,6 @@
                             "$ref": "#/components/schemas/LedgerEntryData"
                         }
                     },
-                    "tradeType": {
-                        "type": "string",
-                        "description": "The type of trade that was executed. Currently only \"market\" is supported, meaning an instant purchase with instant result or failure."
-                    },
                     "tradeId": {
                         "type": "string",
                         "description": "The unique ID of the trade/order used by the exchange.",
@@ -751,7 +752,6 @@
                             "comment": "Kraken fee credits"
                         }
                     ],
-                    "tradeType": "market",
                     "tradeId": "XXXX-XXXX-XXXX-XXXX",
                     "accountId": "xxxxxxxxxxxxxx",
                     "custodianCode": "kraken"

@@ -40,4 +40,5 @@ public class CustodianAccountData
     {
         public JObject config;
     }
+
 }

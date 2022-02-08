@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using BTCPayServer.Client.JsonConverters;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models

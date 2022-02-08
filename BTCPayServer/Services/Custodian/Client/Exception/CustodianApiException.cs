@@ -2,10 +2,10 @@ using System;
 
 namespace BTCPayServer.Services.Custodian.Client.Exception;
 
-public class KrakenApiException: SystemException
+public class CustodianApiException: SystemException
 
 {
-    public KrakenApiException(string message) : base(message)
+    public CustodianApiException(string message) : base(message)
     {
     }
 }

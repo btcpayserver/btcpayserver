@@ -7,6 +7,9 @@
 
 @section PageHeadContent {
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css" asp-append-version="true"></bundle>
+    <style>
+        .flatpickr-wrapper { flex-grow: 1; }
+    </style>
 }
 
 @section PageFootContent {
@@ -67,15 +70,16 @@
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
                     <label asp-for="Enabled" class="form-label mb-0"></label>
-        </div>
+                </div>
                 <span asp-validation-for="Enabled" class="text-danger"></span>
                 <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
                 <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
-    </div>
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
+            <h3 class="mt-5 mb-4">Goal</h3>
             <div class="form-group">
                 <label asp-for="TargetCurrency" class="form-label"></label>
                 <input asp-for="TargetCurrency" class="form-control" placeholder="Use store's default settings" />
@@ -86,33 +90,39 @@
                 <input asp-for="TargetAmount" class="form-control" />
                 <span asp-validation-for="TargetAmount" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="StartDate" class="form-label"></label>
-                <div class="input-group">
-                    <input type="datetime-local" asp-for="StartDate"
-                           value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker"
-                           placeholder="No start date has been set" />
-                    <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
-                    </button>
+            <div class="row g-3">
+                <div class="col col-12 col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="StartDate" class="form-label"></label>
+                        <div class="input-group flex-nowrap">
+                            <input type="datetime-local" asp-for="StartDate"
+                                   value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
+                                   placeholder="No start date has been set"/>
+                            <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
                 </div>
-                <span asp-validation-for="StartDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EndDate" class="form-label"></label>
-                <div class="input-group">
-                    <input type="datetime-local" asp-for="EndDate"
-                           value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker"
-                           placeholder="No end date has been set" />
-                    <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
-                    </button>
+                <div class="col col-12 col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="EndDate" class="form-label"></label>
+                        <div class="input-group flex-nowrap">
+                            <input type="datetime-local" asp-for="EndDate"
+                                   value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
+                                   placeholder="No end date has been set"/>
+                            <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
                 </div>
-                <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
-            <div class="form-group mb-4">
+            <div class="form-group mb-0">
                 <label asp-for="ResetEvery" class="form-label"></label>
                 <div class="input-group">
                     <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">

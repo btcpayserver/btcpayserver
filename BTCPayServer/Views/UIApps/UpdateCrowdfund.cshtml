@@ -162,11 +162,6 @@
             </div>
             
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
-            <div class="form-group">
-                <label asp-for="NotificationUrl" class="form-label"></label>
-                <input asp-for="NotificationUrl" class="form-control" />
-                <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-            </div>
             <div class="form-check">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
@@ -250,6 +245,23 @@
                                     <label asp-for="EmbeddedCSS" class="form-label"></label>
                                     <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                                     <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-notification-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
+                                Notification URL Callbacks
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-notification" class="accordion-collapse collapse" aria-labelledby="additional-notification-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="NotificationUrl" class="form-label"></label>
+                                    <input asp-for="NotificationUrl" class="form-control" />
+                                    <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>

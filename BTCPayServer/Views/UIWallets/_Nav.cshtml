@@ -1,48 +1,13 @@
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Client
-@inject BTCPayNetworkProvider _btcPayNetworkProvider
 @{
     var walletId = Context.GetRouteValue("walletId")?.ToString();
     var storeId = Context.GetRouteValue("storeId")?.ToString();
     var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
-    var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
 }
 
 <div class="sticky-header-setup"></div>
-<header class="sticky-header mb-l">
-    <div class="d-sm-flex align-items-center justify-content-between mb-2 mb-lg-4">
-        <h2 class="mb-0">
-            @ViewData["Title"]
-            <small>
-                <a href="https://docs.btcpayserver.org/Invoices/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-            </small>
-        </h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">
-            @if (!network.ReadonlyWallet)
-            {
-                <a class="btn btn-primary" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@wallet">Send</a>
-            }
-            <a class="btn btn-primary" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@wallet">Receive</a>
-            <a class="btn btn-secondary @ViewData.IsActivePage(WalletsNavPages.Settings) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@wallet.CryptoCode" asp-route-storeId="@wallet.StoreId" title="Settings">
-                <vc:icon symbol="settings"/>
-            </a>
-        </div>
-    </div>
-    <nav id="SectionNav">
-        <div class="nav">
-            <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@wallet" id="SectionNav-Transactions" permission="@Policies.CanModifyStoreSettings">Transactions</a>
-            <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@wallet" id="SectionNav-Rescan" permission="@Policies.CanModifyServerSettings">Rescan</a>
-            @if (!network.ReadonlyWallet)
-            {
-                <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@wallet" id="SectionNav-PSBT" permission="@Policies.CanModifyStoreSettings">PSBT</a>
-            }
-            <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Settings) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@wallet.CryptoCode" asp-route-storeId="@wallet.StoreId" id="SectionNav-Settings" permission="@Policies.CanModifyStoreSettings">Settings</a>
-            <vc:ui-extension-point location="wallet-nav" model="@Model"/>
-        </div>
-    </nav>
+<header class="sticky-header">
+    <vc:wallet-nav wallet-id="wallet"/>
 </header>
 <script>
     const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');

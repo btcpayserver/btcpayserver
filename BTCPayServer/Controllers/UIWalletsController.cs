@@ -1044,7 +1044,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
+        internal async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
         {
             try
             {

@@ -281,7 +281,7 @@
 
         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Paid Invoices</a>
+            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
             <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
@@ -327,10 +327,9 @@
             </div>
         </span>
     </div>
-
+    <div style="clear:both"></div>
     @if (Model.Total > 0)
     {
-        <div style="clear:both"></div>
         <div class="table-responsive">
             <table id="invoices" class="table table-hover">
                 <thead>
@@ -403,11 +402,10 @@
                                 else
                                 {
                                     <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
+                                        @invoice.Status.Status.ToModernStatus().ToString()
                                         @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
                                         {
-                                            @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                            ;
+                                            @($"({invoice.Status.ExceptionStatus.ToString()})")
                                         }
                                     </span>
                                 }

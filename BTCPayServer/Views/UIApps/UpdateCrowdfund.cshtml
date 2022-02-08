@@ -175,9 +175,11 @@
             
             <h3 class="mt-5 mb-4">Sound</h3>
             <div class="form-group mb-0">
-                <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
-                <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                    <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
                 <div class="form-group mb-0 pt-3">
@@ -189,9 +191,11 @@
             
             <h3 class="mt-5 mb-4">Animation</h3>
             <div class="form-group mb-3">
-                <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
-                <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                    <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
                 <div class="form-group mb-0 pt-3">
@@ -203,9 +207,11 @@
             
             <h3 class="mt-5 mb-4">Discussion</h3>
             <div class="form-group mb-3">
-                <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                    <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
                 <div class="form-group mb-0 pt-3">

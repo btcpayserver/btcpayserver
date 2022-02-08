@@ -26,6 +26,7 @@
                             Actions
                         </button>
                         <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+                            <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan">Rescan wallet</a>
                             @if (Model.NBXSeedAvailable)
                             {
                                 <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed">View seed</a>

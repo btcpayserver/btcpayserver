@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Amazon.Util.Internal.PlatformServices;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -41,12 +42,13 @@ namespace BTCPayServer.Services.Labels
         private ColoredLabel CreateLabel(LabelData uncoloredLabel, string color, HttpRequest request)
         {
             ArgumentNullException.ThrowIfNull(uncoloredLabel);
-            color = color ?? DefaultColor;
+            color ??= DefaultColor;
 
-            ColoredLabel coloredLabel = new ColoredLabel()
+            ColoredLabel coloredLabel = new ColoredLabel
             {
                 Text = uncoloredLabel.Text,
-                Color = color
+                Color = color,
+                TextColor = TextColor(color)
             };
             if (uncoloredLabel is ReferenceLabel refLabel)
             {
@@ -89,6 +91,15 @@ namespace BTCPayServer.Services.Labels
                         request.PathBase);
             }
             return coloredLabel;
+        }
+        
+        private string TextColor(string bgColor)
+        {
+            int nThreshold = 105;
+            var bg = ColorTranslator.FromHtml(bgColor);
+            int bgDelta = Convert.ToInt32((bg.R * 0.299) + (bg.G * 0.587) +  (bg.B * 0.114));
+            Color color = (255 - bgDelta < nThreshold) ? Color.Black : Color.White;
+            return ColorTranslator.ToHtml(color);
         }
     }
 }

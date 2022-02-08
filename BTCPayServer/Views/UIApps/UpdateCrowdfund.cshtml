@@ -63,6 +63,15 @@
                 <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+            <div class="form-group mb-0">
+                <div class="d-flex align-items-center mb-3">
+                    <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
+                    <label asp-for="Enabled" class="form-label mb-0"></label>
+        </div>
+                <span asp-validation-for="Enabled" class="text-danger"></span>
+                <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
+                <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
+    </div>
         </div>
     </div>
     <div class="row">
@@ -114,15 +123,6 @@
                         }
                     </select>
                 </div>
-            </div>
-            <div class="form-group mb-0">
-                <div class="d-flex align-items-center mb-3">
-                    <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
-                    <label asp-for="Enabled" class="form-label mb-0"></label>
-                </div>
-                <span asp-validation-for="Enabled" class="text-danger"></span>
-                <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
-                <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
             </div>
         </div>
     </div>

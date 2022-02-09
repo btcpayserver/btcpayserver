@@ -19,7 +19,7 @@
     var storeId = Context.GetRouteValue("storeId");
     var cryptoCode = Context.GetRouteValue("cryptoCode");
     var baseUrl = Context.Request.PathBase.ToUriComponent();
-    var createWalletUrl = $"{baseUrl}/Plugins/LNbank/Wallets/Create?ReturnUrl={baseUrl}/stores/{storeId}/lightning/{cryptoCode}/setup";
+    var createWalletUrl = $"{baseUrl}/plugins/lnbank/wallets/create?ReturnUrl={baseUrl}/stores/{storeId}/lightning/{cryptoCode}/setup";
     var nonce = RandomUtils.GetUInt256().ToString().Substring(0, 32);
     _contentSecurityPolicies.Add("script-src", $"'nonce-{nonce}'");
 }

@@ -48,7 +48,7 @@ namespace BTCPayServer.Plugins.LNbank
 
             applicationBuilder.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<TransactionHub>("/Plugins/LNbank/Hubs/Transaction");
+                endpoints.MapHub<TransactionHub>("/plugins/lnbank/hubs/transaction");
             });
         }
     }

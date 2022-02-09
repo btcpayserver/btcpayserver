@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // SignalR
     ;(window.LNbankHubs || []).forEach(hub => {
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`/Plugins/LNbank/Hubs/${hub.id}`)
+            .withUrl(`/plugins/lnbank/hubs/${hub.id}`)
             .withAutomaticReconnect()
             .build()
 

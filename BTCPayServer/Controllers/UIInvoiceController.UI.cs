@@ -472,20 +472,20 @@ namespace BTCPayServer.Controllers
                                                 .Select(p => p.GetAddress()).ToHashSet();
                         var utxos = await explorer.GetUTXOsAsync(derivationScheme);
                         var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 && bumpableAddresses.Contains(u.ScriptPubKey.Hash.ToString())).ToArray();
-                        var parameters = new List<KeyValuePair<string, string>>();
-                        parameters.Add(new KeyValuePair<string, string>("walletId", new WalletId(storeId, network.CryptoCode).ToString()));
-                        int i = 0;
+                        var parameters = new MultiValueDictionary<string, string>();
                         foreach (var utxo in bumpableUTXOs)
                         {
-                            parameters.Add(new KeyValuePair<string, string>($"outpoints[{i}]", utxo.Outpoint.ToString()));
-                            i++;
+                            parameters.Add($"outpoints[]", utxo.Outpoint.ToString());
                         }
-                        parameters.Add(new KeyValuePair<string, string>("returnUrl", Url.Action(nameof(ListInvoices), new { storeId })!));
                         return View("PostRedirect", new PostRedirectViewModel
                         {
                             AspController = "UIWallets",
                             AspAction = nameof(UIWalletsController.WalletCPFP),
-                            Parameters = parameters
+                            RouteParameters = {
+                                { "walletId", new WalletId(storeId, network.CryptoCode).ToString() },
+                                { "returnUrl", Url.Action(nameof(ListInvoices), new { storeId }) }
+                            },
+                            FormParameters = parameters,
                         });
                 }
             }

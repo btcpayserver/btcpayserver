@@ -3,15 +3,19 @@
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId);
+	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@walletId" id="GoBack">
+	@if (returnUrl is string)
+	{
+    <a href="@returnUrl" id="GoBack">
         <vc:icon symbol="back" />
     </a>
-    <a asp-action="WalletSend" asp-route-walletId="@walletId" class="cancel">
+    <a href="@returnUrl" class="cancel">
         <vc:icon symbol="close" />
     </a>
+	}
 }
 
 <header class="text-center">
@@ -27,7 +31,7 @@
 </div>
 
 <div id="body" class="my-4">
-    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">
+    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl" method="post" style="display:none;">
         <input type="hidden" id="WalletId" asp-for="WalletId" />
         <input type="hidden" asp-for="WebsocketPath" />
         <partial name="SigningContext" for="SigningContext" />
@@ -44,8 +48,6 @@
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script>
-        delegate('click', '#GoBack', () => { history.back(); return false; })
-
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;

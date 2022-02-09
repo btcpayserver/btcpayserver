@@ -204,8 +204,7 @@ namespace BTCPayServer.Tests
                     {
                         // Local link, this is fine
                     }
-                    else if (attributeValue.StartsWith("http://") || attributeValue.StartsWith("https://") ||
-                             attributeValue.StartsWith("@"))
+                    else if (attributeValue.StartsWith("http://") || attributeValue.StartsWith("https://"))
                     {
                         // This can be an external link. Treating it as such.
                         var rel = GetAttributeValue(node, "rel");

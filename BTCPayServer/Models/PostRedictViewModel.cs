@@ -8,6 +8,7 @@ namespace BTCPayServer.Models
         public string AspController { get; set; }
         public string FormUrl { get; set; }
 
-        public List<KeyValuePair<string, string>> Parameters { get; set; } = new List<KeyValuePair<string, string>>();
+        public MultiValueDictionary<string, string> FormParameters { get; set; } = new MultiValueDictionary<string, string>();
+        public Dictionary<string, string> RouteParameters { get; set; } = new Dictionary<string, string>();
     }
 }

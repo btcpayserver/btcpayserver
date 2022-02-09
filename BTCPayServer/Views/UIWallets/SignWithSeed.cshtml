@@ -3,22 +3,19 @@
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, "Sign PSBT", walletId);
+	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section Navbar {
-    <a asp-action="WalletPSBT" asp-route-walletId="@walletId" id="GoBack">
+	@if (returnUrl is string)
+	{
+    <a href="@returnUrl" id="GoBack">
         <vc:icon symbol="back" />
     </a>
-    <a asp-action="WalletSend" asp-route-walletId="@walletId" class="cancel">
+    <a href="@returnUrl" class="cancel">
         <vc:icon symbol="close" />
     </a>
-}
-
-@section PageFootContent
-{
-    <script>
-        delegate('click', '#GoBack', () => { history.back(); return false; })
-    </script>
+	}
 }
 
 <header class="text-center">
@@ -40,7 +37,7 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId">
+<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl">
     <partial name="SigningContext" for="SigningContext"/>
     <div class="form-group">
         <label asp-for="SeedOrKey" class="form-label"></label>

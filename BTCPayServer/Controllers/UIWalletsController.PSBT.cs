@@ -129,21 +129,38 @@ namespace BTCPayServer.Controllers
             {
                 AspController = "UIWallets",
                 AspAction = nameof(UIWalletsController.WalletSign),
-                Parameters =
+                RouteParameters = {
+                    { "walletId", walletId.ToString() },
+                    { "returnUrl", returnUrl }
+                },
+                FormParameters =
                             {
-                                new KeyValuePair<string, string>("walletId", walletId.ToString()),
-                                new KeyValuePair<string, string>("psbt", psbt.ToHex())
+                                { "walletId", walletId.ToString() },
+                                { "psbt", psbt.ToHex() }
                             }
             });
         }
 
         [HttpPost("{walletId}/sign")]
         public async Task<IActionResult> WalletSign([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletPSBTViewModel vm, string actionBack = null)
+            WalletId walletId, WalletPSBTViewModel vm, string returnUrl = null, string command = null)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             vm.SigningContext.PSBT ??= psbt.ToBase64();
+            if (returnUrl is null)
+                returnUrl = Url.Action(nameof(WalletTransactions), new { walletId });
+
+            switch (command)
+            {
+                case "vault":
+                    return ViewVault(walletId, vm.SigningContext);
+                case "seed":
+                    return SignWithSeed(walletId, vm.SigningContext);
+                default:
+                    break;
+            }
+
             if (await CanUseHotWallet())
             {
                 var derivationScheme = GetDerivationSchemeSettings(walletId);
@@ -159,11 +176,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            var routeBack = new Dictionary<string, string>
-                    {
-                        {"action", actionBack }, {"walletId", walletId.ToString()}
-                    };
-            return View("WalletSigningOptions", new WalletSigningOptionsModel(vm.SigningContext, routeBack));
+            return View("WalletSigningOptions", new WalletSigningOptionsModel(vm.SigningContext, returnUrl));
         }
 
         [HttpGet("{walletId}/psbt")]
@@ -501,6 +514,12 @@ namespace BTCPayServer.Controllers
                                 vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
                                 return View(nameof(WalletPSBT), vm);
                             }
+                            else
+                            {
+                                var wallet = _walletProvider.GetWallet(network);
+                                var derivationSettings = GetDerivationSchemeSettings(walletId);
+                                wallet.InvalidateCache(derivationSettings.AccountDerivation);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -512,7 +531,12 @@ namespace BTCPayServer.Controllers
                         {
                             TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash()})";
                         }
-                        return RedirectToWalletTransaction(walletId, transaction);
+                        var returnUrl = this.HttpContext.Request.Query["returnUrl"].FirstOrDefault();
+                        if (returnUrl is not null)
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":
                     return RedirectToWalletPSBT(new WalletPSBTViewModel()

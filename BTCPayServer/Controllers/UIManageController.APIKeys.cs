@@ -312,18 +312,16 @@ namespace BTCPayServer.Controllers
                         var redirectVm = new PostRedirectViewModel()
                         {
                             FormUrl = viewModel.RedirectUrl.AbsoluteUri,
-                            Parameters =
+                            FormParameters =
                             {
-                                new KeyValuePair<string, string>("apiKey", key.Id),
-                                new KeyValuePair<string, string>("userId", key.UserId)
-                            }
+                                { "apiKey", key.Id },
+                                { "userId", key.UserId },
+                            },
                         };
                         foreach (var permission in permissions)
                         {
-                            redirectVm.Parameters.Add(
-                                new KeyValuePair<string, string>("permissions[]", permission));
+                            redirectVm.FormParameters.Add("permissions[]", permission);
                         }
-
                         return View("PostRedirect", redirectVm);
                     }
 

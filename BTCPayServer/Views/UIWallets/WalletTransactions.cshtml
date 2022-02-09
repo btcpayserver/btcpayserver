@@ -84,7 +84,7 @@
                 Actions
             </button>
             <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-				<button id="cpfp" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
+				<button id="BumpFee" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
                 <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")" class="dropdown-item">Rescan wallet for missing transactions</a>
                 <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
                 @if (User.IsInRole(Roles.ServerAdmin))

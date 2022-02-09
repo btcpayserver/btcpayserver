@@ -822,10 +822,11 @@ namespace BTCPayServer.Controllers
             {
                 AspController = "UIWallets",
                 AspAction = nameof(WalletPSBTReady),
-                Parameters =
+                RouteParameters = { { "walletId", this.RouteData?.Values["walletId"]?.ToString() } },
+                FormParameters =
                 {
-                    new KeyValuePair<string, string>("SigningKey", vm.SigningKey),
-                    new KeyValuePair<string, string>("SigningKeyPath", vm.SigningKeyPath)
+                    { "SigningKey", vm.SigningKey },
+                    { "SigningKeyPath", vm.SigningKeyPath }
                 }
             };
             AddSigningContext(redirectVm, vm.SigningContext);
@@ -833,7 +834,11 @@ namespace BTCPayServer.Controllers
                 !string.IsNullOrEmpty(vm.SigningContext.PSBT))
             {
                 //if a hw device signed a payjoin, we want it broadcast instantly
-                redirectVm.Parameters.Add(new KeyValuePair<string, string>("command", "broadcast"));
+                redirectVm.FormParameters.Add("command", "broadcast");
+            }
+            if (this.HttpContext.Request.Query["returnUrl"].FirstOrDefault() is string returnUrl)
+            {
+                redirectVm.RouteParameters.Add("returnUrl", returnUrl);
             }
             return View("PostRedirect", redirectVm);
         }
@@ -842,11 +847,11 @@ namespace BTCPayServer.Controllers
         {
             if (signingContext is null)
                 return;
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.PSBT", signingContext.PSBT));
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.OriginalPSBT", signingContext.OriginalPSBT));
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.PayJoinBIP21", signingContext.PayJoinBIP21));
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.EnforceLowR", signingContext.EnforceLowR?.ToString(CultureInfo.InvariantCulture)));
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.ChangeAddress", signingContext.ChangeAddress));
+            redirectVm.FormParameters.Add("SigningContext.PSBT", signingContext.PSBT);
+            redirectVm.FormParameters.Add("SigningContext.OriginalPSBT", signingContext.OriginalPSBT);
+            redirectVm.FormParameters.Add("SigningContext.PayJoinBIP21", signingContext.PayJoinBIP21);
+            redirectVm.FormParameters.Add("SigningContext.EnforceLowR", signingContext.EnforceLowR?.ToString(CultureInfo.InvariantCulture));
+            redirectVm.FormParameters.Add("SigningContext.ChangeAddress", signingContext.ChangeAddress);
         }
 
         private IActionResult RedirectToWalletPSBT(WalletPSBTViewModel vm)
@@ -855,10 +860,11 @@ namespace BTCPayServer.Controllers
             {
                 AspController = "UIWallets",
                 AspAction = nameof(WalletPSBT),
-                Parameters =
+                RouteParameters = { { "walletId", this.RouteData?.Values["walletId"]?.ToString() } },
+                FormParameters =
                 {
-                    new KeyValuePair<string, string>("psbt", vm.PSBT),
-                    new KeyValuePair<string, string>("fileName", vm.FileName)
+                    { "psbt", vm.PSBT },
+                    { "fileName", vm.FileName }
                 }
             };
             return View("PostRedirect", redirectVm);
@@ -953,18 +959,6 @@ namespace BTCPayServer.Controllers
         private string ValueToString(Money v, BTCPayNetworkBase network)
         {
             return v.ToString() + " " + network.CryptoCode;
-        }
-
-        private IActionResult RedirectToWalletTransaction(WalletId walletId, Transaction transaction)
-        {
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            if (transaction != null)
-            {
-                var wallet = _walletProvider.GetWallet(network);
-                var derivationSettings = GetDerivationSchemeSettings(walletId);
-                wallet.InvalidateCache(derivationSettings.AccountDerivation);
-            }
-            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
         [HttpGet("{walletId}/rescan")]
@@ -1083,20 +1077,21 @@ namespace BTCPayServer.Controllers
                             TempData[WellKnownTempData.ErrorMessage] = $"No transaction selected";
                             return RedirectToAction(nameof(WalletTransactions), new { walletId });
                         }
-                        var parameters = new List<KeyValuePair<string, string>>();
-                        parameters.Add(new KeyValuePair<string, string>("walletId", walletId.ToString()));
+                        var parameters = new MultiValueDictionary<string, string>();
+                        parameters.Add("walletId", walletId.ToString());
                         int i = 0;
                         foreach (var tx in selectedTransactions)
                         {
-                            parameters.Add(new KeyValuePair<string, string>($"transactionHashes[{i}]", tx));
+                            parameters.Add($"transactionHashes[{i}]", tx);
                             i++;
                         }
-                        parameters.Add(new KeyValuePair<string, string>("returnUrl", Url.Action(nameof(WalletTransactions), new { walletId })));
+                        parameters.Add("returnUrl", Url.Action(nameof(WalletTransactions), new { walletId }));
                         return View("PostRedirect", new PostRedirectViewModel
                         {
                             AspController = "UIWallets",
                             AspAction = nameof(UIWalletsController.WalletCPFP),
-                            Parameters = parameters
+                            RouteParameters = { { "walletId", walletId.ToString() } },
+                            FormParameters = parameters
                         });
                     }
                 case "prune":

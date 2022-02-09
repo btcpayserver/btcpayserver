@@ -705,9 +705,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            var aaa = s.Driver.PageSource;
-            var url = s.Driver.Url;
-            s.Driver.FindElement(By.Id("ViewAppButton")).Click();
+            s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
             Assert.Equal("Pay Invoice",
@@ -730,6 +728,21 @@ namespace BTCPayServer.Tests
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
             Assert.Equal("Pay Invoice",
                 s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            
+            // archive (from details page)
+            var payReqId = s.Driver.Url.Split('/').Last();
+            s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
+            Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);
+            Assert.DoesNotContain("Pay123", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("SearchDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("SearchIncludeArchived")).Click();
+            Assert.Contains("Pay123", s.Driver.PageSource);
+            
+            // unarchive (from list)
+            s.Driver.FindElement(By.Id($"ToggleArchival-{payReqId}")).Click();
+            Assert.Contains("The payment request has been unarchived", s.FindAlertMessage().Text);
+            Assert.Contains("Pay123", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]

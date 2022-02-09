@@ -336,9 +336,9 @@ namespace BTCPayServer.Controllers
                 model.Archived = !model.Archived;
                 await EditPaymentRequest(payReqId, model);
                 TempData[WellKnownTempData.SuccessMessage] = model.Archived
-                    ? "The payment request has been archived and will no longer appear in the  payment request list by default again."
-                    : "The payment request has been unarchived and will appear in the  payment request list by default.";
-                return RedirectToAction("GetPaymentRequests");
+                    ? "The payment request has been archived and will no longer appear in the payment request list by default again."
+                    : "The payment request has been unarchived and will appear in the payment request list by default.";
+                return RedirectToAction("GetPaymentRequests", new { storeId = store.Id });
             }
 
             return NotFound();

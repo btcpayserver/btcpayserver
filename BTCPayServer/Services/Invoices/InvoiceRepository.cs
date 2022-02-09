@@ -651,7 +651,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.Status != null && queryObject.Status.Length > 0)
             {
-                HashSet<string> statusSet = new HashSet<string>();
+                var statusSet = queryObject.Status.ToHashSet();
                 // We make sure here that the old filters still work
                 foreach (var status in queryObject.Status.Select(s => s.ToLowerInvariant()))
                 {

@@ -17,6 +17,8 @@ public interface ICanTrade
      * Get the details about a previous market trade.
      */
     public Task<MarketTradeResult> GetTradeInfo(string tradeId, JObject config);
+
+    public Task<decimal> GetBidForAsset(string toAsset, string fromAsset, JObject config);
 }
 
 

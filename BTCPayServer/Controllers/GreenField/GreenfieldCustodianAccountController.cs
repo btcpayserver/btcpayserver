@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -5,10 +7,12 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Services.Custodian.Client.Exception;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
+using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -45,23 +49,20 @@ namespace BTCPayServer.Controllers.Greenfield
             for (int i = 0; i < r.Length; i++)
             {
                 var custodianAccountData = r[i];
-                var custodianAccount = ToModel(custodianAccountData);
+                var custodianAccountResponse = ToModelWithAssets(custodianAccountData);
 
                 if (assetBalances)
                 {
-                    var custodianCode = custodianAccount.CustodianCode;
+                    var custodianCode = custodianAccountResponse.CustodianCode;
                     var custodian = _custodianRegistry.getAll()[custodianCode];
-                    var balances = await custodian.GetAssetBalances(custodianAccount.Config);
-                    custodianAccount.AssetBalances = balances;
+                    var balances = await custodian.GetAssetBalances(custodianAccountResponse.Config);
+                    custodianAccountResponse.AssetBalances = balances;
                 }
 
-                responses[i] = custodianAccount;
+                responses[i] = custodianAccountResponse;
             }
 
-            //.Select(ToModel).ToList();
-
-
-            return Ok(r);
+            return Ok(responses);
         }
 
 
@@ -83,7 +84,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return NotFound();
             }
 
-            var custodianAccount = ToModel(custodianAccountData);
+            var custodianAccount = ToModelWithAssets(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {
                 // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
@@ -96,9 +97,19 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(custodianAccount);
         }
 
-        private CustodianAccountResponse ToModel(CustodianAccountData custodianAccount)
+        private CustodianAccountResponse ToModelWithAssets(CustodianAccountData custodianAccount)
         {
             var r = new CustodianAccountResponse();
+            r.Id = custodianAccount.Id;
+            r.CustodianCode = custodianAccount.CustodianCode;
+            r.StoreId = custodianAccount.StoreId;
+            r.Config = custodianAccount.GetBlob().config;
+            return r;
+        }
+
+        private CustodianAccountDataClient ToModel(CustodianAccountData custodianAccount)
+        {
+            var r = new CustodianAccountDataClient();
             r.Id = custodianAccount.Id;
             r.CustodianCode = custodianAccount.CustodianCode;
             r.StoreId = custodianAccount.StoreId;
@@ -127,16 +138,41 @@ namespace BTCPayServer.Controllers.Greenfield
             custodianAccount.SetBlob(newBlob);
 
             await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
-            return Ok(custodianAccount);
+            return Ok(ToModel(custodianAccount));
         }
 
+
+        [HttpPut("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
+        [Authorize(Policy = Policies.CanModifyCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> UpdateCustodianAccount(string storeId, string accountId,
+            UpdateCustodianAccountRequest request)
+        {
+            request ??= new UpdateCustodianAccountRequest();
+
+            // TODO this may throw an exception if custodian is not found. How do I make this better?
+            var custodian = _custodianRegistry.getAll()[request.CustodianCode];
+
+            // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
+
+            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            custodianAccount.CustodianCode = custodian.GetCode();
+            custodianAccount.StoreId = storeId;
+
+            var newBlob = new CustodianAccountData.CustodianAccountBlob();
+            newBlob.config = request.Config;
+            custodianAccount.SetBlob(newBlob);
+
+            await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
+            return Ok(ToModel(custodianAccount));
+        }
 
         [HttpDelete("~/api/v1/custodian-account/{id}", Order = 1)]
         [Authorize(Policy = Policies.CanModifyCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> DeleteCustodianAccount(string id)
         {
-            //TODO implement
+            //TODO implement delete
             return BadRequest();
             // if (!string.IsNullOrEmpty(id) && await _custodianAccountRepository.Remove(id, _userManager.GetUserId(User)))
             // {
@@ -148,16 +184,23 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
         [Authorize(Policy = Policies.CanDepositToCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod,
-            CreateCustodianAccountRequest request)
+        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId);
             var custodian = _custodianRegistry.getAll()[custodianAccount.Result.CustodianCode];
+            var config = custodianAccount.Result.GetBlob().config;
 
             if (custodian is ICanDeposit depositableCustodian)
             {
-                var result = depositableCustodian.GetDepositAddress(paymentMethod);
-                return Ok(result);
+                try
+                {
+                    var result = await depositableCustodian.GetDepositAddress(paymentMethod, config);
+                    return Ok(result);
+                }
+                catch (CustodianApiException exception)
+                {
+                    return this.CreateAPIError(400, "api-exception", exception.Message);
+                }
             }
 
             return this.CreateAPIError(400, "deposit-payment-method-not-supported",
@@ -175,7 +218,26 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                var result = tradableCustodian.TradeMarket(request.fromAsset, request.toAsset, request.qty, custodianAccount.GetBlob().config);
+                decimal Qty;
+                if (request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // Qty is a percentage of current holdings
+                    var config = custodianAccount.GetBlob().config;
+                    var balances = custodian.GetAssetBalances(config).Result;
+                    var qtyToSell = balances[request.FromAsset];
+                    var currentPrice =
+                        await tradableCustodian.GetBidForAsset(request.ToAsset, request.FromAsset, config);
+                    Qty = qtyToSell / currentPrice;
+                }
+                else
+                {
+                    // Qty is an exact amount
+                    Qty = Decimal.Parse(request.Qty, CultureInfo.InvariantCulture);
+                    // TODO better error handling
+                }
+
+                var result = await tradableCustodian.TradeMarket(request.FromAsset, request.ToAsset, Qty,
+                    custodianAccount.GetBlob().config);
                 return Ok(result);
             }
 
@@ -201,13 +263,40 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Fetching past trade info on \"{custodian.GetName()}\" is not supported.");
         }
 
-        // TODO withdraw endpoint
+
+        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdraw")]
+        [Authorize(Policy = Policies.CanTradeCustodianAccount,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> Withdraw(string storeId, string accountId,
+            WithdrawRequestData request)
+        {
+            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
+
+            if (custodian is ICanWithdraw withdrawableCustodian)
+            {
+                var withdrawResult = await withdrawableCustodian.Withdraw(request.Asset, request.Qty, custodianAccount.GetBlob().config);
+                var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    withdrawResult.WithdrawalId, accountId, custodian.GetCode());
+                return Ok(result);
+            }
+
+            return this.CreateAPIError(400, "withdrawals-not-supported",
+                $"Withdrawals are not supported for \"{custodian.GetName()}\".");
+        }
     }
+
 
     public class TradeRequestData
     {
-        public string fromAsset { set; get; }
-        public string toAsset { set; get; }
-        public decimal qty { set; get; }
+        public string FromAsset { set; get; }
+        public string ToAsset { set; get; }
+        public string Qty { set; get; }
+    }
+
+    public class WithdrawRequestData
+    {
+        public string Asset { set; get; }
+        public decimal Qty { set; get; }
     }
 }

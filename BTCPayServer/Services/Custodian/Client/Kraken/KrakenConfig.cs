@@ -2,6 +2,8 @@ namespace BTCPayServer.Services.Custodian.Client.Kraken;
 
 public class KrakenConfig
 {
-    public string apiKey { get; set; }
-    public string privateKey { get; set; }
+    public string ApiKey { get; set; }
+    public string PrivateKey { get; set; }
+    
+    public string WithdrawToAddressName { get; set; }
 }

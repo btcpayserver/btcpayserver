@@ -1,8 +1,11 @@
+using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Custodian.Client;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Custodian;
 
 public interface ICanWithdraw
 {
-    public WithdrawResultData withdraw(string paymentMethod, decimal amount, WithdrawalTarget target);
+    public Task<WithdrawResult> Withdraw(string asset, decimal amount, JObject config);
 }

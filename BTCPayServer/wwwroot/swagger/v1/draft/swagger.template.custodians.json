@@ -150,64 +150,103 @@
                     "403": {
                         "description": "If you are authenticated but forbidden to view the store's custodian accounts"
                     }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Register a custodial account with a store.",
+                "description": "Register a custodial account with a store.",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustodianAccountData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
                 },
-                "post": {
-                    "tags": [
-                        "Store Custodian Account"
-                    ],
-                    "summary": "Register a custodial account with a store.",
-                    "description": "Register a custodial account with a store.",
-                    "requestBody": {
-                        "x-name": "request",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new custodian account",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/CustodianAccountData"
                                 }
                             }
-                        },
-                        "required": true,
-                        "x-position": 1
+                        }
                     },
-                    "responses": {
-                        "200": {
-                            "description": "Information about the new custodian account",
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/CustodianAccountData"
-                                    }
+                    "400": {
+                        "TODO": true
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new custodian account"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifycustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Update a custodial account",
+                "description": "Update a custodial account",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustodianAccountData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated custodian account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianAccountData"
                                 }
                             }
-                        },
-                        "400": {
-                            "TODO": true
-                        },
-                        "403": {
-                            "description": "If you are authenticated but forbidden to add new custodian account"
                         }
                     },
-                    "security": [
-                        {
-                            "API Key": [
-                                "btcpay.store.canviewcustodianaccounts"
-                            ],
-                            "Basic": []
-                        }
-                    ]
+                    "400": {
+                        "TODO": true
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify new custodian account"
+                    }
                 },
-                "put": {
-                    "tags": [
-                        "Store Custodian Account"
-                    ],
-                    "summary": "Update a store custodian account"
-                },
-                "delete": {
-                    "tags": [
-                        "Store Custodian Account"
-                    ],
-                    "summary": "Delete a store custodian account"
-                }
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifycustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Delete a store custodian account"
             }
         },
         "/api/v1/store/{storeId}/custodian-accounts/{accountId}": {
@@ -535,66 +574,6 @@
                                 "type": "array",
                                 "description": "A list of tradeable asset pairs, or NULL if the custodian cannot trade/convert assets. if thr asset pair contains fiat, fiat is always put last. If both assets are a cyrptocode or both are fiat, the pair is written alphabetically. Always in uppercase. Example: [\"BTC/EUR\",\"BTC/USD\", \"EUR/USD\", \"BTC/ETH\",...]",
                                 "nullable": true
-                            },
-                            "supportsTaprootDeposits": {
-                                "type": "boolean",
-                                "description": "The custodian accepts deposits via taproot addresses.",
-                                "nullable": false
-                            },
-                            "supportsTaprootWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals to taproot addresses.",
-                                "nullable": false
-                            },
-                            "supportsSegwitDeposits": {
-                                "type": "boolean",
-                                "description": "The custodian accepts deposits via segwit addresses.",
-                                "nullable": false
-                            },
-                            "supportsSegwitWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals to segwit addresses.",
-                                "nullable": false
-                            },
-                            "supportsLightningDeposits": {
-                                "type": "boolean",
-                                "description": "The custodian accepts deposits via lightning network.",
-                                "nullable": false
-                            },
-                            "supportsLightningWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals via lightning network.",
-                                "nullable": false
-                            },
-                            "supportsLNURLPay": {
-                                "type": "boolean",
-                                "description": "The custodian accepts deposits via LNURL-Pay.",
-                                "nullable": false
-                            },
-                            "supportsLNURLWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals via LNURL-Withdraw.",
-                                "nullable": false
-                            },
-                            "supportsNonInteractiveWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals without requiring user intervention (like clicking on a link in an email).",
-                                "nullable": false
-                            },
-                            "supportsWithdrawalsToNewAddresses": {
-                                "type": "boolean",
-                                "description": "The custodian accepts withdrawals to an address that is not (yet) on a previously defined whitelist. Some exchanges only allow you to withdraw to one or more addresses that you need to enter beforehand.",
-                                "nullable": false
-                            },
-                            "hasWebhookForDeposits": {
-                                "type": "boolean",
-                                "description": "The custodian can send a webhook when a deposit is made. This way BTCPay Server does not need to poll.",
-                                "nullable": false
-                            },
-                            "hasWebhookForWithdrawals": {
-                                "type": "boolean",
-                                "description": "The custodian can send a webhook when a withdrawal is made. This way BTCPay Server does not need to poll.",
-                                "nullable": false
                             }
                         }
                     }
@@ -769,17 +748,11 @@
                         "type": "number",
                         "description": "The qty to withdraw.",
                         "required": true
-                    },
-                    "address": {
-                        "type": "string",
-                        "description": "The address to withdraw to",
-                        "required": true
                     }
                 },
                 "example": {
                     "asset": "BTC",
-                    "qty": 0.123456,
-                    "address": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    "qty": 0.123456
                 }
             },
             "WithdrawalResultData": {
@@ -846,10 +819,10 @@
                         "description": "The quantity changed of the asset. Can be positive or negative.",
                         "nullable": false
                     },
-                    "comment": {
+                    "type": {
                         "type": "string",
-                        "description": "An optional message.",
-                        "nullable": true
+                        "description": "0 = trade, 1 = fee",
+                        "nullable": false
                     }
                 },
                 "example": {

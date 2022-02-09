@@ -669,6 +669,11 @@ namespace BTCPayServer.Services.Invoices
                         statusSet.Add("complete");
                         statusSet.Add("confirmed");
                     }
+                    if (status == "complete")
+                    {
+                        statusSet.Add("settled");
+                        statusSet.Add("confirmed");
+                    }
                 }
                 query = query.Where(i => statusSet.Contains(i.Status));
             }

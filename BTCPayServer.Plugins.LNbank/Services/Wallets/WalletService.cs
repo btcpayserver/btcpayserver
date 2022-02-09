@@ -88,13 +88,13 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
             return await FilterWallets(dbContext.Wallets.AsQueryable(), walletsQuery).FirstOrDefaultAsync();
         }
 
-        public async Task<Transaction> Receive(Wallet wallet, long amount, string description) =>
-            await Receive(wallet, amount, description, null, LightningInvoiceCreateRequest.ExpiryDefault);
+        public async Task<Transaction> Receive(Wallet wallet, long amount, string description, bool privateRouteHints) =>
+            await Receive(wallet, amount, description, null, privateRouteHints, LightningInvoiceCreateRequest.ExpiryDefault);
         
-        public async Task<Transaction> Receive(Wallet wallet, long amount, uint256 description) =>
-            await Receive(wallet, amount, null, description, LightningInvoiceCreateRequest.ExpiryDefault);
+        public async Task<Transaction> Receive(Wallet wallet, long amount, uint256 descriptionHash, bool privateRouteHints) =>
+            await Receive(wallet, amount, null, descriptionHash, privateRouteHints, LightningInvoiceCreateRequest.ExpiryDefault);
 
-        private async Task<Transaction> Receive(Wallet wallet, long amount, string description, uint256 descriptionHash, TimeSpan expiry)
+        private async Task<Transaction> Receive(Wallet wallet, long amount, string description, uint256 descriptionHash, bool privateRouteHints, TimeSpan expiry)
         {
             await using var dbContext = _dbContextFactory.CreateContext();
             if (amount <= 0) throw new ArgumentException(nameof(amount));
@@ -104,7 +104,8 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 Amount = amount,
                 Description = description,
                 DescriptionHash = descriptionHash,
-                Expiry = expiry
+                Expiry = expiry,
+                PrivateRouteHints = privateRouteHints
             });
 
             var entry = await dbContext.Transactions.AddAsync(new Transaction
@@ -153,7 +154,7 @@ namespace BTCPayServer.Plugins.LNbank.Services.Wallets
                 }
                 if (internalReceivingTransaction.IsPaid)
                 {
-                    throw new Exception($"Payment request has already been paid.");
+                    throw new Exception("Payment request has already been paid.");
                 }
             }
             else

@@ -25,6 +25,9 @@ public class ReceiveModel : BasePageModel
     [Required]
     [Range(1, 2100000000000)]
     public long Amount { get; set; }
+    [BindProperty]
+    [DisplayName("Add routing hints for private channels")]
+    public bool PrivateRouteHints { get; set; }
     public string ErrorMessage { get; set; }
 
     public ReceiveModel(
@@ -58,7 +61,7 @@ public class ReceiveModel : BasePageModel
         try
         {
             var amount = LightMoney.Satoshis(Amount).MilliSatoshi;
-            var transaction = await WalletService.Receive(Wallet, amount, Description);
+            var transaction = await WalletService.Receive(Wallet, amount, Description, PrivateRouteHints);
             var transactionId = transaction.TransactionId;
             return RedirectToPage("/Transactions/Details", new { walletId, transactionId });
         }

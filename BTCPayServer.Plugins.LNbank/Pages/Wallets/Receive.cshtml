@@ -40,6 +40,10 @@
                 <input asp-for="Amount" class="form-control text-end hide-number-spin" type="number" style="width:15ch;" required />
                 <span asp-validation-for="Amount" class="text-danger"></span>
             </div>
+            <div class="form-group my-4 d-flex align-items-center">
+                <input asp-for="PrivateRouteHints" type="checkbox" class="btcpay-toggle me-2"/>
+                <label asp-for="PrivateRouteHints" class="form-label mb-0"></label>
+            </div>
             <div class="form-group">
                 <input type="submit" value="Create invoice" class="btn btn-primary" id="LNbank-CreateInvoice" />
             </div>

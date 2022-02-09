@@ -18,5 +18,6 @@ namespace BTCPayServer.Plugins.LNbank.Services
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public TimeSpan Expiry { get; set; } = ExpiryDefault;
+        public bool PrivateRouteHints { get; set; }
     }
 }

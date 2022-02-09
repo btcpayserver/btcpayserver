@@ -33,17 +33,16 @@ namespace BTCPayServer.Plugins.LNbank.Controllers.API
         [HttpPost("invoice")]
         public async Task<ActionResult<LightningInvoiceData>> CreateLightningInvoice(LightningInvoiceCreateRequest req)
         {
-
             if (Wallet == null) return NotFound();
 
             Transaction transaction;
             if (req.Description is null)
             {
-                transaction = await _walletService.Receive(Wallet, req.Amount, req.DescriptionHash);
+                transaction = await _walletService.Receive(Wallet, req.Amount, req.DescriptionHash, req.PrivateRouteHints);
             }
             else
             {
-                transaction = await _walletService.Receive(Wallet, req.Amount, req.Description);
+                transaction = await _walletService.Receive(Wallet, req.Amount, req.Description, req.PrivateRouteHints);
             }
           
             var data = ToLightningInvoiceData(transaction);

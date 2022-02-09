@@ -26,7 +26,8 @@ namespace BTCPayServer.Plugins.LNbank.Services
             {
                 Amount = req.Amount,
                 Description = req.Description,
-                Expiry = req.Expiry
+                Expiry = req.Expiry,
+                PrivateRouteHints = req.PrivateRouteHints
             });
         }
         

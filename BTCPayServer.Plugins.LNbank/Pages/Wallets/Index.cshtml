@@ -27,30 +27,27 @@
 
             <a asp-page="./Create" class="text-secondary d-inline-flex align-items-center ps-3" id="LNbank-CreateWallet">
                 Create a wallet
-                <svg role="img" class="ms-1"><use href="/Resources/img/icon-sprite.svg#wallet"></use></svg>
             </a>
         </div>
         @if (Model.SelectedWallet != null)
         {
             <div class="col-12 col-xl-9">
-                <header class="flex-wrap mb-0">
-                    <div class="flex-grow-1 d-flex align-items-center mb-3">
-                        <h3 class="d-inline-block mb-0 me-2">@Model.SelectedWallet.Name</h3>
-                        <a asp-page="./Details" asp-route-walletId="@Model.SelectedWallet.WalletId" class="text-secondary d-inline-flex align-items-center mx-1" id="LNbank-WalletDetails">
-                            <svg role="img"><use href="/Resources/img/icon-sprite.svg#info"></use></svg>
-                        </a>
-                        <h4 class="d-inline-flex ms-auto mb-0 me-2">
-                            <span class="badge bg-info" style="padding:.75rem;" id="LNbank-WalletBalance">@Model.SelectedWallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats</span>
-                        </h4>
+                <header class="d-grid d-sm-flex align-items-center justify-content-between mb-0">
+                    <div class="mb-3">
+                        <h3 class="mb-1">@Model.SelectedWallet.Name</h3>
+                        <div class="text-muted fw-semibold" id="LNbank-WalletBalance">
+                            @Model.SelectedWallet.Balance.ToUnit(LightMoneyUnit.Satoshi) sats
+                        </div>
                     </div>
-                    <div class="d-flex align-items-stretch mb-3">
-                        <a asp-page="./Send" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center me-2" id="LNbank-WalletSend">
-                            <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#send"></use></svg>
+                    <div class="d-flex gap-3 align-items-stretch mb-3">
+                        <a asp-page="./Send" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center" id="LNbank-WalletSend">
                             Send
                         </a>
                         <a asp-page="./Receive" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-primary d-inline-flex align-items-center" id="LNbank-WalletReceive">
-                            <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#receive"></use></svg>
                             Receive
+                        </a>
+                        <a asp-page="./Details" asp-route-walletId="@Model.SelectedWallet.WalletId" class="btn btn-secondary d-inline-flex align-items-center" id="LNbank-WalletSettings">
+                            @await Component.InvokeAsync("Icon", new { symbol = "settings" })
                         </a>
                     </div>
                 </header>
@@ -106,7 +103,7 @@
                 }
                 else
                 {
-                    <p id="LNbank-WalletTransactions">There are no transactions, yet.</p>
+                    <p id="LNbank-WalletTransactions" class="text-secondary">There are no transactions yet.</p>
                 }
             </div>
         }
@@ -114,10 +111,9 @@
 }
 else
 {
-    <p>You don't have a wallet, yet.</p>
+    <p class="text-secondary">You don't have a wallet yet.</p>
 
     <a asp-page="./Create" class="btn btn-primary d-inline-flex align-items-center">
-        <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#wallet"></use></svg>
         Create a wallet
     </a>
 }

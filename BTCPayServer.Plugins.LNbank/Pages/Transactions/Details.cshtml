@@ -11,7 +11,6 @@
     <h2 id="LNbank-TransactionDescription">@ViewData["Title"]</h2>
     <div>
         <a asp-page="./Edit" asp-route-walletId="@Model.WalletId" asp-route-transactionId="@Model.Transaction.TransactionId" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center mx-1" id="LNbank-EditTransaction">
-            <svg role="img" class="me-1"><use href="/Resources/img/icon-sprite.svg#edit"></use></svg>
             Edit
         </a>
     </div>
@@ -50,7 +49,7 @@
         {
             <div class="mt-4">
                 <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Model.Transaction.PaymentRequest" id="LNbank-CopyPaymentRequest">Copy payment request</button>
-                <button class="btn btn-primary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })" id="LNbank-CopyShareUrl">Copy public share URL</button>
+                <button class="btn btn-secondary me-2 mb-2" type="button" data-clipboard="@Url.PageLink("/Transactions/Share", null, new { transactionId = Model.Transaction.TransactionId })" id="LNbank-CopyShareUrl">Copy public share URL</button>
             </div>
             
             <div class="qrcode my-4">

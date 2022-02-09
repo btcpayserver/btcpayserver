@@ -65,7 +65,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no transactions, yet.", s.Driver.FindElement(By.Id("LNbank-WalletTransactions")).Text);
             Assert.Single(s.Driver.FindElements(By.CssSelector("#LNbank-Wallets a")));
             s.Driver.FindElement(By.CssSelector("#LNbank-Wallets a")).Click();
-            s.Driver.FindElement(By.Id("LNbank-WalletDetails")).Click();
+            s.Driver.FindElement(By.Id("LNbank-WalletSettings")).Click();
             Assert.Contains(walletName, s.Driver.FindElement(By.Id("LNbank-WalletName")).Text);
             var walletId = s.Driver.FindElement(By.Id("LNbank-WalletId")).Text;
             s.Driver.FindElement(By.Id("LNbank-Back")).Click();

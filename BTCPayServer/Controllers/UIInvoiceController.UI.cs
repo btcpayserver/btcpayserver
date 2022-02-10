@@ -451,8 +451,8 @@ namespace BTCPayServer.Controllers
                     case "cpfp":
                         if (selectedItems.Length == 0)
                             return NotSupported("No invoice has been selected");
-                        var network = _NetworkProvider.BTC;
-                        var explorer = _ExplorerClients.GetExplorerClient(_NetworkProvider.BTC);
+                        var network = _NetworkProvider.DefaultNetwork;
+                        var explorer = _ExplorerClients.GetExplorerClient(network);
                         IActionResult NotSupported(string err)
                         {
                             TempData[WellKnownTempData.ErrorMessage] = err;

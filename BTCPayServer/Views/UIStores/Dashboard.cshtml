@@ -4,7 +4,7 @@
 @{
 	ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
 	var isReady = Model.WalletEnabled || Model.LightningEnabled;
-	var defaultCryptoCode = (networkProvider.BTC ?? networkProvider.GetAll().First()).CryptoCode;
+	var defaultCryptoCode = networkProvider.DefaultNetwork.CryptoCode;
 }
 
 <partial name="_StatusMessage" />

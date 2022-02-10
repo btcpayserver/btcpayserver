@@ -93,6 +93,7 @@ namespace BTCPayServer
         }
 
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
+        public BTCPayNetworkBase DefaultNetwork => BTC ?? GetAll().First();
 
         public void Add(BTCPayNetwork network)
         {

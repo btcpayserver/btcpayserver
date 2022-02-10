@@ -151,9 +151,6 @@ namespace BTCPayServer.Controllers
             
             var vm = new StoreDashboardViewModel
             {
-#if ALTCOINS
-                AltcoinsBuild = true,
-#endif
                 WalletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled),
                 LightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled),
                 StoreId = CurrentStore.Id,

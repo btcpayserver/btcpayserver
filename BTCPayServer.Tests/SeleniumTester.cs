@@ -228,7 +228,10 @@ namespace BTCPayServer.Tests
         /// <param name="derivationScheme"></param>
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
-            GoToWalletSettings(cryptoCode);
+            if (!Driver.PageSource.Contains($"Setup {cryptoCode} Wallet"))
+            {
+                GoToWalletSettings(cryptoCode);
+            }
 
             Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
             Driver.FindElement(By.Id("ImportXpubLink")).Click();
@@ -251,10 +254,9 @@ namespace BTCPayServer.Tests
         public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
         {
             cryptoCode ??= "BTC";
-            Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
-            if (Driver.PageSource.Contains("id=\"SetupLightningNodeLink\""))
+            if (!Driver.PageSource.Contains("Connect to a Lightning node"))
             {
-                Driver.FindElement(By.Id("SetupLightningNodeLink")).Click();
+                GoToLightningSettings();
             }
 
             var connectionString = connectionType switch

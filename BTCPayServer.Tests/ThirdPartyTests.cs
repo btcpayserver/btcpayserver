@@ -191,7 +191,8 @@ namespace BTCPayServer.Tests
         private async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
         {
             var uri = new Uri(url);
-
+            int retryLeft = 3;
+            retry:
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -200,11 +201,6 @@ namespace BTCPayServer.Tests
                 request.Headers.TryAddWithoutValidation("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
                 var response = await httpClient.SendAsync(request);
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable) // Temporary issue
-                {
-                    TestLogs.LogInformation($"Unavailable: {url} ({file})");
-                    return;
-                }
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 if (uri.Fragment.Length != 0)
                 {
@@ -222,8 +218,13 @@ namespace BTCPayServer.Tests
 
                 throw;
             }
+            catch (Exception) when (retryLeft > 0)
+            {
+                goto retry;
+            }
             catch (Exception ex)
             {
+                retryLeft--;
                 var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 

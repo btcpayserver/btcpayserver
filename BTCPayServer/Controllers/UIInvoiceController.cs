@@ -42,6 +42,8 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
         private readonly LanguageService _languageService;
+        private readonly ExplorerClientProvider _ExplorerClients;
+        private readonly UIWalletsController _walletsController;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -58,7 +60,9 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory dbContextFactory,
             PullPaymentHostedService paymentHostedService,
             WebhookSender webhookNotificationManager,
-            LanguageService languageService)
+            LanguageService languageService,
+            ExplorerClientProvider explorerClients,
+            UIWalletsController walletsController)
         {
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
@@ -72,6 +76,8 @@ namespace BTCPayServer.Controllers
             _paymentHostedService = paymentHostedService;
             WebhookNotificationManager = webhookNotificationManager;
             _languageService = languageService;
+            this._ExplorerClients = explorerClients;
+            _walletsController = walletsController;
         }
 
 

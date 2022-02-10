@@ -70,6 +70,115 @@ namespace BTCPayServer.Controllers
             return psbt;
         }
 
+        [HttpPost("{walletId}/cpfp")]
+        public async Task<IActionResult> WalletCPFP([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string[] outpoints, string[] transactionHashes, string returnUrl)
+        {
+            outpoints ??= Array.Empty<string>();
+            transactionHashes ??= Array.Empty<string>();
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            var explorer = ExplorerClientProvider.GetExplorerClient(network);
+            var fr = _feeRateProvider.CreateFeeProvider(network);
+
+            var targetFeeRate = await fr.GetFeeRateAsync(1);
+            // Since we don't know the actual fee rate paid by a tx from NBX
+            // we just assume that it is 20 blocks
+            var assumedFeeRate = await fr.GetFeeRateAsync(20);
+
+            var settings = (this.GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, network.CryptoCode));
+            var derivationScheme = settings.AccountDerivation;
+            if (derivationScheme is null)
+                return NotFound();
+
+            var utxos = await explorer.GetUTXOsAsync(derivationScheme);
+            var outpointsHashet = outpoints.ToHashSet();
+            var transactionHashesSet = transactionHashes.ToHashSet();
+            var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 &&
+                                                                (outpointsHashet.Contains(u.Outpoint.ToString()) ||
+                                                                 transactionHashesSet.Contains(u.Outpoint.Hash.ToString()))).ToArray();
+
+            if (bumpableUTXOs.Length == 0)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "There isn't any UTXO available to bump fee";
+                return Redirect(returnUrl);
+            }
+            Money bumpFee = Money.Zero;
+            foreach (var txid in bumpableUTXOs.Select(u => u.TransactionHash).ToHashSet())
+            {
+                var tx = await explorer.GetTransactionAsync(txid);
+                var vsize = tx.Transaction.GetVirtualSize();
+                var assumedFeePaid = assumedFeeRate.GetFee(vsize);
+                var expectedFeePaid = targetFeeRate.GetFee(vsize);
+                bumpFee += Money.Max(Money.Zero, expectedFeePaid - assumedFeePaid);
+            }
+            var returnAddress = (await explorer.GetUnusedAsync(derivationScheme, NBXplorer.DerivationStrategy.DerivationFeature.Deposit)).Address;
+            TransactionBuilder builder = explorer.Network.NBitcoinNetwork.CreateTransactionBuilder();
+            builder.AddCoins(bumpableUTXOs.Select(utxo => utxo.AsCoin(derivationScheme)));
+            // The fee of the bumped transaction should pay for both, the fee
+            // of the bump transaction and those that are being bumped
+            builder.SendEstimatedFees(targetFeeRate);
+            builder.SendFees(bumpFee);
+            builder.SendAll(returnAddress);
+            var psbt = builder.BuildPSBT(false);
+            psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest()
+            {
+                PSBT = psbt,
+                DerivationScheme = derivationScheme
+            })).PSBT;
+            return View("PostRedirect", new PostRedirectViewModel
+            {
+                AspController = "UIWallets",
+                AspAction = nameof(UIWalletsController.WalletSign),
+                RouteParameters = {
+                    { "walletId", walletId.ToString() },
+                    { "returnUrl", returnUrl }
+                },
+                FormParameters =
+                            {
+                                { "walletId", walletId.ToString() },
+                                { "psbt", psbt.ToHex() }
+                            }
+            });
+        }
+
+        [HttpPost("{walletId}/sign")]
+        public async Task<IActionResult> WalletSign([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletPSBTViewModel vm, string returnUrl = null, string command = null)
+        {
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            vm.SigningContext.PSBT ??= psbt.ToBase64();
+            if (returnUrl is null)
+                returnUrl = Url.Action(nameof(WalletTransactions), new { walletId });
+
+            switch (command)
+            {
+                case "vault":
+                    return ViewVault(walletId, vm.SigningContext);
+                case "seed":
+                    return SignWithSeed(walletId, vm.SigningContext);
+                default:
+                    break;
+            }
+
+            if (await CanUseHotWallet())
+            {
+                var derivationScheme = GetDerivationSchemeSettings(walletId);
+                if (derivationScheme.IsHotWallet)
+                {
+                    var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                            WellknownMetadataKeys.MasterHDKey);
+                    if (extKey != null)
+                    {
+                        return SignWithSeed(walletId,
+                            new SignWithSeedViewModel { SeedOrKey = extKey, SigningContext = vm.SigningContext });
+                    }
+                }
+            }
+            return View("WalletSigningOptions", new WalletSigningOptionsModel(vm.SigningContext, returnUrl));
+        }
+
         [HttpGet("{walletId}/psbt")]
         public async Task<IActionResult> WalletPSBT([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm)
@@ -118,14 +227,12 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
+            vm.PSBT = psbt.ToBase64();
             vm.PSBTHex = psbt.ToHex();
-            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext, nameof(WalletPSBT));
-            if (res != null)
-            {
-                return res;
-            }
             switch (command)
             {
+                case "sign":
+                    return await WalletSign(walletId, vm, nameof(WalletPSBT));
                 case "decode":
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
@@ -407,6 +514,12 @@ namespace BTCPayServer.Controllers
                                 vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
                                 return View(nameof(WalletPSBT), vm);
                             }
+                            else
+                            {
+                                var wallet = _walletProvider.GetWallet(network);
+                                var derivationSettings = GetDerivationSchemeSettings(walletId);
+                                wallet.InvalidateCache(derivationSettings.AccountDerivation);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -418,7 +531,12 @@ namespace BTCPayServer.Controllers
                         {
                             TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash()})";
                         }
-                        return RedirectToWalletTransaction(walletId, transaction);
+                        var returnUrl = this.HttpContext.Request.Query["returnUrl"].FirstOrDefault();
+                        if (returnUrl is not null)
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":
                     return RedirectToWalletPSBT(new WalletPSBTViewModel()
@@ -459,46 +577,6 @@ namespace BTCPayServer.Controllers
             {
                 PSBT = sourcePSBT.ToBase64()
             });
-        }
-
-        private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
-            SigningContextModel signingContext, string actionBack)
-        {
-            signingContext.PSBT = psbt.ToBase64();
-            switch (command)
-            {
-                case "sign":
-                    var routeBack = new Dictionary<string, string>
-                    {
-                        {"action", actionBack }, {"walletId", walletId.ToString()}
-                    };
-                    return View("WalletSigningOptions", new WalletSigningOptionsModel(signingContext, routeBack));
-                case "vault":
-                    return ViewVault(walletId, signingContext);
-                case "seed":
-                    return SignWithSeed(walletId, signingContext);
-                case "nbx-seed":
-                    if (await CanUseHotWallet())
-                    {
-                        var derivationScheme = GetDerivationSchemeSettings(walletId);
-                        if (derivationScheme.IsHotWallet)
-                        {
-                            var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                                .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                                    WellknownMetadataKeys.MasterHDKey);
-                            return SignWithSeed(walletId,
-                                new SignWithSeedViewModel { SeedOrKey = extKey, SigningContext = signingContext });
-                        }
-                    }
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "NBX seed functionality is not available"
-                    });
-                    break;
-            }
-
-            return null;
         }
     }
 }

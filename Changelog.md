@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.4
+
+### Bug fixes:
+
+* Ensure compresed public key is used for SIN generation even if uncompressed key was provided (fix #3432) (#3433) @CherryDT
+* After login, redirect user to the main page even if a root app configured (#3429) @NicolasDorier
+* docker-entrypoint would crash if missing ssh pubkey, but not the private key @NicolasDorier
+* Error messages when starting BTCPay Server where not shown (Fix #3404) @NicolasDorier
+
+### Improvements:
+
+* UI: Use sticky headers for pages with tab navigation. (#3416) @dennisreimann
+* UI: Prevent initial scroll to section nav (#3411) @dennisreimann
+
 ## 1.4.3
 
 ### Bug fixes:

@@ -25,7 +25,6 @@ namespace BTCPayServer.Payments
             CryptoCode = cryptoCode.ToUpperInvariant();
         }
 
-        [Obsolete("Should only be used for legacy stuff")]
         public bool IsBTCOnChain
         {
             get

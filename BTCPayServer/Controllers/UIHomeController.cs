@@ -63,6 +63,12 @@ namespace BTCPayServer.Controllers
             SignInManager = signInManager;
         }
 
+        [HttpGet("home")]
+        public Task<IActionResult> Home()
+        {
+            return Index();
+        }
+
         [Route("")]
         [DomainMappingConstraint]
         public async Task<IActionResult> Index()

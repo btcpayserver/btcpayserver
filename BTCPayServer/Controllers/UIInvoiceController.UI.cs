@@ -15,6 +15,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
@@ -29,6 +30,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
+using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -441,15 +443,59 @@ namespace BTCPayServer.Controllers
                         await _InvoiceRepository.MassArchive(selectedItems);
                         TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} archived.";
                         break;
-                    
+
                     case "unarchive":
                         await _InvoiceRepository.MassArchive(selectedItems, false);
                         TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} unarchived.";
                         break;
+                    case "cpfp":
+                        if (selectedItems.Length == 0)
+                            return NotSupported("No invoice has been selected");
+                        var network = _NetworkProvider.DefaultNetwork;
+                        var explorer = _ExplorerClients.GetExplorerClient(network);
+                        IActionResult NotSupported(string err)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] = err;
+                            return RedirectToAction(nameof(ListInvoices), new { storeId });
+                        }
+                        if (explorer is null)
+                            return NotSupported("This feature is only available to BTC wallets");
+                        if (this.GetCurrentStore().Role != StoreRoles.Owner)
+                            return Forbid();
+                        
+                        var settings = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode));
+                        var derivationScheme = settings.AccountDerivation;
+                        if (derivationScheme is null)
+                            return NotSupported("This feature is only available to BTC wallets");
+                        var bumpableAddresses = (await GetAddresses(selectedItems))
+                                                .Where(p => p.GetPaymentMethodId().IsBTCOnChain)
+                                                .Select(p => p.GetAddress()).ToHashSet();
+                        var utxos = await explorer.GetUTXOsAsync(derivationScheme);
+                        var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 && bumpableAddresses.Contains(u.ScriptPubKey.Hash.ToString())).ToArray();
+                        var parameters = new MultiValueDictionary<string, string>();
+                        foreach (var utxo in bumpableUTXOs)
+                        {
+                            parameters.Add($"outpoints[]", utxo.Outpoint.ToString());
+                        }
+                        return View("PostRedirect", new PostRedirectViewModel
+                        {
+                            AspController = "UIWallets",
+                            AspAction = nameof(UIWalletsController.WalletCPFP),
+                            RouteParameters = {
+                                { "walletId", new WalletId(storeId, network.CryptoCode).ToString() },
+                                { "returnUrl", Url.Action(nameof(ListInvoices), new { storeId }) }
+                            },
+                            FormParameters = parameters,
+                        });
                 }
             }
-
             return RedirectToAction(nameof(ListInvoices), new { storeId });
+        }
+
+        private async Task<AddressInvoiceData[]> GetAddresses(string[] selectedItems)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            return await ctx.AddressInvoices.Where(i => selectedItems.Contains(i.InvoiceDataId)).ToArrayAsync();
         }
 
         [HttpGet("i/{invoiceId}")]

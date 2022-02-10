@@ -151,9 +151,6 @@ namespace BTCPayServer.Controllers
             
             var vm = new StoreDashboardViewModel
             {
-#if ALTCOINS
-                AltcoinsBuild = true,
-#endif
                 WalletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled),
                 LightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled),
                 StoreId = CurrentStore.Id,
@@ -204,8 +201,12 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
-            await _Repo.RemoveStoreUser(storeId, userId);
-            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            if(await _Repo.RemoveStoreUser(storeId, userId))
+                TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Removing this user would result in the store having no owner.";
+            }
             return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 
@@ -777,7 +778,7 @@ namespace BTCPayServer.Controllers
             var tokenRequest = new TokenRequest()
             {
                 Label = model.Label,
-                Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
+                Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey).Compress())
             };
 
             string pairingCode = null;

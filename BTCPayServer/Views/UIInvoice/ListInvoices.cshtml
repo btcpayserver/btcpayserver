@@ -310,11 +310,12 @@
                 Actions
             </button>
             <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive"><i class="fa fa-archive"></i> Archive</button>
+                <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive"><i class="fa fa-archive"></i> Archive</button>
                 @if (Model.IncludeArchived)
                 {
                     <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive"><i class="fa fa-archive"></i> Unarchive</button>
                 }
+				<button id="BumpFee" type="submit" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
             </div>
         </span>
         <span>
@@ -327,10 +328,9 @@
             </div>
         </span>
     </div>
-
+    <div style="clear:both"></div>
     @if (Model.Total > 0)
     {
-        <div style="clear:both"></div>
         <div class="table-responsive">
             <table id="invoices" class="table table-hover">
                 <thead>
@@ -403,11 +403,10 @@
                                 else
                                 {
                                     <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        @invoice.Status.Status.ToModernStatus().ToString() @*  @invoice.Status.ToString().ToLower()  *@
+                                        @invoice.Status.Status.ToModernStatus().ToString()
                                         @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
                                         {
-                                            @String.Format("({0})", @invoice.Status.ExceptionStatus.ToString())
-                                            ;
+                                            @($"({invoice.Status.ExceptionStatus.ToString()})")
                                         }
                                     </span>
                                 }

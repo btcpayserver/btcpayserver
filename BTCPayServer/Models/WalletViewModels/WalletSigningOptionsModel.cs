@@ -6,13 +6,13 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         public WalletSigningOptionsModel(
             SigningContextModel signingContext,
-            IDictionary<string, string> routeDataBack)
+            string returnUrl)
         {
             SigningContext = signingContext;
-            RouteDataBack = routeDataBack;
+            ReturnUrl = returnUrl;
         }
 
         public SigningContextModel SigningContext { get; }
-        public IDictionary<string, string> RouteDataBack { get; }
+        public string ReturnUrl { get; }
     }
 }

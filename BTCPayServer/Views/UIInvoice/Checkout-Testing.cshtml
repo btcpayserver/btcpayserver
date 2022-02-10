@@ -1,4 +1,4 @@
-﻿@model PaymentModel
+@model PaymentModel
 
 <div id="testing">
     <hr class="my-3" />
@@ -13,7 +13,7 @@
                 <div id="test-payment-crypto-code" class="input-group-addon">@Model.CryptoCode</div>
             </div>
         </div>
-        <button class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>
+        <button id="FakePayment" class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>
         <p class="text-muted mt-1">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</p>
     </form>
     <form id="expire-invoice" action="/i/@Model.InvoiceId/expire" method="post" class="mb-1">

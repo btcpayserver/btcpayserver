@@ -92,8 +92,8 @@ namespace BTCPayServer
             return new BTCPayNetworkProvider(this, cryptoCodes);
         }
 
-        [Obsolete("To use only for legacy stuff")]
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
+        public BTCPayNetworkBase DefaultNetwork => BTC ?? GetAll().First();
 
         public void Add(BTCPayNetwork network)
         {

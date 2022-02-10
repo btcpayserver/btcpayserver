@@ -24,6 +24,7 @@ namespace BTCPayServer.Models
             SelectedPaymentMethod = PaymentMethods.First().ToString();
             Archived = data.Archived;
             Title = blob.View.Title;
+            Description = blob.View.Description;
             Amount = blob.Limit;
             Currency = blob.Currency;
             Description = blob.View.Description;

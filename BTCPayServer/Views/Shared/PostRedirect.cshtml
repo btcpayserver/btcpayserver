@@ -1,46 +1,71 @@
-﻿@model PostRedirectViewModel
-@{ 
-    Layout = null;
-
-    var routeData = Context.GetRouteData();
-    var routeParams = new Dictionary<string, string>();
-    if (routeData != null)
-    {
-        routeParams["walletId"] = routeData.Values["walletId"]?.ToString();
-    }
-    var action = Model.FormUrl ?? Url.Action(Model.AspAction, Model.AspController, routeParams);
+@model PostRedirectViewModel
+@{
+	Layout = null;
 }
 
 <html lang="en">
 <head>
-    <partial name="LayoutHead" />
-    <title>Post Redirect</title>
+	<partial name="LayoutHead" />
+	<title>Post Redirect</title>
 </head>
 <body>
-    <form method="post" id="postform" action="@action" rel="noreferrer noopener">
-        @Html.AntiForgeryToken()
-        @foreach (var o in Model.Parameters)
-        {
-            <input type="hidden" name="@o.Key" value="@o.Value"/>
-        }
-        <noscript>
-            <div class="modal-dialog modal-dialog-centered min-vh-100">
-                <div class="modal-content">
-                    <div class="modal-body text-center my-3">
-                        <p>
-                            This redirection page is supposed to be submitted automatically.
-                            <br>
-                            Since you have not enabled JavaScript, please submit manually.
-                        </p>
-                        <button class="btn btn-primary" type="submit">Submit</button>
-                    </div>
-                </div>
-            </div>
-        </noscript>
-    </form>
-    <script type="text/javascript">
-        document.forms.item(0).submit();
-    </script>
-    <partial name="LayoutFoot" />
+	@if (Model.FormUrl is null)
+	{
+		<form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
+			@Html.AntiForgeryToken()
+			@foreach (var o in Model.FormParameters)
+			{
+				foreach (var v in o.Value)
+				{
+					<input type="hidden" name="@o.Key" value="@v" />
+				}
+			}
+			<noscript>
+				<div class="modal-dialog modal-dialog-centered min-vh-100">
+					<div class="modal-content">
+						<div class="modal-body text-center my-3">
+							<p>
+								This redirection page is supposed to be submitted automatically.
+								<br>
+								Since you have not enabled JavaScript, please submit manually.
+							</p>
+							<button class="btn btn-primary" type="submit">Submit</button>
+						</div>
+					</div>
+				</div>
+			</noscript>
+		</form>
+	}
+	else
+	{
+		<form method="post" id="postform" action="@Model.FormUrl" rel="noreferrer noopener">
+			@Html.AntiForgeryToken()
+			@foreach (var o in Model.FormParameters)
+			{
+				foreach (var v in o.Value)
+				{
+					<input type="hidden" name="@o.Key" value="@v" />
+				}
+			}
+			<noscript>
+				<div class="modal-dialog modal-dialog-centered min-vh-100">
+					<div class="modal-content">
+						<div class="modal-body text-center my-3">
+							<p>
+								This redirection page is supposed to be submitted automatically.
+								<br>
+								Since you have not enabled JavaScript, please submit manually.
+							</p>
+							<button class="btn btn-primary" type="submit">Submit</button>
+						</div>
+					</div>
+				</div>
+			</noscript>
+		</form>
+	}
+	<script type="text/javascript">
+		document.forms.item(0).submit();
+	</script>
+	<partial name="LayoutFoot" />
 </body>
 </html>

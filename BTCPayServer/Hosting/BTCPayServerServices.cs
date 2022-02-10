@@ -88,7 +88,8 @@ namespace BTCPayServer.Hosting
 
             services.AddPayJoinServices();
 #if ALTCOINS
-            services.AddMoneroLike();
+            if (configuration.SupportChain("xmr"))
+                services.AddMoneroLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());

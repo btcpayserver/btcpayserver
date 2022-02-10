@@ -111,26 +111,26 @@
                 </div>
             </div>
 
-            <div class="form-group mt-4">
+            <div class="form-group mt-4 d-flex gap-3">
                 <button type="submit" class="btn btn-primary" id="SaveButton">
                     @(string.IsNullOrEmpty(Model.Id) ? "Create" : "Save")
                 </button>
                 @if (!string.IsNullOrEmpty(Model.Id))
                 {
-                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewAppButton">View</a>
+                    <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest">View</a>
                     <a class="btn btn-secondary"
                        target="_blank"
                        asp-action="ListInvoices"
                        asp-controller="UIInvoice"
                        asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-                    <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
+                    <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest">Clone</a>
                     @if (!Model.Archived)
                     {
-                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Archive</a>
+                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest">Archive</a>
                     }
                     else
                     {
-                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id">Unarchive</a>
+                        <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest">Unarchive</a>
                     }
                 }
             </div>

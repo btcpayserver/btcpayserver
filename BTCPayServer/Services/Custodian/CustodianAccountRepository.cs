@@ -33,6 +33,20 @@ namespace BTCPayServer.Services.Custodian.Client
             return entity;
         }
 
+        public async Task<bool> Remove(string id, string storeId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.CustodianAccount,
+                    data => data.Id == id && data.StoreId == storeId);
+                if (key == null)
+                    return false;
+                context.CustodianAccount.Remove(key);
+                await context.SaveChangesAsync();
+            }
+            return true;
+        }
+
         public async Task<CustodianAccountData[]> FindByStoreId(string storeId,
             CancellationToken cancellationToken = default)
         {

@@ -167,18 +167,18 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(custodianAccount));
         }
 
-        [HttpDelete("~/api/v1/custodian-account/{id}", Order = 1)]
+        [HttpDelete("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
         [Authorize(Policy = Policies.CanModifyCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> DeleteCustodianAccount(string id)
+        public async Task<IActionResult> DeleteCustodianAccount(string storeId, string accountId)
         {
-            //TODO implement delete
-            return BadRequest();
-            // if (!string.IsNullOrEmpty(id) && await _custodianAccountRepository.Remove(id, _userManager.GetUserId(User)))
-            // {
-            //     return Ok();
-            // }
-            // return this.CreateAPIError("custodian-account-not-found", "This custodian account does not exist");
+            var isDeleted = await _custodianAccountRepository.Remove(accountId, storeId);
+            if (isDeleted)
+            {
+                return Ok();
+            }
+
+            return NotFound();
         }
 
         [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
@@ -275,7 +275,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var withdrawResult = await withdrawableCustodian.Withdraw(request.Asset, request.Qty, custodianAccount.GetBlob().config);
+                var withdrawResult =
+                    await withdrawableCustodian.Withdraw(request.Asset, request.Qty, custodianAccount.GetBlob().config);
                 var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
                     withdrawResult.WithdrawalId, accountId, custodian.GetCode());
                 return Ok(result);

@@ -492,6 +492,14 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.APPDATA"] = appData;
         }
 
+        public static bool SupportChain(this IConfiguration conf, string cryptoCode)
+        {
+            var supportedChains = conf.GetOrDefault<string>("chains", "btc")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.ToUpperInvariant()).ToHashSet();
+            return supportedChains.Contains(cryptoCode.ToUpperInvariant());
+        }
+
         public static IActionResult RedirectToRecoverySeedBackup(this Controller controller, RecoverySeedBackupViewModel vm)
         {
             var redirectVm = new PostRedirectViewModel

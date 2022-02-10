@@ -1,3 +1,4 @@
+#nullable enable
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,22 +27,20 @@ public class PermissionTagHelper : TagHelper
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
         if (string.IsNullOrEmpty(Permission))
-        {
             return;
-        }
+        if (_httpContextAccessor.HttpContext is null)
+            return;
 
         var key = $"{Permission}_{PermissionResource}";
-        if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key, out var cachedResult))
+        if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key, out var o) ||
+            o is not AuthorizationResult res)
         {
-            var result = await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext.User,
+            res = await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext.User,
                 PermissionResource,
                 Permission);
-
-            cachedResult = result;
-            _httpContextAccessor.HttpContext.Items.Add(key, result);
-
+            _httpContextAccessor.HttpContext.Items.Add(key, res);
         }
-        if (!((AuthorizationResult)cachedResult).Succeeded)
+        if (!res.Succeeded)
         {
             output.SuppressOutput();
         }

@@ -498,14 +498,14 @@ namespace BTCPayServer
             {
                 AspController = "UIHome",
                 AspAction = "RecoverySeedBackup",
-                Parameters =
+                FormParameters =
                 {
-                    new KeyValuePair<string, string>("cryptoCode", vm.CryptoCode),
-                    new KeyValuePair<string, string>("mnemonic", vm.Mnemonic),
-                    new KeyValuePair<string, string>("passphrase", vm.Passphrase),
-                    new KeyValuePair<string, string>("isStored", vm.IsStored ? "true" : "false"),
-                    new KeyValuePair<string, string>("requireConfirm", vm.RequireConfirm ? "true" : "false"),
-                    new KeyValuePair<string, string>("returnUrl", vm.ReturnUrl)
+                    { "cryptoCode", vm.CryptoCode },
+                    { "mnemonic", vm.Mnemonic },
+                    { "passphrase", vm.Passphrase },
+                    { "isStored", vm.IsStored ? "true" : "false" },
+                    { "requireConfirm", vm.RequireConfirm ? "true" : "false" },
+                    { "returnUrl", vm.ReturnUrl }
                 }
             };
             return controller.View("PostRedirect", redirectVm);

@@ -8,10 +8,10 @@
 }
 
 @section Navbar {
-    <a asp-all-route-data="Model.RouteDataBack">
+    <a href="@Model.ReturnUrl">
         <vc:icon symbol="back" />
     </a>
-    <a asp-all-route-data="Model.RouteDataBack" class="cancel">
+    <a href="@Model.ReturnUrl" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }
@@ -21,7 +21,7 @@
     <p class="lead text-secondary mt-3">You can sign the transaction using one of the following methods.</p>
 </header>
 
-<form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId">
+<form method="post" asp-action="WalletSign" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl">
     <partial name="SigningContext" for="SigningContext" />
 
     @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).VaultSupported)

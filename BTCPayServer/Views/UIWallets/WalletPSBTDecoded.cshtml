@@ -1,12 +1,13 @@
-﻿@model WalletPSBTViewModel
+@model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var isReady = !Model.HasErrors;
-    var isSignable = !isReady && Model.NBXSeedAvailable;
-    var needsExport = !isSignable && !isReady;
-    Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	var isReady = !Model.HasErrors;
+	var isSignable = !isReady && Model.NBXSeedAvailable;
+	var needsExport = !isSignable && !isReady;
+	Layout = "_LayoutWizard";
+	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
+	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section PageHeadContent {
@@ -37,9 +38,12 @@
 }
 
 @section Navbar {
-    <a asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")" class="cancel">
+	@if (returnUrl is string)
+	{
+    <a href="@returnUrl" class="cancel">
         <vc:icon symbol="close" />
     </a>
+	}
 }
 
 <header class="text-center mb-3">
@@ -56,13 +60,13 @@
         <input type="hidden" asp-for="PSBT"/>
         <input type="hidden" asp-for="FileName"/>
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
-            <button type="submit" id="SignTransaction" name="command" value="nbx-seed" class="btn btn-primary">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
         </div>
     </form>
 } 
 else if (isReady)
 {
-    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl" class="my-5">
         <input type="hidden" asp-for="SigningKey" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
@@ -75,7 +79,7 @@ else if (isReady)
             }
             else
             {
-                <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast transaction</button>
+                <button id="BroadcastTransaction" type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast transaction</button>
             }
         </div>
     </form>

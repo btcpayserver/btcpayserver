@@ -13,6 +13,5 @@ namespace BTCPayServer
                 .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == cryptoCode);
             return paymentMethod;
         }
-
     }
 }

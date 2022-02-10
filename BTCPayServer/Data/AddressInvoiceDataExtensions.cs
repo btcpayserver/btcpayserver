@@ -20,7 +20,7 @@ namespace BTCPayServer.Data
             addressInvoiceData.Address = address + "#" + paymentMethodId.ToString();
             return addressInvoiceData;
         }
-        public static PaymentMethodId GetpaymentMethodId(this AddressInvoiceData addressInvoiceData)
+        public static PaymentMethodId GetPaymentMethodId(this AddressInvoiceData addressInvoiceData)
         {
             if (addressInvoiceData.Address == null)
                 return null;

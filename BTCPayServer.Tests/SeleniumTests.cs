@@ -64,6 +64,48 @@ namespace BTCPayServer.Tests
             Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
             s.Driver.Quit();
         }
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseCPFP()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GenerateWallet(isHotWallet: true);
+            await s.FundStoreWallet();
+            for (int i = 0; i < 3; i++)
+            {
+                s.CreateInvoice();
+                s.GoToInvoiceCheckout();
+                s.PayInvoice();
+                s.GoToInvoices(s.StoreId);
+            }
+            // Let's CPFP from the invoices page
+            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("BumpFee")).Click();
+            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
+            s.FindAlertMessage();
+            Assert.Contains($"/stores/{s.StoreId}/invoices", s.Driver.Url);
+
+            // CPFP again should fail because all invoices got bumped
+            s.GoToInvoices();
+            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("BumpFee")).Click();
+            var err = s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+            Assert.Contains("any UTXO available", err.Text);
+            Assert.Contains($"/stores/{s.StoreId}/invoices", s.Driver.Url);
+
+            // But we should be able to bump from the wallet's page
+            s.GoToWallet(navPages: WalletsNavPages.Transactions);
+            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("BumpFee")).Click();
+            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
+            s.FindAlertMessage();
+            Assert.Contains($"/wallets/{s.WalletId}", s.Driver.Url);
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
@@ -932,7 +974,7 @@ namespace BTCPayServer.Tests
             {
                 var cryptoCode = "BTC";
                 s.CreateNewStore();
-                s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", privkeys: isHotwallet);
+                s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", isHotWallet: isHotwallet);
                 s.GoToWalletSettings(cryptoCode);
                 if (isHotwallet)
                     Assert.Contains("View seed", s.Driver.PageSource);

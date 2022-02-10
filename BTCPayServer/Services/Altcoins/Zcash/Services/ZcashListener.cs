@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
@@ -29,7 +30,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private readonly ILogger<ZcashListener> _logger;
         private readonly PaymentService _paymentService;
         private readonly CompositeDisposable leases = new CompositeDisposable();
-        private readonly Queue<Func<CancellationToken, Task>> taskQueue = new Queue<Func<CancellationToken, Task>>();
+        private readonly Channel<Func<Task>> _requests = Channel.CreateUnbounded<Func<Task>>();
         private CancellationTokenSource _Cts;
 
         public ZcashListener(InvoiceRepository invoiceRepository,
@@ -76,24 +77,14 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
 
         private async Task WorkThroughQueue(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
-            {
-                if (taskQueue.TryDequeue(out var t))
-                {
-                    try
-                    {
-
-                        await t.Invoke(token);
-                    }
-                    catch (Exception e)
-                    {
-
-                        _logger.LogError($"error with queue item {e}");
-                    }
+            while (await _requests.Reader.WaitToReadAsync(token) && _requests.Reader.TryRead(out var action)) {
+                token.ThrowIfCancellationRequested();
+                try {
+                    await action.Invoke();
                 }
-                else
+                catch (Exception e)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), token);
+                    _logger.LogError($"error with action item {e}");
                 }
             }
         }
@@ -107,12 +98,16 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
 
             if (!string.IsNullOrEmpty(obj.BlockHash))
             {
-                taskQueue.Enqueue(token => OnNewBlock(obj.CryptoCode));
+                if (!_requests.Writer.TryWrite(() => OnNewBlock(obj.CryptoCode))) {
+                    _logger.LogWarning($"Failed to write new block task to channel");
+                }
             }
 
             if (!string.IsNullOrEmpty(obj.TransactionHash))
             {
-                taskQueue.Enqueue(token => OnTransactionUpdated(obj.CryptoCode, obj.TransactionHash));
+                if (!_requests.Writer.TryWrite(() => OnTransactionUpdated(obj.CryptoCode, obj.TransactionHash))) {
+                    _logger.LogWarning($"Failed to write new tx task to channel");
+                }
             }
         }
 

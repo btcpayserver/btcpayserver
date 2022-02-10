@@ -640,11 +640,7 @@
                     "status": {
                         "nullable": false,
                         "description": "Mark an invoice as completed or invalid.",
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/InvoiceStatusMark"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/InvoiceStatusMark"
                     }
                 }
             },
@@ -716,11 +712,7 @@
                     },
                     "checkout": {
                         "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/CheckoutOptions"
-                            }
-                        ],
+                        "$ref": "#/components/schemas/CheckoutOptions",
                         "description": "Additional settings to customize the checkout flow"
                     }
                 }
@@ -1004,11 +996,7 @@
                 "properties": {
                     "speedPolicy": {
                         "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/SpeedPolicy"
-                            }
-                        ],
+                        "$ref": "#/components/schemas/SpeedPolicy",
                         "description": "This is a risk mitigation parameter for the merchant to configure how they want to fulfill orders depending on the number of block confirmations for the transaction made by the consumer on the selected cryptocurrency"
                     },
                     "paymentMethods": {

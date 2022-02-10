@@ -201,8 +201,12 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
-            await _Repo.RemoveStoreUser(storeId, userId);
-            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            if(await _Repo.RemoveStoreUser(storeId, userId))
+                TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Removing this user would result in the store having no owner.";
+            }
             return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
 

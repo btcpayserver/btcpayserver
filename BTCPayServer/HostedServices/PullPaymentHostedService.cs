@@ -28,6 +28,7 @@ namespace BTCPayServer.HostedServices
         public DateTimeOffset? StartsAt { get; set; }
         public string StoreId { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
         public string CustomCSSLink { get; set; }
@@ -103,6 +104,7 @@ namespace BTCPayServer.HostedServices
             o.SetBlob(new PullPaymentBlob()
             {
                 Name = create.Name ?? string.Empty,
+                Description = create.Description ?? string.Empty,
                 Currency = create.Currency,
                 Limit = create.Amount,
                 Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
@@ -110,7 +112,7 @@ namespace BTCPayServer.HostedServices
                 View = new PullPaymentBlob.PullPaymentView()
                 {
                     Title = create.Name ?? string.Empty,
-                    Description = string.Empty,
+                    Description = create.Description ?? string.Empty,
                     CustomCSSLink = create.CustomCSSLink,
                     Email = null,
                     EmbeddedCSS = create.EmbeddedCSS,

@@ -8,6 +8,7 @@ namespace BTCPayServer.Client.Models
     public class CreatePullPaymentRequest
     {
         public string Name { get; set; }
+        public string Description { get; set; }
         [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
         public string Currency { get; set; }

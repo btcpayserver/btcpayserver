@@ -13,6 +13,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset? ExpiresAt { get; set; }
         public string Id { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
         public string Currency { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }

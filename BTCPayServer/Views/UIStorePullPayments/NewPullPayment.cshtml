@@ -5,15 +5,25 @@
     ViewData.SetActivePage(StoreNavPages.PullPayments, "New pull payment", Context.GetStoreData().Id);
 }
 
+@section PageHeadContent {
+    <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.css" asp-append-version="true"></bundle>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.js" asp-append-version="true"></bundle>
+}
+
 <partial name="_StatusMessage" />
 
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form method="post"
-              asp-route-walletId="@Context.GetRouteValue("walletId")"
-              asp-action="NewPullPayment">
+<form
+    method="post"
+    asp-route-walletId="@Context.GetRouteValue("walletId")"
+    asp-action="NewPullPayment">
+    <div class="row">
+        <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Name" class="form-label"></label>
                 <input asp-for="Name" class="form-control"/>
@@ -43,6 +53,13 @@
                     </div>
                 }
                 <span asp-validation-for="PaymentMethods" class="text-danger mt-0"></span>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="form-group mb-4">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control richtext"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
             <h5 class="mt-4 mb-2">Additional Options</h5>
@@ -98,6 +115,6 @@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
             </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>

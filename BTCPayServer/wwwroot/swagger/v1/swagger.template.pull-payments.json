@@ -63,6 +63,11 @@
                                         "description": "The name of the pull payment",
                                         "nullable": true
                                     },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "The description of the pull payment",
+                                        "nullable": true
+                                    },
                                     "amount": {
                                         "type": "string",
                                         "format": "decimal",
@@ -645,7 +650,11 @@
                     },
                     "name": {
                         "type": "string",
-                        "description": "Payment method of of the pull payment"
+                        "description": "Name given to pull payment when it was created"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description given to pull payment when it was created"
                     },
                     "currency": {
                         "type": "string",

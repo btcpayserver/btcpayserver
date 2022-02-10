@@ -80,6 +80,16 @@
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to add new stores"
+                    },
+                    "409": {
+                        "description": "Error code: `duplicate-store-user-role`. Removing this user would result in the store having no owner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -129,6 +139,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Error code: `store-user-role-orphaned`. Removing this user would result in the store having no owner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }

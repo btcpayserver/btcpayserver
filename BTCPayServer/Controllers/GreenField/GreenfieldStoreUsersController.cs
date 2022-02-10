@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Ok();
             }
             
-            return this.CreateAPIError("store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+            return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Ok();
             }
 
-            return this.CreateAPIError("duplicate-store-user-role", "The user could is already added to the store");
+            return this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
         }
 
         private IEnumerable<StoreUserData> FromModel(Data.StoreData data)

@@ -12,13 +12,13 @@ namespace BTCPayServer.Client
         public virtual async Task<IEnumerable<StoreUserData>> GetStoreUsers(string storeId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/users"), token);
+            using var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/users"), token);
             return await HandleResponse<IEnumerable<StoreUserData>>(response);
         }
 
         public virtual async Task RemoveStoreUser(string storeId, string userId, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
+            using var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/users/{userId}", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
@@ -28,7 +28,7 @@ namespace BTCPayServer.Client
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
+            using var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/users", bodyPayload: request, method: HttpMethod.Post),
                 token);
             return await HandleResponse<StoreData>(response);

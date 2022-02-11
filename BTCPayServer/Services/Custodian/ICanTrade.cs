@@ -18,7 +18,7 @@ public interface ICanTrade
      */
     public Task<MarketTradeResult> GetTradeInfoAsync(string tradeId, JObject config);
 
-    public Task<decimal> GetBidForAssetAsync(string toAsset, string fromAsset, JObject config);
+    public Task<AssetQuoteResult> GetQuoteForAssetAsync(string fromAsset, string toAsset, JObject config);
 }
 
 

@@ -302,6 +302,79 @@
                 }
             }
         },
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade/quote": {
+            "get": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Get quote for trading one asset for another",
+                "description": "Get the price for converting one asset into another.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fromAsset",
+                        "in": "query",
+                        "required": true,
+                        "description": "The asset to convert.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toAsset",
+                        "in": "query",
+                        "required": true,
+                        "description": "The asset you want.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the trade that was executed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/QuoteResultData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No tradable asset pair found for this trade."
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to create trades"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewcustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade/market": {
             "post": {
                 "tags": [
@@ -639,6 +712,25 @@
                     ]
                 }
             },
+            "QuoteResultData": {
+                "type": "object",
+                "properties": {
+                    "fromAsset": {
+                        "type": "string",
+                        "description": "The asset to trade.",
+                        "required": true
+                    },
+                    "toAsset": {
+                        "type": "string",
+                        "description": "The asset you want.",
+                        "required": true
+                    }
+                },
+                "example": {
+                    "fromAsset": "USD",
+                    "toAsset": "BTC"
+                }
+            },
             "TradeRequestData": {
                 "type": "object",
                 "properties": {
@@ -667,8 +759,8 @@
                     }
                 },
                 "example": {
-                    "fromAsset": "BTC",
-                    "toAsset": "USD",
+                    "fromAsset": "USD",
+                    "toAsset": "BTC",
                     "qty": "50%"
                 }
             },

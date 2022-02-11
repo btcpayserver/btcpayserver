@@ -16,6 +16,7 @@ public class LedgerEntryData
     public enum LedgerEntryType
     {
         Trade = 0,
-        Fee = 1
+        Fee = 1,
+        Withdrawal = 2
     }
 }

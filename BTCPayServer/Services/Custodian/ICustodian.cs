@@ -28,5 +28,5 @@ public interface ICustodian
     /**
      * Get a list of assets and their qty in custody.
      */
-    public Task<Dictionary<string, decimal>> GetAssetBalances(JObject config);
+    public Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config);
 }

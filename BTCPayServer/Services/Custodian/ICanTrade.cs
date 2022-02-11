@@ -11,14 +11,14 @@ public interface ICanTrade
     /**
      * Execute a market order right now.
      */
-    public Task<MarketTradeResult> TradeMarket(string fromAsset, string toAsset, decimal qty, JObject config);
+    public Task<MarketTradeResult> TradeMarketAsync(string fromAsset, string toAsset, decimal qty, JObject config);
     
     /**
      * Get the details about a previous market trade.
      */
-    public Task<MarketTradeResult> GetTradeInfo(string tradeId, JObject config);
+    public Task<MarketTradeResult> GetTradeInfoAsync(string tradeId, JObject config);
 
-    public Task<decimal> GetBidForAsset(string toAsset, string fromAsset, JObject config);
+    public Task<decimal> GetBidForAssetAsync(string toAsset, string fromAsset, JObject config);
 }
 
 

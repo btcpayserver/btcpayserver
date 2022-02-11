@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("~/api/v1/custodian")]
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> ListCustodians()
+        public IActionResult ListCustodians()
         {
             var all = _custodianRegistry.getAll().Values.ToList().Select(ToModel);
             return Ok(all);

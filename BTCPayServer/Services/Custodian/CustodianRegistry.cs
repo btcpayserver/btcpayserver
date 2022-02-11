@@ -15,7 +15,7 @@ public class CustodianRegistry
 
         // TODO Dispatch event so plugins can register their own custodians?
         // TODO register a dummy custodian when/for running tests?
-        register(new KrakenClient(httpClientFactory, memoryCache));
+        register(new KrakenClient(httpClientFactory.CreateClient(), memoryCache));
     }
 
     public void register(ICustodian custodian)

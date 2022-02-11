@@ -22,9 +22,15 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     private readonly HttpClient _client;
     private readonly IMemoryCache _memoryCache;
 
-    public KrakenClient(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
+    // public KrakenClient(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
+    // {
+    //     _client = httpClientFactory.CreateClient();
+    //     _memoryCache = memoryCache;
+    // }
+
+    public KrakenClient(HttpClient httpClient, IMemoryCache memoryCache)
     {
-        _client = httpClientFactory.CreateClient();
+        _client = httpClient;
         _memoryCache = memoryCache;
     }
 
@@ -41,7 +47,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public string[] GetSupportedAssets()
     {
         // TODO use API to get a full list.
-        return new string[] { "BTC", "LTC" };
+        return new[] { "BTC", "LTC" };
     }
 
     public List<AssetPairData> GetTradableAssetPairs()
@@ -72,12 +78,16 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             var resultList = data["result"];
             if (resultList is JObject resultListObj)
             {
-                foreach (KeyValuePair<string, JToken?> keyValuePair in resultListObj)
+                foreach (KeyValuePair<string, JToken> keyValuePair in resultListObj)
                 {
-                    var splittablePair = keyValuePair.Value["wsname"].ToString();
-                    var parts = splittablePair.Split("/");
-                    list.Add(new KrakenAssetPair(ConvertFromKrakenAsset(parts[0]), ConvertFromKrakenAsset(parts[1]),
-                        keyValuePair.Key));
+                    var splittablePair = keyValuePair.Value["wsname"]?.ToString();
+                    var altname = keyValuePair.Value["altname"]?.ToString();
+                    if (splittablePair != null && altname != null)
+                    {
+                        var parts = splittablePair.Split("/");
+                        list.Add(new KrakenAssetPair(ConvertFromKrakenAsset(parts[0]), ConvertFromKrakenAsset(parts[1]),
+                            altname));
+                    }
                 }
             }
 
@@ -98,7 +108,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     private HttpRequestMessage createHttpClient()
     {
-        HttpRequestMessage request = new HttpRequestMessage();
+        HttpRequestMessage request = new();
 
         // TODO should we advertise ourselves like this? We're doing it on other parts of the code too!
         request.Headers.Add("User-Agent", $"BTCPayServer/{GetVersion()}");
@@ -106,7 +116,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return request;
     }
 
-    public async Task<Dictionary<string, decimal>> GetAssetBalances(JObject config)
+    public async Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config)
     {
         var krakenConfig = parseConfig(config);
         var data = await QueryPrivate("Balance", null, krakenConfig);
@@ -134,7 +144,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
-    public async Task<DepositAddressData> GetDepositAddress(string paymentMethod, JObject config)
+    public async Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config)
     {
         if (paymentMethod == "BTC-OnChain")
         {
@@ -147,28 +157,48 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             param.Add("asset", krakenAsset);
             param.Add("method", "Bitcoin");
             param.Add("new", "true");
-            var requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig);
-            var addresses = requestResult["result"] as JArray;
 
-            foreach (var address in addresses)
+            JObject requestResult;
+            try
             {
-                bool isNew = (bool)address["new"];
-
-                // TODO checking expiry timestamp could be done better
-                bool isNotExpired = (int)address["expiretm"] == 0;
-
-                if (isNew && isNotExpired)
+                requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig);
+            }
+            catch (CustodianApiException ex)
+            {
+                if (ex.Message == "EFunding:Too many addresses")
                 {
-                    var result = new DepositAddressData();
-                    result.Address = address["address"]?.ToString();
-                    return result;
+                    // We cannot create a new address because there are too many already. Query again and look for an existing address to use.
+                    param.Remove("new");
+                    requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig);
+                }
+                else
+                {
+                    throw;
                 }
             }
 
-            throw new CustodianApiException("Could not fetch a suitable deposit address.");
+            var addresses = (JArray)requestResult["result"];
+
+            if (addresses != null)
+                foreach (var address in addresses)
+                {
+                    bool isNew = (bool)address["new"];
+
+                    // TODO checking expiry timestamp could be done better
+                    bool isNotExpired = (int)address["expiretm"] == 0;
+
+                    if (isNew && isNotExpired)
+                    {
+                        var result = new DepositAddressData();
+                        result.Address = address["address"]?.ToString();
+                        return result;
+                    }
+                }
+
+            throw new CustodianApiException(404, "cannot-find-deposit-address", "Could not fetch a suitable deposit address.");
         }
 
-        throw new CustodianApiException("Only BTC-OnChain is implemented at this time.");
+        throw new CustodianApiException(400, "depositing-not-implemented", "Only BTC-OnChain is implemented at this time.");
     }
 
     private string ConvertToKrakenAsset(string asset)
@@ -206,40 +236,100 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return krakenAsset;
     }
 
-    public async Task<MarketTradeResult> GetTradeInfo(string tradeId, JObject config)
+    public async Task<MarketTradeResult> GetTradeInfoAsync(string tradeId, JObject config)
     {
         var krakenConfig = parseConfig(config);
         var param = new Dictionary<string, string>();
         param.Add("txid", tradeId);
-        var requestResult = await QueryPrivate("QueryTrades", param, krakenConfig);
-        var txInfo = requestResult["result"]?[tradeId] as JObject;
-
-        var ledgerEntries = new List<LedgerEntryData>();
-
-        if (txInfo != null)
+        try
         {
-            var pairString = txInfo["pair"].ToString();
-            var assetPair = parseAssetPair(pairString);
-            var costInclFee = txInfo["cost"].ToObject<decimal>();
-            var feeInQuoteCurrencyEquivalent = txInfo["fee"].ToObject<decimal>();
-            var costWithoutFee = costInclFee - feeInQuoteCurrencyEquivalent;
-            var qtyBought = txInfo["vol"].ToObject<decimal>();
+            var requestResult = await QueryPrivate("QueryOrders", param, krakenConfig);
+            var txInfo = requestResult["result"]?[tradeId] as JObject;
 
-            ledgerEntries.Add(new LedgerEntryData(assetPair.AssetBought, qtyBought,
-                LedgerEntryData.LedgerEntryType.Trade));
-            ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * costWithoutFee,
-                LedgerEntryData.LedgerEntryType.Trade));
-            ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * feeInQuoteCurrencyEquivalent,
-                LedgerEntryData.LedgerEntryType.Fee));
+            var ledgerEntries = new List<LedgerEntryData>();
 
-            var r = new MarketTradeResult(assetPair.AssetSold, assetPair.AssetBought, ledgerEntries, tradeId);
-            return r;
+            if (txInfo != null)
+            {
+                var pairString = txInfo["descr"]?["pair"]?.ToString();
+                var assetPair = parseAssetPair(pairString);
+                var costInclFee = txInfo["cost"].ToObject<decimal>();
+                var feeInQuoteCurrencyEquivalent = txInfo["fee"].ToObject<decimal>();
+                var costWithoutFee = costInclFee - feeInQuoteCurrencyEquivalent;
+                var qtyBought = txInfo["vol_exec"].ToObject<decimal>();
+
+                ledgerEntries.Add(new LedgerEntryData(assetPair.AssetBought, qtyBought,
+                    LedgerEntryData.LedgerEntryType.Trade));
+                ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * costWithoutFee,
+                    LedgerEntryData.LedgerEntryType.Trade));
+                ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * feeInQuoteCurrencyEquivalent,
+                    LedgerEntryData.LedgerEntryType.Fee));
+
+                var r = new MarketTradeResult(assetPair.AssetSold, assetPair.AssetBought, ledgerEntries, tradeId);
+                return r;
+            }
+        }
+        catch (CustodianApiException exception)
+        {
+            if (exception.Message == "EOrder:Invalid order")
+            {
+                // Let it pass, our exception is thrown at the end anyway.
+            }
+            else
+            {
+                throw;
+            }
         }
 
         throw new TradeNotFoundException(tradeId);
+
+
+        // var krakenConfig = parseConfig(config);
+        // var param = new Dictionary<string, string>();
+        // param.Add("txid", tradeId);
+        // try
+        // {
+        //     var requestResult = await QueryPrivate("QueryTrades", param, krakenConfig);
+        //     var txInfo = requestResult["result"]?[tradeId] as JObject;
+        //
+        //     var ledgerEntries = new List<LedgerEntryData>();
+        //
+        //     if (txInfo != null)
+        //     {
+        //         var pairString = txInfo["pair"]?.ToString();
+        //         var assetPair = parseAssetPair(pairString);
+        //         var costInclFee = txInfo["cost"].ToObject<decimal>();
+        //         var feeInQuoteCurrencyEquivalent = txInfo["fee"].ToObject<decimal>();
+        //         var costWithoutFee = costInclFee - feeInQuoteCurrencyEquivalent;
+        //         var qtyBought = txInfo["vol"].ToObject<decimal>();
+        //
+        //         ledgerEntries.Add(new LedgerEntryData(assetPair.AssetBought, qtyBought,
+        //             LedgerEntryData.LedgerEntryType.Trade));
+        //         ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * costWithoutFee,
+        //             LedgerEntryData.LedgerEntryType.Trade));
+        //         ledgerEntries.Add(new LedgerEntryData(assetPair.AssetSold, -1 * feeInQuoteCurrencyEquivalent,
+        //             LedgerEntryData.LedgerEntryType.Fee));
+        //
+        //         var r = new MarketTradeResult(assetPair.AssetSold, assetPair.AssetBought, ledgerEntries, tradeId);
+        //         return r;
+        //     }
+        // }
+        // catch (CustodianApiException exception)
+        // {
+        //     if (exception.Message == "EOrder:Invalid order")
+        //     {
+        //         // Let it pass, our exception is thrown at the end anyway.
+        //     }
+        //     else
+        //     {
+        //         throw;
+        //     }
+        // }
+        //
+        // throw new TradeNotFoundException(tradeId);
     }
 
-    public async Task<decimal> GetBidForAsset(string toAsset, string fromAsset, JObject config)
+
+    public async Task<decimal> GetBidForAssetAsync(string toAsset, string fromAsset, JObject config)
     {
         var krakenAssetPair = ConvertToKrakenAsset(toAsset) + ConvertToKrakenAsset(fromAsset);
         var requestResult = await QueryPublic("Ticker?pair=" + krakenAssetPair);
@@ -278,18 +368,17 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 }
             }
         }
-
         return null;
     }
 
 
-    public async Task<MarketTradeResult> TradeMarket(string fromAsset, string toAsset, decimal qty, JObject config)
+    public async Task<MarketTradeResult> TradeMarketAsync(string fromAsset, string toAsset, decimal qty, JObject config)
     {
         var krakenFromAsset = ConvertToKrakenAsset(fromAsset);
         var krakenToAsset = ConvertToKrakenAsset(toAsset);
 
         // If the pair does not exist, Kraken's API will fail and that's fine.
-        var assetPair = krakenToAsset+krakenFromAsset;
+        var assetPair = krakenToAsset + krakenFromAsset;
 
         var param = new Dictionary<string, string>();
         var qtyPositive = qty;
@@ -309,13 +398,15 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         var krakenConfig = parseConfig(config);
         var requestResult = await QueryPrivate("AddOrder", param, krakenConfig);
-        
-        var txid = (string)requestResult["result"]?["txid"]?[0];
-        var r = await GetTradeInfo(txid, config);
+
+        // The field is called "txid", but it's an order ID and not a Transaction ID, so we need to be careful! :(
+        var orderId = (string)requestResult["result"]?["txid"]?[0];
+        var r = await GetTradeInfoAsync(orderId, config);
+
         return r;
     }
 
-    public async Task<WithdrawResult> Withdraw(string asset, decimal amount, JObject config)
+    public async Task<WithdrawResult> WithdrawAsync(string asset, decimal amount, JObject config)
     {
         var krakenConfig = parseConfig(config);
         var withdrawToAddressName = krakenConfig.WithdrawToAddressName;
@@ -330,7 +421,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         // TODO test this
         var refId = (string)requestResult["result"]?["refid"];
-        var withdrawalInfo = GetWithdrawalInfo(asset, refId, config).Result;
+        var withdrawalInfo = GetWithdrawalInfoAsync(asset, refId, config).Result;
 
         var ledgerEntries = new List<LedgerEntryData>();
         //ledgerEntries.Add(new LedgerEntryData(asset, 0));
@@ -339,7 +430,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return r;
     }
 
-    private async Task<JObject> GetWithdrawalInfo(string asset, string refId, JObject config)
+    private async Task<JObject> GetWithdrawalInfoAsync(string asset, string refId, JObject config)
     {
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
@@ -362,7 +453,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     }
 
 
-    private async Task<JObject> QueryPrivate(string method, Dictionary<string, string>? param, KrakenConfig config)
+    private async Task<JObject> QueryPrivate(string method, Dictionary<string, string> param, KrakenConfig config)
     {
         // TODO is this okay? Or should the cancellation token be an input argument?
         var cancellationToken = createCancelationToken();
@@ -394,8 +485,8 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var pathBytes = Encoding.UTF8.GetBytes(path);
 
         byte[] unhashed2 = new byte[path.Length + hash1.Length];
-        System.Buffer.BlockCopy(pathBytes, 0, unhashed2, 0, pathBytes.Length);
-        System.Buffer.BlockCopy(hash1, 0, unhashed2, pathBytes.Length, hash1.Length);
+        Buffer.BlockCopy(pathBytes, 0, unhashed2, 0, pathBytes.Length);
+        Buffer.BlockCopy(hash1, 0, unhashed2, pathBytes.Length, hash1.Length);
 
         var signature = hmac512.ComputeHash(unhashed2);
         var apiSign = Convert.ToBase64String(signature);
@@ -415,16 +506,21 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var responseString = response.Content.ReadAsStringAsync().Result;
         var r = JObject.Parse(responseString);
 
-        var errorMessage = r["error"];
-        if (errorMessage is JArray)
+        var error = r["error"];
+        if (error is JArray)
         {
-            var errorMessageArray = ((JArray)errorMessage);
+            var errorMessageArray = ((JArray)error);
             if (errorMessageArray.Count > 0)
             {
-                throw new CustodianApiException(errorMessageArray[0].ToString());
+                var errorMessage = errorMessageArray[0].ToString();
+                if (errorMessage == "EGeneral:Permission denied")
+                {
+                    throw new PermissionDeniedCustodianApiException(this);
+                }
+
+                throw new CustodianApiException(400, "custodian-api-exception", errorMessage);
             }
         }
-
         return r;
     }
 
@@ -453,7 +549,7 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             var errorMessageArray = ((JArray)errorMessage);
             if (errorMessageArray.Count > 0)
             {
-                throw new CustodianApiException(errorMessageArray[0].ToString());
+                throw new CustodianApiException(400, "custodian-api-exception", errorMessageArray[0].ToString());
             }
         }
 

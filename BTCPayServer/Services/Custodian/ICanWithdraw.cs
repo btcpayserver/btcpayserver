@@ -7,5 +7,5 @@ namespace BTCPayServer.Services.Custodian;
 
 public interface ICanWithdraw
 {
-    public Task<WithdrawResult> Withdraw(string asset, decimal amount, JObject config);
+    public Task<WithdrawResult> WithdrawAsync(string asset, decimal amount, JObject config);
 }

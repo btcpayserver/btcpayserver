@@ -599,6 +599,86 @@
                     }
                 ]
             }
+        },
+        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/withdrawal/{withdrawalId}": {
+            "post": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Get withdrawal info",
+                "description": "Get the details about a past withdrawal.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "withdrawalId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Withdrawal ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the withdrawal",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WithdrawalResultData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Withdrawal not found."
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string",
+                                            "description": "If you are authenticated but forbidden to create trades"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "description": "Withdrawing to the address provided is not allowed"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canwithdrawfromcustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -875,6 +955,21 @@
                         "type": "string",
                         "description": "The code of the custodian used.",
                         "nullable": false
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The status of the withdrawal: 'Queued', 'Success', 'Failed' or 'Unknown'.",
+                        "nullable": false
+                    },
+                    "transactionId": {
+                        "type": "string",
+                        "description": "The transaction ID on the blockchain if the withdrawal has been executed.",
+                        "nullable": true
+                    },
+                    "targetAddress": {
+                        "type": "string",
+                        "description": "The address where the funds were sent to if the withdrawal has been executed.",
+                        "nullable": true
                     }
                 },
                 "example": {

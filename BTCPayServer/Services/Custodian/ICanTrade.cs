@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Custodian.Client;
 using Newtonsoft.Json.Linq;
 

@@ -421,28 +421,12 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         param.Add("amount", amount + "");
 
         var requestResult = await QueryPrivate("Withdraw", param, krakenConfig);
-        
-        var refId = (string)requestResult["result"]?["refid"];
-        var withdrawalInfo = GetWithdrawalInfoAsync(asset, refId, config).Result;
-        var ledgerEntries = new List<LedgerEntryData>();
-        var amountExclFee = withdrawalInfo["amount"].ToObject<decimal>();
-        var fee = withdrawalInfo["fee"].ToObject<decimal>();
-        var withdrawalToAddress = withdrawalInfo["info"].ToString();
+        var withdrawalId = (string)requestResult["result"]?["refid"];
 
-        // TODO should we use the time/status?
-        // var time = withdrawalInfo["time"]; // Unix timestamp integer. Example: 1644595165
-        // var status = withdrawalInfo["status"]; // Example: 'initial'
-
-        ledgerEntries.Add(new LedgerEntryData(asset, -1 * amountExclFee,
-            LedgerEntryData.LedgerEntryType.Withdrawal));
-        ledgerEntries.Add(new LedgerEntryData(asset, -1 * fee,
-            LedgerEntryData.LedgerEntryType.Fee));
-
-        var r = new WithdrawResult(asset, ledgerEntries, refId, withdrawalToAddress);
-        return r;
+        return GetWithdrawalInfoAsync(asset, withdrawalId, config).Result;
     }
 
-    private async Task<JObject> GetWithdrawalInfoAsync(string asset, string refId, JObject config)
+    public async Task<WithdrawResult> GetWithdrawalInfoAsync(string asset, string withdrawalId, JObject config)
     {
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
@@ -451,17 +435,50 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var krakenConfig = ParseConfig(config);
         var withdrawStatusResponse = await QueryPrivate("WithdrawStatus", param, krakenConfig);
 
-
         var recentWithdrawals = withdrawStatusResponse["result"];
         foreach (var withdrawal in recentWithdrawals)
         {
-            if (withdrawal["refid"]?.ToString() == refId)
+            if (withdrawal["refid"]?.ToString() == withdrawalId)
             {
-                return withdrawal.ToObject<JObject>();
+                var withdrawalInfo = withdrawal.ToObject<JObject>();
+
+                var ledgerEntries = new List<LedgerEntryData>();
+                var amountExclFee = withdrawalInfo["amount"].ToObject<decimal>();
+                var fee = withdrawalInfo["fee"].ToObject<decimal>();
+                var withdrawalToAddress = withdrawalInfo["info"].ToString();
+
+                // TODO should we use the time/status?
+                // var time = withdrawalInfo["time"]; // Unix timestamp integer. Example: 1644595165
+                var statusCode = withdrawalInfo["status"]?.ToString(); // Examples: "Initial", "Pending", "Settled", "Success" or "Failure"
+
+                var transactionId = withdrawalInfo["txid"]?.ToString(); // This is the transaction ID on the blockchain
+
+                WithdrawResultData.WithdrawalStatus status = WithdrawResultData.WithdrawalStatus.Unknown;
+                if (statusCode == "Initial" || statusCode == "Pending" || statusCode == "Settled")
+                {
+                    // These 3 states are considered "not final", so we map them to "Queued".
+                    // Even "Settled" is not really final as per the IFEX financial transaction states (https://github.com/globalcitizen/ifex-protocol/blob/master/draft-ifex-00.txt#L837).
+                    status = WithdrawResultData.WithdrawalStatus.Queued;
+                }
+                else if (statusCode == "Success")
+                {
+                    status = WithdrawResultData.WithdrawalStatus.Complete;
+                }
+                else if (statusCode == "Failure")
+                {
+                    status = WithdrawResultData.WithdrawalStatus.Failed;
+                }
+
+                ledgerEntries.Add(new LedgerEntryData(asset, -1 * amountExclFee,
+                    LedgerEntryData.LedgerEntryType.Withdrawal));
+                ledgerEntries.Add(new LedgerEntryData(asset, -1 * fee,
+                    LedgerEntryData.LedgerEntryType.Fee));
+
+                return new WithdrawResult(asset, ledgerEntries, withdrawalId, status, withdrawalToAddress, transactionId);
             }
         }
 
-        return null;
+        throw new WithdrawalNotFoundException(withdrawalId);
     }
 
 

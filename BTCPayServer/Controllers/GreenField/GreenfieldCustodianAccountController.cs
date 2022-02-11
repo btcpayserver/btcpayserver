@@ -357,10 +357,10 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdraw")]
+        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdrawal")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> Withdraw(string storeId, string accountId,
+        public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
             WithdrawRequestData request)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
@@ -373,7 +373,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var withdrawResult =
                         await withdrawableCustodian.WithdrawAsync(request.Asset, request.Qty, custodianAccount.GetBlob().config);
                     var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode());
+                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)
@@ -384,6 +384,34 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return this.CreateAPIError(400, "withdrawals-not-supported",
                 $"Withdrawals are not supported for \"{custodian.GetName()}\".");
+        }
+
+
+        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdrawal/{asset}/{withdrawalId}")]
+        [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId)
+        {
+            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
+
+            if (custodian is ICanWithdraw withdrawableCustodian)
+            {
+                try
+                {
+                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(asset, withdrawalId, custodianAccount.GetBlob().config);
+                    var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
+                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                    return Ok(result);
+                }
+                catch (CustodianApiException e)
+                {
+                    return CreateCustodianApiError(e);
+                }
+            }
+
+            return this.CreateAPIError(400, "fetching-withdrawal-info-not-supported",
+                $"Fetching withdrawal information is not supported for \"{custodian.GetName()}\".");
         }
     }
 

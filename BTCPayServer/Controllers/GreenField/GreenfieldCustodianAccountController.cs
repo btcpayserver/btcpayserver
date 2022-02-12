@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Custodian.Client.Exception;
@@ -23,12 +24,15 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly CustodianRegistry _custodianRegistry;
         private readonly CustodianAccountRepository _custodianAccountRepository;
+        private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldCustodianAccountController(CustodianAccountRepository custodianAccountRepository,
-            CustodianRegistry custodianRegistry)
+            CustodianRegistry custodianRegistry,
+            IAuthorizationService authorizationService)
         {
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet("~/api/v1/store/{storeId}/custodian-account")]
@@ -103,13 +107,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 return NotFound();
             }
 
-            // TODO perform actual permission lookup
-            bool userHasManagePermissions = true;
-            if (!userHasManagePermissions)
-            {
-                // TODO hide the "config" field, because it contains sensitive information (API key, etc). 
-            }
-            
             var custodianAccount = ToModelWithAssets(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {
@@ -123,13 +120,25 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(custodianAccount);
         }
 
+        private bool CanSeeCustodianAccountConfig()
+        {
+            bool canCreate = _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateCustodianAccounts)).Result.Succeeded;
+            bool canManage = _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyCustodianAccounts)).Result.Succeeded;
+            return canCreate || canManage;
+        }
+
         private CustodianAccountResponse ToModelWithAssets(CustodianAccountData custodianAccount)
         {
             var r = new CustodianAccountResponse();
             r.Id = custodianAccount.Id;
             r.CustodianCode = custodianAccount.CustodianCode;
             r.StoreId = custodianAccount.StoreId;
-            r.Config = custodianAccount.GetBlob().config;
+            if (CanSeeCustodianAccountConfig())
+            {
+                // Only show the "config" field if the user can manage the Custodian Account, because config contains sensitive information (API key, etc).
+                r.Config = custodianAccount.GetBlob().config;
+            }
+            
             return r;
         }
 
@@ -139,7 +148,11 @@ namespace BTCPayServer.Controllers.Greenfield
             r.Id = custodianAccount.Id;
             r.CustodianCode = custodianAccount.CustodianCode;
             r.StoreId = custodianAccount.StoreId;
-            r.Config = custodianAccount.GetBlob().config;
+            if (CanSeeCustodianAccountConfig())
+            {
+                // Only show the "config" field if the user can manage the Custodian Account, because config contains sensitive information (API key, etc).
+                r.Config = custodianAccount.GetBlob().config;
+            }
             return r;
         }
 

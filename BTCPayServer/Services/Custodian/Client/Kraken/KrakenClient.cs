@@ -420,10 +420,21 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         param.Add("key", withdrawToAddressName);
         param.Add("amount", amount + "");
 
-        var requestResult = await QueryPrivate("Withdraw", param, krakenConfig);
-        var withdrawalId = (string)requestResult["result"]?["refid"];
+        try
+        {
+            var requestResult = await QueryPrivate("Withdraw", param, krakenConfig);
+            var withdrawalId = (string)requestResult["result"]?["refid"];
 
-        return GetWithdrawalInfoAsync(asset, withdrawalId, config).Result;
+            return GetWithdrawalInfoAsync(asset, withdrawalId, config).Result;
+        }
+        catch (CustodianApiException e)
+        {
+            if (e.Message == "EFunding:Unknown withdraw key")
+            {
+                throw new InvalidWithdrawalTarget(this, asset, withdrawToAddressName, e);
+            }
+            throw;
+        }
     }
 
     public async Task<WithdrawResult> GetWithdrawalInfoAsync(string asset, string withdrawalId, JObject config)

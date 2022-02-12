@@ -412,7 +412,8 @@ public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public async Task<WithdrawResult> WithdrawAsync(string asset, decimal amount, JObject config)
     {
         var krakenConfig = ParseConfig(config);
-        var withdrawToAddressName = krakenConfig.WithdrawToAddressName;
+        var withdrawToAddressNamePerCurrency = krakenConfig.WithdrawToAddressNamePerCurrency;
+        var withdrawToAddressName = withdrawToAddressNamePerCurrency[asset];
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
 

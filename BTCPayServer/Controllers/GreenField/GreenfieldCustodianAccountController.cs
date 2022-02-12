@@ -50,6 +50,13 @@ namespace BTCPayServer.Controllers.Greenfield
             for (int i = 0; i < r.Length; i++)
             {
                 var custodianAccountData = r[i];
+                
+                // TODO perform actual permission lookup
+                bool userHasManagePermissions = true;
+                if (!userHasManagePermissions)
+                {
+                    // TODO hide the "config" field, because it contains sensitive information (API key, etc). 
+                }
 
                 if (assetBalances)
                 {
@@ -96,6 +103,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return NotFound();
             }
 
+            // TODO perform actual permission lookup
+            bool userHasManagePermissions = true;
+            if (!userHasManagePermissions)
+            {
+                // TODO hide the "config" field, because it contains sensitive information (API key, etc). 
+            }
+            
             var custodianAccount = ToModelWithAssets(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {

@@ -1,0 +1,111 @@
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Services.Altcoins.Zcash.UI.UIZcashLikeStoreController.ZcashLikePaymentMethodViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UIStores/_Nav";
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Settings");
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Summary != null)
+        {
+            <div class="card">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Node available: @Model.Summary.DaemonAvailable</li>
+                    <li class="list-group-item">Wallet available: @Model.Summary.WalletAvailable (@(Model.WalletFileFound ? "Wallet file present" : "Wallet file not found"))</li>
+                    <li class="list-group-item">Last updated: @Model.Summary.UpdatedAt</li>
+                    <li class="list-group-item">Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</li>
+                </ul>
+            </div>
+        }
+
+        @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default)
+        {
+            <form method="post" asp-action="GetStoreZcashLikePaymentMethod" 
+                  asp-route-storeId="@Context.GetRouteValue("storeId")"
+                  asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
+                  class="mt-4" enctype="multipart/form-data">
+
+                <div class="card my-2">
+                    <h3 class="card-title p-2">Upload Wallet</h3>
+                    <div class="form-group p-2">
+                        <label asp-for="WalletFile" class="form-label"></label>
+                        <input class="form-control" asp-for="WalletFile" required>
+                        <span asp-validation-for="WalletFile" class="text-danger"></span>
+                    </div>
+                    <div class="form-group p-2">
+                        <label asp-for="WalletKeysFile" class="form-label"></label>
+                        <input class="form-control" asp-for="WalletKeysFile" required>
+                        <span asp-validation-for="WalletKeysFile" class="text-danger"></span>
+                    </div>
+                    <div class="form-group p-2">
+                        <label asp-for="WalletPassword" class="form-label"></label>
+                        <input class="form-control" asp-for="WalletPassword">
+                        <span asp-validation-for="WalletPassword" class="text-danger"></span>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button name="command" value="upload-wallet" class="btn btn-secondary" type="submit">Upload</button>
+                    </div>
+                </div>
+            </form>
+        }
+        <form method="post" asp-action="GetStoreZcashLikePaymentMethod"
+              asp-route-storeId="@Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
+              class="mt-4" enctype="multipart/form-data">
+
+            <input type="hidden" asp-for="CryptoCode"/>
+            @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default)
+            {
+                <input type="hidden" asp-for="AccountIndex"/>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label asp-for="AccountIndex" class="control-label"></label>
+                    @if (@Model.Accounts != null && Model.Accounts.Any())
+                    {
+                        <select asp-for="AccountIndex" asp-items="Model.Accounts" class="form-control"></select>
+                        <span asp-validation-for="AccountIndex" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <span>No accounts available on the current wallet</span>
+                        <input type="hidden" asp-for="AccountIndex"/>
+                    }
+                </div>
+                <div class="form-group">
+                    <div class="input-group my-3">
+                        <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
+                        <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit">Add account</button>
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <label asp-for="Enabled"></label>
+                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                <span asp-validation-for="Enabled" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+
+                <a class="btn btn-secondary" asp-action="GetStoreZcashLikePaymentMethods"
+                   asp-route-storeId="@Context.GetRouteValue("storeId")"
+                   asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
+                   asp-controller="UIZcashLikeStore">
+                    Back to list
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section PageFootContent {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

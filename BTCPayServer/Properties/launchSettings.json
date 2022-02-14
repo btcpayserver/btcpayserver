@@ -98,7 +98,7 @@
         "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
         "BTCPAY_CHEATMODE": "true"
       },
-      "applicationUrl": "https://localhost:14142/"
+      "applicationUrl": "https://localhost:14142/"    
     }
   }
 }

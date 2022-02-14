@@ -1,3 +1,4 @@
+@using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @model InvoicesModel
 @{
@@ -315,7 +316,7 @@
                 {
                     <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive"><i class="fa fa-archive"></i> Unarchive</button>
                 }
-				<button id="BumpFee" type="submit" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
+				<button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
             </div>
         </span>
         <span>

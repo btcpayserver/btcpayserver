@@ -369,7 +369,7 @@ namespace BTCPayServer
                         }
                     }
 
-                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata)));
+                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata)), false);
                     LightningInvoice invoice;
                     try
                     {

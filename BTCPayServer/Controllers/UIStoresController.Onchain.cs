@@ -6,18 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -361,7 +357,8 @@ namespace BTCPayServer.Controllers
 
             TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
-            return RedirectToAction(nameof(GeneralSettings), new { storeId });
+            var walletId = new WalletId(storeId, cryptoCode);
+            return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]

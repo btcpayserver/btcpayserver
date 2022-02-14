@@ -124,7 +124,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<CustodianAccountRepository>();
             
             // List all known custodians after registering CustodianRegistry... 
-            services.AddSingleton<KrakenClient>();
+            services.AddSingleton<KrakenExchange>();
 
             services.TryAddSingleton<WalletHistogramService>();
             services.TryAddSingleton<CustodianRegistry>();

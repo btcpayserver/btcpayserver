@@ -17,12 +17,12 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Custodian.Client.Kraken;
 
-public class KrakenClient : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
+public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 {
     private readonly HttpClient _client;
     private readonly IMemoryCache _memoryCache;
 
-    public KrakenClient(HttpClient httpClient, IMemoryCache memoryCache)
+    public KrakenExchange(HttpClient httpClient, IMemoryCache memoryCache)
     {
         _client = httpClient;
         _memoryCache = memoryCache;

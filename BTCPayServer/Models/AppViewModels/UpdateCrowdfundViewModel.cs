@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [Display(Name = "Make Crowdfund Public")]
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; }
 
         [Required]
         [Display(Name = "Enable background animations on new payments")]
@@ -44,11 +44,11 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [Display(Name = "Enable sounds on new payments")]
-        public bool SoundsEnabled { get; set; } = true;
+        public bool SoundsEnabled { get; set; }
 
         [Required]
         [Display(Name = "Enable Disqus Comments")]
-        public bool DisqusEnabled { get; set; } = true;
+        public bool DisqusEnabled { get; set; }
 
         [Display(Name = "Disqus Shortname")]
         public string DisqusShortname { get; set; }
@@ -60,10 +60,10 @@ namespace BTCPayServer.Models.AppViewModels
         public DateTime? EndDate { get; set; }
 
         [MaxLength(5)]
-        [Display(Name = "Primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
+        [Display(Name = "Currency")]
         public string TargetCurrency { get; set; }
 
-        [Display(Name = "Set a target amount")]
+        [Display(Name = "Target Amount")]
         [Range(0, double.PositiveInfinity)]
         public decimal? TargetAmount { get; set; }
 
@@ -105,7 +105,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Sounds to play when a payment is made. One sound per line")]
         public string Sounds { get; set; }
 
-        [Display(Name = "Colors to rotate between with animation when a payment is made. One color per line (any valid css color value).")]
+        [Display(Name = "Colors to rotate between with animation when a payment is made. One color per line.")]
         public string AnimationColors { get; set; }
 
         // NOTE: Improve validation if needed

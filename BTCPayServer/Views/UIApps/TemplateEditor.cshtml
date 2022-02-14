@@ -18,10 +18,12 @@
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
-                        <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
-                        <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
-                            <i class="fa fa-trash"></i>
-                        </button>
+                        <div class="gap-3 d-flex">
+                            <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
+                            <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div v-if="!items || items.length === 0" class="col-12 text-center">
@@ -31,11 +33,11 @@
                     </button>
                 </div>
             </div>
-            <div class="card-footer text-start p-3">
+            <div class="card-footer text-start p-3 gap-3 d-flex">
                 <button type="button" class="btn btn-primary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary ms-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
                     Toggle raw editor
                 </button>
             </div>

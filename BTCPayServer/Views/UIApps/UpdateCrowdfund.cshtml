@@ -7,6 +7,9 @@
 
 @section PageHeadContent {
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css" asp-append-version="true"></bundle>
+    <style>
+        .flatpickr-wrapper { flex-grow: 1; }
+    </style>
 }
 
 @section PageFootContent {
@@ -63,58 +66,6 @@
                 <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <div class="form-group">
-                <label asp-for="TargetCurrency" class="form-label"></label>
-                <input asp-for="TargetCurrency" class="form-control" placeholder="Use store's default settings" />
-                <span asp-validation-for="TargetCurrency" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TargetAmount" class="form-label"></label>
-                <input asp-for="TargetAmount" class="form-control" />
-                <span asp-validation-for="TargetAmount" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StartDate" class="form-label"></label>
-                <div class="input-group">
-                    <input type="datetime-local" asp-for="StartDate"
-                           value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker"
-                           placeholder="No start date has been set" />
-                    <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
-                    </button>
-                </div>
-                <span asp-validation-for="StartDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EndDate" class="form-label"></label>
-                <div class="input-group">
-                    <input type="datetime-local" asp-for="EndDate"
-                           value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker"
-                           placeholder="No end date has been set" />
-                    <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
-                    </button>
-                </div>
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-4">
-                <label asp-for="ResetEvery" class="form-label"></label>
-                <div class="input-group">
-                    <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
-                    <select class="form-select" asp-for="ResetEvery">
-                        @foreach (var opt in Model.ResetEveryValues)
-                        {
-                            <option value="@opt">@opt</option>
-                        }
-                    </select>
-                </div>
-            </div>
             <div class="form-group mb-0">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
@@ -126,6 +77,67 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <h3 class="mt-5 mb-4">Goal</h3>
+            <div class="d-flex justify-content-between">
+                <div class="form-group flex-fill me-4">
+                    <label asp-for="TargetAmount" class="form-label"></label>
+                    <input asp-for="TargetAmount" class="form-control" />
+                    <span asp-validation-for="TargetAmount" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="TargetCurrency" class="form-label"></label>
+                    <input asp-for="TargetCurrency" class="form-control" placeholder="Use store's default settings" />
+                    <span asp-validation-for="TargetCurrency" class="text-danger"></span>
+                </div>
+            </div>
+                <div class="row g-3">
+                    <div class="col col-12 col-sm-6">
+                        <div class="form-group">
+                            <label asp-for="StartDate" class="form-label"></label>
+                            <div class="input-group flex-nowrap">
+                                <input type="datetime-local" asp-for="StartDate"
+                                       value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                       class="form-control flatdtpicker"
+                                       placeholder="No start date has been set" />
+                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                    <span class="fa fa-times"></span>
+                                </button>
+                            </div>
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col col-12 col-sm-6">
+                        <div class="form-group">
+                            <label asp-for="EndDate" class="form-label"></label>
+                            <div class="input-group flex-nowrap">
+                                <input type="datetime-local" asp-for="EndDate"
+                                       value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                       class="form-control flatdtpicker"
+                                       placeholder="No end date has been set" />
+                                <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
+                                    <span class="fa fa-times"></span>
+                                </button>
+                            </div>
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group mb-0">
+                    <label asp-for="ResetEvery" class="form-label"></label>
+                    <div class="input-group">
+                        <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
+                        <select class="form-select" asp-for="ResetEvery">
+                            @foreach (var opt in Model.ResetEveryValues)
+                            {
+                                <option value="@opt">@opt</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
     <div class="row">
         <div class="col-xxl-constrain">
             <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
@@ -162,11 +174,6 @@
             </div>
             
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
-            <div class="form-group">
-                <label asp-for="NotificationUrl" class="form-label"></label>
-                <input asp-for="NotificationUrl" class="form-control" />
-                <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-            </div>
             <div class="form-check">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
@@ -175,9 +182,11 @@
             
             <h3 class="mt-5 mb-4">Sound</h3>
             <div class="form-group mb-0">
-                <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
-                <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                    <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
                 <div class="form-group mb-0 pt-3">
@@ -189,9 +198,11 @@
             
             <h3 class="mt-5 mb-4">Animation</h3>
             <div class="form-group mb-3">
-                <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
-                <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                    <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
                 <div class="form-group mb-0 pt-3">
@@ -203,9 +214,11 @@
             
             <h3 class="mt-5 mb-4">Discussion</h3>
             <div class="form-group mb-3">
-                <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
-                <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                <div class="d-flex align-items-center">
+                    <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                    <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                    <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                </div>
             </div>
             <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
                 <div class="form-group mb-0 pt-3">
@@ -248,13 +261,29 @@
                             </div>
                         </div>
                     </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-notification-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
+                                Notification URL Callbacks
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-notification" class="accordion-collapse collapse" aria-labelledby="additional-notification-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="NotificationUrl" class="form-label"></label>
+                                    <input asp-for="NotificationUrl" class="form-control" />
+                                    <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </form>
 
-<h3 class="mt-5 mb-4">Other Actions</h3>
 <div id="danger-zone">
     <a id="DeleteApp" class="btn btn-outline-danger" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>

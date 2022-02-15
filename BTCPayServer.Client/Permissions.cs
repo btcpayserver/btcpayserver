@@ -24,6 +24,7 @@ namespace BTCPayServer.Client
         public const string CanViewProfile = "btcpay.user.canviewprofile";
         public const string CanManageNotificationsForUser = "btcpay.user.canmanagenotificationsforuser";
         public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
+        public const string CanViewUsers = "btcpay.server.canviewusers";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
@@ -43,6 +44,7 @@ namespace BTCPayServer.Client
                 yield return CanModifyPaymentRequests;
                 yield return CanModifyProfile;
                 yield return CanViewProfile;
+                yield return CanViewUsers;
                 yield return CanCreateUser;
                 yield return CanDeleteUser;
                 yield return CanManageNotificationsForUser;

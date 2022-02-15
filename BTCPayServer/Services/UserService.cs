@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services
 {
@@ -18,13 +20,16 @@ namespace BTCPayServer.Services
         private readonly StoredFileRepository _storedFileRepository;
         private readonly FileService _fileService;
         private readonly StoreRepository _storeRepository;
+        private readonly ApplicationDbContextFactory _applicationDbContextFactory;
 
         public UserService(
             UserManager<ApplicationUser> userManager,
             IAuthorizationService authorizationService,
             StoredFileRepository storedFileRepository,
             FileService fileService,
-            StoreRepository storeRepository
+            StoreRepository storeRepository,
+            ApplicationDbContextFactory applicationDbContextFactory
+            
         )
         {
             _userManager = userManager;
@@ -32,6 +37,28 @@ namespace BTCPayServer.Services
             _storedFileRepository = storedFileRepository;
             _fileService = fileService;
             _storeRepository = storeRepository;
+            _applicationDbContextFactory = applicationDbContextFactory;
+        }
+
+        public async Task<List<ApplicationUserData>> GetUsersWithRoles()
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            return await  (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
+                (userRole, role) => role.Name).ToArray()))).ToListAsync();
+        }
+        
+        
+        public static ApplicationUserData FromModel(ApplicationUser data, string[] roles)
+        {
+            return new ApplicationUserData()
+            {
+                Id = data.Id,
+                Email = data.Email,
+                EmailConfirmed = data.EmailConfirmed,
+                RequiresEmailConfirmation = data.RequiresEmailConfirmation,
+                Created = data.Created,
+                Roles = roles
+            };
         }
 
         public async Task<bool> IsAdminUser(string userId)

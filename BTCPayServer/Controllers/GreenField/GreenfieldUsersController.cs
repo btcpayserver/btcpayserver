@@ -9,13 +9,10 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -62,6 +59,25 @@ namespace BTCPayServer.Controllers.Greenfield
             _options = options;
             _authorizationService = authorizationService;
             _userService = userService;
+        }
+
+        [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/users/{idOrEmail}")]
+        public async Task<IActionResult> GetUser(string idOrEmail)
+        {
+            var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
+            if (user != null)
+            {
+                return Ok(await FromModel(user));
+            }
+            return UserNotFound();
+        }
+
+        [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/users/")]
+        public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
+        {
+            return Ok(await _userService.GetUsersWithRoles());
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -216,15 +232,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            return new ApplicationUserData()
-            {
-                Id = data.Id,
-                Email = data.Email,
-                EmailConfirmed = data.EmailConfirmed,
-                RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                Roles = roles,
-                Created = data.Created
-            };
+            return UserService.FromModel(data, roles);
         }
 
         private async Task<bool> IsUserTheOnlyOneAdmin()

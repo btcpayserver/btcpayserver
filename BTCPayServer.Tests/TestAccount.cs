@@ -236,6 +236,7 @@ namespace BTCPayServer.Tests
             }
 
             UserId = account.RegisteredUserId;
+            Email = RegisterDetails.Email;
             IsAdmin = account.RegisteredAdmin;
         }
 
@@ -248,6 +249,12 @@ namespace BTCPayServer.Tests
         }
 
         public string UserId
+        {
+            get;
+            set;
+        }
+        
+        public string Email
         {
             get;
             set;

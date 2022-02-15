@@ -52,6 +52,33 @@
             }
         },
         "/api/v1/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users",
+                "description": "Load all users that exist.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Users found"
+                    },
+                    "401": {
+                        "description": "Missing authorization for loading the users"
+                    },
+                    "403": {
+                        "description": "Authorized but forbidden to load the users. You have the wrong API permissions."
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
                     "Users"
@@ -129,7 +156,47 @@
                 ]
             }
         },
-        "/api/v1/users/{userId}": {
+        "/api/v1/users/{idOrEmail}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by ID or Email",
+                "description": "Get 1 user by ID or Email.",
+                "parameters": [
+                    {
+                        "name": "idOrEmail",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ID or email of the user to load",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User found"
+                    },
+                    "401": {
+                        "description": "Missing authorization for loading the user"
+                    },
+                    "403": {
+                        "description": "Authorized but forbidden to load the user. You have the wrong API permissions."
+                    },
+                    "404": {
+                        "description": "No user found with this ID or email"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Users"
@@ -161,7 +228,14 @@
                         "description": "User with provided ID was not found"
                     }
                 },
-                "security": []
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.candeleteuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         }
     },
@@ -192,7 +266,11 @@
                     "created": {
                         "nullable": true,
                         "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "roles": {
                         "type": "array",

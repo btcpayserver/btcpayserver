@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -35,10 +36,10 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
         }
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account")]
         [Authorize(Policy = Policies.CanViewCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> ListCustodianAccount(string storeId, [FromQuery] bool assetBalances = false)
+        public async Task<IActionResult> ListCustodianAccount(string storeId, [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -54,14 +55,6 @@ namespace BTCPayServer.Controllers.Greenfield
             for (int i = 0; i < r.Length; i++)
             {
                 var custodianAccountData = r[i];
-                
-                // TODO perform actual permission lookup
-                bool userHasManagePermissions = true;
-                if (!userHasManagePermissions)
-                {
-                    // TODO hide the "config" field, because it contains sensitive information (API key, etc). 
-                }
-
                 if (assetBalances)
                 {
                     var custodianAccountResponse = ToModelWithAssets(custodianAccountData);
@@ -69,7 +62,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var custodian = _custodianRegistry.getAll()[custodianCode];
                     try
                     {
-                        var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config);
+                        var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config, cancellationToken);
                         custodianAccountResponse.AssetBalances = balances;
                         responses[i] = custodianAccountResponse;
                     }
@@ -89,11 +82,11 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account/{accountId}")]
         [Authorize(Policy = Policies.CanViewCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId,
-            [FromQuery] bool assetBalances = false)
+            [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -113,7 +106,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
                 var custodianCode = custodianAccount.CustodianCode;
                 var custodian = _custodianRegistry.getAll()[custodianCode];
-                var balances = await custodian.GetAssetBalancesAsync(custodianAccount.Config);
+                var balances = await custodian.GetAssetBalancesAsync(custodianAccount.Config, cancellationToken);
                 custodianAccount.AssetBalances = balances;
             }
 
@@ -138,7 +131,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 // Only show the "config" field if the user can manage the Custodian Account, because config contains sensitive information (API key, etc).
                 r.Config = custodianAccount.GetBlob().config;
             }
-            
+
             return r;
         }
 
@@ -146,6 +139,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var r = new CustodianAccountDataClient();
             r.Id = custodianAccount.Id;
+            r.Name = custodianAccount.Name;
             r.CustodianCode = custodianAccount.CustodianCode;
             r.StoreId = custodianAccount.StoreId;
             if (CanSeeCustodianAccountConfig())
@@ -153,10 +147,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 // Only show the "config" field if the user can manage the Custodian Account, because config contains sensitive information (API key, etc).
                 r.Config = custodianAccount.GetBlob().config;
             }
+
             return r;
         }
 
-        [HttpPost("~/api/v1/store/{storeId}/custodian-account")]
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-account")]
         [Authorize(Policy = Policies.CanCreateCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateCustodianAccount(string storeId, CreateCustodianAccountRequest request)
@@ -168,7 +163,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
 
-            var custodianAccount = new CustodianAccountData() { CustodianCode = custodian.GetCode(), StoreId = storeId, };
+            // Use the name provided or if none provided use the name of the custodian.
+            string name = string.IsNullOrEmpty(request.Name) ? custodian.GetName() : request.Name;
+            
+            var custodianAccount = new CustodianAccountData() { CustodianCode = custodian.GetCode(), Name = name, StoreId = storeId, };
             var newBlob = new CustodianAccountData.CustodianAccountBlob();
             newBlob.config = request.Config;
             custodianAccount.SetBlob(newBlob);
@@ -178,7 +176,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpPut("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
+        [HttpPut("~/api/v1/stores/{storeId}/custodian-account/{accountId}")]
         [Authorize(Policy = Policies.CanModifyCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdateCustodianAccount(string storeId, string accountId,
@@ -209,7 +207,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(custodianAccount));
         }
 
-        [HttpDelete("~/api/v1/store/{storeId}/custodian-account/{accountId}")]
+        [HttpDelete("~/api/v1/stores/{storeId}/custodian-account/{accountId}")]
         [Authorize(Policy = Policies.CanModifyCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> DeleteCustodianAccount(string storeId, string accountId)
@@ -223,10 +221,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return NotFound();
         }
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account/{accountId}/{paymentMethod}/address")]
         [Authorize(Policy = Policies.CanDepositToCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod)
+        public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken cancellationToken = default)
         {
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
@@ -244,7 +242,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config);
+                    var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)
@@ -263,11 +261,11 @@ namespace BTCPayServer.Controllers.Greenfield
             return r;
         }
 
-        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/market")]
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-account/{accountId}/trade/market")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> Trade(string storeId, string accountId,
-            TradeRequestData request)
+            TradeRequestData request, CancellationToken cancellationToken = default)
         {
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
@@ -287,10 +285,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     // Qty is a percentage of current holdings
                     var config = custodianAccount.GetBlob().config;
-                    var balances = custodian.GetAssetBalancesAsync(config).Result;
+                    var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
                     var qtyToSell = balances[request.FromAsset];
                     var priceQuote =
-                        await tradableCustodian.GetQuoteForAssetAsync(request.ToAsset, request.FromAsset, config);
+                        await tradableCustodian.GetQuoteForAssetAsync(request.ToAsset, request.FromAsset, config, cancellationToken);
                     // TODO should we use the Bid or the Ask?
                     Qty = qtyToSell / priceQuote.Bid;
                 }
@@ -304,7 +302,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
-                        custodianAccount.GetBlob().config);
+                        custodianAccount.GetBlob().config, cancellationToken);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)
@@ -317,10 +315,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Placing market orders on \"{custodian.GetName()}\" is not supported.");
         }
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/quote")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account/{accountId}/trade/quote")]
         [Authorize(Policy = Policies.CanViewCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetTradeQuote(string storeId, string accountId, [FromQuery] string fromAsset, [FromQuery] string toAsset)
+        public async Task<IActionResult> GetTradeQuote(string storeId, string accountId, [FromQuery] string fromAsset, [FromQuery] string toAsset, CancellationToken cancellationToken = default)
         {
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
@@ -337,7 +335,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config);
+                    var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
                     return Ok(new TradeQuoteResult(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
                 }
                 catch (CustodianApiException e)
@@ -350,10 +348,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Getting a price quote on \"{custodian.GetName()}\" is not supported.");
         }
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/trade/{tradeId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account/{accountId}/trade/{tradeId}")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId)
+        public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken cancellationToken = default)
         {
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
@@ -370,7 +368,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config);
+                    var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config, cancellationToken);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)
@@ -384,11 +382,11 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpPost("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdrawal")]
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-account/{accountId}/withdrawal")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
-            WithdrawRequestData request)
+            WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
             var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
@@ -398,8 +396,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     var withdrawResult =
-                        await withdrawableCustodian.WithdrawAsync(request.Asset, request.Qty, custodianAccount.GetBlob().config);
-                    var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
+                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
+                    var result = new WithdrawResultData(withdrawResult.PaymentMethod, withdrawResult.LedgerEntries,
                         withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
@@ -414,10 +412,10 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpGet("~/api/v1/store/{storeId}/custodian-account/{accountId}/withdrawal/{asset}/{withdrawalId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-account/{accountId}/withdrawal/{asset}/{withdrawalId}")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId)
+        public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId, CancellationToken cancellationToken = default)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
             var custodian = _custodianRegistry.getAll()[custodianAccount.CustodianCode];
@@ -426,8 +424,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(asset, withdrawalId, custodianAccount.GetBlob().config);
-                    var result = new WithdrawResultData(withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(asset, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
+                    var result = new WithdrawResultData(withdrawResult.PaymentMethod, withdrawResult.LedgerEntries,
                         withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
@@ -468,7 +466,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
     public class WithdrawRequestData
     {
-        public string Asset { set; get; }
+        public string PaymentMethod { set; get; }
         public decimal Qty { set; get; }
     }
 }

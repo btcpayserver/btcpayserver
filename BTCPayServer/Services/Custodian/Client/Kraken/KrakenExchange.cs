@@ -38,12 +38,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return "Kraken";
     }
 
-    public string[] GetSupportedAssets()
-    {
-        // TODO use API to get a full list.
-        return new[] { "BTC", "LTC" };
-    }
-
     public List<AssetPairData> GetTradableAssetPairs()
     {
         return _memoryCache.GetOrCreate("KrakenTradableAssetPairs", entry =>
@@ -110,10 +104,10 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return request;
     }
 
-    public async Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config)
+    public async Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken)
     {
         var krakenConfig = ParseConfig(config);
-        var data = await QueryPrivate("Balance", null, krakenConfig);
+        var data = await QueryPrivate("Balance", null, krakenConfig, cancellationToken);
         var balances = data["result"];
         if (balances is JObject)
         {
@@ -138,7 +132,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
-    public async Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config)
+    public async Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)
     {
         if (paymentMethod == "BTC-OnChain")
         {
@@ -155,7 +149,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             JObject requestResult;
             try
             {
-                requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig);
+                requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig, cancellationToken);
             }
             catch (CustodianApiException ex)
             {
@@ -163,7 +157,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 {
                     // We cannot create a new address because there are too many already. Query again and look for an existing address to use.
                     param.Remove("new");
-                    requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig);
+                    requestResult = await QueryPrivate("DepositAddresses", param, krakenConfig, cancellationToken);
                 }
                 else
                 {
@@ -230,7 +224,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return krakenAsset;
     }
 
-    public async Task<MarketTradeResult> GetTradeInfoAsync(string tradeId, JObject config)
+    public async Task<MarketTradeResult> GetTradeInfoAsync(string tradeId, JObject config, CancellationToken cancellationToken)
     {
         // In Kraken, a trade is called an "Order". Don't get confused with a Transaction or a Ledger item!
         var krakenConfig = ParseConfig(config);
@@ -240,7 +234,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         param.Add("txid", tradeId);
         try
         {
-            var requestResult = await QueryPrivate("QueryOrders", param, krakenConfig);
+            var requestResult = await QueryPrivate("QueryOrders", param, krakenConfig, cancellationToken);
             var txInfo = requestResult["result"]?[tradeId] as JObject;
 
             var ledgerEntries = new List<LedgerEntryData>();
@@ -281,7 +275,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     }
 
 
-    public async Task<AssetQuoteResult> GetQuoteForAssetAsync(string fromAsset, string toAsset, JObject config)
+    public async Task<AssetQuoteResult> GetQuoteForAssetAsync(string fromAsset, string toAsset, JObject config, CancellationToken cancellationToken)
     {
         var pair = FindAssetPair(fromAsset, toAsset, false);
         if (pair == null)
@@ -291,7 +285,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         try
         {
-            var requestResult = await QueryPublic("Ticker?pair=" + pair.PairCode);
+            var requestResult = await QueryPublic("Ticker?pair=" + pair.PairCode, cancellationToken);
 
             var bid = requestResult["result"]?.SelectToken("..b[0]");
             var ask = requestResult["result"]?.SelectToken("..a[0]");
@@ -345,7 +339,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     }
 
 
-    public async Task<MarketTradeResult> TradeMarketAsync(string fromAsset, string toAsset, decimal qty, JObject config)
+    public async Task<MarketTradeResult> TradeMarketAsync(string fromAsset, string toAsset, decimal qty, JObject config, CancellationToken cancellationToken)
     {
         // Make sure qty is positive
         if (qty < 0)
@@ -368,7 +362,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         else
         {
             orderType = "sell";
-            var priceQuote = await GetQuoteForAssetAsync(assetPair.AssetSold, assetPair.AssetBought, config);
+            var priceQuote = await GetQuoteForAssetAsync(assetPair.AssetSold, assetPair.AssetBought, config, cancellationToken);
             // TODO should we use the Bid or the Ask?
             qty /= priceQuote.Bid;
         }
@@ -380,11 +374,11 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         param.Add("volume", qty.ToStringInvariant());
 
         var krakenConfig = ParseConfig(config);
-        var requestResult = await QueryPrivate("AddOrder", param, krakenConfig);
+        var requestResult = await QueryPrivate("AddOrder", param, krakenConfig, cancellationToken);
 
         // The field is called "txid", but it's an order ID and not a Transaction ID, so we need to be careful! :(
         var orderId = (string)requestResult["result"]?["txid"]?[0];
-        var r = await GetTradeInfoAsync(orderId, config);
+        var r = await GetTradeInfoAsync(orderId, config, cancellationToken);
 
         return r;
     }
@@ -409,11 +403,13 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
-    public async Task<WithdrawResult> WithdrawAsync(string asset, decimal amount, JObject config)
+    public async Task<WithdrawResult> WithdrawAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
     {
         var krakenConfig = ParseConfig(config);
-        var withdrawToAddressNamePerCurrency = krakenConfig.WithdrawToAddressNamePerCurrency;
-        var withdrawToAddressName = withdrawToAddressNamePerCurrency[asset];
+        var withdrawToAddressNamePerPaymentMethod = krakenConfig.WithdrawToAddressNamePerPaymentMethod;
+        var withdrawToAddressName = withdrawToAddressNamePerPaymentMethod[paymentMethod];
+        var asset = paymentMethod.Split("-")[0];
+        var network = paymentMethod.Split("-")[1];
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
 
@@ -423,29 +419,32 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         try
         {
-            var requestResult = await QueryPrivate("Withdraw", param, krakenConfig);
+            var requestResult = await QueryPrivate("Withdraw", param, krakenConfig, cancellationToken);
             var withdrawalId = (string)requestResult["result"]?["refid"];
 
-            return GetWithdrawalInfoAsync(asset, withdrawalId, config).Result;
+            return GetWithdrawalInfoAsync(paymentMethod, withdrawalId, config, cancellationToken).Result;
         }
         catch (CustodianApiException e)
         {
             if (e.Message == "EFunding:Unknown withdraw key")
             {
-                throw new InvalidWithdrawalTarget(this, asset, withdrawToAddressName, e);
+                throw new InvalidWithdrawalTargetException(this, paymentMethod, withdrawToAddressName, e);
             }
+
             throw;
         }
     }
 
-    public async Task<WithdrawResult> GetWithdrawalInfoAsync(string asset, string withdrawalId, JObject config)
+    public async Task<WithdrawResult> GetWithdrawalInfoAsync(string paymentMethod, string withdrawalId, JObject config, CancellationToken cancellationToken)
     {
+        var asset = paymentMethod.Split("-")[0];
+        var network = paymentMethod.Split("-")[1];
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
         param.Add("asset", krakenAsset);
 
         var krakenConfig = ParseConfig(config);
-        var withdrawStatusResponse = await QueryPrivate("WithdrawStatus", param, krakenConfig);
+        var withdrawStatusResponse = await QueryPrivate("WithdrawStatus", param, krakenConfig, cancellationToken);
 
         var recentWithdrawals = withdrawStatusResponse["result"];
         foreach (var withdrawal in recentWithdrawals)
@@ -486,18 +485,30 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 ledgerEntries.Add(new LedgerEntryData(asset, -1 * fee,
                     LedgerEntryData.LedgerEntryType.Fee));
 
-                return new WithdrawResult(asset, ledgerEntries, withdrawalId, status, withdrawalToAddress, transactionId);
+                return new WithdrawResult(paymentMethod, asset, ledgerEntries, withdrawalId, status, withdrawalToAddress, transactionId);
             }
         }
 
         throw new WithdrawalNotFoundException(withdrawalId);
     }
 
-
-    private async Task<JObject> QueryPrivate(string method, Dictionary<string, string> param, KrakenConfig config)
+    public string[] GetWithdrawablePaymentMethods()
     {
-        // TODO is this okay? Or should the cancellation token be an input argument?
-        var cancellationToken = CreateCancelationToken();
+        // Withdraw is the same as deposit
+        return GetDepositablePaymentMethods();
+    }
+
+
+    private async Task<JObject> QueryPrivate(string method, Dictionary<string, string> param, KrakenConfig config, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(config.ApiKey))
+        {
+            throw new BadConfigException(new[] { "ApiKey" });
+        }
+        if (string.IsNullOrEmpty(config.PrivateKey))
+        {
+            throw new BadConfigException(new[] { "PrivateKey" });
+        }
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
         string nonce = now.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture) + "000";
@@ -516,7 +527,17 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var postDataString = QueryHelpers.AddQueryString("", postData).Remove(0, 1);
         var path = "/0/private/" + method;
         var url = "https://api.kraken.com" + path;
-        var decodedSecret = Convert.FromBase64String(config.PrivateKey);
+
+        byte[] decodedSecret;
+
+        try
+        {
+            decodedSecret = Convert.FromBase64String(config.PrivateKey);
+        }
+        catch (FormatException e)
+        {
+            throw new BadConfigException(new[] { "PrivateKey" });
+        }
 
         var sha256 = SHA256.Create();
         var hmac512 = new HMACSHA512(decodedSecret);
@@ -567,11 +588,8 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return r;
     }
 
-    private async Task<JObject> QueryPublic(string method)
+    private async Task<JObject> QueryPublic(string method, CancellationToken cancellationToken)
     {
-        // TODO is this okay? Or should the cancellation token be an input argument?
-        var cancellationToken = CreateCancelationToken();
-
         var path = "/0/public/" + method;
         var url = "https://api.kraken.com" + path;
 

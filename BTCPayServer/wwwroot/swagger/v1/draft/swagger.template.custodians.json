@@ -6,82 +6,12 @@
         "version": "v1"
     },
     "paths": {
-        "/api/v1/assets": {
-            "get": {
-                "tags": [
-                    "Assets"
-                ],
-                "summary": "List Supported Assets",
-                "description": "List all supported assets for the BTCPay instance. This includes both fiat currency codes + all crypto codes. You can add a filter to return only fiat or crypto. By default both are returned.",
-                "operationId": "Custodians_GetSupportedAssets",
-                "parameters": [
-                    {
-                        "name": "filter",
-                        "in": "query",
-                        "required": false,
-                        "description": "Filter results to contain only fiat or crypto. By default there is no filter and both types are returned.",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "fiat",
-                                "crypto"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "list of supported assets",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AssetData"
-                                    }
-                                },
-                                "example": [
-                                    {
-                                        "code": "BTC",
-                                        "label": "Bitcoin",
-                                        "type": "crypto"
-                                    },
-                                    {
-                                        "code": "LTC",
-                                        "label": "Litecoin",
-                                        "type": "crypto"
-                                    },
-                                    {
-                                        "code": "USD",
-                                        "label": "US Dollar",
-                                        "type": "fiat"
-                                    },
-                                    {
-                                        "code": "EUR",
-                                        "label": "Euro",
-                                        "type": "fiat"
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "API Key": [
-                            "TODO"
-                        ],
-                        "Basic": []
-                    }
-                ]
-            }
-        },
         "/api/v1/custodians": {
             "get": {
                 "tags": [
                     "Custodians"
                 ],
-                "summary": "List Supported Custodians",
+                "summary": "List supported custodians",
                 "description": "List all supported custodians for the BTCPay instance. You can install plugins to add more custodians.",
                 "operationId": "Custodians_GetSupportedCustodians",
                 "responses": {
@@ -90,7 +20,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/CustodianDataList"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CustodianData"
+                                    }
                                 }
                             }
                         }
@@ -98,15 +31,13 @@
                 },
                 "security": [
                     {
-                        "API Key": [
-                            "TODO"
-                        ],
+                        "API_Key": [],
                         "Basic": []
                     }
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts": {
+        "/api/v1/stores/{storeId}/custodian-accounts": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
@@ -156,14 +87,14 @@
                 "tags": [
                     "Store Custodian Account"
                 ],
-                "summary": "Register a custodial account with a store.",
-                "description": "Register a custodial account with a store.",
+                "summary": "Add a custodial account to a store.",
+                "description": "Add a custodial account to a store.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CustodianAccountData"
+                                "$ref": "#/components/schemas/CreateCustodianAccountRequest"
                             }
                         }
                     },
@@ -190,66 +121,15 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifycustodianaccounts"
                         ],
                         "Basic": []
                     }
                 ]
-            },
-            "put": {
-                "tags": [
-                    "Store Custodian Account"
-                ],
-                "summary": "Update a custodial account",
-                "description": "Update a custodial account",
-                "requestBody": {
-                    "x-name": "request",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CustodianAccountData"
-                            }
-                        }
-                    },
-                    "required": true,
-                    "x-position": 1
-                },
-                "responses": {
-                    "200": {
-                        "description": "The updated custodian account",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CustodianAccountData"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "TODO": true
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden to modify new custodian account"
-                    }
-                },
-                "security": [
-                    {
-                        "API Key": [
-                            "btcpay.store.canmodifycustodianaccounts"
-                        ],
-                        "Basic": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Store Custodian Account"
-                ],
-                "summary": "Delete a store custodian account"
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
@@ -287,7 +167,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Information about the requested custodian account",
+                        "description": "List of custodian accounts for the store.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -297,18 +177,78 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to view the store's custodian accounts"
+                        "description": "If you are authenticated but forbidden to view the custodian account"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Update custodial account",
+                "description": "Update custodial account",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCustodianAccountRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated custodian account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustodianAccountData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "TODO": true
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify new custodian account"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifycustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Custodian Account"
+                ],
+                "summary": "Delete store custodian account",
+                "description": "Deletes a custodial account",
+                "responses": {
+                    "200": {
+                        "description": "Custodian account deleted"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to delete the custodian account"
                     }
                 }
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade/quote": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trade/quote": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
                 ],
                 "summary": "Get quote for trading one asset for another",
-                "description": "Get the price for converting one asset into another.",
+                "description": "Get the current bid and ask price for converting one asset into another.",
                 "parameters": [
                     {
                         "name": "storeId",
@@ -349,7 +289,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Information about the trade that was executed",
+                        "description": "The quote for converting one asset to another.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -367,7 +307,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canviewcustodianaccounts"
                         ],
                         "Basic": []
@@ -375,7 +315,7 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/trade/market": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trade/market": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -432,7 +372,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.cantradecustodianaccounts"
                         ],
                         "Basic": []
@@ -440,7 +380,7 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-account/{accountId}/{paymentMethod}/address": {
+        "/api/v1/stores/{storeId}/custodian-account/{accountId}/{paymentMethod}/address": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
@@ -486,7 +426,7 @@
                                     "properties": {
                                         "depositAddress": {
                                             "type": "string",
-                                            "description": "The address to deposit to"
+                                            "description": "The address to deposit your funds."
                                         }
                                     },
                                     "description": "A bitcoin address belonging to the custodian"
@@ -506,7 +446,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.candeposittocustodianaccounts"
                         ],
                         "Basic": []
@@ -514,7 +454,7 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/withdrawal": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawal": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -592,7 +532,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canwithdrawfromcustodianaccounts"
                         ],
                         "Basic": []
@@ -600,7 +540,7 @@
                 ]
             }
         },
-        "/api/v1/store/{storeId}/custodian-accounts/{accountId}/withdrawal/{withdrawalId}": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawal/{withdrawalId}": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -672,7 +612,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canwithdrawfromcustodianaccounts"
                         ],
                         "Basic": []
@@ -683,73 +623,52 @@
     },
     "components": {
         "schemas": {
-            "CustodianDataList": {
-                "type": "array",
-                "items": {
-                    "$ref": "#/components/schemas/CustodianData"
-                }
-            },
             "CustodianData": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/CustodianData"
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "code": {
-                                "type": "string",
-                                "description": "The unique code of the custodian. Example: \"kraken\".",
-                                "nullable": false
-                            },
-                            "label": {
-                                "type": "string",
-                                "description": "The name of the custodian. Example: \"Kraken\".",
-                                "nullable": false
-                            },
-                            "homepage": {
-                                "type": "string",
-                                "description": "The homepage of the custodian. Example: \"https://www.kraken.com\".",
-                                "format": "url",
-                                "nullable": false
-                            },
-                            "depositableAssets": {
-                                "type": "array",
-                                "description": "A list of asset (crypto or fiat) you can deposit on the custodian. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
-                                "nullable": false
-                            },
-                            "withdrawableAssets": {
-                                "type": "array",
-                                "description": "A list of asset (crypto or fiat) you can withdraw from the custodian. Always in uppercase. Example: [\"BTC\",\"EUR\", \"USD\", \"ETH\",...]",
-                                "nullable": false
-                            },
-                            "tradeableAssetPairs": {
-                                "type": "array",
-                                "description": "A list of tradeable asset pairs, or NULL if the custodian cannot trade/convert assets. if thr asset pair contains fiat, fiat is always put last. If both assets are a cyrptocode or both are fiat, the pair is written alphabetically. Always in uppercase. Example: [\"BTC/EUR\",\"BTC/USD\", \"EUR/USD\", \"BTC/ETH\",...]",
-                                "nullable": true
-                            }
-                        }
-                    }
-                ]
-            },
-            "AssetData": {
                 "type": "object",
                 "properties": {
                     "code": {
                         "type": "string",
-                        "description": "The unique code of the asset. Example: BTC, USD, EUR, LTC, ..."
+                        "description": "The unique code of the custodian.",
+                        "nullable": false
                     },
                     "label": {
                         "type": "string",
-                        "description": "The human readable name of the asset. Example: Bitcoin, US Dollar, Euro, Litecoin, ..."
+                        "description": "The name of the custodian.",
+                        "nullable": false
                     },
-                    "type": {
-                        "description": "Is this a fiat currency or a crypto code.",
-                        "enum": [
-                            "fiat",
-                            "crypto"
-                        ]
+                    "depositablePaymentMethods": {
+                        "type": "array",
+                        "description": "A list of payment methods (crypto code + network) you can deposit to the custodian.",
+                        "nullable": false
+                    },
+                    "withdrawablePaymentMethods": {
+                        "type": "array",
+                        "description": "A list of payment methods (crypto code + network) you can withdraw from the custodian.",
+                        "nullable": false
+                    },
+                    "tradableAssetPairs": {
+                        "type": "array",
+                        "description": "A list of tradable asset pairs, or NULL if the custodian cannot trade/convert assets.",
+                        "nullable": true
                     }
+                },
+                "example": {
+                    "code": "kraken",
+                    "name": "Kraken",
+                    "tradableAssetPairs": [
+                        "BTC/USD",
+                        "BTC/EUR",
+                        "LTC/USD",
+                        "LTC/EUR"
+                    ],
+                    "withdrawablePaymentMethods": [
+                        "BTC-OnChain",
+                        "LTC-OnChain"
+                    ],
+                    "depositablePaymentMethods": [
+                        "BTC-OnChain",
+                        "LTC-OnChain"
+                    ]
                 }
             },
             "CustodianAccountData": {
@@ -766,20 +685,31 @@
                     },
                     "custodianCode": {
                         "type": "string",
-                        "description": "The code for the custodian. I.e. \"kraken\""
+                        "description": "The code for the custodian."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the custodian account."
                     },
                     "assetBalances": {
                         "type": "array",
+                        "nullable": true,
                         "description": "A real-time loaded list of all assets (fiat and crypto) on this custodian and the quantity held in the account. Assets with qty 0 can be omitted.",
                         "items": {
                             "$ref": "#/components/schemas/AssetBalanceData"
                         }
+                    },
+                    "config": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "The configuration of this custodian account. Specific contents depend on the custodian and your access permissions."
                     }
                 },
                 "example": {
                     "accountId": "xxxxxxxxxxxxxxx",
                     "storeId": "xxxxxxxxxxxxxx",
                     "custodianCode": "kraken",
+                    "name": "My Kraken Account",
                     "assetBalances": [
                         {
                             "asset": "BTC",
@@ -789,7 +719,54 @@
                             "asset": "USD",
                             "qty": 123456.78
                         }
-                    ]
+                    ],
+                    "config": {
+                        "WithdrawToAddressNamePerPaymentMethod": {
+                            "BTC-OnChain": "My Ledger Nano"
+                        },
+                        "ApiKey": "xxx",
+                        "PrivateKey": "xxx"
+                    }
+                }
+            },
+            "CreateCustodianAccountRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique code of the customer's account with this custodian. The format depends on the custodian."
+                    },
+                    "storeId": {
+                        "type": "string",
+                        "description": "The store ID."
+                    },
+                    "custodianCode": {
+                        "type": "string",
+                        "description": "The code for the custodian."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the custodian account."
+                    },
+                    "config": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "The configuration of this custodian account. Specific contents depend on the custodian and your access permissions."
+                    }
+                },
+                "example": {
+                    "accountId": "xxxxxxxxxxxxxxx",
+                    "storeId": "xxxxxxxxxxxxxx",
+                    "custodianCode": "kraken",
+                    "name": "My Kraken Account",
+                    "config": {
+                        "WithdrawToAddressNamePerPaymentMethod": {
+                            "BTC-OnChain": "My Ledger Nano"
+                        },
+                        "ApiKey": "xxx",
+                        "PrivateKey": "xxx"
+                    }
                 }
             },
             "QuoteResultData": {
@@ -804,11 +781,23 @@
                         "type": "string",
                         "description": "The asset you want.",
                         "required": true
+                    },
+                    "bid": {
+                        "type": "number",
+                        "description": "The bid price.",
+                        "required": true
+                    },
+                    "ask": {
+                        "type": "number",
+                        "description": "The ask price",
+                        "required": true
                     }
                 },
                 "example": {
                     "fromAsset": "USD",
-                    "toAsset": "BTC"
+                    "toAsset": "BTC",
+                    "bid": 30000.12,
+                    "ask": 30002.24
                 }
             },
             "TradeRequestData": {
@@ -857,14 +846,14 @@
                     },
                     "ledgerEntries": {
                         "type": "array",
-                        "description": "The asset entries that were changed during the trade. This is an array of at least 2 items for the asset sold and the asset gained. The 1st item is always the asset sold and the 2nd item is always the asset bought. It may also includes ledger entries for the costs of the trade and may include credits or exchange tokens used to give a discount.",
+                        "description": "The asset entries that were changed during the trade. This is an array of at least 2 items with the asset sold and the asset gained. It may also include ledger entries for the costs of the trade and possibly exchange tokens used.",
                         "items": {
                             "$ref": "#/components/schemas/LedgerEntryData"
                         }
                     },
                     "tradeId": {
                         "type": "string",
-                        "description": "The unique ID of the trade/order used by the exchange.",
+                        "description": "The unique ID of the trade used by the exchange. This ID can be used to get the details of this trade at a later time.",
                         "nullable": true
                     },
                     "accountId": {
@@ -879,28 +868,28 @@
                     }
                 },
                 "example": {
-                    "fromAsset": "BTC",
-                    "toAsset": "USD",
+                    "fromAsset": "USD",
+                    "toAsset": "BTC",
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": -1.23456,
-                            "comment": "Asset sold"
+                            "qty": 1.23456,
+                            "type": "Trade"
                         },
                         {
                             "asset": "USD",
-                            "qty": 61728,
-                            "comment": "Asset bought"
+                            "qty": -61728,
+                            "type": "Trade"
                         },
                         {
                             "asset": "BTC",
                             "qty": -0.00123456,
-                            "comment": "Trading fee"
+                            "type": "Fee"
                         },
                         {
                             "asset": "KFEE",
                             "qty": -123.456,
-                            "comment": "Kraken fee credits"
+                            "type": "Fee"
                         }
                     ],
                     "tradeId": "XXXX-XXXX-XXXX-XXXX",
@@ -911,9 +900,9 @@
             "WithdrawalRequestData": {
                 "type": "object",
                 "properties": {
-                    "asset": {
+                    "paymentMethod": {
                         "type": "string",
-                        "description": "The asset that is being withdrawn.",
+                        "description": "The payment method (cryptocode + network) of the withdrawal.",
                         "required": true
                     },
                     "qty": {
@@ -923,7 +912,7 @@
                     }
                 },
                 "example": {
-                    "asset": "BTC",
+                    "paymentMethod": "BTC-OnChain",
                     "qty": 0.123456
                 }
             },
@@ -933,6 +922,10 @@
                     "asset": {
                         "type": "string",
                         "description": "The asset that is being withdrawn."
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method that is used (crypto code + network)."
                     },
                     "ledgerEntries": {
                         "type": "array",
@@ -974,16 +967,17 @@
                 },
                 "example": {
                     "asset": "BTC",
+                    "paymentMethod": "BTC-OnChain",
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
                             "qty": -0.123456,
-                            "comment": "Asset withdrawn"
+                            "type": "Withdrawal"
                         },
                         {
                             "asset": "BTC",
                             "qty": -0.005,
-                            "comment": "Fixed withdrawal fee"
+                            "type": "Fee"
                         }
                     ],
                     "address": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -1008,14 +1002,14 @@
                     },
                     "type": {
                         "type": "string",
-                        "description": "0 = trade, 1 = fee",
+                        "description": "Trade or Fee",
                         "nullable": false
                     }
                 },
                 "example": {
                     "asset": "BTC",
                     "qty": 1.23456,
-                    "comment": null
+                    "type": "Trade"
                 }
             },
             "AssetBalanceData": {

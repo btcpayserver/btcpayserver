@@ -2,10 +2,10 @@ namespace BTCPayServer.Data;
 
 public class CustodianData
 {
-    public string code { get; set; }
-    public string name { get; set; }
-    public string[] tradableAssetPairs { get; set; }
-    public string[] withdrawableAssets { get; set; }
-    public string[] depositableAssets { get; set; }
+    public string Code { get; set; }
+    public string Name { get; set; }
+    public string[] TradableAssetPairs { get; set; }
+    public string[] WithdrawablePaymentMethods { get; set; }
+    public string[] DepositablePaymentMethods { get; set; }
     
 }

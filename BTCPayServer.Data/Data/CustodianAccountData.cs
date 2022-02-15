@@ -19,6 +19,9 @@ public class CustodianAccountData
     [MaxLength(50)]
     public string CustodianCode { get; set; }
     
+    [MaxLength(50)]
+    public string Name { get; set; }
+    
     [JsonIgnore]
     public byte[] Blob { get; set; }
     

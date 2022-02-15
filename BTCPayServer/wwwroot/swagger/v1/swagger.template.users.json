@@ -70,7 +70,14 @@
                         "description": "Authorized but forbidden to load the users. You have the wrong API permissions."
                     }
                 },
-                "security": ["btcpay.server.canviewusers"]
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -181,10 +188,14 @@
                         "description": "No user found with this ID or email"
                     }
                 },
-                "API Key": [
-                    "btcpay.server.canviewusers"
-                ],
-                "Basic": []
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -217,7 +228,14 @@
                         "description": "User with provided ID was not found"
                     }
                 },
-                "security": []
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.candeleteuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         }
     },
@@ -248,7 +266,11 @@
                     "created": {
                         "nullable": true,
                         "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "roles": {
                         "type": "array",

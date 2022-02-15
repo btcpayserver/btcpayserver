@@ -951,17 +951,17 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "The status of the withdrawal: 'Queued', 'Success', 'Failed' or 'Unknown'.",
+                        "description": "The status of the withdrawal: 'Queued', 'Complete', 'Failed' or 'Unknown'.",
                         "nullable": false
                     },
                     "transactionId": {
                         "type": "string",
-                        "description": "The transaction ID on the blockchain if the withdrawal has been executed.",
+                        "description": "The transaction ID on the blockchain once the withdrawal has been executed.",
                         "nullable": true
                     },
                     "targetAddress": {
                         "type": "string",
-                        "description": "The address where the funds were sent to if the withdrawal has been executed.",
+                        "description": "The address where the funds were sent to once the withdrawal has been executed.",
                         "nullable": true
                     }
                 },
@@ -980,10 +980,12 @@
                             "type": "Fee"
                         }
                     ],
-                    "address": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                     "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
                     "accountId": "xxxxxxxxxxxxxxx",
-                    "custodianCode": "kraken"
+                    "custodianCode": "kraken",
+                    "status": "Complete",
+                    "transactionId": "xxxxxxxxxxxxxxx",
+                    "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 }
             },
             "LedgerEntryData": {
@@ -1002,7 +1004,7 @@
                     },
                     "type": {
                         "type": "string",
-                        "description": "Trade or Fee",
+                        "description": "Trade, Fee or Withdrawal",
                         "nullable": false
                     }
                 },
@@ -1031,6 +1033,14 @@
                     "asset": "BTC",
                     "qty": 1.23456
                 }
+            },
+            "LedgerEntryType": {
+                "type": "string",
+                "enum": [
+                    "Trade",
+                    "Fee",
+                    "Withdrawal"
+                ]
             }
         }
     }

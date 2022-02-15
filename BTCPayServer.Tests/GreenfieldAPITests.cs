@@ -2461,5 +2461,23 @@ namespace BTCPayServer.Tests
              Assert.Empty(payouts.Where(data => data.State != PayoutState.InProgress));
          });
         }
+        
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CustodiansControllerTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertHttpError(401, async () => await unauthClient.GetCustodians());
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var clientBasic = await user.CreateClient();
+            var custodians = await clientBasic.GetCustodians();
+            Assert.NotNull(custodians);
+            Assert.Single(custodians.Select(s => s.Code == "kraken"));
+        }
     }
 }

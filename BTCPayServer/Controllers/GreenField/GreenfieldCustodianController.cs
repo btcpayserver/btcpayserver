@@ -1,5 +1,6 @@
 using System.Linq;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;

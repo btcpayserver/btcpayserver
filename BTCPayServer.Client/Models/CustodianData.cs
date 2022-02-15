@@ -1,4 +1,4 @@
-namespace BTCPayServer.Data;
+namespace BTCPayServer.Client.Models;
 
 public class CustodianData
 {

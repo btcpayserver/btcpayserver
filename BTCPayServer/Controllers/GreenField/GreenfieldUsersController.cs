@@ -80,14 +80,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
         {
-            var users = _userManager.Users.ToArray();
-            ApplicationUserData[] userDataList = new ApplicationUserData[users.Length];
-
-            for (int i = 0; i < users.Length; i++)
-            {
-                userDataList[i] = await FromModel(users[i]);
-            }
-            return Ok(userDataList);
+            return Ok(await _userService.GetUsersWithRoles());
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -242,15 +235,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            return new ApplicationUserData()
-            {
-                Id = data.Id,
-                Email = data.Email,
-                EmailConfirmed = data.EmailConfirmed,
-                RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                Roles = roles,
-                Created = data.Created
-            };
+            return UserService.FromModel(data, roles);
         }
 
         private async Task<bool> IsUserTheOnlyOneAdmin()

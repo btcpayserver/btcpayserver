@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.5
+
+### New features:
+
+* Ability to bump fees of transactions and invoices via CPFP (#3395) @NicolasDorier
+* Add ability to add description to pull payment (#3363) @ubolator
+* Greenfield: Can add store guest/owner to a store (#3363) @Kukks
+
+### Bug fixes:
+
+* Fix payment request archival actions (#3443) @dennisreimann
+* Fix: filtering paid invoices in the invoice list wasn't working anymore (#3434) @dennisreimann @NicolasDorier
+* Fix: Clicking any per-store nav links from the pairing approval page fails with 404 (#3431 #3438) @dennisreimann
+
+### Improvements:
+
+* UI improvements for the crowdfund settings (#3437 #3422) @dstrukt @dennisreimann
+* Redirect to transactions list after wallet creation (#3451) @dennisreimann
+* Setup guide: Link wallet setup always to BTC (#3442)
+
 ## 1.4.4
 
 ### Bug fixes:

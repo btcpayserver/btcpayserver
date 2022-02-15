@@ -3,6 +3,7 @@ using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {
@@ -34,17 +35,17 @@ namespace BTCPayServer.Payments
             return "LNURL/AdditionalPaymentMethodDetails";
         }
 
-        public override Dictionary<string, object> GetAdditionalData()
+        public override Dictionary<string, JObject> GetAdditionalData()
         {
             var result = base.GetAdditionalData();
             if (!string.IsNullOrEmpty(ProvidedComment))
             {
-                result.TryAdd(nameof(ProvidedComment), ProvidedComment);
+                result.TryAdd(nameof(ProvidedComment), new JObject(ProvidedComment));
             }
 
             if (!string.IsNullOrEmpty(ConsumedLightningAddress))
             {
-                result.TryAdd(nameof(ConsumedLightningAddress), ConsumedLightningAddress);
+                result.TryAdd(nameof(ConsumedLightningAddress), new JObject(ConsumedLightningAddress));
             }
 
             return result;

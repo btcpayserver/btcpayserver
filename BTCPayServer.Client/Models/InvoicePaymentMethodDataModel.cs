@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -34,7 +35,7 @@ namespace BTCPayServer.Client.Models
         public string PaymentMethod { get; set; }
 
         public string CryptoCode { get; set; }
-        public Dictionary<string, object> AdditionalData { get; set; }
+        public Dictionary<string, JObject> AdditionalData { get; set; }
 
         public class Payment
         {

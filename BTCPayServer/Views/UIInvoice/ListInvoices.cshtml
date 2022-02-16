@@ -4,6 +4,8 @@
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
+	if (this.Context.GetRouteValue("storeId") is string)
+		storeIds = string.Empty;
 }
 
 @section PageHeadContent {

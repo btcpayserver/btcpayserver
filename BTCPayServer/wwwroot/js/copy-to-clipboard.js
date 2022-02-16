@@ -1,7 +1,7 @@
 const confirmCopy = (el, message) => {
     el.innerText = message;
     setTimeout(function () {
-        el.innerText = el.dataset.clipboardInitialText;
+        el.innerHTML = el.dataset.clipboardInitial;
     }, 2500);
 }
 
@@ -10,8 +10,8 @@ window.copyToClipboard = function (e, data) {
     const item = e.target.closest('[data-clipboard]');
     const confirm = item.querySelector('[data-clipboard-confirm]') || item;
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-    if (!confirm.dataset.clipboardInitialText) {
-        confirm.dataset.clipboardInitialText = confirm.innerText;
+    if (!confirm.dataset.clipboardInitial) {
+        confirm.dataset.clipboardInitial = confirm.innerHTML;
         confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
     }
     if (navigator.clipboard) {

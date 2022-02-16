@@ -11,7 +11,7 @@
 
 .qr-container {
     position: relative;
-    text-align: center;
+    display: inline-block;
 }
 
 .qr-container svg {

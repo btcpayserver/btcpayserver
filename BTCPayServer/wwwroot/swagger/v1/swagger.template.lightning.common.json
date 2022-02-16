@@ -162,6 +162,12 @@
                         "nullable": true,
                         "description": "The fee limit expressed as a percentage of the payment amount",
                         "example": "6.15"
+                    },
+                    "maxFeeFlat": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The fee limit expressed as a fixed amount in satoshi",
+                        "example": "21"
                     }
                 }
             },

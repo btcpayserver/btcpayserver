@@ -178,8 +178,12 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.CreateValidationError(ModelState);
             }
-
-            var result = await lightningClient.Pay(lightningInvoice.BOLT11, new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent });
+            
+            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null
+                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat }
+                : null;
+            var result = await lightningClient.Pay(lightningInvoice.BOLT11, param);
+            
             return result.Result switch
             {
                 PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer"),

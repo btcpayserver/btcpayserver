@@ -8,12 +8,12 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 <div class="d-sm-flex align-items-center justify-content-between">
-    <div>
+    <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
         <h2 class="mb-1">@Model.Label</h2>
         <div class="text-muted fw-semibold">
             @Model.Balance @Model.Network.CryptoCode
         </div>
-    </div>
+    </a>
     <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">
         @if (!Model.Network.ReadonlyWallet)
         {

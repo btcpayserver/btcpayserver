@@ -65,6 +65,11 @@ hr.primary {
     }
 }
 
+a.unobtrusive-link {
+    color: inherit;
+    text-decoration: inherit;
+}
+
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;

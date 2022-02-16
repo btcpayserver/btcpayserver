@@ -91,22 +91,16 @@
                 </div>
             </div>
         }
-        <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" class="ms-auto">
-            <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Actions
-                </button>
-                <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+        <div class="dropdown ms-auto">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Actions
+            </button>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="ActionsDropdownToggle">
+                <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId">
         		    <button id="BumpFee" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
-                    <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")" class="dropdown-item" id="WalletRescan">Rescan wallet for missing transactions</a>
-                    <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
-                    @if (User.IsInRole(Roles.ServerAdmin))
-                    {
-                        <button name="command" type="submit" class="dropdown-item" value="clear">Clear all transactions from history</button>
-                    }
-                </div>
+                </form> 
             </div>
-        </form>
+        </div>
     </div>
     
     <div class="row">

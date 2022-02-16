@@ -1071,11 +1071,9 @@ namespace BTCPayServer.Tests
             Assert.Contains("m/84'/1'/0'",
                 s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
 
-            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-
             // Make sure we can rescan, because we are admin!
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("WalletRescan")).Click();
+            s.Driver.FindElement(By.Id("Rescan")).Click();
             Assert.Contains("The batch size make sure", s.Driver.PageSource);
 
             // Check the tx sent earlier arrived

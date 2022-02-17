@@ -122,7 +122,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifycustodianaccounts"
+                            "btcpay.store.canmanagecustodianaccounts"
                         ],
                         "Basic": []
                     }
@@ -220,7 +220,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifycustodianaccounts"
+                            "btcpay.store.canmanagecustodianaccounts"
                         ],
                         "Basic": []
                     }
@@ -242,7 +242,7 @@
                 }
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trade/quote": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
@@ -315,7 +315,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trade/market": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -380,7 +380,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-account/{accountId}/{paymentMethod}/address": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/{paymentMethod}/address": {
             "get": {
                 "tags": [
                     "Store Custodian Account"
@@ -454,7 +454,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawal": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -540,7 +540,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawal/{withdrawalId}": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
             "post": {
                 "tags": [
                     "Store Custodian Account"
@@ -648,7 +648,7 @@
                     },
                     "tradableAssetPairs": {
                         "type": "array",
-                        "description": "A list of tradable asset pairs, or NULL if the custodian cannot trade/convert assets.",
+                        "description": "A list of tradable asset pairs, or NULL if the custodian cannot trades/convert assets.",
                         "nullable": true
                     }
                 },

@@ -107,7 +107,20 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public async Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken)
     {
         var krakenConfig = ParseConfig(config);
-        var data = await QueryPrivate("Balance", null, krakenConfig, cancellationToken);
+        JObject data;
+        try
+        {
+            data = await QueryPrivate("Balance", null, krakenConfig, cancellationToken);
+        }
+        catch (BadConfigException e)
+        {
+            throw;
+        }
+        catch (System.Exception e)
+        {
+            throw new AssetBalancesUnavailableException(e);
+        }
+
         var balances = data["result"];
         if (balances is JObject)
         {
@@ -125,7 +138,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                     }
                 }
             }
-
             return r;
         }
 
@@ -501,11 +513,12 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     private async Task<JObject> QueryPrivate(string method, Dictionary<string, string> param, KrakenConfig config, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(config.ApiKey))
+        if (string.IsNullOrEmpty(config?.ApiKey))
         {
             throw new BadConfigException(new[] { "ApiKey" });
         }
-        if (string.IsNullOrEmpty(config.PrivateKey))
+
+        if (string.IsNullOrEmpty(config?.PrivateKey))
         {
             throw new BadConfigException(new[] { "PrivateKey" });
         }
@@ -633,6 +646,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     private KrakenConfig ParseConfig(JObject config)
     {
-        return config.ToObject<KrakenConfig>();
+        return config?.ToObject<KrakenConfig>();
     }
 }

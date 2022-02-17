@@ -15,6 +15,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Tests.Logging;
@@ -2478,6 +2479,180 @@ namespace BTCPayServer.Tests
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
             Assert.Single(custodians.Select(s => s.Code == "kraken"));
+        }
+
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CustodianAccountControllerTests()
+        {
+            
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var authedButLackingPermissionsClient = await admin.CreateClient(Policies.CanViewStoreSettings);
+            var viewerOnlyClient = await admin.CreateClient(Policies.CanViewCustodianAccounts);
+            var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
+            var store = await adminClient.GetStore(admin.StoreId);
+            var storeId = store.Id;
+            
+            // Load a custodian, we use the first one we find.
+            var custodianRegistry = tester.PayTester.GetService<CustodianRegistry>();
+            var custodian = custodianRegistry.getAll().First().Value;
+            
+            
+            // List custodian accounts
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId));
+             
+             // Auth, but wrong permission
+             await AssertHttpError(403, async () => await authedButLackingPermissionsClient.GetCustodianAccounts(storeId));
+             
+             // Auth, correct permission, empty result
+             var emptyCustodianAccounts = await viewerOnlyClient.GetCustodianAccounts(storeId);
+             Assert.Empty(emptyCustodianAccounts);
+             
+             
+             // Create custodian account
+             
+            JObject config = JObject.Parse(@"{
+'WithdrawToAddressNamePerPaymentMethod': {
+   'BTC-OnChain': 'My Ledger Nano'
+},
+'ApiKey': 'APIKEY',
+'PrivateKey': 'PRIVATEKEY'
+}");
+            
+            var createCustodianAccountRequest = new CreateCustodianAccountRequest();
+            createCustodianAccountRequest.Config = config;
+            createCustodianAccountRequest.CustodianCode = custodian.GetCode();
+            
+            // Unauthorized
+            await AssertHttpError(401, async () => await unauthClient.CreateCustodianAccount(storeId, createCustodianAccountRequest));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.CreateCustodianAccount(storeId, createCustodianAccountRequest));
+
+            
+            
+            // Auth, correct permission
+            var custodianAccountData = await managerClient.CreateCustodianAccount(storeId, createCustodianAccountRequest);
+            Assert.NotNull(custodianAccountData);
+            Assert.Equal(custodian.GetCode(), custodianAccountData.CustodianCode);
+            
+            // We did not provide a name, so the custodian's name should've been picked as a fallback
+            Assert.Equal(custodian.GetName(), custodianAccountData.Name);
+            
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(config, custodianAccountData.Config));
+            
+            
+            
+            // List all Custodian Accounts, now that we have 1 result
+            
+            // Admin can see all
+            var adminCustodianAccounts = await adminClient.GetCustodianAccounts(storeId);
+            Assert.Single(adminCustodianAccounts);
+            var adminCustodianAccount = adminCustodianAccounts.First();
+            var accountId = adminCustodianAccount.Id;
+            Assert.Equal(adminCustodianAccount.CustodianCode, custodian.GetCode());
+
+            // Manager can see all, including config
+            var managerCustodianAccounts = await managerClient.GetCustodianAccounts(storeId);
+            Assert.Single(managerCustodianAccounts);
+            Assert.Equal(managerCustodianAccounts.First().CustodianCode, custodian.GetCode());
+            Assert.NotNull(managerCustodianAccounts.First().Config);
+            Assert.True(JToken.DeepEquals(config, managerCustodianAccounts.First().Config));
+            
+            // Viewer can see all, but no config
+            var viewerCustodianAccounts = await viewerOnlyClient.GetCustodianAccounts(storeId);
+            Assert.Single(viewerCustodianAccounts);
+            Assert.Equal(viewerCustodianAccounts.First().CustodianCode, custodian.GetCode());
+            Assert.Null(viewerCustodianAccounts.First().Config);
+
+            
+            // Try to fetch 1
+            // Admin
+            var singleAdminCustodianAccount = await adminClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleAdminCustodianAccount);
+            Assert.Equal(singleAdminCustodianAccount.CustodianCode, custodian.GetCode());
+
+            // Manager can see, including config
+            var singleManagerCustodianAccount = await managerClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleManagerCustodianAccount);
+            Assert.Equal(singleManagerCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.NotNull(singleManagerCustodianAccount.Config);
+            Assert.True(JToken.DeepEquals(config, singleManagerCustodianAccount.Config));
+            
+            // Viewer can see, but no config
+            var singleViewerCustodianAccount = await viewerOnlyClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleViewerCustodianAccount);
+            Assert.Equal(singleViewerCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.Null(singleViewerCustodianAccount.Config);
+
+
+
+            // Test updating the custodian account we created
+            var updateCustodianAccountRequest = createCustodianAccountRequest;
+            updateCustodianAccountRequest.Name = "My Custodian";
+            updateCustodianAccountRequest.Config["ApiKey"] = "ZZZ";
+
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.UpdateCustodianAccount(storeId, accountId, updateCustodianAccountRequest));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.UpdateCustodianAccount(storeId, accountId, updateCustodianAccountRequest));
+            
+            // Correct auth: update permissions
+            var updatedCustodianAccountData = await managerClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
+            Assert.NotNull(updatedCustodianAccountData);
+            Assert.Equal(custodian.GetCode(), updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
+            
+            // Admin
+            updateCustodianAccountRequest.Name = "Admin Account";
+            updateCustodianAccountRequest.Config["ApiKey"] = "AAA";
+            updatedCustodianAccountData = await adminClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
+            Assert.NotNull(updatedCustodianAccountData);
+            Assert.Equal(custodian.GetCode(), updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
+            
+            // Admin tries to update a non-existing custodian account
+            await AssertHttpError(404, async () => await adminClient.UpdateCustodianAccount(storeId, "WRONG-ACCOUNT-ID", updateCustodianAccountRequest));
+
+            
+            
+            // Get asset balances, but we cannot because of misconfiguration (we did enter dummy data)
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId, true));
+            
+            // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
+            await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
+            
+            
+            // Delete custodian account
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.DeleteCustodianAccount(storeId, accountId));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.DeleteCustodianAccount(storeId, accountId));
+            
+            // Auth, correct permission
+            await managerClient.DeleteCustodianAccount(storeId, accountId);
+            
+            // Check if the Custodian Account was actually deleted
+            await AssertHttpError(404, async () => await managerClient.GetCustodianAccount(storeId, accountId));
+            
+
+            // TODO what if we try to create a custodian account for a custodian code that does not exist?
+            // TODO what if we try so set config data that is not valid? In phase 2 we will validate the config and only allow you to save a config that makes sense! 
         }
     }
 }

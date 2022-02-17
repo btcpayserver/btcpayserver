@@ -27,6 +27,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
@@ -252,6 +253,7 @@ namespace BTCPayServer.Tests
 
             await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
             {
+                s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\fwefw.png");
                 s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).Click();
                 return Task.CompletedTask;
             });

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
@@ -117,7 +118,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             public bool DaemonAvailable { get; set; }
             public bool WalletAvailable { get; set; }
 
-            public override String ToString() { return String.Format("{0} {1} {2} {3} {4} {5}", Synced, CurrentHeight, TargetHeight, WalletHeight, DaemonAvailable, WalletAvailable); }
+            public override String ToString() { return String.Format(CultureInfo.InvariantCulture, "{0} {1} {2} {3} {4} {5}", Synced, CurrentHeight, TargetHeight, WalletHeight, DaemonAvailable, WalletAvailable); }
         }
     }
 }

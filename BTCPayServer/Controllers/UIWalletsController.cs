@@ -826,7 +826,8 @@ namespace BTCPayServer.Controllers
                 FormParameters =
                 {
                     { "SigningKey", vm.SigningKey },
-                    { "SigningKeyPath", vm.SigningKeyPath }
+                    { "SigningKeyPath", vm.SigningKeyPath },
+                    { "command", "decode" }
                 }
             };
             AddSigningContext(redirectVm, vm.SigningContext);
@@ -834,6 +835,7 @@ namespace BTCPayServer.Controllers
                 !string.IsNullOrEmpty(vm.SigningContext.PSBT))
             {
                 //if a hw device signed a payjoin, we want it broadcast instantly
+                redirectVm.FormParameters.Remove("command");
                 redirectVm.FormParameters.Add("command", "broadcast");
             }
             if (this.HttpContext.Request.Query["returnUrl"].FirstOrDefault() is string returnUrl)
@@ -864,7 +866,8 @@ namespace BTCPayServer.Controllers
                 FormParameters =
                 {
                     { "psbt", vm.PSBT },
-                    { "fileName", vm.FileName }
+                    { "fileName", vm.FileName },
+                    { "command", "decode" },
                 }
             };
             return View("PostRedirect", redirectVm);
@@ -876,12 +879,12 @@ namespace BTCPayServer.Controllers
         {
             return View(nameof(SignWithSeed), new SignWithSeedViewModel
             {
-                SigningContext = signingContext,
+                SigningContext = signingContext
             });
         }
 
         [HttpPost("{walletId}/psbt/seed")]
-        public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
+        public async Task<IActionResult> SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, SignWithSeedViewModel viewModel)
         {
             if (!ModelState.IsValid)
@@ -891,7 +894,6 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
-
             ExtKey extKey = viewModel.GetExtKey(network.NBitcoinNetwork);
 
             if (extKey == null)
@@ -943,8 +945,19 @@ namespace BTCPayServer.Controllers
             var changed = psbt.PSBTChanged(() => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
             if (!changed)
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable causes: Incorrect account key path in wallet settings or PSBT already signed.");
-                return View(nameof(SignWithSeed), viewModel);
+                var update = new UpdatePSBTRequest()
+                {
+                    PSBT = psbt,
+                    DerivationScheme = settings.AccountDerivation
+                };
+                update.RebaseKeyPaths = settings.GetPSBTRebaseKeyRules().ToList();
+                psbt = (await ExplorerClientProvider.GetExplorerClient(network).UpdatePSBTAsync(update))?.PSBT;
+                changed = psbt is not null && psbt.PSBTChanged(() => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
+                if (!changed)
+                {
+                    ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable causes: Incorrect account key path in wallet settings or PSBT already signed.");
+                    return View(nameof(SignWithSeed), viewModel);
+                }
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext.PSBT = psbt.ToBase64();

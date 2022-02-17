@@ -3,7 +3,7 @@
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
 	var isReady = !Model.HasErrors;
-	var isSignable = !isReady && Model.NBXSeedAvailable;
+	var isSignable = !isReady;
 	var needsExport = !isSignable && !isReady;
 	Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
@@ -60,7 +60,7 @@
         <input type="hidden" asp-for="PSBT"/>
         <input type="hidden" asp-for="FileName"/>
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
-            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" asp-route-returnUrl="@returnUrl" class="btn btn-primary">Sign transaction</button>
         </div>
     </form>
 } 
@@ -108,7 +108,7 @@ else
                     <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
                         <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt">Download PSBT file</button>
                         <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
-                        <a href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary">Show raw versions</a>
+                        <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary">Show raw versions</a>
                     </div>
                 </form>
                 <div id="ExportOptions" class="collapse">
@@ -126,7 +126,7 @@ else
                         </ul>
                         <div class="tab-content" id="export-tabContent">
                             <div class="tab-pane fade show active" id="export-base64" role="tabpanel" aria-labelledby="export-base64-tab">
-                                <pre class="mb-4 text-wrap"><code class="text">@Model.PSBT</code></pre>
+                                <pre class="mb-4 text-wrap"><code class="text" id="psbt-base64">@Model.PSBT</code></pre>
                             </div>
                             <div class="tab-pane fade" id="export-hex" role="tabpanel" aria-labelledby="export-hex-tab">
                                 <pre class="mb-4 text-wrap"><code class="text">@Model.PSBTHex</code></pre>
@@ -179,14 +179,11 @@ else
         <div id="PSBTOptionsAdvancedContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsAdvancedHeader" data-bs-parent="#PSBTOptions">
             <div class="accordion-body">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
-                    <input type="hidden" asp-for="CryptoCode"/>
-                    <input type="hidden" asp-for="NBXSeedAvailable"/>
                     <input type="hidden" asp-for="PSBT"/>
-                    <input type="hidden" asp-for="FileName"/>
                     <p class="mb-2">For exporting the signed PSBT and transaction information to a wallet, update the PSBT.</p>
-                    <button type="submit" name="command" value="update" class="btn btn-secondary">Update PSBT</button>
+                    <button id="update-psbt" type="submit" name="command" value="update" class="btn btn-secondary">Update PSBT</button>
                     <p class="mt-4 mb-2">For batching transactions, you can combine this PSBT with another one.</p>
-                    <button type="submit" name="command" value="combine" class="btn btn-secondary">Combine PSBT</button>
+                    <button id="combine-psbt" type="submit" name="command" value="combine" class="btn btn-secondary">Combine PSBT</button>
                 </form>
             </div>
         </div>

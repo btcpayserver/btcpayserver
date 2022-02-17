@@ -138,6 +138,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                     }
                 }
             }
+
             return r;
         }
 
@@ -440,10 +441,11 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         {
             if (e.Message == "EFunding:Unknown withdraw key")
             {
+                // This should point the user to the config in the UI, so he can change the withdrawal destination.
                 throw new InvalidWithdrawalTargetException(this, paymentMethod, withdrawToAddressName, e);
             }
-
-            throw;
+            // Any other withdrawal issue
+            throw new CannotWithdrawException(this, paymentMethod, withdrawToAddressName, e);
         }
     }
 

@@ -14,9 +14,12 @@
     <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.js" asp-append-version="true"></bundle>
 }
 
-<partial name="_StatusMessage" />
+<sticky-header class="d-flex align-items-center justify-content-between">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
+</sticky-header>
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 <form
     method="post"
@@ -110,10 +113,6 @@
                         </div>
 					</div>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
             </div>
         </div>
     </div>

@@ -70,6 +70,20 @@
                     }
                 }
             },
+            "LightningPaymentData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "totalAmount": {
+                        "type": "string",
+                        "description": "The total amount (including fees) in millisatoshi"
+                    },
+                    "feeAmount": {
+                        "type": "string",
+                        "description": "The total fees in millisatoshi"
+                    }
+                }
+            },
             "LightningInvoiceData": {
                 "type": "object",
                 "additionalProperties": false,
@@ -141,6 +155,19 @@
                     "BOLT11": {
                         "type": "string",
                         "description": "The BOLT11 of the invoice to pay"
+                    },
+                    "maxFeePercent": {
+                        "type": "string",
+                        "format": "float",
+                        "nullable": true,
+                        "description": "The fee limit expressed as a percentage of the payment amount",
+                        "example": "6.15"
+                    },
+                    "maxFeeFlat": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The fee limit expressed as a fixed amount in satoshi",
+                        "example": "21"
                     }
                 }
             },

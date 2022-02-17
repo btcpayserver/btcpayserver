@@ -497,10 +497,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _lightningNodeApiController.GetDepositAddress(cryptoCode));
         }
 
-        public override async Task PayLightningInvoice(string cryptoCode, PayLightningInvoiceRequest request,
+        public override async Task<LightningPaymentData> PayLightningInvoice(string cryptoCode, PayLightningInvoiceRequest request,
             CancellationToken token = default)
         {
-            HandleActionResult(await _lightningNodeApiController.PayInvoice(cryptoCode, request));
+            return GetFromActionResult<LightningPaymentData>(
+                await _lightningNodeApiController.PayInvoice(cryptoCode, request));
         }
 
         public override async Task<LightningInvoiceData> GetLightningInvoice(string cryptoCode, string invoiceId,
@@ -517,7 +518,6 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<LightningInvoiceData>(
                 await _lightningNodeApiController.CreateInvoice(cryptoCode, request));
         }
-
 
         private T GetFromActionResult<T>(IActionResult result)
         {

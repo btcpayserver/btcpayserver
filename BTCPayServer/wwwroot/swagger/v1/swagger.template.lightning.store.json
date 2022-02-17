@@ -428,7 +428,14 @@
                 "operationId": "StoreLightningNodeApi_PayInvoice",
                 "responses": {
                     "200": {
-                        "description": "Successfully paid"
+                        "description": "Successfully paid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningPaymentData"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Unable to validate the request",

@@ -178,19 +178,23 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.CreateValidationError(ModelState);
             }
-
-            var result = await lightningClient.Pay(lightningInvoice.BOLT11);
-            switch (result.Result)
+            
+            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null
+                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat }
+                : null;
+            var result = await lightningClient.Pay(lightningInvoice.BOLT11, param);
+            
+            return result.Result switch
             {
-                case PayResult.CouldNotFindRoute:
-                    return this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer");
-                case PayResult.Error:
-                    return this.CreateAPIError("generic-error", result.ErrorDetail);
-                case PayResult.Ok:
-                    return Ok();
-                default:
-                    throw new NotSupportedException("Unsupported Payresult");
-            }
+                PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer"),
+                PayResult.Error => this.CreateAPIError("generic-error", result.ErrorDetail),
+                PayResult.Ok => Ok(new LightningPaymentData
+                {
+                    TotalAmount = result.Details?.TotalAmount, 
+                    FeeAmount = result.Details?.FeeAmount
+                }),
+                _ => throw new NotSupportedException("Unsupported Payresult")
+            };
         }
 
         public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
@@ -253,7 +257,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)
         {
-            return new LightningInvoiceData()
+            return new LightningInvoiceData
             {
                 Amount = invoice.Amount,
                 Id = invoice.Id,

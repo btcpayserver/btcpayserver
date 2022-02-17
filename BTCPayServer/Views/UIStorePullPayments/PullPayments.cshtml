@@ -1,7 +1,8 @@
-@using BTCPayServer.Views.Stores
+﻿@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
+@using ExchangeSharp
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
     ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", Context.GetStoreData().Id);
@@ -35,9 +36,7 @@
     </style>
 }
 
-<partial name="_StatusMessage" />
-
-<div class="d-flex align-items-center justify-content-between mb-2">
+<sticky-header class="d-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
@@ -49,7 +48,9 @@
     <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create Pull Payment
     </a>
-</div>
+</sticky-header>
+
+<partial name="_StatusMessage" />
 
 <ul class="nav nav-pills border bg-tile" style="border-radius: 4px;">
     @foreach (var state in Enum.GetValues(typeof(PullPaymentState)).Cast<PullPaymentState>())
@@ -174,7 +175,7 @@
 }
 else
 {
-    <p class="text-secondary mt-3">
-        There are no pull payments yet.
+    <p class="text-secondary mt-4">
+        There are no @Model.ActiveState.ToStringLowerInvariant() pull payments yet.
     </p>
 }

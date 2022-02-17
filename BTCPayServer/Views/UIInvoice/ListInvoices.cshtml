@@ -181,9 +181,7 @@
 
 @Html.HiddenFor(a => a.Count)
 
-<partial name="_StatusMessage" />
-
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
+<sticky-header class="d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
@@ -196,7 +194,9 @@
         <span class="fa fa-plus"></span>
         Create Invoice
     </a>
-</div>
+</sticky-header>
+
+<partial name="_StatusMessage" />
 
 <partial name="InvoiceStatusChangePartial" />
 

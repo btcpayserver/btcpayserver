@@ -337,7 +337,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
-                    return Ok(new TradeQuoteResponse(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
+                    return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
                 }
                 catch (CustodianApiException e)
                 {
@@ -446,19 +446,4 @@ namespace BTCPayServer.Controllers.Greenfield
         }
     }
 
-    public class TradeQuoteResponse
-    {
-        public decimal Bid { get; }
-        public decimal Ask { get; }
-        public string ToAsset { get; }
-        public string FromAsset { get; }
-
-        public TradeQuoteResponse(string fromAsset, string toAsset, decimal bid, decimal ask)
-        {
-            this.FromAsset = fromAsset;
-            this.ToAsset = toAsset;
-            this.Bid = bid;
-            this.Ask = ask;
-        }
-    }
 }

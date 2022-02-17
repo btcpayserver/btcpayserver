@@ -108,7 +108,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     public Task<AssetQuoteResult> GetQuoteForAssetAsync(string fromAsset, string toAsset, JObject config, CancellationToken cancellationToken)
     {
-        if (fromAsset == TradeFromAsset && toAsset == TradeToAsset)
+        if (fromAsset.Equals(TradeFromAsset) && toAsset.Equals(TradeToAsset))
         {
             return Task.FromResult(new AssetQuoteResult(TradeFromAsset, TradeToAsset, BtcPriceInEuro, BtcPriceInEuro));
         }

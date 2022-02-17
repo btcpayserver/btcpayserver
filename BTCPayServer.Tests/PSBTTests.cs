@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models;
@@ -8,12 +9,13 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PSBTTests : UnitTestBase
     {
         public PSBTTests(ITestOutputHelper helper) : base(helper)
@@ -23,125 +25,110 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanPlayWithPSBT()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-            var invoice = user.BitPay.CreateInvoice(new Invoice()
-            {
-                Price = 10,
-                Currency = "USD",
-                PosData = "posData",
-                OrderId = "orderId",
-                ItemDesc = "Some \", description",
-                FullNotifications = true
-            }, Facade.Merchant);
-            var cashCow = tester.ExplorerNode;
-            var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-            cashCow.SendToAddress(invoiceAddress, Money.Coins(1.5m));
-            TestUtils.Eventually(() =>
-            {
-                invoice = user.BitPay.GetInvoice(invoice.Id);
-                Assert.Equal("paid", invoice.Status);
-            });
+            using var s = CreateSeleniumTester(newDb: true);
+            await s.StartAsync();
 
-            var walletController = user.GetController<UIWalletsController>();
-            var walletId = new WalletId(user.StoreId, "BTC");
-            var sendDestination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString();
-            var sendModel = new WalletSendModel()
-            {
-                Outputs = new List<WalletSendModel.TransactionOutput>()
-                    {
-                        new WalletSendModel.TransactionOutput()
-                        {
-                            DestinationAddress = sendDestination,
-                            Amount = 0.1m,
-                        }
-                    },
-                FeeSatoshiPerByte = 1,
-                CurrentBalance = 1.5m
-            };
+            var u1 = s.RegisterNewUser(true);
+            var hot = s.CreateNewStore();
+            var seed = s.GenerateWallet(isHotWallet: true);
+            var cold = s.CreateNewStore();
+            s.GenerateWallet(isHotWallet: false, seed: seed.ToString());
 
-            string redirectedPSBT = AssertRedirectedPSBT(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt"), nameof(walletController.WalletPSBT));
-            var vmPSBT = await walletController.WalletPSBT(walletId, new WalletPSBTViewModel() { PSBT = redirectedPSBT }).AssertViewModelAsync<WalletPSBTViewModel>();
-            var unsignedPSBT = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
-            Assert.NotNull(vmPSBT.Decoded);
+            // Scenario 1: one user has two stores sharing same seed
+            // one store is hot wallet, the other not.
 
-            var filePSBT = (FileContentResult)(await walletController.WalletPSBT(walletId, vmPSBT, "save-psbt"));
-            PSBT.Load(filePSBT.FileContents, user.SupportedNetwork.NBitcoinNetwork);
+            // Here, the cold wallet create a PSBT, then we switch to hot wallet to sign
+            // the PSBT and broadcast
+            s.GoToStore(cold.storeId);
+            var address = await s.FundStoreWallet();
+            Thread.Sleep(1000);
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
+            SendAllTo(s, address);
+            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\0--.png");
+            s.Driver.FindElement(By.Id("SignWithPSBT")).Click();
 
-            var vmPSBT2 = await walletController.WalletPSBT(walletId, new WalletPSBTViewModel
-            {
-                SigningContext = new SigningContextModel
-                {
-                    PSBT = AssertRedirectedPSBT(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
-                }
-            }).AssertViewModelAsync<WalletPSBTViewModel>();
-            Assert.NotEmpty(vmPSBT2.Inputs.Where(i => i.Error != null));
-            Assert.Equal(vmPSBT.PSBT, vmPSBT2.SigningContext.PSBT);
+            var psbt = ExtractPSBT(s);
 
-            var signedPSBT = unsignedPSBT.Clone();
-            signedPSBT.SignAll(user.DerivationScheme, user.GenerateWalletResponseV.AccountHDKey, user.GenerateWalletResponseV.AccountKeyPath);
-            vmPSBT.PSBT = signedPSBT.ToBase64();
-            var psbtReady = await walletController.WalletPSBT(walletId, new WalletPSBTViewModel
-            {
-                SigningContext = new SigningContextModel
-                {
-                    PSBT = AssertRedirectedPSBT(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
-                }
-            }).AssertViewModelAsync<WalletPSBTViewModel>();
-            Assert.Equal(2 + 1, psbtReady.Destinations.Count); // The fee is a destination
-            Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
-            Assert.Contains(psbtReady.Destinations, d => d.Positive);
+            s.GoToStore(hot.storeId);
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            s.Driver.FindElement(By.Name("PSBT")).SendKeys(psbt);
+            s.Driver.FindElement(By.Id("Decode")).Click();
+            s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
+            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\0-.png");
+            s.FindAlertMessage();
 
-            vmPSBT.PSBT = unsignedPSBT.ToBase64();
-            var combineVM = await walletController.WalletPSBT(walletId, vmPSBT, "combine").AssertViewModelAsync<WalletPSBTCombineViewModel>();
-            Assert.Equal(vmPSBT.PSBT, combineVM.OtherPSBT);
-            combineVM.PSBT = signedPSBT.ToBase64();
-            var psbt = AssertRedirectedPSBT(await walletController.WalletPSBTCombine(walletId, combineVM), nameof(walletController.WalletPSBT));
+            // Scenario 2: Same as scenario 1, except we create a PSBT from hot wallet, then sign by manually
+            // entering the seed on the cold wallet.
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
+            SendAllTo(s, address);
+            psbt = ExtractPSBT(s);
 
-            var signedPSBT2 = PSBT.Parse(psbt, user.SupportedNetwork.NBitcoinNetwork);
-            Assert.True(signedPSBT.TryFinalize(out _));
-            Assert.True(signedPSBT2.TryFinalize(out _));
-            Assert.Equal(signedPSBT, signedPSBT2);
+            // Let's check it has been signed, then remove the signature.
+            // Also remove the hdkeys so we can test the update later
+            var psbtParsed = PSBT.Parse(psbt, s.Server.NetworkProvider.BTC.NBitcoinNetwork);
+            var signedPSBT = psbtParsed.Clone();
+            Assert.True(psbtParsed.Clone().TryFinalize(out _));
+            Assert.Single(psbtParsed.Inputs[0].PartialSigs);
+            psbtParsed.Inputs[0].PartialSigs.Clear();
+            Assert.Single(psbtParsed.Inputs[0].HDKeyPaths);
+            psbtParsed.Inputs[0].HDKeyPaths.Clear();
+            var skeletonPSBT = psbtParsed;
 
-            // Can use uploaded file?
-            combineVM.PSBT = null;
-            combineVM.UploadedPSBTFile = TestUtils.GetFormFile("signedPSBT", signedPSBT.ToBytes());
-            psbt = AssertRedirectedPSBT(await walletController.WalletPSBTCombine(walletId, combineVM), nameof(walletController.WalletPSBT));
-            signedPSBT2 = PSBT.Parse(psbt, user.SupportedNetwork.NBitcoinNetwork);
-            Assert.True(signedPSBT.TryFinalize(out _));
-            Assert.True(signedPSBT2.TryFinalize(out _));
-            Assert.Equal(signedPSBT, signedPSBT2);
+            s.GoToStore(cold.storeId);
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            s.Driver.FindElement(By.Name("PSBT")).SendKeys(skeletonPSBT.ToBase64());
+            s.Driver.FindElement(By.Id("Decode")).Click();
+            s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.FindElement(By.Id("SignWithSeed")).Click();
+            s.Driver.FindElement(By.Name("SeedOrKey")).SendKeys(seed.ToString());
+            s.Driver.FindElement(By.Id("Submit")).Click();
+            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
+            s.FindAlertMessage();
 
-            var ready = (await walletController.WalletPSBT(walletId, new WalletPSBTViewModel
-            {
-                SigningContext = new SigningContextModel(signedPSBT)
-            })).AssertViewModel<WalletPSBTViewModel>();
-            Assert.Equal(signedPSBT.ToBase64(), ready.SigningContext.PSBT);
-            psbt = AssertRedirectedPSBT(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"), nameof(walletController.WalletPSBT));
-            Assert.Equal(signedPSBT.ToBase64(), psbt);
-            var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
-            Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
+            // Let's check if the update feature works
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            s.Driver.FindElement(By.Name("PSBT")).SendKeys(skeletonPSBT.ToBase64());
+            s.Driver.FindElement(By.Id("Decode")).Click();
+            s.Driver.FindElement(By.Id("PSBTOptionsAdvancedHeader")).Click();
+            s.Driver.WaitForElement(By.Id("update-psbt")).Click();
 
-            //test base64 psbt file
-            Assert.False(string.IsNullOrEmpty(Assert.IsType<WalletPSBTViewModel>(
-                Assert.IsType<ViewResult>(
-                    await walletController.WalletPSBT(walletId,
-                        new WalletPSBTViewModel
-                        {
-                            UploadedPSBTFile = TestUtils.GetFormFile("base64", signedPSBT.ToBase64())
-                        })).Model).PSBT));
+            psbt = ExtractPSBT(s);
+            psbtParsed = PSBT.Parse(psbt, s.Server.NetworkProvider.BTC.NBitcoinNetwork);
+            Assert.Single(psbtParsed.Inputs[0].HDKeyPaths);
+            Assert.Empty(psbtParsed.Inputs[0].PartialSigs);
+
+            // Let's if we can combine the updated psbt (which has hdkeys, but no sig)
+            // with the signed psbt (which has sig, but no hdkeys)
+            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            s.Driver.FindElement(By.Name("PSBT")).SendKeys(psbtParsed.ToBase64());
+            s.Driver.FindElement(By.Id("Decode")).Click();
+            s.Driver.FindElement(By.Id("PSBTOptionsAdvancedHeader")).Click();
+            s.Driver.WaitForElement(By.Id("combine-psbt")).Click();
+            signedPSBT.Inputs[0].HDKeyPaths.Clear();
+            s.Driver.FindElement(By.Name("PSBT")).SendKeys(signedPSBT.ToBase64());
+            s.Driver.WaitForElement(By.Id("Submit")).Click();
+
+            psbt = ExtractPSBT(s);
+            psbtParsed = PSBT.Parse(psbt, s.Server.NetworkProvider.BTC.NBitcoinNetwork);
+            Assert.Single(psbtParsed.Inputs[0].HDKeyPaths);
+            Assert.Single(psbtParsed.Inputs[0].PartialSigs);
         }
 
-        private static string AssertRedirectedPSBT(IActionResult view, string actionName)
+        private static void SendAllTo(SeleniumTester s, string address)
         {
-            var postRedirectView = Assert.IsType<ViewResult>(view);
-            var postRedirectViewModel = Assert.IsType<PostRedirectViewModel>(postRedirectView.Model);
-            Assert.Equal(actionName, postRedirectViewModel.AspAction);
-            var redirectedPSBT = postRedirectViewModel.FormParameters.Single(p => p.Key == "psbt" || p.Key == "SigningContext.PSBT").Value?.FirstOrDefault();
-            return redirectedPSBT;
+            s.Driver.FindElement(By.Name("Outputs[0].DestinationAddress")).SendKeys(address);
+            s.Driver.FindElement(By.ClassName("crypto-balance-link")).Click();
+            s.Driver.FindElement(By.Id("SignTransaction")).Click();
+        }
+
+        private static string ExtractPSBT(SeleniumTester s)
+        {
+            var pageSource = s.Driver.PageSource;
+            var start = pageSource.IndexOf("id=\"psbt-base64\">");
+            start += "id=\"psbt-base64\">".Length;
+            var end = pageSource.IndexOf("<", start);
+            return pageSource[start..end];
         }
     }
 }

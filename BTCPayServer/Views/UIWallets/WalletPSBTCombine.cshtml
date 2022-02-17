@@ -1,4 +1,4 @@
-﻿@model WalletPSBTCombineViewModel
+@model WalletPSBTCombineViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "_LayoutWizard";
@@ -15,7 +15,7 @@
     <h1>@ViewData["Title"]</h1>
 </header>
 
-<form class="form-group" method="post" asp-action="WalletPSBTCombine" enctype="multipart/form-data">
+<form class="form-group" method="post" asp-action="WalletPSBTCombine" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
     <input type="hidden" asp-for="OtherPSBT"/>
     <div class="form-group">
         <label asp-for="PSBT" class="form-label"></label>
@@ -26,5 +26,5 @@
         <label asp-for="UploadedPSBTFile" class="form-label"></label>
         <input type="file" class="form-control" asp-for="UploadedPSBTFile">
     </div>
-    <button type="submit" class="btn btn-primary">Combine</button>
+    <button id="Submit" type="submit" class="btn btn-primary">Combine</button>
 </form>

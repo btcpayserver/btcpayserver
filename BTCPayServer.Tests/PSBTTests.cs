@@ -21,8 +21,9 @@ namespace BTCPayServer.Tests
         public PSBTTests(ITestOutputHelper helper) : base(helper)
         {
         }
+        
         [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("Selenium", "Selenium")]
         public async Task CanPlayWithPSBT()
         {
             using var s = CreateSeleniumTester(newDb: true);

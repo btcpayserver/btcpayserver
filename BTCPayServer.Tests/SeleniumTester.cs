@@ -563,7 +563,12 @@ namespace BTCPayServer.Tests
         {
             walletId ??= WalletId;
             Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
-            if (navPages != WalletsNavPages.Transactions)
+            if (navPages == WalletsNavPages.PSBT)
+            {
+                Driver.FindElement(By.Id("WalletNav-Send")).Click();
+                Driver.FindElement(By.Id("PSBT")).Click();
+            }
+            else if (navPages != WalletsNavPages.Transactions)
             {
                 Driver.FindElement(By.Id($"WalletNav-{navPages}")).Click();
             }

@@ -998,13 +998,13 @@ namespace BTCPayServer.Tests
 
             //let's test quickly the receive wallet page
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
+            s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
 
             //you cannot use the Sign with NBX option without saving private keys when generating the wallet.
             Assert.DoesNotContain("nbx-seed", s.Driver.PageSource);
 
-            s.Driver.FindElement(By.Id("SectionNav-Receive")).Click();
+            s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
             //generate a receiving address
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
@@ -1071,20 +1071,19 @@ namespace BTCPayServer.Tests
             Assert.Contains("m/84'/1'/0'",
                 s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
 
-            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-
             // Make sure we can rescan, because we are admin!
-            s.Driver.FindElement(By.Id("SectionNav-Rescan")).Click();
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("Rescan")).Click();
             Assert.Contains("The batch size make sure", s.Driver.PageSource);
 
             // Check the tx sent earlier arrived
-            s.Driver.FindElement(By.Id("SectionNav-Transactions")).Click();
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
 
             var walletTransactionLink = s.Driver.Url;
             Assert.Contains(tx.ToString(), s.Driver.PageSource);
 
             // Send to bob
-            s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
+            s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
             var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, bob, 1);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
@@ -1096,7 +1095,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(walletTransactionLink, s.Driver.Url);
 
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
+            s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
 
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
@@ -1113,7 +1112,7 @@ namespace BTCPayServer.Tests
             bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
             var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            s.Driver.FindElement(By.Id("SectionNav-Send")).Click();
+            s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
             s.Driver.FindElement(By.Id("bip21parse")).Click();
             s.Driver.SwitchTo().Alert().SendKeys(bip21);
             s.Driver.SwitchTo().Alert().Accept();

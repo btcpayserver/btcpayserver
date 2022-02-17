@@ -66,7 +66,7 @@
         }
         
         /* pull mass action form up, so that it is besides the search form */
-        @@media (min-width: 992px) {
+        @@media (min-width: 1200px) {
             #MassAction {
                 margin-top: -4rem;
             }
@@ -267,7 +267,7 @@
         </ul>
     </div>
 </div>
-<form class="col-lg-6 col-xl-8 mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="@(Model.Total > 0 ? "col-xl-7 col-xxl-8 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input type="hidden" asp-for="Count" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <div class="input-group">
@@ -302,38 +302,38 @@
     <span asp-validation-for="SearchTerm" class="text-danger"></span>
 </form>
 
-<form method="post" id="MassAction" asp-action="MassAction" class="">
-    <div class="d-inline-flex align-items-center pb-2 float-lg-end mb-2">
-        <input type="hidden" name="storeId" value="@Model.StoreId" />
-        <a href="https://docs.btcpayserver.org/Accounting/" class="ms-2 ms-lg-0 me-lg-2 order-1 order-lg-0" target="_blank" rel="noreferrer noopener">
-            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-        </a>
-        <span class="me-2">
-            <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Actions
-            </button>
-            <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive"><i class="fa fa-archive"></i> Archive</button>
-                @if (Model.IncludeArchived)
-                {
-                    <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive"><i class="fa fa-archive"></i> Unarchive</button>
-                }
-				<button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
-            </div>
-        </span>
-        <span>
-            <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Export
-            </a>
-            <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
-            </div>
-        </span>
-    </div>
-    <div style="clear:both"></div>
-    @if (Model.Total > 0)
-    {
+@if (Model.Total > 0)
+{
+    <form method="post" id="MassAction" asp-action="MassAction" class="">
+        <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
+            <input type="hidden" name="storeId" value="@Model.StoreId" />
+            <span class="order-xl-1">
+                <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Actions
+                </button>
+                <div class="dropdown-menu dropdown-menu-xl-end" aria-labelledby="ActionsDropdownToggle">
+                    <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive">Archive</button>
+                    @if (Model.IncludeArchived)
+                    {
+                        <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive">Unarchive</button>
+                    }
+				    <button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
+                </div>
+            </span>
+            <span class="d-inline-flex align-items-center gap-3">
+                <a class="btn btn-secondary dropdown-toggle mb-1 order-xl-1" href="#" role="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Export
+                </a>
+                <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                </div>
+                <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+            </span>
+        </div>
+        <div style="clear:both"></div>
         <div class="table-responsive">
             <table id="invoices" class="table table-hover">
                 <thead>
@@ -452,11 +452,12 @@
         </div>
 
         <vc:pager view-model="Model" />
-    }
-    else
-    {
-        <p class="text-secondary mt-3">
-            There are no invoices matching your criteria.
-        </p>
-    }
-</form>
+    
+    </form>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no invoices matching your criteria.
+    </p>
+}

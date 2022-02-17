@@ -10,6 +10,7 @@ namespace BTCPayServer.Services.Labels
 
         public string Text { get; internal set; }
         public string Color { get; internal set; }
+        public string TextColor { get; internal set; }
         public string Link { get; internal set; }
         public string Tooltip { get; internal set; }
 

@@ -19,7 +19,6 @@ namespace BTCPayServer.Components.MainNav
 {
     public class MainNav : ViewComponent
     {
-        private const string RootName = "Global";
         private readonly AppService _appService;
         private readonly StoreRepository _storeRepo;
         private readonly UIStoresController _storesController;

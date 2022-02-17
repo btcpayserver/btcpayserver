@@ -19,48 +19,56 @@
             <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="mb-3 d-flex align-items-center">
                 <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
-                
-                <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
-                    <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Actions
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                            @if (Model.NBXSeedAvailable)
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Actions
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+                        <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan">Rescan wallet for missing transactions</a>
+                        <form method="post" asp-controller="UIWallets" asp-action="WalletActions" asp-route-walletId="@Model.WalletId">
+                            <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
+                            @if (User.IsInRole(Roles.ServerAdmin))
                             {
-                                <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed">View seed</a>
+                                <button name="command" type="submit" class="dropdown-item" value="clear">Clear all transactions from history</button>
                             }
-                            @if (Model.UriScheme == "bitcoin")
-                            {
-                                <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden>Register wallet for payment links</button>
-                            }
-                            <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
-                               id="ChangeWalletLink"
-                               class="dropdown-item"
-                               data-bs-toggle="modal"
-                               data-bs-target="#ConfirmModal"
-                               data-title="Replace @Model.CryptoCode wallet"
-                               data-description="@ViewData["ReplaceDescription"]"
-                               data-confirm="Setup new wallet"
-                               data-confirm-input="REPLACE">
-                                Replace wallet
-                            </a>
+                        </form>
+                        @if (Model.UriScheme == "bitcoin")
+                        {
+                            <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden>Register wallet for payment links</button>
+                        }
+                        <div class="dropdown-divider"></div>
+                        @if (Model.NBXSeedAvailable)
+                        {
+                            <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed">View seed</a>
+                        }
+                        <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                           id="ChangeWalletLink"
+                           class="dropdown-item"
+                           data-bs-toggle="modal"
+                           data-bs-target="#ConfirmModal"
+                           data-title="Replace @Model.CryptoCode wallet"
+                           data-description="@ViewData["ReplaceDescription"]"
+                           data-confirm="Setup new wallet"
+                           data-confirm-input="REPLACE">
+                            Replace wallet
+                        </a>
+                        <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
                             <button type="submit"
-                                id="Delete"
-                                class="dropdown-item"
-                                data-bs-toggle="modal"
-                                data-bs-target="#ConfirmModal"
-                                data-title="Remove @Model.CryptoCode wallet"
-                                data-description="@ViewData["RemoveDescription"]"
-                                data-confirm="Remove"
-                                data-confirm-input="REMOVE">Remove wallet</button>
-                        </div>
+                                    id="Delete"
+                                    class="dropdown-item"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#ConfirmModal"
+                                    data-title="Remove @Model.CryptoCode wallet"
+                                    data-description="@ViewData["RemoveDescription"]"
+                                    data-confirm="Remove"
+                                    data-confirm-input="REMOVE">Remove wallet</button>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
             
             <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
-                <div class="form-group">
+                <div class="form-group my-4">
                     <div class="d-flex align-items-center">
                         <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
                         <label asp-for="Enabled" class="form-label mb-0 me-1"></label>

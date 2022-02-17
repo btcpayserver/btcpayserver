@@ -19,7 +19,7 @@
     --icon-size: 1.5rem;
     
     height: var(--header-height);
-    z-index: 9999999;
+    z-index: 1031; /* needs a value between fixed and the offcanvas backdrop, see https://getbootstrap.com/docs/5.1/layout/z-index/ */
 }
 
 #mainMenuHead  {

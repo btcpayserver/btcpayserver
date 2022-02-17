@@ -403,9 +403,9 @@ namespace BTCPayServer.Tests
         public void GoToWalletSettings(string cryptoCode = "BTC")
         {
             Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            if (Driver.PageSource.Contains("id=\"SectionNav-Settings\""))
+            if (Driver.PageSource.Contains("id=\"WalletNav-Settings\""))
             {
-                Driver.FindElement(By.Id("SectionNav-Settings")).Click();
+                Driver.FindElement(By.Id("WalletNav-Settings")).Click();
             }
         }
 
@@ -565,7 +565,7 @@ namespace BTCPayServer.Tests
             Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {
-                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
+                Driver.FindElement(By.Id($"WalletNav-{navPages}")).Click();
             }
         }
 

@@ -89,6 +89,10 @@
                         <a asp-route-labelFilter="@label.Text" class="badge position-relative text-white flex-grow-0" style="background-color:@label.Color;color:@label.TextColor !important;">@label.Text</a>
                     }
                 </div>
+                @if (Context.Request.Query.ContainsKey("labelFilter"))
+                {
+                    <a asp-route-labelFilter="" class="btn btn-primary d-flex align-items-center">Clear filter</a>
+                }
             </div>
         }
         <div class="dropdown ms-auto">

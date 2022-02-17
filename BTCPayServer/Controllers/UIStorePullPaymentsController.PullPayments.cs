@@ -147,15 +147,19 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("")]
-        public async Task<IActionResult> PullPayments(string storeId, int skip = 0, int count = 50,
-            string sortOrder = "desc")
+        public async Task<IActionResult> PullPayments(
+            string storeId,
+            PullPaymentState pullPaymentState,
+            int skip = 0,
+            int count = 50,
+            string sortOrder = "desc"
+        )
         {
             await using var ctx = _dbContextFactory.CreateContext();
             var now = DateTimeOffset.UtcNow;
             var ppsQuery = ctx.PullPayments
                 .Include(data => data.Payouts)
-                .Where(p => p.StoreId == storeId && !p.Archived);
-
+                .Where(p => p.StoreId == storeId);
 
             if (sortOrder != null)
             {
@@ -172,12 +176,45 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            var paymentMethods = await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData());
+            if (!paymentMethods.Any())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = "You must enable at least one payment method before creating a pull payment.",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("PaymentMethods", "Stores", new { storeId });
+            }
+
             var vm = this.ParseListQuery(new PullPaymentsModel()
             {
                 Skip = skip,
                 Count = count,
-                Total = await ppsQuery.CountAsync()
+                Total = await ppsQuery.CountAsync(),
+                ActiveState = pullPaymentState
             });
+
+            switch (pullPaymentState) {
+                case PullPaymentState.Active:
+                    ppsQuery = ppsQuery
+                        .Where(
+                            p => !p.Archived &&
+                            (p.EndDate != null ? p.EndDate > DateTimeOffset.UtcNow : true) &&
+                            p.StartDate <= DateTimeOffset.UtcNow
+                         );
+                    break;
+                case PullPaymentState.Archived:
+                    ppsQuery = ppsQuery.Where(p => p.Archived);
+                    break;
+                case PullPaymentState.Expired:
+                    ppsQuery = ppsQuery.Where(p => DateTimeOffset.UtcNow > p.EndDate);
+                    break;
+                case PullPaymentState.Future:
+                    ppsQuery = ppsQuery.Where(p => p.StartDate > DateTimeOffset.UtcNow);
+                    break;
+            }
+
             var pps = (await ppsQuery
                     .Skip(vm.Skip)
                     .Take(vm.Count)
@@ -210,8 +247,9 @@ namespace BTCPayServer.Controllers
                         Completed = totalCompleted.RoundToSignificant(ni.Divisibility).ToString("C", nfi),
                         Limit = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
                         ResetIn = period?.End is DateTimeOffset nr ? ZeroIfNegative(nr - now).TimeString() : null,
-                        EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null
-                    }
+                        EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null,
+                    },
+                    Archived = pp.Archived
                 });
             }
             return View(vm);

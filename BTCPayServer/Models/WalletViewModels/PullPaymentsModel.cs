@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BTCPayServer.Payments;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -26,9 +28,13 @@ namespace BTCPayServer.Models.WalletViewModels
             public ProgressModel Progress { get; set; }
             public DateTimeOffset StartDate { get; set; }
             public DateTimeOffset? EndDate { get; set; }
+            public bool Archived { get; set; } = false;
         }
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
+        public string PaymentMethodId { get; set; }
+        public IEnumerable<PaymentMethodId> PaymentMethods { get; set; }
+        public PullPaymentState ActiveState { get; set; } = PullPaymentState.Active;
     }
 
     public class NewPullPaymentModel

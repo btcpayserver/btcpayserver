@@ -380,7 +380,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/{paymentMethod}/address": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}": {
             "get": {
                 "tags": [
                     "Store Custodian Account"

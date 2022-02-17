@@ -14,16 +14,15 @@ public class CustodianRegistry
         _custodians = new Dictionary<string, ICustodian>();
 
         // TODO Dispatch event so plugins can register their own custodians?
-        // TODO register a dummy custodian when/for running tests?
-        register(new KrakenExchange(httpClientFactory.CreateClient(), memoryCache));
+        Register(new KrakenExchange(httpClientFactory.CreateClient(), memoryCache));
     }
 
-    public void register(ICustodian custodian)
+    public void Register(ICustodian custodian)
     {
         _custodians.Add(custodian.GetCode(), custodian);
     }
 
-    public IDictionary<string, ICustodian> getAll()
+    public IDictionary<string, ICustodian> GetAll()
     {
         return _custodians;
     }

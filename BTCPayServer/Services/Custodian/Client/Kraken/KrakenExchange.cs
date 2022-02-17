@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Custodian.Client.Exception;
 using ExchangeSharp;
 using Microsoft.AspNetCore.WebUtilities;
@@ -376,7 +375,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         {
             orderType = "sell";
             var priceQuote = await GetQuoteForAssetAsync(assetPair.AssetSold, assetPair.AssetBought, config, cancellationToken);
-            // TODO should we use the Bid or the Ask?
             qty /= priceQuote.Bid;
         }
 

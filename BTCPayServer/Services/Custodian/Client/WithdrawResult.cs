@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Services.Custodian.Client;
 

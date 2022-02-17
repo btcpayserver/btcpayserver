@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public IActionResult ListCustodians()
         {
-            var all = _custodianRegistry.getAll().Values.ToList().Select(ToModel);
+            var all = _custodianRegistry.GetAll().Values.ToList().Select(ToModel);
             return Ok(all);
         }
 

@@ -1,21 +1,21 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace BTCPayServer.Data;
+namespace BTCPayServer.Client.Models;
 
 public class LedgerEntryData
 {
-    public string asset { get; set; }
-    public decimal qty { get; set; }
+    public string Asset { get; }
+    public decimal Qty { get; }
 
     [JsonConverter(typeof(StringEnumConverter))]
-    public LedgerEntryType type { get; set; }
+    public LedgerEntryType Type { get; }
 
     public LedgerEntryData(string asset, decimal qty, LedgerEntryType type)
     {
-        this.asset = asset;
-        this.qty = qty;
-        this.type = type;
+        Asset = asset;
+        Qty = qty;
+        Type = type;
     }
 
     public enum LedgerEntryType

@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Custodian;

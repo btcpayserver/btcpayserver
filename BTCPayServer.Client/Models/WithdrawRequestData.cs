@@ -1,0 +1,7 @@
+namespace BTCPayServer.Client.Models;
+
+public class WithdrawRequestData
+{
+    public string PaymentMethod { set; get; }
+    public decimal Qty { set; get; }
+}

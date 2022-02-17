@@ -19,7 +19,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<IEnumerable<CustodianAccountData>>(response);
         }
         
-        public virtual async Task<CustodianAccountData> GetCustodianAccount(string storeId, string accountId, bool includeAssetBalances = false, CancellationToken token = default)
+        public virtual async Task<CustodianAccountResponse> GetCustodianAccount(string storeId, string accountId, bool includeAssetBalances = false, CancellationToken token = default)
         {
             var queryPayload = new Dictionary<string, object>();
             if (includeAssetBalances)
@@ -27,7 +27,7 @@ namespace BTCPayServer.Client
                 queryPayload.Add("assetBalances", "true");
             }
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}", queryPayload), token);
-            return await HandleResponse<CustodianAccountData>(response);
+            return await HandleResponse<CustodianAccountResponse>(response);
         }
 
         public virtual async Task<CustodianAccountData> CreateCustodianAccount(string storeId, CreateCustodianAccountRequest request, CancellationToken token = default)
@@ -46,6 +46,24 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}", method: HttpMethod.Delete), token);
             await HandleResponse(response);
+        }
+        
+        public virtual async Task<DepositAddressData> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}"), token);
+            return await HandleResponse<DepositAddressData>(response);
+        }
+        
+        public virtual async Task<MarketTradeResponseData> TradeMarket(string storeId, string accountId, TradeRequestData request, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market", bodyPayload: request, method: HttpMethod.Post), token);
+            return await HandleResponse<MarketTradeResponseData>(response);
+        }
+        
+        public virtual async Task<MarketTradeResponseData> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/{tradeId}", method: HttpMethod.Get), token);
+            return await HandleResponse<MarketTradeResponseData>(response);
         }
     }
 }

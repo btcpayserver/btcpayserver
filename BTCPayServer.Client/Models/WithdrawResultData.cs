@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace BTCPayServer.Data;
+namespace BTCPayServer.Client.Models;
 
 public class WithdrawResultData
 {

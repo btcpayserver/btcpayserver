@@ -1,10 +1,10 @@
-namespace BTCPayServer.Data;
+namespace BTCPayServer.Client.Models;
 
 public class DepositAddressData
 {
-    /**
-     * Example: P2PKH, P2SH, P2WPKH, P2TR, BOLT11, ...
-     */
+    // /**
+    // * Example: P2PKH, P2SH, P2WPKH, P2TR, BOLT11, ...
+    // */
     // public string Type { get; set; }
     
     /**

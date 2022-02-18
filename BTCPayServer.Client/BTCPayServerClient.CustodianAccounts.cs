@@ -77,5 +77,17 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote", queryPayload), token);
             return await HandleResponse<TradeQuoteResponseData>(response);
         }
+        
+        public virtual async Task<WithdrawalResponseData> CreateWithdrawal(string storeId, string accountId,  WithdrawRequestData request, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals", bodyPayload: request, method: HttpMethod.Post), token);
+            return await HandleResponse<WithdrawalResponseData>(response);
+        }
+
+        public virtual async Task<WithdrawalResponseData> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}", method: HttpMethod.Get), token);
+            return await HandleResponse<WithdrawalResponseData>(response);
+        }
     }
 }

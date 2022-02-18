@@ -4,9 +4,10 @@ using Newtonsoft.Json.Converters;
 
 namespace BTCPayServer.Client.Models;
 
-public class WithdrawResultData
+public class WithdrawalResponseData
 {
     public string Asset { get; }
+    public string PaymentMethod { get; }
     public List<LedgerEntryData> LedgerEntries { get; }
     public string WithdrawalId { get; }
     public string AccountId { get; }
@@ -19,17 +20,18 @@ public class WithdrawResultData
 
     public string TargetAddress { get; }
 
-    public WithdrawResultData(string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, string accountId,
+    public WithdrawalResponseData(string paymentMethod, string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, string accountId,
         string custodianCode, WithdrawalStatus status, string targetAddress, string transactionId)
     {
-        this.Asset = asset;
-        this.LedgerEntries = ledgerEntries;
-        this.WithdrawalId = withdrawalId;
-        this.AccountId = accountId;
-        this.CustodianCode = custodianCode;
-        this.TargetAddress = targetAddress;
-        this.TransactionId = transactionId;
-        this.Status = status;
+        PaymentMethod = paymentMethod;
+        Asset = asset;
+        LedgerEntries = ledgerEntries;
+        WithdrawalId = withdrawalId;
+        AccountId = accountId;
+        CustodianCode = custodianCode;
+        TargetAddress = targetAddress;
+        TransactionId = transactionId;
+        Status = status;
     }
 
     public enum WithdrawalStatus

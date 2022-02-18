@@ -476,20 +476,20 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
                 var transactionId = withdrawalInfo["txid"]?.ToString(); // This is the transaction ID on the blockchain
 
-                WithdrawResultData.WithdrawalStatus status = WithdrawResultData.WithdrawalStatus.Unknown;
+                WithdrawalResponseData.WithdrawalStatus status = WithdrawalResponseData.WithdrawalStatus.Unknown;
                 if (statusCode == "Initial" || statusCode == "Pending" || statusCode == "Settled")
                 {
                     // These 3 states are considered "not final", so we map them to "Queued".
                     // Even "Settled" is not really final as per the IFEX financial transaction states (https://github.com/globalcitizen/ifex-protocol/blob/master/draft-ifex-00.txt#L837).
-                    status = WithdrawResultData.WithdrawalStatus.Queued;
+                    status = WithdrawalResponseData.WithdrawalStatus.Queued;
                 }
                 else if (statusCode == "Success")
                 {
-                    status = WithdrawResultData.WithdrawalStatus.Complete;
+                    status = WithdrawalResponseData.WithdrawalStatus.Complete;
                 }
                 else if (statusCode == "Failure")
                 {
-                    status = WithdrawResultData.WithdrawalStatus.Failed;
+                    status = WithdrawalResponseData.WithdrawalStatus.Failed;
                 }
 
                 ledgerEntries.Add(new LedgerEntryData(asset, -1 * amountExclFee,

@@ -24,6 +24,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public static readonly decimal WithdrawalFee = new decimal(0.0005);
     public const string WithdrawalTransactionId = "yyy";
     public const string WithdrawalTargetAddress = "bc1qyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+    public const WithdrawalResponseData.WithdrawalStatus WithdrawalStatus = WithdrawalResponseData.WithdrawalStatus.Queued;
     public static readonly decimal BalanceBTC = new decimal(1.23456);
     public static readonly decimal BalanceLTC = new decimal(50.123456);
     public static readonly decimal BalanceUSD = new decimal(1500.55);
@@ -36,7 +37,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     public string GetName()
     {
-        return "Mock";
+        return "MOCK Exchange";
     }
 
     public Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken)
@@ -122,7 +123,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var ledgerEntries = new List<LedgerEntryData>();
         ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalAmount - WithdrawalFee, LedgerEntryData.LedgerEntryType.Withdrawal));
         ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalFee, LedgerEntryData.LedgerEntryType.Fee));
-        var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawResultData.WithdrawalStatus.Queued, WithdrawalTargetAddress, WithdrawalTransactionId);
+        var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawalStatus, WithdrawalTargetAddress, WithdrawalTransactionId);
         return r;
     }
 

@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     var withdrawResult =
                         await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
-                    var result = new WithdrawResultData(withdrawResult.PaymentMethod, withdrawResult.LedgerEntries,
+                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                         withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
@@ -431,7 +431,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(asset, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
-                    var result = new WithdrawResultData(withdrawResult.PaymentMethod, withdrawResult.LedgerEntries,
+                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                         withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }

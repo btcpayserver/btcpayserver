@@ -17,7 +17,6 @@
     --button-height: 40px;
     --button-padding: 7px;
     --icon-size: 1.5rem;
-    
     height: var(--header-height);
     z-index: 1031; /* needs a value between fixed and the offcanvas backdrop, see https://getbootstrap.com/docs/5.1/layout/z-index/ */
 }
@@ -557,6 +556,7 @@
         left: 0;
         width: var(--sidebar-width);
         height: 100vh;
+        border-right: 1px solid var(--btcpay-body-border-light);
     }
 
     #mainMenuHead {

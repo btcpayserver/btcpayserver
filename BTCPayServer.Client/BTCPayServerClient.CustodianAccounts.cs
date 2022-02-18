@@ -84,9 +84,9 @@ namespace BTCPayServer.Client
             return await HandleResponse<WithdrawalResponseData>(response);
         }
 
-        public virtual async Task<WithdrawalResponseData> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId, CancellationToken token = default)
+        public virtual async Task<WithdrawalResponseData> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}", method: HttpMethod.Get), token);
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{paymentMethod}/{withdrawalId}", method: HttpMethod.Get), token);
             return await HandleResponse<WithdrawalResponseData>(response);
         }
     }

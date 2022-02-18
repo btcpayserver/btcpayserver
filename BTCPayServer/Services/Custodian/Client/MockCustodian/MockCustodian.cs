@@ -144,7 +144,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     public Task<WithdrawResult> GetWithdrawalInfoAsync(string paymentMethod, string withdrawalId, JObject config, CancellationToken cancellationToken)
     {
-        if (withdrawalId == WithdrawalId && paymentMethod == WithdrawalPaymentMethod)
+        if (withdrawalId == WithdrawalId && WithdrawalPaymentMethod.Equals(paymentMethod))
         {
             return Task.FromResult(CreateWithdrawResult());
         }

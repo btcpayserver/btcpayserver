@@ -317,8 +317,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote")]
-        [Authorize(Policy = Policies.CanViewCustodianAccounts,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanTradeCustodianAccount, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetTradeQuote(string storeId, string accountId, [FromQuery] string fromAsset, [FromQuery] string toAsset, CancellationToken cancellationToken = default)
         {
             // TODO these couple of lines are used a lot. How do we DRY?
@@ -389,12 +388,17 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
-        [Authorize(Policy = Policies.CanTradeCustodianAccount,
+        [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            if (custodianAccount == null)
+            {
+                return this.CreateAPIError(404, "custodian-account-not-found",
+                    $"Could not find the custodian account");
+            }
             var custodian = _custodianRegistry.GetAll()[custodianAccount.CustodianCode];
 
             if (custodian is ICanWithdraw withdrawableCustodian)
@@ -418,19 +422,27 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{asset}/{withdrawalId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{paymentMethod}/{withdrawalId}")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string asset, string withdrawalId, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken cancellationToken = default)
         {
             var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
+            if (custodianAccount == null)
+            {
+                return this.CreateAPIError(404, "custodian-account-not-found", $"Could not find the custodian account");
+            }
             var custodian = _custodianRegistry.GetAll()[custodianAccount.CustodianCode];
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
                 try
                 {
-                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(asset, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
+                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
+                    if (withdrawResult == null)
+                    {
+                        return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
+                    }
                     var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                         withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);

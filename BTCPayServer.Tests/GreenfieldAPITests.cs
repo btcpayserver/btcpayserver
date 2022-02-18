@@ -781,12 +781,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(code, ex.HttpCode);
         }
         
-        private async Task AssertCustodianApiError<T>(Func<Task> act) where T : CustodianApiException
+        private async Task AssertCustodianApiError(int httpStatus, string errorCode, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
-            Assert.IsType<T>(ex.APIError);
-            //Assert.Equal(typeof(T));
-            // TODO test if the error code and status matches the exception T provided.
+            Assert.Equal(httpStatus, ex.HttpCode);
+            Assert.Equal(errorCode, ex.APIError.Code);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2677,7 +2676,7 @@ namespace BTCPayServer.Tests
             await admin.GrantAccessAsync(true);
             
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-            var authClientNoPermissions  = await admin.CreateClient();
+            var authClientNoPermissions  = await admin.CreateClient(Policies.CanViewInvoices);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
             var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
             var withdrawalClient = await admin.CreateClient(Policies.CanWithdrawFromCustodianAccounts);
@@ -2788,16 +2787,14 @@ namespace BTCPayServer.Tests
             
             // Test: Trade, correct assets, wrong amount
             var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertCustodianApiError<InsufficientFundsException>(async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
-            
-            
+            await AssertCustodianApiError(InsufficientFundsException.HttpStatus, InsufficientFundsException.ErrorCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
 
 
             // Test: GetTradeQuote, unauth
             await AssertHttpError(401, async () => await unauthClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: GetTradeQuote, auth, but wrong permission
-            await AssertHttpError(403, async () => await authClientNoPermissions.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(403, async () => await managerClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: GetTradeQuote, auth, correct permission
             var tradeQuote = await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset);
@@ -2812,7 +2809,7 @@ namespace BTCPayServer.Tests
             await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset , "WRONG-ASSET"));
 
             // Test: wrong account ID
-            await AssertHttpError(403, async () => await tradeClient.GetTradeQuote(storeId, "WRONG-ACCOUNT-ID",  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, "WRONG-ACCOUNT-ID",  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: wrong store ID
             await AssertHttpError(403, async () => await tradeClient.GetTradeQuote("WRONG-STORE-ID", accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
@@ -2864,26 +2861,7 @@ namespace BTCPayServer.Tests
             
             // Test: CreateWithdrawal, correct payment method, correct amount
             var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest);
-            Assert.NotNull(withdrawResponse);
-            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.Asset);
-            Assert.Equal(createWithdrawalRequest.PaymentMethod, withdrawResponse.PaymentMethod);
-            Assert.Equal(MockCustodian.WithdrawalStatus, withdrawResponse.Status);
-            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.AccountId);
-            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.CustodianCode);
-            
-            Assert.Equal(2, withdrawResponse.LedgerEntries.Count);
-            
-            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[0].Asset);
-            Assert.Equal(MockCustodian.WithdrawalAmount, withdrawResponse.LedgerEntries[0].Qty);
-            Assert.Equal(LedgerEntryData.LedgerEntryType.Withdrawal, withdrawResponse.LedgerEntries[0].Type);
-            
-            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[1].Asset);
-            Assert.Equal(MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[1].Qty);
-            Assert.Equal(LedgerEntryData.LedgerEntryType.Fee, withdrawResponse.LedgerEntries[1].Type);
-
-            Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
-            Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
-            Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
+            AssertMockWithdrawal(withdrawResponse, custodianAccountData);
 
 
             // Test: CreateWithdrawal, wrong payment method
@@ -2899,26 +2877,61 @@ namespace BTCPayServer.Tests
             
             // Test: CreateWithdrawal, correct payment method, wrong amount
             var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, new decimal(0.666));
-            await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
+            await AssertHttpError(400, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
 
 
-            // TODO Test: GetWithdrawalInfo, unauth
-            // TODO Test: GetWithdrawalInfo, auth, but wrong permission
-            // TODO Test: GetWithdrawalInfo, auth, correct permission
-            // TODO Test: GetWithdrawalInfo, wrong withdrawal ID
-            // TODO Test: wrong account ID
-            // TODO Test: wrong store ID
-            // TODO Test: GetWithdrawalInfo, correct withdrawal ID
+            // Test: GetWithdrawalInfo, unauth
+            await AssertHttpError(401, async () => await unauthClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: GetWithdrawalInfo, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: GetWithdrawalInfo, auth, correct permission
+            var withdrawalInfo = await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId);
+            AssertMockWithdrawal(withdrawalInfo, custodianAccountData);
 
+            // Test: GetWithdrawalInfo, wrong withdrawal ID
+            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, "WRONG-WITHDRAWAL-ID"));
+            
+            // Test: wrong account ID
+            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: wrong store ID
+            // TODO shouldn't this be 404? I cannot change this without bigger impact, as it would affect all API endpoints that are store centered
+            await AssertHttpError(403, async () => await withdrawalClient.GetWithdrawalInfo("WRONG-STORE-ID", accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+
+            // TODO assert API error codes, not just status codes by using AssertCustodianApiError()
+            
             // TODO also test withdrawals for the various "Status" (Queued, Complete, Failed)
             // TODO create a mock custodian with only ICustodian
             // TODO create a mock custodian with only ICustodian + ICanWithdraw
             // TODO create a mock custodian with only ICustodian + ICanTrade
             // TODO create a mock custodian with only ICustodian + ICanDeposit
-
-            // TODO assert error codes, not just status codes
-
         }
 
+        private void AssertMockWithdrawal(WithdrawalResponseData withdrawResponse, CustodianAccountData account)
+        {
+            Assert.NotNull(withdrawResponse);
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.Asset);
+            Assert.Equal(MockCustodian.WithdrawalPaymentMethod, withdrawResponse.PaymentMethod);
+            Assert.Equal(MockCustodian.WithdrawalStatus, withdrawResponse.Status);
+            Assert.Equal(account.Id, withdrawResponse.AccountId);
+            Assert.Equal(account.CustodianCode, withdrawResponse.CustodianCode);
+            
+            Assert.Equal(2, withdrawResponse.LedgerEntries.Count);
+            
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[0].Asset);
+            Assert.Equal(MockCustodian.WithdrawalAmount - MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[0].Qty);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Withdrawal, withdrawResponse.LedgerEntries[0].Type);
+            
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[1].Asset);
+            Assert.Equal(MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[1].Qty);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Fee, withdrawResponse.LedgerEntries[1].Type);
+
+            Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
+            Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
+            Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
+        }
     }
 }

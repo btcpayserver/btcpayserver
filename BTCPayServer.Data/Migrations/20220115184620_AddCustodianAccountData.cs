@@ -21,6 +21,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(maxLength: 50, nullable: false),
                     StoreId = table.Column<string>(maxLength: 50, nullable: false),
                     CustodianCode = table.Column<string>(maxLength: 50, nullable: false),
+                    Name = table.Column<string>(maxLength: 50, nullable: true),
                     Blob = table.Column<byte[]>(nullable: true)
                 },
                 constraints: table =>

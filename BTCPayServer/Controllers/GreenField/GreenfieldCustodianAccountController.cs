@@ -263,6 +263,13 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> TradeMarket(string storeId, string accountId,
             TradeRequestData request, CancellationToken cancellationToken = default)
         {
+            // TODO add SATS check everywhere. We cannot change to 'BTC' ourselves because the qty / price would be different too.
+            if ("SATS".Equals(request.FromAsset) || "SATS".Equals(request.ToAsset))
+            {
+                return this.CreateAPIError(400, "use-synonym-asset",
+                    $"Please use 'BTC' instead of 'SATS'.");
+            }
+
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
             if (custodianAccount == null)
@@ -320,6 +327,13 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanTradeCustodianAccount, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetTradeQuote(string storeId, string accountId, [FromQuery] string fromAsset, [FromQuery] string toAsset, CancellationToken cancellationToken = default)
         {
+            // TODO add SATS check everywhere. We cannot change to 'BTC' ourselves because the qty / price would be different too.
+            if ("SATS".Equals(fromAsset) || "SATS".Equals(toAsset))
+            {
+                return this.CreateAPIError(400, "use-asset-synonym",
+                    $"Please use 'BTC' instead of 'SATS'.");
+            }
+
             // TODO these couple of lines are used a lot. How do we DRY?
             var custodianAccount = await _custodianAccountRepository.FindById(accountId);
             if (custodianAccount == null)

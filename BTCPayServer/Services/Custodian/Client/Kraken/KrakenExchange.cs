@@ -420,7 +420,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var withdrawToAddressNamePerPaymentMethod = krakenConfig.WithdrawToAddressNamePerPaymentMethod;
         var withdrawToAddressName = withdrawToAddressNamePerPaymentMethod[paymentMethod];
         var asset = paymentMethod.Split("-")[0];
-        var network = paymentMethod.Split("-")[1];
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
 
@@ -450,7 +449,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public async Task<WithdrawResult> GetWithdrawalInfoAsync(string paymentMethod, string withdrawalId, JObject config, CancellationToken cancellationToken)
     {
         var asset = paymentMethod.Split("-")[0];
-        var network = paymentMethod.Split("-")[1];
         var krakenAsset = ConvertToKrakenAsset(asset);
         var param = new Dictionary<string, string>();
         param.Add("asset", krakenAsset);
@@ -578,7 +576,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         cts.CancelAfter(TimeSpan.FromMinutes(0.5));
 
         var response = await _client.SendAsync(request, cts.Token);
-        var responseString = response.Content.ReadAsStringAsync().Result;
+        var responseString = await response.Content.ReadAsStringAsync();
         var r = JObject.Parse(responseString);
 
         var error = r["error"];
@@ -597,7 +595,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 throw new CustodianApiException(400, "custodian-api-exception", errorMessage);
             }
         }
-
         return r;
     }
 

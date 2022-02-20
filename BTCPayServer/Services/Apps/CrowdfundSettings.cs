@@ -6,12 +6,11 @@ namespace BTCPayServer.Services.Apps
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public bool Enabled { get; set; }
-
+        public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-
         public string TargetCurrency { get; set; }
+
         decimal? _TargetAmount;
         public decimal? TargetAmount
         {
@@ -38,7 +37,7 @@ namespace BTCPayServer.Services.Apps
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
         public string DisqusShortname { get; set; }
-        public bool AnimationsEnabled { get; set; } = true;
+        public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
         [Obsolete("Use AppData.TagAllInvoices instead")]

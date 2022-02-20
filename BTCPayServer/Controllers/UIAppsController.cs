@@ -128,21 +128,20 @@ namespace BTCPayServer.Controllers
                     var empty = new PointOfSaleSettings { Currency = defaultCurrency };
                     appData.SetSettings(empty);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             await _appService.UpdateOrCreateApp(appData);
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-            switch (appType)
+            return appType switch
             {
-                case AppType.PointOfSale:
-                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
-                case AppType.Crowdfund:
-                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
-                default:
-                    return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
-            }
+                AppType.PointOfSale => RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id }),
+                AppType.Crowdfund => RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id }),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         [HttpGet("{appId}/delete")]

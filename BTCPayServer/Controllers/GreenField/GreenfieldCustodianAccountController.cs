@@ -266,7 +266,7 @@ namespace BTCPayServer.Controllers.Greenfield
             // TODO add SATS check everywhere. We cannot change to 'BTC' ourselves because the qty / price would be different too.
             if ("SATS".Equals(request.FromAsset) || "SATS".Equals(request.ToAsset))
             {
-                return this.CreateAPIError(400, "use-synonym-asset",
+                return this.CreateAPIError(400, "use-asset-synonym",
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 

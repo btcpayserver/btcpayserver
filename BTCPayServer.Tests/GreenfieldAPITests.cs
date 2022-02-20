@@ -781,7 +781,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(code, ex.HttpCode);
         }
         
-        private async Task AssertCustodianApiError(int httpStatus, string errorCode, Func<Task> act)
+        private async Task AssertApiError(int httpStatus, string errorCode, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
             Assert.Equal(httpStatus, ex.HttpCode);
@@ -2773,6 +2773,10 @@ namespace BTCPayServer.Tests
             Assert.Equal( tradeRequest.FromAsset, newTradeResult.LedgerEntries[2].Asset);
             Assert.Equal(LedgerEntryData.LedgerEntryType.Fee , newTradeResult.LedgerEntries[2].Type);
             
+            // Test: GetTradeQuote, SATS
+            var satsTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = "SATS", Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.TradeMarket(storeId, accountId, satsTradeRequest));
+            
             // TODO Test: Trade with percentage qty
             
             // Test: Trade, wrong assets method
@@ -2787,7 +2791,7 @@ namespace BTCPayServer.Tests
             
             // Test: Trade, correct assets, wrong amount
             var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertCustodianApiError(InsufficientFundsException.HttpStatus, InsufficientFundsException.ErrorCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
+            await AssertApiError(InsufficientFundsException.HttpStatus, InsufficientFundsException.ErrorCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
 
 
             // Test: GetTradeQuote, unauth
@@ -2804,6 +2808,9 @@ namespace BTCPayServer.Tests
             Assert.Equal(MockCustodian.BtcPriceInEuro, tradeQuote.Bid);
             Assert.Equal(MockCustodian.BtcPriceInEuro, tradeQuote.Ask);
             
+            // Test: GetTradeQuote, SATS
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, "SATS"));
+            
             // Test: GetTradeQuote, wrong asset
             await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId,  "WRONG-ASSET", MockCustodian.TradeToAsset));
             await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset , "WRONG-ASSET"));
@@ -2813,6 +2820,8 @@ namespace BTCPayServer.Tests
             
             // Test: wrong store ID
             await AssertHttpError(403, async () => await tradeClient.GetTradeQuote("WRONG-STORE-ID", accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+
+            
 
 
 

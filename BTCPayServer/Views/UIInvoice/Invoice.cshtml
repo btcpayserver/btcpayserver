@@ -41,7 +41,8 @@
 }
 
 <div class="invoice-details">
-    <sticky-header class="d-md-flex align-items-center justify-content-between">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-md-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-md-0">
             @if (Model.ShowCheckout)
@@ -69,7 +70,7 @@
                 </button>
             </form>
         </div>
-    </sticky-header>
+    </div>
 
     <partial name="_StatusMessage" />
 

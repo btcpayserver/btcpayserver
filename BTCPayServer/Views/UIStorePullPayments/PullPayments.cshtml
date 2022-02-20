@@ -36,7 +36,8 @@
     </style>
 }
 
-<sticky-header class="d-flex align-items-center justify-content-between">
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
@@ -48,7 +49,7 @@
     <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create Pull Payment
     </a>
-</sticky-header>
+</div>
 
 <partial name="_StatusMessage" />
 

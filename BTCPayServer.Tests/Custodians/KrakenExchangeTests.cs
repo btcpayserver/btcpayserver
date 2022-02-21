@@ -1,7 +1,11 @@
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Custodian.Client.Exception;
 using BTCPayServer.Services.Custodian.Client.Kraken;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,15 +26,15 @@ public class KrakenTests : UnitTestBase
     {
         using var tester = CreateServerTester();
         await tester.StartAsync();
-        //var languageService = tester.PayTester.GetService<LanguageService>();
+        //
 
         var cancellationToken = new CancellationToken();
         var kraken = tester.PayTester.GetService<KrakenExchange>();
-        
+
         Assert.NotNull(kraken);
         Assert.NotNull(kraken.GetCode());
         Assert.NotNull(kraken.GetName());
-        
+
         var pairs = kraken.GetTradableAssetPairs();
         Assert.NotNull(pairs);
         Assert.True(pairs.Count > 0);
@@ -39,27 +43,28 @@ public class KrakenTests : UnitTestBase
             Assert.NotNull(pair.AssetBought);
             Assert.NotNull(pair.AssetSold);
             Assert.IsType<KrakenAssetPair>(pair);
-            KrakenAssetPair krakenAssetPair = (KrakenAssetPair) pair;
+            KrakenAssetPair krakenAssetPair = (KrakenAssetPair)pair;
             Assert.NotNull(krakenAssetPair.PairCode);
         }
+
         Assert.NotNull(pairs[0].AssetBought);
-        
+
         // Test: GetDepositablePaymentMethods();
         var depositablePaymentMethods = kraken.GetDepositablePaymentMethods();
         Assert.NotNull(depositablePaymentMethods);
         Assert.True(depositablePaymentMethods.Length > 0);
         Assert.Contains("BTC-OnChain", depositablePaymentMethods);
-        
-        
+
+
         // Test: GetWithdrawablePaymentMethods();
         var withdrawablePaymentMethods = kraken.GetWithdrawablePaymentMethods();
         Assert.NotNull(withdrawablePaymentMethods);
         Assert.True(withdrawablePaymentMethods.Length > 0);
         Assert.Contains("BTC-OnChain", withdrawablePaymentMethods);
-        
-        
+
+
         // Test: GetQuoteForAssetAsync();
-        var btcQuote = await kraken.GetQuoteForAssetAsync("USD","BTC", null, cancellationToken);
+        var btcQuote = await kraken.GetQuoteForAssetAsync("USD", "BTC", null, cancellationToken);
         Assert.NotNull(btcQuote);
         Assert.True(btcQuote.Ask > 1000);
         Assert.True(btcQuote.Bid > 1000);
@@ -68,6 +73,37 @@ public class KrakenTests : UnitTestBase
         Assert.Equal("USD", btcQuote.FromAsset);
         Assert.Equal("BTC", btcQuote.ToAsset);
 
+// TODO this config is copy pasted. Put it
+        JObject goodConfig = JObject.Parse(@"{
+'WithdrawToAddressNamePerPaymentMethod': {
+   'BTC-OnChain': 'My Ledger Nano'
+},
+'ApiKey': 'APIKEY',
+'PrivateKey': 'UFJJVkFURUtFWQ=='
+}");
+        
+        JObject badConfig = JObject.Parse(@"{
+'WithdrawToAddressNamePerPaymentMethod': {
+   'BTC-OnChain': 'My Ledger Nano'
+},
+'ApiKey': 'APIKEY',
+'PrivateKey': 'NOT-BASE-64'
+}");
+
+        var mockHttpMessageHandler = new KrakenMockHttpMessageHandler();
+        var mockHttpClient = new HttpClient(mockHttpMessageHandler);
+        var memoryCache = tester.PayTester.GetService<IMemoryCache>();
+        var mockedKraken = new KrakenExchange(mockHttpClient, memoryCache);
+        
+        // Test: GetAssetBalancesAsync();
+        var assetBalances = await mockedKraken.GetAssetBalancesAsync(goodConfig, cancellationToken);
+        Assert.NotNull(assetBalances);
+        Assert.True(assetBalances.Count == 8);
+        Assert.Contains(assetBalances.Keys, item => item.Equals("BTC"));
+        Assert.Contains(assetBalances.Keys, item => item.Equals("EUR"));
+
+        // TODO Test: GetAssetBalancesAsync() with bad config;
+        // var ex = await Assert.ThrowsAsync<BadConfigException>(mockedKraken.GetAssetBalancesAsync(badConfig, cancellationToken));
 
 
         // TODO Test: Kraken request signing / hash
@@ -75,10 +111,8 @@ public class KrakenTests : UnitTestBase
 
         // TODO Test: WithdrawAsync();
         // TODO Test: TradeMarketAsync();
-        // TODO Test: GetAssetBalancesAsync();
         // TODO Test: GetDepositAddressAsync();
         // TODO Test: GetTradeInfoAsync();
         // TODO Test: GetWithdrawalInfoAsync();
-
     }
 }

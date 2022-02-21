@@ -17,6 +17,7 @@
     --button-height: 40px;
     --button-padding: 7px;
     --icon-size: 1.5rem;
+    --menu-border: 1px solid var(--btcpay-body-border-light);
     height: var(--header-height);
     z-index: 1031; /* needs a value between fixed and the offcanvas backdrop, see https://getbootstrap.com/docs/5.1/layout/z-index/ */
 }
@@ -393,6 +394,7 @@
         top: 0;
         left: 0;
         right: 0;
+        border-bottom: var(--menu-border);
     }
 
     #mainMenuHead  {
@@ -406,6 +408,7 @@
         left: 0;
         width: var(--sidebar-width);
         z-index: 1045;
+        border-right: var(--menu-border);
         color: var(--btcpay-body-text);
         visibility: hidden;
         background-color: inherit;
@@ -558,7 +561,7 @@
         left: 0;
         width: var(--sidebar-width);
         height: 100vh;
-        border-right: 1px solid var(--btcpay-body-border-light);
+        border-right: var(--menu-border);
     }
 
     #mainMenuHead {

@@ -799,17 +799,23 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
-
             var fs = new SearchString(model.SearchTerm);
-            var store = model.StoreId == null || fs.ContainsFilter("storeid") ? null : HttpContext.GetStoreData();
-            var storeIds = store == null
-                ? fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray()
-                : new[] { store.Id };
-
-            model.StoreIds = storeIds;
+            string? storeId = (model.StoreId ?? HttpContext.GetStoreData()?.Id);
+            var storeIds = new HashSet<string>();
+            if (fs.GetFilterArray("storeid") is string[] l)
+            {
+                foreach (var i in l)
+                    storeIds.Add(i);
+            }
+            if (storeId is not null)
+            {
+                storeIds.Add(storeId);
+                model.StoreId = storeId;
+            }
+            model.StoreIds = storeIds.ToArray();
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
-            invoiceQuery.StoreId = storeIds;
+            invoiceQuery.StoreId = model.StoreIds;
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;

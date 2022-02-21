@@ -1,6 +1,7 @@
 using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Mails;

@@ -102,8 +102,8 @@ public class KrakenTests : UnitTestBase
         Assert.Contains(assetBalances.Keys, item => item.Equals("BTC"));
         Assert.Contains(assetBalances.Keys, item => item.Equals("EUR"));
 
-        // TODO Test: GetAssetBalancesAsync() with bad config;
-        // var ex = await Assert.ThrowsAsync<BadConfigException>(mockedKraken.GetAssetBalancesAsync(badConfig, cancellationToken));
+        // Test: GetAssetBalancesAsync() with bad config;
+        await Assert.ThrowsAsync<BadConfigException>(async () => await mockedKraken.GetAssetBalancesAsync(badConfig, cancellationToken));
 
 
         // TODO Test: Kraken request signing / hash

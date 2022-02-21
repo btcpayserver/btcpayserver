@@ -158,10 +158,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 _greenfieldPullPaymentController,
                 _homeController,
                 _storePaymentMethodsController,
-                new HttpContextAccessor() { HttpContext = context }
+                new LocalHttpContextAccessor() { HttpContext = context }
             );
         }
     }
+
+    public class LocalHttpContextAccessor: IHttpContextAccessor
+    {
+        public HttpContext? HttpContext { get; set; }
+    } 
 
     public class LocalBTCPayServerClient : BTCPayServerClient
     {

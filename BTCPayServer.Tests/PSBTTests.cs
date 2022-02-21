@@ -45,7 +45,6 @@ namespace BTCPayServer.Tests
             Thread.Sleep(1000);
             s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
             SendAllTo(s, address);
-            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\0--.png");
             s.Driver.FindElement(By.Id("SignWithPSBT")).Click();
 
             var psbt = ExtractPSBT(s);
@@ -56,7 +55,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Decode")).Click();
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
             s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
-            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\0-.png");
             s.FindAlertMessage();
 
             // Scenario 2: Same as scenario 1, except we create a PSBT from hot wallet, then sign by manually

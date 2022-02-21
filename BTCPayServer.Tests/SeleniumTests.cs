@@ -1614,7 +1614,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
             s.Driver.FindElement(By.Id("Create")).Click();
-            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1279276918\wfew.png");
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.Id("Destination")).SendKeys(lnurl);
 

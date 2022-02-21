@@ -253,7 +253,6 @@ namespace BTCPayServer.Tests
 
             await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
             {
-                s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1721425323\fwefw.png");
                 s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).Click();
                 return Task.CompletedTask;
             });

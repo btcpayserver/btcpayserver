@@ -5,9 +5,8 @@
     ViewData["Title"] = "Payment Requests";
 }
 
-<partial name="_StatusMessage" />
-
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
@@ -21,6 +20,8 @@
         Create Payment Request
     </a>
 </div>
+
+<partial name="_StatusMessage" />
 
 <div class="row mb-2">
     <div class="col col-lg-8 col-xl-6 mr-auto">

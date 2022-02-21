@@ -6,10 +6,6 @@
 }
 
 <div class="sticky-header-setup"></div>
-<header class="sticky-header">
+<div class="sticky-header">
     <vc:wallet-nav wallet-id="wallet"/>
-</header>
-<script>
-    const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
-    document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
-</script>
+</div>

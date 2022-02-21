@@ -348,8 +348,10 @@
     top: 0;
     z-index: 1020;
     background: var(--btcpay-body-bg);
-    padding-top: var(--content-padding-top);
-    padding-bottom: var(--btcpay-space-l);
+    /* pull it out of the content padding and adjust its inner padding to make up for that space */
+    margin-left: calc(var(--content-padding-horizontal) * -1);
+    margin-right: calc(var(--content-padding-horizontal) * -1);
+    padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
 }
 
 .sticky-header #SectionNav {

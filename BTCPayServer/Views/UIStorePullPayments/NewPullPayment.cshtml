@@ -14,14 +14,15 @@
     <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.js" asp-append-version="true"></bundle>
 }
 
-<partial name="_StatusMessage" />
+<form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
+    </div>
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-
-<form
-    method="post"
-    asp-route-walletId="@Context.GetRouteValue("walletId")"
-    asp-action="NewPullPayment">
+    <partial name="_StatusMessage" />
+    
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
@@ -90,30 +91,27 @@
                             </div>
                         </div>
                     </div>
-					<div class="accordion-item"> <h2 class="accordion-header" id="additional-custom-css-header">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-lightning-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-lightning" aria-expanded="false" aria-controls="additional-lightning">
                                 Lightning network settings
                                 <vc:icon symbol="caret-down"/>
                             </button>
                         </h2>
-						<div id="additional-lightning" class="accordion-collapse collapse" aria-labelledby="additional-lightning-header">
+                        <div id="additional-lightning" class="accordion-collapse collapse" aria-labelledby="additional-lightning-header">
                             <div class="accordion-body">
                                 <div class="form-group">
-									<label asp-for="BOLT11Expiration" class="form-label"></label>
-									<div class="input-group">
-										<input asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
-										<span class="input-group-text">days</span>
-									</div>
-									<span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
-								</div>
+                                    <label asp-for="BOLT11Expiration" class="form-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                                        <span class="input-group-text">days</span>
+                                    </div>
+                                    <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
+                                </div>
                             </div>
                         </div>
-					</div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
             </div>
         </div>
     </div>

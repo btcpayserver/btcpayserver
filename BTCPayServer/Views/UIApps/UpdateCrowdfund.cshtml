@@ -19,7 +19,7 @@
 
 <form method="post">
     <div class="sticky-header-setup"></div>
-    <header class="sticky-header d-sm-flex align-items-center justify-content-between">
+    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
             <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
@@ -27,13 +27,8 @@
             {
                 <a class="btn btn-secondary" asp-action="ViewCrowdfund" asp-controller="UIAppsPublic" asp-route-appId="@Model.AppId" id="ViewApp" target="app_@Model.AppId">View</a>
             }
-            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
         </div>
-    </header>
-    <script>
-        const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
-        document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
-    </script>
+    </div>
 
     <partial name="_StatusMessage" />
 
@@ -284,7 +279,8 @@
     </div>
 </form>
 
-<div id="danger-zone">
+<div class="d-flex gap-3 mt-3">
+    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <a id="DeleteApp" class="btn btn-outline-danger" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 

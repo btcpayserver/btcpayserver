@@ -1,7 +1,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 <div class="sticky-header-setup"></div>
-<header class="sticky-header mb-l">
+<div class="sticky-header mb-l">
     <h2 class="mt-1 mb-2 mb-lg-4">Account Settings</h2>
     <nav id="SectionNav">
         <div class="nav">
@@ -14,8 +14,4 @@
             <vc:ui-extension-point location="user-nav" model="@Model"/>
         </div>
     </nav>
-</header>
-<script>
-    const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
-    document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
-</script>
+</div>

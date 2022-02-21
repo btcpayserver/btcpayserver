@@ -306,6 +306,8 @@ namespace BTCPayServer
             {
                 return NotFound();
             }
+            if (comment is not null)
+                comment = comment.Substring(0, 2000);
 
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var i = await _invoiceRepository.GetInvoice(invoiceId, true);

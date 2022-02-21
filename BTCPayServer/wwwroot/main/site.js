@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     // sticky header
-    const { offsetHeight } = document.querySelector('.sticky-header-setup + .sticky-header');
-    document.documentElement.style.scrollPaddingTop = `calc(${offsetHeight}px + var(--btcpay-space-m))`;
+    const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
+    if (stickyHeader) {
+        document.documentElement.style.scrollPaddingTop = `calc(${stickyHeader.offsetHeight}px + var(--btcpay-space-m))`;
+    }
     
     // initialize timezone offset value if field is present in page
     var timezoneOffset = new Date().getTimezoneOffset();

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.6
+
+### New features:
+
+* Greenfield: Exposes LNUrl's comment and LN address in invoice's payment method (#3427) @Kukks
+* Greenfield: Add maxFeePercent/maxFeeFlat to the lightning payment API (#3454) @denniseimann @NicolasDorier
+* Greenfield: Find 1 user by ID or by email, or list all users. (#3176) @woutersamaey
+
+### Bug fixes:
+
+* Fix: All PSBT flows were crashing @NicolasDorier
+
+### Improvements:
+
+* UI: Add border for mobile menu (#3477 #3469) @denniseimann @dstrukt
+* UI: Sticky headers improvements (#3471) @denniseimann
+* UX: Remove payment methods not currently configured when creating invoice (#3394) @ubolator
+* UX: Add pull payment grouping options (#3177) @ubolator
+* UI: Redesign Wallet UI (#3408) @denniseimann @dstrukt
+* UI: Remove storeid from the invoice's filter, as it is implicit @NicolasDorier
+
 ## 1.4.5
 
 ### New features:

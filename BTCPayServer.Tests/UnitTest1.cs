@@ -925,7 +925,7 @@ namespace BTCPayServer.Tests
         private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter, string storeId = null)
         {
             var result =
-                (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>()
+                (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
                     .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }

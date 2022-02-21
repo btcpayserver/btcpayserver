@@ -5,7 +5,7 @@
 ### New features:
 
 * Greenfield: Exposes LNUrl's comment and LN address in invoice's payment method (#3427) @Kukks
-* Greenfield: Add maxFeePercent/maxFeeFlat to the lightning payment API (#3454) @denniseimann @NicolasDorier
+* Greenfield: Add maxFeePercent/maxFeeFlat to the lightning payment API (#3454) @dennisreimann @NicolasDorier
 * Greenfield: Find 1 user by ID or by email, or list all users. (#3176) @woutersamaey
 
 ### Bug fixes:
@@ -14,11 +14,11 @@
 
 ### Improvements:
 
-* UI: Add border for mobile menu (#3477 #3469) @denniseimann @dstrukt
-* UI: Sticky headers improvements (#3471) @denniseimann
-* UX: Remove payment methods not currently configured when creating invoice (#3394) @ubolator
-* UX: Add pull payment grouping options (#3177) @ubolator
-* UI: Redesign Wallet UI (#3408) @denniseimann @dstrukt
+* UI: Add border for mobile menu (#3477 #3469) @dennisreimann @dstrukt
+* UI: Sticky headers improvements (#3471) @dennisreimann
+* UX: Remove payment methods not currently configured when creating invoice (#3394) @bolatovumar
+* UX: Add pull payment grouping options (#3177) @bolatovumar
+* UI: Redesign Wallet UI (#3408) @dennisreimann @dstrukt
 * UI: Remove storeid from the invoice's filter, as it is implicit @NicolasDorier
 
 ## 1.4.5
@@ -26,7 +26,7 @@
 ### New features:
 
 * Ability to bump fees of transactions and invoices via CPFP (#3395) @NicolasDorier
-* Add ability to add description to pull payment (#3363) @ubolator
+* Add ability to add description to pull payment (#3363) @bolatovumar
 * Greenfield: Can add store guest/owner to a store (#3363) @Kukks
 
 ### Bug fixes:
@@ -59,13 +59,13 @@
 
 ### Bug fixes:
 
-* Ensure the swagger doc is semantically correct (#3390) @ubolator
+* Ensure the swagger doc is semantically correct (#3390) @bolatovumar
 * Fix crashes with some plugins (#3401) @Kukks
 * Fix crash of payment request list (#3392) @NicolasDorier
-* Reference correct payment type definition for webhook events in Swagger docs @ubolator
+* Reference correct payment type definition for webhook events in Swagger docs @bolatovumar
 * Fix pay button type comparison (#3403) @dennisreimann
 * No JS error in crowdfund if canvas unavailable @NicolasDorier
-* Bump z-index on header (#3393, #3377) @ubolator
+* Bump z-index on header (#3393, #3377) @bolatovumar
 
 ### Improvements:
 
@@ -134,11 +134,11 @@ Note that you do not need to update libseccomp2, our update process does this fo
 ### Improvements:
 
 * Use the invoice terminology Processing/Settled in the UI rather than Paid/Confirmed/Complete.
-* Add loading indicator for "Pay" button in POS terminal app (#3342 #3336) @ubolator
+* Add loading indicator for "Pay" button in POS terminal app (#3342 #3336) @bolatovumar
 * Do not use uppercase in urls (#921) @NicolasDorier
 * Add a copy Tor URL in the footer (#2692 #3290) @dennisreimann
 * Improve permissions error messages of Greenfield API (#3256 #3212 #3220 #3204 #2795) @NicolasDorier @Kukks
-* Greenfield API: Remove redundant/unused parameters in payment methods @ubolator
+* Greenfield API: Remove redundant/unused parameters in payment methods @bolatovumar
 * Greenfield: Getting the fee rate should work with CanViewStoreSettings permission (#3217) @woutersamaey
 * Add suggestion list for currency text inputs (#3347) @NicolasDorier
 * Add warning about the security tradeoff the paybutton (#3340) @NicolasDorier
@@ -251,19 +251,19 @@ This feature include a critical security patch. The vulnerability impacts owner 
 
 ### Improvements:
 
-* Various Bootstrap related updates (#2785 #2841 #2870 #2893 #2915 #2932 #2957) @dennisreimann @dstrukt @bolatovumar 
+* Various Bootstrap related updates (#2785 #2841 #2870 #2893 #2915 #2932 #2957) @dennisreimann @dstrukt @bolatovumar
 * Various GreenField API improvements (#2817 #2880 #2905 #2934) @bolatovumar @kukks @woutersamaey
-* PSBT UI improvements (#2713) @dennisreimann 
+* PSBT UI improvements (#2713) @dennisreimann
 * Revamp Theme system (#2794 #2927) @dennisreimann @dstrukt
 * Revamp confirmation modals (#2614) @dennisreimann @dstrukt
 * Unify Fido2 authentication under two-factor tab (#2866) @dennisreimann
 * Remove slack link (#2887) @dstrukt
 * Improve warning when creating invoice without wallet (#2844) @bolatovumar
 * Improve public LN node info (#2876) @dennisreimann
-* Adds social links to footer @1nF0rmed 
+* Adds social links to footer @1nF0rmed
 * Switch to offcanvas navigation system @dennisreimann
 * Crowdfund public UI re-design (#2918 #2926 #2938) @dennisreimann
-* Remove Coinswitch entirely @kukks 
+* Remove Coinswitch entirely @kukks
 * Improve display and structure of payment related configuration (#2945) @dennisreimann
 * Coin selection improvements (#2956) @dennisreimann
 * Add Passport hardware wallet option to the wallet import screens (#2962) @BitcoinQnA
@@ -301,12 +301,12 @@ This feature include a critical security patch. The vulnerability impacts owner 
 
 ### Bug fixes:
 
-* Fix Summernote editor (#2829) @dennisreimann 
-* Fix topup invoices not created when payment method criteria specified (#2847) @bolatovumar 
-* Check for empty theme URI before saving theme settings (#2851) @bolatovumar 
+* Fix Summernote editor (#2829) @dennisreimann
+* Fix topup invoices not created when payment method criteria specified (#2847) @bolatovumar
+* Check for empty theme URI before saving theme settings (#2851) @bolatovumar
 * Signing a transaction with too many inputs (around 500), should not timeout @nicolasdorier
 * Fix Vault issues: If signing took more than one minute, the connection to HWI would drop @nicolasdorier
-* Fix CSP issues (#2872 #2946 #2954) @nicolasdorier @dennisreimann  @bolatovumar 
+* Fix CSP issues (#2872 #2946 #2954) @nicolasdorier @dennisreimann  @bolatovumar
 * Fix issues with Authorization Request page (#2894) @bolatovumar
 * Do not activate payment methods for non-new invoices @nicolasdorier
 * Fix camera not working on wallet send (Fix #2922) @nicolasdorier
@@ -332,7 +332,7 @@ Minor bug fixes release, update recommended for shared hosting. (#2851)
 ### Bug fixes
 
 * If `Only enable the payment method after user explicitly chooses it` is enabled for a store and a payment method is unavailable, the server could become unresponsive. @NicolasDorier
-* Authorize API key page was broken when trying to select specific stores (#2858) @ubolator
+* Authorize API key page was broken when trying to select specific stores (#2858) @bolatovumar
 * The /docs page was broken in 1.2.3 due to CSP @NicolasDorier
 * Fixing crashes happening when someone migrate from BTCPay Server altcoins edition back to bitcoin only @Kukks
 
@@ -360,7 +360,7 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Fix rounding issue in the invoice refund flow (#2778, #2810) @NicolasDorier
 * When cloning an expired payment request, the new payment request was also expired (#2820) @dennisreimann
 * Fix instructions to import a coldcard wallet via file upload (#2809) @mandelbit
-* Lightning payments should not be proposed for top-up invoices (#2772, #2780) @ubolator
+* Lightning payments should not be proposed for top-up invoices (#2772, #2780) @bolatovumar
 * Typo fixes (#2774) @jorisvial
 * Fix payjoin client to properly handle receiver using output substitution (#2677) @NicolasDorier
 * The checkout would crash for some client if automatic detection of language was checked, and the browser was not setting the accepted language @NicolasDorier
@@ -393,13 +393,13 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Auto-select store when creating a new invoice (#2680) @bolatovumar
 * Save paymentRequestId in Metadata when creating invoice for Payment Request (#2644) @woutersamaey
 * Support multiple file upload (#2705) @cypherbeerus
-* Improve Dutch translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  @woutersamaey 
+* Improve Dutch translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  @woutersamaey
 * Improve Portuguese translation (https://github.com/btcpayserver/btcpayserver/commit/7ac83575d4c50e42f2ecc02c8bf80f66697b6d57)  rafaelpac
-* Improve payment view (#2748) @dennisreimann @dstrukt 
-* Improve Wallet Send UI (#2750) @dennisreimann 
-* Show new store warning icon only if neither on-chain wallet nor LN is configured (#2760) @bolatovumar 
+* Improve payment view (#2748) @dennisreimann @dstrukt
+* Improve Wallet Send UI (#2750) @dennisreimann
+* Show new store warning icon only if neither on-chain wallet nor LN is configured (#2760) @bolatovumar
 * Update successful refund message (#2764) @cypherbeerus
-* Fix translation on finnish, bulgarian, Kazath (fa91174b1a310e46a37e1862f2b9c263f5e26408, 10e3595a829052573a9918eacafabc6d10e03ea6 965beebc6624906a1f3127623576088dee23e9bf) @NicolasDorier 
+* Fix translation on finnish, bulgarian, Kazath (fa91174b1a310e46a37e1862f2b9c263f5e26408, 10e3595a829052573a9918eacafabc6d10e03ea6 965beebc6624906a1f3127623576088dee23e9bf) @NicolasDorier
 
 ### New features:
 * Greenfield: Delete User API (#2340) @bolatovumar @kukks
@@ -430,8 +430,8 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Re-enable "Create" button for invoices on correct form input (#2694) @bolatovumar
 * Fix: Payment Request status does not update on invoice marked events or when pr amount is changed (#2700) @kukks
 * Properly clip taxIncluded and invoice's amount (#2724) @nicolasdorier
-* Fix PoS bug on dark mode (#2743) @dennisreimann 
-* Remove support for payout to a Bitcoin Url (#2766) @NicolasDorier 
+* Fix PoS bug on dark mode (#2743) @dennisreimann
+* Remove support for payout to a Bitcoin Url (#2766) @NicolasDorier
 * Fix: Support Clightning 0.10.1 @kukks
 
 ## 1.1.2
@@ -465,10 +465,10 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Greenfield: Provides unconf/conf balance, keypath + address + timestamp + confirmation count of utxos @Kukks
 * Add `BTCPAY_TOR_SERVICES` configuration to expose tor services via the server settings. Useful for integration with self-hosted node such as Umbrel (#2388) @Kukks @junderw
 * Payment methods can be toggled directly from the update store page, rather than inside the page of each payment method (#2469) @dennisreimann
-* Start separation of Coinswitch feature and Shopify integration as plugins (#2384 #2390) @Kukks 
+* Start separation of Coinswitch feature and Shopify integration as plugins (#2384 #2390) @Kukks
 * Greenfield: Ability to pass more query parameters to filter results of api/v1/invoices @SakerOmera
 * Human friendly error if webhook or webhook delivery not found @NicolasDorier
-* Add button to copy API key to clipboard (#2439) @ubolator
+* Add button to copy API key to clipboard (#2439) @bolatovumar
 
 ### New features:
 
@@ -477,7 +477,7 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Can disable modification of SSH settings via the server settings to prevent escalation of privilege. (See #2468) @NicolasDorier
 * Manual coin selection has a "confirmed utxo" filter @Kukks
 * Greenfield: Can query fee rate @Kukks
-* New setting for checkout: Ability to activate specific payment methods after the creation of the invoice @xpayserver @Kukks @rockstardev 
+* New setting for checkout: Ability to activate specific payment methods after the creation of the invoice @xpayserver @Kukks @rockstardev
 
 ### Bug fixes:
 
@@ -488,8 +488,8 @@ See [1](https://huntr.dev/bounties/ffabdac8-7280-4806-b70c-9b0d1aafbb6e/), [2](h
 * Greenfield: Fix typo of webhook type OrignalDeliveryId => OriginalDeliveryId @NicolasDorier
 * If the posData property of invoice metadata was not a JObject, the invoice would crash @Kukks
 * If a store was created via the Greenfield API, warning signs of unconfigured stores would not appear. (Fix #2434) @bolatovumar
-* Do not crash if plugin folder mismatches plugin identifier @Kukks 
-* Fix notification count on mobile (#2483) @dennisreimann 
+* Do not crash if plugin folder mismatches plugin identifier @Kukks
+* Fix notification count on mobile (#2483) @dennisreimann
 * Fix: Passing invalid query parameters or route value in the Greenfield API should returns HTTP 422 + validation details rather than empty 400. @NicolasDorier
 * Greenfield: Deleting a store in the server, should delete only webhooks of this store @NicolasDorier
 
@@ -512,7 +512,7 @@ Small release fixing bugs introduced in 1.0.7.1:
 ### Improvements:
 
 * Add user email search/sort @bolatovumar
-* Fix pay button link preview (see #2396) @bumbummen99 
+* Fix pay button link preview (see #2396) @bumbummen99
 * Change display date format on view pull payments (see #2339) @AlexGidge
 * Update form required input styling (see #2373) @bolatovumar
 * Order file uploaded list by descending timestamp (#2273) @bolatovumar
@@ -548,24 +548,24 @@ Small release fixing bugs introduced in 1.0.7.1:
 * Reenabling uppercase BECH32 in QR codes (see #2110) @rockstardev
 * If a store is set to internal node, use "Internal Node" as connection string rather than the actual connection string. @NicolasDorier
 * Improve Policies options UX in server settings (see #2307) @dstrukt @dennisreimann
-* Fix view payment request loading spinner alignment @bumbummen99 
+* Fix view payment request loading spinner alignment @bumbummen99
 * Fix cart pay button loading spinner vertical alignment @bumbummen99
 * Invoices list: Remove icon indicator for onchain (see #2240) @dennisreimann
 * Login: Improve tab navigation for input fields (see #2258) @dennisreimann
 
 ### Bug fixes:
 
-* Hovering the mouse pointer on invoice logs row would make them unreadable @ubolator
+* Hovering the mouse pointer on invoice logs row would make them unreadable @bolatovumar
 * Remove exchange rates that lost support in Coingecko @NicolasDorier
 * Get invoice in greenfield was crashing if invoiceId did not exist @NicolasDorier
 * Getting a file from the storage service which did not exist would return http 500 instead of 404 @NicolasDorier
-* Fix direct URL for local storage with custom root path #2318 @ubolator
-* The pay button would not show up properly on some websites @ubolator
+* Fix direct URL for local storage with custom root path #2318 @bolatovumar
+* The pay button would not show up properly on some websites @bolatovumar
 * Profile email change should check email's availability @NicolasDorier
 * Fixed mysql/sqlite support @ketominer
 * Checkout: Fix scan/copy tab sizes with varying content (see #2264) @dennisreimann
 * Greenfield: Lightning API would return HTTP 500 if store owner did not set the connection string @dennisreimann
-* Point of Sale: The custom price was not properly working (see #2248) @ubolator
+* Point of Sale: The custom price was not properly working (see #2248) @bolatovumar
 
 ## 1.0.6.8
 
@@ -599,7 +599,7 @@ This release is trying some improvement to decrease the chances of being falsy f
 ### Improvements:
 
 * Support a subset of output descriptor in the wallet setup @Kukks
-* Improved styling of the notification dropdown (see #2167) @ubolator @dennisreimann
+* Improved styling of the notification dropdown (see #2167) @bolatovumar @dennisreimann
 * API keys and server's url can be shown as QR Code to facilitate pairing @Kukks
 * Greenfield API: Add `DefaultPaymentMethod` to the store's settings @Kukks
 * Greenfield API: Can configure on-chain payment methods @Kukks @NicolasDorier
@@ -641,13 +641,13 @@ This release is trying some improvement to decrease the chances of being falsy f
 ### New features
 
 * Greenfield API: Can update invoice metadata @Kukks
-* Greenfield API: User notifications API @Kukks 
+* Greenfield API: User notifications API @Kukks
 * Greenfield API: Can specify the preferred language when creating an invoice @NicolasDorier
 * Greenfield API: Can specify the URL to redirect customer to when he paid when creating an invoice @NicolasDorier
 * Greenfield API: Expose the `checkoutLink` of the created invoice, where you need to redirect your customer to pay in BTC @NicolasDorier
-* Add a `Mark all as seen` button to the notification dropdown @ubolator
+* Add a `Mark all as seen` button to the notification dropdown @bolatovumar
 * Support of Armenian language in checkout page. Thanks to Mash Mashok
-* Add ability to add custom CSS to pull payments @ubolator
+* Add ability to add custom CSS to pull payments @bolatovumar
 * Introduce some basic spam protection for hosts with open registration (see #2106) @Kukks
 
 
@@ -657,12 +657,12 @@ This release is trying some improvement to decrease the chances of being falsy f
 * Document in `/docs` miscellaneous features of BTCPay (such as optional arguments of the checkout page) @NicolasDorier
 * UI: Improve mobile store setup view @dennisreimann @dstrukt
 * Improve U2F support, should leverage OS support and now work properly on mobile Safari (See #2086) @dennisreimann
-* Improve how new label picked their color (See #2072) @ubolator
-* Improve the design of transaction's label dropdown to fix display issue when there are too many (see #2078) @ubolator
+* Improve how new label picked their color (See #2072) @bolatovumar
+* Improve the design of transaction's label dropdown to fix display issue when there are too many (see #2078) @bolatovumar
 
 ### Bug fixes:
 
-* Ensure campaign status is shown correctly in minimal crowdfund app (#2062) @ubolator
+* Ensure campaign status is shown correctly in minimal crowdfund app (#2062) @bolatovumar
 * Can remove automatic labels from invoices @NicolasDorier
 * Fix Pay Button Link preview when app mode chosen (#2115) @Kukks
 * If the user was not admin, the API Keys page was ignoring some of the checked permissions @NicolasDorier
@@ -718,13 +718,13 @@ It turns out this is not compatible with every wallets.
 * Greenfield (Breaking change): Invoice state renamed `Confirmed/Complete` to `Settled`. (@NicolasDorier)
 * Greenfield (Breaking change): Invoice state renamed `Paid` to `Processing`. (@NicolasDorier)
 * Breaking change: Remove SQLite as the default database option (@Kukks)
-* UI: Make sure transaction labels display correctly when there are many (ref #2076) (@ubolator)
-* UI: Properly center payment button content (@ubolator)
+* UI: Make sure transaction labels display correctly when there are many (ref #2076) (@bolatovumar)
+* UI: Properly center payment button content (@bolatovumar)
 * UI: Improvement of the lightning node info view (ref #2066) (@dennisreimann)
 * Share the link of a pay button so one can embed in a QR code (fix #635) (@Kukks)
 * Checkout experience: Make QR codes with bech32 uppercase again (@rockstardev)
-* Add warning if the merchant setup invoice confirmation to zero conf (@ubolator)
-* Adds a warning to configure the e-mail server before "Requires a confirmation mail for registering" checkbox can be checked if e-mail server is not configured. (@ubolator)
+* Add warning if the merchant setup invoice confirmation to zero conf (@bolatovumar)
+* Adds a warning to configure the e-mail server before "Requires a confirmation mail for registering" checkbox can be checked if e-mail server is not configured. (@bolatovumar)
 * Payment requests: Partially paid invoices are reused for future payments in payment requests. (@NicolasDorier)
 * API Keys UI: Properly align form items (@dennisreimann)
 * Wallets: By default, created PSBT were including previous transactions. Some hardware wallets ended up returning timeouts, so we reverted this decision. (@NicolasDorier)
@@ -737,7 +737,7 @@ It turns out this is not compatible with every wallets.
 * If a password fail to be reset by mail, show proper error (fix #1986) (@NicolasDorier)
 * Email was not included in the invoice text search (@Kukks)
 * Greenfield: The create invoice route should not sending back generic errors if it fails (@dennisreimann)
-* Fix-up links which were ignoring custom root path (@ubolator)
+* Fix-up links which were ignoring custom root path (@bolatovumar)
 * Greenfield: Opening a channel with lightning was not working properly (ref #2054) (@dennisreimann)
 * Docs: Create invoice route was referencing the wrong type in the doc (@dennisreimann)
 * Payment Request user input rounding issue (ref #2014) (@Kukks)
@@ -954,7 +954,7 @@ Those are low risk injection vulnerabilities.
 * Improve fee selection UI in wallet send screen (@Kukks)
 * Show warning when enabling Payjoin but supported payment methods are not using a hot wallet (@Kukks)
 * Rebuild POS and Crowdfund App Item/Perk editor UI and fix any issues (@Kukks)
-* Adjust Payjoin to the new specification outlined in BIP78 (@NicolasDorier) 
+* Adjust Payjoin to the new specification outlined in BIP78 (@NicolasDorier)
 * Allow opening the BTCPay wallet natively when clicking a Bitcoin payment link (BIP21)
 * Add Server Info GreenField API (@dennisreimann)
 * Add Payment Requests GreenField API (@Kukks @NicolasDorier)
@@ -969,7 +969,7 @@ Those are low risk injection vulnerabilities.
 * Split POS app cart and static and support both simultaneously (@dennisreimann)
 * Add Cross-Implementation Lightning Node GreenField API (@Kukks @NicolasDorier)
 * Make GreenField responses and JSON properties consistent (@Kukks @NicolasDorier)
-* Add Tor Onion-Location HTTP header (@dennisreimann) 
+* Add Tor Onion-Location HTTP header (@dennisreimann)
 * Rename form items in Wallet Send UI (@pavlenex)
 * Add ThunderHub integration (@NicolasDorier)
 * Add option to attempt to create PSBT with full transaction for inputs to sign for Trezor (@Kukks)
@@ -1021,7 +1021,7 @@ Those are low risk injection vulnerabilities.
 * Payjoin receiver fix: The receiver's inputs sequence must be the same as the sender's inputs' sequence (@NicolasDorier, reported by @waxwing)
 * The wallet do not round fee rate to the nearest integer. (@NicolasDorier)
 * Invoice row should not cut off the "AM/PM" part of the date (@r0ckstardev)
-* Ensure dropdown in checkout page does not overflow (@ubolator)
+* Ensure dropdown in checkout page does not overflow (@bolatovumar)
 * Fix decimal points shown in Checkout UI based on currency ( always showed btc decimal precision before) (@kukks #1529)
 * fix label link inconsistency (@kukks)
 * Fix payjoin detection in checkout UI (@kukks)
@@ -1055,7 +1055,7 @@ Those are low risk injection vulnerabilities.
 * When pasting a BIP21 when using coin selection, it would throw an error. (@kukks)
 * In the Wallet Send page, remove a JS script reference which does not exist anymore. (@kukks)
 * Fix LCAD logo (@dennisreimann)
-* Fix dark theme contrast for Payment Requests (@ubolator and @dennisreimann #1488)
+* Fix dark theme contrast for Payment Requests (@bolatovumar and @dennisreimann #1488)
 * Fix MySql supports details (@ketominer)
 * In dark theme, the pay button was rendering BTCPAY text in black. (@dennisreimann #1517)
 
@@ -1152,5 +1152,5 @@ Since this release is substantial, we invite your to read our [blog post](https:
 * nicolasdorier
 * pavlenex
 * rockstardev
-* ubolator
+* bolatovumar
 * vswee

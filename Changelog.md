@@ -27,7 +27,7 @@
 
 * Ability to bump fees of transactions and invoices via CPFP (#3395) @NicolasDorier
 * Add ability to add description to pull payment (#3363) @bolatovumar
-* Greenfield: Can add store guest/owner to a store (#3363) @Kukks
+* Greenfield: Can add store guest/owner to a store (#3425) @Kukks
 
 ### Bug fixes:
 

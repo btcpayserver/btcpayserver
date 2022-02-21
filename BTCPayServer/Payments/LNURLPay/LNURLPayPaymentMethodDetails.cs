@@ -35,19 +35,13 @@ namespace BTCPayServer.Payments
             return "LNURL/AdditionalPaymentMethodDetails";
         }
 
-        public override Dictionary<string, JObject> GetAdditionalData()
+        public override JObject GetAdditionalData()
         {
             var result = base.GetAdditionalData();
             if (!string.IsNullOrEmpty(ProvidedComment))
-            {
-                result.TryAdd(nameof(ProvidedComment), new JObject(ProvidedComment));
-            }
-
+                result.Add("providedComment", new JValue(ProvidedComment));
             if (!string.IsNullOrEmpty(ConsumedLightningAddress))
-            {
-                result.TryAdd(nameof(ConsumedLightningAddress), new JObject(ConsumedLightningAddress));
-            }
-
+                result.Add("consumedLightningAddress", new JValue(ConsumedLightningAddress));
             return result;
         }
     }

@@ -22,6 +22,6 @@ namespace BTCPayServer.Payments
 
         bool Activated { get; set; }
         virtual string GetAdditionalDataPartialName() => null;
-        virtual Dictionary<string,JObject> GetAdditionalData() => new();
+        virtual JObject GetAdditionalData() => new();
     }
 }

@@ -1142,8 +1142,31 @@
                         "description": "If the payment method is activated (when lazy payments option is enabled"
                     },
                     "additionalData": {
-                        "type": "object",
-                        "description": "Additional data provided by the payment method."
+                        "description": "Additional data provided by the payment method.",
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "description": "LNURL Pay information",
+                                "properties": {
+                                    "providedComment": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "The provided comment to a LNUrl payment with comments enabled",
+                                        "example": "Thank you!"
+                                    },
+                                    "consumedLightningAddress": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "The consumed lightning address of a LN Address payment",
+                                        "example": "customer@example.com"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "description": "No additional information"
+                            }
+                        ]
                     }
                 }
             },

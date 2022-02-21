@@ -96,7 +96,7 @@ namespace BTCPayServer.HostedServices
                 throw new ArgumentException("Amount out of bound", nameof(create));
             using var ctx = this._dbContextFactory.CreateContext();
             var o = new Data.PullPaymentData();
-            o.StartDate = create.StartsAt is DateTimeOffset date ? date : DateTimeOffset.UtcNow;
+            o.StartDate = create.StartsAt is DateTimeOffset date ? date : DateTimeOffset.UtcNow - TimeSpan.FromSeconds(1.0);
             o.EndDate = create.ExpiresAt is DateTimeOffset date2 ? new DateTimeOffset?(date2) : null;
             o.Period = create.Period is TimeSpan period ? (long?)period.TotalSeconds : null;
             o.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));

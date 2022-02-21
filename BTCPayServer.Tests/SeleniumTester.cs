@@ -145,7 +145,14 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("IsAdmin")).Click();
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
+            CreatedUser = usr;
             return usr;
+        }
+        string CreatedUser;
+
+        public TestAccount AsTestAccount()
+        {
+            return new TestAccount(Server) { RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser } };
         }
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)

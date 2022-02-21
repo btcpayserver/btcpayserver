@@ -43,7 +43,7 @@ namespace BTCPayServer.Payments.Lightning
             return null;
         }
 
-        public virtual Dictionary<string, JObject> GetAdditionalData()
+        public virtual JObject GetAdditionalData()
         {
             return new();
         }

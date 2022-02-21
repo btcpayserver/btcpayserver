@@ -241,7 +241,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var lnAddress = username is null ? null : $"{username}@{Request.Host.ToString()}";
+            var lnAddress = username is null ? null : $"{username}@{Request.Host}";
             List<string[]> lnurlMetadata = new List<string[]>();
 
             var i = await _invoiceController.CreateInvoiceCoreRaw(

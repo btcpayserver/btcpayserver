@@ -1467,7 +1467,9 @@ namespace BTCPayServer.Tests
             s.GoToLightningSettings();
             // LNURL is true by default
             Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
-            
+            s.Driver.SetCheckbox(By.Name("LUD12Enabled"), true);
+            s.Driver.FindElement(By.Id("save")).Click();
+
             // Topup Invoice test
             var i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
@@ -1479,13 +1481,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(1m, fetchedReuqest.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
             Assert.NotEqual(1m, fetchedReuqest.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
             var lnurlResponse = await fetchedReuqest.SendRequest(new LightMoney(0.000001m, LightMoneyUnit.BTC),
-                network, new HttpClient());
+                network, new HttpClient(), comment: "lol");
 
             Assert.Equal(new LightMoney(0.000001m, LightMoneyUnit.BTC),
                 lnurlResponse.GetPaymentRequest(network).MinimumAmount);
 
             var lnurlResponse2 = await fetchedReuqest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
-                network, new HttpClient());
+                network, new HttpClient(), comment: "lol2");
             Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             await Assert.ThrowsAnyAsync<LightningRPCException>(async () =>
             {
@@ -1499,7 +1501,11 @@ namespace BTCPayServer.Tests
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(i);
                 Assert.Equal(InvoiceStatusLegacy.Complete, inv.Status);
             });
-
+            var greenfield = await s.AsTestAccount().CreateClient();
+            var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
+            Assert.Single(paymentMethods, p => {
+                return p.AdditionalData["providedComment"].Value<string>() == "lol2";
+            });
             // Standard invoice test
             s.GoToStore(storeId);
             s.GoToLightningSettings();
@@ -1608,6 +1614,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
             s.Driver.FindElement(By.Id("Create")).Click();
+            s.Driver.TakeScreenshot().SaveAsFile(@"C:\Users\NicolasDorier\AppData\Local\Temp\1279276918\wfew.png");
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.Id("Destination")).SendKeys(lnurl);
 

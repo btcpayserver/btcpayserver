@@ -181,58 +181,88 @@
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
-            
-            <h3 class="mt-5 mb-4">Sound</h3>
-            <div class="form-group mb-0">
-                <div class="d-flex align-items-center">
-                    <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
-                    <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
-                    <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
-                <div class="form-group mb-0 pt-3">
-                    <label asp-for="Sounds" class="form-label"></label>
-                    <textarea asp-for="Sounds" class="form-control"></textarea>
-                    <span asp-validation-for="Sounds" class="text-danger"></span>
-                </div>
-            </div>
-            
-            <h3 class="mt-5 mb-4">Animation</h3>
-            <div class="form-group mb-3">
-                <div class="d-flex align-items-center">
-                    <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
-                    <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
-                    <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
-                <div class="form-group mb-0 pt-3">
-                    <label asp-for="AnimationColors" class="form-label"></label>
-                    <textarea asp-for="AnimationColors" class="form-control"></textarea>
-                    <span asp-validation-for="AnimationColors" class="text-danger"></span>
-                </div>
-            </div>
-            
-            <h3 class="mt-5 mb-4">Discussion</h3>
-            <div class="form-group mb-3">
-                <div class="d-flex align-items-center">
-                    <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                    <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
-                    <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
-                <div class="form-group mb-0 pt-3">
-                    <label asp-for="DisqusShortname" class="form-label"></label>
-                    <input asp-for="DisqusShortname" class="form-control" />
-                    <span asp-validation-for="DisqusShortname" class="text-danger"></span>
-                </div>
-            </div>
 
             <h3 class="mt-5 mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-sound-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-sound" aria-expanded="false" aria-controls="additional-sound">
+                                Sound
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-sound" class="accordion-collapse collapse" aria-labelledby="additional-sound-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                                        <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="Sounds" class="form-label"></label>
+                                        <textarea asp-for="Sounds" class="form-control" rows="5"></textarea>
+                                        <span asp-validation-for="Sounds" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-animation-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-animation" aria-expanded="false" aria-controls="additional-animation">
+                                Animation
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-animation" class="accordion-collapse collapse" aria-labelledby="additional-animation-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                                        <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="AnimationColors" class="form-label"></label>
+                                        <textarea asp-for="AnimationColors" class="form-control" rows="5"></textarea>
+                                        <span asp-validation-for="AnimationColors" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-discussion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-discussion" aria-expanded="false" aria-controls="additional-discussion">
+                                Discussion
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-discussion" class="accordion-collapse collapse" aria-labelledby="additional-discussion-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                                        <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="DisqusShortname" class="form-label"></label>
+                                        <input asp-for="DisqusShortname" class="form-control" />
+                                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-custom-css-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">

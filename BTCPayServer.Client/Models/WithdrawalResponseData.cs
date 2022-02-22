@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -16,12 +17,14 @@ public class WithdrawalResponseData
     [JsonConverter(typeof(StringEnumConverter))]
     public WithdrawalStatus Status { get; }
 
+    public DateTimeOffset CreatedTime { get; }
+
     public string TransactionId { get; }
 
     public string TargetAddress { get; }
 
     public WithdrawalResponseData(string paymentMethod, string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, string accountId,
-        string custodianCode, WithdrawalStatus status, string targetAddress, string transactionId)
+        string custodianCode, WithdrawalStatus status, DateTimeOffset createdTime, string targetAddress, string transactionId)
     {
         PaymentMethod = paymentMethod;
         Asset = asset;
@@ -32,7 +35,9 @@ public class WithdrawalResponseData
         TargetAddress = targetAddress;
         TransactionId = transactionId;
         Status = status;
+        CreatedTime = createdTime;
     }
+
 
     public enum WithdrawalStatus
     {

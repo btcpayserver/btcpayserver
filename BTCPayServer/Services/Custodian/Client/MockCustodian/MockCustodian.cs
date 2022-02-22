@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -123,7 +124,8 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var ledgerEntries = new List<LedgerEntryData>();
         ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalAmount - WithdrawalFee, LedgerEntryData.LedgerEntryType.Withdrawal));
         ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalFee, LedgerEntryData.LedgerEntryType.Fee));
-        var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawalStatus, WithdrawalTargetAddress, WithdrawalTransactionId);
+        DateTimeOffset createdTime = new DateTimeOffset(2021, 9, 1, 6, 45, 0, new TimeSpan(-7, 0, 0));
+        var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawalStatus, createdTime, WithdrawalTargetAddress, WithdrawalTransactionId);
         return r;
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 
@@ -10,17 +11,19 @@ public class WithdrawResult
     public List<LedgerEntryData> LedgerEntries { get; }
     public string WithdrawalId { get; }
     public WithdrawalResponseData.WithdrawalStatus Status { get; }
+    public DateTimeOffset CreatedTime { get; }
     public string TargetAddress { get; }
     public string TransactionId { get; }
 
-    public WithdrawResult(string paymentMethod, string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, WithdrawalResponseData.WithdrawalStatus status, string targetAddress, string transactionId)
+    public WithdrawResult(string paymentMethod, string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, WithdrawalResponseData.WithdrawalStatus status, DateTimeOffset createdTime, string targetAddress, string transactionId)
     {
-        this.PaymentMethod = paymentMethod;
-        this.Asset = asset;
-        this.LedgerEntries = ledgerEntries;
-        this.WithdrawalId = withdrawalId;
-        this.Status = status;
-        this.TargetAddress = targetAddress;
-        this.TransactionId = transactionId;
+        PaymentMethod = paymentMethod;
+        Asset = asset;
+        LedgerEntries = ledgerEntries;
+        WithdrawalId = withdrawalId;
+        CreatedTime = createdTime;
+        Status = status;
+        TargetAddress = targetAddress;
+        TransactionId = transactionId;
     }
 }

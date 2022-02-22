@@ -422,7 +422,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var withdrawResult =
                         await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
                     var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)
@@ -458,7 +458,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
                     }
                     var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                     return Ok(result);
                 }
                 catch (CustodianApiException e)

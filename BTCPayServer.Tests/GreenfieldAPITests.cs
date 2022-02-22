@@ -2941,6 +2941,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
             Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
             Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
+            Assert.NotNull(withdrawResponse.CreatedTime);
         }
     }
 }

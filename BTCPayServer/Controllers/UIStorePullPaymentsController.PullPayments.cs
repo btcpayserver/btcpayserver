@@ -187,7 +187,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("PaymentMethods", "Stores", new { storeId });
             }
 
-            var vm = this.ParseListQuery(new PullPaymentsModel()
+            var vm = this.ParseListQuery(new PullPaymentsModel
             {
                 Skip = skip,
                 Count = count,
@@ -275,12 +275,12 @@ namespace BTCPayServer.Controllers
             string pullPaymentId)
         {
             await _pullPaymentService.Cancel(new HostedServices.PullPaymentHostedService.CancelRequest(pullPaymentId));
-            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Pull payment archived",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            return RedirectToAction(nameof(PullPayments), new { storeId = storeId });
+            return RedirectToAction(nameof(PullPayments), new { storeId });
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

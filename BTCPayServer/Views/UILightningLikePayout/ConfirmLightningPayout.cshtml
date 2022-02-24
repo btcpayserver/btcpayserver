@@ -18,7 +18,7 @@
                 </li>
                 <form method="post" class="list-group-item justify-content-center" id="pay-invoices-form">
                     <button type="submit" class="btn btn-primary xmx-2" style="min-width:25%;" id="Pay">Pay</button>
-                    <button type="button" class="btn btn-secondary mx-2" onclick="history.back(); return false;" style="min-width:25%;">Go back</button>
+                    <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-secondary mx-2 px-4">Cancel</a>
                 </form>
             }
         </ul>

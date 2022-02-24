@@ -12,12 +12,11 @@
             @foreach (var item in Model)
             {
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div data-bs-toggle="tooltip" class="text-break" title="@item.Destination">@item.Destination</div>
-
+                    <div class="text-break" style="max-width:60em;">@item.Destination</div>
                     <span class="text-capitalize badge bg-secondary">@item.Amount @cryptoCode</span>
                 </li>
                 <form method="post" class="list-group-item justify-content-center" id="pay-invoices-form">
-                    <button type="submit" class="btn btn-primary xmx-2" style="min-width:25%;" id="Pay">Pay</button>
+                    <button type="submit" class="btn btn-primary px-5" id="Pay">Pay</button>
                     <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-secondary mx-2 px-4">Cancel</a>
                 </form>
             }

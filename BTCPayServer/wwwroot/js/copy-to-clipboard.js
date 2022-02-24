@@ -7,7 +7,7 @@ const confirmCopy = (el, message) => {
 
 window.copyToClipboard = function (e, data) {
     e.preventDefault();
-    const item = e.target.closest('[data-clipboard]');
+    const item = e.target.closest('[data-clipboard]') || e.target.closest('[data-clipboard-target]');
     const confirm = item.querySelector('[data-clipboard-confirm]') || item;
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
     if (!confirm.dataset.clipboardInitial) {

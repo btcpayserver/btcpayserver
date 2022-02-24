@@ -12,6 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +22,7 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public class UILightningLikePayoutController : Controller
     {
@@ -33,12 +34,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly IOptions<LightningNetworkOptions> _options;
         private readonly IAuthorizationService _authorizationService;
+        private readonly StoreRepository _storeRepository;
 
         public UILightningLikePayoutController(ApplicationDbContextFactory applicationDbContextFactory,
             UserManager<ApplicationUser> userManager,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
+            StoreRepository storeRepository,
             LightningClientFactoryService lightningClientFactoryService,
             IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService)
         {
@@ -49,6 +52,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactoryService = lightningClientFactoryService;
             _options = options;
+            _storeRepository = storeRepository;
             _authorizationService = authorizationService;
         }
 
@@ -88,6 +92,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         [HttpGet("pull-payments/payouts/lightning/{cryptoCode}")]
         public async Task<IActionResult> ConfirmLightningPayout(string cryptoCode, string[] payoutIds)
         {
+            await SetStoreContext();
+            
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
@@ -110,6 +116,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         [HttpPost("pull-payments/payouts/lightning/{cryptoCode}")]
         public async Task<IActionResult> ProcessLightningPayout(string cryptoCode, string[] payoutIds)
         {
+            await SetStoreContext();
+            
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var payoutHandler = _payoutHandlers.FindPayoutHandler(pmi);
 
@@ -171,7 +179,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     {
 
                         var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
-                        results.Add(new ResultVM()
+                        results.Add(new ResultVM
                         {
                             PayoutId = payoutData.Id,
                             Result = PayResult.Error,
@@ -225,7 +233,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                     }
                                     catch (LNUrlException e)
                                     {
-                                        results.Add(new ResultVM()
+                                        results.Add(new ResultVM
                                         {
                                             PayoutId = payoutData.Id,
                                             Result = PayResult.Error,
@@ -242,7 +250,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                                 break;
                             default:
-                                results.Add(new ResultVM()
+                                results.Add(new ResultVM
                                 {
                                     PayoutId = payoutData.Id,
                                     Result = PayResult.Error,
@@ -254,7 +262,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     }
                     catch (Exception)
                     {
-                        results.Add(new ResultVM()
+                        results.Add(new ResultVM
                         {
                             PayoutId = payoutData.Id,
                             Result = PayResult.Error,
@@ -266,6 +274,19 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
             await ctx.SaveChangesAsync();
             return View("LightningPayoutResult", results);
+        }
+
+        private async Task SetStoreContext()
+        {
+            var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
+            if (string.IsNullOrEmpty(storeId)) return;
+            
+            var userId = _userManager.GetUserId(User);
+            var store = await _storeRepository.FindStore(storeId, userId);
+            if (store != null)
+            {
+                HttpContext.SetStoreData(store);
+            }
         }
 
         public class ResultVM

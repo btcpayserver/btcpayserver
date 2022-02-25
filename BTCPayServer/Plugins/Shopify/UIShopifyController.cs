@@ -214,31 +214,8 @@ namespace BTCPayServer.Plugins.Shopify
 
         [HttpPost("stores/{storeId}/integrations/shopify")]
         public async Task<IActionResult> EditShopifyIntegration(string storeId,
-            ShopifySettings vm, string command = "", string exampleUrl = "")
+            ShopifySettings vm, string command = "")
         {
-            if (!string.IsNullOrEmpty(exampleUrl))
-            {
-                try
-                {
-                    //https://{apikey}:{password}@{hostname}/admin/api/{version}/{resource}.json
-                    var parsedUrl = new Uri(exampleUrl);
-                    var userInfo = parsedUrl.UserInfo.Split(":");
-                    vm = new ShopifySettings()
-                    {
-                        ApiKey = userInfo[0],
-                        Password = userInfo[1],
-                        ShopName = parsedUrl.Host.Replace(".myshopify.com", "",
-                            StringComparison.InvariantCultureIgnoreCase)
-                    };
-                    command = "ShopifySaveCredentials";
-                }
-                catch (Exception)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "The provided Example Url was invalid.";
-                    return View(vm);
-                }
-            }
-
             switch (command)
             {
                 case "ShopifySaveCredentials":

@@ -8,7 +8,11 @@ namespace BTCPayServer.Plugins.Shopify.Models
     {
         [Display(Name = "Shop Name")]
         public string ShopName { get; set; }
+        
+        [Display(Name = "Api Key (Apps->Develop Apps-> Create app)")]
         public string ApiKey { get; set; }
+        
+        [Display(Name = "Api Secret Key")]
         public string Password { get; set; }
 
         public bool CredentialsPopulated()

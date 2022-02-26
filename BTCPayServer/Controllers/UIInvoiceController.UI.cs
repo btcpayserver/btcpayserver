@@ -872,6 +872,7 @@ namespace BTCPayServer.Controllers
             var model = new InvoiceExport(_CurrencyNameTable);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
+            invoiceQuery.StoreId = new[] { GetCurrentStore().Id };
             invoiceQuery.Skip = 0;
             invoiceQuery.Take = int.MaxValue;
             var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);

@@ -495,10 +495,6 @@
         transform: translate(-50%, -50%) rotate(-45deg);
     }
 
-    #mainContent {
-        z-index: 0;
-    }
-
     #SectionNav {
         --scroll-indicator-spacing: var(--btcpay-space-m);
         position: relative;

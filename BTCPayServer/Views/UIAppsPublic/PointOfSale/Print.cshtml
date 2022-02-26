@@ -30,14 +30,31 @@
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
         LNURL is not enabled on your store, which this print feature relies on.
-        <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="alert-link p-0">
+        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@Model.Store.Id" class="alert-link p-0">
             Enable LNURL
         </a>
     </div>
 }
 else
 {
-    <div class="alert alert-info d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none" role="alert">
+    if (Model.ShowCustomAmount)
+    {
+        Model.Items = Model.Items.Concat(new[]
+        {
+            new ViewPointOfSaleViewModel.Item()
+            {
+                Description = "Create invoice to pay custom amount",
+                Title = "Custom amount",
+                BuyButtonText = Model.CustomButtonText,
+                Price = new ViewPointOfSaleViewModel.Item.ItemPrice()
+                {
+                    Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup,
+
+                }
+            }
+        }).ToArray();
+    }
+    <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
         <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
             <i class="fa fa-print"></i>&nbsp;Print
         </button>
@@ -53,6 +70,11 @@ else
         <div class="card" data-id="@x">
             <div class="card-body my-auto">
                 <h4 class="card-title text-center">@item.Title</h4>
+                @if (!string.IsNullOrEmpty(item.Description))
+                {
+                    <p class="card-title text-center">@item.Description</p>
+                    
+                }
                 <div class="w-100 mb-3 fs-5 text-center">
                     @switch (item.Price.Type)
                     {

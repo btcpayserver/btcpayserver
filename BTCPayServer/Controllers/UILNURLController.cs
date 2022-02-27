@@ -115,7 +115,7 @@ namespace BTCPayServer
                     items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
                 case nameof(AppType.PointOfSale):
-                    var posS = app.GetSettings<UIAppsController.PointOfSaleSettings>();
+                    var posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
                     items = _appService.Parse(posS.Template, posS.Currency);
                     break;

@@ -106,8 +106,6 @@ retry:
             driver.ExecuteJavaScript($"document.getElementById('{collapseId}').classList.add('show')");
         }
 
-
-
         public static void SetAttribute(this IWebDriver driver, string element, string attribute, string value)
         {
             driver.ExecuteJavaScript($"document.getElementById('{element}').setAttribute('{attribute}', '{value}')");
@@ -127,12 +125,17 @@ retry:
 
             return el;
         }
+        
+        public static void ScrollTo(this IWebDriver driver, IWebElement element)
+        {
+            driver.ExecuteJavaScript("arguments[0].scrollIntoView();", element);
+        }
 
         public static void ScrollTo(this IWebDriver driver, By selector)
         {
-            var element = driver.FindElement(selector);
-            driver.ExecuteJavaScript("arguments[0].scrollIntoView();", element);
+            ScrollTo(driver, driver.FindElement(selector));
         }
+        
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
             // Try fast path

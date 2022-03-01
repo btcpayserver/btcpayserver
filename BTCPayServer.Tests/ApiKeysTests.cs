@@ -7,7 +7,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -91,7 +90,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
             s.Driver.FindElement(By.CssSelector("button[value='btcpay.store.canmodifystoresettings:change-store-mode']")).Click();
             //there should be a store already by default in the dropdown
-            var src = s.Driver.PageSource;
             var getPermissionValueIndex =
                 s.Driver.FindElement(By.CssSelector("input[value='btcpay.store.canmodifystoresettings']"))
                     .GetAttribute("name")
@@ -203,6 +201,7 @@ namespace BTCPayServer.Tests
             foreach (var checkbox in s.Driver.FindElements(By.ClassName("form-check-input")))
             {
                 checkedPermissionCount++;
+                s.Driver.ScrollTo(checkbox);
                 checkbox.Click();
             }
             s.Driver.FindElement(By.Id("Generate")).Click();

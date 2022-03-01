@@ -800,7 +800,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
             var fs = new SearchString(model.SearchTerm);
-            string? storeId = (model.StoreId ?? HttpContext.GetStoreData()?.Id);
+            string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (fs.GetFilterArray("storeid") is string[] l)
             {

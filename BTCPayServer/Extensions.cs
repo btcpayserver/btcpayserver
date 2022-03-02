@@ -40,7 +40,6 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
         {
             endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
@@ -90,18 +89,6 @@ namespace BTCPayServer
                 value = value / 10m;
             }
             return value;
-        }
-
-        public static bool HasStatusMessage(this ITempDataDictionary tempData)
-        {
-            return (tempData.Peek(WellKnownTempData.SuccessMessage) ??
-                   tempData.Peek(WellKnownTempData.ErrorMessage) ??
-                   tempData.Peek("StatusMessageModel")) != null;
-        }
-
-        public static bool HasErrorMessage(this ITempDataDictionary tempData)
-        {
-            return GetStatusMessageModel(tempData)?.Severity == StatusMessageModel.StatusSeverity.Error;
         }
 
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
@@ -200,152 +187,11 @@ namespace BTCPayServer
             return false;
         }
 
-
-
-        public static StatusMessageModel GetStatusMessageModel(this ITempDataDictionary tempData)
-        {
-            tempData.TryGetValue(WellKnownTempData.SuccessMessage, out var successMessage);
-            tempData.TryGetValue(WellKnownTempData.ErrorMessage, out var errorMessage);
-            tempData.TryGetValue("StatusMessageModel", out var model);
-            if (successMessage != null || errorMessage != null)
-            {
-                var parsedModel = new StatusMessageModel();
-                parsedModel.Message = (string)successMessage ?? (string)errorMessage;
-                if (successMessage != null)
-                {
-                    parsedModel.Severity = StatusMessageModel.StatusSeverity.Success;
-                }
-                else
-                {
-                    parsedModel.Severity = StatusMessageModel.StatusSeverity.Error;
-                }
-                return parsedModel;
-            }
-            else if (model != null && model is string str)
-            {
-                return JObject.Parse(str).ToObject<StatusMessageModel>();
-            }
-            return null;
-        }
-
-        public static bool IsOnion(this HttpRequest request)
-        {
-            if (request?.Host.Host == null)
-                return false;
-            return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
-        }
-
         public static bool IsOnion(this Uri uri)
         {
             if (uri == null || !uri.IsAbsoluteUri)
                 return false;
             return uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
-        }
-
-
-        public static string GetAbsoluteRoot(this HttpRequest request)
-        {
-            return string.Concat(
-                        request.Scheme,
-                        "://",
-                        request.Host.ToUriComponent(),
-                        request.PathBase.ToUriComponent());
-        }
-
-        public static Uri GetAbsoluteRootUri(this HttpRequest request)
-        {
-            return new Uri(request.GetAbsoluteRoot());
-        }
-
-        public static string GetCurrentUrl(this HttpRequest request)
-        {
-            return string.Concat(
-                        request.Scheme,
-                        "://",
-                        request.Host.ToUriComponent(),
-                        request.PathBase.ToUriComponent(),
-                        request.Path.ToUriComponent());
-        }
-
-        public static string GetCurrentPath(this HttpRequest request)
-        {
-            return string.Concat(
-                        request.PathBase.ToUriComponent(),
-                        request.Path.ToUriComponent());
-        }
-        public static string GetCurrentPathWithQueryString(this HttpRequest request)
-        {
-            return request.PathBase + request.Path + request.QueryString;
-        }
-
-        /// <summary>
-        /// If 'toto' and RootPath is 'rootpath' returns '/rootpath/toto'
-        /// If 'toto' and RootPath is empty returns '/toto'
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static string GetRelativePath(this HttpRequest request, string path)
-        {
-            if (path.Length > 0 && path[0] != '/')
-                path = $"/{path}";
-            return string.Concat(
-                        request.PathBase.ToUriComponent(),
-                        path);
-        }
-
-        /// <summary>
-        /// If 'https://example.com/toto' returns 'https://example.com/toto'
-        /// If 'toto' and RootPath is 'rootpath' returns '/rootpath/toto'
-        /// If 'toto' and RootPath is empty returns '/toto'
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
-        {
-            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) ||
-                uri.IsAbsoluteUri)
-                return path;
-
-            if (path.Length > 0 && path[0] != '/')
-                path = $"/{path}";
-            return string.Concat(
-                        request.PathBase.ToUriComponent(),
-                        path);
-        }
-
-        public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
-        {
-            bool isRelative =
-                (redirectUrl.Length > 0 && redirectUrl[0] == '/')
-                || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
-            return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
-        }
-
-        /// <summary>
-        /// Will return an absolute URL. 
-        /// If `relativeOrAsbolute` is absolute, returns it.
-        /// If `relativeOrAsbolute` is relative, send absolute url based on the HOST of this request (without PathBase)
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="relativeOrAbsolte"></param>
-        /// <returns></returns>
-        public static Uri GetAbsoluteUriNoPathBase(this HttpRequest request, Uri relativeOrAbsolute = null)
-        {
-            if (relativeOrAbsolute == null)
-            {
-                return new Uri(string.Concat(
-                    request.Scheme,
-                    "://",
-                    request.Host.ToUriComponent()), UriKind.Absolute);
-            }
-            if (relativeOrAbsolute.IsAbsoluteUri)
-                return relativeOrAbsolute;
-            return new Uri(string.Concat(
-                    request.Scheme,
-                    "://",
-                    request.Host.ToUriComponent()) + relativeOrAbsolute.ToString().WithStartingSlash(), UriKind.Absolute);
         }
 
         public static string GetSIN(this ClaimsPrincipal principal)

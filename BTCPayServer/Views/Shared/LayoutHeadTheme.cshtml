@@ -1,4 +1,5 @@
 ﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Extensions
 @inject ISettingsRepository _settingsRepository
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{ var theme = await _settingsRepository.GetTheme(); }

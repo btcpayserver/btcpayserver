@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;

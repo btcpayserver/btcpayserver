@@ -74,6 +74,8 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanQueryDirectProviders()
         {
+            // TODO: Check once in a while whether or not they are working again
+            string[] brokenShitcoinCasinos = { "polispay", "okex" };
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
@@ -86,47 +88,54 @@ namespace BTCPayServer.Tests
                     Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
-                TestLogs.LogInformation($"Testing {result.ExpectedName}");
+                var name = result.ExpectedName;
+                if (brokenShitcoinCasinos.Contains(name))
+                {
+                    TestLogs.LogInformation($"Skipping {name}");
+                    continue;
+                }
+                
+                TestLogs.LogInformation($"Testing {name}");
 
                 result.Fetcher.InvalidateCache();
-                var exchangeRates = new ExchangeRates(result.ExpectedName, result.ResultAsync.Result);
+                var exchangeRates = new ExchangeRates(name, result.ResultAsync.Result);
                 result.Fetcher.InvalidateCache();
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
-                Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
-                if (result.ExpectedName == "bitbank" || result.ExpectedName == "bitflyer")
+                Assert.NotEmpty(exchangeRates.ByExchange[name]);
+                if (name == "bitbank" || name == "bitflyer")
                 {
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                    Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") &&
                              e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY
                 }
-                else if (result.ExpectedName == "polispay")
+                else if (name == "polispay")
                 {
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                    Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "POLIS") &&
                              e.BidAsk.Bid > 1.0m); // 1BTC will always be more than 1 POLIS
                 }
-                else if (result.ExpectedName == "argoneum")
+                else if (name == "argoneum")
                 {
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                    Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "AGM") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 AGM
                 }
-                else if (result.ExpectedName == "ripio")
+                else if (name == "ripio")
                 {
                     // Ripio keeps changing their pair, so anything is fine...
-                    Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
+                    Assert.NotEmpty(exchangeRates.ByExchange[name]);
                 }
-                else if (result.ExpectedName == "cryptomarket")
+                else if (name == "cryptomarket")
                 {
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                    Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "CLP") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CLP
                 }
                 else
                 {
                     // This check if the currency pair is using right currency pair
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                    Assert.Contains(exchangeRates.ByExchange[name],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                 e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                 e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
@@ -139,8 +148,8 @@ namespace BTCPayServer.Tests
                 // we need to modify the AvailableRateProvider
 
                 // There are some exception we stopped supporting but don't want to break backward compat
-                if (result.ExpectedName != "coinaverage" && result.ExpectedName != "gdax")
-                    Assert.Contains(result.ExpectedName, directlySupported);
+                if (name != "coinaverage" && name != "gdax")
+                    Assert.Contains(name, directlySupported);
             }
 
             // Kraken emit one request only after first GetRates
@@ -251,6 +260,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
+            string[] brokenShitcoins = { "BTX_USD", "POLIS_USD" };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
@@ -261,11 +271,11 @@ namespace BTCPayServer.Tests
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
             var result = fetcher.FetchRates(pairs, rules, default);
-            foreach (var value in result)
+            foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
-                var rateResult = value.Value.GetAwaiter().GetResult();
-                TestLogs.LogInformation($"Testing {value.Key.ToString()}");
-                if (value.Key.ToString() == "BTX_USD") // Broken shitcoin
+                var rateResult = value.GetAwaiter().GetResult();
+                TestLogs.LogInformation($"Testing {key}");
+                if (brokenShitcoins.Contains(key.ToString()))
                     continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }

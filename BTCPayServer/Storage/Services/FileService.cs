@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Storage.Services
 {
-    public class FileService
+    public class FileService : IFileService
     {
         private readonly StoredFileRepository _FileRepository;
         private readonly IEnumerable<IStorageProviderService> _providers;
@@ -25,7 +26,7 @@ namespace BTCPayServer.Storage.Services
             _SettingsRepository = settingsRepository;
         }
 
-        public async Task<StoredFile> AddFile(IFormFile file, string userId)
+        public async Task<IStoredFile> AddFile(IFormFile file, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (settings is null)

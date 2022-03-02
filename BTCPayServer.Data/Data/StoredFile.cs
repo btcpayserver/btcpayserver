@@ -1,9 +1,10 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Data
 {
-    public class StoredFile
+    public class StoredFile : IStoredFile
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.7
+
+### New features:
+
+* Plugins: Expose file service @Kukks
+* Plugins: Allow writing Greenfield API endpoints (#3495) @dennisreimann
+
+### Bug fixes:
+* Fix Shopify configuration UI due to shopify changes (#3479) @Kukks
+* Various fixes related to store context (#3505) @dennisreimann @Kukks
+* Various fixes related to plugin system @dennisreimann @Kukks
+* Add missing documentation for wallet generation Greenfield API @Kukks
+* Fix broken modal views on mobile (#3504) @dennisreimann
+* Custom amount option in point of sale print view was not showing  (#3503) @Kukks
+* Fix code copying buttons (#3489 #3499) @dennisreimann @bolatovumar
+* Various UI fixes @dennisreimann @bolatovumar
+
 ## 1.4.6
 
 ### New features:

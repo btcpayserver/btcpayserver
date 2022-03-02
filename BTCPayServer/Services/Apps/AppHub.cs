@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.AppViewModels;
 using Microsoft.AspNetCore.Builder;

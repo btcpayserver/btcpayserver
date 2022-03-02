@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Mvc;
 

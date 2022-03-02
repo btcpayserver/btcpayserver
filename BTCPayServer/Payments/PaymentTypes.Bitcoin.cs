@@ -1,12 +1,12 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 

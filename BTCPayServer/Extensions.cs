@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -12,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
@@ -28,12 +28,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
-using NBitpayClient;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -48,15 +45,6 @@ namespace BTCPayServer
         {
             endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
             return endpoint != null;
-        }
-
-        public static bool IsValidFileName(this string fileName)
-        {
-            return !fileName.ToCharArray().Any(c => Path.GetInvalidFileNameChars().Contains(c)
-            || c == Path.AltDirectorySeparatorChar
-            || c == Path.DirectorySeparatorChar
-            || c == Path.PathSeparator
-            || c == '\\');
         }
 
         public static bool IsSafe(this LightningConnectionString connectionString)
@@ -79,13 +67,6 @@ namespace BTCPayServer
             return System.Linq.Queryable.Where(obj, predicate);
         }
 
-        public static string Truncate(this string value, int maxLength)
-        {
-            if (string.IsNullOrEmpty(value))
-                return value;
-            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
-        }
-
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();
@@ -96,6 +77,7 @@ namespace BTCPayServer
             builder.Append(CultureInfo.InvariantCulture, $"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
             return builder.ToString();
         }
+        
         public static decimal RoundUp(decimal value, int precision)
         {
             for (int i = 0; i < precision; i++)
@@ -126,6 +108,7 @@ namespace BTCPayServer
         {
             return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));
         }
+        
         public static async Task CloseSocket(this WebSocket webSocket)
         {
             try
@@ -178,25 +161,6 @@ namespace BTCPayServer
                 return null;
             derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
             return result.PSBT;
-        }
-
-        public static string WithTrailingSlash(this string str)
-        {
-            if (str.EndsWith("/", StringComparison.InvariantCulture))
-                return str;
-            return str + "/";
-        }
-        public static string WithStartingSlash(this string str)
-        {
-            if (str.StartsWith("/", StringComparison.InvariantCulture))
-                return str;
-            return $"/{str}";
-        }
-        public static string WithoutEndingSlash(this string str)
-        {
-            if (str.EndsWith("/", StringComparison.InvariantCulture))
-                return str.Substring(0, str.Length - 1);
-            return str;
         }
 
         public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)

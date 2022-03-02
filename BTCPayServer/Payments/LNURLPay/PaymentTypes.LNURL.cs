@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;

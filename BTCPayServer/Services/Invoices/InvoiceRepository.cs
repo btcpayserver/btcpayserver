@@ -400,6 +400,14 @@ namespace BTCPayServer.Services.Invoices
             context.AddRange(filteredTerms);
         }
 
+        public static void RemoveFromTextSearch(ApplicationDbContext context, InvoiceData invoice,
+            string term)
+        {
+            var query = context.InvoiceSearches.AsQueryable();
+            var filteredQuery = query.Where( st => st.InvoiceDataId.Equals(invoice.Id) && st.Value.Equals(term));
+            context.InvoiceSearches.RemoveRange(filteredQuery);
+        }
+
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
         {
             using var context = _applicationDbContextFactory.CreateContext();
@@ -462,7 +470,24 @@ namespace BTCPayServer.Services.Invoices
                                             StringComparison.InvariantCultureIgnoreCase)))
                 return null;
             var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
-            blob.Metadata = InvoiceMetadata.FromJObject(metadata);
+            
+            var newMetadata = InvoiceMetadata.FromJObject(metadata);
+            var oldOrderId = blob.Metadata.OrderId;
+            var newOrderId = newMetadata.OrderId;
+
+            if (newOrderId != null)
+            {
+                // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
+                invoiceData.OrderId = newOrderId;
+                
+                if (oldOrderId != null && !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture))
+                {
+                    RemoveFromTextSearch(context, invoiceData, oldOrderId);
+                }
+                AddToTextSearch(context, invoiceData, new[] { newOrderId });
+            }
+
+            blob.Metadata = newMetadata;
             invoiceData.Blob = ToBytes(blob);
             await context.SaveChangesAsync().ConfigureAwait(false);
             return ToEntity(invoiceData);

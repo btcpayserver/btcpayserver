@@ -204,7 +204,10 @@ namespace BTCPayServer.Tests
                 s.Driver.ScrollTo(checkbox);
                 checkbox.Click();
             }
-            s.Driver.FindElement(By.Id("Generate")).Click();
+
+            var generate = s.Driver.FindElement(By.Id("Generate"));
+            s.Driver.ScrollTo(generate);
+            generate.Click();
             var allAPIKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             
             TestLogs.LogInformation("Checking API key permissions");

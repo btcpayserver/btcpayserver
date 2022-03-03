@@ -1193,12 +1193,13 @@ namespace BTCPayServer.Tests
                     new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
             });
             await user.RegisterDerivationSchemeAsync("BTC");
+            string origOrderId = "testOrder";
             var newInvoice = await client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest()
                 {
                     Currency = "USD",
                     Amount = 1,
-                    Metadata = JObject.Parse("{\"itemCode\": \"testitem\", \"orderId\": \"testOrder\"}"),
+                    Metadata = JObject.Parse($"{{\"itemCode\": \"testitem\", \"orderId\": \"{origOrderId}\"}}"),
                     Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
                         RedirectAutomatically = true,
@@ -1319,6 +1320,8 @@ namespace BTCPayServer.Tests
 
             newInvoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
 
+            const string newOrderId = "UPDATED-ORDER-ID";
+            JObject metadataForUpdate = JObject.Parse($"{{\"orderId\": \"{newOrderId}\", \"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}}");
             Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
             Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
             await AssertHttpError(403, async () =>
@@ -1326,22 +1329,35 @@ namespace BTCPayServer.Tests
                 await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
                     new UpdateInvoiceRequest()
                     {
-                        Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
+                        Metadata = metadataForUpdate
                     });
             });
             invoice = await client.UpdateInvoice(user.StoreId, invoice.Id,
                 new UpdateInvoiceRequest()
                 {
-                    Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
+                    Metadata = metadataForUpdate
                 });
 
+            Assert.Equal(newOrderId, invoice.Metadata["orderId"].Value<string>());
             Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
             Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
 
             //also test the the metadata actually got saved
             invoice = await client.GetInvoice(user.StoreId, invoice.Id);
+            Assert.Equal(newOrderId, invoice.Metadata["orderId"].Value<string>());
             Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
             Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
+
+            // test if we can find the updated invoice using the new orderId
+            var invoicesWithOrderId = await client.GetInvoices(user.StoreId, new[] { newOrderId });
+            Assert.NotNull(invoicesWithOrderId);
+            Assert.Single(invoicesWithOrderId);
+            Assert.Equal(invoice.Id, invoicesWithOrderId.First().Id);
+            
+            // test if the old orderId does not yield any results anymore
+            var invoicesWithOldOrderId = await client.GetInvoices(user.StoreId, new[] { origOrderId });
+            Assert.NotNull(invoicesWithOldOrderId);
+            Assert.Empty(invoicesWithOldOrderId);
 
             //archive 
             await AssertHttpError(403, async () =>

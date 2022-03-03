@@ -58,7 +58,7 @@
                                 {
                                     var nodeInfo = Model.NodeInfo[i];
                                     <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@nodeInfo.Id" role="tabpanel" aria-labelledby="nodeInfo-tab-@nodeInfo.Id">
-                                        <div class="qr-container my-4">
+                                        <div class="qr-container my-4 w-100">
                                             <img alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage"/>
                                             <vc:qr-code data="@nodeInfo.ToString()"/>
                                         </div>

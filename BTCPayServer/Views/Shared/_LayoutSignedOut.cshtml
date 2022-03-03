@@ -1,5 +1,6 @@
 ﻿@{
     Layout = "_LayoutSimple";
+    ViewBag.ShowTitle ??= true;
     ViewBag.ShowLeadText ??= false;
 }
 
@@ -45,7 +46,10 @@
 </div>
 
 <div class="account-form">
-    <h4>@ViewData["Title"]</h4>
+    @if (ViewBag.ShowTitle)
+    {
+        <h4>@ViewData["Title"]</h4>
+    }
     @RenderBody()
 </div>
 

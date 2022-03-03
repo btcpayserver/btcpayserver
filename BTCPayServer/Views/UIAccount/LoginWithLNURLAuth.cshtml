@@ -7,50 +7,43 @@
     };
 }
 
-<section class="pt-5" id="lnurlauth-section">
-    <div>
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>LNURL Auth</h2>
-                <div class="align-items-center">
-                    <ul class="nav justify-content-center my-2">
-                        @for (int i = 0; i < formats.Count; i++)
-                        {
-                            var mode = formats.ElementAt(i);
-                            <li class="nav-item">
-                                <a class="btcpay-pill @(i == 0 ? "active" : "")"
-                                   data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
-                                   href="#">
-                                    @mode.Key
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                    <div class="tab-content">
-                        @for (int i = 0; i < formats.Count; i++)
-                        {
-                            var mode = formats.ElementAt(i);
-                            <div class="tab-pane text-center @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
-                                <div class="qr-container" style="min-height: 256px;">
-                                    <vc:qr-code data="@mode.Value"></vc:qr-code>
-                                </div>
-                                <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener">
-                                    Open in wallet
-                                </a>
-                            </div>
-                        }
+<div id="lnurlauth-section" class="twoFaBox">
+    <form id="authform" asp-action="LoginWithLNURLAuth" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+        <input type="hidden" asp-for="LNURLEndpoint"/>
+        <input type="hidden" asp-for="UserId"/>
+    </form>
+    <h2 class="h3 mb-3">LNURL Auth</h2>
+    <div class="align-items-center">
+        <ul class="nav justify-content-center my-2">
+            @for (int i = 0; i < formats.Count; i++)
+            {
+                var mode = formats.ElementAt(i);
+                <li class="nav-item">
+                    <a class="btcpay-pill @(i == 0 ? "active" : "")"
+                       data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
+                       href="#">
+                        @mode.Key
+                    </a>
+                </li>
+            }
+        </ul>
+        <div class="tab-content">
+            @for (int i = 0; i < formats.Count; i++)
+            {
+                var mode = formats.ElementAt(i);
+                <div class="tab-pane text-center @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
+                    <div class="qr-container" style="min-height: 256px;">
+                        <vc:qr-code data="@mode.Value"></vc:qr-code>
                     </div>
-                    <p>Scan the QR code with your lightning wallet and link to your user account.</p>
+                    <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener">
+                        Open in wallet
+                    </a>
                 </div>
-            </div>
+            }
         </div>
+        <p>Scan the QR code with your lightning wallet and link to your user account.</p>
     </div>
-</section>
-
-<form id="authform" asp-action="LoginWithLNURLAuth" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-    <input type="hidden" asp-for="LNURLEndpoint"/>
-    <input type="hidden" asp-for="UserId"/>
-</form>
+</div>
 
 <script>
     function check() {

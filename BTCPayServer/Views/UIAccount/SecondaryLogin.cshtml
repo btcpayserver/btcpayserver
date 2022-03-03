@@ -1,6 +1,16 @@
 ﻿@model SecondaryLoginViewModel
 @{
     ViewData["Title"] = "Two-factor/U2F authentication";
+    Layout = "_LayoutSignedOut";
+    ViewBag.ShowTitle = false;
+}
+
+@section PageHeadContent {
+    <style>.twoFaBox + .twoFaBox { margin-top: var(--btcpay-space-l); padding-top: var(--btcpay-space-l); border-top: 1px solid var(--btcpay-body-border-light); }</style>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
 }
 
 @if (Model.LoginWith2FaViewModel != null && Model.LoginWithFido2ViewModel != null&& Model.LoginWithLNURLAuthViewModel != null)
@@ -10,7 +20,7 @@
 else if (Model.LoginWith2FaViewModel == null && Model.LoginWithFido2ViewModel == null && Model.LoginWithLNURLAuthViewModel == null)
 {
     <div class="row">
-        <div class="col-lg-12 section-heading">
+        <div class="col-lg-12">
             <h2 class="bg-danger">2FA and U2F/FIDO2 and LNURL-Auth Authentication Methods are not available. Please go to the https endpoint.</h2>
             <hr class="danger">
         </div>
@@ -20,24 +30,14 @@ else if (Model.LoginWith2FaViewModel == null && Model.LoginWithFido2ViewModel ==
 <div class="row justify-content-center">
     @if (Model.LoginWith2FaViewModel != null)
     {
-        <div class="col-sm-12 col-md-6">
-            <partial name="LoginWith2fa" model="@Model.LoginWith2FaViewModel"/>
-        </div>
+        <partial name="LoginWith2fa" model="@Model.LoginWith2FaViewModel"/>
     }
     @if (Model.LoginWithFido2ViewModel != null)
     {
-        <div class="col-sm-12 col-md-6">
-            <partial name="LoginWithFido2" model="@Model.LoginWithFido2ViewModel"/>
-        </div>
+        <partial name="LoginWithFido2" model="@Model.LoginWithFido2ViewModel"/>
     }
     @if (Model.LoginWithLNURLAuthViewModel != null)
     {
-        <div class="col-sm-12 col-md-6">
-            <partial name="LoginWithLNURLAuth" model="@Model.LoginWithLNURLAuthViewModel"/>
-        </div>
+        <partial name="LoginWithLNURLAuth" model="@Model.LoginWithLNURLAuthViewModel"/>
     }
 </div>
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-}

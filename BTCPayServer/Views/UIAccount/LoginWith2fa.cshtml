@@ -1,17 +1,13 @@
 @model LoginWith2faViewModel
 
-<div class="row pt-5">
-    <div class="col-lg-12 section-heading">
-        <h2>Two-factor authentication</h2>
-    </div>
-</div>
-<div class="row mb-3">
-    <form class="col-12" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
+<div class="twoFaBox">
+    <h2 class="h3 mb-3">Two-factor authentication</h2>
+    <form method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <input asp-for="RememberMe" type="hidden"/>
         <div class="form-group">
             <label asp-for="TwoFactorCode" class="form-label"></label>
-            <input asp-for="TwoFactorCode" class="form-control" autocomplete="off" autofocus style="width:13em" />
+            <input asp-for="TwoFactorCode" class="form-control" autocomplete="off" autofocus style="width:13em"/>
             <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
         </div>
         <div class="form-group">
@@ -26,13 +22,9 @@
             <button type="submit" class="btn btn-primary">Log in</button>
         </div>
     </form>
-</div>
-<div class="row">
-    <div class="col-12">
-        <p class="text-secondary">
-            Don't have access to your authenticator device?
-            <br>
-            You can <a asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@ViewData["ReturnUrl"]">log in with a recovery code</a>.
-        </p>
-    </div>
+    <p class="text-secondary mt-4 mb-0">
+        Don't have access to your authenticator device?
+        <br>
+        You can <a asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@ViewData["ReturnUrl"]">log in with a recovery code</a>.
+    </p>
 </div>

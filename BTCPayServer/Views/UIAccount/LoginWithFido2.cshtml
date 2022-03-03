@@ -1,32 +1,31 @@
 @model BTCPayServer.Fido2.Models.LoginWithFido2ViewModel
 
-<form id="fidoForm" asp-action="LoginWithFido2" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-    <input type="hidden" asp-for="Data"/>
-    <input type="hidden" asp-for="Response"/>
-    <input type="hidden" asp-for="UserId"/>
-    <input type="hidden" asp-for="RememberMe"/>
-</form>
-
-<div class="row pt-5">
-    <div class="col-lg-12 section-heading">
-        <h2>FIDO2 Authentication</h2>
-        <p>Insert your security device and proceed.</p>
-        <div id="info-message" class="alert alert-info mb-3 d-none">
-            <div class="d-flex align-items-center">
-                <span id="spinner" class="fa fa-spinner fa-spin me-3 mt-1 fido-running" style="font-size:1.5rem"></span>
-                <span>If your security device has a button, tap on it.</span>
-            </div>
+<div class="twoFaBox">
+    <form id="fidoForm" asp-action="LoginWithFido2" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+        <input type="hidden" asp-for="Data"/>
+        <input type="hidden" asp-for="Response"/>
+        <input type="hidden" asp-for="UserId"/>
+        <input type="hidden" asp-for="RememberMe"/>
+    </form>
+    <h2 class="h3 mb-3">FIDO2 Authentication</h2>
+    <p>Insert your security device and proceed.</p>
+    <div id="info-message" class="alert alert-info mb-3 d-none">
+        <div class="d-flex align-items-center">
+            <span id="spinner" class="fa fa-spinner fa-spin me-3 mt-1 fido-running" style="font-size:1.5rem"></span>
+            <span>If your security device has a button, tap on it.</span>
         </div>
-        <button id="btn-start" class="btn btn-primary d-none" type="button">Start</button>
-        <p id="error-message" class="d-none alert alert-danger"></p>
-        <button id="btn-retry" class="btn btn-secondary d-none" type="button">Retry</button>
     </div>
+    <button id="btn-start" class="btn btn-primary d-none" type="button">Start</button>
+    <p id="error-message" class="d-none alert alert-danger"></p>
+    <button id="btn-retry" class="btn btn-secondary d-none" type="button">Retry</button>
+    
+    <script>
+        document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
+        // send to server for registering
+        window.makeAssertionOptions = @Safe.Json(Model.Data);
+    </script>
+    <script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
+    <script src="~/js/webauthn/login.js" asp-append-version="true"></script>
 </div>
 
-<script>
-    document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
-    // send to server for registering
-    window.makeAssertionOptions = @Safe.Json(Model.Data);
-</script>
-<script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
-<script src="~/js/webauthn/login.js" asp-append-version="true"></script>
+

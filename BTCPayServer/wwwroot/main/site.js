@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     updateTimeAgo();
     
-    // intializing date time pickers throughts website
+    // intializing date time pickers
     $(".flatdtpicker").each(function () {
         var element = $(this);
         var fdtp = element.attr("data-fdtp");
@@ -56,7 +56,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     });
-
+    
+    // rich text editor
+    if ($.summernote) {
+        $('.richtext').summernote({
+            minHeight: 300,
+            tableClassName: 'table table-sm',
+            insertTableMaxSize: {
+                col: 5,
+                row: 10
+            },
+            codeviewFilter: true,
+            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi')
+        });
+    }
 
     $(".input-group-clear").on("click", function () {
         $(this).parents(".input-group").find("input").val(null);

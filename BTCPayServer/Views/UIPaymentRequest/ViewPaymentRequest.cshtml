@@ -52,6 +52,7 @@
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
     </script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <bundle name="wwwroot/bundles/payment-request-bundle.min.js" asp-append-version="true"></bundle>
     @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>

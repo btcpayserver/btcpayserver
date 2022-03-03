@@ -7,12 +7,12 @@
 }
 
 @section PageHeadContent {
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
 <form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">

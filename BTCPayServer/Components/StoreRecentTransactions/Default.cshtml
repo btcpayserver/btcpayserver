@@ -1,0 +1,27 @@
+@model BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel
+
+<div class="widget store-recent-transactions">
+    <header>
+        <h3>Recent Transactions</h3>
+        <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+    </header>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Transaction</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @*@foreach (var entry in Model.Entries)
+            {*@
+                <tr>
+                    <td>14 minutes ago</td>
+                    <td>123</td>
+                    <td class="text-end">0.615 BTC</td>
+                </tr>
+            @*}*@
+        </tbody>
+    </table>
+</div>

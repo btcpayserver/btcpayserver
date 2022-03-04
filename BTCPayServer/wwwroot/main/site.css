@@ -70,6 +70,32 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
+/* Badges */
+.badge-new {
+    background: #d4edda;
+    color: #000;
+}
+
+.badge-expired {
+    background: #eee;
+    color: #000;
+}
+
+.badge-invalid {
+    background: #c94a47;
+    color: #fff;
+}
+
+.badge-processing {
+    background: #f1c332;
+    color: #000;
+}
+
+.badge-settled {
+    background: #329f80;
+    color: #fff;
+}
+
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;
@@ -226,4 +252,83 @@ svg.icon-note {
 #SetupGuide .list-group-item .content {
     flex: 1;
     padding: 1rem 0;
+}
+
+/* Dashboard */
+#Dashboard {
+    display: grid;
+    gap: var(--btcpay-space-m);
+}
+
+.widget {
+    border: 1px solid var(--btcpay-body-border-light);
+    border-radius: var(--btcpay-border-radius);
+    padding: var(--btcpay-space-l);
+    background: var(--btcpay-bg-tile);
+}
+
+.widget header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--btcpay-space-s);
+    line-height: 1.2;
+}
+
+.widget header a,
+.widget header .btn-link {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+.widget h3,
+.widget .h3 {
+    font-weight: var(--btcpay-font-weight-bold);
+    margin-bottom: 0;
+}
+
+.widget h6,
+.widget .h6 {
+    color: var(--btcpay-body-text-muted);
+    margin-bottom: 0;
+}
+
+.widget .btn-link {
+    color: var(--btcpay-body-text-muted);
+    padding: 0 var(--btcpay-space-s);
+    font-weight: var(--btcpay-font-weight-semibold);
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
+
+.widget input:checked + .btn-link {
+    color: var(--btcpay-body-link-accent);
+}
+
+.widget .chart-container {
+    position: relative;
+}
+
+.widget.store-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-l) var(--btcpay-space-xl);
+}
+
+.widget .store-number {
+    flex: 0 1 12rem;
+}
+
+.widget .number {
+    font-weight: var(--btcpay-font-weight-bold);
+}
+
+.widget .table {
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    width: calc(100% + 1rem);
+}
+
+.widget .table th {
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Services.Custodian.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
 
 public class CustodianApiException: SystemException {
     public int HttpStatus { get; }

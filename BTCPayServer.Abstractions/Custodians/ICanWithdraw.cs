@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Abstractions.Custodians.Client;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Custodian;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public interface ICanWithdraw
 {

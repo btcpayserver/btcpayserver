@@ -1,8 +1,8 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Custodian.Client.Exception;
 using BTCPayServer.Services.Custodian.Client.Kraken;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;

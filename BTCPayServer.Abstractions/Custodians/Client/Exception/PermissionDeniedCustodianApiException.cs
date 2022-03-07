@@ -1,6 +1,4 @@
-using System;
-
-namespace BTCPayServer.Services.Custodian.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
 
 public class PermissionDeniedCustodianApiException : CustodianApiException
 

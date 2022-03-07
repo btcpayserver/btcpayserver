@@ -7,6 +7,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians.Client.Exception;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -17,7 +20,6 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client;
-using BTCPayServer.Services.Custodian.Client.Exception;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
@@ -2488,7 +2490,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Single(custodians.Select(s => s.Code == "kraken"));
+            Assert.Equal(2, custodians.Count());
         }
 
 
@@ -2511,10 +2513,9 @@ namespace BTCPayServer.Tests
             var storeId = store.Id;
             
             // Load a custodian, we use the first one we find.
-            var custodianRegistry = tester.PayTester.GetService<CustodianRegistry>();
-            var custodian = custodianRegistry.GetAll().First().Value;
-            
-            
+            var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
+            var custodian = custodians.GetCustodianByCode("kraken");
+
             // List custodian accounts
             // Unauth
             await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId));
@@ -2688,10 +2689,9 @@ namespace BTCPayServer.Tests
             var storeId = store.Id;
             
             // Load a custodian, we use the first one we find.
-            var custodianRegistry = tester.PayTester.GetService<CustodianRegistry>();
+            var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
+            var mockCustodian = custodians.GetCustodianByCode("mock");
 
-            var mockCustodian = new MockCustodian();
-            custodianRegistry.Register(mockCustodian);
             
             
              // Create custodian account

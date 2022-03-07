@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Custodian;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public interface ICanDeposit
 {

@@ -1,15 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians.Client;
+using BTCPayServer.Abstractions.Custodians.Client.Exception;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
-using BTCPayServer.Services.Custodian.Client.Exception;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -23,12 +27,12 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldCustodianAccountController : ControllerBase
     {
-        private readonly CustodianRegistry _custodianRegistry;
         private readonly CustodianAccountRepository _custodianAccountRepository;
+        private readonly IEnumerable<ICustodian> _custodianRegistry;
         private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldCustodianAccountController(CustodianAccountRepository custodianAccountRepository,
-            CustodianRegistry custodianRegistry,
+            IEnumerable<ICustodian> custodianRegistry,
             IAuthorizationService authorizationService)
         {
             _custodianAccountRepository = custodianAccountRepository;
@@ -59,7 +63,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     var custodianAccountResponse = ToModelWithAssets(custodianAccountData);
                     var custodianCode = custodianAccountResponse.CustodianCode;
-                    var custodian = _custodianRegistry.GetAll()[custodianCode];
+                    var custodian = _custodianRegistry.GetCustodianByCode(custodianCode);
                     try
                     {
                         var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config, cancellationToken);
@@ -106,7 +110,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
                 var custodianCode = custodianAccount.CustodianCode;
-                var custodian = _custodianRegistry.GetAll()[custodianCode];
+                var custodian = _custodianRegistry.GetCustodianByCode(custodianCode);
                 var balances = await custodian.GetAssetBalancesAsync(custodianAccount.Config, cancellationToken);
                 custodianAccount.AssetBalances = balances;
             }
@@ -151,7 +155,9 @@ namespace BTCPayServer.Controllers.Greenfield
             request ??= new CreateCustodianAccountRequest();
 
             // TODO this may throw an exception if custodian is not found. How do I make this better?
-            var custodian = _custodianRegistry.GetAll()[request.CustodianCode];
+            
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(request.CustodianCode);
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
 
@@ -184,10 +190,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Could not find the custodian account");
             }
 
-            var allCustodians = _custodianRegistry.GetAll();
+            var allCustodians = _custodianRegistry;
 
             // TODO if the custodian with the desired code does not exist, this will throw an error
-            var custodian = allCustodians[request.CustodianCode];
+            var custodian = allCustodians.GetCustodianByCode(request.CustodianCode);
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
             custodianAccount.CustodianCode = custodian.GetCode();
@@ -230,8 +236,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Could not find the custodian account");
             }
 
-            var allCustodians = _custodianRegistry.GetAll();
-            var custodian = allCustodians[custodianAccount.CustodianCode];
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
             var config = custodianAccount.GetBlob().config;
 
             if (custodian is ICanDeposit depositableCustodian)
@@ -278,8 +284,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Could not find the custodian account");
             }
 
-            var allCustodians = _custodianRegistry.GetAll();
-            var custodian = allCustodians[custodianAccount.CustodianCode];
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
@@ -342,8 +348,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Could not find the custodian account");
             }
 
-            var allCustodians = _custodianRegistry.GetAll();
-            var custodian = allCustodians[custodianAccount.CustodianCode];
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
@@ -375,8 +381,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Could not find the custodian account");
             }
 
-            var allCustodians = _custodianRegistry.GetAll();
-            var custodian = allCustodians[custodianAccount.CustodianCode];
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
@@ -413,7 +419,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError(404, "custodian-account-not-found",
                     $"Could not find the custodian account");
             }
-            var custodian = _custodianRegistry.GetAll()[custodianAccount.CustodianCode];
+            
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
@@ -446,7 +454,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.CreateAPIError(404, "custodian-account-not-found", $"Could not find the custodian account");
             }
-            var custodian = _custodianRegistry.GetAll()[custodianAccount.CustodianCode];
+            var allCustodians = _custodianRegistry;
+            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {

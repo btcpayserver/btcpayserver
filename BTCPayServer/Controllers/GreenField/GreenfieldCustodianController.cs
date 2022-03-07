@@ -1,9 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
-using BTCPayServer.Services.Custodian;
-using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +14,9 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldCustodianController : ControllerBase
     {
-        private readonly CustodianRegistry _custodianRegistry;
+        private readonly IEnumerable<ICustodian> _custodianRegistry;
 
-        public GreenfieldCustodianController(CustodianRegistry custodianRegistry)
+        public GreenfieldCustodianController(IEnumerable<ICustodian> custodianRegistry)
         {
             _custodianRegistry = custodianRegistry;
         }
@@ -26,7 +25,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public IActionResult ListCustodians()
         {
-            var all = _custodianRegistry.GetAll().Values.ToList().Select(ToModel);
+            var all = _custodianRegistry.ToList().Select(ToModel);
             return Ok(all);
         }
 

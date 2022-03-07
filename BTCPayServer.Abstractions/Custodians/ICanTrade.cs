@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Custodians.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Custodian.Client;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Custodian;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public interface ICanTrade
 {

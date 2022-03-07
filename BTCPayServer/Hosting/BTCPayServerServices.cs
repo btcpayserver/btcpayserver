@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
@@ -120,11 +121,11 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
-            services.AddSingleton<CustodianRegistry>();
             services.AddSingleton<CustodianAccountRepository>();
             
             // List all known custodians after registering CustodianRegistry... 
             services.AddSingleton<KrakenExchange>();
+            services.AddSingleton<ICustodian, KrakenExchange>(provider => provider.GetService<KrakenExchange>());
 
             services.TryAddSingleton<WalletHistogramService>();
             services.TryAddSingleton<CustodianRegistry>();

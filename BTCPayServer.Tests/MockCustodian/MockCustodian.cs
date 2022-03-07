@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians.Client;
+using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Custodian.Client.Exception;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Custodian.Client.MockCustodian;

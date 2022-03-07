@@ -282,6 +282,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError(503, "not-available", $"You need to allow non-admins to use hotwallets for their stores (in /server/policies)");
             }
 
+            if (request.Destinations == null || !request.Destinations.Any())
+            {
+                ModelState.AddModelError(
+                    nameof(request.Destinations),
+                    "At least one destination must be specified"
+                );
+
+                return this.CreateValidationError(ModelState);
+            }
+
             var explorerClient = _explorerClientProvider.GetExplorerClient(cryptoCode);
             var wallet = _btcPayWalletProvider.GetWallet(network);
 

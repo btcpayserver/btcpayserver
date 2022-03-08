@@ -9,16 +9,16 @@ namespace BTCPayServer.Services.Custodian.Client
 {
     public class CustodianAccountRepository
     {
-        private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _contextFactory;
 
         public CustodianAccountRepository(ApplicationDbContextFactory contextFactory)
         {
-            _ContextFactory = contextFactory;
+            _contextFactory = contextFactory;
         }
 
         public async Task<CustodianAccountData> CreateOrUpdate(CustodianAccountData entity)
         {
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _contextFactory.CreateContext();
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = Guid.NewGuid().ToString();
@@ -35,15 +35,12 @@ namespace BTCPayServer.Services.Custodian.Client
 
         public async Task<bool> Remove(string id, string storeId)
         {
-            using (var context = _ContextFactory.CreateContext())
-            {
-                var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.CustodianAccount,
-                    data => data.Id == id && data.StoreId == storeId);
-                if (key == null)
-                    return false;
-                context.CustodianAccount.Remove(key);
-                await context.SaveChangesAsync();
-            }
+            await using var context = _contextFactory.CreateContext();
+            var key = await context.CustodianAccount.SingleOrDefaultAsync(data => data.Id == id && data.StoreId == storeId);
+            if (key == null)
+                return false;
+            context.CustodianAccount.Remove(key);
+            await context.SaveChangesAsync();
             return true;
         }
 
@@ -55,25 +52,22 @@ namespace BTCPayServer.Services.Custodian.Client
                 return null;
             }
 
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
                 .Where(ca => ca.StoreId == storeId);
             //.SelectMany(c => c.StoreData.Invoices);
 
-            var data = await query.ToArrayAsync().ConfigureAwait(false);
+            var data = await query.ToArrayAsync( cancellationToken).ConfigureAwait(false);
             return data;
         }
 
         public async Task<CustodianAccountData> FindById(string accountId)
         {
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
                 .Where(ca => ca.Id == accountId);
 
             var custodianAccountData = (await query.ToListAsync()).FirstOrDefault();
-            if (custodianAccountData == null)
-                return null;
-
             return custodianAccountData;
         }
     }

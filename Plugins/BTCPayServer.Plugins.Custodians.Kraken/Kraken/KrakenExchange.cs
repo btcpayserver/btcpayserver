@@ -1,22 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Net.Http;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Custodians.Client;
 using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Client.Models;
-using ExchangeSharp;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Custodian.Client.Kraken;
+namespace BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 
 public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 {
@@ -55,12 +48,9 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             var data = JObject.Parse(responseString);
 
             var errorMessage = data["error"];
-            if (errorMessage is JArray errorMessageArray)
+            if (errorMessage is JArray { Count: > 0 } errorMessageArray)
             {
-                if (errorMessageArray.Count > 0)
-                {
-                    throw new APIException(errorMessageArray[0].ToString());
-                }
+                throw new Exception(errorMessageArray[0].ToString());
             }
 
             var list = new List<AssetPairData>();
@@ -98,10 +88,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     private HttpRequestMessage CreateHttpClient()
     {
         HttpRequestMessage request = new();
-
-        // TODO should we advertise ourselves like this? We're doing it on other parts of the code too!
-        request.Headers.Add("User-Agent", $"BTCPayServer/{GetVersion()}");
-
         return request;
     }
 
@@ -384,7 +370,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         param.Add("type", orderType);
         param.Add("pair", assetPair.PairCode);
         param.Add("ordertype", "market");
-        param.Add("volume", qty.ToStringInvariant());
+        param.Add("volume", qty.ToString( CultureInfo.InvariantCulture));
 
         var krakenConfig = ParseConfig(config);
         var requestResult = await QueryPrivate("AddOrder", param, krakenConfig, cancellationToken);
@@ -628,13 +614,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         }
 
         return r;
-    }
-
-    private string GetVersion()
-    {
-        // TODO this was a copy-paste of somewhere else. Should be put this method somewhere accessible to all?
-        return typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()
-            .Version;
     }
 
     public string[] GetDepositablePaymentMethods()

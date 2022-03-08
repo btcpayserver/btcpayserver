@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Custodian.Client.Kraken;
+using BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using Xunit;

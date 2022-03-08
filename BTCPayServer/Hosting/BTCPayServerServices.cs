@@ -30,7 +30,6 @@ using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Custodian.Client;
-using BTCPayServer.Services.Custodian.Client.Kraken;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -123,9 +122,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<UserService>();
             services.AddSingleton<CustodianAccountRepository>();
             
-            // List all known custodians after registering CustodianRegistry... 
-            services.AddSingleton<KrakenExchange>();
-            services.AddSingleton<ICustodian, KrakenExchange>(provider => provider.GetService<KrakenExchange>());
 
             services.TryAddSingleton<WalletHistogramService>();
             services.TryAddSingleton<CustodianRegistry>();

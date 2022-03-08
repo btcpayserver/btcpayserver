@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace BTCPayServer.Services.Custodian.Client.Kraken;
+namespace BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 
 public class KrakenConfig
 {

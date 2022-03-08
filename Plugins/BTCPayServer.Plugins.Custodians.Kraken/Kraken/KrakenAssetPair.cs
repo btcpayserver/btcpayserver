@@ -1,6 +1,6 @@
 using BTCPayServer.Client.Models;
 
-namespace BTCPayServer.Services.Custodian.Client.Kraken;
+namespace BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 
 public class KrakenAssetPair: AssetPairData
 {

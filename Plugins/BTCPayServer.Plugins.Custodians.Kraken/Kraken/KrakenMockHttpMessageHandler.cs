@@ -1,12 +1,7 @@
-using System;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Custodian.Client.Kraken;
+namespace BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 
 public class KrakenMockHttpMessageHandler : HttpMessageHandler
 {

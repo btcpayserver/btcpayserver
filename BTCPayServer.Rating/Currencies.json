@@ -1274,13 +1274,6 @@
       "crypto":true
    },
    {
-      "name":"POLIS",
-      "code":"POLIS",
-      "divisibility":8,
-      "symbol":null,
-      "crypto":true
-   },
-   {
       "name":"Althash",
       "code":"HTML",
       "divisibility":8,

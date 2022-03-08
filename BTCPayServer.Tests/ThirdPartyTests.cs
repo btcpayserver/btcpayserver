@@ -75,7 +75,7 @@ namespace BTCPayServer.Tests
         public void CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { "polispay", "okex" };
+            string[] brokenShitcoinCasinos = { "okex" };
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
@@ -108,12 +108,6 @@ namespace BTCPayServer.Tests
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") &&
                              e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY
-                }
-                else if (name == "polispay")
-                {
-                    Assert.Contains(exchangeRates.ByExchange[name],
-                        e => e.CurrencyPair == new CurrencyPair("BTC", "POLIS") &&
-                             e.BidAsk.Bid > 1.0m); // 1BTC will always be more than 1 POLIS
                 }
                 else if (name == "argoneum")
                 {
@@ -260,7 +254,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
-            string[] brokenShitcoins = { "BTX_USD", "POLIS_USD" };
+            string[] brokenShitcoins = { "BTX_USD" };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);

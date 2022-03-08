@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Stores;
@@ -56,6 +57,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
+        private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
         private readonly IServiceProvider _serviceProvider;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
@@ -79,6 +81,7 @@ namespace BTCPayServer.Controllers.Greenfield
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
+            GreenfieldStoreEmailController greenfieldStoreEmailController,
             IServiceProvider serviceProvider)
         {
             _storeRepository = storeRepository;
@@ -102,6 +105,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
             _homeController = homeController;
             _storePaymentMethodsController = storePaymentMethodsController;
+            _greenfieldStoreEmailController = greenfieldStoreEmailController;
             _serviceProvider = serviceProvider;
         }
 
@@ -158,6 +162,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 _greenfieldPullPaymentController,
                 _homeController,
                 _storePaymentMethodsController,
+                _greenfieldStoreEmailController,
                 new LocalHttpContextAccessor() { HttpContext = context }
             );
         }
@@ -188,6 +193,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldPullPaymentController _greenfieldPullPaymentController;
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
+        private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
 
         public LocalBTCPayServerClient(
             IServiceProvider serviceProvider,
@@ -209,6 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
             GreenfieldPullPaymentController greenfieldPullPaymentController,
             UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
+            GreenfieldStoreEmailController greenfieldStoreEmailController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -229,6 +236,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _greenfieldPullPaymentController = greenfieldPullPaymentController;
             _homeController = homeController;
             _storePaymentMethodsController = storePaymentMethodsController;
+            _greenfieldStoreEmailController = greenfieldStoreEmailController;
 
             var controllers = new[]
             {
@@ -236,7 +244,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 paymentRequestController, apiKeysController, notificationsController, usersController,
                 storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController, storeWebhooksController,
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
-                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController, 
+                greenfieldStoreEmailController
             };
 
             var authoverride = new DefaultAuthorizationService(
@@ -998,6 +1007,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 ScriptPubKeyType = request.ScriptPubKeyType,
                 ImportKeysToRPC = request.ImportKeysToRPC
             }));
+        }
+
+        public override async Task SendEmail(string storeId, SendEmailRequest request, CancellationToken token = default)
+        {
+            HandleActionResult(await _greenfieldStoreEmailController.SendEmailFromStore(storeId, request));
         }
     }
 }

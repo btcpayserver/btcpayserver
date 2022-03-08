@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/email": {
+        "/api/v1/stores/{storeId}/email/send": {
             "post": {
                 "tags": [
                     "Stores"
@@ -21,7 +21,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "The email was sent successfully"
+                        "description": "The email was sent (scheduled) successfully"
                     },
                     "400": {
                         "description": "The store's SMTP is not configured"
@@ -31,9 +31,6 @@
                     },
                     "404": {
                         "description": "The store was not found"
-                    },
-                    "500": {
-                        "description": "There was a problem while trying to send the email using the store's SMTP server."
                     }
                 },
                 "security": [
@@ -53,11 +50,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "toName": {
-                        "type": "string",
-                        "description": "Name of the recipient"
-                    },
-                    "toEmail": {
+                    "email": {
                         "type": "string",
                         "description": "Email of the recipient"
                     },
@@ -67,7 +60,7 @@
                     },
                     "body": {
                         "type": "string",
-                        "description": "Body of the email to send as plain text. HTML is not supported."
+                        "description": "Body of the email to send as plain text."
                     }
                 }
             }

@@ -2265,6 +2265,24 @@ namespace BTCPayServer.Tests
             await AssertAPIError("store-user-role-orphaned", async () => await user2Client.RemoveStoreUser(user.StoreId, user2.UserId));
 
         }
-        
+
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreEmailTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+
+            await adminClient.SendEmail(admin.StoreId, new SendEmailRequest()
+            {
+                Body = "lol",
+                Subject = "subj",
+                Email = "sdasdas"
+            });
+        }
     }
 }

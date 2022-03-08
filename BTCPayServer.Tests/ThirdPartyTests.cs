@@ -254,7 +254,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
-            string[] brokenShitcoins = { "BTX_USD" };
+            string[] brokenShitcoins = { "BTX_USD", "CHC_USD" };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);

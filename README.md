@@ -216,13 +216,6 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
   <tbody>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://kraken.com" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/kraken.svg" alt="Kraken" height=100>
-          <br/>
-          <span>Kraken</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
         <a href="https://spiral.xyz" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/spiral.svg" alt="Spiral" height=100>
           <br/>

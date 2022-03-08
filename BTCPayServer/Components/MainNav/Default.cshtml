@@ -187,9 +187,9 @@
                                 <vc:ui-extension-point location="store-integrations-nav" model="@Model"/>
                             }
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-AddPlugin">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                     <vc:icon symbol="new"/>
-                                    <span>Add Plugin</span>
+                                    <span>Manage Plugins</span>
                                 </a>
                             </li>
                         </ul>

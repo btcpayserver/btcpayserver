@@ -258,15 +258,20 @@ svg.icon-note {
 #Dashboard {
     display: grid;
     gap: var(--btcpay-space-m);
+    grid-template-columns: repeat(12, 1fr);
 }
 
 .widget {
     --widget-padding: var(--btcpay-space-m);
+    --widget-chart-width: 100vw;
     
     border: 1px solid var(--btcpay-body-border-light);
     border-radius: var(--btcpay-border-radius);
     padding: var(--widget-padding);
     background: var(--btcpay-bg-tile);
+
+    grid-column-start: 1;
+    grid-column-end: 13;
 }
 
 .widget header {
@@ -381,22 +386,38 @@ svg.icon-note {
     }
 }
 
-@media (min-width: 768px) {
-    .widget .chart-container {
-        --widget-chart-width: 90vw;
-    }
-}
-
 @media (max-width: 991px) {
     .widget .chart-container {
-        --widget-chart-width: 100vw;
         max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)));
     }
 }
 
 @media (min-width: 992px) {
     .widget .chart-container {
-        --widget-chart-width: 100vw;
         max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)) - var(--sidebar-width) - 1rem); /* 1rem for scrollbar */
     }
 }
+
+@media (min-width: 1200px) {
+    .widget.app-sales,
+    .widget.store-wallet-balance {
+        --widget-chart-width: 80vw;
+        grid-column-start: 1;
+        grid-column-end: 9;
+    }
+
+    .widget.app-top-items,
+    .widget.store-numbers {
+        grid-column-start: 9;
+        grid-column-end: 13;
+    }
+
+    .widget.store-numbers header {
+        justify-content: space-between;
+    }
+
+    .widget.store-numbers header h6 {
+        margin-right: 0;
+    }
+}
+

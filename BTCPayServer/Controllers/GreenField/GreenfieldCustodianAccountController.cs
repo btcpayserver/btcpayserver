@@ -293,12 +293,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase))
                 {
                     // Qty is a percentage of current holdings
+                    var percentage = Decimal.Parse( request.Qty.Substring(0, request.Qty.Length - 1), CultureInfo.InvariantCulture);
                     var config = custodianAccount.GetBlob().config;
                     var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
                     var fromAssetBalance = balances[request.FromAsset];
                     var priceQuote =
-                        await tradableCustodian.GetQuoteForAssetAsync(request.ToAsset, request.FromAsset, config, cancellationToken);
-                    Qty = fromAssetBalance / priceQuote.Ask;
+                        await tradableCustodian.GetQuoteForAssetAsync(request.FromAsset, request.ToAsset, config, cancellationToken);
+                    Qty = fromAssetBalance / priceQuote.Ask * percentage / 100;
                 }
                 else
                 {

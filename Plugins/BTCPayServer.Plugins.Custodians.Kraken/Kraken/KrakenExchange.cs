@@ -135,7 +135,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     public async Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)
     {
-        if (paymentMethod == "BTC-OnChain")
+        if (paymentMethod.Equals("BTC-OnChain",StringComparison.InvariantCulture))
         {
             var asset = paymentMethod.Split("-")[0];
             var krakenAsset = ConvertToKrakenAsset(asset);
@@ -154,7 +154,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             }
             catch (CustodianApiException ex)
             {
-                if (ex.Message == "EFunding:Too many addresses")
+                if (ex.Message.Equals("EFunding:Too many addresses", StringComparison.InvariantCulture))
                 {
                     // We cannot create a new address because there are too many already. Query again and look for an existing address to use.
                     param.Remove("new");
@@ -192,7 +192,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     private string ConvertToKrakenAsset(string asset)
     {
-        if (asset == "BTC")
+        if (asset.Equals("BTC", StringComparison.InvariantCulture))
         {
             return "XBT";
         }
@@ -202,22 +202,22 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
     private string ConvertFromKrakenAsset(string krakenAsset)
     {
-        if (krakenAsset == "XBT" || krakenAsset == "XXBT")
+        if (krakenAsset.Equals("XBT") || krakenAsset.Equals("XXBT",StringComparison.InvariantCulture))
         {
             return "BTC";
         }
 
-        if (krakenAsset == "XLTC")
+        if (krakenAsset.Equals("XLTC",StringComparison.InvariantCulture))
         {
             return "LTC";
         }
 
-        if (krakenAsset == "ZEUR")
+        if (krakenAsset.Equals("ZEUR",StringComparison.InvariantCulture))
         {
             return "EUR";
         }
 
-        if (krakenAsset == "ZUSD")
+        if (krakenAsset.Equals( "ZUSD",StringComparison.InvariantCulture))
         {
             return "USD";
         }
@@ -262,7 +262,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         }
         catch (CustodianApiException exception)
         {
-            if (exception.Message == "EOrder:Invalid order")
+            if (exception.Message.Equals("EOrder:Invalid order", StringComparison.InvariantCulture))
             {
                 // Let it pass, our exception is thrown at the end anyway.
             }
@@ -313,7 +313,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         {
             if (onePair is KrakenAssetPair krakenAssetPair)
             {
-                if (krakenAssetPair.PairCode == pair)
+                if (krakenAssetPair.PairCode.Equals(pair,StringComparison.InvariantCulture))
                 {
                     return krakenAssetPair;
                 }
@@ -328,7 +328,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             {
                 if (onePair is KrakenAssetPair krakenAssetPair)
                 {
-                    if (onePair.AssetBought == pairParts[0] && onePair.AssetSold == pairParts[1])
+                    if (onePair.AssetBought.Equals(pairParts[0],StringComparison.InvariantCulture) && onePair.AssetSold.Equals(pairParts[1], StringComparison.InvariantCulture))
                     {
                         return krakenAssetPair;
                     }
@@ -356,7 +356,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         }
 
         string orderType;
-        if (assetPair.AssetBought == toAsset)
+        if (assetPair.AssetBought.Equals(toAsset,StringComparison.InvariantCulture))
         {
             orderType = "buy";
         }
@@ -389,17 +389,16 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         foreach (var assetPairData in pairs)
         {
             var pair = (KrakenAssetPair)assetPairData;
-            if (pair.AssetBought == toAsset && pair.AssetSold == fromAsset)
+            if (pair.AssetBought.Equals(toAsset, StringComparison.InvariantCulture) && pair.AssetSold.Equals(fromAsset, StringComparison.InvariantCulture))
             {
                 return pair;
             }
 
-            if (allowReverse && pair.AssetBought == fromAsset && pair.AssetSold == toAsset)
+            if (allowReverse && pair.AssetBought.Equals(fromAsset,StringComparison.InvariantCulture) && pair.AssetSold.Equals(toAsset,StringComparison.InvariantCulture))
             {
                 return pair;
             }
         }
-
         return null;
     }
 
@@ -425,7 +424,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         }
         catch (CustodianApiException e)
         {
-            if (e.Message == "EFunding:Unknown withdraw key")
+            if (e.Message.Equals("EFunding:Unknown withdraw key",StringComparison.InvariantCulture))
             {
                 // This should point the user to the config in the UI, so he can change the withdrawal destination.
                 throw new InvalidWithdrawalTargetException(this, paymentMethod, withdrawToAddressName, e);
@@ -464,17 +463,17 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 var transactionId = (string) withdrawalInfo["txid"]; // This is the transaction ID on the blockchain
 
                 WithdrawalResponseData.WithdrawalStatus status = WithdrawalResponseData.WithdrawalStatus.Unknown;
-                if (statusCode == "Initial" || statusCode == "Pending" || statusCode == "Settled")
+                if (statusCode.Equals("Initial", StringComparison.InvariantCulture) || statusCode.Equals("Pending", StringComparison.InvariantCulture) || statusCode.Equals("Settled", StringComparison.InvariantCulture))
                 {
                     // These 3 states are considered "not final", so we map them to "Queued".
                     // Even "Settled" is not really final as per the IFEX financial transaction states (https://github.com/globalcitizen/ifex-protocol/blob/master/draft-ifex-00.txt#L837).
                     status = WithdrawalResponseData.WithdrawalStatus.Queued;
                 }
-                else if (statusCode == "Success")
+                else if (statusCode.Equals("Success", StringComparison.InvariantCulture))
                 {
                     status = WithdrawalResponseData.WithdrawalStatus.Complete;
                 }
-                else if (statusCode == "Failure")
+                else if (statusCode.Equals("Failure", StringComparison.InvariantCulture))
                 {
                     status = WithdrawalResponseData.WithdrawalStatus.Failed;
                 }
@@ -575,7 +574,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             if (errorMessageArray.Count > 0)
             {
                 var errorMessage = errorMessageArray[0].ToString();
-                if (errorMessage == "EGeneral:Permission denied")
+                if (errorMessage.Equals("EGeneral:Permission denied",StringComparison.InvariantCulture))
                 {
                     throw new PermissionDeniedCustodianApiException(this);
                 }

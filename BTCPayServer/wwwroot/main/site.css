@@ -261,22 +261,27 @@ svg.icon-note {
 }
 
 .widget {
+    --widget-padding: var(--btcpay-space-m);
+    
     border: 1px solid var(--btcpay-body-border-light);
     border-radius: var(--btcpay-border-radius);
-    padding: var(--btcpay-space-l);
+    padding: var(--widget-padding);
     background: var(--btcpay-bg-tile);
 }
 
 .widget header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--btcpay-space-s);
+    gap: var(--btcpay-space-s);
     line-height: 1.2;
 }
 
 .widget header a,
 .widget header .btn-link {
+    margin-top: var(--btcpay-space-xs);
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
@@ -292,9 +297,16 @@ svg.icon-note {
     margin-bottom: 0;
 }
 
+.widget .btn-group {
+    display: inline-flex;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
+}
+
 .widget .btn-link {
     color: var(--btcpay-body-text-muted);
-    padding: 0 var(--btcpay-space-s);
+    padding: 0;
     font-weight: var(--btcpay-font-weight-semibold);
     box-shadow: none !important;
     text-decoration: none !important;
@@ -306,12 +318,26 @@ svg.icon-note {
 
 .widget .chart-container {
     position: relative;
+    max-width: var(--widget-chart-width);
 }
 
 .widget.store-numbers {
     display: flex;
     flex-wrap: wrap;
     gap: var(--btcpay-space-l) var(--btcpay-space-xl);
+}
+
+.widget.store-numbers header {
+    justify-content: start;
+}
+
+.widget.store-numbers header h6 {
+    margin-right: var(--btcpay-space-m);
+}
+
+.widget header a,
+.widget header .btn-link {
+    margin-top: 0;
 }
 
 .widget .store-number {
@@ -347,4 +373,30 @@ svg.icon-note {
 
 .widget.app-top-items .app-item-value {
     font-weight: var(--btcpay-font-weight-semibold);
+}
+
+@media (min-width: 576px) {
+    .widget {
+        --widget-padding: var(--btcpay-space-l);
+    }
+}
+
+@media (min-width: 768px) {
+    .widget .chart-container {
+        --widget-chart-width: 90vw;
+    }
+}
+
+@media (max-width: 991px) {
+    .widget .chart-container {
+        --widget-chart-width: 100vw;
+        max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)));
+    }
+}
+
+@media (min-width: 992px) {
+    .widget .chart-container {
+        --widget-chart-width: 100vw;
+        max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)) - var(--sidebar-width) - 1rem); /* 1rem for scrollbar */
+    }
 }

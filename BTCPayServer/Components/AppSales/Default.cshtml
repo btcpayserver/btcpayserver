@@ -1,0 +1,44 @@
+@model BTCPayServer.Components.AppSales.AppSalesViewModel
+
+<div class="widget app-sales">
+    <header class="mb-3">
+        <h3>@Model.App.Name Sales</h3>
+        <a asp-controller="UIApps" asp-action="UpdatePointOfSale" asp-route-appId="@Model.App.Id">View All</a>
+    </header>
+    <p>177 Sales</p>
+    <div class="chart-container">
+        <canvas id="AppSales-@Model.App.Id"></canvas>
+    </div>
+    <script>
+        (function () {
+            const data = {
+                datasets: [{
+                    type: 'bar',
+                    data: {
+                        'Jun 12': 12,
+                        'Jun 13': 23,
+                        'Jun 14': 21,
+                        'Jun 15': 38,
+                        'Jun 16': 41,
+                        'Jun 17': 39,
+                        'Jun 18': 45,
+                        'Jun 19': 61
+                    }
+                }],
+            };
+            const options = {
+                aspectRatio: 3,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+            const ctx = document.getElementById('AppSales-@Model.App.Id');
+            new Chart(ctx, { data, options });
+        })();
+    </script>
+</div>

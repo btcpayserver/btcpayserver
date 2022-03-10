@@ -24,28 +24,30 @@
         <canvas id="StoreWalletBalance-@Model.Store.Id"></canvas>
     </div>
     <script>
-        const data = {
-            datasets: [{
-                type: 'line',
-                data: {
-                    'Jun 12': 0.1257,
-                    'Jun 13': 0.238,
-                    'Jun 14': 0.21854,
-                    'Jun 15': 0.3875,
-                    'Jun 16': 0.41745,
-                    'Jun 17': 0.39853,
-                    'Jun 18': 0.4521,
-                    'Jun 19': 0.615021
+        (function () {
+            const data = {
+                datasets: [{
+                    type: 'line',
+                    data: {
+                        'Jun 12': 0.1257,
+                        'Jun 13': 0.238,
+                        'Jun 14': 0.21854,
+                        'Jun 15': 0.3875,
+                        'Jun 16': 0.41745,
+                        'Jun 17': 0.39853,
+                        'Jun 18': 0.4521,
+                        'Jun 19': 0.615021
+                    }
+                }],
+            };
+            const options = {
+                aspectRatio: 3,
+                plugins: {
+                    legend: { display: false }
                 }
-            }],
-        };
-        const options = {
-            aspectRatio: 3,
-            plugins: {
-                legend: { display: false }
             }
-        }
-        const ctx = document.getElementById('StoreWalletBalance-@Model.Store.Id');
-        const chartInteractionModeNearest = new Chart(ctx, { data, options });
+            const ctx = document.getElementById('StoreWalletBalance-@Model.Store.Id');
+            new Chart(ctx, { data, options });
+        })();
     </script>
 </div>

@@ -1,10 +1,10 @@
+@using BTCPayServer.Services.Apps
 @model StoreDashboardViewModel;
 
 @inject BTCPayNetworkProvider networkProvider
 @{
-	ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
-	var isReady = Model.WalletEnabled || Model.LightningEnabled;
-	var defaultCryptoCode = networkProvider.DefaultNetwork.CryptoCode;
+    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
+    var defaultCryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
@@ -52,12 +52,14 @@
     </div>
 </div>
 
-@if (isReady)
+@if (Model.IsSetUp)
 {
     /* include chart library inline so that it instantly renders */
     <script src="~/vendor/chart/chart.min.js"></script>
     <script>
-        const chartRGB = '68,164,49';
+        const chartRGB = '68,164,49';        
+        Chart.defaults.borderColor = `rgba(128, 128, 128, .05)`;
+        Chart.defaults.backgroundColor = `rgba(${chartRGB}, 1)`;
         Chart.defaults.interaction.mode = 'nearest';
         Chart.defaults.elements.point.borderWidth = 2;
         Chart.defaults.elements.point.borderColor = `rgba(${chartRGB}, 1)`;
@@ -73,6 +75,12 @@
         <vc:store-wallet-balance store="@store" />
         <vc:store-numbers store="@store" />
         <vc:store-recent-transactions store="@store" />
+        <vc:store-recent-invoices store="@store" />
+        @foreach (var app in Model.Apps)
+        {
+            <vc:app-sales app="@app" />
+            <vc:app-top-items app="@app" />
+        }
     </div>
 }
 else

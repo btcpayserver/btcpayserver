@@ -1,0 +1,22 @@
+@model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
+
+<div class="widget app-top-items">
+    <header class="mb-3">
+        <h3>@Model.App.Name Top Items</h3>
+        <a asp-controller="UIApps" asp-action="UpdatePointOfSale" asp-route-appId="@Model.App.Id">View All</a>
+    </header>
+    <div class="app-items">
+        <div class="app-item">
+            <span class="app-item-name">Green Tea</span>           
+            <span class="app-item-value">12</span>
+        </div>
+        <div class="app-item">
+            <span class="app-item-name">Black Tea</span>           
+            <span class="app-item-value">7</span>
+        </div>
+        <div class="app-item">
+            <span class="app-item-name">Herbal Tea</span>           
+            <span class="app-item-value">5</span>
+        </div>
+    </div>
+</div>

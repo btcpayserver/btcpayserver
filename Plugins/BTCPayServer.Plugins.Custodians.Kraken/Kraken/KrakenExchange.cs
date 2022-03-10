@@ -378,6 +378,10 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         // The field is called "txid", but it's an order ID and not a Transaction ID, so we need to be careful! :(
         var orderId = (string)requestResult["result"]?["txid"]?[0];
+        
+        // A short delay so Kraken has the time to execute the market order and we don't fetch the details too quickly.
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        
         var r = await GetTradeInfoAsync(orderId, config, cancellationToken);
 
         return r;

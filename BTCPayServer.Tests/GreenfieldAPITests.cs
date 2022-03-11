@@ -2292,13 +2292,27 @@ namespace BTCPayServer.Tests
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            await adminClient.UpdateStoreEmailSettings(admin.StoreId,
+                new EmailSettingsData());
 
-            await adminClient.SendEmail(admin.StoreId, new SendEmailRequest()
+            var data = new EmailSettingsData()
             {
-                Body = "lol",
-                Subject = "subj",
-                Email = "sdasdas"
-            });
+                From = "admin@admin.com",
+                Login = "admin@admin.com",
+                Password = "admin@admin.com",
+                Port = 1234,
+                Server = "admin.com",
+            };
+            await adminClient.UpdateStoreEmailSettings(admin.StoreId, data);
+            var s = await adminClient.GetStoreEmailSettings(admin.StoreId);
+            Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(data));
+            await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
+                async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,
+                    new EmailSettingsData() { From = "ass" }));
+
+
+            await adminClient.SendEmail(admin.StoreId,
+                new SendEmailRequest() { Body = "lol", Subject = "subj", Email = "sdasdas" });
         }
     }
 }

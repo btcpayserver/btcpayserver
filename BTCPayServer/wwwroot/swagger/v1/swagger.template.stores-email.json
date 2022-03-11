@@ -1,9 +1,109 @@
 {
     "paths": {
+        "/api/v1/stores/{storeId}/email": {
+            "get": {
+                "tags": [
+                    "Stores (Email)"
+                ],
+                "summary": "Get store email settings",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View email settings of the specified store",
+                "operationId": "Stores_GetStoreEmailSettings",
+                "responses": {
+                    "200": {
+                        "description": "specified store email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmailSettingsData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stores (Email)"
+                ],
+                "summary": "Update store email settings",
+                "description": "Update a store's email settings",
+                "operationId": "Stores_UpdateStoreEmailSettings",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailSettingsData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The settings were updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmailSettingsData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify the store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/email/send": {
             "post": {
                 "tags": [
-                    "Stores"
+                    "Stores (Email)"
                 ],
                 "summary": "Send an email for a store",
                 "description": "Send an email using the store's SMTP server",
@@ -63,12 +163,43 @@
                         "description": "Body of the email to send as plain text."
                     }
                 }
+            },
+            "EmailSettingsData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "server": {
+                        "type": "string",
+                        "description": "Smtp server host"
+                    },
+                    "port": {
+                        "type": "number",
+                        "description": "Smtp server port"
+                    },
+                    "login": {
+                        "type": "string",
+                        "description": "Smtp server username"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "Smtp server password"
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email to send from"
+                    },
+                    "fromDisplay": {
+                        "type": "string",
+                        "description": "The name of the sender"
+                    }
+                }
             }
         }
     },
     "tags": [
         {
-            "name": "Store Email"
+            "name": "Stores (Email)"
         }
     ]
 }

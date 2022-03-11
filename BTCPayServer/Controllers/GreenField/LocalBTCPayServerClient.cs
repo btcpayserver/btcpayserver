@@ -12,6 +12,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 using Language = BTCPayServer.Client.Models.Language;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
@@ -40,7 +43,10 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
         private readonly GreenfieldStoreOnChainPaymentMethodsController _chainPaymentMethodsController;
         private readonly GreenfieldStoreOnChainWalletsController _storeOnChainWalletsController;
-        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
+
+        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController
+            _storeLightningNetworkPaymentMethodsController;
+
         private readonly GreenfieldStoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
         private readonly GreenfieldHealthController _healthController;
         private readonly GreenfieldPaymentRequestsController _paymentRequestController;
@@ -58,6 +64,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
         private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
+        private readonly GreenfieldStoreUsersController _greenfieldStoreUsersController;
         private readonly IServiceProvider _serviceProvider;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
@@ -82,6 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             GreenfieldStoreEmailController greenfieldStoreEmailController,
+            GreenfieldStoreUsersController greenfieldStoreUsersController,
             IServiceProvider serviceProvider)
         {
             _storeRepository = storeRepository;
@@ -106,6 +114,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _homeController = homeController;
             _storePaymentMethodsController = storePaymentMethodsController;
             _greenfieldStoreEmailController = greenfieldStoreEmailController;
+            _greenfieldStoreUsersController = greenfieldStoreUsersController;
             _serviceProvider = serviceProvider;
         }
 
@@ -124,12 +133,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
                     new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, $"Local{GreenfieldConstants.AuthenticationType}WithUser"));
+                    new ClaimsPrincipal(new ClaimsIdentity(claims,
+                        $"Local{GreenfieldConstants.AuthenticationType}WithUser"));
             }
             else
             {
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), $"Local{GreenfieldConstants.AuthenticationType}"));
+                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(),
+                        $"Local{GreenfieldConstants.AuthenticationType}"));
             }
 
             if (storeIds?.Any() is true)
@@ -163,15 +174,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 _homeController,
                 _storePaymentMethodsController,
                 _greenfieldStoreEmailController,
+                _greenfieldStoreUsersController,
                 new LocalHttpContextAccessor() { HttpContext = context }
             );
         }
     }
 
-    public class LocalHttpContextAccessor: IHttpContextAccessor
+    public class LocalHttpContextAccessor : IHttpContextAccessor
     {
         public HttpContext? HttpContext { get; set; }
-    } 
+    }
 
     public class LocalBTCPayServerClient : BTCPayServerClient
     {
@@ -185,7 +197,10 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldStoresController _storesController;
         private readonly GreenfieldStoreLightningNodeApiController _storeLightningNodeApiController;
         private readonly GreenfieldInternalLightningNodeApiController _lightningNodeApiController;
-        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController _storeLightningNetworkPaymentMethodsController;
+
+        private readonly GreenfieldStoreLightningNetworkPaymentMethodsController
+            _storeLightningNetworkPaymentMethodsController;
+
         private readonly GreenfieldStoreLNURLPayPaymentMethodsController _storeLnurlPayPaymentMethodsController;
         private readonly GreenfieldInvoiceController _greenFieldInvoiceController;
         private readonly GreenfieldServerInfoController _greenFieldServerInfoController;
@@ -194,6 +209,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIHomeController _homeController;
         private readonly GreenfieldStorePaymentMethodsController _storePaymentMethodsController;
         private readonly GreenfieldStoreEmailController _greenfieldStoreEmailController;
+        private readonly GreenfieldStoreUsersController _greenfieldStoreUsersController;
 
         public LocalBTCPayServerClient(
             IServiceProvider serviceProvider,
@@ -216,6 +232,7 @@ namespace BTCPayServer.Controllers.Greenfield
             UIHomeController homeController,
             GreenfieldStorePaymentMethodsController storePaymentMethodsController,
             GreenfieldStoreEmailController greenfieldStoreEmailController,
+            GreenfieldStoreUsersController greenfieldStoreUsersController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -237,6 +254,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _homeController = homeController;
             _storePaymentMethodsController = storePaymentMethodsController;
             _greenfieldStoreEmailController = greenfieldStoreEmailController;
+            _greenfieldStoreUsersController = greenfieldStoreUsersController;
 
             var controllers = new[]
             {
@@ -244,14 +262,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 paymentRequestController, apiKeysController, notificationsController, usersController,
                 storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController, storeWebhooksController,
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
-                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController, 
-                greenfieldStoreEmailController
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
+                storePaymentMethodsController, greenfieldStoreEmailController, greenfieldStoreUsersController
             };
 
             var authoverride = new DefaultAuthorizationService(
                 serviceProvider.GetRequiredService<IAuthorizationPolicyProvider>(),
                 new AuthHandlerProvider(
-                    serviceProvider.GetRequiredService<StoreRepository>(), 
+                    serviceProvider.GetRequiredService<StoreRepository>(),
                     serviceProvider.GetRequiredService<UserManager<ApplicationUser>>(),
                     httpContextAccessor
                 ),
@@ -259,16 +277,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 serviceProvider.GetRequiredService<IAuthorizationHandlerContextFactory>(),
                 serviceProvider.GetRequiredService<IAuthorizationEvaluator>(),
                 serviceProvider.GetRequiredService<IOptions<AuthorizationOptions>>()
-
-
             );
-            
-            
+
+
             foreach (var controller in controllers)
             {
                 controller.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
                 var authInterface = typeof(IAuthorizationService);
-                foreach (FieldInfo fieldInfo in controller.GetType().GetFields().Where(info => authInterface.IsAssignableFrom(info.FieldType)))
+                foreach (FieldInfo fieldInfo in controller.GetType().GetFields()
+                             .Where(info => authInterface.IsAssignableFrom(info.FieldType)))
                 {
                     fieldInfo.SetValue(controller, authoverride);
                 }
@@ -283,12 +300,14 @@ namespace BTCPayServer.Controllers.Greenfield
             private readonly UserManager<ApplicationUser> _userManager;
             private readonly StoreRepository _storeRepository;
 
-            public AuthHandlerProvider(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor)
+            public AuthHandlerProvider(StoreRepository storeRepository, UserManager<ApplicationUser> userManager,
+                IHttpContextAccessor httpContextAccessor)
             {
                 _storeRepository = storeRepository;
                 _userManager = userManager;
                 _httpContextAccessor = httpContextAccessor;
             }
+
             public Task<IEnumerable<IAuthorizationHandler>> GetHandlersAsync(AuthorizationHandlerContext context)
             {
                 return Task.FromResult<IEnumerable<IAuthorizationHandler>>(new IAuthorizationHandler[]
@@ -297,6 +316,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 });
             }
         }
+
         protected override HttpRequestMessage CreateHttpRequest(string path,
             Dictionary<string, object> queryPayload = null, HttpMethod method = null)
         {
@@ -511,7 +531,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _lightningNodeApiController.GetDepositAddress(cryptoCode));
         }
 
-        public override async Task<LightningPaymentData> PayLightningInvoice(string cryptoCode, PayLightningInvoiceRequest request,
+        public override async Task<LightningPaymentData> PayLightningInvoice(string cryptoCode,
+            PayLightningInvoiceRequest request,
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningPaymentData>(
@@ -575,7 +596,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public override Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
             bool? enabled, CancellationToken token)
         {
-            return Task.FromResult(GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId, enabled)));
+            return Task.FromResult(
+                GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId, enabled)));
         }
 
         public override Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
@@ -596,17 +618,19 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<OnChainPaymentMethodData>(
-                await _chainPaymentMethodsController.UpdateOnChainPaymentMethod(storeId, cryptoCode, new UpdateOnChainPaymentMethodRequest(
-                    enabled: paymentMethod.Enabled,
-                    label: paymentMethod.Label,
-                    accountKeyPath: paymentMethod.AccountKeyPath,
-                    derivationScheme: paymentMethod.DerivationScheme
-                )));
+                await _chainPaymentMethodsController.UpdateOnChainPaymentMethod(storeId, cryptoCode,
+                    new UpdateOnChainPaymentMethodRequest(
+                        enabled: paymentMethod.Enabled,
+                        label: paymentMethod.Label,
+                        accountKeyPath: paymentMethod.AccountKeyPath,
+                        derivationScheme: paymentMethod.DerivationScheme
+                    )));
         }
 
         public override Task<OnChainPaymentMethodPreviewResultData> PreviewProposedStoreOnChainPaymentMethodAddresses(
             string storeId, string cryptoCode,
-            UpdateOnChainPaymentMethodRequest paymentMethod, int offset = 0, int amount = 10, CancellationToken token = default)
+            UpdateOnChainPaymentMethodRequest paymentMethod, int offset = 0, int amount = 10,
+            CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
                 _chainPaymentMethodsController.GetProposedOnChainPaymentMethodPreview(storeId, cryptoCode,
@@ -618,7 +642,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
-                    _chainPaymentMethodsController.GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
+                _chainPaymentMethodsController.GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
                     amount)));
         }
 
@@ -636,7 +660,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task<PaymentRequestData> GetPaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
-            return GetFromActionResult<PaymentRequestData>(await _paymentRequestController.GetPaymentRequest(storeId, paymentRequestId));
+            return GetFromActionResult<PaymentRequestData>(
+                await _paymentRequestController.GetPaymentRequest(storeId, paymentRequestId));
         }
 
         public override async Task ArchivePaymentRequest(string storeId, string paymentRequestId,
@@ -882,7 +907,8 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningNetworkPaymentMethodData>(await
                 _storeLightningNetworkPaymentMethodsController.UpdateLightningNetworkPaymentMethod(storeId, cryptoCode,
-                    new UpdateLightningNetworkPaymentMethodRequest(paymentMethod.ConnectionString, paymentMethod.Enabled)));
+                    new UpdateLightningNetworkPaymentMethodRequest(paymentMethod.ConnectionString,
+                        paymentMethod.Enabled)));
         }
 
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
@@ -894,8 +920,7 @@ namespace BTCPayServer.Controllers.Greenfield
             int? skip = null,
             int? take = null,
             CancellationToken token = default
-
-            )
+        )
         {
             return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await _greenFieldInvoiceController.GetInvoices(storeId, orderId,
@@ -980,7 +1005,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override Task<Language[]> GetAvailableLanguages(CancellationToken token = default)
         {
-            return Task.FromResult(_homeController.LanguageService.GetLanguages().Select(language => new Language(language.Code, language.DisplayName)).ToArray());
+            return Task.FromResult(_homeController.LanguageService.GetLanguages()
+                .Select(language => new Language(language.Code, language.DisplayName)).ToArray());
         }
 
         public override Task<PermissionMetadata[]> GetPermissionMetadata(CancellationToken token = default)
@@ -988,30 +1014,78 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult<PermissionMetadata[]>(_homeController.Permissions()));
         }
 
-        public override async Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId, bool? enabled = null, CancellationToken token = default)
+        public override async Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId,
+            bool? enabled = null, CancellationToken token = default)
         {
             return GetFromActionResult(await _storePaymentMethodsController.GetStorePaymentMethods(storeId, enabled));
         }
 
-        public override async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId, string cryptoCode, GenerateOnChainWalletRequest request,
+        public override async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId,
+            string cryptoCode, GenerateOnChainWalletRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<OnChainPaymentMethodDataWithSensitiveData>(await _chainPaymentMethodsController.GenerateOnChainWallet(storeId, cryptoCode, new GenerateWalletRequest()
-            {
-                Passphrase = request.Passphrase,
-                AccountNumber = request.AccountNumber,
-                ExistingMnemonic = request.ExistingMnemonic?.ToString(),
-                WordCount = request.WordCount,
-                WordList = request.WordList,
-                SavePrivateKeys = request.SavePrivateKeys,
-                ScriptPubKeyType = request.ScriptPubKeyType,
-                ImportKeysToRPC = request.ImportKeysToRPC
-            }));
+            return GetFromActionResult<OnChainPaymentMethodDataWithSensitiveData>(
+                await _chainPaymentMethodsController.GenerateOnChainWallet(storeId, cryptoCode,
+                    new GenerateWalletRequest()
+                    {
+                        Passphrase = request.Passphrase,
+                        AccountNumber = request.AccountNumber,
+                        ExistingMnemonic = request.ExistingMnemonic?.ToString(),
+                        WordCount = request.WordCount,
+                        WordList = request.WordList,
+                        SavePrivateKeys = request.SavePrivateKeys,
+                        ScriptPubKeyType = request.ScriptPubKeyType,
+                        ImportKeysToRPC = request.ImportKeysToRPC
+                    }));
         }
 
-        public override async Task SendEmail(string storeId, SendEmailRequest request, CancellationToken token = default)
+        public override async Task SendEmail(string storeId, SendEmailRequest request,
+            CancellationToken token = default)
         {
             HandleActionResult(await _greenfieldStoreEmailController.SendEmailFromStore(storeId, request));
+        }
+
+        public override Task<EmailSettingsData> GetStoreEmailSettings(string storeId, CancellationToken token = default)
+        {
+            return Task.FromResult(
+                GetFromActionResult<EmailSettingsData>(_greenfieldStoreEmailController.GetStoreEmailSettings()));
+        }
+
+        public override async Task<EmailSettingsData> UpdateStoreEmailSettings(string storeId,
+            EmailSettingsData request, CancellationToken token = default)
+        {
+            return GetFromActionResult<EmailSettingsData>(
+                await _greenfieldStoreEmailController.UpdateStoreEmailSettings(storeId,
+                    JObject.FromObject(request).ToObject<EmailSettings>()));
+        }
+
+        public override async Task<ApplicationUserData[]> GetUsers(CancellationToken token = default)
+        {
+            return GetFromActionResult(await _usersController.GetUsers());
+        }
+
+        public override Task<IEnumerable<StoreUserData>> GetStoreUsers(string storeId,
+            CancellationToken token = default)
+        {
+            return Task.FromResult(
+                GetFromActionResult<IEnumerable<StoreUserData>>(_greenfieldStoreUsersController.GetStoreUsers()));
+        }
+
+        public override async Task AddStoreUser(string storeId, StoreUserData request,
+            CancellationToken token = default)
+        {
+            HandleActionResult(await _greenfieldStoreUsersController.AddStoreUser(storeId, request));
+        }
+
+        public override async Task RemoveStoreUser(string storeId, string userId, CancellationToken token = default)
+        {
+            HandleActionResult(await _greenfieldStoreUsersController.RemoveStoreUser(storeId, userId));
+        }
+
+        public override async Task<ApplicationUserData> GetUserByIdOrEmail(string idOrEmail,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<ApplicationUserData>(await _usersController.GetUser(idOrEmail));
         }
     }
 }

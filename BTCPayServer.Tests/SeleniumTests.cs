@@ -1011,13 +1011,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
             //generate a receiving address
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-            Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+            Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             var receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
             //unreserve
             s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
             //generate it again, should be the same one as before as nothing got used in the meantime
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-            Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+            Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
             //send money to addr and ensure it changed

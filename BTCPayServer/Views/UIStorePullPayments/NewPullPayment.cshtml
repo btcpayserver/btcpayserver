@@ -6,12 +6,12 @@
 }
 
 @section PageHeadContent {
-    <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-    <bundle name="wwwroot/bundles/pull-payment-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
 <form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">

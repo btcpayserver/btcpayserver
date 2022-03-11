@@ -258,8 +258,9 @@
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
 
 @section PageHeadContent {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
-    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/highlightjs/default.min.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/main/template-editor.css" rel="stylesheet" asp-append-version="true" />
 }
 
 @section PageFootContent {
@@ -417,5 +418,6 @@
         });
     </script>
 
-    <bundle name="wwwroot/bundles/pos-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }

@@ -419,9 +419,10 @@
 @if (!Model.SimpleDisplay)
 {
     <script>var srvModel = @Safe.Json(Model);</script>
-    <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
-    <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
-        @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/moment/moment.min.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/crowdfund-bundle.min.js" asp-append-version="true"></bundle>
+    @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
 }
 <partial name="LayoutFoot"/>

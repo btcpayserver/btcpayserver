@@ -23,7 +23,7 @@ namespace BTCPayServer.Client
             await HandleResponse(response);
         }
 
-        public virtual async Task<StoreData> AddStoreUser(string storeId, StoreUserData request,
+        public virtual async Task AddStoreUser(string storeId, StoreUserData request,
             CancellationToken token = default)
         {
             if (request == null)
@@ -31,7 +31,7 @@ namespace BTCPayServer.Client
             using var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/users", bodyPayload: request, method: HttpMethod.Post),
                 token);
-            return await HandleResponse<StoreData>(response);
+            await HandleResponse(response);
         }
     }
 }

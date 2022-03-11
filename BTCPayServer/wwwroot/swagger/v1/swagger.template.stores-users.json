@@ -52,6 +52,7 @@
                 ],
                 "summary": "Add a store user",
                 "description": "Add a store user",
+                "operationId": "Stores_AddStoreUser",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -66,7 +67,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "The user as added"
+                        "description": "The user was added"
                     },
                     "400": {
                         "description": "A list of errors that occurred when creating the store",
@@ -108,6 +109,7 @@
                     "Stores (Users)"
                 ],
                 "summary": "Remove Store User",
+                "operationId": "Stores_RemoveStoreUser",
                 "description": "Removes the specified store user. If there is no other owner, this endpoint will fail.",
                 "parameters": [
                     {

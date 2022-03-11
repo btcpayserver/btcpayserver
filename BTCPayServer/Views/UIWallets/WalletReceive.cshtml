@@ -40,38 +40,44 @@
                     </div>
                 </noscript>
                 <div class="only-for-js m-sm-0 p-sm-0" id="app">
-                    <div class="mb-4">
-                        <div class="qr-container tab-content mb-3" id="myTabContent">
-                            <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                            <div class="tab-pane show active" id="link-tab" role="tabpanel">
-                                <vc:qr-code data="@Model.PaymentLink"/>
+                    <div class="mb-5">
+                        <div class="tab-content">
+                            <div class="tab-pane" id="link-tab" role="tabpanel">
+                                <div class="qr-container mb-3">
+                                    <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+                                    <vc:qr-code data="@Model.PaymentLink"/>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-group" data-clipboard="@Model.PaymentLink">
+                                        <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
+                                        <button type="button" class="btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                            <vc:icon symbol="copy"/>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="tab-pane" id="address-tab" role="tabpanel">
-                                <vc:qr-code data="@Model.Address"/>
+                            <div class="tab-pane show active" id="address-tab" role="tabpanel">
+                                <div class="qr-container mb-3">
+                                    <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+                                    <vc:qr-code data="@Model.Address"/>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-group" data-clipboard="@Model.Address">
+                                        <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.Address" id="address"/>
+                                        <button type="button" class="input-group-text btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                            <vc:icon symbol="copy"/>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="nav">
-                            <a class="btcpay-pill active" data-bs-toggle="tab" href="#link-tab">Link</a>
-                            <a class="btcpay-pill" data-bs-toggle="tab" href="#address-tab">Address</a>
+                            <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab">Address</a>
+                            <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab">Link</a>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="input-group" data-clipboard="@Model.Address">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.Address" id="address"/>
-                            <button type="button" class="input-group-text btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
-                                <vc:icon symbol="copy"/>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group" data-clipboard="@Model.PaymentLink">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
-                            <button type="button" class="btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
-                                <vc:icon symbol="copy"/>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
+                    
+                    <div class="row">
                         <div class="col-12 col-sm-6">
                             <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
                         </div>

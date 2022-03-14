@@ -25,6 +25,12 @@ namespace BTCPayServer.Storage.Services
             _providers = providers;
             _SettingsRepository = settingsRepository;
         }
+        
+        public async Task<bool> IsAvailable()
+        {
+            var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            return settings is not null;
+        }
 
         public async Task<IStoredFile> AddFile(IFormFile file, string userId)
         {

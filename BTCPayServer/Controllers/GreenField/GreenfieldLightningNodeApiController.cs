@@ -225,12 +225,16 @@ namespace BTCPayServer.Controllers.Greenfield
 
             try
             {
-                var invoice = await lightningClient.CreateInvoice(
-                    new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+                var param = request.DescriptionHash != null
+                    ? new CreateInvoiceParams(request.Amount, request.DescriptionHash, request.Expiry)
                     {
-                        PrivateRouteHints = request.PrivateRouteHints
-                    },
-                    CancellationToken.None);
+                        PrivateRouteHints = request.PrivateRouteHints, Description = request.Description
+                    }
+                    : new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+                    {
+                        PrivateRouteHints = request.PrivateRouteHints, DescriptionHash = request.DescriptionHash
+                    };
+                var invoice = await lightningClient.CreateInvoice(param, CancellationToken.None);
                 return Ok(ToModel(invoice));
             }
             catch (Exception ex)

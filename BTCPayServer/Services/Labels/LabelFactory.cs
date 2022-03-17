@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Drawing;
 using System.Collections.Generic;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Services.Labels
         }
 
         const string DefaultColor = "#000";
-        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string color, HttpRequest request)
+        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string? color, HttpRequest request)
         {
             ArgumentNullException.ThrowIfNull(uncoloredLabel);
             color ??= DefaultColor;

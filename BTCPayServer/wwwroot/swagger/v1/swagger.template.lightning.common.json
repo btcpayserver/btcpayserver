@@ -25,6 +25,12 @@
                         "nullable": true,
                         "description": "Description of the invoice in the BOLT11"
                     },
+                    "descriptionHash": {
+                        "type": "string",
+                        "format": "hex",
+                        "nullable": true,
+                        "description": "Description hash of the invoice in the BOLT11"
+                    },
                     "expiry": {
                         "description": "Expiration time in seconds",
                         "allOf": [ {"$ref": "#/components/schemas/TimeSpanSeconds"}]

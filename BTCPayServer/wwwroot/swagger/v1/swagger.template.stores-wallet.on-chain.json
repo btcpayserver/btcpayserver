@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -57,7 +57,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/feeRate": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feeRate": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -124,7 +124,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/address": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -239,7 +239,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/transactions": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -405,7 +405,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/transactions/{transactionId}": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -545,7 +545,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/utxos": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/utxos": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"

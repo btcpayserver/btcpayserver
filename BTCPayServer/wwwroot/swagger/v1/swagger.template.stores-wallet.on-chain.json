@@ -469,6 +469,80 @@
                         "Basic": []
                     }
                 ]
+            },
+            "patch": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Patch store on-chain wallet transaction info",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the wallet to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "transactionId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The transaction id to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchOnChainTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "description": "Patch store on-chain wallet transaction info",
+                "operationId": "StoreOnChainWallets_PatchOnChainWalletTransaction",
+                "responses": {
+                    "200": {
+                        "description": "transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletTransactionData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/utxos": {
@@ -789,6 +863,25 @@
                     "selectedInputs": {
                         "nullable": true,
                         "description": "Restrict the creation of the transactions from the outpoints provided ONLY (coin selection)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "PatchOnChainTransactionRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "comment": {
+                        "nullable": true,
+                        "type": "string",
+                        "description": "Transaction comment"
+                    },
+                    "labels": {
+                        "nullable": true,
+                        "description": "Transaction labels",
                         "type": "array",
                         "items": {
                             "type": "string"

@@ -2126,7 +2126,30 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
             });
-            await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
+            var transaction = await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
+
+            Assert.Equal(transaction.TransactionHash, txdata.TransactionHash);
+            Assert.Equal(String.Empty, transaction.Comment);
+            Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
+
+            // transaction patch tests
+            var patchedTransaction = await client.PatchOnChainWalletTransaction(
+                walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString(),
+                new PatchOnChainTransactionRequest() {
+                    Comment = "test comment",
+                    Labels = new List<string>
+                    {
+                        "test label"
+                    }
+                });
+            Assert.Equal("test comment", patchedTransaction.Comment);
+            Assert.Equal(
+                new Dictionary<string, LabelData>()
+                {
+                    { "test label", new LabelData(){ Type = "raw", Text = "test label" } }
+                }.ToJson(),
+                patchedTransaction.Labels.ToJson()
+            );
 
             await AssertHttpError(403, async () =>
             {

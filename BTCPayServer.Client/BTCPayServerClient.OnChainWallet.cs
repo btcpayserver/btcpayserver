@@ -79,6 +79,17 @@ namespace BTCPayServer.Client
             return await HandleResponse<OnChainWalletTransactionData>(response);
         }
 
+        public virtual async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(
+            string storeId, string cryptoCode, string transactionId,
+            PatchOnChainTransactionRequest request,
+            CancellationToken token = default)
+        {
+            var response =
+                await _httpClient.SendAsync(
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions/{transactionId}", queryPayload: null, bodyPayload: request, HttpMethod.Patch), token);
+            return await HandleResponse<OnChainWalletTransactionData>(response);
+        }
+
         public virtual async Task<IEnumerable<OnChainWalletUTXOData>> GetOnChainWalletUTXOs(string storeId,
             string cryptoCode,
             CancellationToken token = default)

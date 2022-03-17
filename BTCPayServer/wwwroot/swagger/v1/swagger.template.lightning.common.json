@@ -27,6 +27,7 @@
                     },
                     "descriptionHash": {
                         "type": "string",
+                        "format": "hex",
                         "nullable": true,
                         "description": "Description hash of the invoice in the BOLT11"
                     },

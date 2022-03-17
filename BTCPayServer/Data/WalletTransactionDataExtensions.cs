@@ -17,6 +17,8 @@ namespace BTCPayServer.Data
     }
     public static class WalletTransactionDataExtensions
     {
+        public static int MaxCommentSize = 200;
+
         public static WalletTransactionInfo GetBlobInfo(this WalletTransactionData walletTransactionData)
         {
             WalletTransactionInfo blobInfo;

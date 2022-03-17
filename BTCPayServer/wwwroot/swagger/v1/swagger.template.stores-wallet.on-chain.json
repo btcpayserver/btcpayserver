@@ -57,7 +57,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feeRate": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feerate": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -633,7 +633,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "feeRate": {
+                    "feerate": {
                         "type": "number",
                         "format": "decimal",
                         "description": "The fee rate (sats per byte) based on the wallet's configured recommended block confirmation target"
@@ -832,7 +832,7 @@
                             "$ref": "#/components/schemas/CreateOnChainTransactionRequestDestination"
                         }
                     },
-                    "feeRate": {
+                    "feerate": {
                         "type": "number",
                         "format": "decimal or long (sats/byte)",
                         "description": "Transaction fee."

@@ -2129,7 +2129,7 @@ progress {
   min-height: calc(1.6em + 2rem + 2px);
   padding: 1rem 1.25rem;
   font-size: 1rem;
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
 }
 
 .form-control-lg::-webkit-file-upload-button {
@@ -2241,7 +2241,7 @@ textarea.form-control-lg {
   padding-bottom: 1rem;
   padding-left: 1.25rem;
   font-size: 1rem;
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
 }
 
 .form-check {
@@ -2572,7 +2572,7 @@ textarea.form-control-lg {
 .input-group-lg > .btn {
   padding: 1rem 1.25rem;
   font-size: 1rem;
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
 }
 
 .input-group-sm > .form-control,
@@ -3424,7 +3424,7 @@ fieldset:disabled .btn {
 .btn-lg, .btn-group-lg > .btn {
   padding: 1rem 2rem;
   font-size: 1rem;
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
 }
 
 .btn-sm, .btn-group-sm > .btn {
@@ -4893,13 +4893,13 @@ fieldset:disabled .btn {
 }
 
 .pagination-lg .page-item:first-child .page-link {
-  border-top-left-radius: 0.3rem;
-  border-bottom-left-radius: 0.3rem;
+  border-top-left-radius: var(--btcpay-border-radius-l);
+  border-bottom-left-radius: var(--btcpay-border-radius-l);
 }
 
 .pagination-lg .page-item:last-child .page-link {
-  border-top-right-radius: 0.3rem;
-  border-bottom-right-radius: 0.3rem;
+  border-top-right-radius: var(--btcpay-border-radius-l);
+  border-bottom-right-radius: var(--btcpay-border-radius-l);
 }
 
 .pagination-sm .page-link {
@@ -5613,7 +5613,7 @@ fieldset:disabled .btn {
   background-color: var(--btcpay-bg-tile);
   background-clip: padding-box;
   border: 1px solid var(--btcpay-body-border-medium);
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
   outline: 0;
 }
 
@@ -5642,8 +5642,8 @@ fieldset:disabled .btn {
   justify-content: space-between;
   padding: 1rem 1rem;
   border-bottom: 1px solid var(--btcpay-body-border-light);
-  border-top-left-radius: calc(0.3rem - 1px);
-  border-top-right-radius: calc(0.3rem - 1px);
+  border-top-left-radius: calc(var(--btcpay-border-radius-l) - 1px);
+  border-top-right-radius: calc(var(--btcpay-border-radius-l) - 1px);
 }
 
 .modal-header .btn-close {
@@ -5670,8 +5670,8 @@ fieldset:disabled .btn {
   justify-content: flex-end;
   padding: 0.75rem;
   border-top: 1px solid var(--btcpay-body-border-light);
-  border-bottom-right-radius: calc(0.3rem - 1px);
-  border-bottom-left-radius: calc(0.3rem - 1px);
+  border-bottom-right-radius: calc(var(--btcpay-border-radius-l) - 1px);
+  border-bottom-left-radius: calc(var(--btcpay-border-radius-l) - 1px);
 }
 
 .modal-footer > * {
@@ -5984,7 +5984,7 @@ fieldset:disabled .btn {
   background-color: var(--btcpay-bg-tile);
   background-clip: padding-box;
   border: 1px solid var(--btcpay-body-border-medium);
-  border-radius: 0.3rem;
+  border-radius: var(--btcpay-border-radius-l);
 }
 
 .popover .popover-arrow {
@@ -6087,8 +6087,8 @@ fieldset:disabled .btn {
   font-size: 0.875rem;
   background-color: var(--btcpay-bg-tile);
   border-bottom: 1px solid var(--btcpay-body-border-medium);
-  border-top-left-radius: calc(0.3rem - 1px);
-  border-top-right-radius: calc(0.3rem - 1px);
+  border-top-left-radius: calc(var(--btcpay-border-radius-l) - 1px);
+  border-top-right-radius: calc(var(--btcpay-border-radius-l) - 1px);
 }
 
 .popover-header:empty {
@@ -8044,7 +8044,7 @@ fieldset:disabled .btn {
 }
 
 .rounded-3 {
-  border-radius: 0.3rem !important;
+  border-radius: var(--btcpay-border-radius-l) !important;
 }
 
 .rounded-circle {
@@ -10805,6 +10805,11 @@ ul:not([class]) li {
   height: 1rem;
 }
 
+.dropdown-toggle-split {
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
 .font-monospace {
   font-size: .95rem;
 }
@@ -10962,7 +10967,7 @@ input[type=number].hide-number-spin {
 .btcpay-pills label,
 .btcpay-pill {
     display: inline-block;
-    padding: .75rem 2rem;
+    padding: var(--btcpay-space-s) 1.5rem;
     color: var(--btcpay-body-link);
     background: transparent;
     font-weight: var(--btcpay-font-weight-semibold);

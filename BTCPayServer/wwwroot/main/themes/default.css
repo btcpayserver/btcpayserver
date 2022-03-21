@@ -1,5 +1,8 @@
 :root {
-  --btcpay-border-radius: 4px;
+  --btcpay-border-radius: .25rem;
+  --btcpay-border-radius-l: .5rem;
+  --btcpay-border-radius-xl: 1rem;
+  --btcpay-border-radius-xxl: 1.5rem;
   --btcpay-transition-duration-fast: .2s;
   --btcpay-transition-duration-default: .3s;
   --btcpay-transition-duration-slow: .5s;

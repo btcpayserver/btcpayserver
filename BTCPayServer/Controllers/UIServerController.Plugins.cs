@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
-using BTCPayServer.Models;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -127,8 +126,12 @@ namespace BTCPayServer.Controllers
                     StringComparison.InvariantCultureIgnoreCase));
             }
 
-            return RedirectToAction("ListPlugins",
-                new { StatusMessage = "Files uploaded, restart server to load plugins" });
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Message = "Files uploaded, restart server to load plugins" ,
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+            return RedirectToAction("ListPlugins");
         }
     }
 }

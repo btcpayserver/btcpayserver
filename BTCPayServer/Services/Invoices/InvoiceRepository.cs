@@ -484,7 +484,9 @@ namespace BTCPayServer.Services.Invoices
                 {
                     RemoveFromTextSearch(context, invoiceData, oldOrderId);
                 }
-                AddToTextSearch(context, invoiceData, new[] { newOrderId });
+                if (newOrderId != null) {
+                	AddToTextSearch(context, invoiceData, new[] { newOrderId });
+                }
             }
 
             blob.Metadata = newMetadata;

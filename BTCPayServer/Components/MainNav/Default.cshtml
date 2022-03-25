@@ -60,14 +60,14 @@
                                         {
                                             <a asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
-                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Bitcoin</span>
                                             </a>
                                         }
                                         else
                                         {
                                             <a asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
-                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Wallet</span>
+                                                <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} " : "")Bitcoin</span>
                                             </a>
                                         }
                                     </li>

@@ -475,7 +475,7 @@ namespace BTCPayServer.Services.Invoices
             var oldOrderId = blob.Metadata.OrderId;
             var newOrderId = newMetadata.OrderId;
 
-            if (newOrderId != null)
+            if (newOrderId != oldOrderId)
             {
                 // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
                 invoiceData.OrderId = newOrderId;

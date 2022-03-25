@@ -480,7 +480,7 @@ namespace BTCPayServer.Services.Invoices
                 // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
                 invoiceData.OrderId = newOrderId;
                 
-                if (oldOrderId != null && !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture))
+                if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
                 {
                     RemoveFromTextSearch(context, invoiceData, oldOrderId);
                 }

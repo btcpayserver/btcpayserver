@@ -46,7 +46,7 @@
                     }
                 ]
             },
-            "post": {
+            "put": {
                 "tags": [
                     "Stores (Email)"
                 ],

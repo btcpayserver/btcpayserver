@@ -21,7 +21,7 @@
             <div class="form-group">
                 <label asp-for="TimeAmount" class="form-label"></label>
                 <div class="input-group">
-                    <input type="number" asp-for="TimeAmount" class="form-control">
+                    <input type="number" inputmode="decimal" asp-for="TimeAmount" class="form-control">
                     <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList<UIServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="form-select"></select>
                 </div>
 

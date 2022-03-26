@@ -80,7 +80,7 @@
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">
                     <label asp-for="TargetAmount" class="form-label"></label>
-                    <input asp-for="TargetAmount" class="form-control" />
+                    <input inputmode="decimal" asp-for="TargetAmount" class="form-control" />
                     <span asp-validation-for="TargetAmount" class="text-danger"></span>
                 </div>
                 <div class="form-group">
@@ -124,7 +124,7 @@
                 <div class="form-group mb-0">
                     <label asp-for="ResetEvery" class="form-label"></label>
                     <div class="input-group">
-                        <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
+                        <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
                         <select class="form-select" asp-for="ResetEvery">
                             @foreach (var opt in Model.ResetEveryValues)
                             {

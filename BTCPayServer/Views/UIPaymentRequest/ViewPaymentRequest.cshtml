@@ -112,7 +112,7 @@
                                         <div class="row">
                                             <div class="col col-12 col-sm-6 col-md-12">
                                                 <div class="input-group">
-                                                    <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
+                                                    <input type="number" inputmode="decimal" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
                                                     <span class="input-group-text">@Model.Currency.ToUpper()</span>
                                                 </div>
                                             </div>
@@ -154,7 +154,7 @@
                                     <div class="row">
                                         <div class="col col-12 col-sm-6 col-md-12">
                                             <div class="input-group">
-                                                <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
+                                                <input type="number" inputmode="decimal" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
                                                 <span class="input-group-text">{{currency}}</span>
                                             </div>
                                         </div>

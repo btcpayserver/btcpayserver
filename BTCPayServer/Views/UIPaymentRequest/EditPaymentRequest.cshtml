@@ -45,7 +45,7 @@
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">
                     <label asp-for="Amount" class="form-label" data-required></label>
-                    <input type="number" step="any" asp-for="Amount" class="form-control" required />
+                    <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group">

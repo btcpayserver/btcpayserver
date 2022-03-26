@@ -72,7 +72,7 @@
 
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
-                                    <input type="number" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
+                                    <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
                                     <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
                                 </div>
                             </div>

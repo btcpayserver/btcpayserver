@@ -1703,7 +1703,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC",
                 new UpdateOnChainPaymentMethodRequest() { Enabled = true, DerivationScheme = xpub })).Addresses.First().Address);
 
-            await AssertValidationError(new[] { "accountKeyPath" }, () => viewOnlyClient.SendHttpRequest<GreenfieldValidationError[]>(path: $"api/v1/stores/{store.Id}/payment-methods/Onchain/BTC/preview", method: HttpMethod.Post,
+            await AssertValidationError(new[] { "accountKeyPath" }, () => viewOnlyClient.SendHttpRequest<GreenfieldValidationError[]>(path: $"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", method: HttpMethod.Post,
                                                                           bodyPayload: JObject.Parse("{\"accountKeyPath\": \"0/1\"}")));
 
             var method = await client.UpdateStoreOnChainPaymentMethod(store.Id, "BTC",

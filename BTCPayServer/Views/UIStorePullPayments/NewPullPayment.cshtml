@@ -33,7 +33,7 @@
             <div class="row">
                 <div class="form-group col-8">
                     <label asp-for="Amount" class="form-label"></label>
-                    <input asp-for="Amount" class="form-control"/>
+                    <input inputmode="decimal" asp-for="Amount" class="form-control"/>
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group col-4">
@@ -103,7 +103,7 @@
                                 <div class="form-group">
                                     <label asp-for="BOLT11Expiration" class="form-label"></label>
                                     <div class="input-group">
-                                        <input asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                                        <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
                                         <span class="input-group-text">days</span>
                                     </div>
                                     <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>

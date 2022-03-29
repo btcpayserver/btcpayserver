@@ -83,6 +83,10 @@ namespace BTCPayServer.Storage.Services
             await stream.FlushAsync();
 
             var storedFile = await AddFile(file, userId);
+            
+            // cleanup
+            File.Delete(filePath);
+            
             return storedFile;
         }
 

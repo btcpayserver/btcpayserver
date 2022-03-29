@@ -949,6 +949,7 @@ namespace BTCPayServer.Controllers
             {
                 Stores = stores,
                 StoreId = model?.StoreId,
+                Currency = HttpContext.GetStoreData()?.GetStoreBlob().DefaultCurrency,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 

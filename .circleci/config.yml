@@ -2,7 +2,7 @@ version: 2
 jobs:
   fast_tests:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -10,7 +10,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Fast=Fast|ThirdParty=ThirdParty" && ./can-build.sh
   selenium_tests:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -18,7 +18,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Selenium=Selenium"
   integration_tests:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -26,8 +26,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Integration=Integration"
   trigger_docs_build:
     machine:
-        enabled: true
-        image: ubuntu-2004:202201-02
+      image: ubuntu-2004:202111-02
     steps:
       - run:
           command: |
@@ -36,7 +35,7 @@ jobs:
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   amd64:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -51,7 +50,7 @@ jobs:
 
   arm32v7:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -67,7 +66,7 @@ jobs:
 
   arm64v8:
     machine:
-        enabled: true
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - run:
@@ -83,7 +82,6 @@ jobs:
 
   multiarch:
     machine:
-      enabled: true
       image: ubuntu-2004:202201-02
     steps:
       - run:

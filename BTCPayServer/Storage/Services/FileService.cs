@@ -70,7 +70,7 @@ namespace BTCPayServer.Storage.Services
                 throw new InvalidOperationException("Invalid file name");
             
             // download
-            var filePath = Path.Join(_dataDirectories.Value.TempStorageDir, fileName);
+            var filePath = Path.Join(_dataDirectories.Value.TempDir, fileName);
             var httClient = _httpClientFactory.CreateClient();
             using var resp = await httClient.GetAsync(url);
             await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);

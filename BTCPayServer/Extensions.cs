@@ -394,6 +394,7 @@ namespace BTCPayServer
             dataDirectories.PluginDir = configuration["plugindir"] ?? defaultSettings.DefaultPluginDirectory;
             dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir, Storage.Services.Providers.FileSystemStorage.FileSystemFileProviderService.LocalStorageDirectoryName);
             dataDirectories.TempStorageDir = Path.Combine(dataDirectories.StorageDir, "tmp");
+            dataDirectories.TempDir = Path.Combine(dataDirectories.DataDir, "tmp");
             return dataDirectories;
         }
 

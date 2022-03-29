@@ -142,7 +142,7 @@ namespace BTCPayServer.Tests
 
             var sresp = Assert
                 .IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
-                    .Swagger()).Value.ToJson();
+                    .Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
             JObject swagger = JObject.Parse(sresp);
             var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
             IList<ValidationError> errors;
@@ -191,7 +191,7 @@ namespace BTCPayServer.Tests
 
             var sresp = Assert
                 .IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
-                    .Swagger()).Value.ToJson();
+                    .Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
 
             JObject json = JObject.Parse(sresp);
 

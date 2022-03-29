@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
     {
         private readonly ISettingsRepository _settingsRepository;
         private readonly StoreRepository _storeRepository;
-        private readonly IFileProvider _fileProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
         private IHttpClientFactory HttpClientFactory { get; }
         private SignInManager<ApplicationUser> SignInManager { get; }
@@ -49,7 +48,6 @@ namespace BTCPayServer.Controllers
 
         public UIHomeController(IHttpClientFactory httpClientFactory,
                               ISettingsRepository settingsRepository,
-                              IWebHostEnvironment webHostEnvironment,
                               LanguageService languageService,
                               StoreRepository storeRepository,
                               BTCPayNetworkProvider networkProvider,
@@ -60,7 +58,6 @@ namespace BTCPayServer.Controllers
             LanguageService = languageService;
             _networkProvider = networkProvider;
             _storeRepository = storeRepository;
-            _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
         }
 
@@ -127,22 +124,19 @@ namespace BTCPayServer.Controllers
 
         [Route("swagger/v1/swagger.json")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> Swagger()
+        public async Task<IActionResult> Swagger([FromServices] IEnumerable<ISwaggerProvider> swaggerProviders)
         {
-            JObject json = new JObject();
-            var directoryContents = _fileProvider.GetDirectoryContents("swagger/v1");
-            foreach (IFileInfo fi in directoryContents)
+            JObject json = new();
+            var res = await Task.WhenAll(swaggerProviders.Select(provider => provider.Fetch()));
+            foreach (JObject jObject in res)
             {
-                await using var stream = fi.CreateReadStream();
-                using var reader = new StreamReader(fi.CreateReadStream());
-                json.Merge(JObject.Parse(await reader.ReadToEndAsync()));
+                json.Merge(jObject);
             }
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
             json["servers"] = servers;
             return Json(json);
         }
-
         [Route("docs")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult SwaggerDocs()

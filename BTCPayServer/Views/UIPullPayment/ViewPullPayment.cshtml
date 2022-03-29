@@ -1,4 +1,4 @@
-﻿@using NUglify.Helpers
+@using NUglify.Helpers
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Models.ViewPullPaymentModel
@@ -206,7 +206,6 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
-    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
     </script>

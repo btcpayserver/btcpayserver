@@ -1,4 +1,4 @@
-﻿@using NUglify.Helpers
+@using NUglify.Helpers
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Models.ViewPullPaymentModel
@@ -177,11 +177,11 @@
                                                 <td class="text-end text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
+                                                        <a class="transaction-link text-white badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
+                                                        <span class="text-white badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>
@@ -206,7 +206,6 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
-    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
     </script>

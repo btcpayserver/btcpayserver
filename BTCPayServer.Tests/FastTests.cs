@@ -1763,5 +1763,18 @@ namespace BTCPayServer.Tests
             Assert.Equal(btc.CryptoCode, paymentMethod.CryptoCode);
 #pragma warning restore CS0618
         }
+
+        [Fact]
+        public void AllPoliciesShowInUI()
+        {
+            foreach (var policy in Policies.AllPolicies)
+            {
+               Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
+               if (Policies.IsStorePolicy(policy))
+               {
+                   Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
+               }
+            }
+        }
     }
 }

@@ -177,7 +177,9 @@ namespace BTCPayServer.Client
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:
                 case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanManagePullPayments when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
+                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyPaymentRequests:
                 case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
                 case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:

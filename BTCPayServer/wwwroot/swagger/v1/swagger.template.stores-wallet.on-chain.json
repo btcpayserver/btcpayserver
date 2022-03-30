@@ -278,6 +278,16 @@
                         }
                     },
                     {
+                        "name": "labelFilter",
+                        "in": "query",
+                        "required": false,
+                        "description": "Transaction label to filter by",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "invoice"
+                    },
+                    {
                         "name": "skip",
                         "in": "query",
                         "required": false,

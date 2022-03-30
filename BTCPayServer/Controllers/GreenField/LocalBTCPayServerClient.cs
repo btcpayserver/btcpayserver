@@ -118,9 +118,23 @@ namespace BTCPayServer.Controllers.Greenfield
             _serviceProvider = serviceProvider;
         }
 
-        public async Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
+        public Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
         {
-            var context = new DefaultHttpContext();
+            return Create(userId, storeIds, new DefaultHttpContext()
+            {
+                Request =
+                {
+                    Scheme = "https",
+                    Host = new HostString("dummy.com"),
+                    Path = new PathString(),
+                    PathBase = new PathString(),
+
+                }
+            });
+        }
+
+        public async Task<BTCPayServerClient> Create(string userId, string[] storeIds, HttpContext context)
+        {
             if (!string.IsNullOrEmpty(userId))
             {
                 var user = await _userManager.FindByIdAsync(userId);

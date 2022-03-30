@@ -10836,9 +10836,14 @@ textarea.w-auto {
 }
 
 /* Pull tables out of the grid by their horizontal column padding */
-.row .table {
-  width: calc(100% + 1rem);
-  margin: 1.5rem -.5rem;
+*:not([class^="table-responsive"]) > .table {
+    width: calc(100% + 1rem);
+    margin: 1.5rem -.5rem;
+}
+
+.table-responsive {
+    width: calc(100% + 1rem);
+    margin: 1.5rem -.5rem;
 }
 
 /* Fix table group border width */

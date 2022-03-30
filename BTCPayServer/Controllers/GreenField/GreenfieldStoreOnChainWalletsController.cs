@@ -173,6 +173,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId,
             string cryptoCode,
             [FromQuery] TransactionStatus[]? statusFilter = null,
+            [FromQuery] string? labelFilter = null,
             [FromQuery] int skip = 0,
             [FromQuery] int limit = int.MaxValue
         )
@@ -200,6 +201,23 @@ namespace BTCPayServer.Controllers.Greenfield
             if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Replaced))
             {
                 filteredFlatList.AddRange(txs.ReplacedTransactions.Transactions);
+            }
+
+            if (labelFilter != null)
+            {
+                filteredFlatList = filteredFlatList.Where(information => 
+                {
+                    walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
+
+                    if (transactionInfo != null)
+                    {
+                        return transactionInfo.Labels.ContainsKey(labelFilter);
+                    }
+                    else 
+                    {
+                        return false;
+                    }
+                }).ToList();
             }
 
             var result = filteredFlatList.Skip(skip).Take(limit).Select(information =>

@@ -71,7 +71,7 @@
                         <button type="submit" name="command" value="toggle-input-selection" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" id="toggleInputSelection"><span class="fa fa-@(Model.InputSelection ? "eye-slash" : "eye") "></span> @(Model.InputSelection ? "Hide" : "Show") coin selection</button>
                     </div>
                     <div class="input-group">
-                        <input asp-for="Outputs[0].Amount" type="number" step="any" min="0" asp-format="{0}" class="form-control output-amount hide-number-spin" />
+                        <input asp-for="Outputs[0].Amount" type="number" inputmode="decimal" step="any" min="0" asp-format="{0}" class="form-control output-amount hide-number-spin" />
                         <div class="input-group-text fiat-value" style="display:none;">
                             <span class="input-group-text p-0">=</span>
                             <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
@@ -146,7 +146,7 @@
         
             <div class="form-group my-4">
                 <label asp-for="FeeSatoshiPerByte" class="form-label"></label>
-                <input asp-for="FeeSatoshiPerByte" type="number" min="0" step="any" class="form-control" style="max-width:14ch;" />
+                <input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
                 <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
                 <span id="FeeRate-Error" class="text-danger"></span>
                 @if (Model.RecommendedSatoshiPerByte.Any())

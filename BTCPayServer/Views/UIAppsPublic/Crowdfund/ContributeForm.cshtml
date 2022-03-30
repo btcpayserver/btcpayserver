@@ -85,7 +85,7 @@
         <div class="form-group">
             <label asp-for="Amount" class="form-label"></label>
             <div class="input-group mb-3">
-                <input asp-for="Amount" type="number" step="any" class="form-control"/>
+                <input inputmode="decimal" asp-for="Amount" type="number" step="any" class="form-control"/>
                 <span class="input-group-text">@vm.TargetCurrency.ToUpperInvariant()</span>
             </div>
             <span asp-validation-for="Amount" class="text-danger"></span>

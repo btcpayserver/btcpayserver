@@ -148,7 +148,7 @@
             <h4 class="mt-3 mb-3">General Settings</h4>
             <div class="form-group col-md-8">
                 <label class="form-label" for="price">Price</label>
-                <input name="price" type="text" class="form-control" id="price"
+                <input name="price" type="text" class="form-control" id="price" inputmode="decimal"
                        v-model="srvModel.price" v-on:change="inputChanges"
                        v-validate="'decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
                 <small class="text-danger">{{ errors.first('price') }}</small>

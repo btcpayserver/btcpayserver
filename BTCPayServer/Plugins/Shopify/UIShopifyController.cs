@@ -164,14 +164,11 @@ namespace BTCPayServer.Plugins.Shopify
                     order = await client.GetOrder(orderId);
                 }
 
-                if (order?.FinancialStatus != "pending" && order?.FinancialStatus != "partially_paid")
-                {
-                    return Ok(new
+                 return Ok(new
                     {
                         invoiceId = firstInvoiceSettled.Id,
                         status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
                     });
-                }
             }
 
             if (checkOnly)

@@ -44,6 +44,11 @@ namespace BTCPayServer.Storage
                 {
                     dirInfo = new DirectoryInfo(datadirs.Value.StorageDir);
                 }
+                
+                if (!Directory.Exists(datadirs.Value.TempDir))
+                {
+                    Directory.CreateDirectory(datadirs.Value.TempDir);
+                }
 
                 DirectoryInfo tmpdirInfo;
                 if (!Directory.Exists(datadirs.Value.TempStorageDir))

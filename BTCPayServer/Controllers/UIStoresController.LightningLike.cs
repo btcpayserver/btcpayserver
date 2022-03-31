@@ -49,13 +49,15 @@ namespace BTCPayServer.Controllers
             {
                 var services = _externalServiceOptions.Value.ExternalServices.ToList()
                     .Where(service => _externalServiceTypes.Contains(service.Type))
-                    .Select(service => new AdditionalServiceViewModel
+                    .Select(async service => new AdditionalServiceViewModel
                     {
                         DisplayName = service.DisplayName,
                         ServiceName = service.ServiceName,
                         CryptoCode = service.CryptoCode,
-                        Type = service.Type.ToString()
+                        Type = service.Type.ToString(),
+                        Link = await GetServiceLink(service)
                     })
+                    .Select(t => t.Result)
                     .ToList();
             
                 // other services
@@ -78,7 +80,7 @@ namespace BTCPayServer.Controllers
             
             return View(vm);
         }
-        
+
         [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
         public async Task<IActionResult> SetupLightningNode(string storeId, string cryptoCode)
         {
@@ -376,6 +378,7 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
+        
         private LNURLPaySupportedPaymentMethod? GetExistingLNURLSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
@@ -383,6 +386,13 @@ namespace BTCPayServer.Controllers
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
+        }
+
+        private async Task<string> GetServiceLink(ExternalService service)
+        {
+            var connectionString = await service.ConnectionString.Expand(Request.GetAbsoluteUriNoPathBase(), service.Type, _BtcpayServerOptions.NetworkType);
+            var tokenParam = service.Type == ExternalServiceTypes.ThunderHub ? "token" : "access-key";
+            return $"{connectionString.Server}?{tokenParam}={connectionString.AccessKey}";
         }
     }
 }

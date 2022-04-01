@@ -174,7 +174,7 @@
 
 #StoreSelectorMenu {
     min-width: 100%;
-    max-height: 80vh;
+    max-height: calc(100vh - var(--header-height));
     overflow-y: scroll;
 }
 

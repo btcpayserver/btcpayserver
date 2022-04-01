@@ -1,23 +1,28 @@
 # Changelog
+## 1.4.8
+
+### Bug fixes:
+* Fix plugin installer @Kukks
+* Fix text around shopify settings @pavlenex
 
 ## 1.4.8
 
 ### New features:
-* Greenfield: Send email via store (#3181) @woutersamaey @kukks
-* Greenfield: Configure store email settings (#3554) @kukks
+* Greenfield: Send email via store (#3181) @woutersamaey @Kukks
+* Greenfield: Configure store email settings (#3554) @Kukks
 * Greenfield: Create lightning invoice with description hash (#3559) @dennisreimann
 
 ### Bug fixes:
 * Fix crash on Wallet send page @bolatovumar
 * Various UI fixes (#3519 #3522 #3543 #3553 #3584 #3578) @dennisreimann @bolatovumar @dafunction
-* Fix plugin listing error due to Github rate limiting (#3502) @kukks
-* Fix shopify integration (#3589) @kukks
+* Fix plugin listing error due to Github rate limiting (#3502) @Kukks
+* Fix shopify integration (#3589) @Kukks
 * Fix order id in invoices updating (#3521) @woutersamaey
 * Fix missing permissions in API keys creation pages @Kukks
 
-### Improvements:
+### Improvements
 * Various improvements around plugin system @dennisreimann @kukks
-* Various tweaks around copy in UI @phershbe @dennisreimann @kukks @pavlenex
+* Various tweaks around copy in UI @phershbe @dennisreimann @Kukks @pavlenex
 
 ## 1.4.7
 

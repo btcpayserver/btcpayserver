@@ -1,5 +1,5 @@
 # Changelog
-## 1.4.8
+## 1.4.9
 
 ### Bug fixes:
 * Fix plugin installer @Kukks

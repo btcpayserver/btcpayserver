@@ -13,13 +13,18 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly SettingsRepository _settingsRepository;
         public ApplicationDbContext CreateDbContext()
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory)
+        public StoreRepository(
+            ApplicationDbContextFactory contextFactory,
+            SettingsRepository settingsRepository
+        )
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            _settingsRepository = settingsRepository;
         }
 
         public async Task<StoreData> FindStore(string storeId)
@@ -327,6 +332,12 @@ namespace BTCPayServer.Services.Stores
             await ctx.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        private async Task<LightningAddressSettings> GetSettings()
+        {
+            return await _settingsRepository.GetSettingAsync<LightningAddressSettings>(nameof(LightningAddressSettings)) ??
+                   new LightningAddressSettings();
+        }
+
         public async Task<bool> DeleteStore(string storeId)
         {
             int retry = 0;
@@ -342,6 +353,9 @@ namespace BTCPayServer.Services.Stores
                 .ToArrayAsync();
             foreach (var w in webhooks)
                 ctx.Webhooks.Remove(w);
+
+            await DeleteLightningAddresses(storeId);
+            
             ctx.Stores.Remove(store);
             retry:
             try
@@ -355,6 +369,18 @@ namespace BTCPayServer.Services.Stores
                 goto retry;
             }
             return true;
+        }
+
+        private async Task DeleteLightningAddresses(string storeId)
+        {
+            var lightningAddressSettings = await GetSettings();
+            lightningAddressSettings.StoreToItemMap.Remove(storeId, out var usernames);
+            if (usernames != null) {
+                foreach (var uname in usernames)
+                {
+                    lightningAddressSettings.Items.Remove(uname, out var value);
+                }
+            }
         }
 
         private static bool IsDeadlock(DbUpdateException ex)

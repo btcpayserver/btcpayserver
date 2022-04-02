@@ -185,10 +185,10 @@ namespace BTCPayServer.Hosting
 
         private async Task MigrateLighingAddressSettingRename()
         {
-           var old = await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
+           var old = await _Settings.GetSettingAsync<LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
            if (old is not null)
            {
-              await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
+              await _Settings.UpdateSetting(old, nameof(LightningAddressSettings));
            }
         }
 

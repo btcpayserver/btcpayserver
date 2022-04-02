@@ -175,6 +175,12 @@ namespace BTCPayServer.Hosting
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.UnreachableLightningAddressRemove)
+                {
+                    await RemoveLightningAddressesOfDeletedStores();
+                    settings.UnreachableLightningAddressRemove = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -190,6 +196,30 @@ namespace BTCPayServer.Hosting
            {
               await _Settings.UpdateSetting(old, nameof(LightningAddressSettings));
            }
+        }
+
+        private async Task RemoveLightningAddressesOfDeletedStores()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var storesDictionary = (await ctx.Stores.AsQueryable().ToArrayAsync()).ToDictionary(
+                item => item.Id
+            );
+            var lightningAddressSettings = await _Settings.GetSettingAsync<LightningAddressSettings>(nameof(LightningAddressSettings)) ?? new LightningAddressSettings();
+            foreach (var item in lightningAddressSettings.StoreToItemMap)
+            {
+                if (!storesDictionary.ContainsKey(item.Key))
+                {
+                    lightningAddressSettings.StoreToItemMap.Remove(item.Key, out var usernames);
+                    if (usernames != null) {
+                        foreach (var uname in usernames)
+                        {
+                            lightningAddressSettings.Items.Remove(uname, out var value);
+                        }
+                    }
+                }
+            }
+            
+            await ctx.SaveChangesAsync();
         }
 
         private async Task AddInitialUserBlob()

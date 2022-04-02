@@ -171,7 +171,7 @@ namespace BTCPayServer.Hosting
                 }
                 if (!settings.LighingAddressSettingRename)
                 {
-                    await MigrateLighingAddressSettingRename();
+                    await MigrateLightningAddressSettingRename();
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
@@ -183,7 +183,7 @@ namespace BTCPayServer.Hosting
             }
         }
 
-        private async Task MigrateLighingAddressSettingRename()
+        private async Task MigrateLightningAddressSettingRename()
         {
            var old = await _Settings.GetSettingAsync<LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
            if (old is not null)

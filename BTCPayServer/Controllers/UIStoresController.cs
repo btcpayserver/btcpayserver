@@ -430,13 +430,13 @@ namespace BTCPayServer.Controllers
             vm.DefaultPaymentMethod = chosen?.Value;
         }
 
-        CheckoutAppearanceViewModel.Format[] GetEnabledPaymentMethodChoices(Data.StoreData storeData)
+        PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(Data.StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             
             return enabled
                 .Select(o =>
-                    new CheckoutAppearanceViewModel.Format()
+                    new PaymentMethodOptionViewModel.Format()
                     {
                         Name = o.ToPrettyString(),
                         Value = o.ToString(),
@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers
                     }).ToArray();
         }
 
-        CheckoutAppearanceViewModel.Format? GetDefaultPaymentMethodChoice(Data.StoreData storeData)
+        PaymentMethodOptionViewModel.Format? GetDefaultPaymentMethodChoice(Data.StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             var defaultPaymentId = storeData.GetDefaultPaymentId();

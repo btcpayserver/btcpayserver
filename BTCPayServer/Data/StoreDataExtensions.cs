@@ -38,7 +38,7 @@ namespace BTCPayServer.Data
             return paymentMethodIds;
         }
 
-        public static void SetDefaultPaymentId(this StoreData storeData, PaymentMethodId defaultPaymentId)
+        public static void SetDefaultPaymentId(this StoreData storeData, PaymentMethodId? defaultPaymentId)
         {
             storeData.DefaultCrypto = defaultPaymentId?.ToString();
         }

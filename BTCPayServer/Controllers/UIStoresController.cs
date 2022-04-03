@@ -422,6 +422,29 @@ namespace BTCPayServer.Controllers
 
         void SetCryptoCurrencies(CheckoutAppearanceViewModel vm, Data.StoreData storeData)
         {
+            var choices = GetEnabledPaymentMethodChoices(storeData);
+            var chosen = GetDefaultPaymentMethodChoice(storeData);
+
+            vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
+            vm.DefaultPaymentMethod = chosen?.Value;
+        }
+
+        CheckoutAppearanceViewModel.Format[] GetEnabledPaymentMethodChoices(Data.StoreData storeData)
+        {
+            var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
+            
+            return enabled
+                .Select(o =>
+                    new CheckoutAppearanceViewModel.Format()
+                    {
+                        Name = o.ToPrettyString(),
+                        Value = o.ToString(),
+                        PaymentId = o
+                    }).ToArray();
+        }
+
+        CheckoutAppearanceViewModel.Format GetDefaultPaymentMethodChoice(Data.StoreData storeData)
+        {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             var defaultPaymentId = storeData.GetDefaultPaymentId();
             var defaultChoice = defaultPaymentId is not null ? defaultPaymentId.FindNearest(enabled) : null;
@@ -431,17 +454,9 @@ namespace BTCPayServer.Controllers
                                 enabled.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
                                 enabled.FirstOrDefault();
             }
-            var choices = enabled
-                .Select(o =>
-                    new CheckoutAppearanceViewModel.Format()
-                    {
-                        Name = o.ToPrettyString(),
-                        Value = o.ToString(),
-                        PaymentId = o
-                    }).ToArray();
-            var chosen = defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
-            vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
-            vm.DefaultPaymentMethod = chosen?.Value;
+            var choices = GetEnabledPaymentMethodChoices(storeData);
+
+            return defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
         }
 
         [HttpPost]
@@ -990,6 +1005,8 @@ namespace BTCPayServer.Controllers
             {
                 Price = null,
                 Currency = storeBlob.DefaultCurrency,
+                DefaultPaymentMethod = GetDefaultPaymentMethodChoice(store).Value,
+                PaymentMethods = GetEnabledPaymentMethodChoices(store),
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.svg",

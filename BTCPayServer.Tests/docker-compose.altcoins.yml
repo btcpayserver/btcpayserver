@@ -89,7 +89,7 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.2.18
+    image: nicolasdorier/nbxplorer:2.3.6
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -114,6 +114,7 @@ services:
       NBXPLORER_MINGAPSIZE: 5
       NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
+      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
       NBXPLORER_NOAUTH: 1
       NBXPLORER_EXPOSERPC: 1
     links:

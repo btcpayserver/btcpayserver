@@ -16,7 +16,7 @@
         m.Crypto = payment.GetPaymentMethodId().CryptoCode;
         m.DepositAddress = onChainPaymentData.GetDestination();
 
-        int confirmationCount = onChainPaymentData.ConfirmationCount;
+        long confirmationCount = onChainPaymentData.ConfirmationCount;
         var network = payment.Network as BTCPayNetwork;
         if (confirmationCount >= network.MaxTrackedConfirmation)
         {

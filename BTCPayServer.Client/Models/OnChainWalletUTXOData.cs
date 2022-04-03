@@ -21,6 +21,6 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(KeyPathJsonConverter))]
         public KeyPath KeyPath { get; set; }
         public string Address { get; set; }
-        public int Confirmations { get; set; }
+        public long Confirmations { get; set; }
     }
 }

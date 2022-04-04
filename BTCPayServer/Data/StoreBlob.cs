@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
@@ -178,6 +179,8 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         public TimeSpan RefundBOLT11Expiration { get; set; }
+
+        public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

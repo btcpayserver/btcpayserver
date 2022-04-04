@@ -2628,7 +2628,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
             Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
-            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresController>().Emails(acc.StoreId, new EmailsViewModel(new EmailSettings()
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresController>().StoreEmailSettings(acc.StoreId, new EmailsViewModel(new EmailSettings()
             {
                 From = "store@store.com",
                 Login = "store@store.com",

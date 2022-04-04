@@ -1,0 +1,111 @@
+@using BTCPayServer.Client.Models
+@model BTCPayServer.Controllers.UIStoresController.StoreEmailRuleViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", Context.GetStoreData().Id);
+}
+<form class="row" asp-action="StoreEmails" asp-route-storeId="@Context.GetStoreData().Id">
+    <div class="col-xl-12 col-xxl-constrain">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
+            <div class="d-flex">
+            <button class="btn btn-primary me-3" name="command" type="submit" value="add">
+                <span class="fa fa-plus"></span>
+                Create
+            </button>
+            <button  class="btn btn-primary" name="command" type="submit" value="save" >
+                <span class="fa fa-save"></span>
+                Save
+            </button>
+        </div>
+        </div>
+        <p>Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
+
+        @if (Model.Rules.Any())
+        {
+            <table class="table table-hover table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Event Type</th>
+                    <th>To</th>
+                    <th>Subject</th>
+                    <th>Body</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @for (var index = 0; index < Model.Rules.Count; index++)
+                {
+                    var wh = Model.Rules[index];
+                    <tr>
+                        <td >
+                            <div class="form-group">
+                                <label asp-for="Rules[index].Trigger" class="form-label" data-required></label>
+                                <select asp-for="Rules[index].Trigger" asp-items="@Html.GetEnumSelectList<WebhookEventType>()" class="form-select" required></select>
+                                <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
+                                <div class="mt-2">
+                                    <span class="text-secondary">Choose what event sends the email.</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-group">
+                                <label asp-for="Rules[index].To" class="form-label"></label>
+                                <input type="text" asp-for="Rules[index].To" class="form-control"/>
+                                <span asp-validation-for="Rules[index].To" class="text-danger"></span>
+                                <div class="mt-2">
+                                    <span class="text-secondary">Who to send the email to. For multiple emails, separate with a comma. </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-group">
+                                <label asp-for="Rules[index].CustomerEmail" class="form-check-label" ></label>
+                                <input type="checkbox" asp-for="Rules[index].CustomerEmail" class="form-check"/>
+                                <span asp-validation-for="Rules[index].CustomerEmail" class="text-danger"></span>
+                                <div class="mt-2">
+                                    <span class="text-secondary">Whether to send the email to the buyer, if email was provided to the invoice. </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+
+                            <div class="form-group">
+                                <label asp-for="Rules[index].Subject" class="form-label" ></label>
+                                <input type="text" asp-for="Rules[index].Subject" class="form-control"/>
+                                <span asp-validation-for="Rules[index].Subject" class="text-danger"></span>
+
+                            </div>
+                        </td>
+                        <td>
+
+                            <div class="form-group">
+                                <label asp-for="Rules[index].Body" class="form-label" ></label>
+                                <textare asp-for="Rules[index].Body" class="form-control"/>
+                                <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
+
+                            </div>
+                        </td>
+                        <td class="text-end text-md-nowrap">
+                            <button name="command" type="submit" value="remove:@index" class="btn btn-danger">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no rules yet.
+            </p>
+        }
+    </div>
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+}

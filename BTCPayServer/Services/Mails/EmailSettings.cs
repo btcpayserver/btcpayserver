@@ -13,7 +13,9 @@ namespace BTCPayServer.Services.Mails
             return !string.IsNullOrWhiteSpace(Server) && Port is int;
         }
 
-        public MimeMessage CreateMailMessage(MailboxAddress to, string subject, string message, bool isHtml)
+        public MimeMessage CreateMailMessage(MailboxAddress to, string subject, string message, bool isHtml) =>
+            CreateMailMessage(new[] {to}, null, null, subject, message, isHtml);
+        public MimeMessage CreateMailMessage(MailboxAddress[] to, MailboxAddress[] cc, MailboxAddress[] bcc, string subject, string message, bool isHtml)
         {
             var bodyBuilder = new BodyBuilder();
             if (isHtml)
@@ -25,11 +27,15 @@ namespace BTCPayServer.Services.Mails
                 bodyBuilder.TextBody = message;
             }
 
-            return new MimeMessage(
-                from: new[] { new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay) },
-                to: new[] { to },
-                subject,
-                bodyBuilder.ToMessageBody());
+            var mm = new MimeMessage();
+            mm.Body = bodyBuilder.ToMessageBody();
+            mm.Subject = subject;
+            mm.From.Add(new MailboxAddress(From, !string.IsNullOrWhiteSpace(FromDisplay) ? From : FromDisplay));
+            mm.To.AddRange(to);
+            mm.Cc.AddRange(cc?? System.Array.Empty<InternetAddress>());
+            mm.Bcc.AddRange(bcc?? System.Array.Empty<InternetAddress>());
+            return mm;
+            
         }
 
         public async Task<SmtpClient> CreateSmtpClient()

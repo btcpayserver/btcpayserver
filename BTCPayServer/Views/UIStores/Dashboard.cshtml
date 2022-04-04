@@ -57,14 +57,43 @@
     <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true">
     <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
     <div id="Dashboard" class="mt-4">
-        <vc:store-wallet-balance store="@store" />
-        <vc:store-numbers store="@store" />
-        <vc:store-recent-transactions store="@store" />
-        <vc:store-recent-invoices store="@store" />
+        @if (Model.WalletEnabled)
+        {
+            <vc:store-wallet-balance store="@store"/>
+        }
+        else
+        {
+            <div class="widget setup-guide">
+                <header>
+                    <h5 class="mb-4 text-muted">This store is ready to accept transactions, good job!</h5>
+                </header>
+                <div class="list-group" id="SetupGuide">
+                    <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
+                        <vc:icon symbol="done"/>
+                        <div class="content">
+                            <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                        </div>
+                    </div>
+                    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@defaultCryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <vc:icon symbol="new-wallet"/>
+                        <div class="content">
+                            <h5 class="mb-0">Set up a wallet</h5>
+                        </div>
+                        <vc:icon symbol="caret-right"/>
+                    </a>
+                </div>
+            </div>
+        }
+        <vc:store-numbers store="@store"/>
+        @if (Model.WalletEnabled)
+        {
+            <vc:store-recent-transactions store="@store"/>
+        }
+        <vc:store-recent-invoices store="@store"/>
         @foreach (var app in Model.Apps)
         {
-            <vc:app-sales app="@app" />
-            <vc:app-top-items app="@app" />
+            <vc:app-sales app="@app"/>
+            <vc:app-top-items app="@app"/>
         }
     </div>
 }

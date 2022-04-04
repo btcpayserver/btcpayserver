@@ -1,34 +1,71 @@
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreNumbers;
 
 public class StoreNumbers : ViewComponent
 {
+    private const string CryptoCode = "BTC";
+    
     private readonly StoreRepository _storeRepo;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContextFactory _dbContextFactory;
+    private readonly BTCPayWalletProvider _walletProvider;
+    private readonly BTCPayNetworkProvider _networkProvider;
 
     public StoreNumbers(
         StoreRepository storeRepo,
-        UserManager<ApplicationUser> userManager)
+        ApplicationDbContextFactory dbContextFactory,
+        BTCPayNetworkProvider networkProvider,
+        BTCPayWalletProvider walletProvider)
     {
         _storeRepo = storeRepo;
-        _userManager = userManager;
+        _walletProvider = walletProvider;
+        _networkProvider = networkProvider;
+        _dbContextFactory = dbContextFactory;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)
     {
-        var userId = _userManager.GetUserId(UserClaimsPrincipal);
+        
+        await using var ctx = _dbContextFactory.CreateContext();
+        var payoutsCount = await ctx.Payouts
+            .Where(p => p.PullPaymentData.StoreId == store.Id && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingApproval)
+            .CountAsync();
+        var refundsCount = await ctx.Invoices
+            .Where(i => i.StoreData.Id == store.Id && !i.Archived && i.CurrentRefundId != null)
+            .CountAsync();
+        
+        var walletId = new WalletId(store.Id, CryptoCode);
+        var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+        var transactionsCount = 0;
+        if (derivation != null)
+        {
+            var network = derivation.Network;
+            var wallet = _walletProvider.GetWallet(network);
+            var allTransactions = await wallet.FetchTransactions(derivation.AccountDerivation);
+            transactionsCount = allTransactions.UnconfirmedTransactions.Transactions
+                .Concat(allTransactions.ConfirmedTransactions.Transactions)
+                .Count();
+        }
+        
         var vm = new StoreNumbersViewModel
         {
             Store = store,
-            WalletId = new WalletId(store.Id, "BTC"),
-            PayoutsPending = 4,
-            Transactions = 92,
-            RefundsIssued = 2
+            WalletId = walletId,
+            PayoutsPending = payoutsCount,
+            Transactions = transactionsCount,
+            RefundsIssued = refundsCount
         };
 
         return View(vm);

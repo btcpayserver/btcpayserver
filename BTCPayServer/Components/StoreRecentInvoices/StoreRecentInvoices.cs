@@ -10,13 +10,16 @@ public class StoreRecentInvoices : ViewComponent
 {
     private readonly StoreRepository _storeRepo;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContextFactory _dbContextFactory;
 
     public StoreRecentInvoices(
         StoreRepository storeRepo,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContextFactory dbContextFactory)
     {
         _storeRepo = storeRepo;
         _userManager = userManager;
+        _dbContextFactory = dbContextFactory;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)

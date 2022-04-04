@@ -321,11 +321,6 @@ svg.icon-note {
     color: var(--btcpay-body-link-accent);
 }
 
-.widget .chart-container {
-    position: relative;
-    max-width: var(--widget-chart-width);
-}
-
 .widget.store-numbers {
     display: flex;
     flex-wrap: wrap;
@@ -386,20 +381,9 @@ svg.icon-note {
     }
 }
 
-@media (max-width: 991px) {
-    .widget .chart-container {
-        max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)));
-    }
-}
-
-@media (min-width: 992px) {
-    .widget .chart-container {
-        max-width: calc(var(--widget-chart-width) - (2 * var(--widget-padding)) - (2 * var(--content-padding-horizontal)) - var(--sidebar-width) - 1rem); /* 1rem for scrollbar */
-    }
-}
-
 @media (min-width: 1200px) {
     .widget.app-sales,
+    .widget.setup-guide,
     .widget.store-wallet-balance {
         --widget-chart-width: 80vw;
         grid-column-start: 1;
@@ -410,6 +394,15 @@ svg.icon-note {
     .widget.store-numbers {
         grid-column-start: 9;
         grid-column-end: 13;
+    }
+    
+    .widget.store-numbers {
+        flex-direction: column;
+    }
+
+    .widget .store-number {
+        flex: 0 1;
+        width: 12rem;
     }
 
     .widget.store-numbers header {

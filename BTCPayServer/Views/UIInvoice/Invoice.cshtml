@@ -97,6 +97,11 @@
         {
             <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>
         }
+        @if (Model.ShowReceipt)
+            {
+                <a asp-action="InvoiceReceipt" asp-route-invoiceId="@Model.Id" class="btn btn-secondary text-nowrap" >Receipt</a>
+         
+        }
         @if (Model.CanRefund)
         {
             <a id="IssueRefund" class="btn btn-success text-nowrap" asp-action="Refund" asp-route-invoiceId="@Model.Id" data-bs-toggle="modal" data-bs-target="#RefundModal">Issue Refund</a>

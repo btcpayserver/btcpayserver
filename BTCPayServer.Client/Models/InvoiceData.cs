@@ -41,6 +41,8 @@ namespace BTCPayServer.Client.Models
 
             public bool? RedirectAutomatically { get; set; }
             public bool? RequiresRefundEmail { get; set; } = null;
+            
+            public bool? InvoicePublicReceipt { get; set; }
             public string DefaultLanguage { get; set; }
         }
     }

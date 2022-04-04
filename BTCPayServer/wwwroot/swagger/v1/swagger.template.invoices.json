@@ -1054,6 +1054,11 @@
                         "nullable": true,
                         "description": "Invoice will require user to provide a refund email if this option is set to `true`. Has no effect if `buyerEmail` metadata is set as there is no email to collect in this case."
                     },
+                    "invoicePublicReceipt": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "A public page will be accessible once the invoice is settled. If `receiptData` metadata is set, it will be \"pretty rendered\" on the page."
+                    },
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,

@@ -1,0 +1,54 @@
+﻿@model BTCPayServer.Controllers.UIInvoiceController.InvoiceReceiptViewModel
+@using BTCPayServer.Client
+@{
+    ViewData["Title"] = $"Invoice {Model.InvoiceId} Receipt";
+    Layout = "_LayoutSimple";
+}
+
+@section PageHeadContent {
+    <meta name="robots" content="noindex,nofollow">
+    <style>
+        #posData td > table:last-child { margin-bottom: 0 !important; }
+        #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
+    </style>
+}
+
+<div class="invoice-details">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-md-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-md-0">
+
+            <a asp-action="Invoice" permission="@Policies.CanViewInvoices" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.InvoiceId">Admin details</a>
+
+        </div>
+    </div>
+
+    <div class="row justify-content-between">
+        <div class="col-md-12">
+            <table class="table table-responsive-md mb-5">
+                <tr>
+                    <th class="fw-semibold">Created Date</th>
+                    <td>@Model.Timestamp.ToBrowserDate()</td>
+                </tr>
+
+                <tr>
+                    <th class="fw-semibold">Amount</th>
+                    <td>@Model.Amount @Model.Currency</td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+
+    @if (Model.AdditionalData.Count != 0)
+    {
+        <div class="row">
+
+            <div class="col-md-12 mb-4" id="receiptData">
+                <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+            </div>
+        </div>
+    }
+    
+</div>

@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices/{invoiceId}")]
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
@@ -133,6 +133,7 @@ namespace BTCPayServer.Controllers
                 CanRefund = CanRefund(invoiceState),
                 Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
+                ShowReceipt = invoice.Status == InvoiceStatusLegacy.Complete && invoice.InvoicePublicReceipt.GetValueOrDefault(store.GetStoreBlob().InvoicePublicReceipt),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList(),
@@ -145,6 +146,45 @@ namespace BTCPayServer.Controllers
             model.Payments = details.Payments;
 
             return View(model);
+        }
+
+
+        public class InvoiceReceiptViewModel
+        {
+            public string InvoiceId { get; set; }
+            public string Currency { get; set; }
+            public decimal Amount { get; set; }
+            public DateTimeOffset Timestamp { get; set; }
+            public Dictionary<string, object> AdditionalData { get; set; }
+        }
+        
+        [HttpGet("i/{invoiceId}/receipt")]
+        public async Task<IActionResult> InvoiceReceipt(string invoiceId)
+        {
+            var i = await _InvoiceRepository.GetInvoice(invoiceId);
+            if (i is not null && i.InvoicePublicReceipt is null)
+            {
+                i.InvoicePublicReceipt = (await _StoreRepository.GetStoreByInvoiceId(i.Id))?.GetStoreBlob()
+                    ?.InvoicePublicReceipt;
+            }
+            if (i?.InvoicePublicReceipt is true && i.Status == InvoiceStatusLegacy.Complete)
+            {
+                i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
+
+                return View(new InvoiceReceiptViewModel()
+                {
+                    Amount = i.Price,
+                    Currency = i.Currency,
+                    Timestamp = i.InvoiceTime,
+                    InvoiceId = i.Id,
+                    AdditionalData = receiptData is null
+                        ? new Dictionary<string, object>()
+                        : PosDataParser.ParsePosData(receiptData.ToString())
+                });
+            }
+
+            return NotFound();
+
         }
 
         bool CanRefund(InvoiceState invoiceState)
@@ -1079,25 +1119,7 @@ namespace BTCPayServer.Controllers
                     var jObject = JObject.Parse(posData);
                     foreach (var item in jObject)
                     {
-                        switch (item.Value?.Type)
-                        {
-                            case JTokenType.Array:
-                                var items = item.Value.AsEnumerable().ToList();
-                                for (var i = 0; i < items.Count; i++)
-                                {
-                                    result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
-                                }
-                                break;
-                            case JTokenType.Object:
-                                result.TryAdd(item.Key, ParsePosData(item.Value.ToString()));
-                                break;
-                            case null:
-                                break;
-                            default:
-                                result.TryAdd(item.Key, item.Value.ToString());
-                                break;
-                        }
-
+                        ParsePosDataItem(item, ref result);
                     }
                 }
                 catch
@@ -1105,6 +1127,29 @@ namespace BTCPayServer.Controllers
                     result.TryAdd(string.Empty, posData);
                 }
                 return result;
+            }
+
+            public static void ParsePosDataItem(KeyValuePair<string, JToken?> item, ref Dictionary<string, object> result)
+            {
+                switch (item.Value?.Type)
+                {
+                    case JTokenType.Array:
+                        var items = item.Value.AsEnumerable().ToList();
+                        for (var i = 0; i < items.Count; i++)
+                        {
+                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
+                        }
+
+                        break;
+                    case JTokenType.Object:
+                        result.TryAdd(item.Key, ParsePosData(item.Value.ToString()));
+                        break;
+                    case null:
+                        break;
+                    default:
+                        result.TryAdd(item.Key, item.Value.ToString());
+                        break;
+                }
             }
         }
     }

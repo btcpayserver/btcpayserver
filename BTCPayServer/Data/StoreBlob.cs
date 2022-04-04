@@ -104,6 +104,7 @@ namespace BTCPayServer.Data
         public bool AutoDetectLanguage { get; set; }
 
         public bool RateScripting { get; set; }
+        public bool InvoicePublicReceipt { get; set; }
 
         public string RateScript { get; set; }
 

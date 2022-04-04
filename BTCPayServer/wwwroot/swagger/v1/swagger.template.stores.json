@@ -329,6 +329,11 @@
                         "default": false,
                         "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
                     },
+                    "invoicePublicReceipt": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "If true, a public page will be accessible once the invoice is settled."
+                    },
                     "lightningAmountInSatoshi": {
                         "type": "boolean",
                         "default": false,

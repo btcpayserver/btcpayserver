@@ -58,6 +58,9 @@ namespace BTCPayServer.Client.Models
         public NetworkFeeMode NetworkFeeMode { get; set; } = NetworkFeeMode.Never;
 
         public bool PayJoinEnabled { get; set; }
+        
+
+        public bool InvoicePublicReceipt { get; set; }
 
 
         [JsonExtensionData]

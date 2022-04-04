@@ -47,6 +47,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
 
+        [Display(Name = "Provide a public receipt page for settled invoices")]
+        public bool InvoicePublicReceipt { get; set; }
+
         public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
     }
 

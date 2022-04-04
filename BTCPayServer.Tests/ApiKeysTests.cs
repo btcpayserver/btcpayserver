@@ -147,7 +147,6 @@ namespace BTCPayServer.Tests
 
             var apiKeyRepo = s.Server.PayTester.GetService<APIKeyRepository>();
             var accessToken = GetAccessTokenFromCallbackResult(s.Driver);
-
             await TestApiAgainstAccessToken(accessToken, tester, user,
                 (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
@@ -168,7 +167,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(callbackUrl, s.Driver.Url);
 
             accessToken = GetAccessTokenFromCallbackResult(s.Driver);
-
+            
             TestLogs.LogInformation("Checking authorized permissions");
             
             await TestApiAgainstAccessToken(accessToken, tester, user,
@@ -243,7 +242,7 @@ namespace BTCPayServer.Tests
             }
             //create a second user to see if any of its data gets messed upin our results.
             var secondUser = tester.NewAccount();
-            secondUser.GrantAccess();
+            await secondUser.GrantAccessAsync();
 
             var canModifyAllStores = Permission.Create(Policies.CanModifyStoreSettings, null);
             var canModifyServer = Permission.Create(Policies.CanModifyServerSettings, null);

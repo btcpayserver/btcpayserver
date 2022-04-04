@@ -5505,7 +5505,7 @@ fieldset:disabled .btn {
   background-color: var(--btcpay-bg-tile);
   background-clip: padding-box;
   border: 1px solid var(--btcpay-body-border-medium);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
   border-radius: var(--btcpay-border-radius);
 }
 
@@ -6861,15 +6861,15 @@ fieldset:disabled .btn {
 }
 
 .shadow {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .shadow-sm {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
 }
 
 .shadow-lg {
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
 .shadow-none {
@@ -10698,6 +10698,11 @@ ul:not([class]) li {
   color: var(--btcpay-body-text-muted) !important;
 }
 
+/* Modals */
+.modal-content {
+  box-shadow: 0 20px 20px rgba(0, 0, 0, .15);
+}
+
 /* Accordion */
 .accordion-item + .accordion-item {
   border-top: 1px solid var(--btcpay-body-border-light);
@@ -10954,6 +10959,15 @@ input[type="number"].hide-number-spin {
 .form-control:not(:disabled,.disabled,.is-valid,.is-invalid):hover,
 .form-check-input:not(:disabled,.disabled,.is-valid,.is-invalid):hover {
   border-color: var(--btcpay-form-border-hover);
+}
+
+.form-select,
+.form-control {
+  box-shadow: 0 2px 2px rgba(0, 0, 0, .05);
+}
+
+.form-check-input {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
 }
 
 [data-required]::after {

@@ -175,6 +175,13 @@ namespace BTCPayServer.Hosting
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                
+                if (!settings.LighingAddressOrphanFix)
+                {
+                    await MigrateLighingAddressOrphanFix();
+                    settings.LighingAddressOrphanFix = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -183,12 +190,38 @@ namespace BTCPayServer.Hosting
             }
         }
 
+        private async Task MigrateLighingAddressOrphanFix()
+        {
+            var settings = await UILNURLController.GetSettings(_Settings);
+            var storeIds = settings.StoreToItemMap.Keys;
+            foreach (string storeId in storeIds)
+            {
+                var store = await _StoreRepository.FindStore(storeId);
+                if (store is not null)
+                {
+                    continue;
+                }
+
+                if (settings.StoreToItemMap.TryRemove(storeId, out var itemsToRemove))
+                {
+                    foreach (string s in itemsToRemove)
+                    {
+
+                        settings.Items.TryRemove(s, out _);
+                    }
+                }
+            }
+            
+            await UILNURLController.SetSettings(_Settings, settings);
+            
+        }
+
         private async Task MigrateLighingAddressSettingRename()
         {
            var old = await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
            if (old is not null)
            {
-              await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
+               await UILNURLController.SetSettings(_Settings, old);
            }
         }
 

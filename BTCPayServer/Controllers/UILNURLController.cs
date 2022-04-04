@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -177,11 +178,20 @@ namespace BTCPayServer
                 return null;
             }
         }
+        public static  async Task<LightningAddressSettings> GetSettings(ISettingsRepository settingsRepository)
+        {
+            return await settingsRepository.GetSettingAsync<LightningAddressSettings>(nameof(LightningAddressSettings)) ??
+                   new LightningAddressSettings();
+        }
+        
+        public static  async Task SetSettings(ISettingsRepository settingsRepository, LightningAddressSettings settings)
+        {
+            await settingsRepository.UpdateSetting( settings, nameof(LightningAddressSettings));
+        }
 
         private async Task<LightningAddressSettings> GetSettings()
         {
-            return await _settingsRepository.GetSettingAsync<LightningAddressSettings>(nameof(LightningAddressSettings)) ??
-                   new LightningAddressSettings();
+            return await GetSettings(_settingsRepository);
         }
 
         [HttpGet("~/.well-known/lnurlp/{username}")]
@@ -533,7 +543,7 @@ namespace BTCPayServer
                 lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, ids);
                 vm.Add.StoreId = storeId;
                 lightningAddressSettings.Items.TryAdd(vm.Add.Username.ToLowerInvariant(), vm.Add);
-                await _settingsRepository.UpdateSetting(lightningAddressSettings, nameof(LightningAddressSettings));
+                await SetSettings(_settingsRepository, lightningAddressSettings);
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
@@ -555,7 +565,7 @@ namespace BTCPayServer
                     addresses = addresses.Where(s => s != addressToRemove).ToArray();
                     lightningAddressSettings.StoreToItemMap.AddOrReplace(storeId, addresses);
                     lightningAddressSettings.Items.TryRemove(addressToRemove, out _);
-                    await _settingsRepository.UpdateSetting(lightningAddressSettings, nameof(LightningAddressSettings));
+                    await SetSettings(_settingsRepository, lightningAddressSettings);
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,

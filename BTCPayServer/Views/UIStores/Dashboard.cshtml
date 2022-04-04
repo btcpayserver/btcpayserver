@@ -1,4 +1,3 @@
-@using BTCPayServer.Services.Apps
 @model StoreDashboardViewModel;
 
 @inject BTCPayNetworkProvider networkProvider
@@ -55,22 +54,8 @@
 @if (Model.IsSetUp)
 {
     /* include chart library inline so that it instantly renders */
-    <script src="~/vendor/chart/chart.min.js"></script>
-    <script>
-        const chartRGB = '68,164,49';        
-        Chart.defaults.borderColor = `rgba(128, 128, 128, .05)`;
-        Chart.defaults.backgroundColor = `rgba(${chartRGB}, 1)`;
-        Chart.defaults.interaction.mode = 'nearest';
-        Chart.defaults.elements.point.borderWidth = 2;
-        Chart.defaults.elements.point.borderColor = `rgba(${chartRGB}, 1)`;
-        Chart.defaults.elements.point.backgroundColor = `rgba(${chartRGB}, 1)`;
-        Chart.defaults.elements.point.hitRadius = 20;
-        Chart.defaults.elements.point.hoverRadius = 5;
-        Chart.defaults.elements.point.hoverBorderWidth = 5;
-        Chart.defaults.elements.line.borderColor = `rgba(${chartRGB}, 1)`;
-        Chart.defaults.elements.line.fill = { target: 'origin', above: `rgba(${chartRGB}, .075)` };
-        Chart.defaults.elements.line.tension = 0.125;
-    </script>
+    <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true">
+    <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
     <div id="Dashboard" class="mt-4">
         <vc:store-wallet-balance store="@store" />
         <vc:store-numbers store="@store" />

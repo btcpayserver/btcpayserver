@@ -20,34 +20,26 @@
             <label class="btn btn-link" for="filter-all">ALL</label>
         </div>
     </header>
-    <div class="chart-container">
-        <canvas id="StoreWalletBalance-@Model.Store.Id"></canvas>
-    </div>
+    <div id="StoreWalletBalance-@Model.Store.Id" class="ct-chart ct-major-eleventh"></div>
     <script>
         (function () {
-            const data = {
-                datasets: [{
-                    type: 'line',
-                    data: {
-                        'Jun 12': 0.1257,
-                        'Jun 13': 0.238,
-                        'Jun 14': 0.21854,
-                        'Jun 15': 0.3875,
-                        'Jun 16': 0.41745,
-                        'Jun 17': 0.39853,
-                        'Jun 18': 0.4521,
-                        'Jun 19': 0.615021
-                    }
-                }],
-            };
-            const options = {
-                aspectRatio: 3,
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-            const ctx = document.getElementById('StoreWalletBalance-@Model.Store.Id');
-            new Chart(ctx, { data, options });
+            new Chartist.Line('#StoreWalletBalance-@Model.Store.Id', {
+                labels: ['Jun 12', 'Jun 13', 'Jun 14', 'Jun 15', 'Jun 16', 'Jun 17', 'Jun 18'],
+                series: [[
+                    0.1257,
+                    0.238,
+                    0.21854,
+                    0.3875,
+                    0.41745,
+                    0.39853,
+                    0.4521,
+                    0.615021
+                ]]
+            }, {
+                low: 0,
+                fullWidth: true,
+                showArea: true
+            });
         })();
     </script>
 </div>

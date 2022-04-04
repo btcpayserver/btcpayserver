@@ -133,7 +133,6 @@
 
 	<ItemGroup>
 	  <Folder Include="wwwroot\vendor\bootstrap" />
-	  <Folder Include="wwwroot\vendor\chart" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />

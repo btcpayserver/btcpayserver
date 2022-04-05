@@ -1,3 +1,6 @@
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Invoices
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
 <div class="widget store-recent-transactions">
@@ -5,23 +8,49 @@
         <h3>Recent Invoices</h3>
         <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id">View All</a>
     </header>
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th>Invoice</th>
-            <th class="text-end">Amount</th>
-        </tr>
-        </thead>
-        <tbody>
-        @*@foreach (var entry in Model.Entries)
-        {*@
-        <tr>
-            <td>14 minutes ago</td>
-            <td>123</td>
-            <td class="text-end">0.615 BTC</td>
-        </tr>
-        @*}*@
-        </tbody>
-    </table>
+    @if (Model.Invoices.Any())
+    {
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th class="text-nowrap">Order Id</th>
+                <th class="text-nowrap">Invoice Id</th>
+                <th>Status</th>
+                <th class="text-end">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var invoice in Model.Invoices)
+            {
+                <tr>
+                    <td>@invoice.Date.ToTimeAgo()</td>
+                    <td>@invoice.OrderId</td>
+                    <td>@invoice.InvoiceId</td>
+                    <td>
+                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                            @invoice.Status.Status.ToModernStatus().ToString()
+                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                            {
+                                @($"({invoice.Status.ExceptionStatus.ToString()})")
+                            }
+                        </span>
+                    </td>
+                    <td class="text-end">@invoice.AmountCurrency</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no invoices matching your criteria.
+        </p>
+        
+        <a asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="btn btn-primary mt-3">
+            <span class="fa fa-plus"></span>
+            Create Invoice
+        </a>
+    }
 </div>

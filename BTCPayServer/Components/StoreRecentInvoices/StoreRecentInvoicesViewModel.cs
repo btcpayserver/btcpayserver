@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Collections.Generic;
 using BTCPayServer.Data;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;
@@ -6,5 +6,5 @@ namespace BTCPayServer.Components.StoreRecentInvoices;
 public class StoreRecentInvoicesViewModel
 {
     public StoreData Store { get; set; }
-    public IEnumerable Entries { get; set; }
+    public IEnumerable<StoreRecentInvoiceViewModel> Invoices { get; set; }
 }

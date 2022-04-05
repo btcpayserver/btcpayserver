@@ -6,15 +6,17 @@
 <div class="widget store-recent-transactions">
     <header>
         <h3>Recent Invoices</h3>
-        <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id">View All</a>
+        @if (Model.Invoices.Any())
+        {
+            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id">View All</a>
+        }
     </header>
     @if (Model.Invoices.Any())
     {
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>Date</th>
-                <th class="text-nowrap">Order Id</th>
+                <th class="w-125px">Date</th>
                 <th class="text-nowrap">Invoice Id</th>
                 <th>Status</th>
                 <th class="text-end">Amount</th>
@@ -25,8 +27,9 @@
             {
                 <tr>
                     <td>@invoice.Date.ToTimeAgo()</td>
-                    <td>@invoice.OrderId</td>
-                    <td>@invoice.InvoiceId</td>
+                    <td>
+                        <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
+                    </td>
                     <td>
                         <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
                             @invoice.Status.Status.ToModernStatus().ToString()
@@ -45,10 +48,10 @@
     else
     {
         <p class="text-secondary mt-3">
-            There are no invoices matching your criteria.
+            There are no recent invoices.
         </p>
         
-        <a asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="btn btn-primary mt-3">
+        <a asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="btn btn-primary">
             <span class="fa fa-plus"></span>
             Create Invoice
         </a>

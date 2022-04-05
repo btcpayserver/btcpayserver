@@ -341,7 +341,7 @@ svg.icon-note {
 }
 
 .widget .store-number {
-    flex: 0 1 12rem;
+    flex: 0 1 14rem;
 }
 
 .widget .number {
@@ -402,7 +402,7 @@ svg.icon-note {
 
     .widget .store-number {
         flex: 0 1;
-        width: 12rem;
+        width: 14rem;
     }
 
     .widget.store-numbers header {

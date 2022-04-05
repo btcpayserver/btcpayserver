@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace BTCPayServer.Components.StoreNumbers;
 public class StoreNumbers : ViewComponent
 {
     private const string CryptoCode = "BTC";
+    private const int TransactionDays = 7;
     
     private readonly StoreRepository _storeRepo;
     private readonly ApplicationDbContextFactory _dbContextFactory;
@@ -54,9 +56,10 @@ public class StoreNumbers : ViewComponent
             var network = derivation.Network;
             var wallet = _walletProvider.GetWallet(network);
             var allTransactions = await wallet.FetchTransactions(derivation.AccountDerivation);
+            var afterDate = DateTimeOffset.UtcNow - TimeSpan.FromDays(TransactionDays);
             transactionsCount = allTransactions.UnconfirmedTransactions.Transactions
                 .Concat(allTransactions.ConfirmedTransactions.Transactions)
-                .Count();
+                .Count(t => t.Timestamp > afterDate);
         }
         
         var vm = new StoreNumbersViewModel
@@ -65,6 +68,7 @@ public class StoreNumbers : ViewComponent
             WalletId = walletId,
             PayoutsPending = payoutsCount,
             Transactions = transactionsCount,
+            TransactionDays = TransactionDays,
             RefundsIssued = refundsCount
         };
 

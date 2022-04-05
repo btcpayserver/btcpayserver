@@ -4,14 +4,17 @@
 <div class="widget store-recent-transactions">
     <header>
         <h3>Recent Transactions</h3>
-        <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+        @if (Model.Transactions.Any())
+        {
+            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+        }
     </header>
     @if (Model.Transactions.Any())
     {
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>Date</th>
+                <th class="w-125px">Date</th>
                 <th>Transaction</th>
                 <th class="text-end">Amount</th>
             </tr>
@@ -22,7 +25,7 @@
                 <tr>
                     <td>@tx.Timestamp.ToTimeAgo()</td>
                     <td>
-                        <a href="@tx.Link" target="_blank" rel="noreferrer noopener">
+                        <a href="@tx.Link" target="_blank" rel="noreferrer noopener" class="text-break">
                             @tx.Id
                         </a>
                     </td>
@@ -42,7 +45,7 @@
     else
     {
         <p class="text-secondary mt-3">
-            There are no transactions yet.
+            There are no recent transactions.
         </p>
     }
 </div>

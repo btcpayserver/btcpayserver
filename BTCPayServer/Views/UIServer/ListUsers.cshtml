@@ -23,23 +23,24 @@
     var sortByAsc = "Sort by ascending...";
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
-
-<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-    <form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)">
-        <div class="input-group mb-2">
-            <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-            <button type="submit" class="btn btn-secondary" title="Search by email">
-                <span class="fa fa-search"></span> Search
-            </button>
-        </div>
-        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-    </form>
-    <a asp-action="CreateUser" class="btn btn-primary mb-2" role="button" id="CreateUser">
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h3 class="mb-0">@ViewData["Title"]</h3>
+    <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
         <span class="fa fa-plus"></span>
         Add User
     </a>
 </div>
+
+<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:960px" class="mb-4">
+    <div class="input-group">
+        <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
+        <button type="submit" class="btn btn-secondary" title="Search by email">
+            <span class="fa fa-search"></span> Search
+        </button>
+    </div>
+    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+</form>
+
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>

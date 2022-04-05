@@ -47,6 +47,7 @@ namespace BTCPayServer.Components.StoreSelector
                         WalletId = walletId
                     };
                 })
+                .OrderBy(s => s.Text)
                 .ToList();
 
             var vm = new StoreSelectorViewModel

@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Wallets
         public KeyPath KeyPath { get; set; }
         public IMoney Value { get; set; }
         public Coin Coin { get; set; }
-        public int Confirmations { get; set; }
+        public long Confirmations { get; set; }
     }
     public class NetworkCoins
     {

@@ -32,7 +32,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public OutPoint Outpoint { get; set; }
         [JsonIgnore]
         public TxOut Output { get; set; }
-        public int ConfirmationCount { get; set; }
+        public long ConfirmationCount { get; set; }
         public bool RBF { get; set; }
         public BitcoinAddress Address { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]

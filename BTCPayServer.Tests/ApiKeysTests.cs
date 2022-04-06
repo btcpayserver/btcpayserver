@@ -206,12 +206,11 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Make sure we can check all permissions when not an admin");
             await user.MakeAdmin(false);
             s.Logout();
-            TestLogs.LogInformation("Logged out");
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
-            TestLogs.LogInformation("Logged in");
             s.GoToProfile(ManageNavPages.APIKeys);
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            TestLogs.LogInformation("On API Keys page");
+            s.Driver.WaitForAndClick(By.Id("AddApiKey"));
             int checkedPermissionCount = 0;
             TestLogs.LogInformation($"Adding API key: {s.Driver.FindElements(By.ClassName("form-check-input")).Count} permissions");
             foreach (var checkbox in s.Driver.FindElements(By.ClassName("form-check-input")))

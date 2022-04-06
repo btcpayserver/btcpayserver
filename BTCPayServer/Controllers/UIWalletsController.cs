@@ -65,6 +65,8 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly NBXplorerConnectionFactory _connectionFactory;
+        private readonly WalletHistogramService _walletHistogramService;
 
         readonly CurrencyNameTable _currencyTable;
         public UIWalletsController(StoreRepository repo,
@@ -74,6 +76,8 @@ namespace BTCPayServer.Controllers
                                  UserManager<ApplicationUser> userManager,
                                  MvcNewtonsoftJsonOptions mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
+                                 WalletHistogramService walletHistogramService,
+                                 NBXplorerConnectionFactory connectionFactory,
                                  RateFetcher rateProvider,
                                  IAuthorizationService authorizationService,
                                  ExplorerClientProvider explorerProvider,
@@ -114,6 +118,8 @@ namespace BTCPayServer.Controllers
             _pullPaymentService = pullPaymentService;
             _payoutHandlers = payoutHandlers;
             ServiceProvider = serviceProvider;
+            _connectionFactory = connectionFactory;
+            _walletHistogramService = walletHistogramService;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
@@ -355,6 +361,19 @@ namespace BTCPayServer.Controllers
             model.CryptoCode = walletId.CryptoCode;
 
             return View(model);
+        }
+        
+        [HttpGet("{walletId}/histogram/{type}")]
+        public async Task<IActionResult> WalletHistogram(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletHistogramType type)
+        {
+            var store = GetCurrentStore();
+            var data = await _walletHistogramService.GetHistogram(store, walletId, type);
+
+            return data == null
+                ? NotFound()
+                : Json(data);
         }
 
         private static string GetLabelTarget(WalletId walletId, uint256 txId)

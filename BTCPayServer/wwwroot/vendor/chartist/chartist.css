@@ -4,6 +4,9 @@
     font-size: 0.75rem;
     line-height: 1; }
 
+.ct-label.ct-horizontal {
+    min-width: 3rem; }
+
 .ct-chart-line .ct-label,
 .ct-chart-bar .ct-label {
     display: block;

@@ -116,7 +116,7 @@ public class StoreWalletBalance : ViewComponent
                         vm.Labels.Add(String.Empty);
                     vm.Series.Add((decimal)r.balance);
                 }
-                vm.Balance = await conn.ExecuteScalarAsync<decimal>("SELECT to_btc(available_balance) FROM wallets_balances WHERE wallet_id=@wallet_id", new { wallet_id });
+                vm.Balance = await conn.ExecuteScalarAsync<decimal>("SELECT to_btc(available_balance) FROM wallets_balances WHERE wallet_id=@wallet_id AND code=@code AND asset_id=''", new { wallet_id, code = CryptoCode });
             }
         }
         return View(vm);

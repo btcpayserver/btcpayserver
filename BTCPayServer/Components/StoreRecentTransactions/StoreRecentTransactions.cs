@@ -57,9 +57,9 @@ public class StoreRecentTransactions : ViewComponent
                 await using var conn = await ConnectionFactory.OpenConnection();
                 var rows = await conn.QueryAsync(
                     "SELECT t.tx_id, t.seen_at, to_btc(balance_change::NUMERIC) balance_change, (t.blk_id IS NOT NULL) confirmed " +
-                    "FROM get_wallets_recent(@wallet_id, @interval, 5, 0) " +
+                    "FROM get_wallets_recent(@wallet_id, @code, @interval, 5, 0) " +
                     "JOIN txs t USING (code, tx_id) " +
-                    "WHERE code=@code ORDER BY seen_at DESC;",
+                    "ORDER BY seen_at DESC;",
                     new
                     {
                         wallet_id,

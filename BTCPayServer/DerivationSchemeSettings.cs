@@ -5,6 +5,7 @@ using System.Text;
 using BTCPayServer.Payments;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -42,6 +43,10 @@ namespace BTCPayServer
             return strategy != null;
         }
 
+        public string GetNBXWalletId()
+        {
+            return AccountDerivation is null ? null : DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, AccountDerivation.ToString());
+        }
         private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = true)
         {
             if (!electrum)

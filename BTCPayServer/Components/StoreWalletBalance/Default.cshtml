@@ -4,7 +4,7 @@
     <h6 class="mb-2">Wallet Balance</h6>
     <header class="mb-3">
         <div class="balance">
-            <h3 class="d-inline-block me-1">0.61502100</h3>
+            <h3 class="d-inline-block me-1">@Model.Balance</h3>
             <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
         </div>
         <div class="btn-group mt-1" role="group" aria-label="Filter">
@@ -24,17 +24,8 @@
     <script>
         (function () {
             new Chartist.Line('#StoreWalletBalance-@Model.Store.Id', {
-                labels: ['Jun 12', 'Jun 13', 'Jun 14', 'Jun 15', 'Jun 16', 'Jun 17', 'Jun 18'],
-                series: [[
-                    0.1257,
-                    0.238,
-                    0.21854,
-                    0.3875,
-                    0.41745,
-                    0.39853,
-                    0.4521,
-                    0.615021
-                ]]
+                labels: @Safe.Json(Model.Labels),
+                series: [@Safe.Json(Model.Series)]
             }, {
                 low: 0,
                 fullWidth: true,

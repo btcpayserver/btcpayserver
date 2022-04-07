@@ -4692,7 +4692,7 @@ fieldset:disabled .btn {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   font-size: 0.875rem;
   color: var(--btcpay-body-text);
   text-align: left;

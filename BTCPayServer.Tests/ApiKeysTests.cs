@@ -148,6 +148,7 @@ namespace BTCPayServer.Tests
             
             s.Driver.FindElement(By.Id("consent-yes")).Click();
             Assert.Equal(callbackUrl, s.Driver.Url);
+            TestLogs.LogInformation("On callback URL");
 
             var apiKeyRepo = s.Server.PayTester.GetService<APIKeyRepository>();
             var accessToken = GetAccessTokenFromCallbackResult(s.Driver);
@@ -162,6 +163,7 @@ namespace BTCPayServer.Tests
 
             TestLogs.LogInformation($"Going to auth URL 2 {authUrl}");
             s.Driver.Navigate().GoToUrl(authUrl);
+            TestLogs.LogInformation("On auth URL 2");
             Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
 
             Assert.Equal("checkbox", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("type").ToLowerInvariant());
@@ -175,6 +177,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Going to callback URL 2");
             s.Driver.FindElement(By.Id("consent-yes")).Click();
             Assert.Equal(callbackUrl, s.Driver.Url);
+            TestLogs.LogInformation("On callback URL 2");
 
             accessToken = GetAccessTokenFromCallbackResult(s.Driver);
             TestLogs.LogInformation($"Access token: {accessToken}");
@@ -190,9 +193,11 @@ namespace BTCPayServer.Tests
             //if it's the same, go to the confirm page
             TestLogs.LogInformation($"Going to auth URL 3 {authUrl}");
             s.Driver.Navigate().GoToUrl(authUrl);
+            TestLogs.LogInformation("On auth URL 3");
             s.Driver.FindElement(By.Id("continue")).Click();
             TestLogs.LogInformation("Going to callback URL 3");
             Assert.Equal(callbackUrl, s.Driver.Url);
+            TestLogs.LogInformation("On callback URL 3");
 
             //same app but different redirect = nono
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
@@ -200,6 +205,7 @@ namespace BTCPayServer.Tests
 
             TestLogs.LogInformation($"Going to auth URL 4 {authUrl}");
             s.Driver.Navigate().GoToUrl(authUrl);
+            TestLogs.LogInformation("On auth URL 4");
             Assert.False(s.Driver.Url.StartsWith("https://international.com/callback"));
 
             // Make sure we can check all permissions when not an admin

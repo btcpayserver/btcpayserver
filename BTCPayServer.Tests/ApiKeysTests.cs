@@ -208,6 +208,7 @@ namespace BTCPayServer.Tests
             s.Logout();
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            TestLogs.LogInformation("Go to API Keys page");
             s.GoToProfile(ManageNavPages.APIKeys);
             TestLogs.LogInformation("On API Keys page");
             s.Driver.WaitForAndClick(By.Id("AddApiKey"));

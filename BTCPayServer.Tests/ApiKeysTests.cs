@@ -11,6 +11,7 @@ using BTCPayServer.Views.Manage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -219,15 +220,10 @@ namespace BTCPayServer.Tests
             s.GoToProfile(ManageNavPages.APIKeys);
             TestLogs.LogInformation("On API Keys page");
             s.Driver.WaitForAndClick(By.Id("AddApiKey"));
-            int checkedPermissionCount = 0;
-            TestLogs.LogInformation($"Adding API key: {s.Driver.FindElements(By.ClassName("form-check-input")).Count} permissions");
-            foreach (var checkbox in s.Driver.FindElements(By.ClassName("form-check-input")))
-            {
-                checkedPermissionCount++;
-                s.Driver.ScrollTo(checkbox);
-                checkbox.Click();
-                TestLogs.LogInformation($"Clicked {checkedPermissionCount}");
-            }
+            int checkedPermissionCount = s.Driver.FindElements(By.ClassName("form-check-input")).Count;
+            TestLogs.LogInformation($"Adding API key: {checkedPermissionCount} permissions");
+            s.Driver.ExecuteJavaScript("document.querySelectorAll('#Permissions .form-check-input').forEach(i => i.click())");
+            TestLogs.LogInformation($"Clicked {checkedPermissionCount}");
 
             TestLogs.LogInformation("Generating API key");
             s.Driver.WaitForAndClick(By.Id("Generate"));

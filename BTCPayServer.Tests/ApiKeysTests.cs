@@ -175,7 +175,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("change-store-mode", s.Driver.PageSource);
             
             TestLogs.LogInformation("Going to callback URL 2");
-            s.Driver.FindElement(By.Id("consent-yes")).Click();
+            s.Driver.WaitForAndClick(By.Id("consent-yes"));
             Assert.Equal(callbackUrl, s.Driver.Url);
             TestLogs.LogInformation("On callback URL 2");
 
@@ -194,7 +194,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation($"Going to auth URL 3 {authUrl}");
             s.Driver.Navigate().GoToUrl(authUrl);
             TestLogs.LogInformation("On auth URL 3");
-            s.Driver.FindElement(By.Id("continue")).Click();
+            s.Driver.WaitForAndClick(By.Id("continue"));
             TestLogs.LogInformation("Going to callback URL 3");
             Assert.Equal(callbackUrl, s.Driver.Url);
             TestLogs.LogInformation("On callback URL 3");

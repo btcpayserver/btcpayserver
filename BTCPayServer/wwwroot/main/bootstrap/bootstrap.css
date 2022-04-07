@@ -10781,6 +10781,7 @@ ul:not([class]) li {
 
 .btn-outline-secondary:hover {
   color: var(--btcpay-secondary-text-hover);
+  border-color: var(--btcpay-secondary-border-hover);
 }
 
 .btn-outline-secondary:active {

@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
             var option = dropdown.FindElement(By.TagName("option"));
             var storeId = option.GetAttribute("value");
             option.Click();
-            s.Driver.FindElement(By.Id("Generate")).Click();
+            s.Driver.WaitForAndClick(By.Id("Generate"));
             var selectiveStoreApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             
             TestLogs.LogInformation("Checking CanModifyStoreSettings with StoreId permissions");
@@ -106,12 +106,13 @@ namespace BTCPayServer.Tests
             await TestApiAgainstAccessToken(selectiveStoreApiKey, tester, user,
                 Permission.Create(Policies.CanModifyStoreSettings, storeId).ToString());
 
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
-            s.Driver.FindElement(By.Id("Generate")).Click();
+            TestLogs.LogInformation("Adding API key for no permissions");
+            s.Driver.WaitForAndClick(By.Id("AddApiKey"));
+            TestLogs.LogInformation("Generating API key for no permissions");
+            s.Driver.WaitForAndClick(By.Id("Generate"));
             var noPermissionsApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             
-            TestLogs.LogInformation("Checking no permissions");
-            
+            TestLogs.LogInformation($"Checking no permissions: {noPermissionsApiKey}");
             await TestApiAgainstAccessToken(noPermissionsApiKey, tester, user);
 
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
@@ -146,7 +147,7 @@ namespace BTCPayServer.Tests
             
             TestLogs.LogInformation("Going to callback URL");
             
-            s.Driver.FindElement(By.Id("consent-yes")).Click();
+            s.Driver.WaitForAndClick(By.Id("consent-yes"));
             Assert.Equal(callbackUrl, s.Driver.Url);
             TestLogs.LogInformation("On callback URL");
 

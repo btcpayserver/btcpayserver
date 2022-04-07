@@ -2247,13 +2247,13 @@ textarea.form-control-lg {
 .form-check {
   display: block;
   min-height: 1.4rem;
-  padding-left: 2em;
-  margin-bottom: 0.125rem;
+  padding-left: 2.25em;
+  margin-bottom: 1rem;
 }
 
 .form-check .form-check-input {
   float: left;
-  margin-left: -2em;
+  margin-left: -2.25em;
 }
 
 .form-check-input {
@@ -2321,15 +2321,15 @@ textarea.form-control-lg {
 }
 
 .form-switch {
-  padding-left: 2.5em;
+  padding-left: 3em;
 }
 
 .form-switch .form-check-input {
-  width: 2em;
-  margin-left: -2.5em;
+  width: 2.5em;
+  margin-left: -3em;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
   background-position: left center;
-  border-radius: 2em;
+  border-radius: 2.5em;
   transition: background-position 0.15s ease-in-out;
 }
 
@@ -10615,6 +10615,16 @@ fieldset:disabled .btn {
     display: none !important;
   }
 }
+
+.form-select,
+.form-control {
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+}
+
+.form-check-input {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
 /* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
 * {
   --btcpay-scrollbar-width: 0.375rem;
@@ -10959,16 +10969,6 @@ input[type="number"].hide-number-spin {
 .form-control:not(:disabled,.disabled,.is-valid,.is-invalid):hover,
 .form-check-input:not(:disabled,.disabled,.is-valid,.is-invalid):hover {
   border-color: var(--btcpay-form-border-hover);
-}
-
-.form-select,
-.form-control {
-  box-shadow: 0 2px 2px rgba(0, 0, 0, .05);
-}
-
-.form-check-input {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 [data-required]::after {

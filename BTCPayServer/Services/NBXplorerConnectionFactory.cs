@@ -8,6 +8,7 @@ using System.Data.Common;
 using System;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace BTCPayServer.Services
 {
@@ -42,8 +43,21 @@ namespace BTCPayServer.Services
 
         public async Task<DbConnection> OpenConnection()
         {
+            int maxRetries = 10;
+            int retries = maxRetries;
+            retry:
             var conn = new Npgsql.NpgsqlConnection(connectionString);
-            await conn.OpenAsync();
+            try
+            {
+                await conn.OpenAsync();
+            }
+            catch (PostgresException ex) when (ex.IsTransient && retries > 0)
+            {
+                retries--;
+                await conn.DisposeAsync();
+                await Task.Delay((maxRetries - retries) * 100);
+                goto retry;
+            }
             return conn;
         }
 

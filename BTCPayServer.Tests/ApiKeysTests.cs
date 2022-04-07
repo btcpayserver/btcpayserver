@@ -362,8 +362,9 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
             }
+            TestLogs.LogInformation("Testing can edit store for second user expectation met");
 
-            TestLogs.LogInformation("Testing CanModifyServer");
+            TestLogs.LogInformation($"Testing CanModifyServer with {permissions.Contains(canModifyServer)}");
             if (permissions.Contains(canModifyServer))
             {
                 Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
@@ -379,6 +380,7 @@ namespace BTCPayServer.Tests
                         tester.PayTester.HttpClient);
                 });
             }
+            TestLogs.LogInformation("Testing CanModifyServer expectation met");
         }
 
         public async Task<T> TestApiAgainstAccessToken<T>(string apikey, string url, HttpClient client)

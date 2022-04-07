@@ -136,7 +136,7 @@ namespace BTCPayServer.Tests
             var authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
             TestLogs.LogInformation($"Going to auth URL {authUrl}");
-            s.Driver.Navigate().GoToUrl(authUrl);
+            s.GoToUrl(authUrl);
             Assert.Contains(appidentifier, s.Driver.PageSource);
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("type").ToLowerInvariant());
             Assert.Equal("true", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("value").ToLowerInvariant());
@@ -162,7 +162,7 @@ namespace BTCPayServer.Tests
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, applicationDetails: (null, new Uri(callbackUrl))).ToString();
 
             TestLogs.LogInformation($"Going to auth URL 2 {authUrl}");
-            s.Driver.Navigate().GoToUrl(authUrl);
+            s.GoToUrl(authUrl);
             TestLogs.LogInformation("On auth URL 2");
             Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
 
@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
 
             //if it's the same, go to the confirm page
             TestLogs.LogInformation($"Going to auth URL 3 {authUrl}");
-            s.Driver.Navigate().GoToUrl(authUrl);
+            s.GoToUrl(authUrl);
             TestLogs.LogInformation("On auth URL 3");
             s.Driver.WaitForAndClick(By.Id("continue"));
             TestLogs.LogInformation("Going to callback URL 3");
@@ -204,7 +204,7 @@ namespace BTCPayServer.Tests
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
 
             TestLogs.LogInformation($"Going to auth URL 4 {authUrl}");
-            s.Driver.Navigate().GoToUrl(authUrl);
+            s.GoToUrl(authUrl);
             TestLogs.LogInformation("On auth URL 4");
             Assert.False(s.Driver.Url.StartsWith("https://international.com/callback"));
 

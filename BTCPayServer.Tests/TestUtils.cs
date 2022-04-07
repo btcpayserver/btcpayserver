@@ -17,7 +17,7 @@ namespace BTCPayServer.Tests
 #if DEBUG && !SHORT_TIMEOUT
         public const int TestTimeout = 600_000;
 #else
-        public const int TestTimeout = 60_000;
+        public const int TestTimeout = 90_000;
 #endif
         public static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
         {

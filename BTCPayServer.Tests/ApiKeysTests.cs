@@ -388,10 +388,11 @@ namespace BTCPayServer.Tests
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", apikey);
             TestLogs.LogInformation($"Testing {uri}");
             var result = await client.SendAsync(httpRequest);
+            TestLogs.LogInformation($"Testing {uri} status: {result.StatusCode}");
             result.EnsureSuccessStatusCode();
 
             var rawJson = await result.Content.ReadAsStringAsync();
-            TestLogs.LogInformation($"Testing {uri}: {rawJson}");
+            TestLogs.LogInformation($"Testing {uri} result: {rawJson}");
             if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
             {
                 return (T)Convert.ChangeType(rawJson, typeof(T));

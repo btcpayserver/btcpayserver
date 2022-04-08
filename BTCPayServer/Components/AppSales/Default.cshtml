@@ -1,9 +1,13 @@
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 
+@{
+    var action = $"Update{Model.App.AppType}";
+}
+
 <div class="widget app-sales">
     <header class="mb-3">
         <h3>@Model.App.Name Sales</h3>
-        <a asp-controller="UIApps" asp-action="UpdatePointOfSale" asp-route-appId="@Model.App.Id">View All</a>
+        <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
     <p>177 Sales</p>
     <div id="AppSales-@Model.App.Id" class="ct-chart ct-major-octave"></div>

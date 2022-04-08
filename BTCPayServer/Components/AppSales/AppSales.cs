@@ -21,11 +21,12 @@ public class AppSales : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(AppData app)
     {
-        var entries = await _appService.GetPerkStats(app);
+        var stats = await _appService.GetSalesStats(app);
         var vm = new AppSalesViewModel
         {
             App = app,
-            Entries = entries
+            SalesCount = stats.SalesCount,
+            Series = stats.Series
         };
 
         return View(vm);

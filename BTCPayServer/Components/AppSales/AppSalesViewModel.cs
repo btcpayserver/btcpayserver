@@ -8,5 +8,6 @@ namespace BTCPayServer.Components.AppSales;
 public class AppSalesViewModel
 {
     public AppData App { get; set; }
-    public IEnumerable<ItemStats> Entries { get; set; }
+    public int SalesCount { get; set; }
+    public IEnumerable<SalesStatsItem> Series { get; set; }
 }

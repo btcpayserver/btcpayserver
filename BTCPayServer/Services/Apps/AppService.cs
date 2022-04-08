@@ -90,9 +90,9 @@ namespace BTCPayServer.Services.Apps
             }
 
             var invoices = await GetInvoicesForApp(appData, lastResetDate);
-            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed).ToArray();
-            var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed)).ToArray();
-            var paidInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid).ToArray();
+            var completeInvoices = invoices.Where(IsComplete).ToArray();
+            var pendingInvoices = invoices.Where(IsPending).ToArray();
+            var paidInvoices = invoices.Where(IsPaid).ToArray();
 
             var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
@@ -162,10 +162,9 @@ namespace BTCPayServer.Services.Apps
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
-                CurrencyDataPayments = currentPayments.Select(pair => pair.Key)
-                    .Concat(pendingPayments.Select(pair => pair.Key))
-                    .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true))
-                    .DistinctBy(data => data.Code)
+                CurrencyDataPayments = Enumerable.DistinctBy(currentPayments.Select(pair => pair.Key)
+                        .Concat(pendingPayments.Select(pair => pair.Key))
+                        .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true)), data => data.Code)
                     .ToDictionary(data => data.Code, data => data),
                 Info = new CrowdfundInfo
                 {
@@ -183,11 +182,21 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
+        private static bool IsPending(InvoiceEntity entity)
+        {
+            return !(entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed);
+        }
+
+        private static bool IsComplete(InvoiceEntity entity)
+        {
+            return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed;
+        }
+
         public async Task<IEnumerable<ItemStats>> GetPerkStats(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var invoices = await GetInvoicesForApp(appData);
-            var paidInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid).ToArray();
+            var paidInvoices = invoices.Where(IsPaid).ToArray();
             var currencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true);
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             var perkCount = paidInvoices
@@ -218,6 +227,47 @@ namespace BTCPayServer.Services.Apps
                 .OrderByDescending(stats => stats.SalesCount);
             
             return perkCount;
+        }
+
+        public async Task<SalesStats> GetSalesStats(AppData appData, int numberOfDays = 7)
+        {
+            var invoices = await GetInvoicesForApp(appData);
+            var paidInvoices = invoices.Where(IsPaid).ToArray();
+            var series = paidInvoices
+                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode) &&
+                                 entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays))
+                .GroupBy(entity => entity.InvoiceTime.Date)
+                .Select(entities => new SalesStatsItem
+                {
+                    Date = entities.Key,
+                    Label = entities.Key.ToString("MMM dd", CultureInfo.InvariantCulture),
+                    SalesCount = entities.Count()
+                });
+
+            // fill up the gaps
+            foreach (var i in Enumerable.Range(0, numberOfDays))
+            {
+                var date = (DateTimeOffset.UtcNow - TimeSpan.FromDays(i)).Date;
+                if (!series.Any(e => e.Date == date))
+                {
+                    series = series.Append(new SalesStatsItem
+                    {
+                        Date = date,
+                        Label = date.ToString("MMM dd", CultureInfo.InvariantCulture)
+                    });
+                }
+            }
+            
+            return new SalesStats
+            {
+                SalesCount = paidInvoices.Length,
+                Series = series.OrderBy(i => i.Label)
+            };
+        }
+
+        private static bool IsPaid(InvoiceEntity entity)
+        {
+            return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid;
         }
 
         public static string GetCrowdfundOrderId(string appId) => $"crowdfund-app_{appId}";
@@ -620,5 +670,18 @@ namespace BTCPayServer.Services.Apps
         public int SalesCount { get; set; }
         public decimal Total { get; set; }
         public string TotalFormatted { get; set; }
+    }
+    
+    public class SalesStats
+    {
+        public int SalesCount { get; set; }
+        public IEnumerable<SalesStatsItem> Series { get; set; }
+    }
+    
+    public class SalesStatsItem
+    {
+        public DateTime Date { get; set; }
+        public string Label { get; set; }
+        public int SalesCount { get; set; }
     }
 }

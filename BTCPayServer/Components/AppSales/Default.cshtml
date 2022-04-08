@@ -4,29 +4,26 @@
     var action = $"Update{Model.App.AppType}";
 }
 
-<div class="widget app-sales">
+<div id="AppSales-@Model.App.Id" class="widget app-sales">
     <header class="mb-3">
         <h3>@Model.App.Name Sales</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
-    <p>177 Sales</p>
-    <div id="AppSales-@Model.App.Id" class="ct-chart ct-major-octave"></div>
+    <p>@Model.SalesCount Total Sales</p>
+    <div class="ct-chart ct-major-octave"></div>
     <script>
         (function () {
-            new Chartist.Bar('#AppSales-@Model.App.Id', {
-                labels: ['Jun 12', 'Jun 13', 'Jun 14', 'Jun 15', 'Jun 16', 'Jun 17', 'Jun 18', 'Jun 19'],
-                series: [[
-                    12,
-                    23,
-                    21,
-                    38,
-                    41,
-                    39,
-                    45,
-                    61
-                ]]
+            const id = 'AppSales-@Model.App.Id';
+            const labels = @Safe.Json(Model.Series.Select(i => i.Label));
+            const series = @Safe.Json(Model.Series.Select(i => i.SalesCount));
+            const min = Math.min(...series);
+            const max = Math.max(...series);
+            const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
+            new Chartist.Bar(`#${id} .ct-chart`, {
+                labels,
+                series: [series]
             }, {
-                low: 0,
+                low,
             });
         })();
     </script>

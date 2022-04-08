@@ -28,10 +28,10 @@
 <h3 class="mb-3">@ViewData["Title"]</h3>
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         <p>Generate a new api key to use BTCPay through its API.</p>
         
-        <form method="post" asp-action="AddApiKey">
+        <form method="post" asp-action="AddApiKey" id="Permissions">
             <div asp-validation-summary="All" class="text-danger"></div>
         
             <div class="form-group">

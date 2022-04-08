@@ -475,11 +475,11 @@ namespace BTCPayServer.Tests
                 tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccessAsync();
                 user.RegisterDerivationScheme("BTC");
                 // First we try payment with a merchant having only BTC
-                var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                var invoice = await user.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 5000.0m,
                         Currency = "USD",
@@ -490,10 +490,10 @@ namespace BTCPayServer.Tests
                     }, Facade.Merchant);
 
                 var cashCow = tester.ExplorerNode;
-                cashCow.Generate(2); // get some money in case
+                await cashCow.GenerateAsync(2); // get some money in case
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                 var firstPayment = Money.Coins(0.04m);
-                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -523,8 +523,8 @@ namespace BTCPayServer.Tests
 
                 // Retry now with LTC enabled
                 user.RegisterDerivationScheme("LTC");
-                invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                invoice = await user.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 5000.0m,
                         Currency = "USD",
@@ -537,7 +537,7 @@ namespace BTCPayServer.Tests
                 cashCow = tester.ExplorerNode;
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                 firstPayment = Money.Coins(0.04m);
-                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
                 TestLogs.LogInformation("First payment sent to " + invoiceAddress);
                 TestUtils.Eventually(() =>
                 {
@@ -550,8 +550,8 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(ltcCryptoInfo);
                 invoiceAddress = BitcoinAddress.Create(ltcCryptoInfo.Address, cashCow.Network);
                 var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due, CultureInfo.InvariantCulture));
-                cashCow.Generate(4); // LTC is not worth a lot, so just to make sure we have money...
-                cashCow.SendToAddress(invoiceAddress, secondPayment);
+                await cashCow.GenerateAsync(4); // LTC is not worth a lot, so just to make sure we have money...
+                await cashCow.SendToAddressAsync(invoiceAddress, secondPayment);
                 TestLogs.LogInformation("Second payment sent to " + invoiceAddress);
                 TestUtils.Eventually(() =>
                 {
@@ -570,7 +570,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
                 Assert.Equal("LTC", checkout.CryptoCode);
 
-
                 Assert.Equal(2, invoice.PaymentCodes.Count());
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
@@ -581,11 +580,10 @@ namespace BTCPayServer.Tests
                 Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
                 Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
                 Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
-
-
+                
                 // Check if we can disable LTC
-                invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                invoice = await user.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 5000.0m,
                         Currency = "USD",

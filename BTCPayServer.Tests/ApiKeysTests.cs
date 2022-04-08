@@ -217,7 +217,7 @@ namespace BTCPayServer.Tests
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             TestLogs.LogInformation("Go to API Keys page");
-            s.GoToProfile(ManageNavPages.APIKeys);
+            s.GoToUrl("/account/apikeys");
             TestLogs.LogInformation("On API Keys page");
             s.Driver.WaitForAndClick(By.Id("AddApiKey"));
             int checkedPermissionCount = s.Driver.FindElements(By.ClassName("form-check-input")).Count;

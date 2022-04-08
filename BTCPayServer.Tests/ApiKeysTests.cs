@@ -20,7 +20,7 @@ namespace BTCPayServer.Tests
 {
     public class ApiKeysTests : UnitTestBase
     {
-        public const int TestTimeout = TestUtils.TestTimeout;
+        public const int TestTimeout = 120_000;
 
         public const string TestApiPath = "api/test/apikey";
         public ApiKeysTests(ITestOutputHelper helper) : base(helper)

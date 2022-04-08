@@ -10855,6 +10855,10 @@ textarea.w-auto {
   border-top-width: 1px;
 }
 
+.table > :not(caption) > *:last-child > * {
+  border-bottom-width: 0;
+}
+
 /* custom utility classes */
 .bg-tile {
   background-color: var(--btcpay-bg-tile);

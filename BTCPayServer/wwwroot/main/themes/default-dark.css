@@ -21,6 +21,7 @@
   --btcpay-body-border-medium: var(--btcpay-neutral-700);
   --btcpay-body-text: var(--btcpay-white);
   --btcpay-body-text-rgb: 255, 255, 255;
+  --btcpay-body-link-accent: var(--btcpay-primary-300);
   --btcpay-form-bg: var(--btcpay-neutral-950);
   --btcpay-form-bg-addon: var(--btcpay-neutral-700);
   --btcpay-form-bg-disabled: var(--btcpay-neutral-800);

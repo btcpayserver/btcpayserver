@@ -196,7 +196,7 @@ a {
 
 a:hover {
   color: var(--btcpay-body-link-accent);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 a:not([href]):not([class]), a:not([href]):not([class]):hover {
@@ -2820,7 +2820,6 @@ textarea.form-control-lg {
 
 .btn:hover {
   color: var(--btcpay-body-text);
-  text-decoration: none;
 }
 
 .btn-check:focus + .btn, .btn:focus {
@@ -3410,11 +3409,11 @@ fieldset:disabled .btn {
 
 .btn-link:hover {
   color: var(--btcpay-body-link-accent);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .btn-link:focus {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .btn-link:disabled, .btn-link.disabled {
@@ -3717,7 +3716,6 @@ fieldset:disabled .btn {
 
 .dropdown-item:hover, .dropdown-item:focus {
   color: var(--btcpay-body-text);
-  text-decoration: none;
   background-color: var(--btcpay-body-bg-hover);
 }
 
@@ -3914,7 +3912,6 @@ fieldset:disabled .btn {
 
 .nav-link:hover, .nav-link:focus {
   color: var(--btcpay-nav-link-accent);
-  text-decoration: none;
 }
 
 .nav-link.disabled {
@@ -4021,10 +4018,6 @@ fieldset:disabled .btn {
   margin-right: 1rem;
   font-size: 1rem;
   white-space: nowrap;
-}
-
-.navbar-brand:hover, .navbar-brand:focus {
-  text-decoration: none;
 }
 
 .navbar-nav {
@@ -4568,10 +4561,6 @@ fieldset:disabled .btn {
   margin-bottom: 0;
 }
 
-.card-link:hover {
-  text-decoration: none;
-}
-
 .card-link + .card-link {
   margin-left: 1rem;
 }
@@ -4842,7 +4831,6 @@ fieldset:disabled .btn {
 .page-link:hover {
   z-index: 2;
   color: var(--btcpay-body-link);
-  text-decoration: none;
   background-color: var(--btcpay-body-bg-hover);
   border-color: var(--btcpay-body-border-light);
 }

@@ -169,7 +169,7 @@
   --btcpay-body-text-muted: var(--btcpay-neutral-500);
   --btcpay-body-text-rgb: 41, 41, 41;
   --btcpay-body-link: var(--btcpay-primary);
-  --btcpay-body-link-accent: var(--btcpay-primary);
+  --btcpay-body-link-accent: var(--btcpay-primary-accent);
   --btcpay-body-shadow: rgba(25, 135, 84, 0.33);
   --btcpay-wizard-bg: var(--btcpay-body-bg);
   --btcpay-wizard-text: var(--btcpay-body-text);

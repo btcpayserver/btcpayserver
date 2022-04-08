@@ -47,12 +47,10 @@
     }
     else
     {
-        <p class="text-secondary mt-3">
+        <p class="text-secondary my-3">
             There are no recent invoices.
         </p>
-        
-        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="btn btn-primary">
-            <span class="fa fa-plus"></span>
+        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="fw-semibold">
             Create Invoice
         </a>
     }

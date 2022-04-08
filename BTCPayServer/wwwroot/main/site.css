@@ -324,15 +324,16 @@ svg.icon-note {
 .widget.store-numbers {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     gap: var(--btcpay-space-l) var(--btcpay-space-xl);
 }
 
 .widget.store-numbers header {
-    justify-content: start;
+    justify-content: space-between;
 }
 
 .widget.store-numbers header h6 {
-    margin-right: var(--btcpay-space-m);
+    margin-right: var(--btcpay-space-s);
 }
 
 .widget header a,
@@ -341,7 +342,7 @@ svg.icon-note {
 }
 
 .widget .store-number {
-    flex: 0 1 14rem;
+    flex: 0 1 calc(50% - var(--btcpay-space-xl) / 2);
 }
 
 .widget .number {
@@ -375,6 +376,12 @@ svg.icon-note {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
+@media (max-width: 575px) {
+    .widget .store-number {
+        flex: 0 1 100%;
+    }
+}
+
 @media (min-width: 576px) {
     .widget {
         --widget-padding: var(--btcpay-space-l);
@@ -398,11 +405,12 @@ svg.icon-note {
     
     .widget.store-numbers {
         flex-direction: column;
+        justify-content: start;
     }
 
     .widget .store-number {
         flex: 0 1;
-        width: 14rem;
+        width: 100%;
     }
 
     .widget.store-numbers header {

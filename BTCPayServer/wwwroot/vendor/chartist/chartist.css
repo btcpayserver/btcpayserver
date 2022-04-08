@@ -149,12 +149,12 @@
     fill: none; }
 
 .ct-point {
-    stroke-width: 10px;
+    stroke-width: 7px;
     stroke-linecap: round; }
 
 .ct-line {
     fill: none;
-    stroke-width: 4px; }
+    stroke-width: 2px; }
 
 .ct-area {
     stroke: none;

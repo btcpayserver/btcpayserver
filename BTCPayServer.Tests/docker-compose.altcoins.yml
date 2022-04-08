@@ -89,7 +89,7 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.6
+    image: nicolasdorier/nbxplorer:2.3.14
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -340,13 +340,15 @@ services:
             - monerod   
   litecoind:
     restart: unless-stopped
-    image: nicolasdorier/docker-litecoin:0.16.3
+    image: btcpayserver/litecoin:0.18.1
     environment:
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         regtest=1
         rpcport=43782
+        rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0
     ports: 

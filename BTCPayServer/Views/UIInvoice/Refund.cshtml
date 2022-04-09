@@ -1,4 +1,4 @@
-@model RefundModel
+﻿@model RefundModel
 @{
     ViewData["Title"] = "Refund";
 }
@@ -13,6 +13,10 @@
                 <form method="post">
                     <input type="hidden" asp-for="RefundStep" value="@Model.RefundStep"/>
                     <input type="hidden" asp-for="Title" value="@Model.Title"/>
+                    <input type="hidden" asp-for="RateThenText" value="@Model.RateThenText"/>
+                    <input type="hidden" asp-for="CurrentRateText" value="@Model.CurrentRateText"/>
+                    <input type="hidden" asp-for="FiatText" value="@Model.FiatText"/>
+
                     @switch (Model.RefundStep)
                     {
                         case RefundSteps.SelectPaymentMethod:

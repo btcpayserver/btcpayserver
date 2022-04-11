@@ -64,12 +64,6 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [DisplayName("Store")]
-        public SelectList Stores
-        {
-            get; set;
-        }
-
         [DisplayName("Supported Transaction Currencies")]
         public List<string> SupportedTransactionCurrencies
         {

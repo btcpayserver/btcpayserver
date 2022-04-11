@@ -32,8 +32,8 @@
             </div>
             <div class="row">
                 <div class="form-group col-8">
-                    <label asp-for="Amount" class="form-label"></label>
-                    <input inputmode="decimal" asp-for="Amount" class="form-control"/>
+                    <label asp-for="Amount" class="form-label" data-required></label>
+                    <input asp-for="Amount" class="form-control" inputmode="decimal" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group col-4">
@@ -63,7 +63,7 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <h5 class="mt-4 mb-2">Additional Options</h5>
+            <h4 class="mt-5 mb-2">Additional Options</h4>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">

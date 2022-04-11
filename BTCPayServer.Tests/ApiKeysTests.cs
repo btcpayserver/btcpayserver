@@ -189,6 +189,7 @@ namespace BTCPayServer.Tests
                 (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
             //let's test the app identifier system
+            TestLogs.LogInformation("Checking app identifier system");
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri(callbackUrl))).ToString();
 

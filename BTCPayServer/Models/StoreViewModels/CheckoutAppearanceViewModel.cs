@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -10,18 +9,12 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class CheckoutAppearanceViewModel
     {
-        public class Format
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
-            public PaymentMethodId PaymentId { get; set; }
-        }
         public SelectList PaymentMethods { get; set; }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {
             defaultLang = langService.GetLanguages().Any(language => language.Code == defaultLang) ? defaultLang : "en";
-            var choices = langService.GetLanguages().Select(o => new Format() { Name = o.DisplayName, Value = o.Code }).ToArray().OrderBy(o => o.Name);
+            var choices = langService.GetLanguages().Select(o => new PaymentMethodOptionViewModel.Format() { Name = o.DisplayName, Value = o.Code }).ToArray().OrderBy(o => o.Name);
             var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
             Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             DefaultLang = chosen.Value;

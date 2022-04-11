@@ -84,6 +84,7 @@ function inputChanges(event, buttonSize) {
     let priceInputName = 'price';
     let app = srvModel.appIdEndpoint? srvModel.apps.find(value => value.id === srvModel.appIdEndpoint ): null;
     let allowCurrencySelection = true;
+    let allowDefaultPaymentMethodSelection = true;
     if (app) {
         if (app.appType.toLowerCase() === 'pointofsale') {
             actionUrl = `apps/${app.id}/pos`;
@@ -97,6 +98,7 @@ function inputChanges(event, buttonSize) {
         if (actionUrl !== 'api/v1/invoices') {
             priceInputName = 'amount';
             allowCurrencySelection = false;
+            allowDefaultPaymentMethodSelection = false;
             srvModel.useModal = false;
         }
     }
@@ -149,6 +151,15 @@ function inputChanges(event, buttonSize) {
         if (allowCurrencySelection) html += addSelectCurrency(srvModel.currency);
         html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);
         html += '  </div>\n';
+    }
+
+    if (
+        allowDefaultPaymentMethodSelection &&
+        // Only add default payment method to HTML if user explicitly selected it
+        event && event.target.id === 'default-payment-method' && event.target.value !== ""
+    )
+    {
+        html += addInput("defaultPaymentMethod", srvModel.defaultPaymentMethod)
     }
     
     html += srvModel.payButtonText

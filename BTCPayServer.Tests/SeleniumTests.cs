@@ -674,7 +674,8 @@ namespace BTCPayServer.Tests
             s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-            // We are only if explicitely going to /
+            
+            // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
             s.Driver.Navigate().Back();
@@ -696,7 +697,8 @@ namespace BTCPayServer.Tests
             s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-            // We are only if explicitely going to /
+            
+            // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
         }

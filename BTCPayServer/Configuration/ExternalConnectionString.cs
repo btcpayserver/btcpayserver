@@ -82,26 +82,28 @@ namespace BTCPayServer.Configuration
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
                 {
-                    string cookieFileContent = null;
-                    bool isFake = false;
-                    try
+                    bool isFake = connectionString.CookieFilePath == "fake"; // Hacks for testing
+                    string cookieFileContent = isFake ? "fake" : null;
+                    if (!isFake)
                     {
-                        cookieFileContent = await System.IO.File.ReadAllTextAsync(connectionString.CookieFilePath);
-                        isFake = connectionString.CookieFilePath == "fake";
-                        connectionString.CookieFilePath = null;
+                        try
+                        {
+                            cookieFileContent = await System.IO.File.ReadAllTextAsync(connectionString.CookieFilePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
-                    }
+                    connectionString.CookieFilePath = null;
+                    
                     if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator || serviceType == ExternalServiceTypes.ThunderHub)
                     {
                         connectionString.AccessKey = cookieFileContent;
                     }
                     else if (serviceType == ExternalServiceTypes.Spark)
                     {
-                        var cookie = (isFake ? "fake:fake:fake" // Hacks for testing
-                                    : cookieFileContent).Split(':');
+                        var cookie = (isFake ? "fake:fake:fake" : cookieFileContent).Split(':');
                         if (cookie.Length >= 3)
                         {
                             connectionString.AccessKey = cookie[2];

@@ -311,7 +311,7 @@ namespace BTCPayServer.Controllers
                             model.RefundStep = RefundSteps.SelectCustomAmount;
                             return View(model);
                         default:
-                            ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invalid choice");
+                            ModelState.AddModelError(nameof(model.SelectedRefundOption), "Please select an option before proceeding");
                             return View(model);
                     }
 

@@ -89,10 +89,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            return View(nameof(EditPaymentRequest), new UpdatePaymentRequestViewModel(paymentRequest)
+            var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
                 StoreId = store.Id
-            });
+            };
+
+            vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
+
+            return View(nameof(EditPaymentRequest), vm);
         }
 
         [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]

@@ -76,10 +76,11 @@ namespace BTCPayServer.Controllers
                 });
                 return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
             }
+            
             return View(new NewPullPaymentModel
             {
                 Name = "",
-                Currency = "BTC",
+                Currency = CurrentStore.GetStoreBlob().DefaultCurrency,
                 CustomCSSLink = "",
                 EmbeddedCSS = "",
                 PaymentMethodItems = paymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true))

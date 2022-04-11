@@ -25,7 +25,6 @@
     </script>
 }
 
-
 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
     <div class="sticky-header-setup"></div>
     <div class="sticky-header d-flex align-items-center justify-content-between">
@@ -41,16 +40,6 @@
             @if (Model.StoreId != null)
             {
                 <input type="hidden" asp-for="StoreId" />
-            }
-            else
-            {
-                <div class="form-group">
-                    <label asp-for="Stores" class="form-label"></label>
-                    <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
-                    <span asp-validation-for="StoreId" class="text-danger"></span>
-                </div>
-
-                <h4 class="mt-5 mb-4">Invoice Details</h4>
             }
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">

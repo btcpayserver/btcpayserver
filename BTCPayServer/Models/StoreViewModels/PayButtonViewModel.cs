@@ -13,6 +13,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string InvoiceId { get; set; }
         [Required]
         public string Currency { get; set; }
+        public string DefaultPaymentMethod { get; set; }
+        public PaymentMethodOptionViewModel.Format[] PaymentMethods { get; set; }
         public string CheckoutDesc { get; set; }
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }

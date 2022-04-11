@@ -1,4 +1,4 @@
-version: "3"    
+version: "3"
 
 # Run `docker-compose up dev` for bootstrapping your development environment
 # Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
@@ -35,7 +35,7 @@ services:
     links:
       - dev
       - selenium
-    extra_hosts: 
+    extra_hosts:
       - "tests:127.0.0.1"
     volumes:
       - "sshd_datadir:/root/.ssh"
@@ -43,7 +43,7 @@ services:
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
-  dev: 
+  dev:
     image: alpine:3.7
     command: [ "/bin/sh", "-c", "trap : TERM INT; while :; do echo Ready to code and debug like a rockstar!!!; sleep 2073600; done & wait" ]
     links:
@@ -69,7 +69,7 @@ services:
     volumes:
         - "sshd_datadir:/root/.ssh"
 
-  devlnd: 
+  devlnd:
     image: btcpayserver/bitcoin:22.0
     environment:
       BITCOIN_NETWORK: regtest
@@ -89,11 +89,11 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.6
+    image: nicolasdorier/nbxplorer:2.3.14
     restart: unless-stopped
     ports:
       - "32838:32838"
-    expose: 
+    expose:
       - "32838"
     environment:
       NBXPLORER_NETWORK: regtest
@@ -141,7 +141,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
-    ports: 
+    ports:
       - "43782:43782"
       - "39388:39388"
     expose:
@@ -156,7 +156,7 @@ services:
     image: btcpayserver/lightning:v0.10.1-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
-    environment: 
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
@@ -204,7 +204,7 @@ services:
   merchant_lightningd:
     image: btcpayserver/lightning:v0.10.1-1-dev
     stop_signal: SIGKILL
-    environment: 
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
@@ -337,24 +337,26 @@ services:
       volumes:
           - "./monero_wallet:/wallet"
       depends_on:
-            - monerod   
+            - monerod
   litecoind:
     restart: unless-stopped
-    image: nicolasdorier/docker-litecoin:0.16.3
+    image: btcpayserver/litecoin:0.18.1
     environment:
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         regtest=1
         rpcport=43782
+        rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0
-    ports: 
+    ports:
       - "43783:43782"
     expose:
       - "43782" # RPC
       - "39388" # P2P
-          
+
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid

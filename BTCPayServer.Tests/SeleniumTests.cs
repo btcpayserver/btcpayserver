@@ -674,7 +674,8 @@ namespace BTCPayServer.Tests
             s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-            // We are only if explicitely going to /
+            
+            // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
             s.Driver.Navigate().Back();
@@ -696,7 +697,8 @@ namespace BTCPayServer.Tests
             s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-            // We are only if explicitely going to /
+            
+            // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
         }
@@ -749,7 +751,12 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
-            s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
+
+            var currencyInput = s.Driver.FindElement(By.Id("Currency"));
+            Assert.Equal("USD", currencyInput.GetAttribute("value"));
+            currencyInput.Clear();
+            currencyInput.SendKeys("BTC");
+            
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
@@ -1613,6 +1620,12 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
+            
+            var currencyInput = s.Driver.FindElement(By.Id("Currency"));
+            Assert.Equal("USD", currencyInput.GetAttribute("value"));
+            currencyInput.Clear();
+            currencyInput.SendKeys("BTC");
+            
             s.Driver.FindElement(By.Id("Create")).Click();
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.Id("Destination")).SendKeys(lnurl);

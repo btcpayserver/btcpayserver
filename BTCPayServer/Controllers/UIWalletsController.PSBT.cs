@@ -120,26 +120,34 @@ namespace BTCPayServer.Controllers
             builder.SendEstimatedFees(targetFeeRate);
             builder.SendFees(bumpFee);
             builder.SendAll(returnAddress);
-            var psbt = builder.BuildPSBT(false);
-            psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest()
-            {
-                PSBT = psbt,
-                DerivationScheme = derivationScheme
-            })).PSBT;
-            return View("PostRedirect", new PostRedirectViewModel
-            {
-                AspController = "UIWallets",
-                AspAction = nameof(UIWalletsController.WalletSign),
-                RouteParameters = {
-                    { "walletId", walletId.ToString() },
-                    { "returnUrl", returnUrl }
-                },
-                FormParameters =
-                            {
-                                { "walletId", walletId.ToString() },
-                                { "psbt", psbt.ToHex() }
-                            }
-            });
+            
+            try {
+                var psbt = builder.BuildPSBT(false);
+                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest()
+                {
+                    PSBT = psbt,
+                    DerivationScheme = derivationScheme
+                })).PSBT;
+
+                return View("PostRedirect", new PostRedirectViewModel
+                {
+                    AspController = "UIWallets",
+                    AspAction = nameof(UIWalletsController.WalletSign),
+                    RouteParameters = {
+                        { "walletId", walletId.ToString() },
+                        { "returnUrl", returnUrl }
+                    },
+                    FormParameters =
+                                {
+                                    { "walletId", walletId.ToString() },
+                                    { "psbt", psbt.ToHex() }
+                                }
+                });
+            } catch (Exception ex) {
+                TempData[WellKnownTempData.ErrorMessage] = ex.Message;
+
+                return Redirect(returnUrl);
+            }
         }
 
         [HttpPost("{walletId}/sign")]

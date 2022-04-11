@@ -1006,7 +1006,7 @@ namespace BTCPayServer.Controllers
             {
                 Price = null,
                 Currency = storeBlob.DefaultCurrency,
-                DefaultPaymentMethod = GetDefaultPaymentMethodChoice(store)?.Value,
+                DefaultPaymentMethod = String.Empty,
                 PaymentMethods = GetEnabledPaymentMethodChoices(store),
                 ButtonSize = 2,
                 UrlRoot = appUrl,

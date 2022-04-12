@@ -5,7 +5,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <div class="dropdown only-for-js" id="quick-fill">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
                     Quick Fill
                 </button>
                 <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
@@ -46,7 +46,7 @@
                 <span asp-validation-for="Settings.FromDisplay" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.From" class="form-label">Sender's email address</label>
+                <label asp-for="Settings.From" class="form-label">Sender's Email Address</label>
                 <input asp-for="Settings.From" class="form-control"/>
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>

@@ -7,31 +7,23 @@
 
 <form method="post">
     <div class="row mb-5">
-    <div class="col-xl-8 col-xxl-constrain">
+        <div class="col-xl-8 col-xxl-constrain">
             <h4 class="mb-2">Domain name</h4>
             <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/Deployment/ChangeDomain/" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
 
             <div class="d-flex">
                 <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
-                <button name="command" type="submit" class="btn btn-primary ms-3" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
+                <button name="command" type="submit" class="btn btn-secondary ms-3" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
                     Confirm
                 </button>
-            </div>
-
-            <h4 class="mt-5 mb-2">Update</h4>
-            <p>Update to the latest version of BTCPay Server.</p>
-            <div class="form-group">
-                <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
-                </div>
             </div>
 
             <h4 class="mt-5 mb-2">Restart</h4>
             <p>Restart BTCPay Server and related services.</p>
             <div class="form-group">
                 <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-primary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>
+                    <button name="command" type="submit" class="btn btn-secondary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>
                 </div>
             </div>
 
@@ -40,6 +32,14 @@
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")">Clean</button>
+                </div>
+            </div>
+
+            <h4 class="mt-5 mb-2">Update</h4>
+            <p>Update to the latest version of BTCPay Server.</p>
+            <div class="form-group">
+                <div class="input-group">
+                    <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
                 </div>
             </div>
         </div>

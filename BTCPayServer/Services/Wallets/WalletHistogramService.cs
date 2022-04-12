@@ -44,7 +44,7 @@ public class WalletHistogramService
                 var labelCount = 6;
                 (var days, var pointCount) = type switch
                 {
-                    WalletHistogramType.Week => (7, 7),
+                    WalletHistogramType.Week => (7, 30),
                     WalletHistogramType.Month => (30, 30),
                     WalletHistogramType.Year => (365, 30),
                     _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
@@ -64,11 +64,11 @@ public class WalletHistogramService
                 {
                     var r = data[i];
                     series.Add((decimal)r.balance);
-                    labels.Add((days == 7 && i < labelCount) || (days != 7 && i % labelEvery == 0)
+                    labels.Add((i % labelEvery == 0)
                         ? ((DateTime)r.date).ToString("MMM dd", CultureInfo.InvariantCulture)
                         : null);
                 }
-                
+                series[^1] = balance;
                 return new WalletHistogramData
                 {
                     Series = series,

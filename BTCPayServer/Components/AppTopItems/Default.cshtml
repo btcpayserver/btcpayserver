@@ -6,7 +6,7 @@
 
 <div class="widget app-top-items">
     <header class="mb-3">
-        <h3>@Model.App.Name Top Items</h3>
+        <h3>Top Perks</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">View All</a>
     </header>
     @if (Model.Entries.Any())
@@ -27,7 +27,7 @@
     else
     {
         <p class="text-secondary mt-3">
-            There are no sales yet.
+            No contributions have been made yet.
         </p>
     }
 </div>

@@ -6,10 +6,10 @@
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">
     <header class="mb-3">
-        <h3>@Model.App.Name Sales</h3>
+        <h3>@Model.App.Name Contributions</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
-    <p>@Model.SalesCount Total Sales</p>
+    <p>@Model.SalesCount Total Contributions</p>
     <div class="ct-chart ct-major-octave"></div>
     <script>
         (function () {

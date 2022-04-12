@@ -1,0 +1,57 @@
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Invoices
+@model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
+
+<div class="widget store-recent-transactions">
+    <header>
+        <h3>Recent Invoices</h3>
+        @if (Model.Invoices.Any())
+        {
+            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id">View All</a>
+        }
+    </header>
+    @if (Model.Invoices.Any())
+    {
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th class="w-125px">Date</th>
+                <th class="text-nowrap">Invoice Id</th>
+                <th>Status</th>
+                <th class="text-end">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var invoice in Model.Invoices)
+            {
+                <tr>
+                    <td>@invoice.Date.ToTimeAgo()</td>
+                    <td>
+                        <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
+                    </td>
+                    <td>
+                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                            @invoice.Status.Status.ToModernStatus().ToString()
+                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                            {
+                                @($"({invoice.Status.ExceptionStatus.ToString()})")
+                            }
+                        </span>
+                    </td>
+                    <td class="text-end">@invoice.AmountCurrency</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary my-3">
+            There are no recent invoices.
+        </p>
+        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="fw-semibold">
+            Create Invoice
+        </a>
+    }
+</div>

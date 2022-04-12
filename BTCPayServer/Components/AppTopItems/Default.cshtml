@@ -1,0 +1,33 @@
+@model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
+
+@{
+    var action = $"Update{Model.App.AppType}";
+}
+
+<div class="widget app-top-items">
+    <header class="mb-3">
+        <h3>@Model.App.Name Top Items</h3>
+        <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">View All</a>
+    </header>
+    @if (Model.Entries.Any())
+    {
+        <div class="app-items">
+            @foreach (var entry in Model.Entries)
+            {
+                <div class="app-item">
+                    <span class="app-item-name">@entry.Title</span>
+                    <span class="app-item-value">
+                        @entry.SalesCount sale@(entry.SalesCount == 1 ? "" : "s"),
+                        @entry.TotalFormatted total
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no sales yet.
+        </p>
+    }
+</div>

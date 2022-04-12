@@ -53,6 +53,7 @@
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Fido2" Version="2.0.1" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.1" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />

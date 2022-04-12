@@ -1,4 +1,5 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
@@ -17,6 +18,10 @@
             @if (string.IsNullOrEmpty(Model.Address))
             {
                 <button id="generateButton" class="btn btn-primary" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
+                @if (env.CheatMode)
+                {
+                    <button type="submit" name="command" value="fill-wallet" class="btn btn-info ms-3">Cheat Mode: Send transactions to this wallet</button>
+                }
             }
             else
             {
@@ -84,7 +89,7 @@
                         <div class="col-12 col-sm-6 mt-4 mt-sm-0">
                             <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
                         </div>
-                    </div>
+					</div>
                 </div>
             }
         </form>

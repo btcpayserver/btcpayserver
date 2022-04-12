@@ -47,11 +47,7 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.IsOwner && option.WalletId != null)
-                        {
-                            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@option.WalletId" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
-                        else if (option.IsOwner)
+                        @if (option.IsOwner)
                         {
                             <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                         }

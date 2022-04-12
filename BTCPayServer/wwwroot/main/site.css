@@ -70,6 +70,32 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
+/* Badges */
+.badge-new {
+    background: #d4edda;
+    color: #000;
+}
+
+.badge-expired {
+    background: #eee;
+    color: #000;
+}
+
+.badge-invalid {
+    background: #c94a47;
+    color: #fff;
+}
+
+.badge-processing {
+    background: #f1c332;
+    color: #000;
+}
+
+.badge-settled {
+    background: #329f80;
+    color: #fff;
+}
+
 /* Info icons in main headline */
 h2 small .fa-question-circle-o {
     position: relative;
@@ -227,3 +253,172 @@ svg.icon-note {
     flex: 1;
     padding: 1rem 0;
 }
+
+/* Dashboard */
+#Dashboard {
+    display: grid;
+    gap: var(--btcpay-space-m);
+    grid-template-columns: repeat(12, 1fr);
+}
+
+.widget {
+    --widget-padding: var(--btcpay-space-m);
+    --widget-chart-width: 100vw;
+    
+    border: 1px solid var(--btcpay-body-border-light);
+    border-radius: var(--btcpay-border-radius);
+    padding: var(--widget-padding);
+    background: var(--btcpay-bg-tile);
+
+    grid-column-start: 1;
+    grid-column-end: 13;
+}
+
+.widget header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--btcpay-space-s);
+    gap: var(--btcpay-space-s);
+    line-height: 1.2;
+}
+
+.widget header a,
+.widget header .btn-link {
+    margin-top: var(--btcpay-space-xs);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+.widget h3,
+.widget .h3 {
+    font-weight: var(--btcpay-font-weight-bold);
+    margin-bottom: 0;
+}
+
+.widget h6,
+.widget .h6 {
+    color: var(--btcpay-body-text-muted);
+    margin-bottom: 0;
+}
+
+.widget .btn-group {
+    display: inline-flex;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.widget .btn-link {
+    color: var(--btcpay-body-text-muted);
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
+
+.widget input:checked + .btn-link {
+    color: var(--btcpay-body-link-accent);
+}
+
+.widget.store-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--btcpay-space-l) var(--btcpay-space-xl);
+}
+
+.widget.store-numbers header {
+    justify-content: space-between;
+}
+
+.widget.store-numbers header h6 {
+    margin-right: var(--btcpay-space-s);
+}
+
+.widget header a,
+.widget header .btn-link {
+    margin-top: 0;
+}
+
+.widget .store-number {
+    flex: 0 1 calc(50% - var(--btcpay-space-xl) / 2);
+}
+
+.widget .number {
+    font-weight: var(--btcpay-font-weight-bold);
+}
+
+.widget .table {
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    width: calc(100% + 1rem);
+}
+
+.widget .table th {
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+.widget.app-top-items .app-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--btcpay-space-s);
+}
+
+.widget.app-top-items .app-item {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+}
+
+.widget.app-top-items .app-item-value {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+@media (max-width: 575px) {
+    .widget .store-number {
+        flex: 0 1 100%;
+    }
+}
+
+@media (min-width: 576px) {
+    .widget {
+        --widget-padding: var(--btcpay-space-l);
+    }
+}
+
+@media (min-width: 1200px) {
+    .widget.app-sales,
+    .widget.setup-guide,
+    .widget.store-wallet-balance {
+        --widget-chart-width: 80vw;
+        grid-column-start: 1;
+        grid-column-end: 9;
+    }
+
+    .widget.app-top-items,
+    .widget.store-numbers {
+        grid-column-start: 9;
+        grid-column-end: 13;
+    }
+    
+    .widget.store-numbers {
+        flex-direction: column;
+        justify-content: start;
+    }
+
+    .widget .store-number {
+        flex: 0 1;
+        width: 100%;
+    }
+
+    .widget.store-numbers header {
+        justify-content: space-between;
+    }
+
+    .widget.store-numbers header h6 {
+        margin-right: 0;
+    }
+}
+

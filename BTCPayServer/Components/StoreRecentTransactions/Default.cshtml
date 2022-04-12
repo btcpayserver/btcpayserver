@@ -1,0 +1,51 @@
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel
+
+<div class="widget store-recent-transactions">
+    <header>
+        <h3>Recent Transactions</h3>
+        @if (Model.Transactions.Any())
+        {
+            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+        }
+    </header>
+    @if (Model.Transactions.Any())
+    {
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th class="w-125px">Date</th>
+                <th>Transaction</th>
+                <th class="text-end">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var tx in Model.Transactions)
+            {
+                <tr>
+                    <td>@tx.Timestamp.ToTimeAgo()</td>
+                    <td>
+                        <a href="@tx.Link" target="_blank" rel="noreferrer noopener" class="text-break">
+                            @tx.Id
+                        </a>
+                    </td>
+                    @if (tx.Positive)
+                    {
+                        <td class="text-end text-success">@tx.Balance</td>
+                    }
+                    else
+                    {
+                        <td class="text-end text-danger">@tx.Balance</td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3 mb-0">
+            There are no recent transactions.
+        </p>
+    }
+</div>

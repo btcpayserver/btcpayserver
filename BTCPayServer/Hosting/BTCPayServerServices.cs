@@ -117,6 +117,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
+            services.TryAddSingleton<WalletHistogramService>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>
@@ -176,6 +177,7 @@ namespace BTCPayServer.Hosting
                                     btcPayNetwork.NBXplorerNetwork.DefaultSettings.DefaultCookieFile)
                             };
                         options.NBXplorerConnectionSettings.Add(setting);
+                        options.ConnectionString = configuration.GetOrDefault<string>("explorer.postgres", null);
                     }
                 });
             services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
@@ -310,6 +312,8 @@ namespace BTCPayServer.Hosting
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
             });
 
+            services.AddSingleton<Services.NBXplorerConnectionFactory>();
+            services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             services.AddSingleton<HostedServices.WebhookSender>();

@@ -1,0 +1,57 @@
+@using BTCPayServer.Services.Wallets
+@model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
+
+<div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
+    <h6 class="mb-2">Wallet Balance</h6>
+    <header class="mb-3">
+        <div class="balance">
+            <h3 class="d-inline-block me-1">@Model.Balance</h3>
+            <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
+        </div>
+        <div class="btn-group mt-1" role="group" aria-label="Filter">
+            <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+            <label class="btn btn-link" for="filter-week">1W</label>
+            <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+            <label class="btn btn-link" for="filter-month">1M</label>
+            <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+            <label class="btn btn-link" for="filter-year">1Y</label>
+        </div>
+    </header>
+    <div class="ct-chart ct-major-eleventh"></div>
+    <script>
+        (function () {
+            const id = 'StoreWalletBalance-@Model.Store.Id';
+            const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
+            const render = data => {
+                const { series, labels, balance } = data;
+                document.querySelector(`#${id} h3`).innerText = balance;
+                const min = Math.min(...series);
+                const max = Math.max(...series);
+                const low = Math.max(min - ((max - min) / 5), 0);
+                new Chartist.Line(`#${id} .ct-chart`, {
+                    labels,
+                    series: [series]
+                }, {
+                    low,
+                    fullWidth: true,
+                    showArea: true
+                });
+            };
+            const update = async type => {
+                const url = baseUrl.replace(/\/week$/gi, `/${type}`);
+                const response = await fetch(url);
+                if (response.ok) {
+                  const json = await response.json();
+                  render(json);
+                }
+            };
+            render({ series: @Safe.Json(Model.Series), labels: @Safe.Json(Model.Labels), balance: @Safe.Json(Model.Balance) });
+            document.addEventListener('DOMContentLoaded', () => {
+                delegate('change', `#${id} [name="filter"]`, async e => {
+                    const type = e.target.value;
+                    await update(type);
+                })
+            })
+        })();
+    </script>
+</div>

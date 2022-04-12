@@ -134,30 +134,43 @@ namespace BTCPayServer.Controllers
             }).ToList();
         }
 
-        public StoreData CurrentStore
-        {
-            get
-            {
-                return this.HttpContext.GetStoreData();
-            }
-        }
-        
+        public StoreData CurrentStore => HttpContext.GetStoreData();
+
         [HttpGet("{storeId}")]
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
             var store = CurrentStore;
             var storeBlob = store.GetStoreBlob();
 
             AddPaymentMethods(store, storeBlob,
                 out var derivationSchemes, out var lightningNodes);
-            
+
+            var walletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled);
+            var lightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled);
             var vm = new StoreDashboardViewModel
             {
-                WalletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled),
-                LightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled),
+                WalletEnabled = walletEnabled,
+                LightningEnabled = lightningEnabled,
                 StoreId = CurrentStore.Id,
-                StoreName = CurrentStore.StoreName
+                StoreName = CurrentStore.StoreName,
+                IsSetUp = walletEnabled || lightningEnabled
             };
+            
+            // Widget data
+            if (vm.WalletEnabled || vm.LightningEnabled)
+            {
+                var userId = GetUserId();
+                var apps = await _appService.GetAllApps(userId, false, store.Id);
+                vm.Apps = apps
+                    .Where(a => a.AppType == AppType.Crowdfund.ToString())
+                    .Select(a =>
+                    {
+                        var appData = _appService.GetAppDataIfOwner(userId, a.Id, AppType.Crowdfund).Result;
+                        appData.StoreData = store;
+                        return appData;
+                    })
+                    .ToList();
+            }
             
             return View("Dashboard", vm);
         }

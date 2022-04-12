@@ -266,7 +266,7 @@ svg.icon-note {
     --widget-chart-width: 100vw;
     
     border: 1px solid var(--btcpay-body-border-light);
-    border-radius: var(--btcpay-border-radius);
+    border-radius: var(--btcpay-border-radius-l);
     padding: var(--widget-padding);
     background: var(--btcpay-bg-tile);
 

@@ -1547,7 +1547,7 @@ namespace BTCPayServer.Tests
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
 
-            await AssertAPIError("ligthning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
+            await AssertAPIError("lightning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
             // Not permission for the store!
             await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels(user.StoreId, "BTC"));
             var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()

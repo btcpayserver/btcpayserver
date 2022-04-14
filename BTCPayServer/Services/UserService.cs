@@ -7,37 +7,35 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services
 {
     public class UserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IAuthorizationService _authorizationService;
         private readonly StoredFileRepository _storedFileRepository;
         private readonly FileService _fileService;
         private readonly StoreRepository _storeRepository;
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
+        private readonly ILogger<UserService> _logger;
 
         public UserService(
             UserManager<ApplicationUser> userManager,
-            IAuthorizationService authorizationService,
             StoredFileRepository storedFileRepository,
             FileService fileService,
             StoreRepository storeRepository,
-            ApplicationDbContextFactory applicationDbContextFactory
-            
-        )
+            ApplicationDbContextFactory applicationDbContextFactory,
+            ILogger<UserService> logger)
         {
             _userManager = userManager;
-            _authorizationService = authorizationService;
             _storedFileRepository = storedFileRepository;
             _fileService = fileService;
             _storeRepository = storeRepository;
             _applicationDbContextFactory = applicationDbContextFactory;
+            _logger = logger;
         }
 
         public async Task<List<ApplicationUserData>> GetUsersWithRoles()
@@ -57,8 +55,38 @@ namespace BTCPayServer.Services
                 EmailConfirmed = data.EmailConfirmed,
                 RequiresEmailConfirmation = data.RequiresEmailConfirmation,
                 Created = data.Created,
-                Roles = roles
+                Roles = roles,
+                Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
             };
+        }
+
+        private bool IsDisabled(ApplicationUser user)
+        {
+            return user.LockoutEnabled && user.LockoutEnd is not null &&
+                   DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
+        }
+        public async Task ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return;
+            }
+            if (lockedOutDeadline is not null)
+            {
+                await _userManager.SetLockoutEnabledAsync(user, true);
+            }
+
+            var res = await _userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
+            if (res.Succeeded)
+            {
+                _logger.LogInformation($"User {user.Id} is now {(lockedOutDeadline is null ? "unlocked" : "locked")}");
+            }
+            else
+            {
+                _logger.LogError($"Failed to set lockout for user {user.Id}");
+            }
+            
         }
 
         public async Task<bool> IsAdminUser(string userId)
@@ -88,6 +116,18 @@ namespace BTCPayServer.Services
         public bool IsRoleAdmin(IList<string> roles)
         {
             return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
+        }
+
+
+        public async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
+        {
+            var isUserAdmin = await IsAdminUser(user);
+            if (!isUserAdmin)
+            {
+                return false;
+            }
+
+            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count(applicationUser => !IsDisabled(applicationUser)) == 1;
         }
     }
 }

@@ -56,8 +56,9 @@
                     <span class="fa @(sortIconClass)" />
                 </a>
             </th>
-            <th>Created</th>
-            <th>Verified</th>
+            <th >Created</th>
+            <th class="text-center">Verified</th>
+            <th class="text-center">Enabled</th>
             <th class="text-end">Actions</th>
         </tr>
         </thead>
@@ -83,8 +84,23 @@
                         <span class="text-danger fa fa-times"></span>
                     }
                 </td>
+                <td class="text-center">
+                    @if (!user.Disabled)
+                    {
+                        <span class="text-success fa fa-check" title="User is enabled"></span>
+                    }
+                    else
+                    {
+                        <span class="text-danger fa fa-times" title="User is disabled"></span>
+                    }
+                </td>
                 <td class="text-end">
                     <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+                    - <a asp-action="ToggleUser"
+                         asp-route-enable="@user.Disabled"
+                         asp-route-userId="@user.Id">
+                        @(user.Disabled ? "Enable" : "Disable")
+                    </a>
                 </td>
             </tr>
         }

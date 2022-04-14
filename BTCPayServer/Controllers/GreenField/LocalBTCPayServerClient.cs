@@ -128,7 +128,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     Host = new HostString("dummy.com"),
                     Path = new PathString(),
                     PathBase = new PathString(),
-
                 }
             });
         }
@@ -189,7 +188,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 _storePaymentMethodsController,
                 _greenfieldStoreEmailController,
                 _greenfieldStoreUsersController,
-                new LocalHttpContextAccessor() { HttpContext = context }
+                new LocalHttpContextAccessor() {HttpContext = context}
             );
         }
     }
@@ -575,7 +574,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 case JsonResult jsonResult:
                     return (T)jsonResult.Value;
-                case OkObjectResult { Value: T res }:
+                case OkObjectResult {Value: T res}:
                     return res;
                 default:
                     return default;
@@ -586,9 +585,9 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             switch (result)
             {
-                case UnprocessableEntityObjectResult { Value: List<GreenfieldValidationError> validationErrors }:
+                case UnprocessableEntityObjectResult {Value: List<GreenfieldValidationError> validationErrors}:
                     throw new GreenfieldValidationException(validationErrors.ToArray());
-                case BadRequestObjectResult { Value: GreenfieldAPIError error }:
+                case BadRequestObjectResult {Value: GreenfieldAPIError error}:
                     throw new GreenfieldAPIException(400, error);
                 case NotFoundResult _:
                     throw new GreenfieldAPIException(404, new GreenfieldAPIError("not-found", ""));
@@ -739,7 +738,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<NotificationData>(
                 await _notificationsController.UpdateNotification(notificationId,
-                    new UpdateNotification() { Seen = seen }));
+                    new UpdateNotification() {Seen = seen}));
         }
 
         public override async Task RemoveNotification(string notificationId, CancellationToken token = default)
@@ -1100,6 +1099,30 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<ApplicationUserData>(await _usersController.GetUser(idOrEmail));
+        }
+
+        public override async Task ToggleUser(string idOrEmail, bool disabled, CancellationToken token = default)
+        {
+            HandleActionResult(await _usersController.ToggleUser(idOrEmail, new ToggleUserRequest()
+            {
+                Disabled = disabled
+            }));
+        }
+
+        public override async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(string storeId, string cryptoCode, string transactionId,
+            PatchOnChainTransactionRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<OnChainWalletTransactionData>(await _storeOnChainWalletsController.PatchOnChainWalletTransaction(storeId, cryptoCode, transactionId, request));
+        }
+
+        public override async Task<LightningPaymentData> GetLightningPayment(string cryptoCode, string paymentHash, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningPaymentData>(await _lightningNodeApiController.GetPayment(cryptoCode, paymentHash));
+        }
+
+        public override async Task<LightningPaymentData> GetLightningPayment(string storeId, string cryptoCode, string paymentHash, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningPaymentData>(await _storeLightningNodeApiController.GetPayment(cryptoCode, paymentHash));
         }
     }
 }

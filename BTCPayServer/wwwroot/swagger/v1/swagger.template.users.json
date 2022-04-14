@@ -237,6 +237,48 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/{idOrEmail}/toggle": {
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Toggle user",
+                "description": "Enable or disable a user.\n\nMust be an admin to perform this operation.\n\nAttempting to disable the only admin user will not succeed.",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ID of the user to be deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User has been successfully toggled"
+                    },
+                    "401": {
+                        "description": "Missing authorization for deleting the user"
+                    },
+                    "403": {
+                        "description": "Authorized but forbidden to disable  the user. Can happen if you attempt to disable the only admin user."
+                    },
+                    "404": {
+                        "description": "User with provided ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -279,6 +321,16 @@
                             "type": "string"
                         },
                         "description": "The roles of the user"
+                    }
+                }
+            },
+            "ToggleUserRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "disabled": {
+                        "type": "boolean",
+                        "description": "Whetehr to enable or disable the user"
                     }
                 }
             }

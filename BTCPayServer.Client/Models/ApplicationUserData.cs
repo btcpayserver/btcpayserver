@@ -35,5 +35,7 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? Created { get; set; }
+
+        public bool Disabled { get; set; }
     }
 }

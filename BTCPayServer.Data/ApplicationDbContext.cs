@@ -61,6 +61,7 @@ namespace BTCPayServer.Data
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
         public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
         public DbSet<WebhookData> Webhooks { get; set; }
+        public DbSet<LightningAddressData> LightningAddresses{ get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -106,6 +107,7 @@ namespace BTCPayServer.Data
             //WalletData.OnModelCreating(builder);
             WalletTransactionData.OnModelCreating(builder);
             WebhookDeliveryData.OnModelCreating(builder);
+            LightningAddressData.OnModelCreating(builder);
             //WebhookData.OnModelCreating(builder);
 
 

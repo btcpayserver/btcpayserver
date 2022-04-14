@@ -358,7 +358,7 @@ namespace BTCPayServer.Tests
                 {
                     if (multiCurrency)
                         user.RegisterDerivationScheme("LTC");
-                    foreach (var rateSelection in new[] { "FiatText", "CurrentRateText", "RateThenText" })
+                    foreach (var rateSelection in new[] { "FiatTextRadio", "CurrentRateTextRadio", "RateThenTextRadio" })
                         await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
             }
@@ -402,11 +402,11 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id(rateSelection)).Click();
             s.Driver.FindElement(By.Id("ok")).Click();
             Assert.Contains("pull-payments", s.Driver.Url);
-            if (rateSelection == "FiatText")
+            if (rateSelection == "FiatTextRadio")
                 Assert.Contains("$5,500.00", s.Driver.PageSource);
-            if (rateSelection == "CurrentRateText")
+            if (rateSelection == "CurrentRateTextRadio")
                 Assert.Contains("2.20000000 ₿", s.Driver.PageSource);
-            if (rateSelection == "RateThenText")
+            if (rateSelection == "RateThenTextRadio")
                 Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("refundlink")).Click();

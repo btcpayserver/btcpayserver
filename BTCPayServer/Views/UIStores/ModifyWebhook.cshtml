@@ -32,15 +32,19 @@
                 <p class="text-muted small form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</p>
             </div>
             <div class="form-group">
-                <label asp-for="AutomaticRedelivery" class="form-label">Automatic redelivery</label>
-                <input asp-for="AutomaticRedelivery" type="checkbox" class="btcpay-toggle ms-2" />                
+                <label class="d-flex align-items-center mb-2">
+                    <input asp-for="AutomaticRedelivery" type="checkbox" class="btcpay-toggle me-3" />
+                    <span>Automatic redelivery</span>
+                </label>
                 <p class="text-muted small form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</p>
             </div>
             <div class="form-group">
-                <label asp-for="Active" class="form-label">Is enabled</label>
-                <input asp-for="Active" type="checkbox" class="btcpay-toggle ms-2" />
+                <label class="d-flex align-items-center mb-2">
+                    <input asp-for="Active" type="checkbox" class="btcpay-toggle me-3" />
+                    <span>Is enabled</span>
+                </label>
             </div>
-            
+
             <h3 class="mb-3">Events</h3>
             <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
             <select asp-for="Everything" class="form-select w-auto mb-3">
@@ -50,7 +54,7 @@
             <div id="event-selector" class="collapse">
                 <div class="pb-3">
                     @foreach (var evt in new[]
-                    {
+                   {
                         ("A new invoice has been created", WebhookEventType.InvoiceCreated),
                         ("A new payment has been received", WebhookEventType.InvoiceReceivedPayment),
                         ("A payment has been settled", WebhookEventType.InvoicePaymentSettled),
@@ -61,7 +65,7 @@
                     })
                     {
                         <div class="form-check my-1">
-                            <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input"/>
+                            <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
                             <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
                         </div>
                     }

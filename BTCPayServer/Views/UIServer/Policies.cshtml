@@ -16,7 +16,7 @@
 <form method="post">
     <div class="form-group mb-5">
         <h4 class="mb-3">Existing User Settings</h4>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
             <a href="https://docs.btcpayserver.org/FAQ/LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank" rel="noreferrer noopener">
@@ -24,7 +24,7 @@
             </a>
             <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
         </div>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
             <a href="https://docs.btcpayserver.org/CreateWallet/#requirements-to-create-wallets" target="_blank" rel="noreferrer noopener">
@@ -32,7 +32,7 @@
             </a>
             <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
         </div>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
@@ -41,7 +41,7 @@
 
     <div class="form-group mb-5">
         <h4 class="mb-3">New User Settings</h4>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             @{
                 var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
                 /* The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
@@ -61,13 +61,13 @@
                 </div>
             }
         </div>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
             <label asp-for="LockSubscription" class="form-check-label"></label>
             <span asp-validation-for="LockSubscription" class="text-danger"></span>
         </div>
 
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
             <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
@@ -76,7 +76,7 @@
 
     <div class="form-group mb-5">
         <h4 class="mb-3">Notification Settings</h4>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
             <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank" rel="noreferrer noopener">
@@ -84,7 +84,7 @@
             </a>
             <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
         </div>
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
             <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank" rel="noreferrer noopener">
@@ -98,13 +98,13 @@
         <h4 class="mb-3">Maintenance Settings</h4>
         @if (ViewBag.UpdateUrlPresent)
         {
-            <div class="form-check my-1">
+            <div class="form-check my-3">
                 <input asp-for="CheckForNewVersions" type="checkbox" class="form-check-input"/>
                 <label asp-for="CheckForNewVersions" class="form-check-label"></label>
                 <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
             </div>
         }
-        <div class="form-check my-1">
+        <div class="form-check my-3">
             <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
             <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
             <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">

@@ -47,7 +47,7 @@
                   asp-route-storeId="@Model.StoreId"
                   class="d-flex align-items-center mt-4"
                   style="min-width:7rem">
-                <button type="submit" class="btcpay-toggle me-2 @if (Model.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(Model.Enabled ? "false" : "true")" id="@($"{Model.CryptoCode}LightningEnabled")">@(Model.Enabled ? "Disable" : "Enable")</button>
+                <button type="submit" class="btcpay-toggle me-3 @if (Model.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(Model.Enabled ? "false" : "true")" id="@($"{Model.CryptoCode}LightningEnabled")">@(Model.Enabled ? "Disable" : "Enable")</button>
                 <span>
                     Enabled
                 </span>
@@ -56,15 +56,15 @@
             <form method="post" class="mt-n2 text-center">
                 <div class="text-start">
                     <h3 class="mt-5 mb-3">Payment</h3>
-                    <div class="form-check my-1">
+                    <div class="form-check my-3">
                         <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
                         <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
                     </div>
-                    <div class="form-check my-1">
+                    <div class="form-check my-3">
                         <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
                         <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
                     </div>
-                    <div class="form-check my-1">
+                    <div class="form-check my-3">
                         <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
                         <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
                     </div>
@@ -80,35 +80,35 @@
                     
                     <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
                     <div class="d-flex align-items-center">
-                        <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
+                        <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
                         <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
                     </div>
                     <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
                         <div class="form-group">
                             <div class="d-flex align-items-center pt-4">
-                                <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-2"/>
+                                <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-3"/>
                                 <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
                                 <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
                             </div>
-                            <p class="form-text text-muted mb-0 ms-5">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
+                            <p class="form-text text-muted mb-0">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
                         </div>
                         <div class="form-group">
                             <div class="d-flex align-items-center">
-                                <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-2"/>
+                                <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-3"/>
                                 <label asp-for="LNURLStandardInvoiceEnabled" class="form-label mb-0 me-1"></label>
                             </div>
-                            <p class="form-text text-muted mb-0 ms-5">Required for Lightning Address, the pay button and apps.</p>
+                            <p class="form-text text-muted mb-0">Required for Lightning Address, the pay button and apps.</p>
                         </div>
                         <div class="form-group">
                             <div class="d-flex align-items-center">
-                                <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-2"/>
+                                <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-3"/>
                                 <label asp-for="DisableBolt11PaymentMethod" class="form-label mb-0 me-1"></label>
                             </div>
-                            <p class="form-text text-muted mb-0 ms-5">Performance: Turn it off if users should pay only via LNURL.</p>
+                            <p class="form-text text-muted mb-0">Performance: Turn it off if users should pay only via LNURL.</p>
                         </div>
                         <div class="form-group mb-0 pb-2">
                             <div class="d-flex align-items-center">
-                                <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-2"/>
+                                <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-3"/>
                                 <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
                             </div>
                         </div>

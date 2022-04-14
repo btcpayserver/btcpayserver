@@ -19,6 +19,7 @@ using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Services.Labels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
+        private readonly LabelFactory _labelFactory;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -64,7 +66,9 @@ namespace BTCPayServer.Controllers.Greenfield
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
-            IFeeProviderFactory feeProviderFactory)
+            IFeeProviderFactory feeProviderFactory,
+            LabelFactory labelFactory
+        )
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
@@ -79,6 +83,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
+            _labelFactory = labelFactory;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -227,6 +232,65 @@ namespace BTCPayServer.Controllers.Greenfield
                 .FirstOrDefault();
 
             return Ok(ToModel(walletTransactionsInfoAsync, tx, wallet));
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPatch("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}")]
+        public async Task<IActionResult> PatchOnChainWalletTransaction(
+            string storeId, 
+            string cryptoCode,
+            string transactionId,
+            [FromBody] PatchOnChainTransactionRequest request
+        )
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out var network,
+                out var derivationScheme, out var actionResult))
+                return actionResult;
+
+            var wallet = _btcPayWalletProvider.GetWallet(network);
+            var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
+            if (tx is null)
+            {
+                return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
+            }
+
+            var walletId = new WalletId(storeId, cryptoCode);
+            var walletTransactionsInfoAsync = _walletRepository.GetWalletTransactionsInfo(walletId);
+            if (!(await walletTransactionsInfoAsync).TryGetValue(transactionId, out var walletTransactionInfo))
+            {
+                walletTransactionInfo = new WalletTransactionInfo();
+            }
+
+            if (request.Comment != null)
+            {
+                walletTransactionInfo.Comment = request.Comment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
+            }
+
+            if (request.Labels != null)
+            {
+                var walletBlobInfo = await _walletRepository.GetWalletInfo(walletId);
+                
+                foreach (string label in request.Labels)
+                {
+                    var rawLabel = await _labelFactory.BuildLabel(
+                        walletBlobInfo,
+                        Request,
+                        walletTransactionInfo,
+                        walletId,
+                        transactionId,
+                        label
+                    );
+                    walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel);
+                }
+            }
+
+            await _walletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+            var walletTransactionsInfo =
+                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId }))
+                .Values
+                .FirstOrDefault();
+
+            return Ok(ToModel(walletTransactionsInfo, tx, wallet));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

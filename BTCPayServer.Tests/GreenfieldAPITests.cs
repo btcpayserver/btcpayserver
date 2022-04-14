@@ -1703,7 +1703,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC",
                 new UpdateOnChainPaymentMethodRequest() { Enabled = true, DerivationScheme = xpub })).Addresses.First().Address);
 
-            await AssertValidationError(new[] { "accountKeyPath" }, () => viewOnlyClient.SendHttpRequest<GreenfieldValidationError[]>(path: $"api/v1/stores/{store.Id}/payment-methods/Onchain/BTC/preview", method: HttpMethod.Post,
+            await AssertValidationError(new[] { "accountKeyPath" }, () => viewOnlyClient.SendHttpRequest<GreenfieldValidationError[]>(path: $"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", method: HttpMethod.Post,
                                                                           bodyPayload: JObject.Parse("{\"accountKeyPath\": \"0/1\"}")));
 
             var method = await client.UpdateStoreOnChainPaymentMethod(store.Id, "BTC",
@@ -2126,7 +2126,30 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
             });
-            await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
+            var transaction = await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
+
+            Assert.Equal(transaction.TransactionHash, txdata.TransactionHash);
+            Assert.Equal(String.Empty, transaction.Comment);
+            Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
+
+            // transaction patch tests
+            var patchedTransaction = await client.PatchOnChainWalletTransaction(
+                walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString(),
+                new PatchOnChainTransactionRequest() {
+                    Comment = "test comment",
+                    Labels = new List<string>
+                    {
+                        "test label"
+                    }
+                });
+            Assert.Equal("test comment", patchedTransaction.Comment);
+            Assert.Equal(
+                new Dictionary<string, LabelData>()
+                {
+                    { "test label", new LabelData(){ Type = "raw", Text = "test label" } }
+                }.ToJson(),
+                patchedTransaction.Labels.ToJson()
+            );
 
             await AssertHttpError(403, async () =>
             {

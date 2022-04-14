@@ -121,21 +121,7 @@ namespace BTCPayServer.Controllers
             _connectionFactory = connectionFactory;
             _walletHistogramService = walletHistogramService;
         }
-
-        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
-        readonly string[] LabelColorScheme =
-        {
-            "#fbca04",
-            "#0e8a16",
-            "#ff7619",
-            "#84b6eb",
-            "#5319e7",
-            "#cdcdcd",
-            "#cc317c",
-        };
-
-        const int MaxLabelSize = 20;
-        const int MaxCommentSize = 200;
+       
         [HttpPost]
         [Route("{walletId}")]
         public async Task<IActionResult> ModifyTransaction(
@@ -173,33 +159,19 @@ namespace BTCPayServer.Controllers
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
             {
-                addlabel = addlabel.Trim().TrimStart('{').ToLowerInvariant().Replace(',', ' ').Truncate(MaxLabelSize);
-                var labels = _labelFactory.GetWalletColoredLabels(walletBlobInfo, Request);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();
                 }
-                if (!labels.Any(l => l.Text.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
-                {
-                    List<string> allColors = new List<string>();
-                    allColors.AddRange(LabelColorScheme);
-                    allColors.AddRange(labels.Select(l => l.Color));
-                    var chosenColor =
-                        allColors
-                        .GroupBy(k => k)
-                        .OrderBy(k => k.Count())
-                        .ThenBy(k =>
-                        {
-                            var indexInColorScheme = Array.IndexOf(LabelColorScheme, k.Key);
-
-                            // Ensures that any label color which may not be in our label color scheme is given the least priority
-                            return indexInColorScheme == -1 ? double.PositiveInfinity : indexInColorScheme;
-                        })
-                        .First().Key;
-                    walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
-                    await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
-                }
-                var rawLabel = new RawLabel(addlabel);
+                
+                var rawLabel = await _labelFactory.BuildLabel(
+                    walletBlobInfo,
+                    Request,
+                    walletTransactionInfo,
+                    walletId,
+                    transactionId,
+                    addlabel
+                );
                 if (walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel))
                 {
                     await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
@@ -224,7 +196,7 @@ namespace BTCPayServer.Controllers
             }
             else if (addcomment != null)
             {
-                addcomment = addcomment.Trim().Truncate(MaxCommentSize);
+                addcomment = addcomment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();

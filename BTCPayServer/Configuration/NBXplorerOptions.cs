@@ -9,5 +9,6 @@ namespace BTCPayServer.Configuration
             get;
             set;
         } = new List<NBXplorerConnectionSetting>();
+        public string ConnectionString { get; set; }
     }
 }

@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
             return View(new NewPullPaymentModel
             {
                 Name = "",
-                Currency = "BTC",
+                Currency = CurrentStore.GetStoreBlob().DefaultCurrency,
                 CustomCSSLink = "",
                 EmbeddedCSS = "",
                 PaymentMethodItems =

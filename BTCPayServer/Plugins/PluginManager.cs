@@ -216,6 +216,10 @@ namespace BTCPayServer.Plugins
                 case "delete":
 
                     ExecuteCommand(("enable", command.extension), pluginsFolder, true);
+                    if (File.Exists(dirName))
+                    {
+                        File.Delete(dirName);
+                    }
                     if (Directory.Exists(dirName))
                     {
                         Directory.Delete(dirName, true);

@@ -458,11 +458,11 @@ namespace BTCPayServer.Tests
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            Driver.FindElement(By.Id("Nav-Account")).Click();
-            Driver.FindElement(By.Id("Nav-ManageAccount")).Click();
+            Driver.WaitForAndClick(By.Id("Nav-Account"));
+            Driver.WaitForAndClick(By.Id("Nav-ManageAccount"));
             if (navPages != ManageNavPages.Index)
             {
-                Driver.FindElement(By.Id($"SectionNav-{navPages.ToString()}")).Click();
+                Driver.WaitForAndClick(By.Id($"SectionNav-{navPages.ToString()}"));
             }
         }
 

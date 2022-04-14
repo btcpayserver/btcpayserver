@@ -16,7 +16,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet"), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet"), token);
             return await HandleResponse<OnChainWalletOverviewData>(response);
         }
         public virtual async Task<OnChainWalletFeeRateData> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null,
@@ -29,7 +29,7 @@ namespace BTCPayServer.Client
             }
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/feeRate", queryParams), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feeRate", queryParams), token);
             return await HandleResponse<OnChainWalletFeeRateData>(response);
         }
 
@@ -38,7 +38,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address", new Dictionary<string, object>()
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address", new Dictionary<string, object>()
                     {
                         {"forceGenerate", forceGenerate}
                     }), token);
@@ -50,7 +50,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address", method: HttpMethod.Delete), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
 
@@ -65,7 +65,7 @@ namespace BTCPayServer.Client
             }
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions", query), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions", query), token);
             return await HandleResponse<IEnumerable<OnChainWalletTransactionData>>(response);
         }
 
@@ -75,7 +75,18 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions/{transactionId}"), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}"), token);
+            return await HandleResponse<OnChainWalletTransactionData>(response);
+        }
+
+        public virtual async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(
+            string storeId, string cryptoCode, string transactionId,
+            PatchOnChainTransactionRequest request,
+            CancellationToken token = default)
+        {
+            var response =
+                await _httpClient.SendAsync(
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}", queryPayload: null, bodyPayload: request, HttpMethod.Patch), token);
             return await HandleResponse<OnChainWalletTransactionData>(response);
         }
 
@@ -85,7 +96,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/utxos"), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/utxos"), token);
             return await HandleResponse<IEnumerable<OnChainWalletUTXOData>>(response);
         }
 
@@ -100,7 +111,7 @@ namespace BTCPayServer.Client
             }
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions", null, request, HttpMethod.Post), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions", null, request, HttpMethod.Post), token);
             return await HandleResponse<OnChainWalletTransactionData>(response);
         }
 
@@ -115,7 +126,7 @@ namespace BTCPayServer.Client
             }
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/transactions", null, request, HttpMethod.Post), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions", null, request, HttpMethod.Post), token);
             return Transaction.Parse(await HandleResponse<string>(response), network);
         }
     }

@@ -80,6 +80,32 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The payment's ID"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LightningPaymentStatus"
+                    },
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 representation of the payment",
+                        "nullable": false
+                    },
+                    "paymentHash": {
+                        "type": "string",
+                        "description": "The payment hash",
+                        "nullable": false
+                    },
+                    "preimage": {
+                        "type": "string",
+                        "description": "The payment preimage (available when status is complete)"
+                    },
+                    "createdAt": {
+                        "description": "The unix timestamp when the payment got created",
+                        "nullable": true,
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                    },
                     "totalAmount": {
                         "type": "string",
                         "description": "The total amount (including fees) in millisatoshi"
@@ -137,6 +163,22 @@
                     "Unpaid",
                     "Paid",
                     "Expired"
+                ]
+            },
+            "LightningPaymentStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unknown",
+                    "Pending",
+                    "Complete",
+                    "Failed"
+                ],
+                "enum": [
+                    "Unknown",
+                    "Pending",
+                    "Complete",
+                    "Failed"
                 ]
             },
             "LightningNodeInformationData": {

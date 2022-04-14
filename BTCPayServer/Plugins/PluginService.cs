@@ -92,7 +92,7 @@ namespace BTCPayServer.Plugins
         {
             var dest = _dataDirectories.Value.PluginDir;
             
-            var filedest = Path.Join(dest, plugin);
+            var filedest = Path.Join(dest, plugin+".btcpay");
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             using var resp2 = await _githubClient.GetAsync(path); 
             using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);

@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         public void OnException(ExceptionContext context)
         {
-            context.Result = new ObjectResult(new GreenfieldAPIError("ligthning-node-unavailable", $"The lightning node is unavailable ({context.Exception.GetType().Name}: {context.Exception.Message})")) { StatusCode = 503 };
+            context.Result = new ObjectResult(new GreenfieldAPIError("lightning-node-unavailable", $"The lightning node is unavailable ({context.Exception.GetType().Name}: {context.Exception.Message})")) { StatusCode = 503 };
             // Do not mark handled, it is possible filters above have better errors
         }
     }
@@ -164,6 +164,13 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
         }
 
+        public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash)
+        {
+            var lightningClient = await GetLightningClient(cryptoCode, false);
+            var payment = await lightningClient.GetPayment(paymentHash);
+            return payment == null ? this.CreateAPIError(404, "payment-not-found", "Impossible to find a lightning payment with this payment hash") : Ok(ToModel(payment));
+        }
+
         public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
@@ -271,6 +278,21 @@ namespace BTCPayServer.Controllers.Greenfield
                 PaidAt = invoice.PaidAt,
                 BOLT11 = invoice.BOLT11,
                 ExpiresAt = invoice.ExpiresAt
+            };
+        }
+
+        private LightningPaymentData ToModel(LightningPayment payment)
+        {
+            return new LightningPaymentData
+            {
+                TotalAmount = payment.AmountSent,
+                FeeAmount = payment.Amount != null && payment.AmountSent != null ? payment.AmountSent - payment.Amount : null,
+                Id = payment.Id,
+                Status = payment.Status,
+                CreatedAt = payment.CreatedAt,
+                BOLT11 = payment.BOLT11,
+                PaymentHash = payment.PaymentHash,
+                Preimage = payment.Preimage
             };
         }
 

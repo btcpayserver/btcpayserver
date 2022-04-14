@@ -21,13 +21,16 @@ using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Logging;
 using NBXplorer;
+using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -44,7 +47,7 @@ namespace BTCPayServer.Controllers
         private WalletRepository WalletRepository { get; }
         private BTCPayNetworkProvider NetworkProvider { get; }
         private ExplorerClientProvider ExplorerClientProvider { get; }
-
+        public IServiceProvider ServiceProvider { get; }
         public RateFetcher RateFetcher { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -59,27 +62,41 @@ namespace BTCPayServer.Controllers
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelFactory _labelFactory;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
+        private readonly PullPaymentHostedService _pullPaymentService;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly NBXplorerConnectionFactory _connectionFactory;
+        private readonly WalletHistogramService _walletHistogramService;
 
         readonly CurrencyNameTable _currencyTable;
 
         public UIWalletsController(StoreRepository repo,
-            WalletRepository walletRepository,
-            CurrencyNameTable currencyTable,
-            BTCPayNetworkProvider networkProvider,
-            UserManager<ApplicationUser> userManager,
-            NBXplorerDashboard dashboard,
-            RateFetcher rateProvider,
-            IAuthorizationService authorizationService,
-            ExplorerClientProvider explorerProvider,
-            IFeeProviderFactory feeRateProvider,
-            BTCPayWalletProvider walletProvider,
-            WalletReceiveService walletReceiveService,
-            EventAggregator eventAggregator,
-            SettingsRepository settingsRepository,
-            DelayedTransactionBroadcaster broadcaster,
-            PayjoinClient payjoinClient,
-            LabelFactory labelFactory,
-            PullPaymentHostedService pullPaymentHostedService)
+                                 WalletRepository walletRepository,
+                                 CurrencyNameTable currencyTable,
+                                 BTCPayNetworkProvider networkProvider,
+                                 UserManager<ApplicationUser> userManager,
+                                 MvcNewtonsoftJsonOptions mvcJsonOptions,
+                                 NBXplorerDashboard dashboard,
+                                 WalletHistogramService walletHistogramService,
+                                 NBXplorerConnectionFactory connectionFactory,
+                                 RateFetcher rateProvider,
+                                 IAuthorizationService authorizationService,
+                                 ExplorerClientProvider explorerProvider,
+                                 IFeeProviderFactory feeRateProvider,
+                                 BTCPayWalletProvider walletProvider,
+                                 WalletReceiveService walletReceiveService,
+                                 EventAggregator eventAggregator,
+                                 SettingsRepository settingsRepository,
+                                 DelayedTransactionBroadcaster broadcaster,
+                                 PayjoinClient payjoinClient,
+                                 LabelFactory labelFactory,
+                                 ApplicationDbContextFactory dbContextFactory,
+                                 BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
+                                 PullPaymentHostedService pullPaymentService,
+                                 IEnumerable<IPayoutHandler> payoutHandlers,
+                                 IServiceProvider serviceProvider,
+                                 PullPaymentHostedService pullPaymentHostedService)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -99,16 +116,14 @@ namespace BTCPayServer.Controllers
             _payjoinClient = payjoinClient;
             _labelFactory = labelFactory;
             _pullPaymentHostedService = pullPaymentHostedService;
+            _dbContextFactory = dbContextFactory;
+            _jsonSerializerSettings = jsonSerializerSettings;
+            _pullPaymentService = pullPaymentService;
+            _payoutHandlers = payoutHandlers;
+            ServiceProvider = serviceProvider;
+            _connectionFactory = connectionFactory;
+            _walletHistogramService = walletHistogramService;
         }
-
-        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
-        readonly string[] LabelColorScheme =
-        {
-            "#fbca04", "#0e8a16", "#ff7619", "#84b6eb", "#5319e7", "#cdcdcd", "#cc317c",
-        };
-
-        const int MaxLabelSize = 20;
-        const int MaxCommentSize = 200;
 
         [HttpPost]
         [Route("{walletId}")]
@@ -147,35 +162,19 @@ namespace BTCPayServer.Controllers
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
             {
-                addlabel = addlabel.Trim().TrimStart('{').ToLowerInvariant().Replace(',', ' ').Truncate(MaxLabelSize);
-                var labels = _labelFactory.GetWalletColoredLabels(walletBlobInfo, Request);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();
                 }
-
-                if (!labels.Any(l => l.Text.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
-                {
-                    List<string> allColors = new List<string>();
-                    allColors.AddRange(LabelColorScheme);
-                    allColors.AddRange(labels.Select(l => l.Color));
-                    var chosenColor =
-                        allColors
-                            .GroupBy(k => k)
-                            .OrderBy(k => k.Count())
-                            .ThenBy(k =>
-                            {
-                                var indexInColorScheme = Array.IndexOf(LabelColorScheme, k.Key);
-
-                                // Ensures that any label color which may not be in our label color scheme is given the least priority
-                                return indexInColorScheme == -1 ? double.PositiveInfinity : indexInColorScheme;
-                            })
-                            .First().Key;
-                    walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
-                    await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
-                }
-
-                var rawLabel = new RawLabel(addlabel);
+                
+                var rawLabel = await _labelFactory.BuildLabel(
+                    walletBlobInfo,
+                    Request,
+                    walletTransactionInfo,
+                    walletId,
+                    transactionId,
+                    addlabel
+                );
                 if (walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel))
                 {
                     await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
@@ -201,7 +200,7 @@ namespace BTCPayServer.Controllers
             }
             else if (addcomment != null)
             {
-                addcomment = addcomment.Trim().Truncate(MaxCommentSize);
+                addcomment = addcomment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();
@@ -333,6 +332,19 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
+        
+        [HttpGet("{walletId}/histogram/{type}")]
+        public async Task<IActionResult> WalletHistogram(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletHistogramType type)
+        {
+            var store = GetCurrentStore();
+            var data = await _walletHistogramService.GetHistogram(store, walletId, type);
+
+            return data == null
+                ? NotFound()
+                : Json(data);
+        }
 
         private static string GetLabelTarget(WalletId walletId, uint256 txId)
         {
@@ -399,8 +411,46 @@ namespace BTCPayServer.Controllers
                 case "generate-new-address":
                     await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;
+                case "fill-wallet":
+                    var cheater = ServiceProvider.GetService<Cheater>();
+                    if (cheater != null)
+                        await SendFreeMoney(cheater, walletId, paymentMethod);
+                    break;
             }
             return RedirectToAction(nameof(WalletReceive), new { walletId });
+        }
+
+        private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
+        {
+            var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
+            var addresses = Enumerable.Range(0, 200).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
+            await Task.WhenAll(addresses);
+            await cheater.CashCow.GenerateAsync(addresses.Length / 8);
+            var b = cheater.CashCow.PrepareBatch();
+            Random r = new Random();
+            List<Task<uint256>> sending = new List<Task<uint256>>();
+            foreach (var a in addresses)
+            {
+                sending.Add(b.SendToAddressAsync((await a).Address, Money.Coins(0.1m) + Money.Satoshis(r.Next(0, 90_000_000))));
+            }
+            await b.SendBatchAsync();
+            await cheater.CashCow.GenerateAsync(1);
+
+            var factory = ServiceProvider.GetService<NBXplorerConnectionFactory>();
+
+            // Wait it sync...
+            await Task.Delay(1000);
+            await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).WaitServerStartedAsync();
+            await Task.Delay(1000);
+            await using var conn = await factory.OpenConnection();
+            var wallet_id = paymentMethod.GetNBXWalletId();
+
+            var txIds = sending.Select(s => s.Result.ToString()).ToArray();
+            await conn.ExecuteAsync(
+                "UPDATE txs t SET seen_at=(NOW() - (random() * (interval '90 days'))) " +
+                "FROM unnest(@txIds) AS r (tx_id) WHERE r.tx_id=t.tx_id;", new { txIds });
+            await Task.Delay(1000);
+            await conn.ExecuteAsync("REFRESH MATERIALIZED VIEW wallets_history;");
         }
 
         private async Task<bool> CanUseHotWallet()

@@ -311,7 +311,7 @@ namespace BTCPayServer.Controllers
                             model.RefundStep = RefundSteps.SelectCustomAmount;
                             return View(model);
                         default:
-                            ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invalid choice");
+                            ModelState.AddModelError(nameof(model.SelectedRefundOption), "Please select an option before proceeding");
                             return View(model);
                     }
 
@@ -914,18 +914,6 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {
-            var stores = new SelectList(
-                await _StoreRepository.GetStoresByUserId(GetUserId()),
-                nameof(StoreData.Id),
-                nameof(StoreData.StoreName),
-                new SearchString(model?.SearchTerm).GetFilterArray("storeid")?.ToArray().FirstOrDefault()
-            );
-            if (!stores.Any())
-            {
-                TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-            }
-
             if (model?.StoreId != null)
             {
                 var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
@@ -944,11 +932,16 @@ namespace BTCPayServer.Controllers
 
                 HttpContext.SetStoreData(store);
             }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "You need to select a store before creating an invoice.";
+                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
+            }
 
             var vm = new CreateInvoiceModel
             {
-                Stores = stores,
-                StoreId = model?.StoreId,
+                StoreId = model.StoreId,
+                Currency = HttpContext.GetStoreData()?.GetStoreBlob().DefaultCurrency,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 
@@ -961,8 +954,6 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
-            var stores = await _StoreRepository.GetStoresByUserId(GetUserId());
-            model.Stores = new SelectList(stores, nameof(StoreData.Id), nameof(StoreData.StoreName), model.StoreId);
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
             var store = HttpContext.GetStoreData();
             if (!ModelState.IsValid)

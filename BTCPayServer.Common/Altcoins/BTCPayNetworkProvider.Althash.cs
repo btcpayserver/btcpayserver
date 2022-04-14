@@ -11,7 +11,7 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                DisplayName = "Althash",
+                DisplayName = "Htmlcoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.htmlcoin.com/api/tx/{0}" : "https://explorer.htmlcoin.com/api/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 DefaultRateRules = new[]
@@ -21,7 +21,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/althash.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("88'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("172'") : new KeyPath("1'")
             });
         }
     }

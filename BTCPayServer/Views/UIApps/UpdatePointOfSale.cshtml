@@ -93,7 +93,7 @@
             <section id="custom-payments" class="p-0">
                 <h3 class="mt-5 mb-4">Custom Payments</h3>
                 <div class="form-group mb-4 d-flex align-items-center">
-                    <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
+                    <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
                     <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
                     <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                 </div>
@@ -107,8 +107,8 @@
             </section>
             <section id="tips" class="p-0">
                 <h3 class="mt-5 mb-4">Tips</h3>
-                <div class="form-group d-flex align-items-center mb-0">
-                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-2" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                <div class="form-group d-flex align-items-center">
+                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                     <label asp-for="EnableTips" class="form-label mb-0"></label>
                     <span asp-validation-for="EnableTips" class="text-danger"></span>
                 </div>

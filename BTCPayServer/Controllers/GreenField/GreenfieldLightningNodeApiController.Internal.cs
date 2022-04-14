@@ -79,6 +79,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/payments/{paymentHash}")]
+        public override Task<IActionResult> GetPayment(string cryptoCode, string paymentHash)
+        {
+            return base.GetPayment(cryptoCode, paymentHash);
+        }
+
+        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices/{id}")]
         public override Task<IActionResult> GetInvoice(string cryptoCode, string id)
         {

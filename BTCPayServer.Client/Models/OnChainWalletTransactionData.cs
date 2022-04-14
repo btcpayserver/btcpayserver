@@ -21,9 +21,9 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(UInt256JsonConverter))]
         public uint256 BlockHash { get; set; }
 
-        public int? BlockHeight { get; set; }
+        public long? BlockHeight { get; set; }
 
-        public int Confirmations { get; set; }
+        public long Confirmations { get; set; }
 
         [JsonConverter(typeof(DateTimeToUnixTimeConverter))]
         public DateTimeOffset Timestamp { get; set; }

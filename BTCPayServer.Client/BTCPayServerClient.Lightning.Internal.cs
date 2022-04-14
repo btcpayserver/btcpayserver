@@ -65,6 +65,17 @@ namespace BTCPayServer.Client
             return await HandleResponse<LightningPaymentData>(response);
         }
 
+        public virtual async Task<LightningPaymentData> GetLightningPayment(string cryptoCode,
+            string paymentHash, CancellationToken token = default)
+        {
+            if (paymentHash == null)
+                throw new ArgumentNullException(nameof(paymentHash));
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/server/lightning/{cryptoCode}/payments/{paymentHash}",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<LightningPaymentData>(response);
+        }
+
         public virtual async Task<LightningInvoiceData> GetLightningInvoice(string cryptoCode,
             string invoiceId, CancellationToken token = default)
         {

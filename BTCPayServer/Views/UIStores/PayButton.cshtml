@@ -154,8 +154,10 @@
                 <small class="text-danger">{{ errors.first('price') }}</small>
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="currency">Currency</label>
-                <input asp-for="Currency" currency-selection class="form-control"/>
+                <label class="form-label" for="Currency">Currency</label>
+                <input asp-for="Currency" name="currency" currency-selection class="form-control"
+                       v-model="srvModel.currency" v-on:change="inputChanges"
+                       :class="{'is-invalid': errors.has('currency') }" />
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="defaultPaymentMethod">Default Payment Method</label>

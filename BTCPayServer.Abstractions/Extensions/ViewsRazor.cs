@@ -90,7 +90,7 @@ namespace BTCPayServer.Abstractions.Extensions
         public static string ToTimeAgo(this DateTimeOffset date)
         {
             var diff = DateTimeOffset.UtcNow - date;
-            var formatted = diff.Seconds > 0
+            var formatted = diff.TotalSeconds > 0
                 ? $"{diff.TimeString()} ago"
                 : $"in {diff.Negate().TimeString()}";
             return formatted;
@@ -113,9 +113,9 @@ namespace BTCPayServer.Abstractions.Extensions
             return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
         }
 
-        private static string Plural(int totalDays)
+        private static string Plural(int value)
         {
-            return totalDays > 1 ? "s" : string.Empty;
+            return value > 1 ? "s" : string.Empty;
         }
     }
 }

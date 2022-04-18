@@ -197,17 +197,26 @@
                 </div>
             </div>
             <script>
-                const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')
-                const collapsed = navCollapsed ? JSON.parse(navCollapsed) : []
-                collapsed.forEach(id => {
-                    const el = document.getElementById(id)
-                    const btn = el && el.previousElementSibling.querySelector(`[aria-controls="${id}"]`)
-                    if (el && btn) {
-                        el.classList.remove('show')
-                        btn.classList.add('collapsed')
-                        btn.setAttribute('aria-expanded', 'false')
+                (() => {
+                    // apply collapse settings
+                    const navCollapsed = window.localStorage.getItem('btcpay-nav-collapsed')
+                    const collapsed = navCollapsed ? JSON.parse(navCollapsed) : []
+                    collapsed.forEach(id => {
+                        const el = document.getElementById(id)
+                        const btn = el && el.previousElementSibling.querySelector(`[aria-controls="${id}"]`)
+                        if (el && btn) {
+                            el.classList.remove('show')
+                            btn.classList.add('collapsed')
+                            btn.setAttribute('aria-expanded', 'false')
+                        }
+                    })
+                    // hide empty plugins drawer
+                    const pluginsItem = document.getElementById('Nav-Plugins').closest('.accordion-item')
+                    const pluginsContent = pluginsItem.querySelector('.navbar-nav').innerHTML.trim()
+                    if (pluginsContent === '') {
+                        pluginsItem.setAttribute('hidden', true)
                     }
-                })
+                })()
             </script>
         }
         else if (Env.IsSecure)

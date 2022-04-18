@@ -178,10 +178,10 @@ namespace BTCPayServer.Hosting
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.LighingAddressOrphanFix)
+                if (!settings.LighingAddressDatabaseMigration)
                 {
-                    await MigrateLighingAddressOrphanFix();
-                    settings.LighingAddressOrphanFix = true;
+                    await MigrateLighingAddressDatabaseMigration();
+                    settings.LighingAddressDatabaseMigration = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }
@@ -192,7 +192,7 @@ namespace BTCPayServer.Hosting
             }
         }
 
-        private async Task MigrateLighingAddressOrphanFix()
+        private async Task MigrateLighingAddressDatabaseMigration()
         {
             await using var ctx = _DBContextFactory.CreateContext();
 
@@ -206,7 +206,7 @@ namespace BTCPayServer.Hosting
             }
 
             var storeids = lightningAddressSettings.StoreToItemMap.Keys.ToArray();
-            var existingStores = await ctx.Stores.Where(data => storeids.Contains(data.Id)).Select(data => data.Id ).ToArrayAsync();
+            var existingStores = (await ctx.Stores.Where(data => storeids.Contains(data.Id)).Select(data => data.Id ).ToArrayAsync()).ToHashSet();
 
             foreach (var storeMap in lightningAddressSettings.StoreToItemMap)
             {

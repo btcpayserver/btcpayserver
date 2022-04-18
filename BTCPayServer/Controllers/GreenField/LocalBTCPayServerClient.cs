@@ -305,7 +305,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController, storeWebhooksController,
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
                 lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
-                storePaymentMethodsController, greenfieldStoreEmailController, greenfieldStoreUsersController
+                storePaymentMethodsController, greenfieldStoreEmailController, greenfieldStoreUsersController,
                 lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController, 
                 greenfieldStoreEmailController, greenfieldStoreTransferProcessorsController, greenfieldTransferProcessorsController,
                 greenfieldStoreAutomatedOnChainTransferProcessorsController,

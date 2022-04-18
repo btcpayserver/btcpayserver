@@ -88,7 +88,7 @@ Or, uncheck the box that says, "Break when this exception type is thrown".
 
 ### `docker-compose up dev` failed or tests are not passing, what should I do?
 
-1. Run `docker-compose down` (this will reset your test environment)
+1. Run `docker-compose down --volumes` (this will reset your test environment)
 2. Run `docker-compose pull` (this will ensure you have the latest images)
 3. Run again with `docker-compose up dev`
 

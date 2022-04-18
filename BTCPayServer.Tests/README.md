@@ -30,7 +30,7 @@ You can also generate blocks:
 
 - Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
 - Go to your store's General Settings and enable Lightning.
-- Build your connection string using the Connect infomation in the Polar app.
+- Build your connection string using the Connect information in the Polar app.
 
 LND Connection string example: 
 type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true
@@ -38,7 +38,7 @@ type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to adm
 Now you can create a Lightning invoice on BTCPay Server regtest and make a payment through Polar.
 
 PLEASE NOTE: You may get an exception break in Visual Studio. You must quickly click "Continue" in VS so the invoice is generated.
-Or, uncheck the box that says, "Break when this exceptiontype is thrown".
+Or, uncheck the box that says, "Break when this exception type is thrown".
 
 
 ### Using the test litecoin-cli
@@ -88,8 +88,8 @@ Or, uncheck the box that says, "Break when this exception type is thrown".
 
 ### `docker-compose up dev` failed or tests are not passing, what should I do?
 
-1. Run `docker-compose down --v` (this will reset your test environment)
-2. Run `docker-compose pull` (this will ensure you have the lastest images)
+1. Run `docker-compose down --volumes` (this will reset your test environment)
+2. Run `docker-compose pull` (this will ensure you have the latest images)
 3. Run again with `docker-compose up dev`
 
 ### How to run the Altcoin environment?

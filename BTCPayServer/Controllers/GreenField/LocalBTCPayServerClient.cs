@@ -782,7 +782,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<IEnumerable<OnChainWalletTransactionData>> ShowOnChainWalletTransactions(
-            string storeId, string cryptoCode, TransactionStatus[] statusFilter = null,
+            string storeId, string cryptoCode, TransactionStatus[] statusFilter = null, string labelFilter = null,
             CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<OnChainWalletTransactionData>>(

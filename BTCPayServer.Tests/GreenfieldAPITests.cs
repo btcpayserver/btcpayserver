@@ -2163,6 +2163,9 @@ namespace BTCPayServer.Tests
                     new[] { TransactionStatus.Unconfirmed }), data => data.TransactionHash == txdata.TransactionHash);
             Assert.Contains(
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode), data => data.TransactionHash == txdata.TransactionHash);
+            Assert.Contains(
+                await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode, null, "test label"), data => data.TransactionHash == txdata.TransactionHash);
+
             await tester.WaitForEvent<NewBlockEvent>(async () =>
             {
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -257,16 +258,18 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             if (payout.GetPaymentMethodId() != paymentMethodId)
                 continue;
             var claim = await ParseClaimDestination(paymentMethodId, blob.Destination);
-            var suffix = $"&payout={payout.Id}";
             switch (claim.destination)
             {
                 case UriClaimDestination uriClaimDestination:
                     uriClaimDestination.BitcoinUrl.Amount = new Money(blob.CryptoAmount.Value, MoneyUnit.BTC);
-                    
-                    bip21.Add(uriClaimDestination+suffix);
+                    var newUri = new UriBuilder(uriClaimDestination.BitcoinUrl.Uri);
+                    BTCPayServerClient.AppendPayloadToQuery(newUri, new KeyValuePair<string, object>("payout", payout.Id));
+                    bip21.Add(newUri.Uri.ToString());
                     break;
                 case AddressClaimDestination addressClaimDestination:
-                    bip21.Add(network.GenerateBIP21(addressClaimDestination.Address.ToString(), new Money(blob.CryptoAmount.Value, MoneyUnit.BTC))+suffix);
+                    var bip21New = network.GenerateBIP21(addressClaimDestination.Address.ToString(), new Money(blob.CryptoAmount.Value, MoneyUnit.BTC));
+                    bip21New.QueryParams.Add("payout", payout.Id);
+                    bip21.Add(bip21New.ToString());
                     break;
             }
         }

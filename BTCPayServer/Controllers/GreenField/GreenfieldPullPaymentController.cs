@@ -277,28 +277,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Value = request.Amount,
                 PaymentMethodId = paymentMethodId,
             });
-            switch (result.Result)
-            {
-                case ClaimRequest.ClaimResult.Ok:
-                    break;
-                case ClaimRequest.ClaimResult.Duplicate:
-                    return this.CreateAPIError("duplicate-destination", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.Expired:
-                    return this.CreateAPIError("expired", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.NotStarted:
-                    return this.CreateAPIError("not-started", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.Archived:
-                    return this.CreateAPIError("archived", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.Overdraft:
-                    return this.CreateAPIError("overdraft", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.AmountTooLow:
-                    return this.CreateAPIError("amount-too-low", ClaimRequest.GetErrorMessage(result.Result));
-                case ClaimRequest.ClaimResult.PaymentMethodNotSupported:
-                    return this.CreateAPIError("payment-method-not-supported", ClaimRequest.GetErrorMessage(result.Result));
-                default:
-                    throw new NotSupportedException("Unsupported ClaimResult");
-            }
-            return Ok(ToModel(result.PayoutData));
+            
+             return HandleClaimResult(result);
         }
         
         [HttpPost("~/api/v1/stores/{storeId}/payouts")]
@@ -361,6 +341,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 PaymentMethodId = paymentMethodId,
                 StoreId = storeId
             });
+            return HandleClaimResult(result);
+        }
+
+        private IActionResult HandleClaimResult(ClaimRequest.ClaimResponse result)
+        {
             switch (result.Result)
             {
                 case ClaimRequest.ClaimResult.Ok:
@@ -382,6 +367,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 default:
                     throw new NotSupportedException("Unsupported ClaimResult");
             }
+
             return Ok(ToModel(result.PayoutData));
         }
 

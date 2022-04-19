@@ -1101,11 +1101,11 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<ApplicationUserData>(await _usersController.GetUser(idOrEmail));
         }
 
-        public override async Task ToggleUser(string idOrEmail, bool disabled, CancellationToken token = default)
+        public override async Task LockUser(string idOrEmail, bool disabled, CancellationToken token = default)
         {
-            HandleActionResult(await _usersController.ToggleUser(idOrEmail, new ToggleUserRequest()
+            HandleActionResult(await _usersController.LockUser(idOrEmail, new LockUserRequest()
             {
-                Disabled = disabled
+                Locked = disabled
             }));
         }
 

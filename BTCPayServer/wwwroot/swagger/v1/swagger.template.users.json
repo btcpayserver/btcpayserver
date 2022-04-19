@@ -238,24 +238,34 @@
                 ]
             }
         },
-        "/api/v1/users/{idOrEmail}/toggle": {
+        "/api/v1/users/{idOrEmail}/lock": {
             "delete": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Toggle user",
-                "description": "Enable or disable a user.\n\nMust be an admin to perform this operation.\n\nAttempting to disable the only admin user will not succeed.",
+                "description": "Lock or unlock a user.\n\nMust be an admin to perform this operation.\n\nAttempting to lock the only admin user will not succeed.",
                 "parameters": [
                     {
                         "name": "userId",
                         "in": "path",
                         "required": true,
-                        "description": "The ID of the user to be deleted",
+                        "description": "The ID of the user to be un/locked",
                         "schema": {
                             "type": "string"
                         }
                     }
                 ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LockUserRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "User has been successfully toggled"
@@ -324,13 +334,13 @@
                     }
                 }
             },
-            "ToggleUserRequest": {
+            "LockUserRequest": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "disabled": {
+                    "locked": {
                         "type": "boolean",
-                        "description": "Whetehr to enable or disable the user"
+                        "description": "Whether to lock or unlock the user"
                     }
                 }
             }

@@ -2356,7 +2356,7 @@ namespace BTCPayServer.Tests
             var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
             Assert.False((await newUserClient.GetCurrentUser()).Disabled);
 
-            await adminClient.ToggleUser(newUser.UserId, true, CancellationToken.None);
+            await adminClient.LockUser(newUser.UserId, true, CancellationToken.None);
             
             Assert.True((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
             await AssertAPIError("unauthenticated",async () =>

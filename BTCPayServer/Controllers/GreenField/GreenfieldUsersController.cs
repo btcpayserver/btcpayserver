@@ -74,8 +74,8 @@ namespace BTCPayServer.Controllers.Greenfield
             return UserNotFound();
         }
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/users/{idOrEmail}/toggle")]
-        public async Task<IActionResult> ToggleUser(string idOrEmail, ToggleUserRequest request )
+        [HttpPost("~/api/v1/users/{idOrEmail}/lock")]
+        public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request )
         {
             var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user is null)
@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return UserNotFound();
             }
 
-            await _userService.ToggleUser(user.Id, request.Disabled ? DateTimeOffset.MaxValue : null);
+            await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
             return Ok();
         }
         

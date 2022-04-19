@@ -332,6 +332,25 @@ namespace BTCPayServer.Migrations
                     b.ToTable("InvoiceWebhookDeliveries");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.LightningAddressData", b =>
+                {
+                    b.Property<string>("Username")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("StoreDataId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Username");
+
+                    b.HasIndex("StoreDataId");
+
+                    b.ToTable("LightningAddresses");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
                 {
                     b.Property<string>("Id")
@@ -1101,6 +1120,17 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Invoice");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.LightningAddressData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithMany("LightningAddresses")
+                        .HasForeignKey("StoreDataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
@@ -1385,6 +1415,8 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Apps");
 
                     b.Navigation("Invoices");
+
+                    b.Navigation("LightningAddresses");
 
                     b.Navigation("PairedSINs");
 

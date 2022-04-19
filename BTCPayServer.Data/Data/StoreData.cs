@@ -43,6 +43,7 @@ namespace BTCPayServer.Data
 
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
+        public IEnumerable<LightningAddressData> LightningAddresses { get; set; }
         public IEnumerable<TransferProcessorData> TransferProcessors { get; set; }
         public IEnumerable<PayoutData> Payouts { get; set; }
     }

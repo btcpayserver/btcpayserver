@@ -1713,11 +1713,6 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
 
             s.Driver.ToggleCollapse("AddAddress");
-            s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress1);
-            s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
-            s.Driver.FindElement(By.ClassName("text-danger"));
-
-            s.Driver.FindElement(By.Id("Add_Username")).Clear();
             var lnaddress2 = "EUR" + Guid.NewGuid().ToString();
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress2);
 

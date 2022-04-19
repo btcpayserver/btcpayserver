@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -143,5 +144,12 @@ namespace BTCPayServer
             await using var context = _contextFactory.CreateContext();
             return await context.Fido2Credentials.Where(fDevice => fDevice.ApplicationUserId == userId && fDevice.Type == Fido2Credential.CredentialType.LNURLAuth).AnyAsync();
         }
+    }
+
+    public class LightningAddressQuery
+    {
+        public string[]? StoreIds { get; set; }
+        public string[]? Usernames { get; set; }
+
     }
 }

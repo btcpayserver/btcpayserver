@@ -40,6 +40,7 @@ namespace BTCPayServer.Hosting
         private readonly AppService _appService;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
+        private readonly LightningAddressService _lightningAddressService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
@@ -54,6 +55,7 @@ namespace BTCPayServer.Hosting
             AppService appService,
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
+            LightningAddressService lightningAddressService,
             Logs logs)
         {
             Logs = logs;
@@ -64,6 +66,7 @@ namespace BTCPayServer.Hosting
             _appService = appService;
             _payoutHandlers = payoutHandlers;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
+            _lightningAddressService = lightningAddressService;
             _userManager = userManager;
             LightningOptions = lightningOptions;
         }
@@ -175,12 +178,61 @@ namespace BTCPayServer.Hosting
                     settings.LighingAddressSettingRename = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.LighingAddressDatabaseMigration)
+                {
+                    await MigrateLighingAddressDatabaseMigration();
+                    settings.LighingAddressDatabaseMigration = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateLighingAddressDatabaseMigration()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+
+            var lightningAddressSettings =
+                await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>(
+                    nameof(UILNURLController.LightningAddressSettings));
+
+            if (lightningAddressSettings is null)
+            {
+                return;
+            }
+
+            var storeids = lightningAddressSettings.StoreToItemMap.Keys.ToArray();
+            var existingStores = (await ctx.Stores.Where(data => storeids.Contains(data.Id)).Select(data => data.Id ).ToArrayAsync()).ToHashSet();
+
+            foreach (var storeMap in lightningAddressSettings.StoreToItemMap)
+            {
+                if (!existingStores.Contains(storeMap.Key)) continue;
+                foreach (var storeitem in storeMap.Value)
+                {
+                    if (lightningAddressSettings.Items.TryGetValue(storeitem, out var val))
+                    {
+                        await _lightningAddressService.Set(
+                            new LightningAddressData()
+                            {
+                                StoreDataId = storeMap.Key,
+                                Username = storeitem,
+                                Blob = new LightningAddressDataBlob()
+                                {
+                                    Max = val.Max,
+                                    Min = val.Min,
+                                    CurrencyCode = val.CurrencyCode
+                                }.SerializeBlob()
+                            }, ctx);
+                    }
+                }
+            }
+
+            await ctx.SaveChangesAsync();
+            await _Settings.UpdateSetting<object>(null, nameof(UILNURLController.LightningAddressSettings));
         }
 
         private async Task MigrateLighingAddressSettingRename()

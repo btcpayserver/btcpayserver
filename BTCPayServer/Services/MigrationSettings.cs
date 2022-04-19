@@ -29,5 +29,6 @@ namespace BTCPayServer.Services
         public bool MigratePayoutDestinationId { get; set; }
         public bool AddInitialUserBlob { get; set; }
         public bool LighingAddressSettingRename { get; set; }
+        public bool LighingAddressDatabaseMigration { get; set; }
     }
 }

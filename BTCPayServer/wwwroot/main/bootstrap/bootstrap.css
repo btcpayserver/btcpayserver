@@ -11,7 +11,7 @@
   --btcpay-root-font-size: 16px;
   --btcpay-body-font-family: var(--btcpay-font-family-base);
   --btcpay-body-font-size: 0.875rem;
-  --btcpay-body-font-weight: 400;
+  --btcpay-body-font-weight: var(--btcpay-font-weight-normal);
   --btcpay-body-line-height: 1.6;
   --btcpay-body-color: var(--btcpay-body-text);
   --btcpay-body-bg: var(--btcpay-white);
@@ -55,7 +55,7 @@ hr:not([size]) {
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  font-weight: var(--btcpay-font-weight-bold);
   line-height: 1.2;
 }
 
@@ -147,7 +147,7 @@ ul ol {
 }
 
 dt {
-  font-weight: 700;
+  font-weight: var(--btcpay-font-weight-bold);
 }
 
 dd {
@@ -250,7 +250,7 @@ kbd {
 kbd kbd {
   padding: 0;
   font-size: 1em;
-  font-weight: 700;
+  font-weight: var(--btcpay-font-weight-bold);
 }
 
 figure {
@@ -1969,7 +1969,7 @@ progress {
   width: 100%;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   color: var(--btcpay-form-text);
   background-color: var(--btcpay-form-bg);
@@ -1995,7 +1995,7 @@ progress {
   background-color: var(--btcpay-form-bg);
   border-color: var(--btcpay-form-border-focus);
   outline: 0;
-  box-shadow: 0 0 0 2px var(--btcpay-form-shadow-focus) inset;
+  box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
 .form-control::-webkit-date-and-time-value {
@@ -2191,7 +2191,7 @@ textarea.form-control-lg {
   padding: 0.5rem 2.25rem 0.5rem 0.75rem;
   -moz-padding-start: calc(0.75rem - 3px);
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   color: var(--btcpay-form-text);
   background-color: var(--btcpay-form-bg);
@@ -2210,7 +2210,7 @@ textarea.form-control-lg {
 .form-select:focus {
   border-color: var(--btcpay-form-border-focus);
   outline: 0;
-  box-shadow: 0 0 0 2px rgba(var(--btcpay-primary-rgb), 0.25);
+  box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
 .form-select[multiple], .form-select[size]:not([size="1"]) {
@@ -2247,19 +2247,19 @@ textarea.form-control-lg {
 .form-check {
   display: block;
   min-height: 1.4rem;
-  padding-left: 2.25em;
+  padding-left: 2em;
   margin-bottom: 1rem;
 }
 
 .form-check .form-check-input {
   float: left;
-  margin-left: -2.25em;
+  margin-left: -2em;
 }
 
 .form-check-input {
-  width: 1.5em;
-  height: 1.5em;
-  margin-top: 0.05em;
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: 0.175em;
   vertical-align: top;
   background-color: transparent;
   background-repeat: no-repeat;
@@ -2374,11 +2374,11 @@ textarea.form-control-lg {
 }
 
 .form-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 2px var(--btcpay-form-shadow-focus) inset;
+  box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
 .form-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 2px var(--btcpay-form-shadow-focus) inset;
+  box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
 .form-range::-moz-focus-outer {
@@ -2556,7 +2556,7 @@ textarea.form-control-lg {
   align-items: center;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   color: var(--btcpay-form-text-addon);
   text-align: center;
@@ -3402,7 +3402,7 @@ fieldset:disabled .btn {
 }
 
 .btn-link {
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   color: var(--btcpay-body-link);
   text-decoration: none;
 }
@@ -3706,7 +3706,7 @@ fieldset:disabled .btn {
   width: 100%;
   padding: 0.25rem 1rem;
   clear: both;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   color: var(--btcpay-body-text);
   text-align: inherit;
   white-space: nowrap;
@@ -4907,9 +4907,9 @@ fieldset:disabled .btn {
 
 .badge {
   display: inline-block;
-  padding: 0.5em 0.5em;
+  padding: 0.5em 0.75em;
   font-size: 0.75em;
-  font-weight: 700;
+  font-weight: var(--btcpay-font-weight-semibold);
   line-height: 1;
   color: var(--btcpay-white);
   text-align: center;
@@ -5842,7 +5842,7 @@ fieldset:disabled .btn {
   margin: 0;
   font-family: var(--btcpay-font-family-base);
   font-style: normal;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   text-align: left;
   text-align: start;
@@ -5955,7 +5955,7 @@ fieldset:disabled .btn {
   max-width: 276px;
   font-family: var(--btcpay-font-family-base);
   font-style: normal;
-  font-weight: 400;
+  font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   text-align: left;
   text-align: start;
@@ -7736,11 +7736,11 @@ fieldset:disabled .btn {
 }
 
 .fw-normal {
-  font-weight: 400 !important;
+  font-weight: var(--btcpay-font-weight-normal) !important;
 }
 
 .fw-bold {
-  font-weight: 700 !important;
+  font-weight: var(--btcpay-font-weight-bold) !important;
 }
 
 .fw-bolder {
@@ -10661,6 +10661,10 @@ a.nav-link:hover {
   background: var(--btcpay-nav-bg-hover);
 }
 
+main p > a {
+  font-weight: var(--btcpay-font-weight-semibold);
+}
+
 code {
   background: var(--btcpay-code-bg);
 }
@@ -10845,7 +10849,7 @@ textarea.w-auto {
   margin: 1.5rem -0.5rem;
 }
 
-.table-responsive {
+[class^="table-responsive"] {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
@@ -11139,6 +11143,7 @@ input[type="number"].hide-number-spin {
 }
 .btcpay-pills input:not(:checked):not([disabled]) + label:hover,
 .btcpay-pill:hover {
+    color: var(--btcpay-body-link);
     border-color: var(--btcpay-secondary-border-hover);
     text-decoration: none;
 }

@@ -3,9 +3,12 @@
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
+@using BTCPayServer.TransferProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
+@inject TransferProcessorService TransferProcessorService;
+@inject IEnumerable<ITransferProcessorFactory> TransferProcessorFactories;
 @{
     ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
@@ -49,6 +52,13 @@
 
 <partial name="_StatusMessage" />
 
+    @if (Context.GetStoreData()?.TransferProcessors?.Any(data => data.PaymentMethod.Equals(Model.PaymentMethodId, StringComparison.InvariantCultureIgnoreCase)) is not true && TransferProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)))
+    {
+        <div class="alert alert-info text-break" role="alert">
+            protip: BTCPay Server has detected that there are supported but unconfigured transfer processors for this payout payment method. Transfer processors can potentially help automate the the workflow of these payouts so that you do not need to manually handle them. 
+            <a class="alert-link p-0" asp-action="ConfigureStoreTransferProcessors" asp-controller="UITransferProcessors" asp-route-storeId="@Context.GetRouteValue("storeId")">Configure now</a>
+        </div>
+    }
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <form method="post">

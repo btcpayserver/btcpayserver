@@ -568,8 +568,8 @@ namespace BTCPayServer.Controllers
                 }
                 if (paymentMethodId is null)
                 {
-                    paymentMethodId = enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.BTCLike) ??
-                                      enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
+                    paymentMethodId = enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.BTCLike) ??
+                                      enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.LightningLike) ??
                                       enabledPaymentIds.FirstOrDefault();
                 }
                 isDefaultPaymentId = true;
@@ -689,7 +689,7 @@ namespace BTCPayServer.Controllers
                                                       })
                                               };
                                           }).Where(c => c.CryptoImage != "/")
-                                          .OrderByDescending(a => a.CryptoCode == "BTC").ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
+                                          .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);

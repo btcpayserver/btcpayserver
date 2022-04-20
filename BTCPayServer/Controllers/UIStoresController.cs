@@ -464,8 +464,8 @@ namespace BTCPayServer.Controllers
             var defaultChoice = defaultPaymentId is not null ? defaultPaymentId.FindNearest(enabled) : null;
             if (defaultChoice is null)
             {
-                defaultChoice = enabled.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.BTCLike) ??
-                                enabled.FirstOrDefault(e => e.CryptoCode == "BTC" && e.PaymentType == PaymentTypes.LightningLike) ??
+                defaultChoice = enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.BTCLike) ??
+                                enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.LightningLike) ??
                                 enabled.FirstOrDefault();
             }
             var choices = GetEnabledPaymentMethodChoices(storeData);

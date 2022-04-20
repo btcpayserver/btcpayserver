@@ -21,7 +21,7 @@ namespace BTCPayServer.Components.StoreRecentTransactions;
 
 public class StoreRecentTransactions : ViewComponent
 {
-    private const string CryptoCode = "BTC";
+    private string CryptoCode;
     private readonly StoreRepository _storeRepo;
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly BTCPayWalletProvider _walletProvider;
@@ -41,6 +41,7 @@ public class StoreRecentTransactions : ViewComponent
         ConnectionFactory = connectionFactory;
         _walletProvider = walletProvider;
         _dbContextFactory = dbContextFactory;
+        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
 

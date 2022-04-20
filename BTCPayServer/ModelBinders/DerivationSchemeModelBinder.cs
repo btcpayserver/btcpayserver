@@ -32,7 +32,7 @@ namespace BTCPayServer.ModelBinders
 
             var networkProvider = (BTCPayNetworkProvider)bindingContext.HttpContext.RequestServices.GetService(typeof(BTCPayNetworkProvider));
             var cryptoCode = bindingContext.ValueProvider.GetValue("cryptoCode").FirstValue;
-            var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode ?? "BTC");
+            var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode ?? networkProvider.DefaultNetwork.CryptoCode);
             try
             {
                 var data = network.NBXplorerNetwork.DerivationStrategyFactory.Parse(key);

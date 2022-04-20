@@ -252,10 +252,13 @@ namespace BTCPayServer.Hosting
         private async Task MigrateAddStoreToPayout()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-
-            await ctx.Payouts.Include(data => data.PullPaymentData)
-                .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
-            await ctx.SaveChangesAsync();
+            var queryable = ctx.Payouts.Where(data => data.StoreDataId == null);
+            while (await queryable.AnyAsync())
+            {
+                await queryable.Include(data => data.PullPaymentData).Take(5000)
+                    .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
+                await ctx.SaveChangesAsync();
+            }
         }
 
         private async Task AddInitialUserBlob()

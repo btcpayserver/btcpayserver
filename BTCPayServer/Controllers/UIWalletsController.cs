@@ -814,6 +814,10 @@ namespace BTCPayServer.Controllers
                 {
                     message += $"<br/><br/>{errorMessage}";
                 }
+                else if(message is null && errorMessage is not null)
+                {
+                    message = errorMessage;
+                }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity =someFailed? StatusMessageModel.StatusSeverity.Warning:

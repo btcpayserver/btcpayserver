@@ -515,6 +515,9 @@ namespace BTCPayServer.Controllers
                 payoutRequest = payoutRequest.Where(p => p.PaymentMethodId == pmiStr);
             }
 
+            vm.PaymentMethodCount = (await payoutRequest.GroupBy(data => data.PaymentMethodId)
+                    .Select(datas => new {datas.Key, Count = datas.Count()}).ToListAsync())
+                .ToDictionary(datas => datas.Key, arg => arg.Count);
             vm.PayoutStateCount = payoutRequest.GroupBy(data => data.State)
                 .Select(e => new { e.Key, Count = e.Count() })
                 .ToDictionary(arg => arg.Key, arg => arg.Count);

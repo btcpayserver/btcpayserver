@@ -65,7 +65,12 @@
                        asp-route-pullPaymentId="@Model.PullPaymentId"
                        class="btcpay-pill @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
-                       role="tab">@state.ToPrettyString()</a>
+                       role="tab">@state.ToPrettyString()
+                    @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
+                    {
+                        <span>(@count)</span>
+                    }
+                        </a>
                 </li>
             }
         </ul>

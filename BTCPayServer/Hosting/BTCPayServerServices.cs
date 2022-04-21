@@ -21,6 +21,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
@@ -37,7 +38,6 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.TransferProcessors;
 using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -404,7 +404,7 @@ namespace BTCPayServer.Hosting
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
             //also provide a factory that can impersonate user/store id
             services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
-            services.AddScheduledTransfers();
+            services.AddPayoutProcesors();
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();

@@ -2344,7 +2344,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
-        public async Task CanUseTransferProcessorsThroughAPI()
+        public async Task CanUsePayoutProcessorsThroughAPI()
         {
             
             using var tester = CreateServerTester();
@@ -2355,7 +2355,7 @@ namespace BTCPayServer.Tests
             
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
 
-            var registeredProcessors = await adminClient.GetTransferProcessors();
+            var registeredProcessors = await adminClient.GetPayoutProcessors();
             Assert.Equal(2,registeredProcessors.Count());
             await adminClient.GenerateOnChainWallet(admin.StoreId, "BTC", new GenerateOnChainWalletRequest()
             {
@@ -2414,23 +2414,23 @@ namespace BTCPayServer.Tests
            Assert.Empty( await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
 
 
-          Assert.Empty( await adminClient.GetStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC"));
-          Assert.Empty(await adminClient.GetTransferProcessors(admin.StoreId));
+          Assert.Empty( await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
+          Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));
           
-          await adminClient.UpdateStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC",
-              new OnChainAutomatedTransferSettings() {IntervalSeconds = TimeSpan.FromSeconds(100000)});
-          Assert.Equal(100000, Assert.Single( await adminClient.GetStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
+          await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
+              new OnChainAutomatedPayoutSettings() {IntervalSeconds = TimeSpan.FromSeconds(100000)});
+          Assert.Equal(100000, Assert.Single( await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
 
-         var tpGen = Assert.Single(await adminClient.GetTransferProcessors(admin.StoreId));
+         var tpGen = Assert.Single(await adminClient.GetPayoutProcessors(admin.StoreId));
          Assert.Equal("BTC", Assert.Single(tpGen.PaymentMethods));
          //still too poor to process any payouts
          Assert.Empty( await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
 
 
-         await adminClient.RemoveTransferProcessor(admin.StoreId, tpGen.Name, tpGen.PaymentMethods.First());
+         await adminClient.RemovePayoutProcessor(admin.StoreId, tpGen.Name, tpGen.PaymentMethods.First());
 
-         Assert.Empty( await adminClient.GetStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC"));
-         Assert.Empty(await adminClient.GetTransferProcessors(admin.StoreId));
+         Assert.Empty( await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
+         Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));
         
          await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
              tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.000012m));
@@ -2442,9 +2442,9 @@ namespace BTCPayServer.Tests
              payouts = await adminClient.GetStorePayouts(admin.StoreId);
              Assert.Equal(3, payouts.Length);
          });
-         await adminClient.UpdateStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC",
-             new OnChainAutomatedTransferSettings() {IntervalSeconds = TimeSpan.FromSeconds(5)});
-         Assert.Equal(5, Assert.Single( await adminClient.GetStoreOnChainAutomatedTransferProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
+         await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
+             new OnChainAutomatedPayoutSettings() {IntervalSeconds = TimeSpan.FromSeconds(5)});
+         Assert.Equal(5, Assert.Single( await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
          await TestUtils.EventuallyAsync(async () =>
          {
              Assert.Equal(2, (await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC")).Count());

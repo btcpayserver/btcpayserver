@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BTCPayServer.Migrations
+namespace BTCPayServer.ZMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -853,7 +853,7 @@ namespace BTCPayServer.Migrations
                     b.ToTable("WebhookDeliveries");
                 });
 
-            modelBuilder.Entity("BTCPayServer.TransferProcessors.TransferProcessorData", b =>
+            modelBuilder.Entity("BTCPayServer.PayoutProcessors.PayoutProcessorData", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
@@ -875,7 +875,7 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("TransferProcessors");
+                    b.ToTable("PayoutProcessors");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1308,10 +1308,10 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Webhook");
                 });
 
-            modelBuilder.Entity("BTCPayServer.TransferProcessors.TransferProcessorData", b =>
+            modelBuilder.Entity("BTCPayServer.PayoutProcessors.PayoutProcessorData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
-                        .WithMany("TransferProcessors")
+                        .WithMany("PayoutProcessors")
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -1426,7 +1426,7 @@ namespace BTCPayServer.Migrations
 
                     b.Navigation("PullPayments");
 
-                    b.Navigation("TransferProcessors");
+                    b.Navigation("PayoutProcessors");
 
                     b.Navigation("UserStores");
                 });

@@ -4,7 +4,7 @@ namespace BTCPayServer.Data
 {
     public static class InvoiceDataExtensions
     {
-        public static InvoiceEntity GetBlob(this Data.InvoiceData invoiceData, BTCPayNetworkProvider networks)
+        public static InvoiceEntity GetBlob(this InvoiceData invoiceData, BTCPayNetworkProvider networks)
         {
 
             var entity = InvoiceRepository.FromBytes<InvoiceEntity>(invoiceData.Blob);

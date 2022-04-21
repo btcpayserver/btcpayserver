@@ -784,7 +784,7 @@ namespace BTCPayServer.Controllers
                    {
                        if (message is null)
                        {
-                           message = "Transfers scheduled:<br/>";
+                           message = "Payouts scheduled:<br/>";
                        }
                        
                        message += $"{claimRequest.Value} to {claimRequest.Destination.ToString()}<br/>";
@@ -795,7 +795,7 @@ namespace BTCPayServer.Controllers
                        someFailed = true;
                        if (errorMessage is null)
                        {
-                           errorMessage = "Transfers failed to be scheduled:<br/>";
+                           errorMessage = "Payouts failed to be scheduled:<br/>";
                        }
 
                        switch (response.Result)

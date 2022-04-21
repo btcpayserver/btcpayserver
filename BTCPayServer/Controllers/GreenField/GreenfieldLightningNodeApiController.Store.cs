@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -113,14 +114,18 @@ namespace BTCPayServer.Controllers.Greenfield
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = HttpContext.GetStoreData();
-            if (store == null || network == null)
+            if (network == null)
             {
                 throw ErrorCryptoCodeNotFound();
             }
-
+            
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-store", "There is no store with this id"));
+            }
+            
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()

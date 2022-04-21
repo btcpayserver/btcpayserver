@@ -212,7 +212,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
     public class LocalHttpContextAccessor : IHttpContextAccessor
     {
-        public HttpContext? HttpContext { get; set; }
+        public HttpContext HttpContext { get; set; }
     }
 
     public class LocalBTCPayServerClient : BTCPayServerClient
@@ -1157,7 +1157,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<IEnumerable<OnChainAutomatedTransferSettings>>
-            GetStoreOnChainAutomatedTransferProcessors(string storeId, string? paymentMethod = null,
+            GetStoreOnChainAutomatedTransferProcessors(string storeId, string paymentMethod = null,
                 CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<OnChainAutomatedTransferSettings>>(

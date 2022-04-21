@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +19,6 @@ public class UIOnChainAutomatedTransferProcessorsController : Controller
     private readonly EventAggregator _eventAggregator;
     private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     private readonly OnChainAutomatedTransferSenderFactory _onChainAutomatedTransferSenderFactory;
-    private readonly IEnumerable<ITransferProcessorFactory> _transferProcessorFactories;
     private readonly TransferProcessorService _transferProcessorService;
 
     public UIOnChainAutomatedTransferProcessorsController(

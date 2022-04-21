@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -103,7 +103,7 @@ public class LightningTransferSender : BaseTransferSender<AutomatedTransferBlob>
                                     payoutData.State = PayoutState.Completed;
                                 }
                             }
-                            catch (LNUrlException e)
+                            catch (LNUrlException)
                             {
                                 continue;
                             }

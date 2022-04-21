@@ -1,4 +1,5 @@
-﻿namespace BTCPayServer.Client.Models;
+#nullable enable
+namespace BTCPayServer.Client.Models;
 
 public class CreatePayoutThroughStoreRequest : CreatePayoutRequest
 {

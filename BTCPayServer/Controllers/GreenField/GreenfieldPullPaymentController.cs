@@ -285,7 +285,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePayoutThroughStore(string storeId, CreatePayoutThroughStoreRequest request)
         {
-            if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            if (request is null || !PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
@@ -302,7 +302,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
             PullPaymentBlob? ppBlob = null;
-            if (request.PullPaymentId is not null)
+            if (request?.PullPaymentId is not null)
             {
 
                 var pp = await ctx.PullPayments.FirstOrDefaultAsync(data =>
@@ -329,7 +329,8 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (request.Amount is { } v && (v < ppBlob?.MinimumClaim || v == 0.0m))
             {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {ppBlob.MinimumClaim})");
+                var minimumClaim = ppBlob?.MinimumClaim is decimal val ? val : 0.0m;
+                ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {minimumClaim})");
                 return this.CreateValidationError(ModelState);
             }
             var result = await _pullPaymentService.Claim(new ClaimRequest()

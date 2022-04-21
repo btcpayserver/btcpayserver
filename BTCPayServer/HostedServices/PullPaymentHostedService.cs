@@ -396,7 +396,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                PullPaymentBlob? ppBlob = null;
+                PullPaymentBlob ppBlob = null;
                 if (!withoutPullPayment)
                 {
                     if (pp.IsExpired(now))
@@ -698,7 +698,7 @@ namespace BTCPayServer.HostedServices
         }
 
         public PaymentMethodId PaymentMethodId { get; set; }
-        public string? PullPaymentId { get; set; }
+        public string PullPaymentId { get; set; }
         public decimal? Value { get; set; }
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }

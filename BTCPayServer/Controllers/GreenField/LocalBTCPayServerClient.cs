@@ -1165,7 +1165,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     .GetStoreOnChainAutomatedTransferProcessors(storeId, paymentMethod));
         }
 
-        public override async Task<IEnumerable<LightningAutomatedTransferSettings>> GetStoreLightningAutomatedTransferProcessors(string storeId, string? paymentMethod = null,
+        public override async Task<IEnumerable<LightningAutomatedTransferSettings>> GetStoreLightningAutomatedTransferProcessors(string storeId, string paymentMethod = null,
             CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<LightningAutomatedTransferSettings>>(

@@ -59,7 +59,7 @@ namespace BTCPayServer.Plugins
 
             var respObj = JObject.Parse(resp)["tree"] as JArray;
 
-            var detectedPlugins = respObj.Where(token => token["path"].ToString().EndsWith(".btcpay"));
+            var detectedPlugins = respObj.Where(token => token["path"].ToString().EndsWith(".btcpay", StringComparison.OrdinalIgnoreCase));
 
             List<Task<AvailablePlugin>> result = new List<Task<AvailablePlugin>>();
             foreach (JToken detectedPlugin in detectedPlugins)

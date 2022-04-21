@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,7 +14,7 @@ namespace BTCPayServer.TransferProcessors;
 public class TransferProcessorUpdated
 {
     public string Id { get; set; }
-    public TransferProcessorData? Data { get; set; }
+    public TransferProcessorData Data { get; set; }
 
     public TaskCompletionSource Processed { get; set; }
 }

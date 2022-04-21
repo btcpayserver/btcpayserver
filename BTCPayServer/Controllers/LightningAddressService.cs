@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+#nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -30,15 +31,17 @@ public class LightningAddressService
         query.Usernames = query.Usernames?.Select(NormalizeUsername)?.ToArray();
         if (query.Usernames is not null)
         {
-            queryable = queryable.Where(data => query.Usernames.Contains(data.Username));
+            queryable = queryable.Where(data => query.Usernames.Contains(data!.Username));
         }
 
         if (query.StoreIds is not null)
         {
-            queryable = queryable.Where(data => query.StoreIds.Contains(data.StoreDataId));
+            queryable = queryable.Where(data => query.StoreIds.Contains(data!.StoreDataId));
         }
 
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         return await queryable.ToListAsync();
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
     }
 
     public async Task<LightningAddressData?> ResolveByAddress(string username)
@@ -77,7 +80,7 @@ public class LightningAddressService
         return true;
     }
 
-    public async Task<bool> Remove(string username, string storeId = null)
+    public async Task<bool> Remove(string username, string? storeId = null)
     {
         await using var context = _applicationDbContextFactory.CreateContext();
         var x = (await GetCore(context, new LightningAddressQuery() {Usernames = new[] {username}})).FirstOrDefault();

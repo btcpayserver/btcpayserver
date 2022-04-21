@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -22,7 +22,6 @@ namespace BTCPayServer.TransferProcessors.OnChain
 {
     public class OnChainTransferSender : BaseTransferSender<AutomatedTransferBlob>
     {
-        private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
@@ -43,7 +42,6 @@ namespace BTCPayServer.TransferProcessors.OnChain
             base(logger, storeRepository, transferProcesserSettings, applicationDbContextFactory,
                 btcPayNetworkProvider)
         {
-            _applicationDbContextFactory = applicationDbContextFactory;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
@@ -184,7 +182,7 @@ namespace BTCPayServer.TransferProcessors.OnChain
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }
-                catch (OperationCanceledException e)
+                catch (OperationCanceledException)
                 {
                 }
                 catch(Exception e)

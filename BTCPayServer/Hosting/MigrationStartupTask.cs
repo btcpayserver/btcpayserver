@@ -266,7 +266,7 @@ namespace BTCPayServer.Hosting
 WITH cte AS (
 SELECT DISTINCT p.""Id"", pp.""StoreId"" FROM ""Payouts"" p
 JOIN ""PullPayments"" pp  ON pp.""Id"" = p.""PullPaymentDataId""
-WHERE p.""StoreDataId"" IS NULL AND p.""StoreDataId"" IS NULL
+WHERE p.""StoreDataId"" IS NULL
 )
 UPDATE ""Payouts"" p
 SET ""StoreDataId""=cte.""StoreId""

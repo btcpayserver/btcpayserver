@@ -3,7 +3,7 @@
         "/api/v1/stores/{storeId}/payment-methods/LNURL": {
             "get": {
                 "tags": [
-                    "Store Payment Methods (LNURL)"
+                    "Store Payment Methods (LNURL Pay)"
                 ],
                 "summary": "Get store LNURL payment methods",
                 "parameters": [

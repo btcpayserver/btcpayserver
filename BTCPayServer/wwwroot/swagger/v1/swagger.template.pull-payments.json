@@ -554,7 +554,7 @@
             },
             "CreatePayoutRequest": {
                 "type": "object",
-                "properties":{
+                "properties": {
                     "destination": {
                         "type": "string",
                         "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
@@ -571,7 +571,7 @@
                         "example": "BTC",
                         "description": "The payment method of the payout"
                     }
-                }                
+                }
             },
             "PayoutData": {
                 "type": "object",
@@ -689,5 +689,16 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Pull payments (Management)"
+        },
+        {
+            "name": "Pull payments (Public)"
+        },
+        {
+            "name": "Pull payments payout (Public)"
+        }
+    ]
 }

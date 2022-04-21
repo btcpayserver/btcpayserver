@@ -92,5 +92,10 @@
                 "security": []
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Authorization"
+        }
+    ]
 }

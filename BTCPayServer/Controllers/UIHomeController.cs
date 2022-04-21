@@ -135,6 +135,12 @@ namespace BTCPayServer.Controllers
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
             json["servers"] = servers;
+            var tags = (JArray)json["tags"];
+            json["tags"] = new JArray(tags
+                .Select(o => (name: ((JObject)o)["name"].Value<string>(), o))
+                .OrderBy(o => o.name)
+                .Select(o => o.o)
+                .ToArray());
             return Json(json);
         }
         [Route("docs")]

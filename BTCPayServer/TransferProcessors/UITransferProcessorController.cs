@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -84,7 +84,7 @@ public class UITransferProcessorsController : Controller
 
     public class StoreTransferProcessorsView
     {
-        public Dictionary<PaymentMethodId, TransferProcessorData?> Configured { get; set; }
+        public Dictionary<PaymentMethodId, TransferProcessorData> Configured { get; set; }
         public ITransferProcessorFactory Factory { get; set; }
     }
 }

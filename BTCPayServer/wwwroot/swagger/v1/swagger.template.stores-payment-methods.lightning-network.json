@@ -267,36 +267,44 @@
                 }
             },
             "LightningNetworkPaymentMethodData": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
-                },
-                "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
                     },
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "Crypto code of the payment method"
-                    },
-                    "paymentMethod": {
-                        "type": "string",
-                        "description": "The payment method"
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the payment method is enabled"
+                            },
+                            "cryptoCode": {
+                                "type": "string",
+                                "description": "Crypto code of the payment method"
+                            },
+                            "paymentMethod": {
+                                "type": "string",
+                                "description": "The payment method"
+                            }
+                        }
                     }
-                }
+                ]
             },
             "UpdateLightningNetworkPaymentMethodRequest": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
-                },
-                "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the payment method is enabled"
+                            }
+                        }
                     }
-                }
+                ]
             }
         }
     },

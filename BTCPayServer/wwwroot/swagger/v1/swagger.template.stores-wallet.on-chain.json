@@ -755,8 +755,8 @@
                     },
                     "labels": {
                         "description": "Labels linked to this transaction",
-                        "type": "object",
-                        "additionalProperties": {
+                        "type": "array",
+                        "items": {
                             "$ref": "#/components/schemas/LabelData"
                         }
                     }
@@ -803,8 +803,8 @@
                     },
                     "labels": {
                         "description": "Labels linked to this transaction",
-                        "type": "object",
-                        "additionalProperties": {
+                        "type": "array",
+                        "items": {
                             "$ref": "#/components/schemas/LabelData"
                         }
                     }

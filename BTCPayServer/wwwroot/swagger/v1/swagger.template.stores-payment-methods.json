@@ -30,12 +30,12 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "list of payment methods",
+                        "description": "List of payment methods",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
                                         "$ref": "#/components/schemas/GenericPaymentMethodData"
                                     }
                                 }

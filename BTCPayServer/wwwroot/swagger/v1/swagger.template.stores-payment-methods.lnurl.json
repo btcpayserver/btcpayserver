@@ -3,7 +3,7 @@
         "/api/v1/stores/{storeId}/payment-methods/LNURL": {
             "get": {
                 "tags": [
-                    "Store Payment Methods (LNURL)"
+                    "Store Payment Methods (LNURL Pay)"
                 ],
                 "summary": "Get store LNURL payment methods",
                 "parameters": [
@@ -269,20 +269,24 @@
                 }
             },
             "LNURLPayPaymentMethodData": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/LNURLPayPaymentMethodBaseData"
-                },
-                "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled. Note that this can only enabled when a Lightning Network payment method is available and enabled"
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the payment method is enabled. Note that this can only enabled when a Lightning Network payment method is available and enabled"
+                            },
+                            "cryptoCode": {
+                                "type": "string",
+                                "description": "Crypto code of the payment method"
+                            }
+                        }
                     },
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "Crypto code of the payment method"
+                    {
+                        "$ref": "#/components/schemas/LNURLPayPaymentMethodBaseData"
                     }
-                }
+                ]
             }
         }
     },

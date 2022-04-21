@@ -18,16 +18,17 @@ namespace BTCPayServer.Components.StoreWalletBalance;
 
 public class StoreWalletBalance : ViewComponent
 {
-    private const string CryptoCode = "BTC";
+    private string CryptoCode;
     private const WalletHistogramType DefaultType = WalletHistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
     private readonly WalletHistogramService _walletHistogramService;
 
-    public StoreWalletBalance(StoreRepository storeRepo, WalletHistogramService walletHistogramService)
+    public StoreWalletBalance(StoreRepository storeRepo, WalletHistogramService walletHistogramService, BTCPayNetworkProvider networkProvider)
     {
         _storeRepo = storeRepo;
         _walletHistogramService = walletHistogramService;
+        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)

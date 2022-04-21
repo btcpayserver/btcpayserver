@@ -279,32 +279,36 @@
                 }
             },
             "PaymentRequestData": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/PaymentRequestBaseData"
-                },
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "description":  "The id of the payment request",
-                        "nullable": false
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PaymentRequestBaseData"
                     },
-                    "storeId": {
-                        "type": "string",
-                        "description": "The store identifier that the payment request belongs to"
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [ "Pending", "Completed" ,"Expired"],
-                        "description": "The status of the payment request",
-                        "nullable": false
-                    },
-                    "createdTime": {
-                        "description": "The creation date of the payment request",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
-                        "nullable": false
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the payment request",
+                                "nullable": false
+                            },
+                            "storeId": {
+                                "type": "string",
+                                "description": "The store identifier that the payment request belongs to"
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": [ "Pending", "Completed", "Expired" ],
+                                "description": "The status of the payment request",
+                                "nullable": false
+                            },
+                            "createdTime": {
+                                "description": "The creation date of the payment request",
+                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ],
+                                "nullable": false
+                            }
+                        }
                     }
-                }
+                ]
             },
             "PaymentRequestBaseData":{
                 "type": "object",

@@ -1,8 +1,4 @@
 /* General and site-wide Bootstrap modifications */
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    font-weight: 600;
-}
-
 p {
     margin-bottom: 1.5rem;
 }
@@ -292,12 +288,12 @@ svg.icon-note {
 
 .widget h3,
 .widget .h3 {
-    font-weight: var(--btcpay-font-weight-bold);
     margin-bottom: 0;
 }
 
 .widget h6,
 .widget .h6 {
+    font-weight: var(--btcpay-font-weight-semibold);
     color: var(--btcpay-body-text-muted);
     margin-bottom: 0;
 }

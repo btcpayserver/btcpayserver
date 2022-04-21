@@ -534,44 +534,56 @@
                 }
             },
             "UpdateOnChainPaymentMethodRequest": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
-                },
-                "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the payment method is enabled"
+                            }
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
                     }
-                }
+                ]
             },
             "OnChainPaymentMethodData": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
-                },
-                "properties": {
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is enabled"
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the payment method is enabled"
+                            },
+                            "paymentMethod": {
+                                "type": "string",
+                                "description": "The payment method"
+                            }
+                        }
                     },
-                    "paymentMethod": {
-                        "type": "string",
-                        "description": "The payment method"
+                    {
+                        "$ref": "#/components/schemas/OnChainPaymentMethodDataPreview"
                     }
-                }
+                ]
             },
             "OnChainPaymentMethodDataPreview": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
-                },
-                "properties": {
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "Crypto code of the payment method"
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "cryptoCode": {
+                                "type": "string",
+                                "description": "Crypto code of the payment method"
+                            }
+                        }
                     }
-                }
+                ]
             },
             "OnChainPaymentMethodPreviewResultData": {
                 "type": "object",

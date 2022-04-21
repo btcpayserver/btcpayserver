@@ -862,5 +862,16 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Pull payments (Management)"
+        },
+        {
+            "name": "Pull payments (Public)"
+        },
+        {
+            "name": "Pull payments payout (Public)"
+        }
+    ]
 }

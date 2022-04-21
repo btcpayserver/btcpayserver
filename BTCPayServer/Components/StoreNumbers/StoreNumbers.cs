@@ -17,7 +17,7 @@ namespace BTCPayServer.Components.StoreNumbers;
 
 public class StoreNumbers : ViewComponent
 {
-    private const string CryptoCode = "BTC";
+    private string CryptoCode;
     private const int TransactionDays = 7;
     
     private readonly StoreRepository _storeRepo;
@@ -35,6 +35,7 @@ public class StoreNumbers : ViewComponent
         _walletProvider = walletProvider;
         _networkProvider = networkProvider;
         _dbContextFactory = dbContextFactory;
+        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)

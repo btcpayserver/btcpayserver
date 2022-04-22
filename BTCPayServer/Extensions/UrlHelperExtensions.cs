@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Mvc
             return urlHelper.GetUriByAction(
                 action: nameof(UIPaymentRequestController.ViewPaymentRequest),
                 controller: "UIPaymentRequest",
-                values: new { id = paymentRequestId },
+                values: new { payReqId = paymentRequestId },
                 scheme, host, pathbase);
         }
 
@@ -50,7 +50,7 @@ namespace Microsoft.AspNetCore.Mvc
             return urlHelper.GetUriByAction(
                 action: nameof(UIInvoiceController.Invoice),
                 controller: "UIInvoice",
-                values: new { invoiceId = invoiceId },
+                values: new { invoiceId },
                 scheme, host, pathbase);
         }
 
@@ -59,7 +59,7 @@ namespace Microsoft.AspNetCore.Mvc
             return urlHelper.GetUriByAction(
                 action: nameof(UIInvoiceController.Checkout),
                 controller: "UIInvoice",
-                values: new { invoiceId = invoiceId },
+                values: new { invoiceId },
                 scheme, host, pathbase);
         }
 

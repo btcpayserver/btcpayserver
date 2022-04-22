@@ -7,11 +7,9 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -123,7 +121,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
-                throw new JsonHttpException(this.CreateAPIError(404, "unknown-store", "There is no store with this id"));
+                throw new JsonHttpException(StoreNotFound());
             }
             
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -147,6 +145,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
             }
             throw ErrorLightningNodeNotConfiguredForStore();
+        }
+        
+        private IActionResult StoreNotFound()
+        {
+            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

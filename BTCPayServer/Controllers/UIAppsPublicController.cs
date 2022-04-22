@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
                     Currency = settings.Currency,
                     Price = price,
                     BuyerEmail = email,
-                    OrderId = orderId,
+                    OrderId = orderId ?? AppService.GetPosOrderId(appId),
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl

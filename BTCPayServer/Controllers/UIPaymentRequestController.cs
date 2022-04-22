@@ -186,7 +186,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
+                    return RedirectToAction("ViewPaymentRequest", new { payReqId });
                 }
 
                 return BadRequest("Payment Request cannot be paid as it has been archived");
@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
+                    return RedirectToAction("ViewPaymentRequest", new { payReqId });
                 }
 
                 return BadRequest("Payment Request has already been settled.");
@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("ViewPaymentRequest", new { Id = payReqId });
+                    return RedirectToAction("ViewPaymentRequest", new { payReqId });
                 }
 
                 return BadRequest("Payment Request has expired");
@@ -265,7 +265,7 @@ namespace BTCPayServer.Controllers
 
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { newInvoice.Id });
+                    return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });
                 }
 
                 return Ok(newInvoice.Id);
@@ -306,7 +306,7 @@ namespace BTCPayServer.Controllers
             if (redirect)
             {
                 TempData[WellKnownTempData.SuccessMessage] = "Payment cancelled";
-                return RedirectToAction(nameof(ViewPaymentRequest), new { Id = payReqId });
+                return RedirectToAction(nameof(ViewPaymentRequest), new { payReqId });
             }
 
             return Ok("Payment cancelled");

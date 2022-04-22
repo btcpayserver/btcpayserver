@@ -132,7 +132,7 @@ namespace BTCPayServer
             }
 
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
+                () => (null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
         }
 
         public class EditLightningAddressVM
@@ -187,13 +187,13 @@ namespace BTCPayServer
 
             var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
-                () => (username, null, null, true));
+                () => (username, null, null, null, null, true));
         }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -226,8 +226,8 @@ namespace BTCPayServer
                 return NotFound("LNURL or Lightning payment method disabled");
             }
 
-            (string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
-                (internalDetails ?? (() => (null, null, null, null)))();
+            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
+                (internalDetails ?? (() => (null, null, null, null, null, null)))();
 
             if ((anyoneCanInvoice ?? blob.AnyoneCanInvoice) is false)
             {
@@ -237,20 +237,32 @@ namespace BTCPayServer
             var lnAddress = username is null ? null : $"{username}@{Request.Host}";
             List<string[]> lnurlMetadata = new();
 
-            var i = await _invoiceController.CreateInvoiceCoreRaw(
-                new CreateInvoiceRequest
+            var invoiceRequest = new CreateInvoiceRequest
+            {
+                Amount = invoiceAmount,
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
-                    Amount = invoiceAmount,
-                    Checkout = new InvoiceDataBase.CheckoutOptions
+                    PaymentMethods = new[] { pmi.ToStringNormalized() },
+                    Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
+                        ? blob.InvoiceExpiration
+                        : TimeSpan.FromMinutes(2)
+                },
+                Currency = currencyCode,
+                Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
+            };
+
+            if (item != null)
+            {
+                invoiceRequest.Metadata =
+                    new InvoiceMetadata
                     {
-                        PaymentMethods = new[] {pmi.ToStringNormalized()},
-                        Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
-                            ? blob.InvoiceExpiration
-                            : TimeSpan.FromMinutes(2)
-                    },
-                    Currency = currencyCode,
-                    Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
-                }, store, Request.GetAbsoluteRoot(), additionalTags);
+                        ItemCode = item.Id, 
+                        ItemDesc = item.Description, 
+                        OrderId = AppService.GetPosOrderId(app.Id)
+                    }.ToJObject();
+            }
+            
+            var i = await _invoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);

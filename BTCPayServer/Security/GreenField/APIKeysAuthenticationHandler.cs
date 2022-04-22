@@ -39,7 +39,6 @@ namespace BTCPayServer.Security.Greenfield
 
             var key = await _apiKeyRepository.GetKey(apiKey, true);
 
-            var u = await _userManager.FindByIdAsync(key.UserId);
             if (key == null || await _userManager.IsLockedOutAsync(key.User))
             {
                 return AuthenticateResult.Fail("ApiKey authentication failed");

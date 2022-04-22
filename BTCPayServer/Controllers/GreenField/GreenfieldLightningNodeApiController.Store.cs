@@ -2,15 +2,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -113,14 +112,18 @@ namespace BTCPayServer.Controllers.Greenfield
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = HttpContext.GetStoreData();
-            if (store == null || network == null)
+            if (network == null)
             {
                 throw ErrorCryptoCodeNotFound();
             }
-
+            
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                throw new JsonHttpException(StoreNotFound());
+            }
+            
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
@@ -142,6 +145,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
             }
             throw ErrorLightningNodeNotConfiguredForStore();
+        }
+        
+        private IActionResult StoreNotFound()
+        {
+            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

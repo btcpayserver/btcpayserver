@@ -94,6 +94,7 @@
                 <div class="list-group list-group-flush">
                     @for (var index = 0; index < Model.Outputs.Count; index++)
                     {
+                        <input type="hidden" asp-for="Outputs[index].PayoutId" />
                         <div class="list-group-item transaction-output-form px-0 pt-0 pb-3 mb-3">
                             <div class="form-group">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -231,6 +232,7 @@
             </div>
             <div class="form-group d-flex gap-3 mt-2">
                 <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
+                <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary">Schedule transaction</button>
                 <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" id="PSBT">PSBT</a>
                 <button type="button" id="bip21parse" class="btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
                 <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>

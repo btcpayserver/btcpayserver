@@ -21,6 +21,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
@@ -322,7 +323,8 @@ namespace BTCPayServer.Hosting
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
 
 
-            services.AddSingleton<IPayoutHandler, BitcoinLikePayoutHandler>();
+            services.AddSingleton<BitcoinLikePayoutHandler>();
+            services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<BitcoinLikePayoutHandler>());
             services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
 
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
@@ -402,6 +404,7 @@ namespace BTCPayServer.Hosting
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
             //also provide a factory that can impersonate user/store id
             services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
+            services.AddPayoutProcesors();
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();

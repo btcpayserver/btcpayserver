@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data.Data;
+using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Data
 {
@@ -42,5 +44,7 @@ namespace BTCPayServer.Data
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
         public IEnumerable<LightningAddressData> LightningAddresses { get; set; }
+        public IEnumerable<PayoutProcessorData> PayoutProcessors { get; set; }
+        public IEnumerable<PayoutData> Payouts { get; set; }
     }
 }

@@ -41,12 +41,23 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts", queryPayload: query, method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PayoutData[]>(response);
         }
+        public virtual async Task<PayoutData[]> GetStorePayouts(string storeId, bool includeCancelled = false, CancellationToken cancellationToken = default)
+        {
+            Dictionary<string, object> query = new Dictionary<string, object>();
+            query.Add("includeCancelled", includeCancelled);
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts", queryPayload: query, method: HttpMethod.Get), cancellationToken);
+            return await HandleResponse<PayoutData[]>(response);
+        }
         public virtual async Task<PayoutData> CreatePayout(string pullPaymentId, CreatePayoutRequest payoutRequest, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);
             return await HandleResponse<PayoutData>(response);
+        } 
+        public virtual async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest, CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);
+            return await HandleResponse<PayoutData>(response);
         }
-
         public virtual async Task CancelPayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}", method: HttpMethod.Delete), cancellationToken);

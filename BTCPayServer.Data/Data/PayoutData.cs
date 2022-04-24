@@ -14,6 +14,7 @@ namespace BTCPayServer.Data
         public string Id { get; set; }
         public DateTimeOffset Date { get; set; }
         public string PullPaymentDataId { get; set; }
+        public string StoreDataId { get; set; }
         public PullPaymentData PullPaymentData { get; set; }
         [MaxLength(20)]
         public PayoutState State { get; set; }
@@ -25,11 +26,15 @@ namespace BTCPayServer.Data
 #nullable enable
         public string? Destination { get; set; }
 #nullable restore
+        public StoreData StoreData { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<PayoutData>()
                 .HasOne(o => o.PullPaymentData)
+                .WithMany(o => o.Payouts).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<PayoutData>()
+                .HasOne(o => o.StoreData)
                 .WithMany(o => o.Payouts).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<PayoutData>()
                 .Property(o => o.State)

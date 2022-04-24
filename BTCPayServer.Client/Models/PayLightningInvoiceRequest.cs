@@ -1,4 +1,3 @@
-#nullable enable
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using NBitcoin;
@@ -15,6 +14,6 @@ namespace BTCPayServer.Client.Models
         public float? MaxFeePercent { get; set; }
         
         [JsonConverter(typeof(MoneyJsonConverter))]
-        public Money? MaxFeeFlat { get; set; }
+        public Money MaxFeeFlat { get; set; }
     }
 }

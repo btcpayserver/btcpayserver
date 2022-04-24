@@ -1,0 +1,32 @@
+﻿@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.PayoutProcessors.OnChain.UIOnChainAutomatedPayoutProcessorsController.OnChainTransferViewModel
+@{
+    ViewData["NavPartialName"] = "../UIStores/_Nav";
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePage("PayoutProcessors", "OnChain Payout Processor", Context.GetStoreData().Id);
+}
+<div class="row">
+    
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="mb-0">@ViewData["Title"]</h3>
+            </div>
+            <p>Payout Processors allow BTCPay Server to handle payouts awaiting payment in an automated way.</p>
+            @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="IntervalMinutes" class="form-label"></label>
+                <input asp-for="IntervalMinutes" class="form-control">
+            </div>
+
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
+        </form>
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

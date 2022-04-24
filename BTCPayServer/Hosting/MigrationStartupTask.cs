@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,9 +24,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
+using PayoutData = BTCPayServer.Data.PayoutData;
+using PullPaymentData = BTCPayServer.Data.PullPaymentData;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Hosting
 {
@@ -41,6 +47,7 @@ namespace BTCPayServer.Hosting
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly LightningAddressService _lightningAddressService;
+        private readonly ILogger<MigrationStartupTask> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
@@ -56,9 +63,8 @@ namespace BTCPayServer.Hosting
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             LightningAddressService lightningAddressService,
-            Logs logs)
+            ILogger<MigrationStartupTask> logger)
         {
-            Logs = logs;
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
@@ -67,6 +73,7 @@ namespace BTCPayServer.Hosting
             _payoutHandlers = payoutHandlers;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _lightningAddressService = lightningAddressService;
+            _logger = logger;
             _userManager = userManager;
             LightningOptions = lightningOptions;
         }
@@ -182,12 +189,17 @@ namespace BTCPayServer.Hosting
                 {
                     await MigrateLighingAddressDatabaseMigration();
                     settings.LighingAddressDatabaseMigration = true;
+                }
+                if (!settings.AddStoreToPayout)
+                {
+                    await MigrateAddStoreToPayout();
+                    settings.AddStoreToPayout = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }
             catch (Exception ex)
             {
-                Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
+                _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
         }
@@ -242,6 +254,41 @@ namespace BTCPayServer.Hosting
            {
               await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
            }
+        }
+
+        private async Task MigrateAddStoreToPayout()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+
+            if (ctx.Database.IsNpgsql())
+            {
+                await ctx.Database.ExecuteSqlRawAsync(@"
+WITH cte AS (
+SELECT DISTINCT p.""Id"", pp.""StoreId"" FROM ""Payouts"" p
+JOIN ""PullPayments"" pp  ON pp.""Id"" = p.""PullPaymentDataId""
+WHERE p.""StoreDataId"" IS NULL
+)
+UPDATE ""Payouts"" p
+SET ""StoreDataId""=cte.""StoreId""
+FROM cte
+WHERE cte.""Id""=p.""Id""
+");
+            }
+            else
+            {
+                var queryable = ctx.Payouts.Where(data => data.StoreDataId == null);
+                var count = await queryable.CountAsync();
+                _logger.LogInformation($"Migrating {count} payouts to have a store id explicitly");
+                for (int i = 0; i < count; i+=1000)
+                {
+                    await queryable.Include(data => data.PullPaymentData).Skip(i).Take(1000)
+                        .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
+                
+                    await ctx.SaveChangesAsync();
+                
+                    _logger.LogInformation($"Migrated {i+1000}/{count} payouts to have a store id explicitly");
+                }
+            }
         }
 
         private async Task AddInitialUserBlob()

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using BTCPayServer.Data.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -62,6 +63,7 @@ namespace BTCPayServer.Data
         public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
         public DbSet<WebhookData> Webhooks { get; set; }
         public DbSet<LightningAddressData> LightningAddresses{ get; set; }
+        public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -88,7 +90,7 @@ namespace BTCPayServer.Data
             InvoiceData.OnModelCreating(builder);
             NotificationData.OnModelCreating(builder);
             //OffchainTransactionData.OnModelCreating(builder);
-            Data.PairedSINData.OnModelCreating(builder);
+            BTCPayServer.Data.PairedSINData.OnModelCreating(builder);
             PairingCodeData.OnModelCreating(builder);
             //PayjoinLock.OnModelCreating(builder);
             PaymentRequestData.OnModelCreating(builder);
@@ -103,11 +105,12 @@ namespace BTCPayServer.Data
             //StoreData.OnModelCreating(builder);
             U2FDevice.OnModelCreating(builder);
             Fido2Credential.OnModelCreating(builder);
-            Data.UserStore.OnModelCreating(builder);
+            BTCPayServer.Data.UserStore.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
             WalletTransactionData.OnModelCreating(builder);
             WebhookDeliveryData.OnModelCreating(builder);
             LightningAddressData.OnModelCreating(builder);
+            PayoutProcessorData.OnModelCreating(builder);
             //WebhookData.OnModelCreating(builder);
 
 

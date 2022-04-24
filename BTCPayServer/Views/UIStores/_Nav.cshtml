@@ -16,6 +16,7 @@
             <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Users))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Users)" asp-controller="UIStores" asp-action="StoreUsers" asp-route-storeId="@storeId">Users</a>
             <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Integrations))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Integrations)" asp-controller="UIStores" asp-action="Integrations" asp-route-storeId="@storeId">Integrations</a>
             <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Webhooks)" asp-controller="UIStores" asp-action="Webhooks" asp-route-storeId="@storeId">Webhooks</a>
+            <a permission="@Policies.CanModifyStoreSettings" id="SectionNav-PayoutProcessors" class="nav-link @ViewData.IsActivePage("PayoutProcessors")" asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@storeId">Payout Processors</a>
             <vc:ui-extension-point location="store-nav" model="@Model"/>
         </div>
     </nav>

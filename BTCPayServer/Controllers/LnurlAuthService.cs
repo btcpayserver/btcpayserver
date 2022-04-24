@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -148,8 +147,8 @@ namespace BTCPayServer
 
     public class LightningAddressQuery
     {
-        public string[]? StoreIds { get; set; }
-        public string[]? Usernames { get; set; }
+        public string[] StoreIds { get; set; }
+        public string[] Usernames { get; set; }
 
     }
 }

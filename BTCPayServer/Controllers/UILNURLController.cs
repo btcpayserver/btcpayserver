@@ -132,7 +132,7 @@ namespace BTCPayServer
             }
 
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
+                () => (null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
         }
 
         public class EditLightningAddressVM
@@ -176,7 +176,6 @@ namespace BTCPayServer
             }
         }
 
-
         [HttpGet("~/.well-known/lnurlp/{username}")]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
@@ -188,13 +187,13 @@ namespace BTCPayServer
 
             var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
-                () => (username, null, null, true));
+                () => (username, null, null, null, null, true));
         }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -227,8 +226,8 @@ namespace BTCPayServer
                 return NotFound("LNURL or Lightning payment method disabled");
             }
 
-            (string username, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
-                (internalDetails ?? (() => (null, null, null, null)))();
+            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
+                (internalDetails ?? (() => (null, null, null, null, null, null)))();
 
             if ((anyoneCanInvoice ?? blob.AnyoneCanInvoice) is false)
             {
@@ -236,22 +235,34 @@ namespace BTCPayServer
             }
 
             var lnAddress = username is null ? null : $"{username}@{Request.Host}";
-            List<string[]> lnurlMetadata = new List<string[]>();
+            List<string[]> lnurlMetadata = new();
 
-            var i = await _invoiceController.CreateInvoiceCoreRaw(
-                new CreateInvoiceRequest
+            var invoiceRequest = new CreateInvoiceRequest
+            {
+                Amount = invoiceAmount,
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
-                    Amount = invoiceAmount,
-                    Checkout = new InvoiceDataBase.CheckoutOptions
+                    PaymentMethods = new[] { pmi.ToStringNormalized() },
+                    Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
+                        ? blob.InvoiceExpiration
+                        : TimeSpan.FromMinutes(2)
+                },
+                Currency = currencyCode,
+                Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
+            };
+
+            if (item != null)
+            {
+                invoiceRequest.Metadata =
+                    new InvoiceMetadata
                     {
-                        PaymentMethods = new[] {pmi.ToStringNormalized()},
-                        Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
-                            ? blob.InvoiceExpiration
-                            : TimeSpan.FromMinutes(2)
-                    },
-                    Currency = currencyCode,
-                    Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
-                }, store, Request.GetAbsoluteRoot(), additionalTags);
+                        ItemCode = item.Id, 
+                        ItemDesc = item.Description, 
+                        OrderId = AppService.GetPosOrderId(app.Id)
+                    }.ToJObject();
+            }
+            
+            var i = await _invoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);
@@ -266,8 +277,13 @@ namespace BTCPayServer
                 pm.SetPaymentMethodDetails(paymentMethodDetails);
                 await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
             }
+            
+            var description = blob.LightningDescriptionTemplate
+                .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                .Replace("{ItemDescription}", i.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                .Replace("{OrderId}", i.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
 
-            lnurlMetadata.Add(new[] {"text/plain", i.Id});
+            lnurlMetadata.Add(new[] {"text/plain", description});
             if (!string.IsNullOrEmpty(username))
             {
                 lnurlMetadata.Add(new[] {"text/identifier", lnAddress});
@@ -290,7 +306,6 @@ namespace BTCPayServer
             });
         }
 
-
         [HttpGet("pay/i/{invoiceId}")]
         public async Task<IActionResult> GetLNURLForInvoice(string invoiceId, string cryptoCode,
             [FromQuery] long? amount = null, string comment = null)
@@ -306,6 +321,13 @@ namespace BTCPayServer
 
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var i = await _invoiceRepository.GetInvoice(invoiceId, true);
+            
+            var store = await _storeRepository.FindStore(i.StoreId);
+            if (store is null)
+            {
+                return NotFound();
+            }
+            
             if (i.Status == InvoiceStatusLegacy.New)
             {
                 var isTopup = i.IsUnsetTopUp();
@@ -330,9 +352,15 @@ namespace BTCPayServer
                     LightMoneyUnit.Satoshi);
                 var max = isTopup ? LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC) : min;
 
-                List<string[]> lnurlMetadata = new List<string[]>();
+                List<string[]> lnurlMetadata = new();
 
-                lnurlMetadata.Add(new[] {"text/plain", i.Id});
+                var blob = store.GetStoreBlob();
+                var description = blob.LightningDescriptionTemplate
+                    .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                    .Replace("{ItemDescription}", i.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                    .Replace("{OrderId}", i.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+
+                lnurlMetadata.Add(new[] {"text/plain", description});
                 if (!string.IsNullOrEmpty(paymentMethodDetails.ConsumedLightningAddress))
                 {
                     lnurlMetadata.Add(new[] {"text/identifier", paymentMethodDetails.ConsumedLightningAddress});

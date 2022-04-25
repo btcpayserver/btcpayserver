@@ -52,7 +52,8 @@ namespace BTCPayServer.Services
             _memoryCache.Set(GetCacheKey(name), obj);
             _EventAggregator.Publish(new SettingsChanged<T>()
             {
-                Settings = obj
+                Settings = obj,
+                SettingsName = name
             });
         }
 

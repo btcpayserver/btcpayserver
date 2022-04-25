@@ -6,7 +6,7 @@ namespace BTCPayServer.Data
 {
     public static class PaymentDataExtensions
     {
-        public static PaymentEntity GetBlob(this Data.PaymentData paymentData, BTCPayNetworkProvider networks)
+        public static PaymentEntity GetBlob(this PaymentData paymentData, BTCPayNetworkProvider networks)
         {
             var unziped = ZipUtils.Unzip(paymentData.Blob);
             var cryptoCode = "BTC";

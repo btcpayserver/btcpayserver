@@ -270,6 +270,7 @@ namespace BTCPayServer.Services.Apps
             return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid;
         }
 
+        public static string GetPosOrderId(string appId) => $"pos-app_{appId}";
         public static string GetCrowdfundOrderId(string appId) => $"crowdfund-app_{appId}";
         public static string GetAppInternalTag(string appId) => $"APP#{appId}";
         public static string[] GetAppInternalTags(InvoiceEntity invoice)

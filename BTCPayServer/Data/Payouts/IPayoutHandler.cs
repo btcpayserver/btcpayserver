@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,8 +16,8 @@ public interface IPayoutHandler
     public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination);
     //Allows payout handler to parse payout destinations on its own
     public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination);
-    public (bool valid, string error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob pullPaymentBlob);
-    public async Task<(IClaimDestination destination, string error)> ParseAndValidateClaimDestination(PaymentMethodId paymentMethodId, string destination, PullPaymentBlob pullPaymentBlob)
+    public (bool valid, string? error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob? pullPaymentBlob);
+    public async Task<(IClaimDestination? destination, string? error)> ParseAndValidateClaimDestination(PaymentMethodId paymentMethodId, string destination, PullPaymentBlob? pullPaymentBlob)
     {
         var res = await ParseClaimDestination(paymentMethodId, destination);
         if (res.destination is null)

@@ -13,9 +13,15 @@ namespace BTCPayServer.HostedServices
         private CancellationTokenSource _Cts = new CancellationTokenSource();
         protected Task[] _Tasks;
         public readonly Logs Logs;
-        public BaseAsyncService(Logs logs)
+
+        protected BaseAsyncService(Logs logs)
         {
             Logs = logs;
+        }
+
+        protected BaseAsyncService(ILogger logger)
+        {
+            Logs = new Logs() { PayServer = logger, Events = logger, Configuration = logger};
         }
 
         public virtual Task StartAsync(CancellationToken cancellationToken)

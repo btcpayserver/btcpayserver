@@ -108,7 +108,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             if (claimDestination is not BoltInvoiceClaimDestination bolt)
                 return (true, null);
             var invoice = bolt.PaymentRequest;
-            if ((invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow) < pullPaymentBlob.BOLT11Expiration)
+            if (pullPaymentBlob is not null && (invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow) < pullPaymentBlob.BOLT11Expiration)
             {
                 return (false,
                     $"The BOLT11 invoice must have an expiry date of at least {(long)pullPaymentBlob.BOLT11Expiration.TotalDays} days from submission (Provided was only {(invoice.ExpiryDate.UtcDateTime - DateTime.UtcNow).Days}).");

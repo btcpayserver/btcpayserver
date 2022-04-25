@@ -7,7 +7,9 @@
                     "in": "path",
                     "required": true,
                     "description": "The store ID",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "get": {
@@ -38,7 +40,9 @@
                         }
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Pull payments (Management)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -142,7 +146,9 @@
                         }
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Pull payments (Management)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -160,7 +166,9 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the pull payment",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "get": {
@@ -182,7 +190,9 @@
                         "description": "Pull payment not found"
                     }
                 },
-                "tags": [ "Pull payments (Public)" ],
+                "tags": [
+                    "Pull payments (Public)"
+                ],
                 "security": []
             }
         },
@@ -193,14 +203,18 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the store",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 },
                 {
                     "name": "pullPaymentId",
                     "in": "path",
                     "required": true,
                     "description": "The ID of the pull payment",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "delete": {
@@ -215,7 +229,9 @@
                         "description": "The pull payment has not been found, or does not belong to this store"
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Pull payments (Management)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -233,7 +249,9 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the pull payment",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "get": {
@@ -267,7 +285,9 @@
                         "description": "Pull payment not found"
                     }
                 },
-                "tags": [ "Pull payments (Public)" ],
+                "tags": [
+                    "Pull payments (Public)"
+                ],
                 "security": []
             },
             "post": {
@@ -321,7 +341,9 @@
                         }
                     }
                 },
-                "tags": [ "Pull payments (Public)" ],
+                "tags": [
+                    "Pull payments (Public)"
+                ],
                 "security": []
             }
         },
@@ -332,14 +354,18 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the pull payment",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 },
                 {
                     "name": "payoutId",
                     "in": "path",
                     "required": true,
                     "description": "The ID of the pull payment payout",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "get": {
@@ -361,7 +387,122 @@
                         "description": "Pull payment payout not found"
                     }
                 },
-                "tags": [ "Pull payments (Public)", "Pull payments payout (Public)" ],
+                "tags": [
+                    "Pull payments (Public)",
+                    "Pull payments payout (Public)"
+                ],
+                "security": []
+            }
+        },
+        "/api/v1/stores/{storeId}/payouts": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "summary": "Create Payout ",
+                "description": "Create a new payout",
+                "operationId": "Payouts_CreatePayoutThroughStore",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePayoutThroughStoreRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "A new payout has been created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "store not found"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `duplicate-destination`, `expired`, `not-started`, `archived`, `overdraft`, `amount-too-low`, `payment-method-not-supported`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Stores (Payouts)"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "get": {
+                "summary": "Get Store Payouts",
+                "operationId": "PullPayments_GetStorePayouts",
+                "description": "Get payouts",
+                "parameters": [
+                    {
+                        "name": "includeCancelled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether this should list cancelled payouts",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The payouts of the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutDataList"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pull payment not found"
+                    }
+                },
+                "tags": [
+                    "Stores (Payouts)"
+                ],
                 "security": []
             }
         },
@@ -372,18 +513,21 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the store",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 },
                 {
                     "name": "payoutId",
                     "in": "path",
                     "required": true,
                     "description": "The ID of the payout",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "post": {
-
                 "summary": "Approve Payout",
                 "operationId": "PullPayments_ApprovePayout",
                 "description": "Approve a payout",
@@ -443,7 +587,9 @@
                         "description": "The payout is not found"
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Stores (Payouts)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -465,7 +611,9 @@
                         "description": "The payout is not found"
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Stores (Payouts)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -483,24 +631,27 @@
                     "in": "path",
                     "required": true,
                     "description": "The ID of the store",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 },
                 {
                     "name": "payoutId",
                     "in": "path",
                     "required": true,
                     "description": "The ID of the payout",
-                    "schema": { "type": "string" }
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "post": {
-
                 "summary": "Mark Payout as Paid",
                 "operationId": "PullPayments_MarkPayoutPaid",
                 "description": "Mark a payout as paid",
                 "responses": {
                     "200": {
-                        "description": "The payout has been marked paid, transitioning to `Completed` state."                        
+                        "description": "The payout has been marked paid, transitioning to `Completed` state."
                     },
                     "422": {
                         "description": "Unable to validate the request",
@@ -526,7 +677,9 @@
                         "description": "The payout is not found"
                     }
                 },
-                "tags": [ "Pull payments (Management)" ],
+                "tags": [
+                    "Stores (Payouts)"
+                ],
                 "security": [
                     {
                         "API_Key": [
@@ -572,6 +725,26 @@
                         "description": "The payment method of the payout"
                     }
                 }
+            },
+            "CreatePayoutThroughStoreRequest": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CreatePayoutRequest"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "pullPaymentId": {
+                                "type": "string",
+                                "description": "The pull payment to create this for. Optional."
+                            },
+                            "approved": {
+                                "type": "boolean",
+                                "description": "Whether to approve this payout automatically upon creation"
+                            }
+                        }
+                    }
+                ]
             },
             "PayoutData": {
                 "type": "object",

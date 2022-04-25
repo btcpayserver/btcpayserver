@@ -18,8 +18,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public TimeSpan Target { get; set; }
             public decimal FeeRate { get; set; }
         }
-        public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
-
+        public List<TransactionOutput> Outputs { get; set; } = new();
         public class TransactionOutput
         {
             [Display(Name = "Destination Address")]
@@ -33,6 +32,8 @@ namespace BTCPayServer.Models.WalletViewModels
 
             [Display(Name = "Subtract fees from amount")]
             public bool SubtractFeesFromOutput { get; set; }
+
+            public string PayoutId { get; set; }
         }
         public decimal CurrentBalance { get; set; }
         public decimal ImmatureBalance { get; set; }

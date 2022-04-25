@@ -90,11 +90,12 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip = $"Paid a payout of a pull payment ({payoutLabel.PullPaymentId})";
-                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.PullPaymentId) || string.IsNullOrEmpty(payoutLabel.WalletId)
+                coloredLabel.Tooltip =
+                    $"Paid a payout{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
+                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
                     ? null
                     : _linkGenerator.PayoutLink(payoutLabel.WalletId,
-                        payoutLabel.PullPaymentId, request.Scheme, request.Host,
+                        payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
                         request.PathBase);
             }
             return coloredLabel;

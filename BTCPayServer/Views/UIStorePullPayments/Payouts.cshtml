@@ -3,10 +3,14 @@
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
+@using BTCPayServer.PayoutProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
+@inject PayoutProcessorService _payoutProcessorService;
+@inject IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
 @{
+    var storeId = Context.GetRouteValue("storeId") as string;
     ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
@@ -19,7 +23,6 @@
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
-
     }
     switch (Model.PayoutState)
     {
@@ -47,13 +50,28 @@
     </script>
 }
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 
+@{
+
+}
+
+@if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
+{
+    Stores = new[] {storeId},
+    PaymentMethods = new[] {Model.PaymentMethodId}
+})).Any())
+{
+    <div class="alert alert-info text-break" role="alert">
+        protip: BTCPay Server has detected that there are supported but unconfigured Payout Processors for this payout payment method. Payout processors can potentially help automate the the workflow of these payouts so that you do not need to manually handle them.
+        <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
+    </div>
+}
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <form method="post">
-    <input type="hidden" asp-for="PaymentMethodId" />
-    <input type="hidden" asp-for="PayoutState" />
+    <input type="hidden" asp-for="PaymentMethodId"/>
+    <input type="hidden" asp-for="PayoutState"/>
     <div class="d-flex justify-content-between mb-4">
         <ul class="nav mb-1">
             @foreach (var state in Model.PaymentMethods)
@@ -65,7 +83,13 @@
                        asp-route-pullPaymentId="@Model.PullPaymentId"
                        class="btcpay-pill @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
-                       role="tab">@state.ToPrettyString()</a>
+                       role="tab">
+                        @state.ToPrettyString()
+                        @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
+                        {
+                            <span>(@count)</span>
+                        }
+                    </a>
                 </li>
             }
         </ul>
@@ -93,70 +117,72 @@
                    asp-route-payoutState="@state.Key"
                    asp-route-pullPaymentId="@Model.PullPaymentId"
                    asp-route-paymentMethodId="@Model.PaymentMethodId"
-                   class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">@state.Key.GetStateString() (@state.Value)</a>
+                   class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
+                    @state.Key.GetStateString() (@state.Value)
+                </a>
             }
         </div>
     </nav>
-    
+
     @if (Model.Payouts.Any())
     {
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="thead-inverse">
-                    <tr>
-                        <th permission="@Policies.CanModifyStoreSettings">
-                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
-                        </th>
-                        <th style="min-width: 90px;" class="col-md-auto">
-                            Date
-                        </th>
-                        <th class="text-start">Source</th>
-                        <th class="text-start">Destination</th>
-                        <th class="text-end">Amount</th>
-                        @if (Model.PayoutState != PayoutState.AwaitingApproval)
-                        {
-                            <th class="text-end">Transaction</th>
-                        }
-                    </tr>
+                <tr>
+                    <th permission="@Policies.CanModifyStoreSettings">
+                        <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()"/>
+                    </th>
+                    <th style="min-width: 90px;" class="col-md-auto">
+                        Date
+                    </th>
+                    <th class="text-start">Source</th>
+                    <th class="text-start">Destination</th>
+                    <th class="text-end">Amount</th>
+                    @if (Model.PayoutState != PayoutState.AwaitingApproval)
+                    {
+                        <th class="text-end">Transaction</th>
+                    }
+                </tr>
                 </thead>
                 <tbody>
-                    @for (int i = 0; i < Model.Payouts.Count; i++)
-                    {
-                        var pp = Model.Payouts[i];
-                        <tr class="payout">
-                            <td permission="@Policies.CanModifyStoreSettings">
-                                <span>
-                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected" />
-                                    <input type="hidden" asp-for="Payouts[i].PayoutId" />
-                                </span>
+                @for (int i = 0; i < Model.Payouts.Count; i++)
+                {
+                    var pp = Model.Payouts[i];
+                    <tr class="payout">
+                        <td permission="@Policies.CanModifyStoreSettings">
+                            <span>
+                                <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected"/>
+                                <input type="hidden" asp-for="Payouts[i].PayoutId"/>
+                            </span>
+                        </td>
+                        <td>
+                            <span>@pp.Date.ToBrowserDate()</span>
+                        </td>
+                        <td class="mw-100">
+                            <span>@pp.PullPaymentName</span>
+                        </td>
+                        <td title="@pp.Destination">
+                            <span class="text-break">@pp.Destination</span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <span>@pp.Amount</span>
+                        </td>
+                        @if (Model.PayoutState != PayoutState.AwaitingApproval)
+                        {
+                            <td class="text-end">
+                                @if (!(pp.ProofLink is null))
+                                {
+                                    <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                }
                             </td>
-                            <td>
-                                <span>@pp.Date.ToBrowserDate()</span>
-                            </td>
-                            <td class="mw-100">
-                                <span>@pp.PullPaymentName</span>
-                            </td>
-                            <td title="@pp.Destination">
-                                <span class="text-break">@pp.Destination</span>
-                            </td>
-                            <td class="text-end text-nowrap">
-                                <span>@pp.Amount</span>
-                            </td>
-                            @if (Model.PayoutState != PayoutState.AwaitingApproval)
-                            {
-                                <td class="text-end">
-                                    @if (!(pp.ProofLink is null))
-                                    {
-                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
-                                    }
-                                </td>
-                            }
-                        </tr>
-                    }
+                        }
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
-        <vc:pager view-model="Model" />
+        <vc:pager view-model="Model"/>
     }
     else
     {

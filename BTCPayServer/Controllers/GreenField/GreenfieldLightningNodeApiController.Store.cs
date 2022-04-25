@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -42,9 +43,9 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/info")]
-        public override Task<IActionResult> GetInfo(string cryptoCode)
+        public override Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
         {
-            return base.GetInfo(cryptoCode);
+            return base.GetInfo(cryptoCode, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
@@ -57,16 +58,16 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]
-        public override Task<IActionResult> GetChannels(string cryptoCode)
+        public override Task<IActionResult> GetChannels(string cryptoCode, CancellationToken cancellationToken = default)
         {
-            return base.GetChannels(cryptoCode);
+            return base.GetChannels(cryptoCode, cancellationToken);
         }
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]
-        public override Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
+        public override Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request, CancellationToken cancellationToken = default)
         {
-            return base.OpenChannel(cryptoCode, request);
+            return base.OpenChannel(cryptoCode, request, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
@@ -80,33 +81,33 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments/{paymentHash}")]
-        public override Task<IActionResult> GetPayment(string cryptoCode, string paymentHash)
+        public override Task<IActionResult> GetPayment(string cryptoCode, string paymentHash, CancellationToken cancellationToken = default)
         {
-            return base.GetPayment(cryptoCode, paymentHash);
+            return base.GetPayment(cryptoCode, paymentHash, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/pay")]
-        public override Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
+        public override Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice, CancellationToken cancellationToken = default)
         {
-            return base.PayInvoice(cryptoCode, lightningInvoice);
+            return base.PayInvoice(cryptoCode, lightningInvoice, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/{id}")]
-        public override Task<IActionResult> GetInvoice(string cryptoCode, string id)
+        public override Task<IActionResult> GetInvoice(string cryptoCode, string id, CancellationToken cancellationToken = default)
         {
-            return base.GetInvoice(cryptoCode, id);
+            return base.GetInvoice(cryptoCode, id, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanCreateLightningInvoiceInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices")]
-        public override Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
+        public override Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
         {
-            return base.CreateInvoice(cryptoCode, request);
+            return base.CreateInvoice(cryptoCode, request, cancellationToken);
         }
 
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,

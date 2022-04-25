@@ -39,11 +39,11 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
         }
 
-        public virtual async Task<IActionResult> GetInfo(string cryptoCode)
+        public virtual async Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            var info = await lightningClient.GetInfo();
-            return Ok(new LightningNodeInformationData()
+            var info = await lightningClient.GetInfo(cancellationToken);
+            return Ok(new LightningNodeInformationData
             {
                 BlockHeight = info.BlockHeight,
                 NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
@@ -75,12 +75,12 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok();
         }
 
-        public virtual async Task<IActionResult> GetChannels(string cryptoCode)
+        public virtual async Task<IActionResult> GetChannels(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
 
-            var channels = await lightningClient.ListChannels();
-            return Ok(channels.Select(channel => new LightningChannelData()
+            var channels = await lightningClient.ListChannels(cancellationToken);
+            return Ok(channels.Select(channel => new LightningChannelData
             {
                 Capacity = channel.Capacity,
                 ChannelPoint = channel.ChannelPoint.ToString(),
@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
+        public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             if (request?.NodeURI is null)
@@ -124,12 +124,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            var response = await lightningClient.OpenChannel(new Lightning.OpenChannelRequest()
+            var response = await lightningClient.OpenChannel(new OpenChannelRequest
             {
                 ChannelAmount = request.ChannelAmount,
                 FeeRate = request.FeeRate,
                 NodeInfo = request.NodeURI
-            });
+            }, cancellationToken);
 
             string errorCode, errorMessage;
             switch (response.Result)
@@ -164,14 +164,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
         }
 
-        public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash)
+        public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            var payment = await lightningClient.GetPayment(paymentHash);
+            var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
             return payment == null ? this.CreateAPIError(404, "payment-not-found", "Impossible to find a lightning payment with this payment hash") : Ok(ToModel(payment));
         }
 
-        public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
+        public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -190,7 +190,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null
                 ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat }
                 : null;
-            var result = await lightningClient.Pay(lightningInvoice.BOLT11, param);
+            var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
             
             return result.Result switch
             {
@@ -205,14 +205,14 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
+        public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            var inv = await lightningClient.GetInvoice(id);
+            var inv = await lightningClient.GetInvoice(id, cancellationToken);
             return inv == null ? this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id") : Ok(ToModel(inv));
         }
 
-        public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
+        public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
             if (request.Amount < LightMoney.Zero)
@@ -241,7 +241,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         PrivateRouteHints = request.PrivateRouteHints, DescriptionHash = request.DescriptionHash
                     };
-                var invoice = await lightningClient.CreateInvoice(param, CancellationToken.None);
+                var invoice = await lightningClient.CreateInvoice(param, cancellationToken);
                 return Ok(ToModel(invoice));
             }
             catch (Exception ex)

@@ -106,9 +106,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "TODO": true
-                    },
                     "403": {
                         "description": "If you are authenticated but forbidden to add new custodian account"
                     }
@@ -203,9 +200,6 @@
                                 }
                             }
                         }
-                    },
-                    "400": {
-                        "TODO": true
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to modify new custodian account"

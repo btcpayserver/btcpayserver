@@ -1,10 +1,4 @@
 {
-    "openapi": "3.0.0",
-    "info": {
-        "title": "BTCPay Greenfield API - Custodian Extension",
-        "description": "API calls for handling custodial wallets and exchanges.",
-        "version": "v1"
-    },
     "paths": {
         "/api/v1/custodians": {
             "get": {
@@ -1043,5 +1037,13 @@
                 ]
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Custodians"
+        },
+        {
+            "name": "Store Custodian Account"
+        }
+    ]
 }

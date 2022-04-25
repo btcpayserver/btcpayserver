@@ -143,38 +143,10 @@ namespace BTCPayServer.Controllers
                 .ToArray());
             return Json(json);
         }
-        
-        [Route("swagger/v1/swagger-draft.json")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> SwaggerDraft()
-        {
-            JObject json = new JObject();
-            var directoryContents = _fileProvider.GetDirectoryContents("swagger/v1/draft");
-            foreach (IFileInfo fi in directoryContents)
-            {
-                if (fi.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                {
-                    await using var stream = fi.CreateReadStream();
-                    using var reader = new StreamReader(fi.CreateReadStream());
-                    json.Merge(JObject.Parse(await reader.ReadToEndAsync()));
-                }
-            }
-            var servers = new JArray();
-            servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
-            json["servers"] = servers;
-            return Json(json);
-        }
 
         [Route("docs")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult SwaggerDocs()
-        {
-            return View();
-        }
-        
-        [Route("docs-draft")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public IActionResult SwaggerDraftDocs()
         {
             return View();
         }

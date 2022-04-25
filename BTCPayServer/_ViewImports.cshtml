@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @using BTCPayServer
+@using BTCPayServer.Abstractions.Services
 @using BTCPayServer.Views
 @using BTCPayServer.Models
 @using BTCPayServer.Models.AccountViewModels
@@ -8,7 +9,7 @@
 @using BTCPayServer.Models.StoreViewModels
 @using BTCPayServer.Data
 @using Microsoft.AspNetCore.Routing;
-@inject BTCPayServer.Services.Safe Safe
+@inject Safe Safe
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @addTagHelper *, BTCPayServer
 @addTagHelper *, BundlerMinifier.TagHelpers

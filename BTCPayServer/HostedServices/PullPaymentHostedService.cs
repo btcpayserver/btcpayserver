@@ -497,7 +497,7 @@ namespace BTCPayServer.HostedServices
                     await ctx.SaveChangesAsync();
                     if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true) )
                     {
-                        payout.PullPaymentData.StoreData = await ctx.Stores.FindAsync(payout.PullPaymentData.StoreId);
+                        payout.StoreData = await ctx.Stores.FindAsync(payout.StoreDataId);
                         var rateResult = await GetRate(payout, null, CancellationToken.None);
                         if (rateResult.BidAsk != null)
                         {

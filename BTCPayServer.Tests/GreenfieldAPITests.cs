@@ -2341,6 +2341,45 @@ namespace BTCPayServer.Tests
                 new SendEmailRequest() { Body = "lol", Subject = "subj", Email = "sdasdas" });
         }
 
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task DisabledEnabledUserTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+
+            var newUser = tester.NewAccount();
+            await newUser.GrantAccessAsync();
+            var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
+            Assert.False((await newUserClient.GetCurrentUser()).Disabled);
+
+            await adminClient.LockUser(newUser.UserId, true, CancellationToken.None);
+            
+            Assert.True((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await AssertAPIError("unauthenticated",async () =>
+            {
+                await newUserClient.GetCurrentUser();
+            });
+            var newUserBasicClient = new BTCPayServerClient(newUserClient.Host, newUser.RegisterDetails.Email,
+                newUser.RegisterDetails.Password);
+            await AssertAPIError("unauthenticated",async () =>
+            {
+                await newUserBasicClient.GetCurrentUser();
+            });
+
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
+            // Twice for good measure
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
+        }
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]

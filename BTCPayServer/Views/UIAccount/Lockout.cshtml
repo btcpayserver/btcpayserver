@@ -1,5 +1,8 @@
-﻿@{
-    ViewData["Title"] = "Locked out";
+﻿@using BTCPayServer.Abstractions.Extensions
+@model DateTimeOffset? 
+@{
+    ViewData["Title"] = "Account disabled";
+    Layout = "_LayoutSignedOut";
 }
 
 <div class="row">
@@ -8,6 +11,17 @@
         <hr class="primary">
     </div>
     <div class="col-lg-12 lead">
-        <p>This account has been locked out because of multiple invalid login attempts. Please try again later.</p>
+        @if (DateTimeOffset.MaxValue - Model.Value < TimeSpan.FromSeconds(1))
+        {
+            <p>Your account has been disabled. Please contact server administrator.</p>
+        }
+        else if(Model is null)
+        {
+            <p>This account has been locked out because of multiple invalid login attempts. Please try again later.</p>  
+        }
+        else
+        {
+            <p>This account has been locked out.  Please try again <span data-timeago-unixms="@Model.Value.ToUnixTimeMilliseconds()">@Model.Value.ToTimeAgo()</span>.</p>  
+        }
     </div>
 </div>

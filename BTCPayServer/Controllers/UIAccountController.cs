@@ -209,7 +209,7 @@ namespace BTCPayServer.Controllers
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning($"User '{user.Id}' account locked out.");
-                    return RedirectToAction(nameof(Lockout));
+                    return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
                 }
                 else
                 {
@@ -428,7 +428,7 @@ namespace BTCPayServer.Controllers
             else if (result.IsLockedOut)
             {
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
-                return RedirectToAction(nameof(Lockout));
+                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
             }
             else
             {
@@ -497,7 +497,8 @@ namespace BTCPayServer.Controllers
             if (result.IsLockedOut)
             {
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
-                return RedirectToAction(nameof(Lockout));
+                
+                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
             }
             else
             {
@@ -509,9 +510,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login/lockout")]
         [AllowAnonymous]
-        public IActionResult Lockout()
+        public IActionResult Lockout(DateTimeOffset? lockoutEnd)
         {
-            return View();
+            return View(lockoutEnd);
         }
 
         [HttpGet("/register")]

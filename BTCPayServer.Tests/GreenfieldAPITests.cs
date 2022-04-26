@@ -2343,7 +2343,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
-        public async Task DisabledUserTests()
+        public async Task DisabledEnabledUserTests()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -2369,6 +2369,16 @@ namespace BTCPayServer.Tests
             {
                 await newUserBasicClient.GetCurrentUser();
             });
+
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
+            // Twice for good measure
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

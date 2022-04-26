@@ -673,11 +673,12 @@ namespace BTCPayServer.Tests
             s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
+            var prevUrl = s.Driver.Url;
             
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
-            s.Driver.Navigate().Back();
+            s.Driver.Navigate().GoToUrl(new Uri(prevUrl, UriKind.Absolute));
 
             // Let's check with domain mapping as well.
             s.GoToServer(ServerNavPages.Policies);

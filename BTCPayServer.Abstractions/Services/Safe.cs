@@ -2,7 +2,7 @@ using Ganss.XSS;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Services
+namespace BTCPayServer.Abstractions.Services
 {
     public class Safe
     {

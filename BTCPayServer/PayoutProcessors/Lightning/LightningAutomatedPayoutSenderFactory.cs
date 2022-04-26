@@ -45,14 +45,14 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
                 new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));
     }
 
-    public async Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)
+    public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)
     {
         if (settings.Processor != Processor)
         {
             throw new NotSupportedException("This processor cannot handle the provided requirements");
         }
 
-        return ActivatorUtilities.CreateInstance<LightningAutomatedPayoutProcessor>(_serviceProvider, settings);
+        return Task.FromResult<IHostedService>(ActivatorUtilities.CreateInstance<LightningAutomatedPayoutProcessor>(_serviceProvider, settings));
 
     }
 }

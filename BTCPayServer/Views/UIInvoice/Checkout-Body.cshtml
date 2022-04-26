@@ -95,13 +95,13 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp">
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp && !!srvModel.btcPaid">
                 <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
             </div>
             <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp && parseFloat(srvModel.btcDue) > 0">
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
-            <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
+            <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode && srvModel.rate">
                 <span v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</span>
                 <span v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</span>
             </div>
@@ -114,7 +114,7 @@
             {{$t("NotPaid_ExtraTransaction")}}
         </div>
         <div class="line-items" v-bind:class="{ 'expanded': lineItemsExpanded}">
-            <div class="line-items__item">
+            <div class="line-items__item" v-if="srvModel.orderAmount">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>
                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
             </div>
@@ -137,7 +137,7 @@
                     </span>
                 </div>
             </div>
-            <div class="line-items__item">
+            <div class="line-items__item" v-if="srvModel.btcPaid">
                 <div class="line-items__item__label">
                     <span>{{$t("Already Paid")}}</span>
                 </div>

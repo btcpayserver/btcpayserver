@@ -480,8 +480,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<PayoutData> ApprovePayout(string storeId, string payoutId,
-            ApprovePayoutRequest request,
-            CancellationToken cancellationToken = default)
+            ApprovePayoutRequest request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PayoutData>(
                 await _greenfieldPullPaymentController.ApprovePayout(storeId, payoutId, request, cancellationToken));
@@ -491,12 +490,11 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningNodeInformationData>(
-                await _storeLightningNodeApiController.GetInfo(cryptoCode));
+                await _storeLightningNodeApiController.GetInfo(cryptoCode, token));
         }
 
         public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
-            ConnectToNodeRequest request,
-            CancellationToken token = default)
+            ConnectToNodeRequest request, CancellationToken token = default)
         {
             HandleActionResult(await _storeLightningNodeApiController.ConnectToNode(cryptoCode, request));
         }
@@ -505,14 +503,14 @@ namespace BTCPayServer.Controllers.Greenfield
             string cryptoCode, CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<LightningChannelData>>(
-                await _storeLightningNodeApiController.GetChannels(cryptoCode));
+                await _storeLightningNodeApiController.GetChannels(cryptoCode, token));
         }
 
         public override async Task OpenLightningChannel(string storeId, string cryptoCode,
             OpenLightningChannelRequest request,
             CancellationToken token = default)
         {
-            HandleActionResult(await _storeLightningNodeApiController.OpenChannel(cryptoCode, request));
+            HandleActionResult(await _storeLightningNodeApiController.OpenChannel(cryptoCode, request, token));
         }
 
         public override async Task<string> GetLightningDepositAddress(string storeId, string cryptoCode,
@@ -523,32 +521,30 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task PayLightningInvoice(string storeId, string cryptoCode,
-            PayLightningInvoiceRequest request,
-            CancellationToken token = default)
+            PayLightningInvoiceRequest request, CancellationToken token = default)
         {
-            HandleActionResult(await _storeLightningNodeApiController.PayInvoice(cryptoCode, request));
+            HandleActionResult(await _storeLightningNodeApiController.PayInvoice(cryptoCode, request, token));
         }
 
         public override async Task<LightningInvoiceData> GetLightningInvoice(string storeId, string cryptoCode,
             string invoiceId, CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
-                await _storeLightningNodeApiController.GetInvoice(cryptoCode, invoiceId));
+                await _storeLightningNodeApiController.GetInvoice(cryptoCode, invoiceId, token));
         }
         
         public override async Task<LightningPaymentData> GetLightningPayment(string storeId, string cryptoCode,
             string paymentHash, CancellationToken token = default)
         {
             return GetFromActionResult<LightningPaymentData>(
-                await _storeLightningNodeApiController.GetPayment(cryptoCode, paymentHash));
+                await _storeLightningNodeApiController.GetPayment(cryptoCode, paymentHash, token));
         }
 
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
-            CreateLightningInvoiceRequest request,
-            CancellationToken token = default)
+            CreateLightningInvoiceRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
-                await _storeLightningNodeApiController.CreateInvoice(cryptoCode, request));
+                await _storeLightningNodeApiController.CreateInvoice(cryptoCode, request, token));
         }
 
         public override async Task<LightningNodeInformationData> GetLightningNodeInfo(string cryptoCode,
@@ -568,13 +564,13 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<LightningChannelData>>(
-                await _lightningNodeApiController.GetChannels(cryptoCode));
+                await _lightningNodeApiController.GetChannels(cryptoCode, token));
         }
 
         public override async Task OpenLightningChannel(string cryptoCode, OpenLightningChannelRequest request,
             CancellationToken token = default)
         {
-            HandleActionResult(await _lightningNodeApiController.OpenChannel(cryptoCode, request));
+            HandleActionResult(await _lightningNodeApiController.OpenChannel(cryptoCode, request, token));
         }
 
         public override async Task<string> GetLightningDepositAddress(string cryptoCode,
@@ -585,25 +581,24 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<LightningPaymentData> PayLightningInvoice(string cryptoCode,
-            PayLightningInvoiceRequest request,
-            CancellationToken token = default)
+            PayLightningInvoiceRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<LightningPaymentData>(
-                await _lightningNodeApiController.PayInvoice(cryptoCode, request));
+                await _lightningNodeApiController.PayInvoice(cryptoCode, request, token));
         }
 
         public override async Task<LightningInvoiceData> GetLightningInvoice(string cryptoCode, string invoiceId,
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
-                await _lightningNodeApiController.GetInvoice(cryptoCode, invoiceId));
+                await _lightningNodeApiController.GetInvoice(cryptoCode, invoiceId, token));
         }
         
         public override async Task<LightningPaymentData> GetLightningPayment(string cryptoCode,
             string paymentHash, CancellationToken token = default)
         {
             return GetFromActionResult<LightningPaymentData>(
-                await _lightningNodeApiController.GetPayment(cryptoCode, paymentHash));
+                await _lightningNodeApiController.GetPayment(cryptoCode, paymentHash, token));
         }
 
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string cryptoCode,
@@ -611,21 +606,18 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
-                await _lightningNodeApiController.CreateInvoice(cryptoCode, request));
+                await _lightningNodeApiController.CreateInvoice(cryptoCode, request, token));
         }
 
         private T GetFromActionResult<T>(IActionResult result)
         {
             HandleActionResult(result);
-            switch (result)
+            return result switch
             {
-                case JsonResult jsonResult:
-                    return (T)jsonResult.Value;
-                case OkObjectResult { Value: T res }:
-                    return res;
-                default:
-                    return default;
-            }
+                JsonResult jsonResult => (T)jsonResult.Value,
+                OkObjectResult { Value: T res } => res,
+                _ => default
+            };
         }
 
         private void HandleActionResult(IActionResult result)
@@ -654,7 +646,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
-            bool? enabled, CancellationToken token)
+            bool? enabled, CancellationToken token = default)
         {
             return Task.FromResult(
                 GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId, enabled)));
@@ -674,8 +666,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<OnChainPaymentMethodData> UpdateStoreOnChainPaymentMethod(string storeId,
-            string cryptoCode, UpdateOnChainPaymentMethodRequest paymentMethod,
-            CancellationToken token = default)
+            string cryptoCode, UpdateOnChainPaymentMethodRequest paymentMethod, CancellationToken token = default)
         {
             return GetFromActionResult<OnChainPaymentMethodData>(
                 await _chainPaymentMethodsController.UpdateOnChainPaymentMethod(storeId, cryptoCode,
@@ -698,8 +689,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override Task<OnChainPaymentMethodPreviewResultData> PreviewStoreOnChainPaymentMethodAddresses(
-            string storeId, string cryptoCode, int offset = 0, int amount = 10,
-            CancellationToken token = default)
+            string storeId, string cryptoCode, int offset = 0, int amount = 10, CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
                 _chainPaymentMethodsController.GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
@@ -836,8 +826,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<OnChainWalletTransactionData> GetOnChainWalletTransaction(string storeId,
-            string cryptoCode, string transactionId,
-            CancellationToken token = default)
+            string cryptoCode, string transactionId, CancellationToken token = default)
         {
             return GetFromActionResult<OnChainWalletTransactionData>(
                 await _storeOnChainWalletsController.GetOnChainWalletTransaction(storeId, cryptoCode, transactionId));
@@ -851,8 +840,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<OnChainWalletTransactionData> CreateOnChainTransaction(string storeId,
-            string cryptoCode, CreateOnChainTransactionRequest request,
-            CancellationToken token = default)
+            string cryptoCode, CreateOnChainTransactionRequest request, CancellationToken token = default)
         {
             if (!request.ProceedWithBroadcast)
             {

@@ -2490,7 +2490,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Equal(2, custodians.Count());
+            Assert.Equal(1, custodians.Count());
         }
 
 
@@ -2514,7 +2514,7 @@ namespace BTCPayServer.Tests
             
             // Load a custodian, we use the first one we find.
             var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
-            var custodian = custodians.GetCustodianByCode("kraken");
+            var custodian = custodians.First();
 
             // List custodian accounts
             // Unauth
@@ -2643,9 +2643,9 @@ namespace BTCPayServer.Tests
             // Get asset balances, but we cannot because of misconfiguration (we did enter dummy data)
             await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId, true));
             
-            // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
-            await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
-            
+            // // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
+            // await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
+            //
             
             // Delete custodian account
             // Unauth

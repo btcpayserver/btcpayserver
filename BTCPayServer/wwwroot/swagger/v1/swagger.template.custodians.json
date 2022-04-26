@@ -763,22 +763,22 @@
                     "fromAsset": {
                         "type": "string",
                         "description": "The asset to trade.",
-                        "required": true
+                        "nullable": false
                     },
                     "toAsset": {
                         "type": "string",
                         "description": "The asset you want.",
-                        "required": true
+                        "nullable": false
                     },
                     "bid": {
                         "type": "number",
                         "description": "The bid price.",
-                        "required": true
+                        "nullable": false
                     },
                     "ask": {
                         "type": "number",
                         "description": "The ask price",
-                        "required": true
+                        "nullable": false
                     }
                 },
                 "example": {
@@ -794,12 +794,12 @@
                     "fromAsset": {
                         "type": "string",
                         "description": "The asset to trade.",
-                        "required": true
+                        "nullable": false
                     },
                     "toAsset": {
                         "type": "string",
                         "description": "The asset you want.",
-                        "required": true
+                        "nullable": false
                     },
                     "qty": {
                         "oneOf": [
@@ -812,7 +812,7 @@
                                 "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage."
                             }
                         ],
-                        "required": true
+                        "nullable": false
                     }
                 },
                 "example": {
@@ -891,12 +891,12 @@
                     "paymentMethod": {
                         "type": "string",
                         "description": "The payment method (cryptocode + network) of the withdrawal.",
-                        "required": true
+                        "nullable": false
                     },
                     "qty": {
                         "type": "number",
                         "description": "The qty to withdraw.",
-                        "required": true
+                        "nullable": false
                     }
                 },
                 "example": {

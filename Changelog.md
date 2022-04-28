@@ -5,6 +5,7 @@
 ### New features:
 * DASHBOARD!!! (#3530 #3629 #3631 #3654) @NicolasDorier @dennisreimann @dstrukt
 * Payout Processors (#3476) @Kukks
+* Allow pull payments, refunds to be automatically approved (#1851  #3682) @Kukks
 * Greenfield: Add transaction info for on chain wallet (#3561) @bolatovumar
 * Greenfield: Add label filter for on chain wallet transaction (#3588) @bolatovumar
 * Greenfield: Add lightning payment info (#3557) @dennisreimann

@@ -28,6 +28,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public ProgressModel Progress { get; set; }
             public DateTimeOffset StartDate { get; set; }
             public DateTimeOffset? EndDate { get; set; }
+            public bool AutoApproveClaims { get; set; }
             public bool Archived { get; set; } = false;
         }
 
@@ -62,5 +63,7 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
         [Range(1, 365 * 10)]
         public long BOLT11Expiration { get; set; } = 30;
+        [Display(Name = "Automatically approve claims")]
+        public bool AutoApproveClaims { get; set; } = false;
     }
 }

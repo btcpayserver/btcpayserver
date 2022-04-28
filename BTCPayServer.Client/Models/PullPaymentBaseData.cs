@@ -31,5 +31,6 @@ namespace BTCPayServer.Client.Models
         public TimeSpan BOLT11Expiration { get; set; }
         public bool Archived { get; set; }
         public string ViewLink { get; set; }
+        public bool AutoApproveClaims { get; set; }
     }
 }

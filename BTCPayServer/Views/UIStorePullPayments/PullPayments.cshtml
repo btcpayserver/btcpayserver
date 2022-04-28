@@ -103,6 +103,7 @@
                 </a>
             </th>
             <th scope="col">Name</th>
+            <th scope="col">Automatically Approved</th>
             <th scope="col">Refunded</th>
             <th scope="col" class="text-end" >Actions</th>
         </tr>
@@ -113,6 +114,7 @@
             <tr>
                 <td>@pp.StartDate.ToBrowserDate()</td>
                 <td>@pp.Name</td>
+                <td>@pp.AutoApproveClaims</td>
                 <td class="align-middle">
                     <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
                         <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"

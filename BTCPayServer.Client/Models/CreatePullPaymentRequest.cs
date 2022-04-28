@@ -22,5 +22,6 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? StartsAt { get; set; }
         public string[] PaymentMethods { get; set; }
+        public bool AutoApproveClaims { get; set; }
     }
 }

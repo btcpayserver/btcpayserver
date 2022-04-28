@@ -1,4 +1,31 @@
 # Changelog
+
+## 1.5.0
+
+### New features:
+* DASHBOARD!!! (#3530 #3629 #3631 #3654) @NicolasDorier @dennisreimann @dstrukt
+* Payout Processors (#3476) @Kukks
+* Allow pull payments, refunds to be automatically approved (#1851  #3682) @Kukks
+* Greenfield: Add transaction info for on chain wallet (#3561) @bolatovumar
+* Greenfield: Add label filter for on chain wallet transaction (#3588) @bolatovumar
+* Greenfield: Add lightning payment info (#3557) @dennisreimann
+* Greenfield: Add description hash to CreateLightningInvoiceRequest (#3559) @dennisreimann
+* Allow Users to be disabled/enabled (#3639) @Kukks
+### Bug fixes:
+* Various UI fixes (#3599 #3577 #3624 #3642) @leesalminen @bolatovumar @dafunction @dennisreimann
+* Fix bug when bumping fee (#3608) @bolatovumar
+* Fix bug around Pay button html generator (#3646) @dennisreimann
+* Fix Lightning addresses not being deleted after removing store (#3638) @Kukks
+* Fix payment request redirect url (#3672 #3673) @dennisreimann
+### Improvements
+* Add additional rate providers as supported from CoinGecko @NicolasDorier
+* Allow default payment method for Pay button (#3606) @bolatovumar
+* Link directly to services from Lightning wallet page (#3593) @dennisreimann
+* Use the store's default currency when creating entities (#3585) @dennisreimann
+* Specify PayJoin enabled in Payment Link heading (#3614) @orangesurf
+* LNURL: Use Lightning description template in LNURL metadata (#3667) @dennisreimann
+* Design updates (#3647 #3653 #3565) @dennisreimann @dstrukt
+* Hide empty plugins section (#3643) @dennisreimann
 ## 1.4.9
 
 ### Bug fixes:

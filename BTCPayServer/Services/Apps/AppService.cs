@@ -219,7 +219,7 @@ namespace BTCPayServer.Services.Apps
                     {
                         ItemCode = itemCode,
                         Title = perk?.Title ?? itemCode,
-                        SalesCount = entities.Count(), 
+                        SalesCount = entities.Count(),
                         Total = total,
                         TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.TargetCurrency}"
                     };

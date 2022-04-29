@@ -97,6 +97,13 @@
                                         "nullable": true,
                                         "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
                                     },
+                                    "autoApproveClaims": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "default": false,
+                                        "nullable": true,
+                                        "description": "Any payouts created for this pull payment will skip the approval phase upon creation"
+                                    },
                                     "startsAt": {
                                         "type": "integer",
                                         "format": "unix timestamp in seconds",
@@ -850,6 +857,13 @@
                         "type": "string",
                         "example": 30,
                         "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
+                    },
+                    "autoApproveClaims": {
+                        "type": "boolean",
+                        "example": false,
+                        "default": false,
+                        "nullable": true,
+                        "description": "Any payouts created for this pull payment will skip the approval phase upon creation"
                     },
                     "archived": {
                         "type": "boolean",

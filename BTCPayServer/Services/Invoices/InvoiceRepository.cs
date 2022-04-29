@@ -66,7 +66,6 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
-            Logs.PayServer.LogInformation($"Remove pending invoice {invoiceId}");
             using var ctx = _applicationDbContextFactory.CreateContext();
             ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
             try

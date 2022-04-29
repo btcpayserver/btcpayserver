@@ -196,12 +196,25 @@ namespace BTCPayServer.Hosting
                     settings.AddStoreToPayout = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.AddNameToSettings)
+                {
+                    await MigrateAddNameToSettings();
+                    settings.AddNameToSettings = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateAddNameToSettings()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            await ctx.Settings.ForEachAsync(data => data.Name = data.Id);
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateLighingAddressDatabaseMigration()

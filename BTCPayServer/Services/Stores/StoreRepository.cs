@@ -13,13 +13,16 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly SettingsRepository _settingsRepository;
+
         public ApplicationDbContext CreateDbContext()
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory)
+        public StoreRepository(ApplicationDbContextFactory contextFactory, SettingsRepository settingsRepository)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            _settingsRepository = settingsRepository;
         }
 
         public async Task<StoreData> FindStore(string storeId)
@@ -117,7 +120,7 @@ namespace BTCPayServer.Services.Stores
                 return;
             foreach (var store in await ctx.Stores.Where(s => !s.UserStores.Where(u => u.Role == StoreRoles.Owner).Any()).ToArrayAsync())
             {
-                ctx.Stores.Remove(store);
+                await RemoveStore(ctx, store);
             }
             await ctx.SaveChangesAsync();
         }
@@ -146,11 +149,18 @@ namespace BTCPayServer.Services.Stores
                     var store = await ctx.Stores.FindAsync(storeId);
                     if (store != null)
                     {
-                        ctx.Stores.Remove(store);
+                        await RemoveStore(ctx, store);
                         await ctx.SaveChangesAsync();
                     }
                 }
             }
+        }
+
+        private async Task RemoveStore(ApplicationDbContext ctx, StoreData store)
+        {
+            await _settingsRepository.InvalidateCacheForStore(ctx, store.Id);
+            ctx.Stores.Remove(store);
+            
         }
 
         public async Task CreateStore(string ownerId, StoreData storeData)

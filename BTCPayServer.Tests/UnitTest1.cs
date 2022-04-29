@@ -2716,6 +2716,30 @@ namespace BTCPayServer.Tests
             await CanUploadRemoveFiles(controller);
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanStoreArbitrarySettingsWithStore()
+        {
+
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<ISettingsRepository>();
+            var arbValue = await settingsRepo.GetSettingAsync<string>("arbitrary", user.StoreId);
+            Assert.Null(arbValue);
+            await settingsRepo.UpdateSetting("saved","arbitrary", user.StoreId);
+
+            arbValue = await settingsRepo.GetSettingAsync<string>("arbitrary", user.StoreId);
+            Assert.Equal("saved", arbValue);
+            var client = await user.CreateClient();
+            await client.RemoveStore(user.StoreId);
+            tester.Stores.Clear();
+            arbValue = await settingsRepo.GetSettingAsync<string>("arbitrary", user.StoreId);
+            Assert.Null(arbValue);
+            
+        }
+
         internal static async Task CanUploadRemoveFiles(UIServerController controller)
         {
             var fileContent = "content";

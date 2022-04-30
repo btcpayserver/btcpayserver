@@ -646,8 +646,18 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
             {
-                var stores = queryObject.StoreId.ToHashSet().ToArray();
-                query = query.Where(i => stores.Contains(i.StoreDataId));
+                if (queryObject.StoreId.Length > 1)
+                {
+                    var stores = queryObject.StoreId.ToHashSet().ToArray();
+                    query = query.Where(i => stores.Contains(i.StoreDataId));
+                }
+                // Big performant improvement to use Where rather than Contains when possible
+                // In our test, the first gives  720.173 ms vs 40.735 ms
+                else
+                {
+                    var storeId = queryObject.StoreId.First();
+                    query = query.Where(i => i.StoreDataId == storeId);
+                }
             }
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))

@@ -821,7 +821,6 @@ namespace BTCPayServer.Controllers
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
             invoiceQuery.StoreId = model.StoreIds;
-            var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
@@ -845,7 +844,6 @@ namespace BTCPayServer.Controllers
                     Details = InvoicePopulatePayments(invoice),
                 });
             }
-            model.Total = await counting;
             return View(model);
         }
 

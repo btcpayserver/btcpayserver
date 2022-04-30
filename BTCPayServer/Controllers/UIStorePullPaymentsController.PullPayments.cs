@@ -192,7 +192,7 @@ namespace BTCPayServer.Controllers
 
             var vm = this.ParseListQuery(new PullPaymentsModel
             {
-                Skip = skip, Count = count, Total = await ppsQuery.CountAsync(), ActiveState = pullPaymentState
+                Skip = skip, Count = count, ActiveState = pullPaymentState
             });
 
             switch (pullPaymentState)
@@ -533,11 +533,11 @@ namespace BTCPayServer.Controllers
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
             payoutRequest = payoutRequest.Where(p => p.State == vm.PayoutState);
-            vm.Total = await payoutRequest.CountAsync();
             payoutRequest = payoutRequest.Skip(vm.Skip).Take(vm.Count);
 
             var payouts = await payoutRequest.OrderByDescending(p => p.Date)
                 .Select(o => new { Payout = o, PullPayment = o.PullPaymentData }).ToListAsync();
+
             foreach (var item in payouts)
             {
                 var ppBlob = item.PullPayment?.GetBlob();

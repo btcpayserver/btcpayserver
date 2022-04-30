@@ -68,7 +68,6 @@ namespace BTCPayServer.Controllers
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
                 })
                 .ToListAsync();
-            model.Total = await usersQuery.CountAsync();
 
             return View(model);
         }

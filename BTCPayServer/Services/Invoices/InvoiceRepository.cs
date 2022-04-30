@@ -736,13 +736,6 @@ namespace BTCPayServer.Services.Invoices
             return query;
         }
 
-        public async Task<int> GetInvoicesTotal(InvoiceQuery queryObject)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            var query = GetInvoiceQuery(context, queryObject);
-            return await query.CountAsync();
-        }
-
         public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
         {
             using var context = _applicationDbContextFactory.CreateContext();

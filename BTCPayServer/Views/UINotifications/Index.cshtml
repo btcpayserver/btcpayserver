@@ -11,7 +11,7 @@
         Settings                
     </a>
 </div>
-@if (Model.Total > 0)
+@if (Model.Items.Count > 0)
 {
     <form method="post" asp-action="MassAction">
         <div class="row button-row">
@@ -34,7 +34,7 @@
                     <thead>
                         <tr>
                             <th width="30px" class="only-for-js">
-                                @if (Model.Total > 0)
+                                @if (Model.Items.Count > 0)
                                 {
                                     <input name="selectedItems" id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                                 }

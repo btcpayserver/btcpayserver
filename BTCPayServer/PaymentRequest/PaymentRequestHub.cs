@@ -122,12 +122,11 @@ namespace BTCPayServer.PaymentRequest
         private async Task CheckingPendingPayments(CancellationToken cancellationToken)
         {
             Logs.PayServer.LogInformation("Starting payment request expiration watcher");
-            var (total, items) = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
+            var items = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
                 Status = new[] { Client.Models.PaymentRequestData.PaymentRequestStatus.Pending }
             }, cancellationToken);
-
-            Logs.PayServer.LogInformation($"{total} pending payment requests being checked since last run");
+            Logs.PayServer.LogInformation($"{items.Length} pending payment requests being checked since last run");
             await Task.WhenAll(items.Select(i => _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(i))
                 .ToArray());
         }

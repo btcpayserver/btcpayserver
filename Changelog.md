@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.1
+
+### Bug fixes:
+
+* Do not show balance if can't get the balance (#3695) @NicolasDorier
+* Fix performance issue on dashboard for big wallets (#3694) @NicolasDorier
+* Do not crash if /apps/{appId} do not exists @NicolasDorier
+
+### Improvements:
+
+* Remove logs about pending invoices @NicolasDorier
+* Add missing swagger doc for auto approval of payouts @Kukks
+
 ## 1.5.0
 
 ### New features:

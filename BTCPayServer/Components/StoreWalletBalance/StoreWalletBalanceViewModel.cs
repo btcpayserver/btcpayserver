@@ -6,7 +6,7 @@ namespace BTCPayServer.Components.StoreWalletBalance;
 
 public class StoreWalletBalanceViewModel
 {
-    public decimal Balance { get; set; }
+    public decimal? Balance { get; set; }
     public string CryptoCode { get; set; }
     public StoreData Store { get; set; }
     public WalletId WalletId { get; set; }

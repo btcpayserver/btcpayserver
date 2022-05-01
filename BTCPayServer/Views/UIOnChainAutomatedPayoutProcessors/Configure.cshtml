@@ -11,14 +11,14 @@
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h3 class="mb-0">@ViewData["Title"]</h3>
             </div>
-            <p>Payout Processors allow BTCPay Server to handle payouts awaiting payment in an automated way.</p>
+            <p>Set a schedule for automated On-Chain Bitcoin Payouts. </p>
             @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="text-danger"></div>
         }
         <form method="post">
             <div class="form-group">
-                <label asp-for="IntervalMinutes" class="form-label"></label>
+                <label asp-for="IntervalMinutes" class="form-label">Set interval in minutes.</label>
                 <input asp-for="IntervalMinutes" class="form-control">
             </div>
 

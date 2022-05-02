@@ -34,52 +34,73 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
         }
 
-        [HttpPost("~/api/v1/apps")]
-        [Authorize(Policy = Policies.CanModifyStoreSettingsUnscoped, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> CreateApp(CreateAppRequest request)
+        [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> CreatePointOfSaleApp(string storeId, CreatePointOfSaleAppRequest request)
         {
-            var validationResult = await Validate(request);
+            var validationResult = Validate(request);
             if (validationResult != null)
             {
                 return validationResult;
             }
 
+            var defaultCurrency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
             var appData = new AppData
             {
-                StoreDataId = request.StoreId,
+                StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = request.AppType
+                AppType = AppType.PointOfSale.ToString()
             };
 
-            var defaultCurrency = (await _storeRepository.FindStore(request.StoreId)).GetStoreBlob().DefaultCurrency;
-            Enum.TryParse(request.AppType, out AppType appType);
-            switch (appType)
+            Enum.TryParse(request.DefaultView, out PosViewType defaultView);
+
+            appData.SetSettings(new PointOfSaleSettings
             {
-                case AppType.Crowdfund:
-                    var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
-                    appData.SetSettings(emptyCrowdfund);
-                    break;
-                case AppType.PointOfSale:
-                    var empty = new PointOfSaleSettings { Currency = defaultCurrency };
-                    appData.SetSettings(empty);
-                    break;
-            }
+                Title = request.Title,
+                DefaultView = defaultView,
+                ShowCustomAmount = request.ShowCustomAmount,
+                ShowDiscount = request.ShowDiscount,
+                EnableTips = request.EnableTips,
+                Currency = request.Currency ?? defaultCurrency,
+                Template = request.Template,
+                ButtonText = request.FixedAmountPayButtonText,
+                CustomButtonText = request.CustomAmountPayButtonText,
+                CustomTipText = request.TipText,
+                CustomCSSLink = request.CustomCSSLink,
+                NotificationUrl = request.NotificationUrl,
+                RedirectUrl = request.RedirectUrl,
+                Description = request.Description,
+                EmbeddedCSS = request.EmbeddedCSS,
+                RedirectAutomatically = request.RedirectAutomatically,
+                RequiresRefundEmail = request.RequiresRefundEmail == true ? 
+                    RequiresRefundEmail.On : 
+                    request.RequiresRefundEmail == false ? 
+                        RequiresRefundEmail.Off : 
+                        RequiresRefundEmail.InheritFromStore,
+            });
 
             await _appService.UpdateOrCreateApp(appData);
 
-            return Ok(appData);
+            return Ok(ToModel(appData));
         }
 
-        async private Task<IActionResult?> Validate(CreateAppRequest request)
+        private PointOfSaleAppData ToModel(AppData appData)
+        {
+            return new PointOfSaleAppData
+            {
+                Id = appData.Id,
+                AppType = appData.AppType,
+                Name = appData.Name,
+                StoreId = appData.StoreDataId,
+                Created = appData.Created
+            };
+        }
+
+        private IActionResult? Validate(CreateAppRequest request)
         {
             if (request is null)
             {
                 return BadRequest();
-            }
-
-            if (!Enum.TryParse(request.AppType, out AppType appType))
-            {
-                ModelState.AddModelError(nameof(request.AppType), "Invalid app type");
             }
 
             if (string.IsNullOrEmpty(request.AppName))
@@ -90,12 +111,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.AppName), "Name can only be between 1 and 50 characters");
             }
-
-            var store = await _storeRepository.FindStore(request.StoreId);
-            if (store == null)
-            {
-                ModelState.AddModelError(nameof(request.StoreId), "Store with provided ID not found");
-            }           
 
             return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
         }

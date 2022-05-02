@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -58,7 +59,7 @@ namespace BTCPayServer.HostedServices
             }
 
             var invoiceQuery = new InvoiceQuery { IncludeArchived = true };
-            var totalCount = await _invoiceRepository.GetInvoicesTotal(invoiceQuery);
+            var totalCount = await CountInvoices();
             const int PAGE_SIZE = 1000;
             var totalPages = Math.Ceiling(totalCount * 1.0m / PAGE_SIZE);
             Logs.PayServer.LogInformation($"Importing {totalCount} invoices into the search table in {totalPages - startFromPage} pages");
@@ -117,6 +118,12 @@ namespace BTCPayServer.HostedServices
                 await ctx.SaveChangesAsync();
             }
             Logs.PayServer.LogInformation($"Full invoice search import successful");
+        }
+
+        private Task<int> CountInvoices()
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            return ctx.Invoices.CountAsync();
         }
     }
 }

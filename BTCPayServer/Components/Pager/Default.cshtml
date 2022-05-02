@@ -1,39 +1,45 @@
 @model BasePagingViewModel
 
 @{
-    var pageSizeOptions = new [] { 50, 100, 250, 500 };
+	var pageSizeOptions = new[] { 50, 100, 250, 500 };
 }
 
-@if (Model.Total > pageSizeOptions.Min())
+@if (Model.Total is null || Model.Total.Value > pageSizeOptions.Min())
 {
     <nav aria-label="..." class="w-100 clearfix">
-        @if (Model.Total > Model.Count)
+        @if (Model.Total is null || Model.Total.Value > Model.Count)
         {
             <ul class="pagination float-start">
                 <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
                     <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
                 </li>
                 <li class="page-item disabled">
-                    @if (Model.Total <= Model.Count)
+                    @if (Model.Total is null)
+					{
+						<span class="page-link">
+                            @(Model.Skip + 1)–@(Model.Skip + Model.Count)
+                        </span>
+					}
+					else if (Model.Total.Value <= Model.Count)
                     {
                         <span class="page-link">
-                            1–@Model.Total
+                            1–@Model.Total.Value
                         </span>
                     }
                     else
                     {
                         <span class="page-link">
-                            @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total
+                            @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total.Value
                         </span>
                     }
                 </li>
-                <li class="page-item @(Model.Total > (Model.Skip + Model.Count) ? null : "disabled")">
+                <li class="page-item @(((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > (Model.Skip + Model.Count))) ? null : "disabled")">
                     <a class="page-link" href="@NavigatePages(1, Model.Count)">&raquo;</a>
                 </li>
             </ul>
         }
 
-        @if (Model.Total >= pageSizeOptions.Min())
+        @if (Model.Total is null || Model.Total.Value >= pageSizeOptions.Min())
         {
             <ul class="pagination float-end">
                 <li class="page-item disabled">
@@ -41,7 +47,7 @@
                 </li>
                 @foreach (int pageSize in pageSizeOptions)
                 {
-                    if (Model.Total >= pageSize)
+                    if (Model.Total is null || Model.Total.Value >= pageSize)
                     {
                         <li class="page-item @(Model.Count == pageSize ? "active" : null)">
                             <a class="page-link" href="@NavigatePages(0, pageSize)">@pageSize</a>

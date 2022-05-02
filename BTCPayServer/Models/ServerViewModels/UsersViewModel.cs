@@ -17,6 +17,7 @@ namespace BTCPayServer.Models.ServerViewModels
             public IEnumerable<string> Roles { get; set; }
         }
         public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
+        public override int CurrentPageCount => Users.Count;
         public Dictionary<string, string> Roles { get; set; }
     }
 

@@ -836,37 +836,6 @@ namespace BTCPayServer.Tests
                 $"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
         }
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanListNotifications()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.GrantAccess(true);
-            acc.RegisterDerivationScheme("BTC");
-
-            const string newVersion = "1.0.4.4";
-            var ctrl = acc.GetController<UINotificationsController>();
-            var resp = await ctrl.Generate(newVersion);
-
-            var vm = Assert.IsType<Models.NotificationViewModels.IndexViewModel>(
-                Assert.IsType<ViewResult>(await ctrl.Index()).Model);
-
-            Assert.True(vm.Skip == 0);
-            Assert.True(vm.Count == 50);
-            Assert.True(vm.Total == 1);
-            Assert.True(vm.Items.Count == 1);
-
-            var fn = vm.Items.First();
-            var now = DateTimeOffset.UtcNow;
-            Assert.True(fn.Created >= now.AddSeconds(-3));
-            Assert.True(fn.Created <= now);
-            Assert.Equal($"New version {newVersion} released!", fn.Body);
-            Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
-            Assert.False(fn.Seen);
-        }
-
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanGetRates()
@@ -2450,7 +2419,7 @@ namespace BTCPayServer.Tests
 
             Assert.True(vm.Skip == 0);
             Assert.True(vm.Count == 50);
-            Assert.True(vm.Total == 1);
+            Assert.Null(vm.Total);
             Assert.True(vm.Items.Count == 1);
 
             var fn = vm.Items.First();

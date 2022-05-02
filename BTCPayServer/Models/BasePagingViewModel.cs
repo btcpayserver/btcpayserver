@@ -7,10 +7,12 @@ namespace BTCPayServer.Models
     {
         public int Skip { get; set; } = 0;
         public int Count { get; set; } = 50;
-        public int Total { get; set; }
+        public int? Total { get; set; }
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string SearchTerm { get; set; }
         public int? TimezoneOffset { get; set; }
         public Dictionary<string, object> PaginationQuery { get; set; }
+
+        public abstract int CurrentPageCount { get; }
     }
 }

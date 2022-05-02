@@ -243,7 +243,7 @@
         </ul>
     </div>
 </div>
-<form class="@(Model.Total > 0 ? "col-xl-7 col-xxl-8 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="@(Model.Invoices.Count > 0 ? "col-xl-7 col-xxl-8 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input type="hidden" asp-for="Count" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <div class="input-group">
@@ -278,7 +278,7 @@
     <span asp-validation-for="SearchTerm" class="text-danger"></span>
 </form>
 
-@if (Model.Total > 0)
+@if (Model.Invoices.Count > 0)
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
         <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">

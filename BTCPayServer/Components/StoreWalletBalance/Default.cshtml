@@ -32,7 +32,7 @@
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
-                new Chartist.Line(`#${id} .ct-chart`, {
+                const chart = new Chartist.Line(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
                 }, {
@@ -40,6 +40,14 @@
                     fullWidth: true,
                     showArea: true
                 });
+                // prevent y-axis labels from getting cut off
+                window.setTimeout(() => {
+                    const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
+                    if (yLabels) {
+                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 8)))
+                        chart.update(null, { axisY: { offset: width } })
+                    }
+                }, 0)
             };
             const update = async type => {
                 const url = baseUrl.replace(/\/week$/gi, `/${type}`);

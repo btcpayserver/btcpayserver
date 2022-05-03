@@ -27,25 +27,13 @@
 <!DOCTYPE html>
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <title>@ViewData["Title"]</title>
-    <meta charset="utf-8" />
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <partial name="LayoutHead" />
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @Safe.Raw(Model.EmbeddedCSS)
-    <noscript>
-        <style>
-            .hide-when-js, [v-cloak] { display: block !important; }
-            .only-for-js { display: none !important; }
-        </style>
-    </noscript>
 </head>
 <body>
     <div class="min-vh-100 d-flex flex-column">
@@ -200,8 +188,14 @@
             </div>
         </main>
         <footer class="pt-2 pb-4 d-print-none">
-            <div class="container text-center">
-                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
+            <div class="container d-flex flex-wrap align-items-center justify-content-center">
+                <span class="text-muted mx-2">
+                    Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
+                </span>
+                @if (!theme.CustomTheme)
+                {
+                    <vc:theme-switch css-class="text-muted mx-2" responsive="none"/>
+                }
             </div>
         </footer>
     </div>

@@ -1,16 +1,22 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
+using NBitcoin.Secp256k1;
 
 namespace BTCPayServer.PluginPacker
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Length < 3)
             {
@@ -37,12 +43,51 @@ namespace BTCPayServer.PluginPacker
             var loadedPlugin = (IBTCPayServerPlugin)Activator.CreateInstance(extension);
             var json = JsonSerializer.Serialize(loadedPlugin);
             Directory.CreateDirectory(outputDir);
+            outputDir = Path.Combine(outputDir, loadedPlugin.Version.ToString());
+            Directory.CreateDirectory(outputDir);
+            outputFile = Path.Combine(outputDir, name);
             if (File.Exists(outputFile + ".btcpay"))
             {
                 File.Delete(outputFile + ".btcpay");
             }
             ZipFile.CreateFromDirectory(directory, outputFile + ".btcpay", CompressionLevel.Optimal, false);
-            File.WriteAllText(outputFile + ".btcpay.json", json);
+            await File.WriteAllTextAsync(outputFile + ".btcpay.json", json);
+
+            var sha256sums = new StringBuilder();
+            sha256sums.AppendLine(
+                $"{Encoders.Hex.EncodeData(Hashes.SHA256(Encoding.UTF8.GetBytes(json)))} {name}.btcpay.json"); 
+            
+            sha256sums.AppendLine(
+                $"{Encoders.Hex.EncodeData(Hashes.SHA256(await File.ReadAllBytesAsync(outputFile + ".btcpay")))} {name}.btcpay");
+
+            var sha256dirs = Path.Combine(outputDir, "SHA256SUMS");
+            if (File.Exists(sha256dirs))
+            {
+                File.Delete(sha256dirs);
+            }
+            await File.WriteAllTextAsync(sha256dirs, sha256sums.ToString());
+            try
+            {
+                Process cmd = new();
+                cmd.StartInfo.FileName = "powershell.exe";
+                cmd.StartInfo.RedirectStandardInput = true;
+                cmd.StartInfo.RedirectStandardOutput = true;
+                cmd.StartInfo.CreateNoWindow = false;
+                cmd.StartInfo.UseShellExecute = false;
+                cmd.Start();
+                
+                await cmd.StandardInput.WriteLineAsync($"cat {sha256dirs} | gpg -s > {Path.Combine(outputDir, "SHA256SUMS.asc")}");
+                await cmd.StandardInput.FlushAsync();
+                cmd.StandardInput.Close();
+                await cmd.WaitForExitAsync();
+                Console.WriteLine(await cmd.StandardOutput.ReadToEndAsync());
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Attempted to sign hashes with gpg but maybe powershell is not installed?\n{e.Message}");
+            }
+            
             Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
         }
 

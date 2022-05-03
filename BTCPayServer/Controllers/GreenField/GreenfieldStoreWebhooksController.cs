@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return Ok((await StoreRepository.GetWebhooks(CurrentStoreId))
                         .Select(o => FromModel(o, false))
-                        .ToList());
+                        .ToArray());
             }
             else
             {

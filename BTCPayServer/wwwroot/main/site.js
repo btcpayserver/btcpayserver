@@ -1,3 +1,5 @@
+const flatpickrInstances = [];
+
 document.addEventListener("DOMContentLoaded", function () {
     // sticky header
     const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
@@ -36,12 +38,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // support for initializing with special options per instance
         if (fdtp) {
             var parsed = JSON.parse(fdtp);
-            element.flatpickr(parsed);
+            flatpickrInstances.push(element.flatpickr(parsed));
         } else {
             var min = element.attr("min");
             var max = element.attr("max");
             var defaultDate = element.attr("value");
-            element.flatpickr({
+            flatpickrInstances.push(element.flatpickr({
                 enableTime: true,
                 enableSeconds: true,
                 dateFormat: 'Z',
@@ -53,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 time_24hr: true,
                 defaultHour: 0,
                 static: true
-            });
+            }));
         }
     });
     
@@ -72,7 +74,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     $(".input-group-clear").on("click", function () {
-        $(this).parents(".input-group").find("input").val(null);
+        const input = $(this).parents(".input-group").find("input");
+        const event = new CustomEvent('input-group-clear-input-value-cleared', { detail: input });
+        input.val(null);
+        document.dispatchEvent(event);
         handleInputGroupClearButtonDisplay(this);
     });
 

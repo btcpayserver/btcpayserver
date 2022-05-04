@@ -71,11 +71,11 @@
     @foreach (var pp in Model.PullPayments)
     {
         <script id="tooptip_template_@pp.Id" type="text/template">
-            <span>Awaiting:&nbsp;<span class="float-end">@pp.Progress.Awaiting</span></span>
+            <span>Awaiting:&nbsp;<span class="float-end">@pp.Progress.AwaitingFormatted</span></span>
             <br />
-            <span>Completed:&nbsp;<span class="float-end">@pp.Progress.Completed</span></span>
+            <span>Completed:&nbsp;<span class="float-end">@pp.Progress.CompletedFormatted</span></span>
             <br />
-            <span>Limit:&nbsp;<span class="float-end">@pp.Progress.Limit</span></span>
+            <span>Limit:&nbsp;<span class="float-end">@pp.Progress.LimitFormatted</span></span>
             @if (pp.Progress.ResetIn != null)
             {
                 <br />

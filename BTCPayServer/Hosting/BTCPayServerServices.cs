@@ -339,7 +339,8 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<BitcoinLikePayoutHandler>();
             services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<BitcoinLikePayoutHandler>());
-            services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
+            services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<LightningLikePayoutHandler>());
+            services.AddSingleton<LightningLikePayoutHandler>();
 
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

@@ -114,13 +114,14 @@ namespace BTCPayServer.Controllers
                 parsedSounds = new CrowdfundSettings().Sounds;
             }
 
-            var parsedAnimationColors = vm.AnimationColors.Split(
+            var parsedAnimationColors = vm.AnimationColors?.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             ).Select(s => s.Trim()).ToArray();
-            if (vm.AnimationsEnabled && !parsedAnimationColors.Any())
+            if (vm.AnimationsEnabled && (parsedAnimationColors == null || !parsedAnimationColors.Any()))
             {
-                ModelState.AddModelError(nameof(vm.AnimationColors), "You must have at least one animation color if you enable animations");
+                vm.AnimationsEnabled = false;
+                parsedAnimationColors = new CrowdfundSettings().AnimationColors;
             }
 
             if (!ModelState.IsValid)

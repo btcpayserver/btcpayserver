@@ -65,7 +65,7 @@ window.BTCPayShopifyIntegrationModule = function () {
     }
 
     function getOrCheckInvoice(backgroundCheck) {
-        const url = btcPayServerUrl + "/stores/" + storeId + "/integrations/shopify/" + shopify_order_id+"?amount="+Shopify.checkout.payment_due+ (backgroundCheck ? "&checkonly=true" : "");
+        const url = btcPayServerUrl + "/stores/" + storeId + "/plugins/shopify/" + shopify_order_id+"?amount="+Shopify.checkout.payment_due+ (backgroundCheck ? "&checkonly=true" : "");
         return fetch(url, {
             method: "GET",
             mode: "cors", // no-cors, cors, *same-origin,

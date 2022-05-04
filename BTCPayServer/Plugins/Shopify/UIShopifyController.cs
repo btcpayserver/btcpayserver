@@ -94,7 +94,7 @@ namespace BTCPayServer.Plugins.Shopify
         }
 
         [AllowAnonymous]
-        [HttpGet("stores/{storeId}/integrations/shopify/shopify.js")]
+        [HttpGet("stores/{storeId}/plugins/shopify/shopify.js")]
         public async Task<IActionResult> ShopifyJavascript(string storeId)
         {
             var jsFile =
@@ -105,7 +105,7 @@ namespace BTCPayServer.Plugins.Shopify
         [RateLimitsFilter(ZoneLimits.Shopify, Scope = RateLimitsScope.RemoteAddress)]
         [AllowAnonymous]
         [EnableCors(CorsPolicies.All)]
-        [HttpGet("stores/{storeId}/integrations/shopify/{orderId}")]
+        [HttpGet("stores/{storeId}/plugins/shopify/{orderId}")]
         public async Task<IActionResult> ShopifyInvoiceEndpoint(
             string storeId, string orderId, decimal amount, bool checkOnly = false)
         {
@@ -202,8 +202,8 @@ namespace BTCPayServer.Plugins.Shopify
         }
 
         [HttpGet]
-        [Route("stores/{storeId}/integrations/shopify")]
-        public IActionResult EditShopifyIntegration()
+        [Route("stores/{storeId}/plugins/shopify")]
+        public IActionResult EditShopify()
         {
             var blob = CurrentStore.GetStoreBlob();
 
@@ -211,8 +211,8 @@ namespace BTCPayServer.Plugins.Shopify
         }
 
 
-        [HttpPost("stores/{storeId}/integrations/shopify")]
-        public async Task<IActionResult> EditShopifyIntegration(string storeId,
+        [HttpPost("stores/{storeId}/plugins/shopify")]
+        public async Task<IActionResult> EditShopify(string storeId,
             ShopifySettings vm, string command = "")
         {
             switch (command)
@@ -257,7 +257,7 @@ namespace BTCPayServer.Plugins.Shopify
                             await _storeRepository.UpdateStore(CurrentStore);
                         }
 
-                        TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully updated";
+                        TempData[WellKnownTempData.SuccessMessage] = "Shopify plugin successfully updated";
                         break;
                     }
                 case "ShopifyClearCredentials":
@@ -269,12 +269,12 @@ namespace BTCPayServer.Plugins.Shopify
                             await _storeRepository.UpdateStore(CurrentStore);
                         }
 
-                        TempData[WellKnownTempData.SuccessMessage] = "Shopify integration credentials cleared";
+                        TempData[WellKnownTempData.SuccessMessage] = "Shopify plugin credentials cleared";
                         break;
                     }
             }
 
-            return RedirectToAction(nameof(EditShopifyIntegration), new { storeId = CurrentStore.Id });
+            return RedirectToAction(nameof(EditShopify), new { storeId = CurrentStore.Id });
         }
     }
 

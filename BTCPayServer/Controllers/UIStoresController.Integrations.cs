@@ -15,10 +15,10 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-        [HttpGet("{storeId}/integrations")]
-        public IActionResult Integrations()
+        [HttpGet("{storeId}/plugins")]
+        public IActionResult Plugins()
         {
-            return View("Integrations", new IntegrationsViewModel());
+            return View("Plugins", new PluginsViewModel());
         }
 
         private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)

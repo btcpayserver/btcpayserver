@@ -7,4 +7,5 @@ public class AdditionalServiceViewModel
     public string ServiceName { get; set; }
     public string CryptoCode { get; set; }
     public string Link { get; set; }
+    public string Error { get; set; }
 }

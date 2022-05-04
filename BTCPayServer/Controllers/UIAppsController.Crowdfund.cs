@@ -99,9 +99,9 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1 ");
             }
 
-            if (vm.DisplayPerksRanking && !vm.SortPerksByPopularity)
+            if (vm.DisplayPerksRanking)
             {
-                ModelState.AddModelError(nameof(vm.DisplayPerksRanking), "You must sort by popularity in order to display ranking.");
+                vm.SortPerksByPopularity = true;
             }
 
             var parsedSounds = vm.Sounds.Split(

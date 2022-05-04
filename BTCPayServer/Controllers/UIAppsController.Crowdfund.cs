@@ -99,27 +99,29 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1 ");
             }
 
-            if (vm.DisplayPerksRanking && !vm.SortPerksByPopularity)
+            if (vm.DisplayPerksRanking)
             {
-                ModelState.AddModelError(nameof(vm.DisplayPerksRanking), "You must sort by popularity in order to display ranking.");
+                vm.SortPerksByPopularity = true;
             }
 
-            var parsedSounds = vm.Sounds.Split(
+            var parsedSounds = vm.Sounds?.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             ).Select(s => s.Trim()).ToArray();
-            if (vm.SoundsEnabled && !parsedSounds.Any())
+            if (vm.SoundsEnabled && (parsedSounds == null || !parsedSounds.Any()))
             {
-                ModelState.AddModelError(nameof(vm.Sounds), "You must have at least one sound if you enable sounds");
+                vm.SoundsEnabled = false;
+                parsedSounds = new CrowdfundSettings().Sounds;
             }
 
-            var parsedAnimationColors = vm.AnimationColors.Split(
+            var parsedAnimationColors = vm.AnimationColors?.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             ).Select(s => s.Trim()).ToArray();
-            if (vm.AnimationsEnabled && !parsedAnimationColors.Any())
+            if (vm.AnimationsEnabled && (parsedAnimationColors == null || !parsedAnimationColors.Any()))
             {
-                ModelState.AddModelError(nameof(vm.AnimationColors), "You must have at least one animation color if you enable animations");
+                vm.AnimationsEnabled = false;
+                parsedAnimationColors = new CrowdfundSettings().AnimationColors;
             }
 
             if (!ModelState.IsValid)

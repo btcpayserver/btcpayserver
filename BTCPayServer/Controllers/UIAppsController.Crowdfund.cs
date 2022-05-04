@@ -104,13 +104,14 @@ namespace BTCPayServer.Controllers
                 vm.SortPerksByPopularity = true;
             }
 
-            var parsedSounds = vm.Sounds.Split(
+            var parsedSounds = vm.Sounds?.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             ).Select(s => s.Trim()).ToArray();
-            if (vm.SoundsEnabled && !parsedSounds.Any())
+            if (vm.SoundsEnabled && (parsedSounds == null || !parsedSounds.Any()))
             {
-                ModelState.AddModelError(nameof(vm.Sounds), "You must have at least one sound if you enable sounds");
+                vm.SoundsEnabled = false;
+                parsedSounds = new CrowdfundSettings().Sounds;
             }
 
             var parsedAnimationColors = vm.AnimationColors.Split(

@@ -409,17 +409,6 @@
                                 }
                                 &nbsp;
                                 <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                                <a class="only-for-js invoice-details-toggle" href="#">
-                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
-                            <td colspan="99" class="border-top-0">
-                                <div style="margin-left: 15px; margin-bottom: 0;">
-                                    @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                    <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
-                                </div>
                             </td>
                         </tr>
                     }

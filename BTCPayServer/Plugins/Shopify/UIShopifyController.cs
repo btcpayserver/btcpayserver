@@ -112,7 +112,7 @@ namespace BTCPayServer.Plugins.Shopify
             var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await _invoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                OrderId = new[] { invoiceOrderId },
+                TextSearch = invoiceOrderId,
                 StoreId = new[] { storeId }
             });
             matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
@@ -190,7 +190,8 @@ namespace BTCPayServer.Plugins.Shopify
                     {
                         Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,
                         Currency = order.PresentmentCurrency,
-                        Metadata = new JObject { ["orderId"] = invoiceOrderId }
+                        Metadata = new JObject { ["orderId"] = order.OrderNumber },
+                        AdditionalSearchTerms = new []{ "shopify", order.OrderNumber, order.Id, invoiceOrderId}
                     }, store,
                     Request.GetAbsoluteRoot(), new List<string>() { invoiceOrderId });
 

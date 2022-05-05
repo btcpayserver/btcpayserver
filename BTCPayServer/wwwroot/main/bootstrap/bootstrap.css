@@ -10844,12 +10844,12 @@ textarea.w-auto {
 }
 
 /* Pull tables out of the grid by their horizontal column padding */
-*:not([class^="table-responsive"]) > .table {
+main *:not([class^="table-responsive"]) > .table {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
 
-[class^="table-responsive"] {
+main [class^="table-responsive"] {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }

@@ -132,7 +132,7 @@ namespace BTCPayServer
             }
 
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
+                () => (null, null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
         }
 
         public class EditLightningAddressVM
@@ -142,6 +142,11 @@ namespace BTCPayServer
                 [Required]
                 [RegularExpression("[a-zA-Z0-9-_]+")]
                 public string Username { get; set; }
+                
+                // See https://stackoverflow.com/questions/1418423/the-hostname-regex
+                [RegularExpression("^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\\.?$")]
+                [Display(Name="Alternative hostname")]
+                public string AlternativeHostname { get; set; }
             }
 
             public EditLightningAddressItem Add { get; set; }
@@ -187,13 +192,13 @@ namespace BTCPayServer
 
             var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
-                () => (username, null, null, null, null, true));
+                () => (username, blob.AlternativeHostname, null, null, null, null, true));
         }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, string alternativeHostname, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -226,15 +231,16 @@ namespace BTCPayServer
                 return NotFound("LNURL or Lightning payment method disabled");
             }
 
-            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
-                (internalDetails ?? (() => (null, null, null, null, null, null)))();
+            (string username, string alternativeHostname, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
+                (internalDetails ?? (() => (null, null, null, null, null, null, null)))();
 
             if ((anyoneCanInvoice ?? blob.AnyoneCanInvoice) is false)
             {
                 return NotFound();
             }
 
-            var lnAddress = username is null ? null : $"{username}@{Request.Host}";
+            var hostname = string.IsNullOrEmpty(alternativeHostname) ? Request.Host.ToString() : alternativeHostname;
+            var lnAddress = username is null ? null : $"{username}@{hostname}";
             List<string[]> lnurlMetadata = new();
 
             var invoiceRequest = new CreateInvoiceRequest
@@ -501,8 +507,9 @@ namespace BTCPayServer
                             Max = blob.Max,
                             Min = blob.Min,
                             CurrencyCode = blob.CurrencyCode,
+                            AlternativeHostname = blob.AlternativeHostname,
                             StoreId = storeId,
-                            Username = s.Username,
+                            Username = s.Username
                         };
                     }
                 ).ToList()
@@ -530,13 +537,16 @@ namespace BTCPayServer
                 }
                
 
-                if (await _lightningAddressService.Set(new LightningAddressData()
+                if (await _lightningAddressService.Set(new LightningAddressData
                     {
                         StoreDataId = storeId,
                         Username = vm.Add.Username,
-                        Blob = new LightningAddressDataBlob()
+                        Blob = new LightningAddressDataBlob
                         {
-                            Max = vm.Add.Max, Min = vm.Add.Min, CurrencyCode = vm.Add.CurrencyCode
+                            Max = vm.Add.Max, 
+                            Min = vm.Add.Min, 
+                            CurrencyCode = vm.Add.CurrencyCode,
+                            AlternativeHostname = vm.Add.AlternativeHostname
                         }.SerializeBlob()
                     }))
                 {

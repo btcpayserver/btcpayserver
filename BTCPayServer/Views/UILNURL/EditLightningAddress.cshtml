@@ -3,6 +3,8 @@
 @model UILNURLController.EditLightningAddressVM
 @{
     ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), "Lightning Address", Context.GetStoreData().Id);
+    var instanceHostname = Context.Request.Host.ToUriComponent();
+    var urlTemplate = Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}");
 }
 
 @section PageHeadContent {
@@ -31,8 +33,8 @@
 {
     <div class="alert alert-warning" role="alert">
         Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br /><br />
-        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br /><br />
-        If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.
+        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@urlTemplate</span>.<br /><br />
+        If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@urlTemplate</span>.
     </div>
 }
 
@@ -48,8 +50,7 @@
     @{
         var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
         var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || Model.Add?.Min != null || Model.Add?.Max != null;
-     }
-    
+    }
     <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">
         <div class="form-group pt-2">
             <label asp-for="Add.Username" class="form-label"></label>
@@ -65,7 +66,7 @@
                 <div class="col-12 col-sm-auto">
                     <div class="form-group">
                         <label asp-for="Add.CurrencyCode" class="form-label"></label>
-                        <input asp-for="Add.CurrencyCode" class="form-control" style="max-width:16ch;"/>
+                        <input asp-for="Add.CurrencyCode" class="form-control" currency-selection style="max-width:16ch;"/>
                         <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
                     </div>
                 </div>
@@ -83,9 +84,19 @@
                         <span asp-validation-for="Add.Max" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.AlternativeHostname" class="form-label"></label>
+                        <input asp-for="Add.AlternativeHostname" class="form-control" style="max-width:32ch;"/>
+                        <span asp-validation-for="Add.AlternativeHostname" class="text-danger"></span>
+                    </div>
+                </div>
+                <p class="text-muted small form-text">
+                    The alternative hostname requires a redirect of that hosts <code>/.well-known/lnurlp/{username}</code>
+                    to <code>@urlTemplate</code>.
+                </p>
             </div>
         </div>
-    
         <div class="form-group">
             <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
         </div>
@@ -109,15 +120,17 @@
                         <input asp-for="Items[index].CurrencyCode" type="hidden"/>
                         <input asp-for="Items[index].Min" type="hidden"/>
                         <input asp-for="Items[index].Max" type="hidden"/>
+                        <input asp-for="Items[index].AlternativeHostname" type="hidden"/>
                         <input asp-for="Items[index].Username" type="hidden"/>
-                        var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
+                        var alternativeHostname = Model.Items[index].AlternativeHostname;
+                        var hostname = string.IsNullOrEmpty(alternativeHostname) ? instanceHostname : alternativeHostname;
+                        var address = $"{Model.Items[index].Username}@{hostname}";
                         <tr>
                             <td>
                                 <div class="input-group" data-clipboard="@address">
                                     <input type="text" class="form-control copy-cursor lightning-address-value"  readonly="readonly" value="@address"/>
                                     <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
                                 </div>
-
                             </td>
                             <td class="settings-holder align-middle">
                                 @if (Model.Items[index].Min.HasValue)

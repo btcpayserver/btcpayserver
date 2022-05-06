@@ -26,6 +26,7 @@ public class LightningAddressData
 public class LightningAddressDataBlob
 {
     public string CurrencyCode { get; set; }
+    public string AlternativeHostname { get; set; }
     public decimal? Min { get; set; }
     public decimal? Max { get; set; }
 }

@@ -90,6 +90,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $('[data-bs-toggle="tooltip"]').tooltip();
 
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        const popoverId = popoverTriggerEl.attributes['data-bs-content-selector'];
+        if (popoverId) {
+            const contentEl=$(`${popoverId.value}`).html();
+            popoverTriggerEl.setAttribute("data-bs-content", contentEl);
+            
+        }
+
+        return new bootstrap.Popover(popoverTriggerEl)
+    });
+    
     function handleInputGroupClearButtonDisplay(element) {
         var inputs = $(element).parents(".input-group").find("input");
 

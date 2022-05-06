@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -31,6 +32,7 @@ using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
 {
@@ -267,7 +269,7 @@ namespace BTCPayServer
             }
 
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true));
+                () => (null, app, item, new List<string> {AppService.GetAppInternalTag(appId)}, item.Price.Value, true, null));
         }
 
         public class EditLightningAddressVM
@@ -297,6 +299,9 @@ namespace BTCPayServer
                 [Display(Name = "Max sats")]
                 [Range(1, double.PositiveInfinity)]
                 public decimal? Max { get; set; }
+
+                public string PayerData { get; set; }
+                
             }
 
             public ConcurrentDictionary<string, LightningAddressItem> Items { get; set; } =
@@ -321,14 +326,19 @@ namespace BTCPayServer
             }
 
             var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
+            Dictionary<string, LNURL.LNURLPayRequest.PayerDataField> data = null;
+            if (!string.IsNullOrEmpty(blob.PayerData))
+            {
+                data = JObject.Parse(blob.PayerData).ToObject<Dictionary<string, LNURL.LNURLPayRequest.PayerDataField>>();
+            }
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
-                () => (username, null, null, null, null, true));
+                () => (username, null, null, null, null, true, data));
         }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice, Dictionary<string,  LNURL.LNURLPayRequest.PayerDataField> payerData)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -362,8 +372,8 @@ namespace BTCPayServer
                 return NotFound("LNURL or Lightning payment method disabled");
             }
 
-            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice) =
-                (internalDetails ?? (() => (null, null, null, null, null, null)))();
+            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice, Dictionary<string,  LNURL.LNURLPayRequest.PayerDataField> payerData) =
+                (internalDetails ?? (() => (null, null, null, null, null, null, null)))();
 
             if ((anyoneCanInvoice ?? blob.AnyoneCanInvoice) is false)
             {
@@ -412,15 +422,26 @@ namespace BTCPayServer
                 max = min;
             }
 
+            var updatepmd = false;
+            
+            var pm = i.GetPaymentMethod(pmi);
+            var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
             if (!string.IsNullOrEmpty(username))
             {
-                var pm = i.GetPaymentMethod(pmi);
-                var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
+                updatepmd = true;
+            }
+            if (payerData is not null)
+            {
+                paymentMethodDetails.PayerDataFields = payerData;
+                updatepmd = true;
+            }
+            if (updatepmd)
+            {
                 pm.SetPaymentMethodDetails(paymentMethodDetails);
                 await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
             }
-            
+
             var description = blob.LightningDescriptionTemplate
                 .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                 .Replace("{ItemDescription}", i.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
@@ -444,13 +465,14 @@ namespace BTCPayServer
                 Callback = new Uri(_linkGenerator.GetUriByAction(
                     action: nameof(GetLNURLForInvoice),
                     controller: "UILNURL",
-                    values: new {cryptoCode, invoiceId = i.Id}, Request.Scheme, Request.Host, Request.PathBase))
+                    values: new {cryptoCode, invoiceId = i.Id}, Request.Scheme, Request.Host, Request.PathBase)),
+                PayerData = payerData
             });
         }
 
         [HttpGet("pay/i/{invoiceId}")]
         public async Task<IActionResult> GetLNURLForInvoice(string invoiceId, string cryptoCode,
-            [FromQuery] long? amount = null, string comment = null)
+            [FromQuery] long? amount = null, string comment = null, string payerData = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
@@ -461,6 +483,21 @@ namespace BTCPayServer
             if (comment is not null)
                 comment = comment.Truncate(2000);
 
+            Dictionary<string, JToken> payerDataParsed = null;
+            if (payerData is not null)
+            {
+                // payerData = HttpUtility.UrlDecode(payerData);
+                try
+                {
+                    payerDataParsed = JObject.Parse(payerData).ToObject<Dictionary<string, JToken>>();
+                }
+                catch (Exception e)
+                {
+                    return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "LUD18 payer data was not valid json"});
+                }
+            }
+
+            payerData ??= string.Empty;
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var i = await _invoiceRepository.GetInvoice(invoiceId, true);
             
@@ -505,6 +542,10 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(paymentMethodDetails.ConsumedLightningAddress))
                 {
                     lnurlMetadata.Add(new[] {"text/identifier", paymentMethodDetails.ConsumedLightningAddress});
+                }
+                if (paymentMethodDetails.PayerDataFields is not null && payerDataParsed is null ||  !LNURLPayRequest.VerifyPayerData(paymentMethodDetails.PayerDataFields, payerDataParsed))
+                {
+                    return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Payer data was invalid."});
                 }
 
                 var metadata = JsonConvert.SerializeObject(lnurlMetadata);
@@ -556,7 +597,7 @@ namespace BTCPayServer
                         }
                     }
 
-                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata)), false);
+                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata + payerData)), false);
                     LightningInvoice invoice;
                     try
                     {
@@ -567,7 +608,7 @@ namespace BTCPayServer
                         };
                         invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)
-                                .VerifyDescriptionHash(metadata))
+                                .VerifyDescriptionHash(metadata+payerData))
                         {
                             return BadRequest(new LNUrlStatusResponse
                             {
@@ -592,6 +633,8 @@ namespace BTCPayServer
                     {
                         paymentMethodDetails.ProvidedComment = comment;
                     }
+                    
+                    paymentMethodDetails.PayerData = payerData;
 
                     lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
                     await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);
@@ -661,6 +704,7 @@ namespace BTCPayServer
                             CurrencyCode = blob.CurrencyCode,
                             StoreId = storeId,
                             Username = s.Username,
+                            PayerData = blob.PayerData
                         };
                     }
                 ).ToList()
@@ -681,7 +725,21 @@ namespace BTCPayServer
                 {
                     vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, "Currency is invalid", this);
                 }
+                if (!string.IsNullOrEmpty(vm.Add.PayerData) )
+                {
+                    try
+                    {
+                        var jobj = JObject.Parse(vm.Add.PayerData);
 
+                    }
+                    catch (Exception e)
+                    {
+                        vm.AddModelError(addressVm => addressVm.Add.PayerData, "Payer Data is invalid , needs to be json ", this);
+                    }
+                }
+
+                
+                
                 if (!ModelState.IsValid)
                 {
                     return View(vm);
@@ -694,7 +752,8 @@ namespace BTCPayServer
                         Username = vm.Add.Username,
                         Blob = new LightningAddressDataBlob()
                         {
-                            Max = vm.Add.Max, Min = vm.Add.Min, CurrencyCode = vm.Add.CurrencyCode
+                            Max = vm.Add.Max, Min = vm.Add.Min, CurrencyCode = vm.Add.CurrencyCode,
+                            PayerData = vm.Add.PayerData
                         }.SerializeBlob()
                     }))
                 {

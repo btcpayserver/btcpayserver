@@ -28,4 +28,5 @@ public class LightningAddressDataBlob
     public string CurrencyCode { get; set; }
     public decimal? Min { get; set; }
     public decimal? Max { get; set; }
+    public string PayerData { get; set; }
 }

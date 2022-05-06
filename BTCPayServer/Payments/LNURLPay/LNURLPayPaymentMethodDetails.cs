@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
+using LNURL;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +20,8 @@ namespace BTCPayServer.Payments
 
         public string ProvidedComment { get; set; }
         public string ConsumedLightningAddress { get; set; }
+        public string PayerData { get; set; }
+        public Dictionary<string, LNURLPayRequest.PayerDataField> PayerDataFields { get; set; }
 
         public override PaymentType GetPaymentType()
         {

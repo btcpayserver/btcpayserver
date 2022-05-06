@@ -1,6 +1,10 @@
 ﻿@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Controllers
+@using BTCPayServer.TagHelpers
+@using LNURL
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json
 @model UILNURLController.EditLightningAddressVM
 @{
     ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), "Lightning Address", Context.GetStoreData().Id);
@@ -85,6 +89,16 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group">
+                        <label asp-for="Add.PayerData" class="form-label"></label>
+                        <textarea asp-for="Add.PayerData" class="form-control" ></textarea>
+                        <span asp-validation-for="Add.PayerData" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
         </div>
     
         <div class="form-group">
@@ -111,6 +125,7 @@
                         <input asp-for="Items[index].Min" type="hidden"/>
                         <input asp-for="Items[index].Max" type="hidden"/>
                         <input asp-for="Items[index].Username" type="hidden"/>
+                        <input asp-for="Items[index].PayerData" type="hidden"/>
                         var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
                         <tr>
                             <td>
@@ -132,6 +147,18 @@
                                 @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
                                 {
                                     <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Items[index].PayerData))
+                                {
+                                   
+                                    var pos = JsonConvert.DeserializeObject<Dictionary<string, LNURLPayRequest.PayerDataField>>(Model.Items[index].PayerData);
+                                    <a href="#" data-bs-trigger="focus" data-bs-html="true" data-bs-toggle="popover" title="@address Payer Data" data-bs-content-selector="#@(index)lud18">Payer data configured</a>
+                                    <div style="display: none;" id="@(index)lud18">
+                                        @Json.Serialize(pos, new JsonSerializerSettings()
+                                        {
+                                            Formatting =  Formatting.Indented
+                                        });
+                                    </div>
                                 }
                             </td>
                             <td class="text-end">

@@ -204,6 +204,11 @@
                         "type": "string",
                         "description": "The BOLT11 of the invoice to pay"
                     },
+                    "amount": {
+                        "type": "string",
+                        "description": "Optional explicit payment amount in millisatoshi (if specified, it overrides the BOLT11 amount)",
+                        "nullable": true
+                    },
                     "maxFeePercent": {
                         "type": "string",
                         "format": "float",

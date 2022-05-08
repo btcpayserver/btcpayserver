@@ -10,10 +10,11 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Storage.Services;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Controllers
 {
@@ -63,6 +64,7 @@ namespace BTCPayServer.Controllers
                     Email = u.Email,
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
+                    RequiresEmailConfirmation = u.RequiresEmailConfirmation,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
@@ -245,9 +247,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListUsers));
         }
 
-        
-        
-
         [HttpGet("server/users/{userId}/toggle")]
         public async Task<IActionResult> ToggleUser(string userId, bool enable)
         {
@@ -277,6 +276,41 @@ namespace BTCPayServer.Controllers
             await _userService.ToggleUser(userId, enable? null: DateTimeOffset.MaxValue);
 
             TempData[WellKnownTempData.SuccessMessage] = $"User {(enable? "enabled": "disabled")}";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
+        [HttpGet("server/users/{userId}/verification-email")]
+        public async Task<IActionResult> SendVerificationEmail(string userId)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            
+            return View(
+                "Confirm", 
+                new ConfirmModel(
+                    "Send verification email",
+                    $"This will send a verification email to <strong>{user.Email}</strong>. Are you sure?",
+                    "Send"
+                )
+            );
+        }
+
+        [HttpPost("server/users/{userId}/verification-email")]
+        public async Task<IActionResult> SendVerificationEmailPost(string userId)
+        {
+            var user = await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{userId}'.");
+            }
+
+            var code = await _UserManager.GenerateEmailConfirmationTokenAsync(user);
+            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+
+            (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.Email, callbackUrl);
+
+            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
             return RedirectToAction(nameof(ListUsers));
         }
     }

@@ -390,7 +390,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
             s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
             s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("refundlink")).Click();
+            s.Driver.FindElement(By.Id("IssueRefund")).Click();
             if (multiCurrency)
             {
                 s.Driver.FindElement(By.Id("SelectedPaymentMethod")).SendKeys("BTC" + Keys.Enter);
@@ -409,7 +409,7 @@ namespace BTCPayServer.Tests
             if (rateSelection == "RateThenTextRadio")
                 Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
             s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("refundlink")).Click();
+            s.Driver.FindElement(By.Id("IssueRefund")).Click();
             Assert.Contains("pull-payments", s.Driver.Url);
             var client = await user.CreateClient();
             var ppid = s.Driver.Url.Split('/').Last();

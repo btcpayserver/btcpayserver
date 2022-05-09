@@ -210,7 +210,7 @@ namespace BTCPayServer.Controllers
             {
                 return await Refund(invoiceId, refund, cancellationToken);
             }
-            return View(refund);
+            return View("_RefundModal", refund);
         }
 
         [HttpPost("invoices/{invoiceId}/refund")]
@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers
                         {
                             ModelState.AddModelError(nameof(model.SelectedRefundOption),
                                 $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
-                            return View(model);
+                            return View("_RefundModal", model);
                         }
 
                         model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
                     }
 
                     model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency);
-                    return View(model);
+                    return View("_RefundModal", model);
 
                 case RefundSteps.SelectRate:
                     createPullPayment = new CreatePullPayment
@@ -306,10 +306,10 @@ namespace BTCPayServer.Controllers
                             model.CustomCurrency = invoice.Currency;
                             model.CustomAmount = model.FiatAmount;
                             model.RefundStep = RefundSteps.SelectCustomAmount;
-                            return View(model);
+                            return View("_RefundModal", model);
                         default:
                             ModelState.AddModelError(nameof(model.SelectedRefundOption), "Please select an option before proceeding");
-                            return View(model);
+                            return View("_RefundModal", model);
                     }
 
                     break;
@@ -327,7 +327,7 @@ namespace BTCPayServer.Controllers
 
                     if (!ModelState.IsValid)
                     {
-                        return View(model);
+                        return View("_RefundModal", model);
                     }
 
                     rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
@@ -339,7 +339,7 @@ namespace BTCPayServer.Controllers
                     {
                         ModelState.AddModelError(nameof(model.SelectedRefundOption),
                             $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
-                        return View(model);
+                        return View("_RefundModal", model);
                     }
 
                     createPullPayment = new CreatePullPayment
@@ -357,18 +357,19 @@ namespace BTCPayServer.Controllers
             }
 
             var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken))!.CurrentRefundId = ppId;
-            ctx.Refunds.Add(new RefundData()
+            ctx.Refunds.Add(new RefundData
             {
                 InvoiceDataId = invoice.Id,
                 PullPaymentDataId = ppId
             });
             await ctx.SaveChangesAsync(cancellationToken);
+            
             // TODO: Having dedicated UI later on
             return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
                 "UIPullPayment",

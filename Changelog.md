@@ -8,7 +8,7 @@
 * Various UI fixes (#3702 #3721) @dennisreimann
 * Updated Payout processor Label for setting interval (#3698) @Bangalisch
 * Update validation of crowdfund app settings (#3708) @bolatovumar
-* Fix POS styling (#3713) @ishristov
+* Fix POS styling (#3713) @ishristov 
 
 ### Improvements:
 

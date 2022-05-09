@@ -1,4 +1,4 @@
-@model ListTransactionsViewModel
+﻿@model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
@@ -138,6 +138,7 @@
                                             <div
                                                 class="badge transactionLabel position-relative d-block"
                                                 style="background-color:@label.Color;padding-right: 16px; z-index: 1;"
+                                                data-bs-html="true"
                                                 data-bs-toggle="tooltip"
                                                 title="@label.Tooltip">
                                                 <a asp-route-labelFilter="@label.Text" style="color:@label.TextColor !important;">@label.Text</a>

@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -90,13 +91,27 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip =
-                    $"Paid a payout{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
-                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
-                    ? null
-                    : _linkGenerator.PayoutLink(payoutLabel.WalletId,
-                        payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
-                        request.PathBase);
+                if (payoutLabel.PayoutId is not null)
+                {
+                    coloredLabel.Tooltip =
+                        $"Paid a payout{(payoutLabel.PayoutId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
+                    coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
+                        ? null
+                        : _linkGenerator.PayoutLink(payoutLabel.WalletId,
+                            payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
+                            request.PathBase);
+                }
+                else
+                {
+                    coloredLabel.Tooltip = string.Join("<br/>", payoutLabel.PullPaymentPayouts.Select(pair =>
+                        $"Paid {(pair.Value.Length == 1 ? "a" : pair.Value.Length)} payout{(pair.Value.Length == 1 ? "" : "s")}{(string.IsNullOrEmpty(pair.Key) ? string.Empty : $" of a pull payment ({pair.Key})")}"));
+                    
+                    coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
+                        ? null
+                        : _linkGenerator.PayoutLink(payoutLabel.WalletId,null, PayoutState.Completed, request.Scheme, request.Host,
+                            request.PathBase);
+                }
+                
             }
             return coloredLabel;
         }

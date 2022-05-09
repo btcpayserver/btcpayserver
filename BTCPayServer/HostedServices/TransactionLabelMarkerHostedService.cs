@@ -14,6 +14,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
@@ -82,24 +83,23 @@ namespace BTCPayServer.HostedServices
 
                     foreach (var label in pair.Value)
                     {
-                        walletBlobInfo.LabelColors.TryAdd(label.label.Text, label.color);
+                        walletBlobInfo.LabelColors.AddOrReplace(label.label.Text, label.color);
                     }
 
                     await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    var update = false;
                     foreach (var label in pair.Value)
                     {
-                        if (walletTransactionInfo.Labels.TryAdd(label.label.Text, label.label))
+                        var l = label.label;
+                        if (walletTransactionInfo.Labels.TryGetValue(label.label.Text, out var existingLabel))
                         {
-                            update = true;
+                            l = label.label.Merge(existingLabel);
                         }
+
+                        walletTransactionInfo.Labels.AddOrReplace(label.label.Text, l);
                     }
 
-                    if (update)
-                    {
-                        await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                            pair.Key.ToString(), walletTransactionInfo);
-                    }
+                    await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
+                        pair.Key.ToString(), walletTransactionInfo);
                 }));
             }
         }
@@ -146,12 +146,11 @@ namespace BTCPayServer.HostedServices
             return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
         }
 
-        public static (string color, Label label) PayoutTemplate(string payoutId, string pullPaymentId, string walletId)
+        public static (string color, Label label) PayoutTemplate(Dictionary<string, string[]> pullPaymentToPayouts, string walletId)
         {
             return ("#3F88AF", new PayoutLabel()
             {
-                PayoutId = payoutId,
-                PullPaymentId = pullPaymentId,
+                PullPaymentPayouts = pullPaymentToPayouts,
                 WalletId = walletId
             });
         }

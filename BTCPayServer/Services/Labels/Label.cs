@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using BTCPayServer.Client.Models;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -8,6 +11,11 @@ namespace BTCPayServer.Services.Labels
 
     public abstract class Label : LabelData
     {
+        public virtual Label Merge(LabelData old)
+        {
+            return this;
+        }
+        
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
             if (refLabel.Reference is null && jObj.ContainsKey("id"))
@@ -16,7 +24,7 @@ namespace BTCPayServer.Services.Labels
         }
         static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
         {
-            if (payoutLabel.PayoutId is null)
+            if (payoutLabel.PullPaymentPayouts is null && payoutLabel.PayoutId is null)
                 payoutLabel.PayoutId = jObj["id"].Value<string>();
             FixLegacy(jObj, (Label)payoutLabel);
         }
@@ -111,8 +119,32 @@ namespace BTCPayServer.Services.Labels
             Type = "payout";
             Text = "payout";
         }
+        [Obsolete]
         public string PayoutId { get; set; }
-        public string WalletId { get; set; }
+        [Obsolete]
         public string PullPaymentId { get; set; }
+
+        public Dictionary<string, string[]> PullPaymentPayouts { get; set; } = new();
+        public string WalletId { get; set; }
+
+        public override Label Merge(LabelData old)
+        {
+            if (old is not PayoutLabel payoutLabelOld) return base.Merge(old);
+            payoutLabelOld.PullPaymentPayouts ??= new()
+            {
+                {payoutLabelOld.PullPaymentId ?? "", new[] {payoutLabelOld.PayoutId}}
+            };
+
+            foreach (KeyValuePair<string,string[]> pullPaymentPayout in payoutLabelOld.PullPaymentPayouts)
+            {
+                if (!PullPaymentPayouts.TryGetValue(pullPaymentPayout.Key, out var pullPaymentPayouts))
+                {
+                    pullPaymentPayouts = Array.Empty<string>();
+                }
+                pullPaymentPayouts = pullPaymentPayouts.Concat(pullPaymentPayout.Value).ToArray();
+                PullPaymentPayouts.AddOrReplace(pullPaymentPayout.Key, pullPaymentPayouts);
+            }
+            return base.Merge(old);
+        }
     }
 }

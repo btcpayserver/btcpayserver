@@ -3,60 +3,60 @@
 @{ var invoice = Model.Invoice; }
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 
-<div class="row mb-4">
-    <div class="col-md-12 invoice-payments">
-        <h3 class="mb-0">Invoice Summary</h3>
-        <table class="table table-hover table-responsive-md">
-            <thead class="thead-inverse">
+<div class="invoice-payments table-responsive-xl mb-4">
+    <h3 class="mb-0">Invoice Summary</h3>
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+        <tr>
+            <th>Payment method</th>
+            @if (Model.ShowAddress)
+            {
+            <th>Address</th>
+            }
+            <th class="text-end">Rate</th>
+            <th class="text-end">Paid</th>
+            <th class="text-end">Due</th>
+            @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
+            {
+                <th class="text-end">Overpaid</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var payment in invoice.CryptoPayments)
+        {
             <tr>
-                <th>Payment method</th>
+                <td>@payment.PaymentMethod</td>
                 @if (Model.ShowAddress)
                 {
-                <th>Address</th>
+                    <td title="@payment.Address">
+                        <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
+                    </td>
                 }
-                <th class="text-end">Rate</th>
-                <th class="text-end">Paid</th>
-                <th class="text-end">Due</th>
+                <td class="text-end">@payment.Rate</td>
+                <td class="text-end">@payment.Paid</td>
+                <td class="text-end">@payment.Due</td>
                 @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
                 {
-                    <th class="text-end">Overpaid</th>
+                    <td class="text-end">@payment.Overpaid</td>
                 }
             </tr>
-            </thead>
-            <tbody>
-            @foreach (var payment in invoice.CryptoPayments)
+            var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();
+            var name = details.GetAdditionalDataPartialName();
+            if (!string.IsNullOrEmpty(name))
             {
-                <tr>
-                    <td>@payment.PaymentMethod</td>
-                    @if (Model.ShowAddress)
-                    {
-                        <td title="@payment.Address">
-                            <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
-                        </td>
-                    }
-                    <td class="text-end">@payment.Rate</td>
-                    <td class="text-end">@payment.Paid</td>
-                    <td class="text-end">@payment.Due</td>
-                    @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
-                    {
-                        <td class="text-end">@payment.Overpaid</td>
-                    }
-                </tr>
-                var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();
-                var name = details.GetAdditionalDataPartialName();
-                if (!string.IsNullOrEmpty(name))
-                {
-                    <partial name="@name" model="@details" />
-                }
+                <partial name="@name" model="@details" />
             }
-            </tbody>
-        </table>
-    </div>
+        }
+        </tbody>
+    </table>
 </div>
 @{
     var grouped = invoice.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);    
 }
 @foreach (var paymentGroup in grouped)
 {
-    <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
+    <div class="table-responsive-xl">
+        <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
+    </div>
 }

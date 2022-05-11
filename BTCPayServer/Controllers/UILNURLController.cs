@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -433,6 +434,20 @@ namespace BTCPayServer
             }
             if (payerData is not null)
             {
+                if (payerData.TryGetValue("auth", out var authPayerDataField))
+                {
+
+                    if (authPayerDataField is LNURLPayRequest.AuthPayerDataField authPayerDataField2)
+                    {
+                        authPayerDataField2.K1 =  Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
+                        payerData["auth"] = authPayerDataField2;
+                    }
+                    else
+                    {
+                        payerData["auth"].AdditionalData ??= new Dictionary<string, JToken>();
+                        payerData["auth"].AdditionalData["k1"] = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
+                    }
+                }
                 paymentMethodDetails.PayerDataFields = payerData;
                 updatepmd = true;
             }
@@ -486,7 +501,6 @@ namespace BTCPayServer
             Dictionary<string, JToken> payerDataParsed = null;
             if (payerData is not null)
             {
-                // payerData = HttpUtility.UrlDecode(payerData);
                 try
                 {
                     payerDataParsed = JObject.Parse(payerData).ToObject<Dictionary<string, JToken>>();

@@ -30,13 +30,13 @@
     </script>
 }
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 
 @if (Context.Request.PathBase.ToString() != string.Empty)
 {
     <div class="alert alert-warning" role="alert">
-        Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br /><br />
-        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br /><br />
+        Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br/><br/>
+        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br/><br/>
         If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.
     </div>
 }
@@ -53,9 +53,9 @@
     @{
         var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
         var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || Model.Add?.Min != null || Model.Add?.Max != null;
-     }
-    
-    <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">
+    }
+
+    <div class="collapse @(showAddForm ? "show" : "")" id="AddAddress">
         <div class="form-group pt-2">
             <label asp-for="Add.Username" class="form-label"></label>
             <div class="input-group">
@@ -90,22 +90,25 @@
                 </div>
             </div>
             <div class="row">
-                
-                <div class="col-12 col-sm-auto">
+
+                <div class="col-md-6 col-sm-12 ">
                     <div class="form-group">
+
                         <label asp-for="Add.PayerData" class="form-label"></label>
                         <textarea asp-for="Add.PayerData" class="form-control" ></textarea>
                         <span asp-validation-for="Add.PayerData" class="text-danger"></span>
                     </div>
+                    
+                        <partial name="PayerDataEditor" model="@(nameof(Model.Add) + "_" + nameof(Model.Add.PayerData), "LUD-18 Payer Data")"/>
                 </div>
             </div>
         </div>
-    
+
         <div class="form-group">
             <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
         </div>
     </div>
-    
+
     @if (Model.Items.Any())
     {
         <div class="row">
@@ -130,7 +133,7 @@
                         <tr>
                             <td>
                                 <div class="input-group" data-clipboard="@address">
-                                    <input type="text" class="form-control copy-cursor lightning-address-value"  readonly="readonly" value="@address"/>
+                                    <input type="text" class="form-control copy-cursor lightning-address-value" readonly="readonly" value="@address"/>
                                     <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
                                 </div>
 
@@ -150,14 +153,15 @@
                                 }
                                 @if (!string.IsNullOrEmpty(Model.Items[index].PayerData))
                                 {
-                                   
                                     var pos = JsonConvert.DeserializeObject<Dictionary<string, LNURLPayRequest.PayerDataField>>(Model.Items[index].PayerData);
-                                    <a href="#" data-bs-trigger="focus" data-bs-html="true" data-bs-toggle="popover" title="@address Payer Data" data-bs-content-selector="#@(index)lud18">Payer data configured</a>
+                                    <a href="#" data-bs-trigger="focus" data-bs-html="true" data-bs-toggle="popover" title="Payer Data" data-bs-content-selector="#@(index)lud18">Payer data configured</a>
                                     <div style="display: none;" id="@(index)lud18">
-                                        @Json.Serialize(pos, new JsonSerializerSettings()
-                                        {
-                                            Formatting =  Formatting.Indented
-                                        });
+                                        <ul>
+                                            @foreach (var i in pos)
+                                            {
+                                                <li>@i.Key - @(i.Value.Mandatory ? "Required" : "Optional")</li>
+                                            }
+                                        </ul>
                                     </div>
                                 }
                             </td>
@@ -182,4 +186,4 @@
     }
 </form>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))"/>

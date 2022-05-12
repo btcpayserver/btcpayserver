@@ -1,0 +1,149 @@
+@model (string payerDataId, string title)
+
+<div id="payer-data-editor-app" class="card" v-cloak>
+    <div class="card-header">Payer data (LUD-18)</div>
+    <table class="card-body text-center">
+        <tr >
+            <th>Field</th>
+            <th>Mandatory</th>
+            <th>Action</th>
+        </tr>
+        <tr v-for="(item, index) of items" v-bind:key="item.key">
+            <td  class="p-2">{{item.key}}</td>
+            <td  class="p-2" >{{item.mandatory? "Required" : "Optional"}}</td>
+            <td  class="p-2">
+                <a href="#" v-on:click="removeItem(index)" class="btn btn-outline-secondary">Remove </a>
+            </td>
+        </tr>
+        <tr v-if="errors.length >0">
+            <td colspan="3"  class="p-2">
+                <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="p-2">
+                <input type="text" placeholder="field" class="form-control form-control-sm" v-model="editingItem.key"/>
+            </td>
+            <td class="p-2">
+                <input type="checkbox" class="form-check-input" v-model="editingItem.mandatory" />
+            </td>
+            <td  class="p-2">
+                <a href="#" v-on:click="saveEditingItem" class="btn btn-outline-primary btn-sm">Add </a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    new Vue({
+        el: '#payer-data-editor-app',
+        data: {
+            items: [],
+            editingItem: { key:"", mandatory: false},
+errors:[],
+            elementId: "@Model.payerDataId"
+        },
+        mounted: function() {
+            this.loadJson();
+            this.toggleTemplateElement();
+        },
+        methods: {
+            toggleTemplateElement: function(){
+                this.getInputElement().parent().toggle();
+            },
+            getInputElement : function(){ return $("#" + this.elementId); },
+            loadJson: function(){
+                let result = [];
+                let template = this.getInputElement().val().trim();
+                if (template){
+                   const json = JSON.parse(template);
+                   for (const jsonKey in json) {
+                        result.push(Object.assign({}, {key:json}, json[jsonKey])); 
+                   }
+                }
+                this.items = result;
+            },
+            toJson: function(){
+                    let template = '';
+                    if (this.items.length > 0){
+                        template = {};
+                        for (const item of this.items) {
+                            let  clone = {...item};
+                            const key = item.key;
+                            delete  clone.key;
+                            template[key] = clone;
+                        }
+                    }
+                    this.getInputElement().val(JSON.stringify(template));
+            },
+            removeItem: function(index){
+                this.items.splice(index,1);
+                this.toJson();
+            },
+            clearEditingItem: function(){
+                this.editingItem = { key:"", mandatory: false};
+                this.errors = [];
+            },
+            validate: function(){
+                this.errors = [];
+                if (this.editingItem.key && this.editingItem.key.trim() != "") {
+                    var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.key) === this.editingItem.key;});
+                    if( matchedId>= 0 && matchedId != this.editingItem.index)
+                        this.errors.push("You cannot have multiple items with the same key");
+                    
+                    if(this.editingItem.key.startsWith("- ")){
+                        this.errors.push("Id cannot start with \"- \"");
+                    }                  
+                }   else{
+                    this.errors.push("Key is required");    
+                }
+                
+                return this.errors.length === 0;
+            },
+            saveEditingItem: function(){
+                if(!this.validate()){
+                    return;
+                }
+                this.editingItem = this.escape(this.editingItem);
+                
+                if(this.editingItem.index == null){
+                    this.items.push({...this.editingItem});
+                }else{
+                    this.items.splice(this.editingItem.index,1, {...this.editingItem});
+                }
+                this.clearEditingItem();
+                this.toJson();
+            },
+            escape: function(item) {
+                // for(var k in item){
+                //     if(k !== "paymentMethods" && k!=="id"){
+                //         item[k] = $('<div/>').text(item[k]).html();
+                //     }
+                // }
+                return item;
+            },
+            unEscape: function(item){
+                // for(var k in item){
+                //     if(k !== "paymentMethods" && k!=="id" && k !== "disabled"){
+                //         item[k] = this.unEscapeKey(item[k]);
+                //     }
+                // }
+                return item;
+            },
+            unEscapeKey : function(k){
+                // Without this check a `false` boolean value will always be returned as an empty string
+                if (k === false) {
+                    return "false";
+                }
+
+                return $('<div/>').html(k).text();
+            }
+        }
+    });
+});
+
+
+</script>

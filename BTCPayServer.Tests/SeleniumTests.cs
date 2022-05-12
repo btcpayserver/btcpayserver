@@ -968,7 +968,7 @@ namespace BTCPayServer.Tests
             server.Done();
 
             TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();

@@ -344,6 +344,7 @@
                                     <a asp-action="WebhookDelivery"
                                        asp-route-invoiceId="@Model.Id"
                                        asp-route-deliveryId="@delivery.Id"
+                                       class="delivery-content"
                                        target="_blank">
                                         @delivery.Id
                                     </a>
@@ -365,7 +366,7 @@
                             <td class="text-end">
                                 <button id="#redeliver-@delivery.Id"
                                         type="submit"
-                                        class="btn btn-link p-0">
+                                        class="btn btn-link p-0 redeliver">
                                     Redeliver
                                 </button>
                             </td>

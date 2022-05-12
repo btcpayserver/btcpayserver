@@ -251,7 +251,8 @@ namespace BTCPayServer.Controllers
                         ResetIn = period?.End is DateTimeOffset nr ? ZeroIfNegative(nr - now).TimeString() : null,
                         EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null,
                     },
-                    Archived = pp.Archived
+                    Archived = pp.Archived,
+                    AutoApproveClaims = ppBlob.AutoApproveClaims
                 });
             }
             return View(vm);

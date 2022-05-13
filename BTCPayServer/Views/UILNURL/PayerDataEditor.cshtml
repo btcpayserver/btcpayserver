@@ -22,7 +22,9 @@
         </tr>
         <tr>
             <td class="p-2">
-                <input type="text" placeholder="field" class="form-control form-control-sm" v-model="editingItem.key"/>
+                <select class="form-select" v-model="editingItem.key">
+                    <option v-for="option in options" :value="option">{{option}}</option>
+                </select>
             </td>
             <td class="p-2">
                 <input type="checkbox" class="form-check-input" v-model="editingItem.mandatory" />
@@ -44,6 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
             items: [],
             editingItem: { key:"", mandatory: false},
 errors:[],
+            options: [ "name", "email", "pubkey", "auth", "identifier"],
             elementId: "@Model.payerDataId"
         },
         mounted: function() {
@@ -58,10 +61,16 @@ errors:[],
             loadJson: function(){
                 let result = [];
                 let template = this.getInputElement().val().trim();
+                this.options = [ "name", "email", "pubkey", "auth", "identifier"];
                 if (template){
                    const json = JSON.parse(template);
                    for (const jsonKey in json) {
-                        result.push(Object.assign({}, {key:json}, json[jsonKey])); 
+                       const i = options.indexOf(jsonKey);
+                       if (i === -1){
+                            continue;
+                       }
+                       options.splice(i, 1);
+                       result.push(Object.assign({}, {key:jsonKey}, json[jsonKey])); 
                    }
                 }
                 this.items = result;
@@ -89,15 +98,10 @@ errors:[],
             },
             validate: function(){
                 this.errors = [];
-                if (this.editingItem.key && this.editingItem.key.trim() != "") {
-                    var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.key) === this.editingItem.key;});
-                    if( matchedId>= 0 && matchedId != this.editingItem.index)
-                        this.errors.push("You cannot have multiple items with the same key");
+                if (this.editingItem.key && this.options.indexOf(this.editingItem.key) === -1) {
                     
-                    if(this.editingItem.key.startsWith("- ")){
-                        this.errors.push("Id cannot start with \"- \"");
-                    }                  
-                }   else{
+                        this.errors.push("key is not valid");              
+                }   else if (!this.editingItem.key){
                     this.errors.push("Key is required");    
                 }
                 
@@ -114,6 +118,8 @@ errors:[],
                 }else{
                     this.items.splice(this.editingItem.index,1, {...this.editingItem});
                 }
+                const i = this.options.indexOf(this.editingItem.key);
+                this.options.splice(i, 1);
                 this.clearEditingItem();
                 this.toJson();
             },

@@ -1,4 +1,5 @@
 ﻿@using BTCPayServer.Controllers
+@using Newtonsoft.Json
 @model BTCPayServer.Payments.LNURLPayPaymentMethodDetails
 
 @if (!string.IsNullOrEmpty(Model.ProvidedComment))
@@ -18,9 +19,9 @@
     </tr>
 }
 
-@if (!string.IsNullOrEmpty(Model.PayerData))
+@if (Model.ProvidedPayerData is not null)
 {
-    var pos = UIInvoiceController.PosDataParser.ParsePosData(Model.PayerData);
+    var pos = UIInvoiceController.PosDataParser.ParsePosData(JsonConvert.SerializeObject(Model.ProvidedPayerData));
     <tr>
         <td colspan="100% bg-tile">
             Payer Data

@@ -20,8 +20,8 @@ namespace BTCPayServer.Payments
 
         public string ProvidedComment { get; set; }
         public string ConsumedLightningAddress { get; set; }
-        public string PayerData { get; set; }
-        public Dictionary<string, LNURLPayRequest.PayerDataField> PayerDataFields { get; set; }
+        public LNURLPayRequest.LUD18PayerDataResponse ProvidedPayerData { get; set; }
+        public LNURLPayRequest.LUD18PayerData PayerData { get; set; }
 
         public override PaymentType GetPaymentType()
         {

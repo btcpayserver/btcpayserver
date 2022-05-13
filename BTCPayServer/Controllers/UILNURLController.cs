@@ -327,10 +327,10 @@ namespace BTCPayServer
             }
 
             var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
-            Dictionary<string, LNURL.LNURLPayRequest.PayerDataField> data = null;
+            LNURL.LNURLPayRequest.LUD18PayerData data = null;
             if (!string.IsNullOrEmpty(blob.PayerData))
             {
-                data = JObject.Parse(blob.PayerData).ToObject<Dictionary<string, LNURL.LNURLPayRequest.PayerDataField>>();
+                data = JObject.Parse(blob.PayerData).ToObject<LNURL.LNURLPayRequest.LUD18PayerData>();
             }
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
                 () => (username, null, null, null, null, true, data));
@@ -339,7 +339,7 @@ namespace BTCPayServer
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice, Dictionary<string,  LNURL.LNURLPayRequest.PayerDataField> payerData)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice, LNURL.LNURLPayRequest.LUD18PayerData payerData)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -373,7 +373,7 @@ namespace BTCPayServer
                 return NotFound("LNURL or Lightning payment method disabled");
             }
 
-            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice, Dictionary<string,  LNURL.LNURLPayRequest.PayerDataField> payerData) =
+            (string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice,  LNURL.LNURLPayRequest.LUD18PayerData payerData) =
                 (internalDetails ?? (() => (null, null, null, null, null, null, null)))();
 
             if ((anyoneCanInvoice ?? blob.AnyoneCanInvoice) is false)
@@ -434,21 +434,11 @@ namespace BTCPayServer
             }
             if (payerData is not null)
             {
-                if (payerData.TryGetValue("auth", out var authPayerDataField))
+                if (payerData.Auth is not null)
                 {
-
-                    if (authPayerDataField is LNURLPayRequest.AuthPayerDataField authPayerDataField2)
-                    {
-                        authPayerDataField2.K1 =  Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
-                        payerData["auth"] = authPayerDataField2;
-                    }
-                    else
-                    {
-                        payerData["auth"].AdditionalData ??= new Dictionary<string, JToken>();
-                        payerData["auth"].AdditionalData["k1"] = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
-                    }
+                    payerData.Auth.K1 =  Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
                 }
-                paymentMethodDetails.PayerDataFields = payerData;
+                paymentMethodDetails.PayerData = payerData;
                 updatepmd = true;
             }
             if (updatepmd)
@@ -498,12 +488,12 @@ namespace BTCPayServer
             if (comment is not null)
                 comment = comment.Truncate(2000);
 
-            Dictionary<string, JToken> payerDataParsed = null;
+            LNURL.LNURLPayRequest.LUD18PayerDataResponse payerDataParsed = null;
             if (payerData is not null)
             {
                 try
                 {
-                    payerDataParsed = JObject.Parse(payerData).ToObject<Dictionary<string, JToken>>();
+                    payerDataParsed = JObject.Parse(payerData).ToObject<LNURL.LNURLPayRequest.LUD18PayerDataResponse>();
                 }
                 catch (Exception e)
                 {
@@ -557,7 +547,7 @@ namespace BTCPayServer
                 {
                     lnurlMetadata.Add(new[] {"text/identifier", paymentMethodDetails.ConsumedLightningAddress});
                 }
-                if (paymentMethodDetails.PayerDataFields is not null && payerDataParsed is null ||  !LNURLPayRequest.VerifyPayerData(paymentMethodDetails.PayerDataFields, payerDataParsed))
+                if (paymentMethodDetails.PayerData is not null && payerDataParsed is null ||  !LNURLPayRequest.VerifyPayerData(paymentMethodDetails.PayerData, payerDataParsed))
                 {
                     return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Payer data was invalid."});
                 }
@@ -648,7 +638,7 @@ namespace BTCPayServer
                         paymentMethodDetails.ProvidedComment = comment;
                     }
                     
-                    paymentMethodDetails.PayerData = payerData;
+                    paymentMethodDetails.ProvidedPayerData = payerDataParsed;
 
                     lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
                     await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);

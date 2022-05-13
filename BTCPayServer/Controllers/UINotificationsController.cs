@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             await _notificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
-            return Redirect(returnUrl);
+            return LocalRedirect(returnUrl);
         }
 
         private bool ValidUserClaim(out string userId)

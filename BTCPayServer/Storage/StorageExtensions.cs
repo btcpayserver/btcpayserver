@@ -5,8 +5,10 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
+using BTCPayServer.Storage.Services.Providers.AmazonS3Storage;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
+using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -25,10 +27,10 @@ namespace BTCPayServer.Storage
             serviceCollection.AddSingleton<StoredFileRepository>();
             serviceCollection.AddSingleton<FileService>();
             serviceCollection.AddSingleton<IFileService>(provider => provider.GetRequiredService<FileService>());
-            //            serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
+                        serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, AzureBlobStorageFileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();
-            //            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
+                        serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
         }
 
         public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)

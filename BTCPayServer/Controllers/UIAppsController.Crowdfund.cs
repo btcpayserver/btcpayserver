@@ -88,6 +88,10 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(vm.PerksTemplate), "Invalid template");
             }
+            if (vm.TargetAmount is decimal v && v == 0.0m)
+            {
+                vm.TargetAmount = null;
+            }
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
             {

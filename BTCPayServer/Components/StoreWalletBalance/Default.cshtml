@@ -1,16 +1,34 @@
 @using BTCPayServer.Services.Wallets
 @model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
 
+@{
+    var store = ViewContext.HttpContext.GetStoreData();
+    var storeBlob = store.GetStoreBlob();
+}
+
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <h6 class="mb-2">Wallet Balance</h6>
-    <header class="mb-3">
+    @if (Model.CryptoCode == "BTC")
+    {
+    <div class="form-check form-switch" id="defaultCurrencyToggle">
+                <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" onclick="renderBalance()"/>
+                <h6 class="d-inline form-check-label mb-3"> @Model.CryptoCode / @storeBlob.DefaultCurrency </h6>
+    </div>
+    }
+
+    <header class="mb-3">        
 		@if (Model.Balance is not null)
 		{
-			<div class="balance">
-				<h3 class="d-inline-block me-1">@Model.Balance</h3>
+         <div class="balance" id="balance-@Model.CryptoCode"> 
+                <h3 class="d-inline-block me-1">@Model.Balance</h3>
 				<span class="text-secondary fw-semibold">@Model.CryptoCode</span>
-			</div>
+        </div>
+        <div class="balance" id="balance-@storeBlob.DefaultCurrency">
+                <h3 class="d-inline-block" id="DefaultCurrency"> </h3>
+                <span class="text-secondary fw-semibold">@storeBlob.DefaultCurrency</span> 
+        </div>   
 		}
+       
 		<div class="btn-group mt-1" role="group" aria-label="Filter">
             <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
             <label class="btn btn-link" for="filter-week">1W</label>
@@ -22,7 +40,25 @@
     </header>
     <div class="ct-chart ct-major-eleventh"></div>
     <script>
+        const currency = "@storeBlob.DefaultCurrency".toLowerCase()
+        element = document.getElementById("balance-@Model.CryptoCode")
+        element2 = document.getElementById("balance-@storeBlob.DefaultCurrency")
+        async function renderBalance(){
+            if(document.getElementById("flexSwitchCheckDefault").checked == true){
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${currency}`)
+                const json = await response.json()
+                var price = json["bitcoin"]["usd"]
+                document.getElementById("DefaultCurrency").innerText = (Math.round((price * @Model.Balance) * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                element.style.display = 'none' 
+                element2.style.display = 'block'
+            }else {    
+                element.style.display = 'block'  
+                element2.style.display = 'none'
+            }
+        }
+        
         (function () {
+            document.getElementById("balance-@storeBlob.DefaultCurrency").style.display = 'none'
             const id = 'StoreWalletBalance-@Model.Store.Id';
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
             const render = data => {

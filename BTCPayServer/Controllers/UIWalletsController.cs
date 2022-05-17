@@ -1280,7 +1280,6 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{walletId}/export")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         public async Task<IActionResult> Export(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, 
             string format, string labelFilter = null)

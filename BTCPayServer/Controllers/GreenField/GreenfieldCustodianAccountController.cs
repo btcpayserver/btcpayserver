@@ -90,9 +90,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private async Task<CustodianAccountDataClient> ToModel(CustodianAccountData custodianAccount, bool includeAsset, CancellationToken cancellationToken)
         {
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
             var r = includeAsset ? new CustodianAccountResponse() : new CustodianAccountDataClient();
             r.Id = custodianAccount.Id;
-            r.CustodianCode = custodianAccount.CustodianCode;
+            r.CustodianCode = custodian.Code;
             r.Name = custodianAccount.Name;
             r.StoreId = custodianAccount.StoreId;
             if (await CanSeeCustodianAccountConfig())

@@ -1518,11 +1518,9 @@ namespace BTCPayServer.Tests
             var lnurlResponse2 = await fetchedReuqest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
                 network, new HttpClient(), comment: "lol2");
             Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
-            await Assert.ThrowsAnyAsync<LightningRPCException>(async () =>
-            {
-                // Initial bolt was cancelled
-                await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
-            });
+            // Initial bolt was cancelled
+            var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
+            Assert.Equal(PayResult.Error, res.Result);
 
             await s.Server.CustomerLightningD.Pay(lnurlResponse2.Pr);
             await TestUtils.EventuallyAsync(async () =>

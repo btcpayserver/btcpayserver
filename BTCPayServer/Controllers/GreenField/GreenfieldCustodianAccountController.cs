@@ -16,14 +16,28 @@ using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
+    public class CustodianExceptionFilter : Attribute, IExceptionFilter
+    {
+        public void OnException(ExceptionContext context)
+        {
+            if (context.Exception is CustodianApiException ex)
+            {
+                context.Result = new ObjectResult(new GreenfieldAPIError(ex.Code, ex.Message)) { StatusCode = ex.HttpStatus };
+                context.ExceptionHandled = true;
+            }
+        }
+    }
+
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
+    [CustodianExceptionFilter]
     public class GreenfieldCustodianAccountController : ControllerBase
     {
         private readonly CustodianAccountRepository _custodianAccountRepository;
@@ -44,33 +58,24 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ListCustodianAccount(string storeId, [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
-            var custodianAccounts = _custodianAccountRepository.FindByStoreId(storeId);
-            var r = custodianAccounts.Result;
+            var custodianAccounts = await _custodianAccountRepository.FindByStoreId(storeId);
 
-            CustodianAccountDataClient[] responses = new CustodianAccountDataClient[r.Length];
+            CustodianAccountDataClient[] responses = new CustodianAccountDataClient[custodianAccounts.Length];
 
-            for (int i = 0; i < r.Length; i++)
+            for (int i = 0; i < custodianAccounts.Length; i++)
             {
-                var custodianAccountData = r[i];
+                var custodianAccountData = custodianAccounts[i];
                 if (assetBalances)
                 {
-                    var custodianAccountResponse = ToModelWithAssets(custodianAccountData);
-                    var custodianCode = custodianAccountResponse.CustodianCode;
-                    var custodian = GetCustodianByCode(custodianCode);
-                    try
-                    {
-                        var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config, cancellationToken);
-                        custodianAccountResponse.AssetBalances = balances;
-                        responses[i] = custodianAccountResponse;
-                    }
-                    catch (CustodianApiException e)
-                    {
-                        return CreateCustodianApiError(e);
-                    }
+                    var custodianAccountResponse = await ToModelWithAssets(custodianAccountData);
+                    var custodian = GetCustodianByCode(custodianAccountResponse.CustodianCode);
+                    var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config, cancellationToken);
+                    custodianAccountResponse.AssetBalances = balances;
+                    responses[i] = custodianAccountResponse;
                 }
                 else
                 {
-                    var custodianAccountResponse = ToModel(custodianAccountData);
+                    var custodianAccountResponse = await ToModel(custodianAccountData);
                     responses[i] = custodianAccountResponse;
                 }
             }
@@ -86,12 +91,10 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
             var custodianAccountData = await GetCustodian(storeId, accountId);
-            var custodianAccount = ToModelWithAssets(custodianAccountData);
+            var custodianAccount = await ToModelWithAssets(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {
-                // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
-                var custodianCode = custodianAccount.CustodianCode;
-                var custodian = GetCustodianByCode(custodianCode);
+                var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
                 var balances = await custodian.GetAssetBalancesAsync(custodianAccount.Config, cancellationToken);
                 custodianAccount.AssetBalances = balances;
             }
@@ -99,15 +102,15 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(custodianAccount);
         }
 
-        private bool CanSeeCustodianAccountConfig()
+        private async Task<bool> CanSeeCustodianAccountConfig()
         {
-            return _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanManageCustodianAccounts)).Result.Succeeded;
+            return (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanManageCustodianAccounts))).Succeeded;
         }
 
-        private CustodianAccountResponse ToModelWithAssets(CustodianAccountData custodianAccount)
+        private async Task<CustodianAccountResponse> ToModelWithAssets(CustodianAccountData custodianAccount)
         {
             var r = new CustodianAccountResponse { Id = custodianAccount.Id, CustodianCode = custodianAccount.CustodianCode, StoreId = custodianAccount.StoreId };
-            if (CanSeeCustodianAccountConfig())
+            if (await CanSeeCustodianAccountConfig())
             {
                 // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
                 r.Config = custodianAccount.GetBlob().config;
@@ -116,10 +119,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return r;
         }
 
-        private CustodianAccountDataClient ToModel(CustodianAccountData custodianAccount)
+        private async Task<CustodianAccountDataClient> ToModel(CustodianAccountData custodianAccount)
         {
             var r = new CustodianAccountDataClient { Id = custodianAccount.Id, Name = custodianAccount.Name, CustodianCode = custodianAccount.CustodianCode, StoreId = custodianAccount.StoreId };
-            if (CanSeeCustodianAccountConfig())
+            if (await CanSeeCustodianAccountConfig())
             {
                 // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
                 r.Config = custodianAccount.GetBlob().config;
@@ -186,8 +189,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Ok();
             }
 
-            return this.CreateAPIError(404, "custodian-account-not-found",
-                $"Could not find the custodian account");
+            throw CustodianAccountNotFound();
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}")]
@@ -201,25 +203,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanDeposit depositableCustodian)
             {
-                try
-                {
-                    var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
-                    return Ok(result);
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "deposit-payment-method-not-supported",
                 $"Deposits to \"{custodian.GetName()}\" are not supported using \"{paymentMethod}\".");
-        }
-
-        private IActionResult CreateCustodianApiError(CustodianApiException exception)
-        {
-            var r = this.CreateAPIError(exception.HttpStatus, exception.Code, exception.Message);
-            return r;
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market")]
@@ -259,17 +248,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     
                 }
 
-                try
-                {
-                    var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
+                var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
                         custodianAccount.GetBlob().config, cancellationToken);
 
-                    return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }
 
             return this.CreateAPIError(400, "market-trade-not-supported",
@@ -298,15 +280,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                try
-                {
-                    var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
-                    return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
+                return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
             }
 
             return this.CreateAPIError(400, "getting-quote-not-supported",
@@ -323,20 +298,13 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                try
+                var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config, cancellationToken);
+                if (result == null)
                 {
-                    var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config, cancellationToken);
-                    if (result == null)
-                    {
-                        return this.CreateAPIError(404, "trade-not-found",
-                            $"Could not find the the trade with ID {tradeId} on {custodianAccount.Name}");
-                    }
-                    return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
+                    return this.CreateAPIError(404, "trade-not-found",
+                        $"Could not find the the trade with ID {tradeId} on {custodianAccount.Name}");
                 }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }
 
             return this.CreateAPIError(400, "fetching-trade-info-not-supported",
@@ -355,18 +323,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                try
-                {
-                    var withdrawResult =
+                var withdrawResult =
                         await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
-                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
-                    return Ok(result);
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "withdrawals-not-supported",
@@ -378,8 +339,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var cust = await _custodianAccountRepository.FindById(storeId, accountId);
             if (cust is null)
-                throw new JsonHttpException(this.CreateAPIError(404, "custodian-account-not-found", "Could not find the custodian account"));
+                throw CustodianAccountNotFound();
             return cust;
+        }
+
+        JsonHttpException CustodianAccountNotFound()
+        {
+            return new JsonHttpException(this.CreateAPIError(404, "custodian-account-not-found", "Could not find the custodian account"));
         }
 
         ICustodian GetCustodianByCode(string custodianCode)
@@ -396,26 +362,18 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken cancellationToken = default)
         {
             var custodianAccount = await GetCustodian(storeId, accountId);
-            var allCustodians = _custodianRegistry;
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                try
+                var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
+                if (withdrawResult == null)
                 {
-                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
-                    if (withdrawResult == null)
-                    {
-                        return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
-                    }
-                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
-                    return Ok(result);
+                    return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
                 }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "fetching-withdrawal-info-not-supported",

@@ -3,7 +3,7 @@
         "/api/v1/custodians": {
             "get": {
                 "tags": [
-                    "Custodians"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "List supported custodians",
                 "description": "List all supported custodians for the BTCPay instance. You can install plugins to add more custodians.",
@@ -34,7 +34,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts": {
             "get": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "List store custodian accounts",
                 "parameters": [
@@ -79,7 +79,7 @@
             },
             "post": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Add a custodial account to a store.",
                 "description": "Add a custodial account to a store.",
@@ -123,7 +123,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}": {
             "get": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Get store custodian account",
                 "parameters": [
@@ -174,7 +174,7 @@
             },
             "put": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Update custodial account",
                 "description": "Update custodial account",
@@ -216,7 +216,7 @@
             },
             "delete": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Delete store custodian account",
                 "description": "Deletes a custodial account",
@@ -233,7 +233,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote": {
             "get": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Get quote for trading one asset for another",
                 "description": "Get the current bid and ask price for converting one asset into another.",
@@ -306,7 +306,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market": {
             "post": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Trade one asset for another",
                 "description": "Trade one asset for another using a market order (=instant purchase with instant result or failure). A suitable asset pair will automatically be selected. If no asset pair is available, the call will fail.",
@@ -371,7 +371,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}": {
             "get": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Get a deposit address for custodian",
                 "description": "Get a new deposit address for the custodian using the specified payment method (network + crypto code).",
@@ -445,7 +445,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals": {
             "post": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Withdraw to store wallet",
                 "description": "Withdraw an asset to your store wallet.",
@@ -531,7 +531,7 @@
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
             "post": {
                 "tags": [
-                    "Store Custodian Account"
+                    "Custodians (Experimental)"
                 ],
                 "summary": "Get withdrawal info",
                 "description": "Get the details about a past withdrawal.",
@@ -1034,10 +1034,7 @@
     },
     "tags": [
         {
-            "name": "Custodians"
-        },
-        {
-            "name": "Store Custodian Account"
+            "name": "Custodians (Experimental)"
         }
     ]
 }

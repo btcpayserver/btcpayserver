@@ -2489,7 +2489,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Equal(1, custodians.Count());
+            Assert.Single(custodians);
         }
 
 

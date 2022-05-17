@@ -1289,16 +1289,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
-            var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var input = transactions.UnconfirmedTransactions.Transactions
                 .Concat(transactions.ConfirmedTransactions.Transactions)
                 .OrderByDescending(t => t.Timestamp)
                 .ToList();
-            var export = new TransactionsExport(wallet, walletBlob, walletTransactionsInfo);
+            var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);
 
             var cd = new ContentDisposition

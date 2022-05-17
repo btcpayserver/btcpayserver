@@ -32,8 +32,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private CustodianData ToModel(ICustodian custodian)
         {
             var result = new CustodianData();
-            result.Code = custodian.GetCode();;
-            result.Name = custodian.GetName();
+            result.Code = custodian.Code;
+            result.Name = custodian.Name;
 
             if (custodian is ICanTrade tradableCustodian)
             {

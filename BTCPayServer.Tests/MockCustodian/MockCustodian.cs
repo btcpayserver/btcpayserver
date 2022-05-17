@@ -31,14 +31,14 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public static readonly decimal BalanceUSD = new decimal(1500.55);
     public static readonly decimal BalanceEUR = new decimal(1235.15);
 
-    public string GetCode()
+    public string Code
     {
-        return "mock";
+        get => "mock";
     }
 
-    public string GetName()
+    public string Name
     {
-        return "MOCK Exchange";
+        get => "MOCK Exchange";
     }
 
     public Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken)
@@ -59,7 +59,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             return Task.FromResult(r);
         }
 
-        throw new CustodianFeatureNotImplementedException($"Only BTC-OnChain is implemented for {this.GetName()}");
+        throw new CustodianFeatureNotImplementedException($"Only BTC-OnChain is implemented for {this.Name}");
     }
 
     public string[] GetDepositablePaymentMethods()
@@ -92,7 +92,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         if (qty != TradeQtyBought)
         {
-            throw new InsufficientFundsException($"With {GetName()}, you can only buy {TradeQtyBought} {TradeToAsset} with {TradeFromAsset} and nothing else.");
+            throw new InsufficientFundsException($"With {Name}, you can only buy {TradeQtyBought} {TradeToAsset} with {TradeFromAsset} and nothing else.");
         }
 
         return Task.FromResult(GetMarketTradeResult());
@@ -138,10 +138,10 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 return Task.FromResult(CreateWithdrawResult());
             }
 
-            throw new InsufficientFundsException($"{GetName()} only supports withdrawals of {WithdrawalAmount}");
+            throw new InsufficientFundsException($"{Name} only supports withdrawals of {WithdrawalAmount}");
         }
 
-        throw new CannotWithdrawException(this, paymentMethod, $"Only {WithdrawalPaymentMethod} can be withdrawn from {GetName()}");
+        throw new CannotWithdrawException(this, paymentMethod, $"Only {WithdrawalPaymentMethod} can be withdrawn from {Name}");
     }
 
     public Task<WithdrawResult> GetWithdrawalInfoAsync(string paymentMethod, string withdrawalId, JObject config, CancellationToken cancellationToken)

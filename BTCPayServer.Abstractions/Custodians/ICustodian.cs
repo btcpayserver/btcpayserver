@@ -10,12 +10,12 @@ public interface ICustodian
     /**
      * Get the unique code that identifies this custodian.
      */
-    public string GetCode();
+    string Code { get; }
     
-    public string GetName();
+    string Name { get; }
 
     /**
      * Get a list of assets and their qty in custody.
      */
-    public Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken);
+    Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken);
 }

@@ -7,7 +7,7 @@ public class CannotWithdrawException : CustodianApiException
     {
     }
 
-    public CannotWithdrawException(ICustodian custodian, string paymentMethod, string targetAddress, CustodianApiException originalException) : base(403, "cannot-withdraw", $"{custodian.GetName()} cannot withdraw {paymentMethod} to '{targetAddress}': {originalException.Message}")
+    public CannotWithdrawException(ICustodian custodian, string paymentMethod, string targetAddress, CustodianApiException originalException) : base(403, "cannot-withdraw", $"{custodian.Name} cannot withdraw {paymentMethod} to '{targetAddress}': {originalException.Message}")
     {
     }
 }

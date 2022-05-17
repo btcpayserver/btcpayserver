@@ -113,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (await CanSeeCustodianAccountConfig())
             {
                 // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
-                r.Config = custodianAccount.GetBlob().config;
+                r.Config = custodianAccount.GetBlob();
             }
 
             return r;
@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (await CanSeeCustodianAccountConfig())
             {
                 // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
-                r.Config = custodianAccount.GetBlob().config;
+                r.Config = custodianAccount.GetBlob();
             }
 
             return r;
@@ -145,9 +145,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string name = string.IsNullOrEmpty(request.Name) ? custodian.GetName() : request.Name;
 
             var custodianAccount = new CustodianAccountData() { CustodianCode = custodian.GetCode(), Name = name, StoreId = storeId, };
-            var newBlob = new CustodianAccountData.CustodianAccountBlob();
-            newBlob.config = request.Config;
-            custodianAccount.SetBlob(newBlob);
+            custodianAccount.SetBlob(request.Config);
 
             await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
             return Ok(ToModel(custodianAccount));
@@ -170,9 +168,7 @@ namespace BTCPayServer.Controllers.Greenfield
             custodianAccount.StoreId = storeId;
             custodianAccount.Name = request.Name;
 
-            var newBlob = new CustodianAccountData.CustodianAccountBlob();
-            newBlob.config = request.Config;
-            custodianAccount.SetBlob(newBlob);
+            custodianAccount.SetBlob(request.Config);
 
             await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
             return Ok(ToModel(custodianAccount));
@@ -199,7 +195,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var custodianAccount = await GetCustodian(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
-            var config = custodianAccount.GetBlob().config;
+            var config = custodianAccount.GetBlob();
 
             if (custodian is ICanDeposit depositableCustodian)
             {
@@ -234,7 +230,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     // Qty is a percentage of current holdings
                     var percentage = Decimal.Parse( request.Qty.Substring(0, request.Qty.Length - 1), CultureInfo.InvariantCulture);
-                    var config = custodianAccount.GetBlob().config;
+                    var config = custodianAccount.GetBlob();
                     var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
                     var fromAssetBalance = balances[request.FromAsset];
                     var priceQuote =
@@ -249,7 +245,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
 
                 var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
-                        custodianAccount.GetBlob().config, cancellationToken);
+                        custodianAccount.GetBlob(), cancellationToken);
 
                 return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }
@@ -280,7 +276,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
+                var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob(), cancellationToken);
                 return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
             }
 
@@ -298,7 +294,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config, cancellationToken);
+                var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob(), cancellationToken);
                 if (result == null)
                 {
                     return this.CreateAPIError(404, "trade-not-found",
@@ -324,7 +320,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
                 var withdrawResult =
-                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
+                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                     withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                 return Ok(result);
@@ -366,7 +362,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
+                var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob(), cancellationToken);
                 if (withdrawResult == null)
                 {
                     return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");

@@ -5,15 +5,15 @@ namespace BTCPayServer.Data;
 
 public static class CustodianAccountDataExtensions
 {
-    public static CustodianAccountData.CustodianAccountBlob GetBlob(this CustodianAccountData custodianAccountData)
+    public static JObject GetBlob(this CustodianAccountData custodianAccountData)
     {
         var result = custodianAccountData.Blob == null
-            ? new CustodianAccountData.CustodianAccountBlob()
-            : JObject.Parse(ZipUtils.Unzip(custodianAccountData.Blob)).ToObject<CustodianAccountData.CustodianAccountBlob>();
+            ? new JObject()
+            : JObject.Parse(ZipUtils.Unzip(custodianAccountData.Blob));
         return result;
     }
 
-    public static bool SetBlob(this CustodianAccountData custodianAccountData, CustodianAccountData.CustodianAccountBlob blob)
+    public static bool SetBlob(this CustodianAccountData custodianAccountData, JObject blob)
     {
         var original = new Serializer(null).ToString(custodianAccountData.GetBlob());
         var newBlob = new Serializer(null).ToString(blob);

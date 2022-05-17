@@ -12,7 +12,21 @@ namespace BTCPayServer.Services.Apps
         public DateTime? EndDate { get; set; }
 
         public string TargetCurrency { get; set; }
-        public decimal? TargetAmount { get; set; }
+        decimal? _TargetAmount;
+        public decimal? TargetAmount
+        {
+            get
+            {
+                // In the past, target amount might have been 0, creating exception
+                if (_TargetAmount is decimal v && v == 0.0m)
+                    return null;
+                return _TargetAmount;
+            }
+            set
+            {
+                _TargetAmount = value;
+            }
+        }
 
         public bool EnforceTargetAmount { get; set; }
         public string CustomCSSLink { get; set; }

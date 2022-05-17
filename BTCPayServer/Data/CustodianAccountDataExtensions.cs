@@ -1,3 +1,4 @@
+using System;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
@@ -15,11 +16,10 @@ public static class CustodianAccountDataExtensions
 
     public static bool SetBlob(this CustodianAccountData custodianAccountData, JObject blob)
     {
-        var original = new Serializer(null).ToString(custodianAccountData.GetBlob());
-        var newBlob = new Serializer(null).ToString(blob);
-        if (original == newBlob)
+        var original = custodianAccountData.GetBlob();
+        if (JToken.DeepEquals(original, blob))
             return false;
-        custodianAccountData.Blob = ZipUtils.Zip(newBlob);
+        custodianAccountData.Blob = blob is null ? null : ZipUtils.Zip(blob.ToString(Newtonsoft.Json.Formatting.None));
         return true;
     }
 }

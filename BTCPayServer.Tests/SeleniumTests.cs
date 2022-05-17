@@ -1149,6 +1149,15 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.Id("confirm")));
             s.Driver.FindElement(By.Id("proceed")).Click();
             Assert.Equal(settingsUrl, s.Driver.Url);
+            
+            // Transactions list contains export and action, ensure functions are present, but do not download exports:
+            // https://www.selenium.dev/documentation/test_practices/discouraged/file_downloads/
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("BumpFee"));
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportCSV"));
+            s.Driver.FindElement(By.Id("ExportJSON"));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1167,6 +1176,12 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).GetAttribute("value"));
             Assert.Contains("m/84'/1'/0'",
                 s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
+                
+            // Transactions list is empty 
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            Assert.Contains("There are no transactions yet.", s.Driver.PageSource);
+            s.Driver.AssertElementNotFound(By.Id("ExportDropdownToggle"));
+            s.Driver.AssertElementNotFound(By.Id("ActionsDropdownToggle"));
         }
 
         [Fact]

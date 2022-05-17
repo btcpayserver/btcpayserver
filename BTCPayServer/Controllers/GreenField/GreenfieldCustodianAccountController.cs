@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Custodians.Client;
-using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;

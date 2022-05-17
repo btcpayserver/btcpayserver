@@ -1,6 +1,6 @@
 using BTCPayServer.Client.Models;
 
-namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public class AssetQuoteUnavailableException : CustodianApiException
 {

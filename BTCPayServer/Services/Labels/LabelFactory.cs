@@ -58,6 +58,13 @@ namespace BTCPayServer.Services.Labels
                 Color = color,
                 TextColor = TextColor(color)
             };
+
+            string PayoutLabelText(KeyValuePair<string, string[]> pair)
+            {
+                var text = $"{(pair.Value.Length == 1 ? "a" : pair.Value.Length)} payout{(pair.Value.Length == 1 ? "" : "s")}";
+                return $"Paid {text}{(string.IsNullOrEmpty(pair.Key) ? string.Empty : $" of a pull payment ({pair.Key})")}";
+            }
+
             if (uncoloredLabel is ReferenceLabel refLabel)
             {
                 var refInLabel = string.IsNullOrEmpty(refLabel.Reference) ? string.Empty : $"({refLabel.Reference})";
@@ -103,8 +110,9 @@ namespace BTCPayServer.Services.Labels
                 }
                 else
                 {
-                    coloredLabel.Tooltip = string.Join("<br/>", payoutLabel.PullPaymentPayouts.Select(pair =>
-                        $"Paid {(pair.Value.Length == 1 ? "a" : pair.Value.Length)} payout{(pair.Value.Length == 1 ? "" : "s")}{(string.IsNullOrEmpty(pair.Key) ? string.Empty : $" of a pull payment ({pair.Key})")}"));
+                    coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
+                        ? $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
+                        : payoutLabel.PullPaymentPayouts.Select(PayoutLabelText).ToString();
                     
                     coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
                         ? null

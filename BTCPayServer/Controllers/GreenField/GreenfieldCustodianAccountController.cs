@@ -90,19 +90,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId,
             [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-            }
-
-            var custodianAccountData = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccountData == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
+            var custodianAccountData = await GetCustodian(storeId, accountId);
             var custodianAccount = ToModelWithAssets(custodianAccountData);
             if (custodianAccount != null && assetBalances)
             {
@@ -180,18 +168,9 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             request ??= new CreateCustodianAccountRequest();
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var allCustodians = _custodianRegistry;
-
+            var custodianAccount = await GetCustodian(storeId, accountId);
             // TODO if the custodian with the desired code does not exist, this will throw an error
-            var custodian = allCustodians.GetCustodianByCode(request.CustodianCode);
+            var custodian = _custodianRegistry.GetCustodianByCode(request.CustodianCode);
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
             custodianAccount.CustodianCode = custodian.GetCode();
@@ -226,13 +205,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken cancellationToken = default)
         {
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
 
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
@@ -274,13 +247,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
 
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
@@ -339,13 +306,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
 
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
@@ -372,13 +333,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken cancellationToken = default)
         {
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
 
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
@@ -412,13 +367,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-            
+            var custodianAccount = await GetCustodian(storeId, accountId);
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 
@@ -443,16 +392,20 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
+        async Task<CustodianAccountData> GetCustodian(string storeId, string accountId)
+        {
+            var cust = await _custodianAccountRepository.FindById(storeId, accountId);
+            if (cust is null)
+                throw new JsonHttpException(this.CreateAPIError(404, "custodian-account-not-found", "Could not find the custodian account"));
+            return cust;
+        }
+
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{paymentMethod}/{withdrawalId}")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found", $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
             var allCustodians = _custodianRegistry;
             var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
 

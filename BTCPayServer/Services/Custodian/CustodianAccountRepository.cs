@@ -61,11 +61,11 @@ namespace BTCPayServer.Services.Custodian.Client
             return data;
         }
 
-        public async Task<CustodianAccountData> FindById(string accountId)
+        public async Task<CustodianAccountData> FindById(string storeId, string accountId)
         {
             await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
-                .Where(ca => ca.Id == accountId);
+                .Where(ca => ca.StoreId == storeId && ca.Id == accountId);
 
             var custodianAccountData = (await query.ToListAsync()).FirstOrDefault();
             return custodianAccountData;

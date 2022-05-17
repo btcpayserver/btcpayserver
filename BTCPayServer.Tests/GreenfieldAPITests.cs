@@ -2689,7 +2689,7 @@ namespace BTCPayServer.Tests
             
             // Load a custodian, we use the first one we find.
             var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
-            var mockCustodian = custodians.GetCustodianByCode("mock");
+            var mockCustodian = custodians.First(c => c.GetCode() == "mock");
 
             
             
@@ -2790,7 +2790,7 @@ namespace BTCPayServer.Tests
             
             // Test: Trade, correct assets, wrong amount
             var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertApiError(InsufficientFundsException.HttpStatus, InsufficientFundsException.ErrorCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
+            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
 
 
             // Test: GetTradeQuote, unauth

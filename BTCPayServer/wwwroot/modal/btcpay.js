@@ -1,4 +1,4 @@
-﻿/* jshint browser: true, strict: false, maxlen: false, maxstatements: false */
+/* jshint browser: true, strict: false, maxlen: false, maxstatements: false */
 (function () {
     var showingInvoice = false;
     var scriptSrcRegex = /\/modal\/btcpay\.js(\?v=.*)?$/;
@@ -99,11 +99,6 @@
         } else if (event.data && event.data.open) {
             uri = event.data.open;
             if (uri.indexOf('bitcoin:') === 0) {
-                window.location = uri;
-            }
-        } else if (event.data && event.data.mailto) {
-            uri = event.data.mailto;
-            if (uri.indexOf('mailto:') === 0) {
                 window.location = uri;
             }
         }

@@ -8,16 +8,19 @@
         </header>
         <div class="h3">@Model.PayoutsPending</div>
     </div>
-    <div class="store-number">
-        <header>
-            <h6>TXs in the last @Model.TransactionDays days</h6>
-            @if (Model.Transactions > 0)
-            {
-                <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
-            }
-        </header>
-        <div class="h3">@Model.Transactions</div>
-    </div>
+	@if (Model.Transactions is not null)
+	{
+		<div class="store-number">
+			<header>
+				<h6>TXs in the last @Model.TransactionDays days</h6>
+				@if (Model.Transactions.Value > 0)
+				{
+					<a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+				}
+			</header>
+        <div class="h3">@Model.Transactions.Value</div>
+		</div>
+	}
     <div class="store-number">
         <header>
             <h6>Refunds Issued</h6>

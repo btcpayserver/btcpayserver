@@ -66,7 +66,6 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
-            Logs.PayServer.LogInformation($"Remove pending invoice {invoiceId}");
             using var ctx = _applicationDbContextFactory.CreateContext();
             ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
             try
@@ -647,8 +646,18 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
             {
-                var stores = queryObject.StoreId.ToHashSet().ToArray();
-                query = query.Where(i => stores.Contains(i.StoreDataId));
+                if (queryObject.StoreId.Length > 1)
+                {
+                    var stores = queryObject.StoreId.ToHashSet().ToArray();
+                    query = query.Where(i => stores.Contains(i.StoreDataId));
+                }
+                // Big performant improvement to use Where rather than Contains when possible
+                // In our test, the first gives  720.173 ms vs 40.735 ms
+                else
+                {
+                    var storeId = queryObject.StoreId.First();
+                    query = query.Where(i => i.StoreDataId == storeId);
+                }
             }
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
@@ -725,13 +734,6 @@ namespace BTCPayServer.Services.Invoices
             if (queryObject.Take != null)
                 query = query.Take(queryObject.Take.Value);
             return query;
-        }
-
-        public async Task<int> GetInvoicesTotal(InvoiceQuery queryObject)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            var query = GetInvoiceQuery(context, queryObject);
-            return await query.CountAsync();
         }
 
         public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)

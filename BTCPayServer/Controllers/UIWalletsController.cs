@@ -281,7 +281,7 @@ namespace BTCPayServer.Controllers
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
-            var model = new ListTransactionsViewModel { Skip = skip, Count = count, Total = 0 };
+            var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             if (labelFilter != null)
             {
                 model.PaginationQuery = new Dictionary<string, object> { { "labelFilter", labelFilter } };

@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Notifications
                     UserId = userId
                 });
                 entry.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs));
-                var res = new NotificationsViewModel { Last5 = resp.Items, UnseenCount = resp.Count };
+                var res = new NotificationsViewModel { Last5 = resp.Items, UnseenCount = resp.Count.Value };
                 entry.Value = res;
                 return res;
             });
@@ -68,14 +68,20 @@ namespace BTCPayServer.Services.Notifications
             return $"notifications-{userId}";
         }
 
-        public async Task<(List<NotificationViewModel> Items, int Count)> GetNotifications(NotificationsQuery query)
+        public async Task<(List<NotificationViewModel> Items, int? Count)> GetNotifications(NotificationsQuery query)
         {
             await using var dbContext = _factory.CreateContext();
 
             var queryables = GetNotificationsQueryable(dbContext, query);
+            var items = (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList();
 
-            return (Items: (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList(),
-                Count: await queryables.withoutPaging.CountAsync());
+            int? count = null;
+            if (query.Seen is false)
+            {
+                // Unseen notifications aren't likely to be too huge, so count should be fast
+                count = await queryables.withoutPaging.CountAsync();
+            }
+            return (Items: items, Count: count);
         }
 
         private (IQueryable<NotificationData> withoutPaging, IQueryable<NotificationData> withPaging)

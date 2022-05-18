@@ -49,13 +49,24 @@ namespace BTCPayServer.Controllers
             {
                 var services = _externalServiceOptions.Value.ExternalServices.ToList()
                     .Where(service => _externalServiceTypes.Contains(service.Type))
-                    .Select(async service => new AdditionalServiceViewModel
+                    .Select(async service =>
                     {
-                        DisplayName = service.DisplayName,
-                        ServiceName = service.ServiceName,
-                        CryptoCode = service.CryptoCode,
-                        Type = service.Type.ToString(),
-                        Link = await GetServiceLink(service)
+                        var model = new AdditionalServiceViewModel
+                        {
+                            DisplayName = service.DisplayName,
+                            ServiceName = service.ServiceName,
+                            CryptoCode = service.CryptoCode,
+                            Type = service.Type.ToString()
+                        };
+                        try
+                        {
+                            model.Link = await GetServiceLink(service);
+                        }
+                        catch (Exception exception)
+                        {
+                            model.Error = exception.Message;
+                        }
+                        return model;
                     })
                     .Select(t => t.Result)
                     .ToList();

@@ -121,10 +121,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group mb-0">
+                <div class="form-group mb-0" id="ResetRow" hidden="@(Model.StartDate == null)">
                     <label asp-for="ResetEvery" class="form-label"></label>
                     <div class="input-group">
-                        <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
+                        <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control" min="0">
                         <select class="form-select" asp-for="ResetEvery">
                             @foreach (var opt in Model.ResetEveryValues)
                             {
@@ -132,6 +132,7 @@
                             }
                         </select>
                     </div>
+                    <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
                 </div>
             </div>
         </div>
@@ -287,3 +288,32 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+
+<script>
+    const resetRow = document.getElementById('ResetRow');
+    const startDateInputId = "StartDate";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            flatpickrInstances.forEach((instance) => {
+                if (instance.element.id === startDateInputId) {
+                    instance.config.onChange.push((selectedDates) => {
+                        if (selectedDates.length) {
+                            // Show the reset row if start date is selected.
+                            // Since start date must be selected in order for the reset options to be set
+                            // we don't need to show it by default and can show it only when start date is selected
+                            resetRow.removeAttribute('hidden');
+                        }
+                    });
+                }
+            });
+        }, 0);
+
+        document.addEventListener('input-group-clear-input-value-cleared', ({ detail }) => {
+            const input = detail[0];
+            if (input.id === startDateInputId) {
+                resetRow.setAttribute('hidden', 'hidden');
+            }
+        });
+    });
+</script>

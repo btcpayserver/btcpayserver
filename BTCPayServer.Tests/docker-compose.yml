@@ -82,7 +82,7 @@ services:
       - customer_lnd
       - merchant_lnd
   selenium:
-    image: selenium/standalone-chrome:3
+    image: selenium/standalone-chrome:101.0
     expose:
       - "4444"
   nbxplorer:

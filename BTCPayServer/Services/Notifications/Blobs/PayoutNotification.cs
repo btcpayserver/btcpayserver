@@ -3,6 +3,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Routing;
 
@@ -37,7 +38,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 vm.Body = (notification.Status ?? PayoutState.AwaitingApproval) switch
                 {
                     PayoutState.AwaitingApproval => $"A new payout is awaiting for approval",
-                    PayoutState.AwaitingPayment => $"A new payout is awaiting for payment",
+                    PayoutState.AwaitingPayment => $"A new payout is approved and awaiting payment",
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),
@@ -50,6 +51,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
         public string StoreId { get; set; }
         public string PaymentMethod { get; set; }
         public string Currency { get; set; }
+        public PayoutState? State { get; set; }
         public override string Identifier => TYPE;
         public override string NotificationType => TYPE;
         public PayoutState? Status { get; set; }

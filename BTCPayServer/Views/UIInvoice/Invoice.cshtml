@@ -75,9 +75,9 @@
     <partial name="_StatusMessage" />
 
     <div class="row justify-content-between">
-        <div class="col-md-5">
+        <div class="col-md-6">
             <h3 class="mb-3">Invoice Information</h3>
-            <table class="table table-responsive-md mb-5">
+            <table class="table mb-5">
                 <tr>
                     <th class="fw-semibold">Store</th>
                     <td><a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a></td>
@@ -140,7 +140,7 @@
                         else
                         {
                             @Model.State
-                            @if (Model.StatusException  != InvoiceExceptionStatus.None)
+                            @if (Model.StatusException != InvoiceExceptionStatus.None)
                             {
                                 @String.Format(" ({0})", Model.StatusException.ToString());
                             }
@@ -192,7 +192,7 @@
             @if (Model.PosData.Count == 0)
             {
                 <h3 class="mb-3">Product Information</h3>
-                <table class="table table-responsive-md mb-5">
+                <table class="table mb-5">
                     @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                     {
                         <tr>
@@ -218,46 +218,48 @@
                 </table>
             }
         </div>
-        <div class="col-md-5">
+        <div class="col-md-6">
             <h3 class="mb-3">Buyer Information</h3>
-            <table class="table table-responsive-md mb-5">
-                <tr>
-                    <th class="fw-semibold">Name</th>
-                    <td>@Model.TypedMetadata.BuyerName</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Email</th>
-                    <td><a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a></td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Phone</th>
-                    <td>@Model.TypedMetadata.BuyerPhone</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Address 1</th>
-                    <td>@Model.TypedMetadata.BuyerAddress1</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Address 2</th>
-                    <td>@Model.TypedMetadata.BuyerAddress2</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">City</th>
-                    <td>@Model.TypedMetadata.BuyerCity</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">State</th>
-                    <td>@Model.TypedMetadata.BuyerState</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Country</th>
-                    <td>@Model.TypedMetadata.BuyerCountry</td>
-                </tr>
-                <tr>
-                    <th class="fw-semibold">Zip</th>
-                    <td>@Model.TypedMetadata.BuyerZip</td>
-                </tr>
-            </table>
+            <div class="table-responsive-xl">
+                <table class="table mb-5">
+                    <tr>
+                        <th class="fw-semibold">Name</th>
+                        <td>@Model.TypedMetadata.BuyerName</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Email</th>
+                        <td><a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a></td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Phone</th>
+                        <td>@Model.TypedMetadata.BuyerPhone</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Address 1</th>
+                        <td>@Model.TypedMetadata.BuyerAddress1</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Address 2</th>
+                        <td>@Model.TypedMetadata.BuyerAddress2</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">City</th>
+                        <td>@Model.TypedMetadata.BuyerCity</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">State</th>
+                        <td>@Model.TypedMetadata.BuyerState</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Country</th>
+                        <td>@Model.TypedMetadata.BuyerCountry</td>
+                    </tr>
+                    <tr>
+                        <th class="fw-semibold">Zip</th>
+                        <td>@Model.TypedMetadata.BuyerZip</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -266,7 +268,7 @@
         <div class="row">
             <div class="col-md-6">
                 <h3 class="mb-3">Product information</h3>
-                <table class="table table-responsive-md mb-5">
+                <table class="table mb-5">
                     @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                     {
                         <tr>
@@ -303,81 +305,95 @@
 
     @if (Model.Deliveries.Count != 0)
     {
-        <h3 class="mb-3 mt-4">Webhook deliveries</h3>
-        <ul class="list-group mb-5">
-            @foreach (var delivery in Model.Deliveries)
-            {
-                <li class="list-group-item ">
-                    <form
-                          asp-action="RedeliverWebhook"
-                          asp-route-storeId="@Model.StoreId"
-                          asp-route-invoiceId="@Model.Id"
-                          asp-route-deliveryId="@delivery.Id"
-                          method="post">
-                        <div class="d-flex align-items-center">
-                            <span class="d-flex align-items-center flex-fill me-3">
-                                @if (delivery.Success)
-                                {
-                                    <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
-                                }
-                                else
-                                {
-                                    <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                }
-                            <span class="ms-3">
-                                <a 
-                                   asp-action="WebhookDelivery"
-                                   asp-route-invoiceId="@Model.Id"
-                                   asp-route-deliveryId="@delivery.Id"
-                                   class="btn btn-link delivery-content" target="_blank">
-                                    @delivery.Id
-                                </a>
-                                <span class="text-light mx-2">|</span>
-                                <span class="small text-muted">@delivery.Type</span>
-                                <span class="text-light mx-2">|</span>
-                            </span>
-                            </span>
-                            <span class="d-flex align-items-center">
-                                <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
-                                    <span class="small text-truncate d-inline-block" style="max-width: 250px;">@delivery.PayloadUrl</span>
-                                </span>
-                                <span class="text-light mx-2">|</span>
-                                <strong class="d-flex align-items-center text-muted small">
-                                    @delivery.Time.ToBrowserDate()
-                                </strong>
-
-                                <button id="#redeliver-@delivery.Id"
-                                        type="submit"
-                                        class="btn btn-info py-1 ms-3 redeliver">
-                                    Redeliver
-                                </button>
-                            </span>
-                        </div>
-                    </form>
-                </li>
-            }
-        </ul>
-    }
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <h3 class="mb-0">Events</h3>
-            <table class="table table-hover table-responsive-md">
+        <div class="table-responsive-xl">
+            <h3 class="mb-3 mt-4">Webhooks</h3>
+            <table class="table table-hover table-responsive-md mb-5">
                 <thead class="thead-inverse">
                     <tr>
+                        <th>Status</th>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Url</th>
                         <th>Date</th>
-                        <th>Message</th>
+                        <th class="text-end">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var evt in Model.Events)
+                    @foreach (var delivery in Model.Deliveries)
                     {
-                        <tr class="text-@evt.GetCssClass()">
-                            <td>@evt.Timestamp.ToBrowserDate()</td>
-                            <td>@evt.Message</td>
+                        <tr>
+                            <form asp-action="RedeliverWebhook"
+                                  asp-route-storeId="@Model.StoreId"
+                                  asp-route-invoiceId="@Model.Id"
+                                  asp-route-deliveryId="@delivery.Id"
+                                  method="post">
+                            <td>
+                                <span>
+                                    @if (delivery.Success)
+                                    {
+                                        <span class="fa fa-check text-success" title="Success"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                <span>
+                                    <a asp-action="WebhookDelivery"
+                                       asp-route-invoiceId="@Model.Id"
+                                       asp-route-deliveryId="@delivery.Id"
+                                       class="delivery-content"
+                                       target="_blank">
+                                        @delivery.Id
+                                    </a>
+                                </span>
+                            </td>
+                            <td>
+                                <span>@delivery.Type</span>
+                            </td>
+                            <td>
+                                <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                    <span style="max-width: 250px;">@delivery.PayloadUrl</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span>
+                                    @delivery.Time.ToBrowserDate()
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button id="#redeliver-@delivery.Id"
+                                        type="submit"
+                                        class="btn btn-link p-0 redeliver">
+                                    Redeliver
+                                </button>
+                            </td>
+                            </form>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-    </div>
+    }
+
+    <h3 class="mb-0">Events</h3>
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+            <tr>
+                <th>Date</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in Model.Events)
+            {
+                <tr class="text-@evt.GetCssClass()">
+                    <td>@evt.Timestamp.ToBrowserDate()</td>
+                    <td>@evt.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>

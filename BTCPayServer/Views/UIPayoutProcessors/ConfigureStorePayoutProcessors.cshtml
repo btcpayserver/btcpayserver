@@ -15,50 +15,39 @@
 
         @if (Model.Any())
         {
-            foreach (var processorsView  in Model)
+            foreach (var processorsView in Model)
             {
-                <div class="row">
-                    <h4>@processorsView.Factory.FriendlyName</h4>
-                    <div class="row">
-                        <div class="col">
-                            <table class="table table-hover">
-                                <thead>
-                                <tr>
-                                    <th>Payment Method</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var conf in processorsView.Configured)
+                <h4 class="mt-5">@processorsView.Factory.FriendlyName</h4>
+                <table class="table table-hover mt-0">
+                    <thead>
+                    <tr>
+                        <th>Payment Method</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var conf in processorsView.Configured)
+                    {
+                        <tr>
+                            <td>
+                                @conf.Key.ToPrettyString()
+                            </td>
+                            <td class="text-end">
+                                @if (conf.Value is null)
                                 {
-                                    <tr>
-                                        <td>
-                                            @conf.Key.ToPrettyString()
-
-                                        </td>
-
-                                        <td class="text-end">
-                                            @if (conf.Value is null)
-                                            {
-                                                <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Configure</a>
-                                            }
-                                            else
-                                            {
-                                                <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Modify</a>
-                                                <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Payout Processor @processorsView.Factory.Processor for @conf.Key.CryptoCode will be removed from your store." >Remove</a>
-                                          
-                                            }
-                                        </td>
-                                    </tr>
+                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Configure</a>
                                 }
-
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </div>
+                                else
+                                {
+                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Modify</a>
+                                    <span>-</span>
+                                    <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Payout Processor @processorsView.Factory.Processor for @conf.Key.CryptoCode will be removed from your store.">Remove</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
             }
         }
         else

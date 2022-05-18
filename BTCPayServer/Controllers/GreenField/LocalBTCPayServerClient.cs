@@ -1136,12 +1136,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<LightningPaymentData> GetLightningPayment(string cryptoCode, string paymentHash, CancellationToken token = default)
         {
-            return GetFromActionResult<LightningPaymentData>(await _lightningNodeApiController.GetPayment(cryptoCode, paymentHash));
+            return GetFromActionResult<LightningPaymentData>(await _lightningNodeApiController.GetPayment(cryptoCode, paymentHash, token));
         }
 
         public override async Task<LightningPaymentData> GetLightningPayment(string storeId, string cryptoCode, string paymentHash, CancellationToken token = default)
         {
-            return GetFromActionResult<LightningPaymentData>(await _storeLightningNodeApiController.GetPayment(cryptoCode, paymentHash));
+            return GetFromActionResult<LightningPaymentData>(await _storeLightningNodeApiController.GetPayment(cryptoCode, paymentHash, token));
         }
         public override async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest,
             CancellationToken cancellationToken = default)

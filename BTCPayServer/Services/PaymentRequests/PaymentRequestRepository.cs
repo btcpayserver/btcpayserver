@@ -76,7 +76,7 @@ namespace BTCPayServer.Services.PaymentRequests
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<(int Total, PaymentRequestData[] Items)> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
+        public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
         {
             using var context = _ContextFactory.CreateContext();
             var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
@@ -109,8 +109,6 @@ namespace BTCPayServer.Services.PaymentRequests
                     i.StoreData != null && i.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
             }
 
-            var total = await queryable.CountAsync(cancellationToken);
-
             queryable = queryable.OrderByDescending(u => u.Created);
 
             if (query.Skip.HasValue)
@@ -122,7 +120,8 @@ namespace BTCPayServer.Services.PaymentRequests
             {
                 queryable = queryable.Take(query.Count.Value);
             }
-            return (total, await queryable.ToArrayAsync(cancellationToken));
+            var items = await queryable.ToArrayAsync(cancellationToken);
+            return items;
         }
 
         public async Task<InvoiceEntity[]> GetInvoicesForPaymentRequest(string paymentRequestId,

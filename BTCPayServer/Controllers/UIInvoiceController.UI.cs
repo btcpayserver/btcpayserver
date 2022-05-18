@@ -224,7 +224,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund(string invoiceId, RefundModel model, CancellationToken cancellationToken)
         {
-            using var ctx = _dbContextFactory.CreateContext();
+            await using var ctx = _dbContextFactory.CreateContext();
 
             var invoice = GetCurrentInvoice();
             if (invoice == null)
@@ -288,21 +288,25 @@ namespace BTCPayServer.Controllers
                         Name = $"Refund {invoice.Id}",
                         PaymentMethodIds = new[] { paymentMethodId },
                         StoreId = invoice.StoreId,
-                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
+                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration,
+                        //AutoApproveClaims = true
                     };
                     switch (model.SelectedRefundOption)
                     {
                         case "RateThen":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountThen;
+                            createPullPayment.AutoApproveClaims = true;
                             break;
                         case "CurrentRate":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountNow;
+                            createPullPayment.AutoApproveClaims = true;
                             break;
                         case "Fiat":
                             createPullPayment.Currency = invoice.Currency;
                             createPullPayment.Amount = model.FiatAmount;
+                            createPullPayment.AutoApproveClaims = false;
                             break;
                         case "Custom":
                             model.Title = "How much to refund?";
@@ -348,10 +352,11 @@ namespace BTCPayServer.Controllers
                     createPullPayment = new CreatePullPayment
                     {
                         Name = $"Refund {invoice.Id}",
-                        PaymentMethodIds = new[] { paymentMethodId },
+                        PaymentMethodIds = new[] {paymentMethodId},
                         StoreId = invoice.StoreId,
                         Currency = model.CustomCurrency,
-                        Amount = model.CustomAmount
+                        Amount = model.CustomAmount,
+                        AutoApproveClaims = paymentMethodId.CryptoCode == model.CustomCurrency
                     };
                     break;
                 default:
@@ -816,7 +821,6 @@ namespace BTCPayServer.Controllers
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
             invoiceQuery.StoreId = model.StoreIds;
-            var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
@@ -840,7 +844,6 @@ namespace BTCPayServer.Controllers
                     Details = InvoicePopulatePayments(invoice),
                 });
             }
-            model.Total = await counting;
             return View(model);
         }
 

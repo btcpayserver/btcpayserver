@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -17,7 +15,6 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -26,7 +23,6 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
@@ -39,33 +35,26 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
-using BTCPayServer.Rating;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
-using BTCPayServer.Tests.Logging;
-using BTCPayServer.Validation;
 using ExchangeSharp;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
-using NBitcoin.Socks;
 using NBitpayClient;
 using NBXplorer;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -390,11 +379,9 @@ namespace BTCPayServer.Tests
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
             //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
-            TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice ");
-            await Assert.ThrowsAsync<LightningRPCException>(async () =>
-            {
-                await tester.SendLightningPaymentAsync(invoice);
-            });
+            TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice");
+            var res = await tester.SendLightningPaymentAsync(invoice);
+            Assert.Equal(PayResult.Error, res.Result);
 
             //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
             // TestLogs.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
@@ -834,37 +821,6 @@ namespace BTCPayServer.Tests
                 $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
             AssertSearchInvoice(acc, false, invoice.Id,
                 $"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanListNotifications()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.GrantAccess(true);
-            acc.RegisterDerivationScheme("BTC");
-
-            const string newVersion = "1.0.4.4";
-            var ctrl = acc.GetController<UINotificationsController>();
-            var resp = await ctrl.Generate(newVersion);
-
-            var vm = Assert.IsType<Models.NotificationViewModels.IndexViewModel>(
-                Assert.IsType<ViewResult>(await ctrl.Index()).Model);
-
-            Assert.True(vm.Skip == 0);
-            Assert.True(vm.Count == 50);
-            Assert.True(vm.Total == 1);
-            Assert.True(vm.Items.Count == 1);
-
-            var fn = vm.Items.First();
-            var now = DateTimeOffset.UtcNow;
-            Assert.True(fn.Created >= now.AddSeconds(-3));
-            Assert.True(fn.Created <= now);
-            Assert.Equal($"New version {newVersion} released!", fn.Body);
-            Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
-            Assert.False(fn.Seen);
         }
 
         [Fact]
@@ -2450,7 +2406,7 @@ namespace BTCPayServer.Tests
 
             Assert.True(vm.Skip == 0);
             Assert.True(vm.Count == 50);
-            Assert.True(vm.Total == 1);
+            Assert.Null(vm.Total);
             Assert.True(vm.Items.Count == 1);
 
             var fn = vm.Items.First();

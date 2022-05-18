@@ -110,9 +110,6 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/vendor/signalr/signalr.js",
             "wwwroot/vendor/animejs/anime.min.js",
-            "wwwroot/vendor/moment/moment.min.js",
-            "wwwroot/js/copy-to-clipboard.js",
-            "wwwroot/main/utils.js",
             "wwwroot/payment-request/**/*.js"
         ],
         "minify": {

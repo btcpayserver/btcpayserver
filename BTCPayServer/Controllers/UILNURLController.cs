@@ -474,7 +474,7 @@ namespace BTCPayServer
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpGet("~/stores/{storeId}/integrations/lightning-address")]
+        [HttpGet("~/stores/{storeId}/plugins/lightning-address")]
         public async Task<IActionResult> EditLightningAddress(string storeId)
         {
             if (ControllerContext.HttpContext.GetStoreData().GetEnabledPaymentIds(_btcPayNetworkProvider)
@@ -512,7 +512,7 @@ namespace BTCPayServer
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpPost("~/stores/{storeId}/integrations/lightning-address")]
+        [HttpPost("~/stores/{storeId}/plugins/lightning-address")]
         public async Task<IActionResult> EditLightningAddress(string storeId, [FromForm] EditLightningAddressVM vm,
             string command, [FromServices] CurrencyNameTable currencyNameTable)
         {

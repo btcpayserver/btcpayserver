@@ -120,15 +120,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Generate(string version)
-        {
-            if (_env.NetworkType != NBitcoin.ChainName.Regtest)
-                return NotFound();
-            await _notificationSender.SendNotification(new AdminScope(), new NewVersionNotification(version));
-            return RedirectToAction(nameof(Index));
-        }
-
         [HttpPost]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]
         public async Task<IActionResult> FlipRead(string id)
@@ -226,7 +217,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             await _notificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
-            return Redirect(returnUrl);
+            return LocalRedirect(returnUrl);
         }
 
         private bool ValidUserClaim(out string userId)

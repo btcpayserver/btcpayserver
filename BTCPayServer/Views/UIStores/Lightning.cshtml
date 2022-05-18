@@ -45,7 +45,15 @@
             <div id="Services" class="services-list">
                 @foreach (var service in Model.Services)
                 {
-                    @if (string.IsNullOrEmpty(service.Link))
+                    @if (!string.IsNullOrEmpty(service.Error))
+                    {
+                        <div class="service" id="@($"Service-{service.ServiceName}")">
+                            <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                            <h6>@service.DisplayName</h6>
+                            <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
+                        </div>
+                    }
+                    else if (string.IsNullOrEmpty(service.Link))
                     {
                         <a asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
                             <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />

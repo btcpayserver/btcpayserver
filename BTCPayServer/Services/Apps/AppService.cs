@@ -214,12 +214,12 @@ namespace BTCPayServer.Services.Apps
                                 return rate * value;
                             }));
                     var itemCode = entities.Key;
-                    var perk = perks.First(p => p.Id == itemCode);
+                    var perk = perks.FirstOrDefault(p => p.Id == itemCode);
                     return new ItemStats
                     {
                         ItemCode = itemCode,
-                        Title = perk.Title,
-                        SalesCount = entities.Count(), 
+                        Title = perk?.Title ?? itemCode,
+                        SalesCount = entities.Count(),
                         Total = total,
                         TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.TargetCurrency}"
                     };

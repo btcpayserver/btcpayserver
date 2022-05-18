@@ -31,16 +31,6 @@ namespace BTCPayServer.Tests
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
 
-        public DirectoryInfo DownloadDirectoryInfo 
-        {
-            get
-            {
-                var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var downloadPath = Path.Combine(userPath, "Downloads", "btcpay-tests");
-                return new DirectoryInfo(downloadPath);
-            }
-        }
-        
         public async Task StartAsync()
         {
             Server.PayTester.NoCSP = true;
@@ -56,20 +46,12 @@ namespace BTCPayServer.Tests
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
             var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
-
-            var downloadDir = DownloadDirectoryInfo;
-            if (!downloadDir.Exists)
-            {
-                downloadDir.Create();
-            }
             
             var options = new ChromeOptions();
             if (!runInBrowser)
             {
                 options.AddArguments("headless");
             }
-            options.AddUserProfilePreference("download.default_directory", downloadDir.FullName);
-            options.AddUserProfilePreference("disable-popup-blocking", "true");
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
             options.AddArgument("start-maximized");

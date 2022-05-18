@@ -1158,8 +1158,6 @@ namespace BTCPayServer.Tests
             // CSV export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportCSV")).Click();
-            Thread.Sleep(1000);
-            Assert.NotNull(s.DownloadDirectoryInfo.GetFiles().FirstOrDefault(f => f.Name.StartsWith($"btcpay-{s.WalletId}") && f.Extension == ".csv"));
             
             // JSON export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();

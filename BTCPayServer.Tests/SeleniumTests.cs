@@ -809,7 +809,7 @@ namespace BTCPayServer.Tests
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
             s.Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = s.Driver.FindElement(By.Id("address")).GetProperty("value");
+            var addressStr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
             await s.Server.ExplorerNode.GenerateAsync(1);

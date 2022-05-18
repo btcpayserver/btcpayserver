@@ -73,9 +73,9 @@
                     <div class="input-group">
                         <input asp-for="Outputs[0].Amount" type="number" inputmode="decimal" step="any" min="0" asp-format="{0}" class="form-control output-amount hide-number-spin" />
                         <div class="input-group-text fiat-value" style="display:none;">
-                            <span class="input-group-text p-0">=</span>
-                            <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
-                            <span class="input-group-text p-0">@Model.Fiat</span>
+                            <span class="input-group-text p-0 border-0">=</span>
+                            <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 border-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
+                            <span class="input-group-text p-0 border-0">@Model.Fiat</span>
                         </div>
                     </div>
                     <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
@@ -111,9 +111,9 @@
                                 <div class="input-group">
                                     <input asp-for="Outputs[index].Amount" type="number" min="0" step="any" asp-format="{0}" class="form-control output-amount hide-number-spin" />
                                     <div class="input-group-text fiat-value" style="display:none;">
-                                        <span class="input-group-text p-0">=</span>
-                                        <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
-                                        <span class="input-group-text p-0">@Model.Fiat</span>
+                                        <span class="input-group-text p-0 border-0">=</span>
+                                        <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 border-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
+                                        <span class="input-group-text p-0 border-0">@Model.Fiat</span>
                                     </div>
                                 </div>
                                 <p class="form-text text-secondary crypto-info mb-2">

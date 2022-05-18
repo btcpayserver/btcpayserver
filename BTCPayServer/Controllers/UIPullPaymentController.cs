@@ -82,8 +82,8 @@ namespace BTCPayServer.Controllers
                               Status = entity.Entity.State,
                               Destination = entity.Blob.Destination,
                               PaymentMethod = PaymentMethodId.Parse(entity.Entity.PaymentMethodId),
-                              Link = entity.ProofBlob.Link,
-                              TransactionId = entity.ProofBlob.Id
+                              Link = entity.ProofBlob?.Link,
+                              TransactionId = entity.ProofBlob?.Id
                           }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;

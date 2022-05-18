@@ -1150,14 +1150,26 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("proceed")).Click();
             Assert.Equal(settingsUrl, s.Driver.Url);
             
-            // Transactions list contains export and action, ensure functions are present, but do not download exports:
-            // https://www.selenium.dev/documentation/test_practices/discouraged/file_downloads/
+            // Transactions list contains export and action, ensure functions are present.
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("BumpFee"));
+            
+            // CSV export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("ExportCSV"));
-            s.Driver.FindElement(By.Id("ExportJSON"));
+            s.Driver.FindElement(By.Id("ExportCSV")).Click();
+            Thread.Sleep(1000);
+            Assert.NotNull(s.DownloadDirectoryInfo.GetFiles().FirstOrDefault(f => f.Name.StartsWith($"btcpay-{s.WalletId}") && f.Extension == ".csv"));
+            
+            // JSON export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportJSON")).Click();
+            Thread.Sleep(1000);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Contains(s.WalletId.ToString(), s.Driver.Url);
+            Assert.EndsWith("export?format=json", s.Driver.Url);
+            Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
         }
 
         [Fact(Timeout = TestTimeout)]

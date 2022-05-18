@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.Greenfield
             });
         }
 
-        public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request)
+        public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             if (request?.NodeURI is null)
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            var result = await lightningClient.ConnectTo(request.NodeURI);
+            var result = await lightningClient.ConnectTo(request.NodeURI, cancellationToken);
             switch (result)
             {
                 case ConnectionResult.Ok:
@@ -156,10 +156,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(errorCode, errorMessage);
         }
 
-        public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode)
+        public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
+            return Ok(new JValue((await lightningClient.GetDepositAddress(cancellationToken)).ToString()));
         }
 
         public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash, CancellationToken cancellationToken = default)

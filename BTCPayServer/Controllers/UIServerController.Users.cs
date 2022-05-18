@@ -285,14 +285,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             
-            return View(
-                "Confirm", 
-                new ConfirmModel(
-                    "Send verification email",
-                    $"This will send a verification email to <strong>{user.Email}</strong>. Are you sure?",
-                    "Send"
-                )
-            );
+            return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{user.Email}</strong>.", "Send"));
         }
 
         [HttpPost("server/users/{userId}/verification-email")]

@@ -15,7 +15,6 @@ namespace BTCPayServer.Models.ServerViewModels
             public bool IsAdmin { get; set; }
             public DateTimeOffset? Created { get; set; }
             public IEnumerable<string> Roles { get; set; }
-            public bool RequiresEmailConfirmation { get; set; }
         }
         public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
         public override int CurrentPageCount => Users.Count;

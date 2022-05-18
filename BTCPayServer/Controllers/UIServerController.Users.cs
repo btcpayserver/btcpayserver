@@ -64,7 +64,6 @@ namespace BTCPayServer.Controllers
                     Email = u.Email,
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
-                    RequiresEmailConfirmation = u.RequiresEmailConfirmation,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime

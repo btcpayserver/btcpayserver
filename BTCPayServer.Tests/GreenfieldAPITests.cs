@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -15,6 +18,8 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Tests.Logging;
@@ -775,6 +780,13 @@ namespace BTCPayServer.Tests
         {
             var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
             Assert.Equal(code, ex.HttpCode);
+        }
+        
+        private async Task AssertApiError(int httpStatus, string errorCode, Func<Task> act)
+        {
+            var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
+            Assert.Equal(httpStatus, ex.HttpCode);
+            Assert.Equal(errorCode, ex.APIError.Code);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2499,6 +2511,475 @@ namespace BTCPayServer.Tests
              payouts = await adminClient.GetStorePayouts(admin.StoreId);
              Assert.Empty(payouts.Where(data => data.State != PayoutState.InProgress));
          });
+        }
+        
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CustodiansControllerTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertHttpError(401, async () => await unauthClient.GetCustodians());
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var clientBasic = await user.CreateClient();
+            var custodians = await clientBasic.GetCustodians();
+            Assert.NotNull(custodians);
+            Assert.Single(custodians);
+        }
+
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CustodianAccountControllerTests()
+        {
+            
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var authedButLackingPermissionsClient = await admin.CreateClient(Policies.CanViewStoreSettings);
+            var viewerOnlyClient = await admin.CreateClient(Policies.CanViewCustodianAccounts);
+            var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
+            var store = await adminClient.GetStore(admin.StoreId);
+            var storeId = store.Id;
+            
+            // Load a custodian, we use the first one we find.
+            var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
+            var custodian = custodians.First();
+
+            // List custodian accounts
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId));
+             
+             // Auth, but wrong permission
+             await AssertHttpError(403, async () => await authedButLackingPermissionsClient.GetCustodianAccounts(storeId));
+             
+             // Auth, correct permission, empty result
+             var emptyCustodianAccounts = await viewerOnlyClient.GetCustodianAccounts(storeId);
+             Assert.Empty(emptyCustodianAccounts);
+             
+             
+             // Create custodian account
+             
+            JObject config = JObject.Parse(@"{
+'WithdrawToAddressNamePerPaymentMethod': {
+   'BTC-OnChain': 'My Ledger Nano'
+},
+'ApiKey': 'APIKEY',
+'PrivateKey': 'UFJJVkFURUtFWQ=='
+}");
+            
+            var createCustodianAccountRequest = new CreateCustodianAccountRequest();
+            createCustodianAccountRequest.Config = config;
+            createCustodianAccountRequest.CustodianCode = custodian.Code;
+            
+            // Unauthorized
+            await AssertHttpError(401, async () => await unauthClient.CreateCustodianAccount(storeId, createCustodianAccountRequest));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.CreateCustodianAccount(storeId, createCustodianAccountRequest));
+            
+            // Auth, correct permission
+            var custodianAccountData = await managerClient.CreateCustodianAccount(storeId, createCustodianAccountRequest);
+            Assert.NotNull(custodianAccountData);
+            Assert.NotNull(custodianAccountData.Id);
+            var accountId = custodianAccountData.Id;
+            Assert.Equal(custodian.Code, custodianAccountData.CustodianCode);
+            
+            // We did not provide a name, so the custodian's name should've been picked as a fallback
+            Assert.Equal(custodian.Name, custodianAccountData.Name);
+            
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(config, custodianAccountData.Config));
+            
+            
+            
+            // List all Custodian Accounts, now that we have 1 result
+            
+            // Admin can see all
+            var adminCustodianAccounts = await adminClient.GetCustodianAccounts(storeId);
+            Assert.Single(adminCustodianAccounts);
+            var adminCustodianAccount = adminCustodianAccounts.First();
+            Assert.Equal(adminCustodianAccount.CustodianCode, custodian.Code);
+
+            // Manager can see all, including config
+            var managerCustodianAccounts = await managerClient.GetCustodianAccounts(storeId);
+            Assert.Single(managerCustodianAccounts);
+            Assert.Equal(managerCustodianAccounts.First().CustodianCode, custodian.Code);
+            Assert.NotNull(managerCustodianAccounts.First().Config);
+            Assert.True(JToken.DeepEquals(config, managerCustodianAccounts.First().Config));
+            
+            // Viewer can see all, but no config
+            var viewerCustodianAccounts = await viewerOnlyClient.GetCustodianAccounts(storeId);
+            Assert.Single(viewerCustodianAccounts);
+            Assert.Equal(viewerCustodianAccounts.First().CustodianCode, custodian.Code);
+            Assert.Null(viewerCustodianAccounts.First().Config);
+
+            
+            // Try to fetch 1
+            // Admin
+            var singleAdminCustodianAccount = await adminClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleAdminCustodianAccount);
+            Assert.Equal(singleAdminCustodianAccount.CustodianCode, custodian.Code);
+
+            // Manager can see, including config
+            var singleManagerCustodianAccount = await managerClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleManagerCustodianAccount);
+            Assert.Equal(singleManagerCustodianAccount.CustodianCode, custodian.Code);
+            Assert.NotNull(singleManagerCustodianAccount.Config);
+            Assert.True(JToken.DeepEquals(config, singleManagerCustodianAccount.Config));
+            
+            // Viewer can see, but no config
+            var singleViewerCustodianAccount = await viewerOnlyClient.GetCustodianAccount(storeId, accountId);
+            Assert.NotNull(singleViewerCustodianAccount);
+            Assert.Equal(singleViewerCustodianAccount.CustodianCode, custodian.Code);
+            Assert.Null(singleViewerCustodianAccount.Config);
+
+
+
+            // Test updating the custodian account we created
+            var updateCustodianAccountRequest = createCustodianAccountRequest;
+            updateCustodianAccountRequest.Name = "My Custodian";
+            updateCustodianAccountRequest.Config["ApiKey"] = "ZZZ";
+
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.UpdateCustodianAccount(storeId, accountId, updateCustodianAccountRequest));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.UpdateCustodianAccount(storeId, accountId, updateCustodianAccountRequest));
+            
+            // Correct auth: update permissions
+            var updatedCustodianAccountData = await managerClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
+            Assert.NotNull(updatedCustodianAccountData);
+            Assert.Equal(custodian.Code, updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
+            
+            // Admin
+            updateCustodianAccountRequest.Name = "Admin Account";
+            updateCustodianAccountRequest.Config["ApiKey"] = "AAA";
+            updatedCustodianAccountData = await adminClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
+            Assert.NotNull(updatedCustodianAccountData);
+            Assert.Equal(custodian.Code, updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
+            Assert.Equal(storeId, custodianAccountData.StoreId);
+            Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
+            
+            // Admin tries to update a non-existing custodian account
+            await AssertHttpError(404, async () => await adminClient.UpdateCustodianAccount(storeId, "WRONG-ACCOUNT-ID", updateCustodianAccountRequest));
+
+            
+            
+            // Get asset balances, but we cannot because of misconfiguration (we did enter dummy data)
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId, true));
+            
+            // // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
+            // await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
+            //
+            
+            // Delete custodian account
+            // Unauth
+            await AssertHttpError(401, async () => await unauthClient.DeleteCustodianAccount(storeId, accountId));
+            
+            // Auth, but wrong permission
+            await AssertHttpError(403, async () => await viewerOnlyClient.DeleteCustodianAccount(storeId, accountId));
+            
+            // Auth, correct permission
+            await managerClient.DeleteCustodianAccount(storeId, accountId);
+            
+            // Check if the Custodian Account was actually deleted
+            await AssertHttpError(404, async () => await managerClient.GetCustodianAccount(storeId, accountId));
+            
+
+            // TODO what if we try to create a custodian account for a custodian code that does not exist?
+            // TODO what if we try so set config data that is not valid? In phase 2 we will validate the config and only allow you to save a config that makes sense! 
+        }
+
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CustodianTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            var authClientNoPermissions  = await admin.CreateClient(Policies.CanViewInvoices);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
+            var withdrawalClient = await admin.CreateClient(Policies.CanWithdrawFromCustodianAccounts);
+            var depositClient = await admin.CreateClient(Policies.CanDepositToCustodianAccounts);
+            var tradeClient = await admin.CreateClient(Policies.CanTradeCustodianAccount);
+            
+            
+            var store = await adminClient.GetStore(admin.StoreId);
+            var storeId = store.Id;
+            
+            // Load a custodian, we use the first one we find.
+            var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
+            var mockCustodian = custodians.First(c => c.Code == "mock");
+
+            
+            
+             // Create custodian account
+             var createCustodianAccountRequest = new CreateCustodianAccountRequest();
+            createCustodianAccountRequest.CustodianCode = mockCustodian.Code;
+            
+            var custodianAccountData = await managerClient.CreateCustodianAccount(storeId, createCustodianAccountRequest);
+            Assert.NotNull(custodianAccountData);
+            Assert.Equal(mockCustodian.Code, custodianAccountData.CustodianCode);
+            Assert.NotNull(custodianAccountData.Id);
+            var accountId = custodianAccountData.Id;
+            
+            
+            // Test: Get Asset Balances
+            var custodianAccountWithBalances = await adminClient.GetCustodianAccount(storeId, accountId,true);
+            Assert.NotNull(custodianAccountWithBalances);
+            Assert.NotNull(custodianAccountWithBalances.AssetBalances);
+            Assert.Equal(4, custodianAccountWithBalances.AssetBalances.Count);
+            Assert.True(custodianAccountWithBalances.AssetBalances.Keys.Contains("BTC"));
+            Assert.True(custodianAccountWithBalances.AssetBalances.Keys.Contains("LTC"));
+            Assert.True(custodianAccountWithBalances.AssetBalances.Keys.Contains("EUR"));
+            Assert.True(custodianAccountWithBalances.AssetBalances.Keys.Contains("USD"));
+            Assert.Equal(MockCustodian.BalanceBTC, custodianAccountWithBalances.AssetBalances["BTC"]);
+            Assert.Equal(MockCustodian.BalanceLTC, custodianAccountWithBalances.AssetBalances["LTC"]);
+            Assert.Equal(MockCustodian.BalanceEUR, custodianAccountWithBalances.AssetBalances["EUR"]);
+            Assert.Equal(MockCustodian.BalanceUSD, custodianAccountWithBalances.AssetBalances["USD"]);
+            
+            // Test: Get Asset Balances omitted if we choose so
+            var custodianAccountWithoutBalances = await adminClient.GetCustodianAccount(storeId, accountId,false);
+            Assert.NotNull(custodianAccountWithoutBalances);
+            Assert.Null(custodianAccountWithoutBalances.AssetBalances);
+
+
+            // Test: GetDepositAddress, unauth
+            await AssertHttpError(401, async () => await unauthClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
+            
+            // Test: GetDepositAddress, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
+            
+            // Test: GetDepositAddress, wrong payment method
+            await AssertHttpError(400, async () => await depositClient.GetDepositAddress(storeId, accountId, "WRONG-PaymentMethod"));
+            
+            // Test: GetDepositAddress, wrong store ID
+            await AssertHttpError(403, async () => await depositClient.GetDepositAddress("WRONG-STORE", accountId, MockCustodian.DepositPaymentMethod));
+            
+            // Test: GetDepositAddress, wrong account ID
+            await AssertHttpError(404, async () => await depositClient.GetDepositAddress(storeId, "WRONG-ACCOUNT-ID", MockCustodian.DepositPaymentMethod));
+            
+            // Test: GetDepositAddress, correct payment method
+            var depositAddress = await depositClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod);
+            Assert.NotNull(depositAddress);
+            Assert.Equal(MockCustodian.DepositAddress, depositAddress.Address);
+            
+            
+            // Test: Trade, unauth
+            var tradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
+            await AssertHttpError(401, async () => await unauthClient.TradeMarket(storeId, accountId, tradeRequest));
+            
+            // Test: Trade, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.TradeMarket(storeId, accountId, tradeRequest));
+            
+            // Test: Trade, correct permission, correct assets, correct amount
+            var newTradeResult = await tradeClient.TradeMarket(storeId, accountId, tradeRequest);
+            Assert.NotNull(newTradeResult);
+            Assert.Equal(accountId, newTradeResult.AccountId);
+            Assert.Equal(mockCustodian.Code, newTradeResult.CustodianCode);
+            Assert.Equal(MockCustodian.TradeId, newTradeResult.TradeId);
+            Assert.Equal(tradeRequest.FromAsset, newTradeResult.FromAsset);
+            Assert.Equal(tradeRequest.ToAsset, newTradeResult.ToAsset);
+            Assert.NotNull( newTradeResult.LedgerEntries);
+            Assert.Equal( 3, newTradeResult.LedgerEntries.Count);
+            Assert.Equal( MockCustodian.TradeQtyBought, newTradeResult.LedgerEntries[0].Qty);
+            Assert.Equal( tradeRequest.ToAsset, newTradeResult.LedgerEntries[0].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Trade , newTradeResult.LedgerEntries[0].Type);
+            Assert.Equal( -1 * MockCustodian.TradeQtyBought * MockCustodian.BtcPriceInEuro, newTradeResult.LedgerEntries[1].Qty);
+            Assert.Equal( tradeRequest.FromAsset, newTradeResult.LedgerEntries[1].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Trade , newTradeResult.LedgerEntries[1].Type);
+            Assert.Equal( -1 * MockCustodian.TradeFeeEuro, newTradeResult.LedgerEntries[2].Qty);
+            Assert.Equal( tradeRequest.FromAsset, newTradeResult.LedgerEntries[2].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Fee , newTradeResult.LedgerEntries[2].Type);
+            
+            // Test: GetTradeQuote, SATS
+            var satsTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = "SATS", Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.TradeMarket(storeId, accountId, satsTradeRequest));
+            
+            // TODO Test: Trade with percentage qty
+            
+            // Test: Trade, wrong assets method
+            var wrongAssetsTradeRequest = new TradeRequestData {FromAsset = "WRONG", ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
+            await AssertHttpError(WrongTradingPairException.HttpCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongAssetsTradeRequest));
+
+            // Test: wrong account ID
+            await AssertHttpError(404, async () => await tradeClient.TradeMarket(storeId, "WRONG-ACCOUNT-ID", tradeRequest));
+            
+            // Test: wrong store ID
+            await AssertHttpError(403, async () => await tradeClient.TradeMarket("WRONG-STORE-ID", accountId, tradeRequest));
+            
+            // Test: Trade, correct assets, wrong amount
+            var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
+            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
+
+
+            // Test: GetTradeQuote, unauth
+            await AssertHttpError(401, async () => await unauthClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            
+            // Test: GetTradeQuote, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            
+            // Test: GetTradeQuote, auth, correct permission
+            var tradeQuote = await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset);
+            Assert.NotNull(tradeQuote);
+            Assert.Equal(MockCustodian.TradeFromAsset, tradeQuote.FromAsset);
+            Assert.Equal(MockCustodian.TradeToAsset, tradeQuote.ToAsset);
+            Assert.Equal(MockCustodian.BtcPriceInEuro, tradeQuote.Bid);
+            Assert.Equal(MockCustodian.BtcPriceInEuro, tradeQuote.Ask);
+            
+            // Test: GetTradeQuote, SATS
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, "SATS"));
+            
+            // Test: GetTradeQuote, wrong asset
+            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId,  "WRONG-ASSET", MockCustodian.TradeToAsset));
+            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset , "WRONG-ASSET"));
+
+            // Test: wrong account ID
+            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, "WRONG-ACCOUNT-ID",  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            
+            // Test: wrong store ID
+            await AssertHttpError(403, async () => await tradeClient.GetTradeQuote("WRONG-STORE-ID", accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+
+            
+
+
+
+            // Test: GetTradeInfo, unauth
+            await AssertHttpError(401, async () => await unauthClient.GetTradeInfo(storeId, accountId,  MockCustodian.TradeId));
+            
+            // Test: GetTradeInfo, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.GetTradeInfo(storeId, accountId,  MockCustodian.TradeId));
+            
+            // Test: GetTradeInfo, auth, correct permission
+            var tradeResult = await tradeClient.GetTradeInfo(storeId, accountId, MockCustodian.TradeId);
+            Assert.NotNull(tradeResult);
+            Assert.Equal(accountId, tradeResult.AccountId);
+            Assert.Equal(mockCustodian.Code, tradeResult.CustodianCode);
+            Assert.Equal(MockCustodian.TradeId, tradeResult.TradeId);
+            Assert.Equal(tradeRequest.FromAsset, tradeResult.FromAsset);
+            Assert.Equal(tradeRequest.ToAsset, tradeResult.ToAsset);
+            Assert.NotNull( tradeResult.LedgerEntries);
+            Assert.Equal( 3, tradeResult.LedgerEntries.Count);
+            Assert.Equal( MockCustodian.TradeQtyBought, tradeResult.LedgerEntries[0].Qty);
+            Assert.Equal( tradeRequest.ToAsset, tradeResult.LedgerEntries[0].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Trade , tradeResult.LedgerEntries[0].Type);
+            Assert.Equal( -1 * MockCustodian.TradeQtyBought * MockCustodian.BtcPriceInEuro, tradeResult.LedgerEntries[1].Qty);
+            Assert.Equal( tradeRequest.FromAsset, tradeResult.LedgerEntries[1].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Trade , tradeResult.LedgerEntries[1].Type);
+            Assert.Equal( -1 * MockCustodian.TradeFeeEuro, tradeResult.LedgerEntries[2].Qty);
+            Assert.Equal( tradeRequest.FromAsset, tradeResult.LedgerEntries[2].Asset);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Fee , tradeResult.LedgerEntries[2].Type);
+            
+            // Test: GetTradeInfo, wrong trade ID
+            await AssertHttpError(404, async () => await tradeClient.GetTradeInfo(storeId, accountId, "WRONG-TRADE-ID"));
+            
+            // Test: wrong account ID
+            await AssertHttpError(404, async () => await tradeClient.GetTradeInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.TradeId));
+            
+            // Test: wrong store ID
+            await AssertHttpError(403, async () => await tradeClient.GetTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
+
+
+            // Test: CreateWithdrawal, unauth
+            var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
+            await AssertHttpError(401, async () => await unauthClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
+            
+            // Test: CreateWithdrawal, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
+            
+            // Test: CreateWithdrawal, correct payment method, correct amount
+            var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest);
+            AssertMockWithdrawal(withdrawResponse, custodianAccountData);
+
+
+            // Test: CreateWithdrawal, wrong payment method
+            var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", MockCustodian.WithdrawalAmount );
+            await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
+            
+            // Test: CreateWithdrawal, wrong account ID
+            await AssertHttpError(404, async () => await withdrawalClient.CreateWithdrawal(storeId, "WRONG-ACCOUNT-ID", createWithdrawalRequest));
+            
+            // Test: CreateWithdrawal, wrong store ID
+            // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
+            await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal( "WRONG-STORE-ID",accountId, createWithdrawalRequest));
+            
+            // Test: CreateWithdrawal, correct payment method, wrong amount
+            var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, new decimal(0.666));
+            await AssertHttpError(400, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
+
+
+            // Test: GetWithdrawalInfo, unauth
+            await AssertHttpError(401, async () => await unauthClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: GetWithdrawalInfo, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: GetWithdrawalInfo, auth, correct permission
+            var withdrawalInfo = await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId);
+            AssertMockWithdrawal(withdrawalInfo, custodianAccountData);
+
+            // Test: GetWithdrawalInfo, wrong withdrawal ID
+            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, "WRONG-WITHDRAWAL-ID"));
+            
+            // Test: wrong account ID
+            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+            // Test: wrong store ID
+            // TODO shouldn't this be 404? I cannot change this without bigger impact, as it would affect all API endpoints that are store centered
+            await AssertHttpError(403, async () => await withdrawalClient.GetWithdrawalInfo("WRONG-STORE-ID", accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            
+
+            // TODO assert API error codes, not just status codes by using AssertCustodianApiError()
+            
+            // TODO also test withdrawals for the various "Status" (Queued, Complete, Failed)
+            // TODO create a mock custodian with only ICustodian
+            // TODO create a mock custodian with only ICustodian + ICanWithdraw
+            // TODO create a mock custodian with only ICustodian + ICanTrade
+            // TODO create a mock custodian with only ICustodian + ICanDeposit
+        }
+
+        private void AssertMockWithdrawal(WithdrawalResponseData withdrawResponse, CustodianAccountData account)
+        {
+            Assert.NotNull(withdrawResponse);
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.Asset);
+            Assert.Equal(MockCustodian.WithdrawalPaymentMethod, withdrawResponse.PaymentMethod);
+            Assert.Equal(MockCustodian.WithdrawalStatus, withdrawResponse.Status);
+            Assert.Equal(account.Id, withdrawResponse.AccountId);
+            Assert.Equal(account.CustodianCode, withdrawResponse.CustodianCode);
+            
+            Assert.Equal(2, withdrawResponse.LedgerEntries.Count);
+            
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[0].Asset);
+            Assert.Equal(MockCustodian.WithdrawalAmount - MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[0].Qty);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Withdrawal, withdrawResponse.LedgerEntries[0].Type);
+            
+            Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.LedgerEntries[1].Asset);
+            Assert.Equal(MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[1].Qty);
+            Assert.Equal(LedgerEntryData.LedgerEntryType.Fee, withdrawResponse.LedgerEntries[1].Type);
+
+            Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
+            Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
+            Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
+            Assert.NotEqual(default, withdrawResponse.CreatedTime);
         }
     }
 }

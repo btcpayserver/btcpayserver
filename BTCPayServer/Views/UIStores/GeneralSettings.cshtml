@@ -45,11 +45,14 @@
                 <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
-                <select asp-for="NetworkFeeMode" class="form-select w-auto">
-                    <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
-                    <option value="Always">... on every payment</option>
-                    <option value="Never">Never add network fee</option>
-                </select>
+                @* For whatever reason wrapping the select with this div fixes this Safari bug: https://github.com/btcpayserver/btcpayserver/issues/3699 *@
+                <div class="overflow-hidden">
+                    <select asp-for="NetworkFeeMode" class="form-select w-auto">
+                        <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
+                        <option value="Always">... on every payment</option>
+                        <option value="Never">Never add network fee</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration" class="form-label"></label>

@@ -181,7 +181,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                             txHash,
                             UpdateTransactionLabel.PayoutTemplate(new ()
                             {
-                                {payoutData.PullPaymentDataId?? "", new []{payoutData.Id}}
+                                {payoutData.PullPaymentDataId?? "", new List<string>{payoutData.Id}}
                             }, walletId.ToString())));
                     }
                     await Task.WhenAny(tcs.Task, task);

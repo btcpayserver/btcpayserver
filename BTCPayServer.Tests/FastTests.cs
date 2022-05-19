@@ -513,9 +513,8 @@ namespace BTCPayServer.Tests
             {
                 Assert.Single(info.Labels);
                 var l = Assert.IsType<PayoutLabel>(info.Labels["payout"]);
-                Assert.Equal("pullPaymentId", l.PullPaymentId);
+                Assert.Single(Assert.Single(l.PullPaymentPayouts, k => k.Key == "pullPaymentId").Value, "payoutId");
                 Assert.Equal("walletId", l.WalletId);
-                Assert.Equal("payoutId", l.PayoutId);
             }
 
             var payoutId = "payoutId";

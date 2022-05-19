@@ -11,7 +11,7 @@ namespace BTCPayServer.Services.Labels
 
     public abstract class Label : LabelData
     {
-        public virtual Label Merge(LabelData old)
+        public virtual Label Merge(LabelData other)
         {
             return this;
         }
@@ -24,8 +24,11 @@ namespace BTCPayServer.Services.Labels
         }
         static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
         {
-            if (payoutLabel.PullPaymentPayouts is null && payoutLabel.PayoutId is null)
-                payoutLabel.PayoutId = jObj["id"].Value<string>();
+            if (jObj.ContainsKey("id") && payoutLabel.PullPaymentPayouts.Count is 0)
+            {
+                var pullPaymentId = jObj["pullPaymentId"]?.Value<string>() ?? string.Empty;
+                payoutLabel.PullPaymentPayouts.Add(pullPaymentId, new List<string>() { jObj["id"].Value<string>() });
+            }
             FixLegacy(jObj, (Label)payoutLabel);
         }
         static void FixLegacy(JObject jObj, Label label)
@@ -119,32 +122,23 @@ namespace BTCPayServer.Services.Labels
             Type = "payout";
             Text = "payout";
         }
-        [Obsolete]
-        public string PayoutId { get; set; }
-        [Obsolete]
-        public string PullPaymentId { get; set; }
 
-        public Dictionary<string, string[]> PullPaymentPayouts { get; set; } = new();
+        public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
         public string WalletId { get; set; }
 
-        public override Label Merge(LabelData old)
+        public override Label Merge(LabelData other)
         {
-            if (old is not PayoutLabel payoutLabelOld) return base.Merge(old);
-            payoutLabelOld.PullPaymentPayouts ??= new()
-            {
-                {payoutLabelOld.PullPaymentId ?? "", new[] {payoutLabelOld.PayoutId}}
-            };
-
-            foreach (KeyValuePair<string,string[]> pullPaymentPayout in payoutLabelOld.PullPaymentPayouts)
+            if (other is not PayoutLabel otherPayoutLabel) return base.Merge(other);
+            foreach (var pullPaymentPayout in otherPayoutLabel.PullPaymentPayouts)
             {
                 if (!PullPaymentPayouts.TryGetValue(pullPaymentPayout.Key, out var pullPaymentPayouts))
                 {
-                    pullPaymentPayouts = Array.Empty<string>();
+                    pullPaymentPayouts = new List<string>();
+                    PullPaymentPayouts.Add(pullPaymentPayout.Key, pullPaymentPayouts);
                 }
-                pullPaymentPayouts = pullPaymentPayouts.Concat(pullPaymentPayout.Value).ToArray();
-                PullPaymentPayouts.AddOrReplace(pullPaymentPayout.Key, pullPaymentPayouts);
+                pullPaymentPayouts.AddRange(pullPaymentPayout.Value);
             }
-            return base.Merge(old);
+            return base.Merge(other);
         }
     }
 }

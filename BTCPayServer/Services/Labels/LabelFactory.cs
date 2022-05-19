@@ -59,10 +59,12 @@ namespace BTCPayServer.Services.Labels
                 TextColor = TextColor(color)
             };
 
-            string PayoutLabelText(KeyValuePair<string, string[]> pair)
+            string PayoutLabelText(KeyValuePair<string, List<string>> pair)
             {
-                var text = $"{(pair.Value.Length == 1 ? "a" : pair.Value.Length)} payout{(pair.Value.Length == 1 ? "" : "s")}";
-                return $"Paid {text}{(string.IsNullOrEmpty(pair.Key) ? string.Empty : $" of a pull payment ({pair.Key})")}";
+                if (pair.Value.Count == 1)
+                    return $"Paid a payout of a pull payment ({pair.Key})";
+                else
+                    return $"Paid payouts of a pull payment ({pair.Key})";
             }
 
             if (uncoloredLabel is ReferenceLabel refLabel)
@@ -98,28 +100,15 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                if (payoutLabel.PayoutId is not null)
-                {
-                    coloredLabel.Tooltip =
-                        $"Paid a payout{(payoutLabel.PayoutId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
-                    coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
-                        ? null
-                        : _linkGenerator.PayoutLink(payoutLabel.WalletId,
-                            payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
-                            request.PathBase);
-                }
-                else
-                {
-                    coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
+                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
                         ? $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
                         : payoutLabel.PullPaymentPayouts.Select(PayoutLabelText).ToString();
-                    
-                    coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
-                        ? null
-                        : _linkGenerator.PayoutLink(payoutLabel.WalletId,null, PayoutState.Completed, request.Scheme, request.Host,
-                            request.PathBase);
-                }
-                
+
+                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
+                    ? null
+                    : _linkGenerator.PayoutLink(payoutLabel.WalletId, null, PayoutState.Completed, request.Scheme, request.Host,
+                        request.PathBase);
+
             }
             return coloredLabel;
         }

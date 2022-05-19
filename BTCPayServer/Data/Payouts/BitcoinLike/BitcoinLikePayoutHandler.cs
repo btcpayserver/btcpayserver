@@ -413,7 +413,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
                     UpdateTransactionLabel.PayoutTemplate(new ()
                     {
-                        {payout.PullPaymentDataId?? "", new []{payout.Id}}
+                        {payout.PullPaymentDataId?? "", new List<string>{payout.Id}}
                     }, walletId.ToString())));
             }
             else

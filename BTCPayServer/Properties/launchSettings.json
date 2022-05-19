@@ -9,7 +9,7 @@
         "BTCPAY_BUNDLEJSCSS": "false",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
         "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/lnd-rest/btc/;allowinsecure=true;macaroonfilepath=D:\\admin.macaroon",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
@@ -46,7 +46,7 @@
         "BTCPAY_VERBOSE": "true",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
         "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/lnd-rest/btc/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
@@ -86,7 +86,7 @@
         "BTCPAY_LBTCEXPLORERURL": "http://127.0.0.1:32838/",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
         "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/lnd-rest/btc/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
@@ -110,7 +110,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
-      "applicationUrl": "https://localhost:14142/"    
+      "applicationUrl": "https://localhost:14142/"
     }
   }
 }

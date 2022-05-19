@@ -1155,10 +1155,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("BumpFee"));
             
-            // CSV export
-            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("ExportCSV")).Click();
-            
             // JSON export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportJSON")).Click();
@@ -1168,6 +1164,10 @@ namespace BTCPayServer.Tests
             Assert.EndsWith("export?format=json", s.Driver.Url);
             Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            
+            // CSV export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportCSV")).Click();
         }
 
         [Fact(Timeout = TestTimeout)]

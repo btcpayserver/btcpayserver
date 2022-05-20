@@ -15,10 +15,7 @@ namespace BTCPayServer.Services.Mails
     {
         public bool IsComplete()
         {
-            return !string.IsNullOrWhiteSpace(Server) &&
-                   Port is int &&
-                   !string.IsNullOrWhiteSpace(Login) &&
-                   !string.IsNullOrWhiteSpace(Password);
+            return !string.IsNullOrWhiteSpace(Server) && Port is int;
         }
 
         public MimeMessage CreateMailMessage(MailboxAddress to, string subject, string message, bool isHtml)

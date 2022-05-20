@@ -1,6 +1,7 @@
 @model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
+    var labelFilter = Context.Request.Query["labelFilter"].ToString();
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
 }
@@ -47,6 +48,13 @@
             background-color: transparent;
             border: 0;
         }
+        
+        /* pull actions area, so that it is besides the search form */
+        @@media (min-width: 1200px) {
+            #Actions {
+                margin-top: -4rem;
+            }
+        }
     </style>
 }
 
@@ -67,10 +75,10 @@
 
 @if (Model.Transactions.Any())
 {
-    <div class="d-sm-flex align-items-center gap-3 mb-2">
-        @if (Model.Labels.Any())
-        {
-            <div class="input-group mb-4 mb-sm-0">
+    @if (Model.Labels.Any())
+    {
+        <div class="col-xl-7 col-xxl-8 mb-4">
+            <div class="input-group">
                 <span class="input-group-text">Filter</span>
                 <div class="form-control d-flex flex-wrap gap-2 align-items-center">
                     @foreach (var label in Model.Labels)
@@ -78,13 +86,15 @@
                         <a asp-route-labelFilter="@label.Text" class="badge position-relative text-white flex-grow-0" style="background-color:@label.Color;color:@label.TextColor !important;">@label.Text</a>
                     }
                 </div>
-                @if (Context.Request.Query.ContainsKey("labelFilter"))
+                @if (labelFilter != null)
                 {
                     <a asp-route-labelFilter="" class="btn btn-secondary d-flex align-items-center">Clear filter</a>
                 }
             </div>
-        }
-        <div class="dropdown ms-auto">
+        </div>
+    }
+    <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3" id="Actions">
+        <div class="dropdown order-xl-1 ms-auto">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Actions
             </button>
@@ -94,7 +104,20 @@
                 </form> 
             </div>
         </div>
+        <div class="dropdown d-inline-flex align-items-center gap-3">
+            <button class="btn btn-secondary dropdown-toggle order-xl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Export
+            </button>
+            <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
+            </div>
+            <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </div>
     </div>
+    <div style="clear:both"></div>
     
     <div class="row">
         <div class="col table-responsive-md">

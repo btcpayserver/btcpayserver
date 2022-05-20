@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
-    public class EmailSettings :EmailSettingsData
+    public class EmailSettings : EmailSettingsData
     {
         public bool IsComplete()
         {

@@ -42,23 +42,27 @@ namespace BTCPayServer
             NetworkType = networkType;
             InitBitcoin();
 #if ALTCOINS
-            InitLiquid();
-            InitLiquidAssets();
-            InitLitecoin();
-            InitBitcore();
-            InitDogecoin();
-            InitBGold();
-            InitMonacoin();
-            InitDash();
-            InitFeathercoin();
-            InitAlthash();
-            InitGroestlcoin();
-            InitViacoin();
-            InitMonero();
-            InitZcash();
-            InitChaincoin();
+            // InitLiquid();
+            // InitLiquidAssets();
+            // InitLitecoin();
+            // InitBitcore();
+            // InitDogecoin();
+            // InitBGold();
+            // InitMonacoin();
+            // InitDash();
+            // InitFeathercoin();
+            // InitAlthash();
+            // InitGroestlcoin();
+            // InitViacoin();
+            // InitMonero();
+            // InitZcash();
+            // InitChaincoin();
             // InitArgoneum();//their rate source is down 9/15/20.
-            InitMonetaryUnit();
+            //InitMonetaryUnit();
+            InitEthereum();
+            // InitERC20();
+            InitBPROSUS();
+            // InitBNB();
 
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())

@@ -83,6 +83,8 @@ namespace BTCPayServer.Services.Rates
             yield return new AvailableRateProvider("coinbasepro", "Coinbase Pro", "https://api.pro.coinbase.com/products");
 
             yield return new AvailableRateProvider("argoneum", "Argoneum", "https://rates.argoneum.net/rates");
+            
+            yield return new AvailableRateProvider("bprosus", "BPROSUS", "https://bprosus.broader.io/rates");
         }
         void InitExchanges()
         {
@@ -103,6 +105,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("cryptomarket", new CryptoMarketExchangeRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_CRYPTOMARKET")));
             Providers.Add("bitflyer", new BitflyerRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITFLYER")));
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
+            Providers.Add("bprosus", new BPROSUSRateProvider(_httpClientFactory));
 
 
             // Backward compatibility: coinaverage should be using coingecko to prevent stores from breaking

@@ -26,7 +26,7 @@ namespace BTCPayServer.Rating
             ArgumentNullException.ThrowIfNull(str);
             value = null;
             str = str.Trim();
-            if (str.Length > 12)
+            if (str.Length > 200)
                 return false;
             var splitted = str.Split(new[] { '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
             if (splitted.Length == 2)
@@ -37,7 +37,7 @@ namespace BTCPayServer.Rating
             else if (splitted.Length == 1)
             {
                 var currencyPair = splitted[0];
-                if (currencyPair.Length < 6 || currencyPair.Length > 10)
+                if (currencyPair.Length < 6 || currencyPair.Length > 50)
                     return false;
                 if (currencyPair.Length == 6)
                 {

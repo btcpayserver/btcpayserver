@@ -7,6 +7,7 @@ using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
+using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 
 namespace BTCPayServer.Payments
 {
@@ -19,7 +20,7 @@ namespace BTCPayServer.Payments
         {
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS
-            MoneroLike, ZcashLike,
+            MoneroLike, ZcashLike, EthereumPaymentType.Instance
 #endif
         };
         /// <summary>

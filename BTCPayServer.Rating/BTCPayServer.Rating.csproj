@@ -11,6 +11,12 @@
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.6.3" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Altcoins)' == 'true'">
+    <PackageReference Include="Nethereum.ABI" Version="4.4.1" />
+    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="4.4.1" />
+    <PackageReference Include="Nethereum.Web3" Version="4.4.1" />
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Currencies.json" />
   </ItemGroup>

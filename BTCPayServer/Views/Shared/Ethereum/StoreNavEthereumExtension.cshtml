@@ -1,0 +1,11 @@
+@using BTCPayServer.Services.Altcoins.Ethereum.UI
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject BTCPayNetworkProvider BTCPayNetworkProvider;
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isEthereum = controller.Equals(nameof(EthereumLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
+}
+@if (SignInManager.IsSignedIn(User) && BTCPayNetworkProvider.GetAll().OfType<EthereumBTCPayNetwork>().Any())
+{
+    <a class="nav-link @(isEthereum ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreEthereumLikePaymentMethods" asp-controller="EthereumLikeStore">Ethereum</a>
+}

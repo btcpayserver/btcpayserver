@@ -2519,6 +2519,7 @@ namespace BTCPayServer.Tests
         public async Task CustodiansControllerTests()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.Experimental = true;
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             await AssertHttpError(401, async () => await unauthClient.GetCustodians());
@@ -2538,6 +2539,7 @@ namespace BTCPayServer.Tests
         {
             
             using var tester = CreateServerTester();
+            tester.PayTester.Experimental = true;
             await tester.StartAsync();
             
             var admin = tester.NewAccount();
@@ -2709,6 +2711,7 @@ namespace BTCPayServer.Tests
         public async Task CustodianTests()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.Experimental = true;
             await tester.StartAsync();
             
             var admin = tester.NewAccount();

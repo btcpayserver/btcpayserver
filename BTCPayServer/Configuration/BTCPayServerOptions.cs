@@ -147,6 +147,7 @@ namespace BTCPayServer.Configuration
             PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
+            Experimental = conf.GetOrDefault("experimental", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");
         }
@@ -154,6 +155,7 @@ namespace BTCPayServer.Configuration
         public string PluginRemote { get; set; }
         public string[] RecommendedPlugins { get; set; }
         public bool CheatMode { get; set; }
+        public bool Experimental { get; set; }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {

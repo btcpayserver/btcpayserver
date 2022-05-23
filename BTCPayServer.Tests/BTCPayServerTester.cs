@@ -137,6 +137,8 @@ namespace BTCPayServer.Tests
             }
             if (CheatMode)
                 config.AppendLine("cheatmode=1");
+            if (Experimental)
+                config.AppendLine("experimental=1");
 
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
@@ -291,6 +293,7 @@ namespace BTCPayServer.Tests
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
         public bool NoCSP { get; set; }
+        public bool Experimental { get; internal set; }
 
         public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {

@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,15 @@ namespace BTCPayServer.Services.Labels
                 Color = color,
                 TextColor = TextColor(color)
             };
+
+            string PayoutLabelText(KeyValuePair<string, List<string>> pair)
+            {
+                if (pair.Value.Count == 1)
+                    return $"Paid a payout of a pull payment ({pair.Key})";
+                else
+                    return $"Paid payouts of a pull payment ({pair.Key})";
+            }
+
             if (uncoloredLabel is ReferenceLabel refLabel)
             {
                 var refInLabel = string.IsNullOrEmpty(refLabel.Reference) ? string.Empty : $"({refLabel.Reference})";
@@ -90,13 +100,15 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip =
-                    $"Paid a payout{(payoutLabel.PullPaymentId is null ? string.Empty : $" of a pull payment ({payoutLabel.PullPaymentId})")}";
+                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
+                        ? $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
+                        : payoutLabel.PullPaymentPayouts.Select(PayoutLabelText).ToString();
+
                 coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
                     ? null
-                    : _linkGenerator.PayoutLink(payoutLabel.WalletId,
-                        payoutLabel.PullPaymentId, PayoutState.Completed, request.Scheme, request.Host,
+                    : _linkGenerator.PayoutLink(payoutLabel.WalletId, null, PayoutState.Completed, request.Scheme, request.Host,
                         request.PathBase);
+
             }
             return coloredLabel;
         }

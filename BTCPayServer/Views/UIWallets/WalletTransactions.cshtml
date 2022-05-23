@@ -17,7 +17,12 @@
                 max-width: 200px;
             }
         }
-
+        /* pull actions area, so that it is besides the search form */
+        @@media (min-width: 1200px) {
+            #Actions {
+                margin-top: -4rem;
+            }
+		}
         .unconf > * {
             opacity: 0.5;
         }
@@ -49,11 +54,14 @@
             border: 0;
         }
         
-        /* pull actions area, so that it is besides the search form */
-        @@media (min-width: 1200px) {
-            #Actions {
-                margin-top: -4rem;
-            }
+        .label-tooltip .tooltip-inner {
+            max-width: 15rem;
+            text-align: left;
+        }
+        
+        .label-tooltip ul {
+            margin: 0;
+            padding-left: var(--btcpay-space-m);
         }
     </style>
 }
@@ -161,7 +169,9 @@
                                             <div
                                                 class="badge transactionLabel position-relative d-block"
                                                 style="background-color:@label.Color;padding-right: 16px; z-index: 1;"
+                                                data-bs-html="true"
                                                 data-bs-toggle="tooltip"
+                                                data-bs-custom-class="label-tooltip"
                                                 title="@label.Tooltip">
                                                 <a asp-route-labelFilter="@label.Text" style="color:@label.TextColor !important;">@label.Text</a>
 

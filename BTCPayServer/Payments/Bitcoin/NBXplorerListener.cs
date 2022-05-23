@@ -143,7 +143,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
-                                await UpdatePaymentStates(wallet, await _InvoiceRepository.GetPendingInvoices());
+                                await UpdatePaymentStates(wallet);
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
@@ -220,9 +220,9 @@ namespace BTCPayServer.Payments.Bitcoin
             }
         }
 
-        async Task UpdatePaymentStates(BTCPayWallet wallet, string[] invoiceIds)
+        async Task UpdatePaymentStates(BTCPayWallet wallet)
         {
-            var invoices = await _InvoiceRepository.GetInvoices(invoiceIds);
+            var invoices = await _InvoiceRepository.GetPendingInvoices(skipNoPaymentInvoices: true);
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(wallet, i)).ToArray());
         }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
@@ -234,9 +234,9 @@ namespace BTCPayServer.Payments.Bitcoin
         }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, InvoiceEntity invoice)
         {
-
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
             var transactions = await wallet.GetTransactions(invoice.GetAllBitcoinPaymentData(false)
+                    .Where(p => p.Network == wallet.Network)
                     .Select(p => p.Outpoint.Hash)
                     .ToArray(), true);
             bool? originalPJBroadcasted = null;
@@ -355,14 +355,12 @@ namespace BTCPayServer.Payments.Bitcoin
         private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetwork network)
         {
             int totalPayment = 0;
-            var invoices = await _InvoiceRepository.GetPendingInvoices();
+            var invoices = await _InvoiceRepository.GetPendingInvoices(true);
             var coinsPerDerivationStrategy =
                 new Dictionary<DerivationStrategyBase, ReceivedCoin[]>();
-            foreach (var invoiceId in invoices)
+            foreach (var i in invoices)
             {
-                var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
-                if (invoice == null)
-                    continue;
+                var invoice = i;
                 var alreadyAccounted = invoice.GetAllBitcoinPaymentData(false).Select(p => p.Outpoint).ToHashSet();
                 var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)

@@ -88,7 +88,20 @@ namespace BTCPayServer.Services.Invoices
                 .ToListAsync()).Select(ToEntity);
         }
 
-        public async Task<string[]> GetPendingInvoices()
+        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false)
+        {
+            using var ctx = _applicationDbContextFactory.CreateContext();
+            var q = ctx.PendingInvoices.AsQueryable();
+            q = q.Include(o => o.InvoiceData)
+                 .ThenInclude(o => o.Payments);
+            if (includeAddressData)
+                q = q.Include(o => o.InvoiceData)
+                    .ThenInclude(o => o.AddressInvoices);
+            if (skipNoPaymentInvoices)
+                q = q.Where(i => i.InvoiceData.Payments.Any());
+            return (await q.Select(o => o.InvoiceData).ToArrayAsync()).Select(ToEntity).ToArray();
+        }
+        public async Task<string[]> GetPendingInvoiceIds()
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
             return await ctx.PendingInvoices.AsQueryable().Select(data => data.Id).ToArrayAsync();
@@ -640,8 +653,16 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
             {
-                var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
-                query = query.Where(i => statusSet.Contains(i.Id));
+                if (queryObject.InvoiceId.Length > 1)
+                {
+                    var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
+                    query = query.Where(i => statusSet.Contains(i.Id));
+                }
+                else
+                {
+                    var invoiceId = queryObject.InvoiceId.First();
+                    query = query.Where(i => i.Id == invoiceId);
+                }
             }
 
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)

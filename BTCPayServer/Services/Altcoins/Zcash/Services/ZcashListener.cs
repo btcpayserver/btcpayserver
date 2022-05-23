@@ -355,16 +355,11 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
 
         private async Task UpdateAnyPendingZcashLikePayment(string cryptoCode)
         {
-            var invoiceIds = await _invoiceRepository.GetPendingInvoices();
-            if (!invoiceIds.Any())
-            {
+            var invoices = await _invoiceRepository.GetPendingInvoices();
+            if (!invoices.Any())
                 return;
-            }
-
-            var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() { InvoiceId = invoiceIds });
             invoices = invoices.Where(entity => entity.GetPaymentMethod(new PaymentMethodId(cryptoCode, ZcashPaymentType.Instance))
                 ?.GetPaymentMethodDetails().Activated is true).ToArray();
-            _logger.LogInformation($"Updating pending payments for {cryptoCode} in {string.Join(',', invoiceIds)}");
             await UpdatePaymentStates(cryptoCode, invoices);
         }
 

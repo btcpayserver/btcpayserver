@@ -254,28 +254,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Fido2Credentials");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.HistoricalAddressInvoiceData", b =>
-                {
-                    b.Property<string>("InvoiceDataId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Address")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("Assigned")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CryptoCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset?>("UnAssigned")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("InvoiceDataId", "Address");
-
-                    b.ToTable("HistoricalAddressInvoices");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>
                 {
                     b.Property<string>("Id")
@@ -1106,17 +1084,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.HistoricalAddressInvoiceData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("HistoricalAddressInvoices")
-                        .HasForeignKey("InvoiceDataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InvoiceData");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1434,8 +1401,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("AddressInvoices");
 
                     b.Navigation("Events");
-
-                    b.Navigation("HistoricalAddressInvoices");
 
                     b.Navigation("InvoiceSearchData");
 

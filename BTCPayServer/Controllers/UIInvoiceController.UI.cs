@@ -132,13 +132,6 @@ namespace BTCPayServer.Controllers
                 CanMarkInvalid = invoiceState.CanMarkInvalid(),
                 CanMarkSettled = invoiceState.CanMarkComplete(),
             };
-            model.Addresses = invoice.HistoricalAddresses.Select(h =>
-                new InvoiceDetailsModel.AddressModel
-                {
-                    Destination = h.GetAddress(),
-                    PaymentMethod = h.GetPaymentMethodId().ToPrettyString(),
-                    Current = !h.UnAssigned.HasValue
-                }).ToArray();
 
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;

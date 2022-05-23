@@ -368,11 +368,11 @@ namespace BTCPayServer.Services.Invoices
         {
             var paymentMethodIdStr = paymentMethodId?.ToString();
             var addresses = context.HistoricalAddressInvoices.Where(data =>
-                (data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
+                data.InvoiceDataId == invoiceId && data.UnAssigned == null);
 #pragma warning disable CS0618 // Type or member is obsolete
-                 data.CryptoCode == paymentMethodIdStr) &&
+            if (paymentMethodIdStr != null)
+                addresses = addresses.Where(data => data.CryptoCode == paymentMethodIdStr);
 #pragma warning restore CS0618 // Type or member is obsolete
-                data.UnAssigned == null);
             foreach (var historicalAddressInvoiceData in addresses)
             {
                 historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;

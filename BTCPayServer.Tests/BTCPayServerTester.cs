@@ -7,11 +7,13 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -179,6 +181,7 @@ namespace BTCPayServer.Tests
                     .ConfigureServices(services =>
                     {
                         services.TryAddSingleton<IFeeProviderFactory>(new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
+                        services.AddSingleton<ICustodian, MockCustodian>();
                     })
                     .UseKestrel()
                     .UseStartup<Startup>()

@@ -1,7 +1,7 @@
-@model IntegrationsViewModel
+@model PluginsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Plugins, "Plugins", Context.GetStoreData().Id);
 }
 
 <div class="row">
@@ -16,8 +16,8 @@
             <vc:ui-extension-point location="store-integrations-list" model="@Model" />
         </ul>
 
-        <h3 class="mt-5 mb-3">Other Integrations</h3>
-        <p>Take a look at documentation for the list of other integrations we support and the directions on how to enable them:</p>
+        <h3 class="mt-5 mb-3">Integrations</h3>
+        <p>Take a look at documentation for the list of integrations we support and the directions on how to enable them:</p>
         <ul>
             <li><a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank" rel="noreferrer noopener">WooCommerce</a></li>
             <li><a href="https://docs.btcpayserver.org/Drupal/" target="_blank" rel="noreferrer noopener">Drupal</a></li>

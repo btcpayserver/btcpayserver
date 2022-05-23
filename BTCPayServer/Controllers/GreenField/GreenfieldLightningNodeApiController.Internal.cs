@@ -49,9 +49,9 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/server/lightning/{cryptoCode}/connect")]
-        public override Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request)
+        public override Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request, CancellationToken cancellationToken = default)
         {
-            return base.ConnectToNode(cryptoCode, request);
+            return base.ConnectToNode(cryptoCode, request, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
@@ -73,9 +73,9 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/server/lightning/{cryptoCode}/address")]
-        public override Task<IActionResult> GetDepositAddress(string cryptoCode)
+        public override Task<IActionResult> GetDepositAddress(string cryptoCode, CancellationToken cancellationToken = default)
         {
-            return base.GetDepositAddress(cryptoCode);
+            return base.GetDepositAddress(cryptoCode, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,

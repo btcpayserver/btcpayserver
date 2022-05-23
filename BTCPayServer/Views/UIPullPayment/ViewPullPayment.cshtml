@@ -34,6 +34,9 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @Safe.Raw(Model.EmbeddedCSS)
+    <style>
+        .no-marker > ul { list-style-type: none; }
+    </style>
 </head>
 <body>
     <div class="min-vh-100 d-flex flex-column">
@@ -78,8 +81,9 @@
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 @if (!ViewContext.ModelState.IsValid)
                 {
-                    @Html.ValidationSummary(string.Empty, new { @class = "alert alert-danger mb-4 pb-0 text-center" })
+                    @Html.ValidationSummary(string.Empty, new { @class = $"alert alert-danger mb-4 pb-0 {(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")}" })
                 }
+
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">

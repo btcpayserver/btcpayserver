@@ -46,7 +46,7 @@ namespace BTCPayServer.Tests
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
             var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
-
+            
             var options = new ChromeOptions();
             if (!runInBrowser)
             {
@@ -522,7 +522,7 @@ namespace BTCPayServer.Tests
             walletId ??= WalletId;
             GoToWallet(walletId, WalletsNavPages.Receive);
             Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = Driver.FindElement(By.Id("address")).GetProperty("value");
+            var addressStr = Driver.FindElement(By.Id("address")).GetAttribute("value");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)
             {

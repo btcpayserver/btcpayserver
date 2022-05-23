@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
@@ -28,6 +29,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -118,7 +120,11 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
+            services.AddSingleton<CustodianAccountRepository>();
+            
+
             services.TryAddSingleton<WalletHistogramService>();
+            services.TryAddSingleton<CustodianAccountRepository>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>

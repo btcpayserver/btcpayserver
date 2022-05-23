@@ -114,10 +114,10 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
             Id = activeProcessor.Id,
             Processed = tcs
         });
-        TempData.SetStatusMessageModel(new StatusMessageModel()
+        TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = $"Processor updated."
+            Message = "Processor updated."
         });
         await tcs.Task;
         return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new {storeId});
@@ -138,7 +138,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
 
         public AutomatedPayoutBlob ToBlob()
         {
-            return new AutomatedPayoutBlob() { Interval = TimeSpan.FromMinutes(IntervalMinutes) };
+            return new AutomatedPayoutBlob { Interval = TimeSpan.FromMinutes(IntervalMinutes) };
         }
     }
 }

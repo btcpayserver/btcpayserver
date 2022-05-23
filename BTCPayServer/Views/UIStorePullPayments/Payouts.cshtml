@@ -62,8 +62,9 @@
     PaymentMethods = new[] {Model.PaymentMethodId}
 })).Any())
 {
-    <div class="alert alert-info text-break" role="alert">
-        protip: BTCPay Server has detected that there are supported but unconfigured Payout Processors for this payout payment method. Payout processors can potentially help automate the the workflow of these payouts so that you do not need to manually handle them.
+    <div class="alert alert-info mb-5" role="alert">
+        <strong>Protip:</strong> BTCPay Server has detected that there are supported but unconfigured Payout Processors for this payout payment method.<br/>
+        Payout Processors can help automate the the workflow of these payouts so that you do not need to manually handle them.
         <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
     </div>
 }

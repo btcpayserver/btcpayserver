@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -29,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Logging;
+using BTCPayServer.Services.Wallets.Export;
 using NBXplorer;
 using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;
@@ -578,7 +580,6 @@ namespace BTCPayServer.Controllers
                 ? seed
                 : null;
         }
-
 
         [HttpPost("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
@@ -1276,6 +1277,36 @@ namespace BTCPayServer.Controllers
                 default:
                     return NotFound();
             }
+        }
+
+        [HttpGet("{walletId}/export")]
+        public async Task<IActionResult> Export(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, 
+            string format, string labelFilter = null)
+        {
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+            
+            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
+            var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
+            var walletTransactionsInfo = await walletTransactionsInfoAsync;
+            var input = transactions.UnconfirmedTransactions.Transactions
+                .Concat(transactions.ConfirmedTransactions.Transactions)
+                .OrderByDescending(t => t.Timestamp)
+                .ToList();
+            var export = new TransactionsExport(wallet, walletTransactionsInfo);
+            var res = export.Process(input, format);
+
+            var cd = new ContentDisposition
+            {
+                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
+                Inline = true
+            };
+            Response.Headers.Add("Content-Disposition", cd.ToString());
+            Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            return Content(res, "application/" + format);
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)

@@ -1,5 +1,6 @@
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Lightning;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -15,5 +16,8 @@ namespace BTCPayServer.Client.Models
         
         [JsonConverter(typeof(MoneyJsonConverter))]
         public Money MaxFeeFlat { get; set; }
+    
+        [JsonConverter(typeof(LightMoneyJsonConverter))]
+        public LightMoney Amount { get; set; }
     }
 }

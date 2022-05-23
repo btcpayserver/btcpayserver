@@ -43,6 +43,7 @@ namespace BTCPayServer.Data
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
             builder.Entity<InvoiceData>()
                 .HasOne(o => o.CurrentRefund);
+            builder.Entity<InvoiceData>().HasIndex(o => o.Created);
         }
     }
 }

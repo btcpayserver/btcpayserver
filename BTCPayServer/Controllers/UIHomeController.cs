@@ -143,6 +143,7 @@ namespace BTCPayServer.Controllers
                 .ToArray());
             return Json(json);
         }
+
         [Route("docs")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult SwaggerDocs()

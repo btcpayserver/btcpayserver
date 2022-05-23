@@ -809,7 +809,7 @@ namespace BTCPayServer.Tests
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
             s.Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = s.Driver.FindElement(By.Id("address")).GetProperty("value");
+            var addressStr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
             await s.Server.ExplorerNode.GenerateAsync(1);
@@ -968,7 +968,7 @@ namespace BTCPayServer.Tests
             server.Done();
 
             TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -1149,6 +1149,25 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.Id("confirm")));
             s.Driver.FindElement(By.Id("proceed")).Click();
             Assert.Equal(settingsUrl, s.Driver.Url);
+            
+            // Transactions list contains export and action, ensure functions are present.
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("BumpFee"));
+            
+            // JSON export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportJSON")).Click();
+            Thread.Sleep(1000);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Contains(s.WalletId.ToString(), s.Driver.Url);
+            Assert.EndsWith("export?format=json", s.Driver.Url);
+            Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            
+            // CSV export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportCSV")).Click();
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1167,6 +1186,12 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).GetAttribute("value"));
             Assert.Contains("m/84'/1'/0'",
                 s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
+                
+            // Transactions list is empty 
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            Assert.Contains("There are no transactions yet.", s.Driver.PageSource);
+            s.Driver.AssertElementNotFound(By.Id("ExportDropdownToggle"));
+            s.Driver.AssertElementNotFound(By.Id("ActionsDropdownToggle"));
         }
 
         [Fact]
@@ -1518,11 +1543,9 @@ namespace BTCPayServer.Tests
             var lnurlResponse2 = await fetchedReuqest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
                 network, new HttpClient(), comment: "lol2");
             Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
-            await Assert.ThrowsAnyAsync<LightningRPCException>(async () =>
-            {
-                // Initial bolt was cancelled
-                await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
-            });
+            // Initial bolt was cancelled
+            var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
+            Assert.Equal(PayResult.Error, res.Result);
 
             await s.Server.CustomerLightningD.Pay(lnurlResponse2.Pr);
             await TestUtils.EventuallyAsync(async () =>

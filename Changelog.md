@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.2
+
+### Bug fixes:
+
+* Various internal fixes @NicolasDorier @Kukks
+* Various UI fixes (#3702 #3721) @dennisreimann
+* Updated Payout processor Label for setting interval (#3698) @Bangalisch
+* Update validation of crowdfund app settings (#3708) @bolatovumar
+* Fix POS styling (#3713) @ishristov 
+
+### Improvements:
+
+* Do not always provide counting in list views (#3696) @NicolasDorier
+* Lightning: Catch and display external service error (#3710) @dennisreimann
+* Add dark mode option for public pull payment and payment request views (#3707) @dennisreimann
+* Show Shopify Order Id instead of Shopify order internal id (#3718) @Kukks
+
 ## 1.5.1
 
 ### Bug fixes:

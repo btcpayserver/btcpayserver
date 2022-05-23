@@ -495,7 +495,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
             ConnectToNodeRequest request, CancellationToken token = default)
         {
-            HandleActionResult(await _storeLightningNodeApiController.ConnectToNode(cryptoCode, request));
+            HandleActionResult(await _storeLightningNodeApiController.ConnectToNode(cryptoCode, request, token));
         }
 
         public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string storeId,
@@ -516,7 +516,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<string>(
-                await _storeLightningNodeApiController.GetDepositAddress(cryptoCode));
+                await _storeLightningNodeApiController.GetDepositAddress(cryptoCode, token));
         }
 
         public override async Task PayLightningInvoice(string storeId, string cryptoCode,
@@ -549,7 +549,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request,
             CancellationToken token = default)
         {
-            HandleActionResult(await _lightningNodeApiController.ConnectToNode(cryptoCode, request));
+            HandleActionResult(await _lightningNodeApiController.ConnectToNode(cryptoCode, request, token));
         }
 
         public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string cryptoCode,
@@ -569,7 +569,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<string>(
-                await _lightningNodeApiController.GetDepositAddress(cryptoCode));
+                await _lightningNodeApiController.GetDepositAddress(cryptoCode, token));
         }
 
         public override async Task<LightningPaymentData> PayLightningInvoice(string cryptoCode,

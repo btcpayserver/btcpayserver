@@ -10,6 +10,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
@@ -38,6 +39,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
     [CustodianExceptionFilter]
+    [ExperimentalRouteAttribute] // if you remove this, also remove "x_experimental": true in swagger.template.custodians.json
     public class GreenfieldCustodianAccountController : ControllerBase
     {
         private readonly CustodianAccountRepository _custodianAccountRepository;

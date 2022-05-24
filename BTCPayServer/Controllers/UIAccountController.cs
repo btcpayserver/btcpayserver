@@ -33,9 +33,9 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         readonly RoleManager<IdentityRole> _RoleManager;
-        readonly SettingsRepository _SettingsRepository;
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
+        readonly SettingsRepository _SettingsRepository;
         private readonly Fido2Service _fido2Service;
         private readonly LnurlAuthService _lnurlAuthService;
         private readonly LinkGenerator _linkGenerator;
@@ -43,12 +43,14 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
 
+        public PoliciesSettings PoliciesSettings { get; }
         public Logs Logs { get; }
 
         public UIAccountController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
+            PoliciesSettings policiesSettings,
             SettingsRepository settingsRepository,
             Configuration.BTCPayServerOptions options,
             BTCPayServerEnvironment btcPayServerEnvironment,
@@ -61,8 +63,9 @@ namespace BTCPayServer.Controllers
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _RoleManager = roleManager;
+            PoliciesSettings = policiesSettings;
             _SettingsRepository = settingsRepository;
+            _RoleManager = roleManager;
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
@@ -85,7 +88,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
-                return await RedirectToLocal();
+                return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -119,7 +122,7 @@ namespace BTCPayServer.Controllers
 
                 _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
                 await _signInManager.SignInAsync(user, false, "LoginCode");
-                return await RedirectToLocal(returnUrl);
+                return RedirectToLocal(returnUrl);
             }
             return await Login(returnUrl, null);
         }
@@ -194,7 +197,7 @@ namespace BTCPayServer.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"User '{user.Id}' logged in.");
-                    return await RedirectToLocal(returnUrl);
+                    return RedirectToLocal(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -293,7 +296,7 @@ namespace BTCPayServer.Controllers
                     _lnurlAuthService.FinalLoginStore.TryRemove(viewModel.UserId, out _);
                     await _signInManager.SignInAsync(user, viewModel.RememberMe, "FIDO2");
                     _logger.LogInformation("User logged in.");
-                    return await RedirectToLocal(returnUrl);
+                    return RedirectToLocal(returnUrl);
                 }
 
                 errorMessage = "Invalid login attempt.";
@@ -344,7 +347,7 @@ namespace BTCPayServer.Controllers
                 {
                     await _signInManager.SignInAsync(user, viewModel.RememberMe, "FIDO2");
                     _logger.LogInformation("User logged in.");
-                    return await RedirectToLocal(returnUrl);
+                    return RedirectToLocal(returnUrl);
                 }
 
                 errorMessage = "Invalid login attempt.";
@@ -423,7 +426,7 @@ namespace BTCPayServer.Controllers
             if (result.Succeeded)
             {
                 _logger.LogInformation("User with ID {UserId} logged in with 2fa.", user.Id);
-                return await RedirectToLocal(returnUrl);
+                return RedirectToLocal(returnUrl);
             }
             else if (result.IsLockedOut)
             {
@@ -492,7 +495,7 @@ namespace BTCPayServer.Controllers
             if (result.Succeeded)
             {
                 _logger.LogInformation("User with ID {UserId} logged in with a recovery code.", user.Id);
-                return await RedirectToLocal(returnUrl);
+                return RedirectToLocal(returnUrl);
             }
             if (result.IsLockedOut)
             {
@@ -518,14 +521,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("/register")]
         [AllowAnonymous]
         [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
+        public IActionResult Register(string returnUrl = null, bool logon = true)
         {
             if (!CanLoginOrRegister())
             {
                 SetInsecureFlags();
             }
-            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
+            if (PoliciesSettings.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
@@ -583,7 +585,7 @@ namespace BTCPayServer.Controllers
                     {
                         if (logon)
                             await _signInManager.SignInAsync(user, isPersistent: false);
-                        return await RedirectToLocal(returnUrl);
+                        return RedirectToLocal(returnUrl);
                     }
                     else
                     {
@@ -750,7 +752,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private async Task<IActionResult> RedirectToLocal(string returnUrl = null)
+        private IActionResult RedirectToLocal(string returnUrl = null)
         {
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -759,10 +761,9 @@ namespace BTCPayServer.Controllers
             else
             {
                 // After login, if there is an app on "/", we should redirect to BTCPay explicit home route, and not to the app.
-                var policies = await _SettingsRepository.GetPolicies();
-                if (policies?.RootAppId is not null && policies?.RootAppType is not null)
+                if (PoliciesSettings.RootAppId is not null && PoliciesSettings.RootAppType is not null)
                     return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
-                if (policies?.DomainToAppMapping is { } mapping)
+                if (PoliciesSettings.DomainToAppMapping is { } mapping)
                 {
                     var matchedDomainMapping = mapping.FirstOrDefault(item =>
                     item.Domain.Equals(this.HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));

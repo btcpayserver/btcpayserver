@@ -28,8 +28,7 @@ namespace BTCPayServer.Filters
         {
             if (context.RouteContext.RouteData.Values.ContainsKey("appId"))
                 return true;
-            var settingsRepository = context.RouteContext.HttpContext.RequestServices.GetService<ISettingsRepository>();
-            var policies = settingsRepository.GetPolicies().GetAwaiter().GetResult();
+            var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
             if (policies?.DomainToAppMapping is { } mapping)
             {
                 var matchedDomainMapping = mapping.FirstOrDefault(item =>

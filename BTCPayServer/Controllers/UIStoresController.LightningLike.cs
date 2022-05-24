@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
         };
         
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
-        public async Task<IActionResult> Lightning(string storeId, string cryptoCode)
+        public IActionResult Lightning(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers
                 CryptoCode = cryptoCode,
                 StoreId = storeId
             };
-            await SetExistingValues(store, vm);
+            SetExistingValues(store, vm);
 
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
-        public async Task<IActionResult> SetupLightningNode(string storeId, string cryptoCode)
+        public IActionResult SetupLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
                 CryptoCode = cryptoCode,
                 StoreId = storeId
             };
-            await SetExistingValues(store, vm);
+            SetExistingValues(store, vm);
             return View(vm);
         }
 
@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            vm.CanUseInternalNode = await CanUseInternalLightning();
+            vm.CanUseInternalNode = CanUseInternalLightning();
 
             if (vm.CryptoCode == null)
             {
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers
             LightningSupportedPaymentMethod? paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
-                if (!await CanUseInternalLightning())
+                if (!CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use the internal lightning node");
                     return View(vm);
@@ -213,7 +213,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/lightning/{cryptoCode}/settings")]
-        public async Task<IActionResult> LightningSettings(string storeId, string cryptoCode)
+        public IActionResult LightningSettings(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback
             };
-            await SetExistingValues(store, vm);
+            SetExistingValues(store, vm);
 
             if (lightning != null)
             {
@@ -360,14 +360,14 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
         }
 
-        private async Task<bool> CanUseInternalLightning()
+        private bool CanUseInternalLightning()
         {
-            return User.IsInRole(Roles.ServerAdmin) || (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll;
+            return User.IsInRole(Roles.ServerAdmin) || _policiesSettings.AllowLightningInternalNodeForAll;
         }
 
-        private async Task SetExistingValues(StoreData store, LightningNodeViewModel vm)
+        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.CanUseInternalNode = await CanUseInternalLightning();
+            vm.CanUseInternalNode = CanUseInternalLightning();
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
 
             if (lightning != null)

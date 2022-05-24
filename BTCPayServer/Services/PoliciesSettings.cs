@@ -44,6 +44,8 @@ namespace BTCPayServer.Services
         public List<BlockExplorerOverrideItem> BlockExplorerLinks { get; set; } = new List<BlockExplorerOverrideItem>();
 
         public List<DomainToAppMappingItem> DomainToAppMapping { get; set; } = new List<DomainToAppMappingItem>();
+        [Display(Name = "Enable experimental features")]
+        public bool Experimental { get; set; }
 
         public class BlockExplorerOverrideItem
         {

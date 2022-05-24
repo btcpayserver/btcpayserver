@@ -121,10 +121,9 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public async Task<IActionResult> CreateUser()
+        public IActionResult CreateUser()
         {
-            ViewData["AllowRequestEmailConfirmation"] = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
-
+            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
 
@@ -132,7 +131,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            var requiresConfirmedEmail = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
+            var requiresConfirmedEmail = _policiesSettings.RequiresConfirmedEmail;
             ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;

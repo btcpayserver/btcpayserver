@@ -27,6 +27,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldUsersController : ControllerBase
     {
+        public PoliciesSettings PoliciesSettings { get; }
         public Logs Logs { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -42,6 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
             RateLimitService throttleService,
@@ -54,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _userManager = userManager;
             _roleManager = roleManager;
             _settingsRepository = settingsRepository;
+            PoliciesSettings = policiesSettings;
             _eventAggregator = eventAggregator;
             _passwordValidator = passwordValidator;
             _throttleService = throttleService;
@@ -147,7 +150,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.IsAdministrator is true && !isAdmin)
                 return this.CreateAPIPermissionError(Policies.Unrestricted, $"Insufficient API Permissions. Please use an API key with permission: {Policies.Unrestricted} and be an admin.");
 
-            if (!isAdmin && (policies.LockSubscription || (await _settingsRepository.GetPolicies()).DisableNonAdminCreateUserApi))
+            if (!isAdmin && (policies.LockSubscription || PoliciesSettings.DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;

@@ -1,6 +1,6 @@
 ﻿@using BTCPayServer.Abstractions.Contracts
 @model LoginViewModel
-@inject ISettingsRepository _settingsRepository
+@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 @{
     ViewData["Title"] = "Sign in";
     Layout = "_LayoutSignedOut";
@@ -35,7 +35,7 @@
 <form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
     <input asp-for="LoginCode" type="hidden" class="form-control"/>
 </form>
-@if (!(await _settingsRepository.GetPolicies()).LockSubscription)
+@if (!PoliciesSettings.LockSubscription)
 {
     <p class="text-center mt-2 mb-0">
         <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>

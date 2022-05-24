@@ -5,9 +5,9 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Lightning
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
+@inject BTCPayServer.Services.ThemeSettings Theme
 @{
     Layout = null;
-    var theme = await _settingsRepository.GetTheme();
 }
 <!DOCTYPE html>
 <html>
@@ -20,7 +20,7 @@
     <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
     <link rel="manifest" href="~/manifest.json">
     <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
 </head>
 <body>

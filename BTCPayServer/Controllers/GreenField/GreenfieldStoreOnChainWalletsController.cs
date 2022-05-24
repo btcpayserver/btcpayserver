@@ -38,12 +38,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStoreOnChainWalletsController : Controller
     {
         private StoreData Store => HttpContext.GetStoreData();
+
+        public PoliciesSettings PoliciesSettings { get; }
+
         private readonly IAuthorizationService _authorizationService;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly WalletRepository _walletRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private readonly ISettingsRepository _settingsRepository;
         private readonly NBXplorerDashboard _nbXplorerDashboard;
         private readonly UIWalletsController _walletsController;
         private readonly PayjoinClient _payjoinClient;
@@ -59,8 +61,8 @@ namespace BTCPayServer.Controllers.Greenfield
             BTCPayNetworkProvider btcPayNetworkProvider,
             WalletRepository walletRepository,
             ExplorerClientProvider explorerClientProvider,
-            ISettingsRepository settingsRepository,
             NBXplorerDashboard nbXplorerDashboard,
+            PoliciesSettings policiesSettings,
             UIWalletsController walletsController,
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
@@ -75,7 +77,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletRepository = walletRepository;
             _explorerClientProvider = explorerClientProvider;
-            _settingsRepository = settingsRepository;
+            PoliciesSettings = policiesSettings;
             _nbXplorerDashboard = nbXplorerDashboard;
             _walletsController = walletsController;
             _payjoinClient = payjoinClient;
@@ -615,7 +617,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            return await _authorizationService.CanUseHotWallet(await _settingsRepository.GetPolicies(), User);
+            return await _authorizationService.CanUseHotWallet(PoliciesSettings, User);
         }
 
         private bool IsInvalidWalletRequest(string cryptoCode, [MaybeNullWhen(true)] out BTCPayNetwork network,

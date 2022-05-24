@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             LanguageService langService,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            SettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             AppService appService,
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
-            _settingsRepository = settingsRepository;
+            _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
             _appService = appService;
             DataProtector = dataProtector.CreateProtector("ConfigProtector");
@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
         private readonly ExplorerClientProvider _ExplorerProvider;
         private readonly LanguageService _LangService;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
-        private readonly SettingsRepository _settingsRepository;
+        private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;

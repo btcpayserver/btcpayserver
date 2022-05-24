@@ -2,11 +2,11 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
-@inject ISettingsRepository _settingsRepository
 @inject LinkGenerator _linkGenerator
+@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 
 @{
-    var notificationDisabled = (await _settingsRepository.GetPolicies()).DisableInstantNotifications;
+    var notificationDisabled = PoliciesSettings.DisableInstantNotifications;
     if (!notificationDisabled)
     {
         var user = await _userManager.GetUserAsync(User);

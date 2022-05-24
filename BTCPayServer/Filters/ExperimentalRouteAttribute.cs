@@ -14,7 +14,7 @@ namespace BTCPayServer.Filters
 
         public bool Accept(ActionConstraintContext context)
         {
-            return context.RouteContext.HttpContext.RequestServices.GetRequiredService<BTCPayServerEnvironment>().Experimental;
+            return context.RouteContext.HttpContext.RequestServices.GetRequiredService<PoliciesSettings>().Experimental;
         }
     }
 }

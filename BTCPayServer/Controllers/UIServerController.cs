@@ -48,6 +48,7 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
+        readonly PoliciesSettings _policiesSettings;
         private readonly NBXplorerDashboard _dashBoard;
         private readonly StoreRepository _StoreRepository;
         readonly LightningConfigurationProvider _LnConfigProvider;
@@ -70,6 +71,7 @@ namespace BTCPayServer.Controllers
             IEnumerable<IStorageProviderService> storageProviderServices,
             BTCPayServerOptions options,
             SettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             NBXplorerDashboard dashBoard,
             IHttpClientFactory httpClientFactory,
             LightningConfigurationProvider lnConfigProvider,
@@ -81,6 +83,7 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs)
         {
+            _policiesSettings = policiesSettings;
             _Options = options;
             _StoredFileRepository = storedFileRepository;
             _FileService = fileService;
@@ -278,10 +281,9 @@ namespace BTCPayServer.Controllers
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             ViewBag.AppsList = await GetAppSelectList();
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-            return View(data);
+            return View(_policiesSettings);
         }
 
         [Route("server/policies")]
@@ -358,7 +360,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
-            if (await CanShowSSHService())
+            if (CanShowSSHService())
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -845,7 +847,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/services/ssh")]
         public async Task<IActionResult> SSHService()
         {
-            if (!await CanShowSSHService())
+            if (!CanShowSSHService())
                 return NotFound();
 
             var settings = _Options.SSHSettings;
@@ -881,10 +883,9 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        async Task<bool> CanShowSSHService()
+        bool CanShowSSHService()
         {
-            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>();
-            return !(policies?.DisableSSHService is true) &&
+            return !_policiesSettings.DisableSSHService &&
                    _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
         }
 
@@ -896,7 +897,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/services/ssh")]
         public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string? command = null)
         {
-            if (!await CanShowSSHService())
+            if (!CanShowSSHService())
                 return NotFound();
 
             if (command is "Save")

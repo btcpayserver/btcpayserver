@@ -28,10 +28,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
         public GreenfieldInternalLightningNodeApiController(
-            BTCPayNetworkProvider btcPayNetworkProvider, ISettingsRepository settingsRepository, LightningClientFactoryService lightningClientFactory,
+            BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IAuthorizationService authorizationService) : base(
-            btcPayNetworkProvider, settingsRepository, authorizationService)
+            btcPayNetworkProvider, policiesSettings, authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactory = lightningClientFactory;

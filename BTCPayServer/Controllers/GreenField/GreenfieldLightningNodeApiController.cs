@@ -8,6 +8,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -26,14 +27,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public abstract class GreenfieldLightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly ISettingsRepository _settingsRepository;
+        private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         protected GreenfieldLightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
-            ISettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _settingsRepository = settingsRepository;
+            _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
         }
 
@@ -296,8 +297,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         protected async Task<bool> CanUseInternalLightning(bool doingAdminThings)
         {
-
-            return (!doingAdminThings && (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll) ||
+            return (!doingAdminThings && this._policiesSettings.AllowLightningInternalNodeForAll) ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

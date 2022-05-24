@@ -35,7 +35,6 @@ namespace BTCPayServer.Services
             NetworkType = provider.NetworkType;
             this.torServices = torServices;
             CheatMode = opts.CheatMode;
-            Experimental = opts.Experimental;
         }
         public IWebHostEnvironment Environment
         {
@@ -80,8 +79,6 @@ namespace BTCPayServer.Services
         }
 
         public HttpContext Context => httpContext.HttpContext;
-
-        public bool Experimental { get; set; }
 
         public override string ToString()
         {

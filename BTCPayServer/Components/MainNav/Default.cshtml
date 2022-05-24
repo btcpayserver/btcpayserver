@@ -8,16 +8,15 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using BTCPayServer.Services
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
-@inject ISettingsRepository SettingsRepository
+@inject PoliciesSettings PoliciesSettings
+@inject ThemeSettings Theme
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
-@{
-    var theme = await SettingsRepository.GetTheme();
-}
 
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
     <div class="accordion px-3 px-lg-4">
@@ -222,7 +221,7 @@
         else if (Env.IsSecure)
         {
             <ul class="navbar-nav">
-                @if (!(await SettingsRepository.GetPolicies()).LockSubscription)
+                @if (!PoliciesSettings.LockSubscription)
                 {
                     <li class="nav-item">
                         <a asp-area="" asp-controller="UIAccount" asp-action="Register" class="nav-link js-scroll-trigger" id="Nav-Register">Register</a>
@@ -256,7 +255,7 @@
                             <div class="text-secondary">Administrator</div>
                         }
                     </li>
-                    @if (!theme.CustomTheme)
+                    @if (!Theme.CustomTheme)
                     {
                         <li class="border-top py-1 px-3">
                             <vc:theme-switch css-class="nav-link"/>

@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            return await _authorizationService.CanUseHotWallet(await _settingsRepository.GetPolicies(), User);
+            return await _authorizationService.CanUseHotWallet(PoliciesSettings, User);
         }
     }
 }

@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -25,11 +26,13 @@ namespace BTCPayServer.Controllers.Greenfield
     public partial class GreenfieldStoreOnChainPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
+
+        public PoliciesSettings PoliciesSettings { get; }
+
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         private readonly IAuthorizationService _authorizationService;
-        private readonly ISettingsRepository _settingsRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
 
         public GreenfieldStoreOnChainPaymentMethodsController(
@@ -37,14 +40,15 @@ namespace BTCPayServer.Controllers.Greenfield
             BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayWalletProvider walletProvider,
             IAuthorizationService authorizationService,
-            ExplorerClientProvider explorerClientProvider, ISettingsRepository settingsRepository)
+            ExplorerClientProvider explorerClientProvider,
+            PoliciesSettings policiesSettings)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletProvider = walletProvider;
             _authorizationService = authorizationService;
             _explorerClientProvider = explorerClientProvider;
-            _settingsRepository = settingsRepository;
+            PoliciesSettings = policiesSettings;
         }
 
         public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,

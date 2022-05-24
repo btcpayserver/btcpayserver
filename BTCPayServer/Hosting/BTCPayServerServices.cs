@@ -110,7 +110,10 @@ namespace BTCPayServer.Hosting
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             // Don't move this StartupTask, we depend on it being right here
             services.AddStartupTask<MigrationStartupTask>();
-            // 
+            //
+            AddSettingsAccessor<PoliciesSettings>(services);
+            AddSettingsAccessor<ThemeSettings>(services);
+            //
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
@@ -475,6 +478,15 @@ namespace BTCPayServer.Hosting
                 services.AddSingleton<IHostedService, Cheater>(o => o.GetRequiredService<Cheater>());
             }
             return services;
+        }
+
+        private static void AddSettingsAccessor<T>(IServiceCollection services) where T : class, new()
+        {
+            services.TryAddSingleton<ISettingsAccessor<T>, SettingsAccessor<T>>();
+            services.AddSingleton<IHostedService>(provider => (SettingsAccessor<T>)provider.GetRequiredService<ISettingsAccessor<T>>());
+            services.AddSingleton<IStartupTask>(provider => (SettingsAccessor<T>)provider.GetRequiredService<ISettingsAccessor<T>>());
+            // Singletons shouldn't reference the settings directly, but ISettingsAccessor<T>, since singletons won't have refreshed values of the setting
+            services.AddTransient<T>(provider => provider.GetRequiredService<ISettingsAccessor<T>>().Settings);
         }
 
         public static void SkipModelValidation<T>(this IServiceCollection services)

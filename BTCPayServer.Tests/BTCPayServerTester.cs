@@ -137,8 +137,6 @@ namespace BTCPayServer.Tests
             }
             if (CheatMode)
                 config.AppendLine("cheatmode=1");
-            if (Experimental)
-                config.AppendLine("experimental=1");
 
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
@@ -293,7 +291,6 @@ namespace BTCPayServer.Tests
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
         public bool NoCSP { get; set; }
-        public bool Experimental { get; internal set; }
 
         public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {
@@ -341,6 +338,14 @@ namespace BTCPayServer.Tests
             var p = CurrencyPair.Parse(pair);
             var index = coinAverageMock.ExchangeRates.FindIndex(o => o.CurrencyPair == p);
             coinAverageMock.ExchangeRates[index] = new PairRate(p, bidAsk);
+        }
+
+        public async Task EnableExperimental()
+        {
+            var r = GetService<SettingsRepository>();
+            var p = await r.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            p.Experimental = true;
+            await r.UpdateSetting(p);
         }
     }
 }

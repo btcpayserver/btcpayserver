@@ -408,7 +408,7 @@ namespace BTCPayServer.Tests
             var storeController = user.GetController<UIStoresController>();
             var storeResponse = storeController.GeneralSettings();
             Assert.IsType<ViewResult>(storeResponse);
-            Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
+            Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
             storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
             {
@@ -430,7 +430,7 @@ namespace BTCPayServer.Tests
                 new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                 "save", "BTC").GetAwaiter().GetResult());
 
-            storeResponse = storeController.LightningSettings(user.StoreId, "BTC").GetAwaiter().GetResult();
+            storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
             var storeVm =
                 Assert.IsType<LightningSettingsViewModel>(Assert
                     .IsType<ViewResult>(storeResponse).Model);
@@ -1571,7 +1571,7 @@ namespace BTCPayServer.Tests
 
             // enable unified QR code in settings
             var vm = Assert.IsType<LightningSettingsViewModel>(Assert
-                .IsType<ViewResult>(await user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
+                .IsType<ViewResult>(user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
             );
             vm.OnChainWithLnInvoiceFallback = true;
             Assert.IsType<RedirectToActionResult>(
@@ -1629,7 +1629,7 @@ namespace BTCPayServer.Tests
 
             // Activating LNUrl, we should still have only 1 payment criteria that can be set.
             user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
-            var lnSettingsVm = await user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModelAsync<LightningSettingsViewModel>();
+            var lnSettingsVm = user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModel<LightningSettingsViewModel>();
             lnSettingsVm.LNURLEnabled = true;
             lnSettingsVm.LNURLStandardInvoiceEnabled = true;
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);

@@ -297,7 +297,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await Task.WhenAll((await _invoiceRepository.GetPendingInvoices())
+            await Task.WhenAll((await _invoiceRepository.GetPendingInvoiceIds())
                 .Select(id => Wait(id)).ToArray());
         }
 

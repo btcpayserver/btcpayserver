@@ -2110,8 +2110,6 @@ namespace BTCPayServer.Tests
             cashCow.SendToAddress(invoiceAddress, firstPayment);
 
             var invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
-            Assert.Single(invoiceEntity.HistoricalAddresses);
-            Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
             Money secondPayment = Money.Zero;
 
@@ -2128,13 +2126,6 @@ namespace BTCPayServer.Tests
                 Assert.True(IsMapped(localInvoice, ctx));
 
                 invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
-                var historical1 =
-                    invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress);
-                Assert.NotNull(historical1.UnAssigned);
-                var historical2 =
-                    invoiceEntity.HistoricalAddresses.FirstOrDefault(h =>
-                        h.GetAddress() == localInvoice.BitcoinAddress);
-                Assert.Null(historical2.UnAssigned);
                 invoiceAddress = BitcoinAddress.Create(localInvoice.BitcoinAddress, cashCow.Network);
                 secondPayment = localInvoice.BtcDue;
             });

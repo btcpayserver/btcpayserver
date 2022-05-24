@@ -430,7 +430,6 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public DateTimeOffset MonitoringExpiration { get; set; }
-        public HistoricalAddressInvoiceData[] HistoricalAddresses { get; set; }
 
         public HashSet<string> AvailableAddressHashes { get; set; }
         public bool ExtendedNotifications { get; set; }

@@ -16,8 +16,6 @@ namespace BTCPayServer.Data
         public List<PaymentData> Payments { get; set; }
         public List<InvoiceEventData> Events { get; set; }
 
-        public List<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
-
         public byte[] Blob { get; set; }
         public string ItemCode { get; set; }
         public string OrderId { get; set; }

@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers
             // TODO: What if no option?
             var refund = new RefundModel
             {
-                Title = "Select a payment method",
+                Title = "Payment method",
                 AvailablePaymentMethods =
                     new SelectList(options.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString())),
                         "Value", "Text"),
@@ -237,7 +237,7 @@ namespace BTCPayServer.Controllers
             {
                 case RefundSteps.SelectPaymentMethod:
                     model.RefundStep = RefundSteps.SelectRate;
-                    model.Title = "What to refund?";
+                    model.Title = "How much to refund?";
                     var pms = invoice.GetPaymentMethods();
                     var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
 
@@ -271,7 +271,8 @@ namespace BTCPayServer.Controllers
                             _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
                         model.FiatAmount = paidCurrency;
                     }
-
+                    model.CustomAmount = model.FiatAmount;
+                    model.CustomCurrency = invoice.Currency;
                     model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency);
                     return View("_RefundModal", model);
 
@@ -281,8 +282,7 @@ namespace BTCPayServer.Controllers
                         Name = $"Refund {invoice.Id}",
                         PaymentMethodIds = new[] { paymentMethodId },
                         StoreId = invoice.StoreId,
-                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration,
-                        //AutoApproveClaims = true
+                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
                     };
                     switch (model.SelectedRefundOption)
                     {
@@ -291,67 +291,64 @@ namespace BTCPayServer.Controllers
                             createPullPayment.Amount = model.CryptoAmountThen;
                             createPullPayment.AutoApproveClaims = true;
                             break;
+                        
                         case "CurrentRate":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountNow;
                             createPullPayment.AutoApproveClaims = true;
                             break;
+                        
                         case "Fiat":
                             createPullPayment.Currency = invoice.Currency;
                             createPullPayment.Amount = model.FiatAmount;
                             createPullPayment.AutoApproveClaims = false;
                             break;
+                        
                         case "Custom":
                             model.Title = "How much to refund?";
-                            model.CustomCurrency = invoice.Currency;
-                            model.CustomAmount = model.FiatAmount;
-                            model.RefundStep = RefundSteps.SelectCustomAmount;
-                            return View("_RefundModal", model);
+                            
+                            model.RefundStep = RefundSteps.SelectRate;
+                            
+                            if (model.CustomAmount <= 0)
+                            {
+                                model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
+                            }
+
+                            if (string.IsNullOrEmpty(model.CustomCurrency) ||
+                                _CurrencyNameTable.GetCurrencyData(model.CustomCurrency, false) == null)
+                            {
+                                ModelState.AddModelError(nameof(model.CustomCurrency), "Invalid currency");
+                            }
+
+                            if (!ModelState.IsValid)
+                            {
+                                return View("_RefundModal", model);
+                            }
+
+                            rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+                            rateResult = await _RateProvider.FetchRate(
+                                new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
+                                cancellationToken);
+                            
+                            //TODO: What if fetching rate failed?
+                            if (rateResult.BidAsk is null)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption),
+                                    $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                                return View("_RefundModal", model);
+                            }
+
+                            createPullPayment.Currency = model.CustomCurrency;
+                            createPullPayment.Amount = model.CustomAmount;
+                            createPullPayment.AutoApproveClaims = paymentMethodId.CryptoCode == model.CustomCurrency;
+                            break;
+                        
                         default:
                             ModelState.AddModelError(nameof(model.SelectedRefundOption), "Please select an option before proceeding");
                             return View("_RefundModal", model);
                     }
-
                     break;
-                case RefundSteps.SelectCustomAmount:
-                    if (model.CustomAmount <= 0)
-                    {
-                        model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
-                    }
-
-                    if (string.IsNullOrEmpty(model.CustomCurrency) ||
-                        _CurrencyNameTable.GetCurrencyData(model.CustomCurrency, false) == null)
-                    {
-                        ModelState.AddModelError(nameof(model.CustomCurrency), "Invalid currency");
-                    }
-
-                    if (!ModelState.IsValid)
-                    {
-                        return View("_RefundModal", model);
-                    }
-
-                    rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
-                    rateResult = await _RateProvider.FetchRate(
-                        new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
-                        cancellationToken);
-                    //TODO: What if fetching rate failed?
-                    if (rateResult.BidAsk is null)
-                    {
-                        ModelState.AddModelError(nameof(model.SelectedRefundOption),
-                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
-                        return View("_RefundModal", model);
-                    }
-
-                    createPullPayment = new CreatePullPayment
-                    {
-                        Name = $"Refund {invoice.Id}",
-                        PaymentMethodIds = new[] {paymentMethodId},
-                        StoreId = invoice.StoreId,
-                        Currency = model.CustomCurrency,
-                        Amount = model.CustomAmount,
-                        AutoApproveClaims = paymentMethodId.CryptoCode == model.CustomCurrency
-                    };
-                    break;
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -350,7 +350,7 @@ namespace BTCPayServer.Tests
                 {
                     if (multiCurrency)
                         user.RegisterDerivationScheme("LTC");
-                    foreach (var rateSelection in new[] { "FiatTextRadio", "CurrentRateTextRadio", "RateThenTextRadio" })
+                    foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
                         await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
             }
@@ -401,11 +401,11 @@ namespace BTCPayServer.Tests
             
             s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
             Assert.Contains("pull-payments", s.Driver.Url);
-            if (rateSelection == "FiatTextRadio")
+            if (rateSelection == "FiatOption")
                 Assert.Contains("$5,500.00", s.Driver.PageSource);
-            if (rateSelection == "CurrentRateTextRadio")
+            if (rateSelection == "CurrentOption")
                 Assert.Contains("2.20000000 ₿", s.Driver.PageSource);
-            if (rateSelection == "RateThenTextRadio")
+            if (rateSelection == "RateThenOption")
                 Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
             
             s.GoToInvoice(invoice.Id);

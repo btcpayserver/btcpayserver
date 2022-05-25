@@ -102,7 +102,7 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<ShopifyOrder> GetOrder(string orderId)
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Get,
-                $"orders/{orderId}.json?fields=id,total_price,total_outstanding,currency,presentment_currency,transactions,financial_status");
+                $"orders/{orderId}.json?fields=id,order_number,total_price,total_outstanding,currency,presentment_currency,transactions,financial_status");
 
             var strResp = await SendRequest(req);
 

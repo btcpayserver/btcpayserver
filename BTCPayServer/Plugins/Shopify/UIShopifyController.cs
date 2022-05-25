@@ -109,10 +109,10 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<IActionResult> ShopifyInvoiceEndpoint(
             string storeId, string orderId, decimal amount, bool checkOnly = false)
         {
-            var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
+            var shopifySearchTerm = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await _invoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                TextSearch = invoiceOrderId,
+                TextSearch = shopifySearchTerm,
                 StoreId = new[] { storeId }
             });
             matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
@@ -146,7 +146,7 @@ namespace BTCPayServer.Plugins.Shopify
             {
                 client = new ShopifyApiClient(_clientFactory, shopify.CreateShopifyApiCredentials());
                 order = await client.GetOrder(orderId);
-                if (string.IsNullOrEmpty(order?.Id))
+                if (order?.Id is null)
                 {
                     return NotFound();
                 }
@@ -178,7 +178,7 @@ namespace BTCPayServer.Plugins.Shopify
 
             if (shopify?.IntegratedAt.HasValue is true)
             {
-                if (string.IsNullOrEmpty(order?.Id) ||
+                if (order?.Id is null ||
                     !new[] { "pending", "partially_paid" }.Contains(order.FinancialStatus))
                 {
                     return NotFound();
@@ -190,10 +190,20 @@ namespace BTCPayServer.Plugins.Shopify
                     {
                         Amount = amount < order.TotalOutstanding ? amount : order.TotalOutstanding,
                         Currency = order.PresentmentCurrency,
-                        Metadata = new JObject { ["orderId"] = order.OrderNumber },
-                        AdditionalSearchTerms = new []{ "shopify", order.OrderNumber, order.Id, invoiceOrderId}
+                        Metadata = new JObject
+                        {
+                            ["orderId"] = order.OrderNumber,
+                            ["shopifyOrderId"] = order.Id,
+                            ["shopifyOrderNumber"] = order.OrderNumber
+                        },
+                        AdditionalSearchTerms = new []
+                        {
+                            order.OrderNumber.ToString(CultureInfo.InvariantCulture),
+                            order.Id.ToString(CultureInfo.InvariantCulture),
+                            shopifySearchTerm
+                        }
                     }, store,
-                    Request.GetAbsoluteRoot(), new List<string>() { invoiceOrderId });
+                    Request.GetAbsoluteRoot(), new List<string>() { shopifySearchTerm });
 
                 return Ok(new { invoiceId = invoice.Id, status = invoice.Status.ToString().ToLowerInvariant() });
             }

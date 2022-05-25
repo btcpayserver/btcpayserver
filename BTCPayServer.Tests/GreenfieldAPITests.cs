@@ -496,9 +496,9 @@ namespace BTCPayServer.Tests
                 Amount = 12.3m,
                 Currency = "BTC",
                 PaymentMethods = new[] { "BTC" },
-                BOLT11Expiration = TimeSpan.FromDays(31.0)
+                BOLT11Expiration = TimeSpan.FromDays(2.0)
             });
-            Assert.Equal(TimeSpan.FromDays(31.0), test2.BOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(2.0), test2.BOLT11Expiration);
 
             TestLogs.LogInformation("Can't archive without knowing the walletId");
             var ex = await AssertAPIError("missing-permission", async () => await client.ArchivePullPayment("lol", result.Id));
@@ -507,7 +507,7 @@ namespace BTCPayServer.Tests
             await AssertAPIError("unauthenticated", async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
             await client.ArchivePullPayment(storeId, result.Id);
             result = await unauthenticated.GetPullPayment(result.Id);
-            Assert.Equal(TimeSpan.FromDays(30.0), result.BOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(1.0), result.BOLT11Expiration);
             Assert.True(result.Archived);
             var pps = await client.GetPullPayments(storeId);
             result = Assert.Single(pps);

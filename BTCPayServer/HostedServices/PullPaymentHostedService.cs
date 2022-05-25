@@ -127,7 +127,7 @@ namespace BTCPayServer.HostedServices
                     Email = null,
                     EmbeddedCSS = create.EmbeddedCSS,
                 },
-                BOLT11Expiration = create.BOLT11Expiration ?? TimeSpan.FromDays(30.0)
+                BOLT11Expiration = create.BOLT11Expiration ?? TimeSpan.FromDays(1.0)
             });
             ctx.PullPayments.Add(o);
             await ctx.SaveChangesAsync();

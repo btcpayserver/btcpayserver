@@ -63,7 +63,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public IEnumerable<SelectListItem> PaymentMethodItems { get; set; }
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
         [Range(1, 365 * 10)]
-        public long BOLT11Expiration { get; set; } = 30;
+        public long BOLT11Expiration { get; set; } = 1;
         [Display(Name = "Automatically approve claims")]
         public bool AutoApproveClaims { get; set; } = false;
     }

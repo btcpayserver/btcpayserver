@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.5.3
+
+### New features:
+
+* Add an experimental mode for new features (#3772) @NicolasDorier
+* Wallet transactions export (#3744) @dennisreimann
+
+### Bug fixes:
+
+* Fix: Invoices from shopify had empty orderId (#3777 #3769) @NicolasDorier
+* Lightning: Allow specifying explicit amount for invoices (#3753) @dennisreimann
+* Make login and password not required for sending email (#3764) @bolatovumar @NicolasDorier
+* Fix labels not showing multiple payouts payments (#3729) @Kukks
+* Fix overflowing text in order ID field in invoices table (#3765) @bolatovumar
+* Fix a couple of mobile display issues (#3759) @bolatovumar
+* Fix unwanted alert list marker for single error in payout's validation form, issue #3583 MrPaz
+* Fix a bunch of open redirect vulnerability @NicolasDorier (Thanks to Iman Sharafaldin @ImanOracle for reporting those)
+* Fix Automatically Approved column in pull payment was always false, even if automatic approval was activated (#3693) @bolatovumar
+
+### Improvements:
+
+* Performance improvement when lot's of invoices are pending (#3774) @NicolasDorier
+* Remove of an unused table in postgres (#3773) @NicolasDorier
+* Remove some logs from the payout processor @NicolasDorier
+* Payout Processors: Use friendly name in delete confirmation (#3758) @dennisreimann
+* Wallet display improvements (#3755) @dennisreimann
+* Some UI improvements @dstrukt
+
 ## 1.5.2
 
 ### Bug fixes:

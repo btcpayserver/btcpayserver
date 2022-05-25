@@ -1,5 +1,4 @@
 #nullable enable
-using NBitcoin;
 
 namespace BTCPayServer.Data
 {

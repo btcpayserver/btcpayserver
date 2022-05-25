@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -14,6 +15,7 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
 
 namespace BTCPayServer.Controllers
 {
@@ -90,8 +92,7 @@ namespace BTCPayServer.Controllers
             return View(nameof(ViewPullPayment), vm);
         }
 
-        [Route("pull-payments/{pullPaymentId}/claim")]
-        [HttpPost]
+        [HttpPost("pull-payments/{pullPaymentId}/claim")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -122,10 +123,16 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount), "Amount is required");
             }
-            else if (vm.ClaimedAmount != 0 && destination.destination.Amount != null && vm.ClaimedAmount != destination.destination.Amount)
+            else
             {
-                ModelState.AddModelError(nameof(vm.ClaimedAmount),
-                    $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {vm.ClaimedAmount})");
+                var amount = ppBlob.Currency == "SATS" ? new Money(vm.ClaimedAmount, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) : vm.ClaimedAmount;
+                if (destination.destination.Amount != null && amount != destination.destination.Amount)
+                {
+                    var implied = _currencyNameTable.DisplayFormatCurrency(destination.destination.Amount.Value, paymentMethodId.CryptoCode);
+                    var provided = _currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency);
+                    ModelState.AddModelError(nameof(vm.ClaimedAmount), 
+                        $"Amount implied in destination ({implied}) does not match the payout amount provided ({provided}).");
+                }
             }
 
             if (!ModelState.IsValid)

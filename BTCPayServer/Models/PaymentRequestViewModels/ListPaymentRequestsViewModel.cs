@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
     public class ListPaymentRequestsViewModel : BasePagingViewModel
     {
         public List<ViewPaymentRequestViewModel> Items { get; set; }
+        public override int CurrentPageCount => Items.Count;
     }
 
     public class UpdatePaymentRequestViewModel

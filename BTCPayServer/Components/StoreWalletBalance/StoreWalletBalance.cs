@@ -43,7 +43,7 @@ public class StoreWalletBalance : ViewComponent
             WalletId = walletId,
             Series = data?.Series,
             Labels = data?.Labels,
-            Balance = data?.Balance ?? 0,
+            Balance = data?.Balance,
             Type = DefaultType
         };
 

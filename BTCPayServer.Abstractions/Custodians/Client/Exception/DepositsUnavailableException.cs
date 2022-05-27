@@ -1,4 +1,4 @@
-namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public class DepositsUnavailableException : CustodianApiException
 {

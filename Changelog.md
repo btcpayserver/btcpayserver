@@ -1,4 +1,89 @@
 # Changelog
+
+## 1.5.3
+
+### New features:
+
+* Add an experimental mode for new features (#3772) @NicolasDorier
+* Wallet transactions export (#3744) @dennisreimann
+
+### Bug fixes:
+
+* Fix: Invoices from shopify had empty orderId (#3777 #3769) @NicolasDorier
+* Lightning: Allow specifying explicit amount for invoices (#3753) @dennisreimann
+* Make login and password not required for sending email (#3764) @bolatovumar @NicolasDorier
+* Fix labels not showing multiple payouts payments (#3729) @Kukks
+* Fix overflowing text in order ID field in invoices table (#3765) @bolatovumar
+* Fix a couple of mobile display issues (#3759) @bolatovumar
+* Fix unwanted alert list marker for single error in payout's validation form, issue #3583 MrPaz
+* Fix a bunch of open redirect vulnerability @NicolasDorier (Thanks to Iman Sharafaldin @ImanOracle for reporting those)
+* Fix Automatically Approved column in pull payment was always false, even if automatic approval was activated (#3693) @bolatovumar
+
+### Improvements:
+
+* Performance improvement when lot's of invoices are pending (#3774) @NicolasDorier
+* Remove of an unused table in postgres (#3773) @NicolasDorier
+* Remove some logs from the payout processor @NicolasDorier
+* Payout Processors: Use friendly name in delete confirmation (#3758) @dennisreimann
+* Wallet display improvements (#3755) @dennisreimann
+* Some UI improvements @dstrukt
+
+## 1.5.2
+
+### Bug fixes:
+
+* Various internal fixes @NicolasDorier @Kukks
+* Various UI fixes (#3702 #3721) @dennisreimann
+* Updated Payout processor Label for setting interval (#3698) @Bangalisch
+* Update validation of crowdfund app settings (#3708) @bolatovumar
+* Fix POS styling (#3713) @ishristov 
+
+### Improvements:
+
+* Do not always provide counting in list views (#3696) @NicolasDorier
+* Lightning: Catch and display external service error (#3710) @dennisreimann
+* Add dark mode option for public pull payment and payment request views (#3707) @dennisreimann
+* Show Shopify Order Id instead of Shopify order internal id (#3718) @Kukks
+
+## 1.5.1
+
+### Bug fixes:
+
+* Do not show balance if can't get the balance (#3695) @NicolasDorier
+* Fix performance issue on dashboard for big wallets (#3694) @NicolasDorier
+* Do not crash if /apps/{appId} do not exists @NicolasDorier
+
+### Improvements:
+
+* Remove logs about pending invoices @NicolasDorier
+* Add missing swagger doc for auto approval of payouts @Kukks
+
+## 1.5.0
+
+### New features:
+* DASHBOARD!!! (#3530 #3629 #3631 #3654) @NicolasDorier @dennisreimann @dstrukt
+* Payout Processors (#3476) @Kukks
+* Allow pull payments, refunds to be automatically approved (#1851  #3682) @Kukks
+* Greenfield: Add transaction info for on chain wallet (#3561) @bolatovumar
+* Greenfield: Add label filter for on chain wallet transaction (#3588) @bolatovumar
+* Greenfield: Add lightning payment info (#3557) @dennisreimann
+* Greenfield: Add description hash to CreateLightningInvoiceRequest (#3559) @dennisreimann
+* Allow Users to be disabled/enabled (#3639) @Kukks
+### Bug fixes:
+* Various UI fixes (#3599 #3577 #3624 #3642) @leesalminen @bolatovumar @dafunction @dennisreimann
+* Fix bug when bumping fee (#3608) @bolatovumar
+* Fix bug around Pay button html generator (#3646) @dennisreimann
+* Fix Lightning addresses not being deleted after removing store (#3638) @Kukks
+* Fix payment request redirect url (#3672 #3673) @dennisreimann
+### Improvements
+* Add additional rate providers as supported from CoinGecko @NicolasDorier
+* Allow default payment method for Pay button (#3606) @bolatovumar
+* Link directly to services from Lightning wallet page (#3593) @dennisreimann
+* Use the store's default currency when creating entities (#3585) @dennisreimann
+* Specify PayJoin enabled in Payment Link heading (#3614) @orangesurf
+* LNURL: Use Lightning description template in LNURL metadata (#3667) @dennisreimann
+* Design updates (#3647 #3653 #3565) @dennisreimann @dstrukt
+* Hide empty plugins section (#3643) @dennisreimann
 ## 1.4.9
 
 ### Bug fixes:

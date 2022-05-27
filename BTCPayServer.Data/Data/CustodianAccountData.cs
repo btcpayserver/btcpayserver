@@ -38,10 +38,4 @@ public class CustodianAccountData
         builder.Entity<APIKeyData>()
             .HasIndex(o => o.StoreId);
     }
-
-    public class CustodianAccountBlob
-    {
-        public JObject config;
-    }
-
 }

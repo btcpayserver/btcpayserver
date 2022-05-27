@@ -3,10 +3,10 @@
 @inject ISettingsRepository SettingsRepository
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Models.AppViewModels
+@inject BTCPayServer.Services.ThemeSettings Theme
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-    var theme = await SettingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
@@ -264,7 +264,7 @@
 </div>
 <div class="card-footer text-muted d-flex flex-wrap align-items-center">
     <div class="me-3" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
-    @if (!theme.CustomTheme)
+    @if (!Theme.CustomTheme)
     {
         <vc:theme-switch css-class="text-muted me-3" responsive="none"/>
     }

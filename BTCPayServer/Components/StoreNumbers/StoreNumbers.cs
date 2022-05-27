@@ -1,10 +1,12 @@
 using System;
+using Dapper;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Identity;
@@ -23,16 +25,19 @@ public class StoreNumbers : ViewComponent
     private readonly StoreRepository _storeRepo;
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly BTCPayWalletProvider _walletProvider;
+    private readonly NBXplorerConnectionFactory _nbxConnectionFactory;
     private readonly BTCPayNetworkProvider _networkProvider;
 
     public StoreNumbers(
         StoreRepository storeRepo,
         ApplicationDbContextFactory dbContextFactory,
         BTCPayNetworkProvider networkProvider,
-        BTCPayWalletProvider walletProvider)
+        BTCPayWalletProvider walletProvider,
+        NBXplorerConnectionFactory nbxConnectionFactory)
     {
         _storeRepo = storeRepo;
         _walletProvider = walletProvider;
+        _nbxConnectionFactory = nbxConnectionFactory;
         _networkProvider = networkProvider;
         _dbContextFactory = dbContextFactory;
         CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
@@ -51,16 +56,14 @@ public class StoreNumbers : ViewComponent
         
         var walletId = new WalletId(store.Id, CryptoCode);
         var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
-        var transactionsCount = 0;
-        if (derivation != null)
+        int? transactionsCount = null;
+        if (derivation != null && _nbxConnectionFactory.Available)
         {
-            var network = derivation.Network;
-            var wallet = _walletProvider.GetWallet(network);
-            var allTransactions = await wallet.FetchTransactions(derivation.AccountDerivation);
+            await using var conn = await _nbxConnectionFactory.OpenConnection();
+            var wid = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(derivation.Network.CryptoCode, derivation.AccountDerivation.ToString());
             var afterDate = DateTimeOffset.UtcNow - TimeSpan.FromDays(TransactionDays);
-            transactionsCount = allTransactions.UnconfirmedTransactions.Transactions
-                .Concat(allTransactions.ConfirmedTransactions.Transactions)
-                .Count(t => t.Timestamp > afterDate);
+            var count = await conn.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM wallets_history WHERE code=@code AND wallet_id=@wid AND seen_at > @afterDate", new { code = derivation.Network.CryptoCode, wid, afterDate });
+            transactionsCount = (int)count;
         }
         
         var vm = new StoreNumbersViewModel

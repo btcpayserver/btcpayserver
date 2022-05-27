@@ -215,7 +215,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 try
                 {
-                    var invoiceIds = await _InvoiceRepository.GetPendingInvoices();
+                    var invoiceIds = await _InvoiceRepository.GetPendingInvoiceIds();
                     foreach (var invoiceId in invoiceIds)
                         _CheckInvoices.Writer.TryWrite(invoiceId);
                 }

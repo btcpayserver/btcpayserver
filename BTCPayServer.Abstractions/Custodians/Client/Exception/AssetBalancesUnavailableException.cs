@@ -1,12 +1,10 @@
-namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public class AssetBalancesUnavailableException : CustodianApiException
 {
-    public System.Exception OriginalException { get; }
     
-    public AssetBalancesUnavailableException(System.Exception e) : base(500, "asset-balances-unavailable", $"Cannot fetch the asset balances: {e.Message}")
+    public AssetBalancesUnavailableException(System.Exception e) : base(500, "asset-balances-unavailable", $"Cannot fetch the asset balances: {e.Message}", e)
     {
-        this.OriginalException = e;
     }
 
     

@@ -46,25 +46,21 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 
     private async Task Act()
     {
-        Logs.PayServer.LogInformation($"Starting to process");
         var store = await _storeRepository.FindStore(_PayoutProcesserSettings.StoreId);
         var paymentMethod = store?.GetEnabledPaymentMethods(_btcPayNetworkProvider)?.FirstOrDefault(
             method =>
                 method.PaymentId == PaymentMethodId);
+        
+        var blob = GetBlob(_PayoutProcesserSettings);
         if (paymentMethod is not null)
         {
             var payouts = await GetRelevantPayouts();
-            Logs.PayServer.LogInformation($"{payouts.Length} found to process");
-            await Process(paymentMethod, payouts);
+            if (payouts.Length > 0)
+            {
+                Logs.PayServer.LogInformation($"{payouts.Length} found to process. Starting (and after will sleep for {blob.Interval})");
+                await Process(paymentMethod, payouts);
+            }
         }
-        else
-        {
-            Logs.PayServer.LogInformation($"Payment method not configured.");
-        }
-
-        var blob = GetBlob(_PayoutProcesserSettings);
-
-        Logs.PayServer.LogInformation($"Sleeping for {blob.Interval}");
         await Task.Delay(blob.Interval, CancellationToken);
     }
 

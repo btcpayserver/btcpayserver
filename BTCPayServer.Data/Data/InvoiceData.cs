@@ -16,8 +16,6 @@ namespace BTCPayServer.Data
         public List<PaymentData> Payments { get; set; }
         public List<InvoiceEventData> Events { get; set; }
 
-        public List<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
-
         public byte[] Blob { get; set; }
         public string ItemCode { get; set; }
         public string OrderId { get; set; }
@@ -43,6 +41,7 @@ namespace BTCPayServer.Data
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
             builder.Entity<InvoiceData>()
                 .HasOne(o => o.CurrentRefund);
+            builder.Entity<InvoiceData>().HasIndex(o => o.Created);
         }
     }
 }

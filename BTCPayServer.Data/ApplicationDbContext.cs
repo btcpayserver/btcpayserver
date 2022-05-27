@@ -36,7 +36,6 @@ namespace BTCPayServer.Data
         public DbSet<AppData> Apps { get; set; }
         public DbSet<CustodianAccountData> CustodianAccount { get; set; }
         public DbSet<StoredFile> Files { get; set; }
-        public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
         public DbSet<InvoiceEventData> InvoiceEvents { get; set; }
         public DbSet<InvoiceSearchData> InvoiceSearches { get; set; }
         public DbSet<InvoiceWebhookDeliveryData> InvoiceWebhookDeliveries { get; set; }
@@ -85,7 +84,6 @@ namespace BTCPayServer.Data
             AppData.OnModelCreating(builder);
             CustodianAccountData.OnModelCreating(builder);
             //StoredFile.OnModelCreating(builder);
-            HistoricalAddressInvoiceData.OnModelCreating(builder);
             InvoiceEventData.OnModelCreating(builder);
             InvoiceSearchData.OnModelCreating(builder);
             InvoiceWebhookDeliveryData.OnModelCreating(builder);

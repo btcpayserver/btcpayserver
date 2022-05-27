@@ -10,10 +10,11 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Storage.Services;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Controllers
 {
@@ -64,10 +65,10 @@ namespace BTCPayServer.Controllers
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
                     Created = u.Created,
-                    Roles = u.UserRoles.Select(role => role.RoleId)
+                    Roles = u.UserRoles.Select(role => role.RoleId),
+                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
                 })
                 .ToListAsync();
-            model.Total = await usersQuery.CountAsync();
 
             return View(model);
         }
@@ -121,10 +122,9 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public async Task<IActionResult> CreateUser()
+        public IActionResult CreateUser()
         {
-            ViewData["AllowRequestEmailConfirmation"] = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
-
+            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
 
@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            var requiresConfirmedEmail = (await _SettingsRepository.GetPolicies()).RequiresConfirmedEmail;
+            var requiresConfirmedEmail = _policiesSettings.RequiresConfirmedEmail;
             ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
@@ -217,12 +217,11 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             if (_userService.IsRoleAdmin(roles))
             {
-                var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                if (admins.Count == 1)
+                if (await _userService.IsUserTheOnlyOneAdmin(user))
                 {
                     // return
                     return View("Confirm", new ConfirmModel("Delete admin",
-                        $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last admin, it cannot be removed."));
+                        $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last enabled admin, it cannot be removed."));
                 }
 
                 return View("Confirm", new ConfirmModel("Delete admin",
@@ -243,6 +242,66 @@ namespace BTCPayServer.Controllers
             await _userService.DeleteUserAndAssociatedData(user);
 
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
+        [HttpGet("server/users/{userId}/toggle")]
+        public async Task<IActionResult> ToggleUser(string userId, bool enable)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
+            {
+                return View("Confirm", new ConfirmModel("Disable admin",
+                    $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last enabled admin, it cannot be disabled."));
+            }
+            return View("Confirm", new ConfirmModel($"{(enable? "Enable" : "Disable")} user", $"The user <strong>{user.Email}</strong> will be {(enable? "enabled" : "disabled")}. Are you sure?", (enable? "Enable" : "Disable")));
+        }
+        
+        [HttpPost("server/users/{userId}/toggle")]
+        public async Task<IActionResult> ToggleUserPost(string userId, bool enable)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = $"User was the last enabled admin and could not be disabled.";
+                return RedirectToAction(nameof(ListUsers));
+            }
+            await _userService.ToggleUser(userId, enable? null: DateTimeOffset.MaxValue);
+
+            TempData[WellKnownTempData.SuccessMessage] = $"User {(enable? "enabled": "disabled")}";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
+        [HttpGet("server/users/{userId}/verification-email")]
+        public async Task<IActionResult> SendVerificationEmail(string userId)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            
+            return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{user.Email}</strong>.", "Send"));
+        }
+
+        [HttpPost("server/users/{userId}/verification-email")]
+        public async Task<IActionResult> SendVerificationEmailPost(string userId)
+        {
+            var user = await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{userId}'.");
+            }
+
+            var code = await _UserManager.GenerateEmailConfirmationTokenAsync(user);
+            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+
+            (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.Email, callbackUrl);
+
+            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
             return RedirectToAction(nameof(ListUsers));
         }
     }

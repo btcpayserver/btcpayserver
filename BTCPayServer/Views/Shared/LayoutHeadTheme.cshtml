@@ -1,12 +1,13 @@
-﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Services
 @inject ISettingsRepository _settingsRepository
+@inject ThemeSettings Theme
 @addTagHelper *, BundlerMinifier.TagHelpers
-@{ var theme = await _settingsRepository.GetTheme(); }
 
-@if (theme.CustomTheme)
+@if (Theme.CustomTheme)
 {
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
 }
 else
 {

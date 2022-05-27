@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -28,14 +27,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public abstract class GreenfieldLightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly ISettingsRepository _settingsRepository;
+        private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         protected GreenfieldLightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
-            ISettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _settingsRepository = settingsRepository;
+            _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
         }
 
@@ -50,7 +49,7 @@ namespace BTCPayServer.Controllers.Greenfield
             });
         }
 
-        public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request)
+        public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             if (request?.NodeURI is null)
@@ -63,7 +62,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            var result = await lightningClient.ConnectTo(request.NodeURI);
+            var result = await lightningClient.ConnectTo(request.NodeURI, cancellationToken);
             switch (result)
             {
                 case ConnectionResult.Ok:
@@ -158,10 +157,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(errorCode, errorMessage);
         }
 
-        public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode)
+        public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
+            return Ok(new JValue((await lightningClient.GetDepositAddress(cancellationToken)).ToString()));
         }
 
         public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash, CancellationToken cancellationToken = default)
@@ -187,8 +186,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null
-                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat }
+            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null || lightningInvoice?.Amount != null
+                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat, Amount = lightningInvoice.Amount }
                 : null;
             var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
             
@@ -298,8 +297,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         protected async Task<bool> CanUseInternalLightning(bool doingAdminThings)
         {
-
-            return (!doingAdminThings && (await _settingsRepository.GetPolicies()).AllowLightningInternalNodeForAll) ||
+            return (!doingAdminThings && this._policiesSettings.AllowLightningInternalNodeForAll) ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

@@ -35,6 +35,7 @@ namespace BTCPayServer.HostedServices
         public string EmbeddedCSS { get; set; }
         public PaymentMethodId[] PaymentMethodIds { get; set; }
         public TimeSpan? Period { get; set; }
+        public bool AutoApproveClaims { get; set; }
         public TimeSpan? BOLT11Expiration { get; set; }
     }
 
@@ -117,6 +118,7 @@ namespace BTCPayServer.HostedServices
                 Limit = create.Amount,
                 Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
                 SupportedPaymentMethods = create.PaymentMethodIds,
+                AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView()
                 {
                     Title = create.Name ?? string.Empty,
@@ -422,14 +424,6 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (req.ClaimRequest.PreApprove && !withoutPullPayment &&
-                    ppBlob.Currency != req.ClaimRequest.PaymentMethodId.CryptoCode)
-                {
-                    req.Completion.TrySetResult(
-                        new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
-                    return;
-                }
-
                 var payoutHandler =
                     _payoutHandlers.FindPayoutHandler(req.ClaimRequest.PaymentMethodId);
                 if (payoutHandler is null)
@@ -484,8 +478,7 @@ namespace BTCPayServer.HostedServices
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20)),
                     Date = now,
-                    State =
-                        req.ClaimRequest.PreApprove ? PayoutState.AwaitingPayment : PayoutState.AwaitingApproval,
+                    State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PaymentMethodId = req.ClaimRequest.PaymentMethodId.ToString(),
                     Destination = req.ClaimRequest.Destination.Id,
@@ -494,7 +487,6 @@ namespace BTCPayServer.HostedServices
                 var payoutBlob = new PayoutBlob()
                 {
                     Amount = claimed,
-                    CryptoAmount = req.ClaimRequest.PreApprove ? claimed : null,
                     Destination = req.ClaimRequest.Destination.ToString()
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
@@ -503,6 +495,24 @@ namespace BTCPayServer.HostedServices
                 {
                     await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
                     await ctx.SaveChangesAsync();
+                    if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true) )
+                    {
+                        payout.StoreData = await ctx.Stores.FindAsync(payout.StoreDataId);
+                        var rateResult = await GetRate(payout, null, CancellationToken.None);
+                        if (rateResult.BidAsk != null)
+                        {
+                            var approveResult = new TaskCompletionSource<PayoutApproval.Result>();
+                            await HandleApproval(new PayoutApproval()
+                            {
+                                PayoutId = payout.Id, Revision = payoutBlob.Revision, Rate = rateResult.BidAsk.Ask, Completion =approveResult
+                            });
+                            
+                            if ((await approveResult.Task) == PayoutApproval.Result.Ok)
+                            {
+                                payout.State = PayoutState.AwaitingPayment;
+                            }
+                        }
+                    }
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout));
                     await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId),
                         new PayoutNotification()
@@ -702,6 +712,6 @@ namespace BTCPayServer.HostedServices
         public decimal? Value { get; set; }
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
-        public bool PreApprove { get; set; }
+        public bool? PreApprove { get; set; }
     }
 }

@@ -787,8 +787,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            return await _authorizationService.CanUseHotWallet(policies, User);
+            return await _authorizationService.CanUseHotWallet(_policiesSettings, User);
         }
 
         private async Task<string> ReadAllText(IFormFile file)

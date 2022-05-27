@@ -339,5 +339,13 @@ namespace BTCPayServer.Tests
             var index = coinAverageMock.ExchangeRates.FindIndex(o => o.CurrencyPair == p);
             coinAverageMock.ExchangeRates[index] = new PairRate(p, bidAsk);
         }
+
+        public async Task EnableExperimental()
+        {
+            var r = GetService<SettingsRepository>();
+            var p = await r.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            p.Experimental = true;
+            await r.UpdateSetting(p);
+        }
     }
 }

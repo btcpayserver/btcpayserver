@@ -1,14 +1,14 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@inject ISettingsRepository _settingsRepository
+@addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Services.ThemeSettings Theme
 
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
+
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-    var theme = await _settingsRepository.GetTheme();
 }
 
 <!DOCTYPE html>
@@ -22,7 +22,7 @@
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="~/manifest.json">
     <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />

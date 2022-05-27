@@ -47,11 +47,8 @@ namespace BTCPayServer.Services.Custodian.Client
         public async Task<CustodianAccountData[]> FindByStoreId(string storeId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(storeId))
-            {
-                return null;
-            }
-
+            if (storeId is null)
+                throw new ArgumentNullException(nameof(storeId));
             await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
                 .Where(ca => ca.StoreId == storeId);
@@ -61,11 +58,11 @@ namespace BTCPayServer.Services.Custodian.Client
             return data;
         }
 
-        public async Task<CustodianAccountData> FindById(string accountId)
+        public async Task<CustodianAccountData> FindById(string storeId, string accountId)
         {
             await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
-                .Where(ca => ca.Id == accountId);
+                .Where(ca => ca.StoreId == storeId && ca.Id == accountId);
 
             var custodianAccountData = (await query.ToListAsync()).FirstOrDefault();
             return custodianAccountData;

@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
             if (bumpableUTXOs.Length == 0)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "There isn't any UTXO available to bump fee";
-                return Redirect(returnUrl);
+                return LocalRedirect(returnUrl);
             }
             Money bumpFee = Money.Zero;
             foreach (var txid in bumpableUTXOs.Select(u => u.TransactionHash).ToHashSet())
@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
             } catch (Exception ex) {
                 TempData[WellKnownTempData.ErrorMessage] = ex.Message;
 
-                return Redirect(returnUrl);
+                return LocalRedirect(returnUrl);
             }
         }
 
@@ -526,7 +526,7 @@ namespace BTCPayServer.Controllers
                         var returnUrl = this.HttpContext.Request.Query["returnUrl"].FirstOrDefault();
                         if (returnUrl is not null)
                         {
-                            return Redirect(returnUrl);
+                            return LocalRedirect(returnUrl);
                         }
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }

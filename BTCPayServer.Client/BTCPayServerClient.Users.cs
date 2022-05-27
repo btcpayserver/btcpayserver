@@ -33,6 +33,13 @@ namespace BTCPayServer.Client
             return await HandleResponse<ApplicationUserData>(response);
         }
 
+        public virtual async Task LockUser(string idOrEmail, bool locked, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{idOrEmail}/lock", null,
+                new LockUserRequest() {Locked = locked}, HttpMethod.Post), token);
+            await HandleResponse(response);
+        }
+
         public virtual async Task<ApplicationUserData[]> GetUsers( CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/", null, HttpMethod.Get), token);

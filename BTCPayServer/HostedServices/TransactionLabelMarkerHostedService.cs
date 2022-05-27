@@ -14,6 +14,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
@@ -75,31 +76,46 @@ namespace BTCPayServer.HostedServices
                 var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
                 await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
                 {
-                    if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
+                    var txId = pair.Key.ToString();
+                    var coloredLabels = pair.Value;
+                    if (!walletTransactionsInfo.TryGetValue(txId, out var walletTransactionInfo))
                     {
                         walletTransactionInfo = new WalletTransactionInfo();
                     }
 
-                    foreach (var label in pair.Value)
+                    bool walletNeedUpdate = false;
+                    foreach (var cl in coloredLabels)
                     {
-                        walletBlobInfo.LabelColors.TryAdd(label.label.Text, label.color);
-                    }
-
-                    await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    var update = false;
-                    foreach (var label in pair.Value)
-                    {
-                        if (walletTransactionInfo.Labels.TryAdd(label.label.Text, label.label))
+                        if (walletBlobInfo.LabelColors.TryGetValue(cl.label.Text, out var currentColor))
                         {
-                            update = true;
+                            if (currentColor != cl.color)
+                            {
+                                walletNeedUpdate = true;
+                                walletBlobInfo.LabelColors[cl.label.Text] = currentColor;
+                            }
+                        }
+                        else
+                        {
+                            walletNeedUpdate = true;
+                            walletBlobInfo.LabelColors.AddOrReplace(cl.label.Text, cl.color);
                         }
                     }
 
-                    if (update)
+                    if (walletNeedUpdate)
+                        await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
+                    foreach (var cl in coloredLabels)
                     {
-                        await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                            pair.Key.ToString(), walletTransactionInfo);
+                        var label = cl.label;
+                        if (walletTransactionInfo.Labels.TryGetValue(label.Text, out var existingLabel))
+                        {
+                            label = label.Merge(existingLabel);
+                        }
+
+                        walletTransactionInfo.Labels.AddOrReplace(label.Text, label);
                     }
+
+                    await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
+                        txId, walletTransactionInfo);
                 }));
             }
         }
@@ -146,12 +162,11 @@ namespace BTCPayServer.HostedServices
             return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
         }
 
-        public static (string color, Label label) PayoutTemplate(string payoutId, string pullPaymentId, string walletId)
+        public static (string color, Label label) PayoutTemplate(Dictionary<string, List<string>> pullPaymentToPayouts, string walletId)
         {
             return ("#3F88AF", new PayoutLabel()
             {
-                PayoutId = payoutId,
-                PullPaymentId = pullPaymentId,
+                PullPaymentPayouts = pullPaymentToPayouts,
                 WalletId = walletId
             });
         }

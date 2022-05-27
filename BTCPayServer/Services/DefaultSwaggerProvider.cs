@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using Microsoft.AspNetCore.Hosting;
@@ -11,11 +11,16 @@ public class DefaultSwaggerProvider: ISwaggerProvider
 {
     private readonly IFileProvider _fileProvider;
 
-    public DefaultSwaggerProvider(IWebHostEnvironment webHostEnvironment)
+    public DefaultSwaggerProvider(IWebHostEnvironment webHostEnvironment, ISettingsAccessor<PoliciesSettings> policies)
     {
                 
         _fileProvider = webHostEnvironment.WebRootFileProvider;
+        Policies = policies;
     }
+
+    public BTCPayServerEnvironment Env { get; }
+    public ISettingsAccessor<PoliciesSettings> Policies { get; }
+
     public async Task<JObject> Fetch()
     {
                 
@@ -25,7 +30,10 @@ public class DefaultSwaggerProvider: ISwaggerProvider
         {
             await using var stream = fi.CreateReadStream();
             using var reader = new StreamReader(fi.CreateReadStream());
-            json.Merge(JObject.Parse(await reader.ReadToEndAsync()));
+            var jObject = JObject.Parse(await reader.ReadToEndAsync());
+            if (jObject.Remove("x_experimental") && !Policies.Settings.Experimental)
+                continue;
+            json.Merge(jObject);
         }
 
         return json;

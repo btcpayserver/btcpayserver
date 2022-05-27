@@ -1,12 +1,8 @@
-namespace BTCPayServer.Abstractions.Custodians.Client.Exception;
+namespace BTCPayServer.Abstractions.Custodians;
 
 public class InsufficientFundsException : CustodianApiException
-{
-
-    public const int HttpStatus = 400;
-    public const string ErrorCode = "insufficient-funds";
-    
-    public InsufficientFundsException(string message) : base(HttpStatus, ErrorCode, message)
+{   
+    public InsufficientFundsException(string message) : base(400, "insufficient-funds", message)
     {
     }
 

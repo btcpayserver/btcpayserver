@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers
 {
     public class UIHomeController : Controller
     {
-        private readonly ISettingsRepository _settingsRepository;
+        private readonly ThemeSettings _theme;
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _networkProvider;
         private IHttpClientFactory HttpClientFactory { get; }
@@ -47,13 +47,13 @@ namespace BTCPayServer.Controllers
         public LanguageService LanguageService { get; }
 
         public UIHomeController(IHttpClientFactory httpClientFactory,
-                              ISettingsRepository settingsRepository,
+                              ThemeSettings theme,
                               LanguageService languageService,
                               StoreRepository storeRepository,
                               BTCPayNetworkProvider networkProvider,
                               SignInManager<ApplicationUser> signInManager)
         {
-            _settingsRepository = settingsRepository;
+            _theme = theme;
             HttpClientFactory = httpClientFactory;
             LanguageService = languageService;
             _networkProvider = networkProvider;
@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
         [DomainMappingConstraint]
         public async Task<IActionResult> Index()
         {
-            if ((await _settingsRepository.GetTheme()).FirstRun)
+            if (_theme.FirstRun)
             {
                 return RedirectToAction(nameof(UIAccountController.Register), "UIAccount");
             }

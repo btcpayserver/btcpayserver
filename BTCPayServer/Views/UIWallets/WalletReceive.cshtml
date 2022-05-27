@@ -17,11 +17,13 @@
         <form method="post" asp-action="WalletReceive">
             @if (string.IsNullOrEmpty(Model.Address))
             {
-                <button id="generateButton" class="btn btn-primary" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
-                @if (env.CheatMode)
-                {
-                    <button type="submit" name="command" value="fill-wallet" class="btn btn-info ms-3">Cheat Mode: Send transactions to this wallet</button>
-                }
+                <div class="d-flex flex-wrap gap-3">
+                    <button id="generateButton" class="btn btn-primary" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
+                    @if (env.CheatMode)
+                    {
+                        <button type="submit" name="command" value="fill-wallet" class="btn btn-info">Cheat Mode: Send transactions to this wallet</button>
+                    }
+                </div>
             }
             else
             {

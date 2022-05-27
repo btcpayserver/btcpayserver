@@ -1,11 +1,11 @@
 @using BTCPayServer.Abstractions.Contracts
 @inject ISettingsRepository _settingsRepository
+@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 @addTagHelper *, BundlerMinifier.TagHelpers
-@{ var policies = await _settingsRepository.GetPolicies(); }
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="~/favicon.ico" type="image/x-icon">
-@if (policies.DiscourageSearchEngines)
+@if (PoliciesSettings.DiscourageSearchEngines)
 {
 <meta name="robots" content="noindex">
 }

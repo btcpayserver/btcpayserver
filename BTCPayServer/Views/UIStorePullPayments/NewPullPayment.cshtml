@@ -6,11 +6,11 @@
 }
 
 @section PageHeadContent {
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true"/>
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
@@ -21,8 +21,8 @@
         <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
     </div>
 
-    <partial name="_StatusMessage" />
-    
+    <partial name="_StatusMessage"/>
+
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
@@ -33,13 +33,21 @@
             <div class="row">
                 <div class="form-group col-8">
                     <label asp-for="Amount" class="form-label" data-required></label>
-                    <input asp-for="Amount" class="form-control" inputmode="decimal" />
+                    <input asp-for="Amount" class="form-control" inputmode="decimal"/>
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group col-4">
                     <label asp-for="Currency" class="form-label"></label>
                     <input asp-for="Currency" currency-selection class="form-control"/>
                     <span asp-validation-for="Currency" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-12">
+                    <div class="form-check ">
+                        <input asp-for="AutoApproveClaims" type="checkbox" class="form-check-input"/>
+                        <label asp-for="AutoApproveClaims" class="form-check-label"></label>
+                        <span asp-validation-for="AutoApproveClaims" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
             <div class="form-group mb-4">

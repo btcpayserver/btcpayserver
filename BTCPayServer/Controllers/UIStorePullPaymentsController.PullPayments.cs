@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a pull payment.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
             }
 
             return View(new NewPullPaymentModel
@@ -139,7 +139,8 @@ namespace BTCPayServer.Controllers
                 PaymentMethodIds = selectedPaymentMethodIds,
                 EmbeddedCSS = model.EmbeddedCSS,
                 CustomCSSLink = model.CustomCSSLink,
-                BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration)
+                BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
+                AutoApproveClaims = model.AutoApproveClaims
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {
@@ -186,12 +187,12 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a pull payment.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
             }
 
             var vm = this.ParseListQuery(new PullPaymentsModel
             {
-                Skip = skip, Count = count, Total = await ppsQuery.CountAsync(), ActiveState = pullPaymentState
+                Skip = skip, Count = count, ActiveState = pullPaymentState
             });
 
             switch (pullPaymentState)
@@ -250,7 +251,8 @@ namespace BTCPayServer.Controllers
                         ResetIn = period?.End is DateTimeOffset nr ? ZeroIfNegative(nr - now).TimeString() : null,
                         EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null,
                     },
-                    Archived = pp.Archived
+                    Archived = pp.Archived,
+                    AutoApproveClaims = ppBlob.AutoApproveClaims
                 });
             }
             return View(vm);
@@ -487,7 +489,7 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a payout.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
             }
 
             var vm = this.ParseListQuery(new PayoutsModel
@@ -532,11 +534,11 @@ namespace BTCPayServer.Controllers
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
             payoutRequest = payoutRequest.Where(p => p.State == vm.PayoutState);
-            vm.Total = await payoutRequest.CountAsync();
             payoutRequest = payoutRequest.Skip(vm.Skip).Take(vm.Count);
 
             var payouts = await payoutRequest.OrderByDescending(p => p.Date)
                 .Select(o => new { Payout = o, PullPayment = o.PullPaymentData }).ToListAsync();
+
             foreach (var item in payouts)
             {
                 var ppBlob = item.PullPayment?.GetBlob();

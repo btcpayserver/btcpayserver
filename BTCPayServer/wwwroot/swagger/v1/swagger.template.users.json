@@ -237,6 +237,58 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/{idOrEmail}/lock": {
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Toggle user",
+                "description": "Lock or unlock a user.\n\nMust be an admin to perform this operation.\n\nAttempting to lock the only admin user will not succeed.",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ID of the user to be un/locked",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LockUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User has been successfully toggled"
+                    },
+                    "401": {
+                        "description": "Missing authorization for deleting the user"
+                    },
+                    "403": {
+                        "description": "Authorized but forbidden to disable  the user. Can happen if you attempt to disable the only admin user."
+                    },
+                    "404": {
+                        "description": "User with provided ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -279,6 +331,16 @@
                             "type": "string"
                         },
                         "description": "The roles of the user"
+                    }
+                }
+            },
+            "LockUserRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "locked": {
+                        "type": "boolean",
+                        "description": "Whether to lock or unlock the user"
                     }
                 }
             }

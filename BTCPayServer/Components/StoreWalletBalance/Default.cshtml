@@ -4,11 +4,14 @@
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <h6 class="mb-2">Wallet Balance</h6>
     <header class="mb-3">
-        <div class="balance">
-            <h3 class="d-inline-block me-1">@Model.Balance</h3>
-            <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
-        </div>
-        <div class="btn-group mt-1" role="group" aria-label="Filter">
+		@if (Model.Balance is not null)
+		{
+			<div class="balance">
+				<h3 class="d-inline-block me-1">@Model.Balance</h3>
+				<span class="text-secondary fw-semibold">@Model.CryptoCode</span>
+			</div>
+		}
+		<div class="btn-group mt-1" role="group" aria-label="Filter">
             <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
             <label class="btn btn-link" for="filter-week">1W</label>
             <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
@@ -24,11 +27,12 @@
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
             const render = data => {
                 const { series, labels, balance } = data;
-                document.querySelector(`#${id} h3`).innerText = balance;
+                if (balance)
+                    document.querySelector(`#${id} h3`).innerText = balance;
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
-                new Chartist.Line(`#${id} .ct-chart`, {
+                const chart = new Chartist.Line(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
                 }, {
@@ -36,6 +40,14 @@
                     fullWidth: true,
                     showArea: true
                 });
+                // prevent y-axis labels from getting cut off
+                window.setTimeout(() => {
+                    const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
+                    if (yLabels) {
+                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 8)))
+                        chart.update(null, { axisY: { offset: width } })
+                    }
+                }, 0)
             };
             const update = async type => {
                 const url = baseUrl.replace(/\/week$/gi, `/${type}`);

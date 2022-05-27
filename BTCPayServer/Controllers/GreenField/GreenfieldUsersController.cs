@@ -27,6 +27,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldUsersController : ControllerBase
     {
+        public PoliciesSettings PoliciesSettings { get; }
         public Logs Logs { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -42,6 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SettingsRepository settingsRepository,
+            PoliciesSettings policiesSettings,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
             RateLimitService throttleService,
@@ -54,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _userManager = userManager;
             _roleManager = roleManager;
             _settingsRepository = settingsRepository;
+            PoliciesSettings = policiesSettings;
             _eventAggregator = eventAggregator;
             _passwordValidator = passwordValidator;
             _throttleService = throttleService;
@@ -73,7 +76,20 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             return UserNotFound();
         }
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/users/{idOrEmail}/lock")]
+        public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request )
+        {
+            var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
+            if (user is null)
+            {
+                return UserNotFound();
+            }
 
+            await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
+            return Ok();
+        }
+        
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
@@ -134,7 +150,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.IsAdministrator is true && !isAdmin)
                 return this.CreateAPIPermissionError(Policies.Unrestricted, $"Insufficient API Permissions. Please use an API key with permission: {Policies.Unrestricted} and be an admin.");
 
-            if (!isAdmin && (policies.LockSubscription || (await _settingsRepository.GetPolicies()).DisableNonAdminCreateUserApi))
+            if (!isAdmin && (policies.LockSubscription || PoliciesSettings.DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
@@ -219,7 +235,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             // User shouldn't be deleted if it's the only admin
-            if (await IsUserTheOnlyOneAdmin(user))
+            if (await _userService.IsUserTheOnlyOneAdmin(user))
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }
@@ -236,21 +252,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return UserService.FromModel(data, roles);
         }
 
-        private async Task<bool> IsUserTheOnlyOneAdmin()
-        {
-            return await IsUserTheOnlyOneAdmin(await _userManager.GetUserAsync(User));
-        }
-
-        private async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
-        {
-            var isUserAdmin = await _userService.IsAdminUser(user);
-            if (!isUserAdmin)
-            {
-                return false;
-            }
-
-            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1;
-        }
+       
 
         private IActionResult UserNotFound()
         {

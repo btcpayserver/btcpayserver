@@ -50,13 +50,13 @@ public class OnChainAutomatedPayoutSenderFactory : EventHostedServiceBase, IPayo
                 new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance));
     }
 
-    public async Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)
+    public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)
     {
         if (settings.Processor != Processor)
         {
             throw new NotSupportedException("This processor cannot handle the provided requirements");
         }
 
-        return ActivatorUtilities.CreateInstance<OnChainAutomatedPayoutProcessor>(_serviceProvider, settings);
+        return Task.FromResult<IHostedService>(ActivatorUtilities.CreateInstance<OnChainAutomatedPayoutProcessor>(_serviceProvider, settings));
     }
 }

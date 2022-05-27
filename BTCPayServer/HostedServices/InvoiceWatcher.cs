@@ -36,13 +36,7 @@ namespace BTCPayServer.HostedServices
                 _Dirty = true;
             }
 
-            public void UnaffectAddresses()
-            {
-                _Unaffect = true;
-            }
-
             public bool Dirty => _Dirty;
-            public bool Unaffect => _Unaffect;
 
             bool _IsBlobUpdated;
             public bool IsBlobUpdated => _IsBlobUpdated;
@@ -84,7 +78,6 @@ namespace BTCPayServer.HostedServices
             if (invoice.Status == InvoiceStatusLegacy.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
             {
                 context.MarkDirty();
-                context.UnaffectAddresses();
                 invoice.Status = InvoiceStatusLegacy.Expired;
                 var paidPartial = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial;
                 context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired) { PaidPartial = paidPartial });
@@ -133,7 +126,6 @@ namespace BTCPayServer.HostedServices
                         {
                             invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
                         }
-                        context.UnaffectAddresses();
                         context.MarkDirty();
                     }
                     else if (invoice.Status == InvoiceStatusLegacy.Expired && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidLate)
@@ -186,14 +178,12 @@ namespace BTCPayServer.HostedServices
                    // And not enough amount confirmed
                    (confirmedAccounting.Paid < accounting.MinimumTotalDue))
                 {
-                    context.UnaffectAddresses();
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.FailedToConfirm));
                     invoice.Status = InvoiceStatusLegacy.Invalid;
                     context.MarkDirty();
                 }
                 else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
-                    context.UnaffectAddresses();
                     invoice.Status = InvoiceStatusLegacy.Confirmed;
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Confirmed));
                     context.MarkDirty();
@@ -307,7 +297,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await Task.WhenAll((await _invoiceRepository.GetPendingInvoices())
+            await Task.WhenAll((await _invoiceRepository.GetPendingInvoiceIds())
                 .Select(id => Wait(id)).ToArray());
         }
 
@@ -329,10 +319,6 @@ namespace BTCPayServer.HostedServices
                             break;
                         var updateContext = new UpdateInvoiceContext(invoice);
                         UpdateInvoice(updateContext);
-                        if (updateContext.Unaffect)
-                        {
-                            await _invoiceRepository.UnaffectAddress(invoice.Id);
-                        }
                         if (updateContext.Dirty)
                         {
                             await _invoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());

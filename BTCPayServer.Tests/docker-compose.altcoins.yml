@@ -85,7 +85,7 @@ services:
       - customer_lnd
       - merchant_lnd
   selenium:
-    image: selenium/standalone-chrome:3
+    image: selenium/standalone-chrome:101.0
     expose:
       - "4444"
   nbxplorer:
@@ -261,6 +261,7 @@ services:
         no-rest-tls=1
     ports:
       - "35531:8080"
+      - "53280:10009"
     expose:
       - "9735"
     volumes:

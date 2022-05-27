@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using BTCPayServer.Client.Models;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -8,6 +11,11 @@ namespace BTCPayServer.Services.Labels
 
     public abstract class Label : LabelData
     {
+        public virtual Label Merge(LabelData other)
+        {
+            return this;
+        }
+        
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
             if (refLabel.Reference is null && jObj.ContainsKey("id"))
@@ -16,8 +24,11 @@ namespace BTCPayServer.Services.Labels
         }
         static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
         {
-            if (payoutLabel.PayoutId is null)
-                payoutLabel.PayoutId = jObj["id"].Value<string>();
+            if (jObj.ContainsKey("id") && payoutLabel.PullPaymentPayouts.Count is 0)
+            {
+                var pullPaymentId = jObj["pullPaymentId"]?.Value<string>() ?? string.Empty;
+                payoutLabel.PullPaymentPayouts.Add(pullPaymentId, new List<string>() { jObj["id"].Value<string>() });
+            }
             FixLegacy(jObj, (Label)payoutLabel);
         }
         static void FixLegacy(JObject jObj, Label label)
@@ -111,8 +122,23 @@ namespace BTCPayServer.Services.Labels
             Type = "payout";
             Text = "payout";
         }
-        public string PayoutId { get; set; }
+
+        public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
         public string WalletId { get; set; }
-        public string PullPaymentId { get; set; }
+
+        public override Label Merge(LabelData other)
+        {
+            if (other is not PayoutLabel otherPayoutLabel) return base.Merge(other);
+            foreach (var pullPaymentPayout in otherPayoutLabel.PullPaymentPayouts)
+            {
+                if (!PullPaymentPayouts.TryGetValue(pullPaymentPayout.Key, out var pullPaymentPayouts))
+                {
+                    pullPaymentPayouts = new List<string>();
+                    PullPaymentPayouts.Add(pullPaymentPayout.Key, pullPaymentPayouts);
+                }
+                pullPaymentPayouts.AddRange(pullPaymentPayout.Value);
+            }
+            return base.Merge(other);
+        }
     }
 }

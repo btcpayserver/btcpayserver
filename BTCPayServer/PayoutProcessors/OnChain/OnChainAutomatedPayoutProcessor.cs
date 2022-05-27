@@ -57,13 +57,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             if (storePaymentMethod?.IsHotWallet is not true)
             {
                 
-                Logs.PayServer.LogInformation($"Wallet is not a hot wallet.");
                 return;
             }
 
             if (!_explorerClientProvider.IsAvailable(PaymentMethodId.CryptoCode))
             {
-                Logs.PayServer.LogInformation($"{paymentMethod.PaymentId.CryptoCode} node is not available");
                 return;
             }
             var explorerClient = _explorerClientProvider.GetExplorerClient(PaymentMethodId.CryptoCode);
@@ -75,7 +73,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 WellknownMetadataKeys.AccountHDKey);
             if (extKeyStr == null)
             {
-                Logs.PayServer.LogInformation($"Wallet keys not found.");
                 return;
             }
 
@@ -106,7 +103,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     await _bitcoinLikePayoutHandler.ParseClaimDestination(paymentMethodId, blob.Destination);
                 if (!string.IsNullOrEmpty(claimDestination.error))
                 {
-                    Logs.PayServer.LogInformation($"Could not process payout {transferRequest.Id} because {claimDestination.error}.");
                     continue;
                 }
 
@@ -137,7 +133,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 catch (NotEnoughFundsException e)
                 {
                     
-                    Logs.PayServer.LogInformation($"Could not process payout {transferRequest.Id} because of not enough funds. ({e.Missing.GetValue(network)})");
                     failedAmount = blob.CryptoAmount;
                     //keep going, we prioritize withdraws by time but if there is some other we can fit, we should
                 }
@@ -149,7 +144,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 {
                     await using var context = _applicationDbContextFactory.CreateContext();
                     var txHash = workingTx.GetHash();
-                    Logs.PayServer.LogInformation($"Processing {transfersProcessing.Count} payouts in tx {txHash}");
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
                         context.Attach(payoutData);
@@ -179,8 +173,10 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     {
                         _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
                             txHash,
-                            UpdateTransactionLabel.PayoutTemplate(payoutData.Id, payoutData.PullPaymentDataId,
-                                walletId.ToString())));
+                            UpdateTransactionLabel.PayoutTemplate(new ()
+                            {
+                                {payoutData.PullPaymentDataId?? "", new List<string>{payoutData.Id}}
+                            }, walletId.ToString())));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }

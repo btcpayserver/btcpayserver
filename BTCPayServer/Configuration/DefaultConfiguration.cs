@@ -49,7 +49,7 @@ namespace BTCPayServer.Configuration
             app.Option("--plugin-remote", "Which github repository to fetch the available plugins list (default:btcpayserver/btcpayserver-plugins)", CommandOptionType.SingleValue);
             app.Option("--recommended-plugins", "Plugins which would be marked as recommended to be installed. Separated by newline or space", CommandOptionType.MultipleValue);
             app.Option("--xforwardedproto", "If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https)", CommandOptionType.SingleValue);
-            app.Option("--cheatmode", "Add elements in the UI to facilitate dev-time testing (Default false)", CommandOptionType.BoolValue);
+            app.Option("--cheatmode", "Add some helper UI to facilitate dev-time testing (Default false)", CommandOptionType.BoolValue);
 
             app.Option("--explorerpostgres", $"Connection string to the postgres database of NBXplorer. (optional, used for dashboard and reporting features)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll().OfType<BTCPayNetwork>())

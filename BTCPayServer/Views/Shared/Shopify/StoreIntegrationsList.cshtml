@@ -26,7 +26,7 @@
                     Enabled
                 </span>
                 <span class="text-light ms-3 me-2">|</span>
-                <a lass="btn btn-link px-1 py-1 fw-semibold" asp-controller="UIShopify" asp-action="EditShopifyIntegration" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                <a lass="btn btn-link px-1 py-1 fw-semibold" asp-controller="UIShopify" asp-action="EditShopify" asp-route-storeId="@Context.GetRouteValue("storeId")">
                     Modify
                 </a>
             }
@@ -36,7 +36,7 @@
                     <span class="me-2 btcpay-status btcpay-status--disabled"></span>
                     Disabled
                 </span>
-                <a class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="UIShopify" asp-action="EditShopifyIntegration" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                <a class="btn btn-primary btn-sm ms-4 px-3 py-1 fw-semibold" asp-controller="UIShopify" asp-action="EditShopify" asp-route-storeId="@Context.GetRouteValue("storeId")">
                     Setup
                 </a>
             }

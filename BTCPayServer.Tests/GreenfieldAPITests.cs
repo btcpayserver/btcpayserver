@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -2354,6 +2353,45 @@ namespace BTCPayServer.Tests
                 new SendEmailRequest() { Body = "lol", Subject = "subj", Email = "sdasdas" });
         }
 
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task DisabledEnabledUserTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+
+            var newUser = tester.NewAccount();
+            await newUser.GrantAccessAsync();
+            var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
+            Assert.False((await newUserClient.GetCurrentUser()).Disabled);
+
+            await adminClient.LockUser(newUser.UserId, true, CancellationToken.None);
+            
+            Assert.True((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await AssertAPIError("unauthenticated",async () =>
+            {
+                await newUserClient.GetCurrentUser();
+            });
+            var newUserBasicClient = new BTCPayServerClient(newUserClient.Host, newUser.RegisterDetails.Email,
+                newUser.RegisterDetails.Password);
+            await AssertAPIError("unauthenticated",async () =>
+            {
+                await newUserBasicClient.GetCurrentUser();
+            });
+
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
+            // Twice for good measure
+            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
+            await newUserClient.GetCurrentUser();
+            await newUserBasicClient.GetCurrentUser();
+        }
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
@@ -2482,6 +2520,7 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
+            await tester.PayTester.EnableExperimental();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             await AssertHttpError(401, async () => await unauthClient.GetCustodians());
 
@@ -2490,7 +2529,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Equal(2, custodians.Count());
+            Assert.Single(custodians);
         }
 
 
@@ -2501,6 +2540,7 @@ namespace BTCPayServer.Tests
             
             using var tester = CreateServerTester();
             await tester.StartAsync();
+            await tester.PayTester.EnableExperimental();
             
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
@@ -2514,7 +2554,7 @@ namespace BTCPayServer.Tests
             
             // Load a custodian, we use the first one we find.
             var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
-            var custodian = custodians.GetCustodianByCode("kraken");
+            var custodian = custodians.First();
 
             // List custodian accounts
             // Unauth
@@ -2540,7 +2580,7 @@ namespace BTCPayServer.Tests
             
             var createCustodianAccountRequest = new CreateCustodianAccountRequest();
             createCustodianAccountRequest.Config = config;
-            createCustodianAccountRequest.CustodianCode = custodian.GetCode();
+            createCustodianAccountRequest.CustodianCode = custodian.Code;
             
             // Unauthorized
             await AssertHttpError(401, async () => await unauthClient.CreateCustodianAccount(storeId, createCustodianAccountRequest));
@@ -2553,10 +2593,10 @@ namespace BTCPayServer.Tests
             Assert.NotNull(custodianAccountData);
             Assert.NotNull(custodianAccountData.Id);
             var accountId = custodianAccountData.Id;
-            Assert.Equal(custodian.GetCode(), custodianAccountData.CustodianCode);
+            Assert.Equal(custodian.Code, custodianAccountData.CustodianCode);
             
             // We did not provide a name, so the custodian's name should've been picked as a fallback
-            Assert.Equal(custodian.GetName(), custodianAccountData.Name);
+            Assert.Equal(custodian.Name, custodianAccountData.Name);
             
             Assert.Equal(storeId, custodianAccountData.StoreId);
             Assert.True(JToken.DeepEquals(config, custodianAccountData.Config));
@@ -2569,19 +2609,19 @@ namespace BTCPayServer.Tests
             var adminCustodianAccounts = await adminClient.GetCustodianAccounts(storeId);
             Assert.Single(adminCustodianAccounts);
             var adminCustodianAccount = adminCustodianAccounts.First();
-            Assert.Equal(adminCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.Equal(adminCustodianAccount.CustodianCode, custodian.Code);
 
             // Manager can see all, including config
             var managerCustodianAccounts = await managerClient.GetCustodianAccounts(storeId);
             Assert.Single(managerCustodianAccounts);
-            Assert.Equal(managerCustodianAccounts.First().CustodianCode, custodian.GetCode());
+            Assert.Equal(managerCustodianAccounts.First().CustodianCode, custodian.Code);
             Assert.NotNull(managerCustodianAccounts.First().Config);
             Assert.True(JToken.DeepEquals(config, managerCustodianAccounts.First().Config));
             
             // Viewer can see all, but no config
             var viewerCustodianAccounts = await viewerOnlyClient.GetCustodianAccounts(storeId);
             Assert.Single(viewerCustodianAccounts);
-            Assert.Equal(viewerCustodianAccounts.First().CustodianCode, custodian.GetCode());
+            Assert.Equal(viewerCustodianAccounts.First().CustodianCode, custodian.Code);
             Assert.Null(viewerCustodianAccounts.First().Config);
 
             
@@ -2589,19 +2629,19 @@ namespace BTCPayServer.Tests
             // Admin
             var singleAdminCustodianAccount = await adminClient.GetCustodianAccount(storeId, accountId);
             Assert.NotNull(singleAdminCustodianAccount);
-            Assert.Equal(singleAdminCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.Equal(singleAdminCustodianAccount.CustodianCode, custodian.Code);
 
             // Manager can see, including config
             var singleManagerCustodianAccount = await managerClient.GetCustodianAccount(storeId, accountId);
             Assert.NotNull(singleManagerCustodianAccount);
-            Assert.Equal(singleManagerCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.Equal(singleManagerCustodianAccount.CustodianCode, custodian.Code);
             Assert.NotNull(singleManagerCustodianAccount.Config);
             Assert.True(JToken.DeepEquals(config, singleManagerCustodianAccount.Config));
             
             // Viewer can see, but no config
             var singleViewerCustodianAccount = await viewerOnlyClient.GetCustodianAccount(storeId, accountId);
             Assert.NotNull(singleViewerCustodianAccount);
-            Assert.Equal(singleViewerCustodianAccount.CustodianCode, custodian.GetCode());
+            Assert.Equal(singleViewerCustodianAccount.CustodianCode, custodian.Code);
             Assert.Null(singleViewerCustodianAccount.Config);
 
 
@@ -2620,7 +2660,7 @@ namespace BTCPayServer.Tests
             // Correct auth: update permissions
             var updatedCustodianAccountData = await managerClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
             Assert.NotNull(updatedCustodianAccountData);
-            Assert.Equal(custodian.GetCode(), updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(custodian.Code, updatedCustodianAccountData.CustodianCode);
             Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
             Assert.Equal(storeId, custodianAccountData.StoreId);
             Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
@@ -2630,7 +2670,7 @@ namespace BTCPayServer.Tests
             updateCustodianAccountRequest.Config["ApiKey"] = "AAA";
             updatedCustodianAccountData = await adminClient.UpdateCustodianAccount(storeId, accountId, createCustodianAccountRequest);
             Assert.NotNull(updatedCustodianAccountData);
-            Assert.Equal(custodian.GetCode(), updatedCustodianAccountData.CustodianCode);
+            Assert.Equal(custodian.Code, updatedCustodianAccountData.CustodianCode);
             Assert.Equal(updateCustodianAccountRequest.Name, updatedCustodianAccountData.Name);
             Assert.Equal(storeId, custodianAccountData.StoreId);
             Assert.True(JToken.DeepEquals(updateCustodianAccountRequest.Config, createCustodianAccountRequest.Config));
@@ -2643,9 +2683,9 @@ namespace BTCPayServer.Tests
             // Get asset balances, but we cannot because of misconfiguration (we did enter dummy data)
             await AssertHttpError(401, async () => await unauthClient.GetCustodianAccounts(storeId, true));
             
-            // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
-            await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
-            
+            // // Auth, viewer permission => Error 500 because of BadConfigException (dummy data)
+            // await AssertHttpError(500, async () => await viewerOnlyClient.GetCustodianAccounts(storeId, true));
+            //
             
             // Delete custodian account
             // Unauth
@@ -2672,7 +2712,8 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
-            
+            await tester.PayTester.EnableExperimental();
+
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             
@@ -2690,17 +2731,17 @@ namespace BTCPayServer.Tests
             
             // Load a custodian, we use the first one we find.
             var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
-            var mockCustodian = custodians.GetCustodianByCode("mock");
+            var mockCustodian = custodians.First(c => c.Code == "mock");
 
             
             
              // Create custodian account
              var createCustodianAccountRequest = new CreateCustodianAccountRequest();
-            createCustodianAccountRequest.CustodianCode = mockCustodian.GetCode();
+            createCustodianAccountRequest.CustodianCode = mockCustodian.Code;
             
             var custodianAccountData = await managerClient.CreateCustodianAccount(storeId, createCustodianAccountRequest);
             Assert.NotNull(custodianAccountData);
-            Assert.Equal(mockCustodian.GetCode(), custodianAccountData.CustodianCode);
+            Assert.Equal(mockCustodian.Code, custodianAccountData.CustodianCode);
             Assert.NotNull(custodianAccountData.Id);
             var accountId = custodianAccountData.Id;
             
@@ -2757,7 +2798,7 @@ namespace BTCPayServer.Tests
             var newTradeResult = await tradeClient.TradeMarket(storeId, accountId, tradeRequest);
             Assert.NotNull(newTradeResult);
             Assert.Equal(accountId, newTradeResult.AccountId);
-            Assert.Equal(mockCustodian.GetCode(), newTradeResult.CustodianCode);
+            Assert.Equal(mockCustodian.Code, newTradeResult.CustodianCode);
             Assert.Equal(MockCustodian.TradeId, newTradeResult.TradeId);
             Assert.Equal(tradeRequest.FromAsset, newTradeResult.FromAsset);
             Assert.Equal(tradeRequest.ToAsset, newTradeResult.ToAsset);
@@ -2791,7 +2832,7 @@ namespace BTCPayServer.Tests
             
             // Test: Trade, correct assets, wrong amount
             var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertApiError(InsufficientFundsException.HttpStatus, InsufficientFundsException.ErrorCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
+            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
 
 
             // Test: GetTradeQuote, unauth
@@ -2835,7 +2876,7 @@ namespace BTCPayServer.Tests
             var tradeResult = await tradeClient.GetTradeInfo(storeId, accountId, MockCustodian.TradeId);
             Assert.NotNull(tradeResult);
             Assert.Equal(accountId, tradeResult.AccountId);
-            Assert.Equal(mockCustodian.GetCode(), tradeResult.CustodianCode);
+            Assert.Equal(mockCustodian.Code, tradeResult.CustodianCode);
             Assert.Equal(MockCustodian.TradeId, tradeResult.TradeId);
             Assert.Equal(tradeRequest.FromAsset, tradeResult.FromAsset);
             Assert.Equal(tradeRequest.ToAsset, tradeResult.ToAsset);
@@ -2941,7 +2982,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
             Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
             Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
-            Assert.NotNull(withdrawResponse.CreatedTime);
+            Assert.NotEqual(default, withdrawResponse.CreatedTime);
         }
     }
 }

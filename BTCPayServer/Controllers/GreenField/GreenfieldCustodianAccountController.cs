@@ -1,30 +1,45 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Custodians.Client;
-using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
+    public class CustodianExceptionFilter : Attribute, IExceptionFilter
+    {
+        public void OnException(ExceptionContext context)
+        {
+            if (context.Exception is CustodianApiException ex)
+            {
+                context.Result = new ObjectResult(new GreenfieldAPIError(ex.Code, ex.Message)) { StatusCode = ex.HttpStatus };
+                context.ExceptionHandled = true;
+            }
+        }
+    }
+
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
+    [CustodianExceptionFilter]
+    [ExperimentalRouteAttribute] // if you remove this, also remove "x_experimental": true in swagger.template.custodians.json
     public class GreenfieldCustodianAccountController : ControllerBase
     {
         private readonly CustodianAccountRepository _custodianAccountRepository;
@@ -45,41 +60,14 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ListCustodianAccount(string storeId, [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
+            var custodianAccounts = await _custodianAccountRepository.FindByStoreId(storeId);
+
+            CustodianAccountDataClient[] responses = new CustodianAccountDataClient[custodianAccounts.Length];
+
+            for (int i = 0; i < custodianAccounts.Length; i++)
             {
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-            }
-
-            var custodianAccounts = _custodianAccountRepository.FindByStoreId(storeId);
-            var r = custodianAccounts.Result;
-
-            CustodianAccountDataClient[] responses = new CustodianAccountDataClient[r.Length];
-
-            for (int i = 0; i < r.Length; i++)
-            {
-                var custodianAccountData = r[i];
-                if (assetBalances)
-                {
-                    var custodianAccountResponse = ToModelWithAssets(custodianAccountData);
-                    var custodianCode = custodianAccountResponse.CustodianCode;
-                    var custodian = _custodianRegistry.GetCustodianByCode(custodianCode);
-                    try
-                    {
-                        var balances = await custodian.GetAssetBalancesAsync(custodianAccountResponse.Config, cancellationToken);
-                        custodianAccountResponse.AssetBalances = balances;
-                        responses[i] = custodianAccountResponse;
-                    }
-                    catch (CustodianApiException e)
-                    {
-                        return CreateCustodianApiError(e);
-                    }
-                }
-                else
-                {
-                    var custodianAccountResponse = ToModel(custodianAccountData);
-                    responses[i] = custodianAccountResponse;
-                }
+                var custodianAccountData = custodianAccounts[i];
+                responses[i] = await ToModel(custodianAccountData, assetBalances, cancellationToken);
             }
 
             return Ok(responses);
@@ -92,85 +80,53 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId,
             [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-            }
-
-            var custodianAccountData = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccountData == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var custodianAccount = ToModelWithAssets(custodianAccountData);
-            if (custodianAccount != null && assetBalances)
-            {
-                // TODO this is copy paste from above. Maybe put it in a method? Can be use ToModel for this? Not sure how to do it...
-                var custodianCode = custodianAccount.CustodianCode;
-                var custodian = _custodianRegistry.GetCustodianByCode(custodianCode);
-                var balances = await custodian.GetAssetBalancesAsync(custodianAccount.Config, cancellationToken);
-                custodianAccount.AssetBalances = balances;
-            }
-
+            var custodianAccountData = await GetCustodian(storeId, accountId);
+            var custodianAccount = await ToModel(custodianAccountData, assetBalances, cancellationToken);
             return Ok(custodianAccount);
         }
 
-        private bool CanSeeCustodianAccountConfig()
+        private async Task<bool> CanSeeCustodianAccountConfig()
         {
-            return _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanManageCustodianAccounts)).Result.Succeeded;
+            return (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanManageCustodianAccounts))).Succeeded;
         }
 
-        private CustodianAccountResponse ToModelWithAssets(CustodianAccountData custodianAccount)
+        private async Task<CustodianAccountDataClient> ToModel(CustodianAccountData custodianAccount, bool includeAsset, CancellationToken cancellationToken)
         {
-            var r = new CustodianAccountResponse { Id = custodianAccount.Id, CustodianCode = custodianAccount.CustodianCode, StoreId = custodianAccount.StoreId };
-            if (CanSeeCustodianAccountConfig())
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+            var r = includeAsset ? new CustodianAccountResponse() : new CustodianAccountDataClient();
+            r.Id = custodianAccount.Id;
+            r.CustodianCode = custodian.Code;
+            r.Name = custodianAccount.Name;
+            r.StoreId = custodianAccount.StoreId;
+            if (await CanSeeCustodianAccountConfig())
             {
                 // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
-                r.Config = custodianAccount.GetBlob().config;
+                r.Config = custodianAccount.GetBlob();
             }
-
-            return r;
-        }
-
-        private CustodianAccountDataClient ToModel(CustodianAccountData custodianAccount)
-        {
-            var r = new CustodianAccountDataClient { Id = custodianAccount.Id, Name = custodianAccount.Name, CustodianCode = custodianAccount.CustodianCode, StoreId = custodianAccount.StoreId };
-            if (CanSeeCustodianAccountConfig())
+            if (includeAsset)
             {
-                // Only show the "config" field if the user can create or manage the Custodian Account, because config contains sensitive information (API key, etc).
-                r.Config = custodianAccount.GetBlob().config;
+                var balances = await GetCustodianByCode(r.CustodianCode).GetAssetBalancesAsync(r.Config, cancellationToken);
+                ((CustodianAccountResponse)r).AssetBalances = balances;
             }
-
             return r;
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts")]
         [Authorize(Policy = Policies.CanManageCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> CreateCustodianAccount(string storeId, CreateCustodianAccountRequest request)
+        public async Task<IActionResult> CreateCustodianAccount(string storeId, CreateCustodianAccountRequest request, CancellationToken cancellationToken)
         {
             request ??= new CreateCustodianAccountRequest();
-
-            // TODO this may throw an exception if custodian is not found. How do I make this better?
-            
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(request.CustodianCode);
-
-            // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
+            var custodian = GetCustodianByCode(request.CustodianCode);
 
             // Use the name provided or if none provided use the name of the custodian.
-            string name = string.IsNullOrEmpty(request.Name) ? custodian.GetName() : request.Name;
+            string name = string.IsNullOrEmpty(request.Name) ? custodian.Name : request.Name;
 
-            var custodianAccount = new CustodianAccountData() { CustodianCode = custodian.GetCode(), Name = name, StoreId = storeId, };
-            var newBlob = new CustodianAccountData.CustodianAccountBlob();
-            newBlob.config = request.Config;
-            custodianAccount.SetBlob(newBlob);
+            var custodianAccount = new CustodianAccountData() { CustodianCode = custodian.Code, Name = name, StoreId = storeId, };
+            custodianAccount.SetBlob(request.Config);
 
             await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
-            return Ok(ToModel(custodianAccount));
+            return Ok(await ToModel(custodianAccount, false, cancellationToken));
         }
 
 
@@ -178,34 +134,22 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanManageCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdateCustodianAccount(string storeId, string accountId,
-            CreateCustodianAccountRequest request)
+            CreateCustodianAccountRequest request, CancellationToken cancellationToken = default)
         {
             request ??= new CreateCustodianAccountRequest();
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var allCustodians = _custodianRegistry;
-
-            // TODO if the custodian with the desired code does not exist, this will throw an error
-            var custodian = allCustodians.GetCustodianByCode(request.CustodianCode);
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(request.CustodianCode);
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
-            custodianAccount.CustodianCode = custodian.GetCode();
+            custodianAccount.CustodianCode = custodian.Code;
             custodianAccount.StoreId = storeId;
             custodianAccount.Name = request.Name;
 
-            var newBlob = new CustodianAccountData.CustodianAccountBlob();
-            newBlob.config = request.Config;
-            custodianAccount.SetBlob(newBlob);
+            custodianAccount.SetBlob(request.Config);
 
             await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
-            return Ok(ToModel(custodianAccount));
+            return Ok(await ToModel(custodianAccount, false, cancellationToken));
         }
 
         [HttpDelete("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}")]
@@ -219,8 +163,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return Ok();
             }
 
-            return this.CreateAPIError(404, "custodian-account-not-found",
-                $"Could not find the custodian account");
+            throw CustodianAccountNotFound();
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}")]
@@ -228,39 +171,18 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken cancellationToken = default)
         {
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
-            var config = custodianAccount.GetBlob().config;
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+            var config = custodianAccount.GetBlob();
 
             if (custodian is ICanDeposit depositableCustodian)
             {
-                try
-                {
-                    var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
-                    return Ok(result);
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "deposit-payment-method-not-supported",
-                $"Deposits to \"{custodian.GetName()}\" are not supported using \"{paymentMethod}\".");
-        }
-
-        private IActionResult CreateCustodianApiError(CustodianApiException exception)
-        {
-            var r = this.CreateAPIError(exception.HttpStatus, exception.Code, exception.Message);
-            return r;
+                $"Deposits to \"{custodian.Name}\" are not supported using \"{paymentMethod}\".");
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market")]
@@ -276,16 +198,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
@@ -294,7 +208,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     // Qty is a percentage of current holdings
                     var percentage = Decimal.Parse( request.Qty.Substring(0, request.Qty.Length - 1), CultureInfo.InvariantCulture);
-                    var config = custodianAccount.GetBlob().config;
+                    var config = custodianAccount.GetBlob();
                     var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
                     var fromAssetBalance = balances[request.FromAsset];
                     var priceQuote =
@@ -308,21 +222,14 @@ namespace BTCPayServer.Controllers.Greenfield
                     
                 }
 
-                try
-                {
-                    var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
-                        custodianAccount.GetBlob().config, cancellationToken);
+                var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
+                        custodianAccount.GetBlob(), cancellationToken);
 
-                    return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }
 
             return this.CreateAPIError(400, "market-trade-not-supported",
-                $"Placing market orders on \"{custodian.GetName()}\" is not supported.");
+                $"Placing market orders on \"{custodian.Name}\" is not supported.");
         }
 
         private MarketTradeResponseData ToModel(MarketTradeResult marketTrade, string accountId, string custodianCode)
@@ -341,32 +248,18 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
+            var custodianAccount = await GetCustodian(storeId, accountId);
 
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                try
-                {
-                    var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob().config, cancellationToken);
-                    return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var priceQuote = await tradableCustodian.GetQuoteForAssetAsync(fromAsset, toAsset, custodianAccount.GetBlob(), cancellationToken);
+                return Ok(new TradeQuoteResponseData(priceQuote.FromAsset, priceQuote.ToAsset, priceQuote.Bid, priceQuote.Ask));
             }
 
             return this.CreateAPIError(400, "getting-quote-not-supported",
-                $"Getting a price quote on \"{custodian.GetName()}\" is not supported.");
+                $"Getting a price quote on \"{custodian.Name}\" is not supported.");
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/{tradeId}")]
@@ -374,37 +267,22 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken cancellationToken = default)
         {
-            // TODO these couple of lines are used a lot. How do we DRY?
-            var custodianAccount = await _custodianAccountRepository.FindById(accountId);
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                try
+                var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob(), cancellationToken);
+                if (result == null)
                 {
-                    var result = await tradableCustodian.GetTradeInfoAsync(tradeId, custodianAccount.GetBlob().config, cancellationToken);
-                    if (result == null)
-                    {
-                        return this.CreateAPIError(404, "trade-not-found",
-                            $"Could not find the the trade with ID {tradeId} on {custodianAccount.Name}");
-                    }
-                    return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
+                    return this.CreateAPIError(404, "trade-not-found",
+                        $"Could not find the the trade with ID {tradeId} on {custodianAccount.Name}");
                 }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }
 
             return this.CreateAPIError(400, "fetching-trade-info-not-supported",
-                $"Fetching past trade info on \"{custodian.GetName()}\" is not supported.");
+                $"Fetching past trade info on \"{custodian.Name}\" is not supported.");
         }
 
 
@@ -414,71 +292,66 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found",
-                    $"Could not find the custodian account");
-            }
-            
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                try
-                {
-                    var withdrawResult =
-                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob().config, cancellationToken);
-                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
-                    return Ok(result);
-                }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var withdrawResult =
+                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    withdrawResult.WithdrawalId, accountId, custodian.Code, withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "withdrawals-not-supported",
-                $"Withdrawals are not supported for \"{custodian.GetName()}\".");
+                $"Withdrawals are not supported for \"{custodian.Name}\".");
         }
 
+
+        async Task<CustodianAccountData> GetCustodian(string storeId, string accountId)
+        {
+            var cust = await _custodianAccountRepository.FindById(storeId, accountId);
+            if (cust is null)
+                throw CustodianAccountNotFound();
+            return cust;
+        }
+
+        JsonHttpException CustodianAccountNotFound()
+        {
+            return new JsonHttpException(this.CreateAPIError(404, "custodian-account-not-found", "Could not find the custodian account"));
+        }
+
+        ICustodian GetCustodianByCode(string custodianCode)
+        {
+            var cust = _custodianRegistry.FirstOrDefault(custodian => custodian.Code.Equals(custodianCode, StringComparison.OrdinalIgnoreCase));
+            if (cust is null)
+                throw new JsonHttpException(this.CreateAPIError(422, "custodian-code-not-found", "The custodian of this account isn't referenced in /api/v1/custodians"));
+            return cust;
+        }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{paymentMethod}/{withdrawalId}")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = _custodianAccountRepository.FindById(accountId).Result;
-            if (custodianAccount == null)
-            {
-                return this.CreateAPIError(404, "custodian-account-not-found", $"Could not find the custodian account");
-            }
-            var allCustodians = _custodianRegistry;
-            var custodian = allCustodians.GetCustodianByCode(custodianAccount.CustodianCode);
+            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                try
+                var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob(), cancellationToken);
+                if (withdrawResult == null)
                 {
-                    var withdrawResult = await withdrawableCustodian.GetWithdrawalInfoAsync(paymentMethod, withdrawalId, custodianAccount.GetBlob().config, cancellationToken);
-                    if (withdrawResult == null)
-                    {
-                        return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
-                    }
-                    var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
-                        withdrawResult.WithdrawalId, accountId, custodian.GetCode(), withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
-                    return Ok(result);
+                    return this.CreateAPIError(404, "withdrawal-not-found", "The withdrawal was not found.");
                 }
-                catch (CustodianApiException e)
-                {
-                    return CreateCustodianApiError(e);
-                }
+                var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
+                    withdrawResult.WithdrawalId, accountId, custodian.Code, withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
+                return Ok(result);
             }
 
             return this.CreateAPIError(400, "fetching-withdrawal-info-not-supported",
-                $"Fetching withdrawal information is not supported for \"{custodian.GetName()}\".");
+                $"Fetching withdrawal information is not supported for \"{custodian.Name}\".");
         }
     }
 

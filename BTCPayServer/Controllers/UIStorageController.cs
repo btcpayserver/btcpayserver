@@ -19,6 +19,8 @@ namespace BTCPayServer.Storage
         public async Task<IActionResult> GetFile(string fileId)
         {
             var url = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
+            if (url is null)
+                return NotFound();
             return new RedirectResult(url);
         }
     }

@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
@@ -174,11 +173,11 @@ namespace BTCPayServer.Tests
             SendLightningPaymentAsync(invoice).GetAwaiter().GetResult();
         }
 
-        public async Task SendLightningPaymentAsync(Invoice invoice)
+        public async Task<PayResponse> SendLightningPaymentAsync(Invoice invoice)
         {
             var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
-            await CustomerLightningD.Pay(bolt11);
+            return await CustomerLightningD.Pay(bolt11);
         }
 
         public async Task<T> WaitForEvent<T>(Func<Task> action, Func<T, bool> correctEvent = null)

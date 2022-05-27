@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Custodians.Client.Exception;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Plugins.Custodians.Kraken.Kraken;
 using Microsoft.Extensions.Caching.Memory;
@@ -34,8 +34,8 @@ public class KrakenTests : UnitTestBase
         var kraken = tester.PayTester.GetService<KrakenExchange>();
 
         Assert.NotNull(kraken);
-        Assert.NotNull(kraken.GetCode());
-        Assert.NotNull(kraken.GetName());
+        Assert.NotNull(kraken.Code);
+        Assert.NotNull(kraken.Name);
 
         var pairs = kraken.GetTradableAssetPairs();
         Assert.NotNull(pairs);
@@ -164,6 +164,5 @@ public class KrakenTests : UnitTestBase
         Assert.Equal(KrakenMockHttpMessageHandler.TargetWithdrawalAddress, withdrawalInfo.TargetAddress);
         Assert.Null(withdrawalInfo.TransactionId);
         Assert.Equal(KrakenMockHttpMessageHandler.NewWithdrawalId, withdrawalInfo.WithdrawalId);
-        Assert.NotNull(withdrawalInfo.CreatedTime);
     }
 }

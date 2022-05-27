@@ -2,8 +2,6 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Custodians.Client;
-using BTCPayServer.Abstractions.Custodians.Client.Exception;
 using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
@@ -15,21 +13,21 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 {
     private readonly HttpClient _client;
     private readonly IMemoryCache _memoryCache;
-
+    
     public KrakenExchange(HttpClient httpClient, IMemoryCache memoryCache)
     {
         _client = httpClient;
         _memoryCache = memoryCache;
     }
-
-    public string GetCode()
+    
+    public string Code
     {
-        return "kraken";
+        get => "kraken";
     }
 
-    public string GetName()
+    public string Name
     {
-        return "Kraken";
+        get => "Kraken";
     }
 
     public List<AssetPairData> GetTradableAssetPairs()
@@ -88,6 +86,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     private HttpRequestMessage CreateHttpClient()
     {
         HttpRequestMessage request = new();
+        // Setting a User-Agent header is required by the Kraken API!
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36");
         return request;
     }
@@ -187,7 +186,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             throw new DepositsUnavailableException("Could not fetch a suitable deposit address.");
         }
 
-        throw new CustodianFeatureNotImplementedException($"Only BTC-OnChain is implemented for {this.GetName()}");
+        throw new CustodianFeatureNotImplementedException($"Only BTC-OnChain is implemented for {this.Name}");
     }
 
     private string ConvertToKrakenAsset(string asset)

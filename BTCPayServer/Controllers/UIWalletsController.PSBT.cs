@@ -399,7 +399,7 @@ namespace BTCPayServer.Controllers
             if (vm.InvalidPSBT || psbt is null)
             {
                 if (vm.InvalidPSBT)
-                    vm.GlobalError = "Invalid PSBT";
+                    vm.Errors.Add("Invalid PSBT");
                 return View(nameof(WalletPSBT), vm);
             }
             DerivationSchemeSettings derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
@@ -503,7 +503,7 @@ namespace BTCPayServer.Controllers
                                     return await WalletPSBTReady(walletId, vm, "broadcast");
                                 }
 
-                                vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
+                                vm.Errors.Add($"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}");
                                 return View(nameof(WalletPSBT), vm);
                             }
                             else
@@ -515,7 +515,7 @@ namespace BTCPayServer.Controllers
                         }
                         catch (Exception ex)
                         {
-                            vm.GlobalError = "Error while broadcasting: " + ex.Message;
+                            vm.Errors.Add("Error while broadcasting: " + ex.Message);
                             return View(nameof(WalletPSBT), vm);
                         }
 
@@ -539,7 +539,7 @@ namespace BTCPayServer.Controllers
                     await FetchTransactionDetails(derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
                 default:
-                    vm.GlobalError = "Unknown command";
+                    vm.Errors.Add("Unknown command");
                     return View(nameof(WalletPSBT), vm);
             }
         }

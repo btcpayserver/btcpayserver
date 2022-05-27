@@ -1158,6 +1158,7 @@ namespace BTCPayServer.Controllers
             {
                 await explorer.ScanUTXOSetAsync(paymentMethod.AccountDerivation, vm.BatchSize, vm.GapLimit,
                     vm.StartingIndex);
+                _walletProvider.GetWallet(walletId.CryptoCode).InvalidateCache(paymentMethod.AccountDerivation);
             }
             catch (NBXplorerException ex) when (ex.Error.Code == "scanutxoset-in-progress")
             {

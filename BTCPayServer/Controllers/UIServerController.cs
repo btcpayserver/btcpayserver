@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -62,6 +61,8 @@ namespace BTCPayServer.Controllers
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
+        private readonly LinkGenerator _linkGenerator;
+        private readonly EmailSenderFactory _emailSenderFactory;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -81,7 +82,10 @@ namespace BTCPayServer.Controllers
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
             IOptions<ExternalServicesOptions> externalServiceOptions,
-            Logs logs)
+            Logs logs,
+            LinkGenerator linkGenerator,
+            EmailSenderFactory emailSenderFactory
+        )
         {
             _policiesSettings = policiesSettings;
             _Options = options;
@@ -101,6 +105,8 @@ namespace BTCPayServer.Controllers
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
+            _linkGenerator = linkGenerator;
+            _emailSenderFactory = emailSenderFactory;
         }
 
         [Route("server/maintenance")]

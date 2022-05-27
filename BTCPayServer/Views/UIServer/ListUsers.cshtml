@@ -95,6 +95,10 @@
                     }
                 </td>
                 <td class="text-end">
+                    @if (!user.Verified && !user.Disabled) {
+                        <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This will send a verification email to <strong>@user.Email</strong>.">Resend verification email</a>
+                        <span>-</span>
+                    }
                     <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
                     - <a asp-action="ToggleUser"
                          asp-route-enable="@user.Disabled"
@@ -109,3 +113,5 @@
 </div>
 
 <vc:pager view-model="Model"></vc:pager>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Send verification email", $"This will send a verification email to the user.", "Send"))" />

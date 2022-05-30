@@ -52,10 +52,6 @@
 
 <partial name="_StatusMessage"/>
 
-@{
-
-}
-
 @if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
 {
     Stores = new[] {storeId},
@@ -82,13 +78,13 @@
                        asp-route-payoutState="@Model.PayoutState"
                        asp-route-paymentMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
                         @state.ToPrettyString()
                         @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
-                            <span>(@count)</span>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill border bg-secondary fw-bold">@count</span>
                         }
                     </a>
                 </li>
@@ -119,7 +115,8 @@
                    asp-route-pullPaymentId="@Model.PullPaymentId"
                    asp-route-paymentMethodId="@Model.PaymentMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
-                    @state.Key.GetStateString() (@state.Value)
+                    @state.Key.GetStateString() 
+                    <span class="badge rounded-pill border bg-secondary fw-bold">@state.Value</span>
                 </a>
             }
         </div>

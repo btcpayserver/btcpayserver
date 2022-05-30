@@ -103,7 +103,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             {
                 var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
 
-                return new ConfirmVM()
+                return new ConfirmVM
                 {
                     Amount = blob.CryptoAmount.Value,
                     Destination = blob.Destination,
@@ -133,7 +133,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
                 if (boltAmount != payoutBlob.CryptoAmount)
                 {
-                    results.Add(new ResultVM()
+                    results.Add(new ResultVM
                     {
                         PayoutId = payoutData.Id,
                         Result = PayResult.Error,
@@ -145,21 +145,26 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
                 if (result.Result == PayResult.Ok)
                 {
-                    results.Add(new ResultVM()
+                    var message = result.Details?.TotalAmount != null
+                        ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
+                        : null;
+                    results.Add(new ResultVM
                     {
                         PayoutId = payoutData.Id,
                         Result = result.Result,
-                        Destination = payoutBlob.Destination
+                        Destination = payoutBlob.Destination,
+                        Message = message
                     });
                     payoutData.State = PayoutState.Completed;
                 }
                 else
                 {
-                    results.Add(new ResultVM()
+                    results.Add(new ResultVM
                     {
                         PayoutId = payoutData.Id,
                         Result = result.Result,
-                        Destination = payoutBlob.Destination
+                        Destination = payoutBlob.Destination,
+                        Message = result.ErrorDetail
                     });
                 }
             }
@@ -184,8 +189,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                             PayoutId = payoutData.Id,
                             Result = PayResult.Error,
                             Destination = blob.Destination,
-                            Message =
-                                $"You are currently using the internal lightning node for this payout's store but you are not a server admin."
+                            Message = "You are currently using the internal Lightning node for this payout's store but you are not a server admin."
                         });
                     }
 
@@ -260,13 +264,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 break;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
                         results.Add(new ResultVM
                         {
                             PayoutId = payoutData.Id,
                             Result = PayResult.Error,
-                            Destination = blob.Destination
+                            Destination = blob.Destination,
+                            Message = exception.Message
                         });
                     }
                 }

@@ -66,29 +66,43 @@ namespace BTCPayServer.PluginPacker
                 File.Delete(sha256dirs);
             }
             await File.WriteAllTextAsync(sha256dirs, sha256sums.ToString());
+            
+            // try Windows executable first, fall back to macOS/Linux PowerShell
             try
             {
-                Process cmd = new();
-                cmd.StartInfo.FileName = "powershell.exe";
-                cmd.StartInfo.RedirectStandardInput = true;
-                cmd.StartInfo.RedirectStandardOutput = true;
-                cmd.StartInfo.CreateNoWindow = false;
-                cmd.StartInfo.UseShellExecute = false;
-                cmd.Start();
-                
-                await cmd.StandardInput.WriteLineAsync($"cat {sha256dirs} | gpg -s > {Path.Combine(outputDir, "SHA256SUMS.asc")}");
-                await cmd.StandardInput.FlushAsync();
-                cmd.StandardInput.Close();
-                await cmd.WaitForExitAsync();
-                Console.WriteLine(await cmd.StandardOutput.ReadToEndAsync());
-
+                await CreateShasums("powershell.exe", sha256dirs, outputDir);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Attempted to sign hashes with gpg but maybe powershell is not installed?\n{e.Message}");
+                try
+                {
+                    await CreateShasums("bash", sha256dirs, outputDir);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Attempted to sign hashes with gpg but maybe powershell is not installed?\n{ex.Message}");
+                }
             }
             
             Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
+        }
+
+        private static async Task CreateShasums(string exec, string sha256dirs, string outputDir)
+        {
+            Process cmd = new();
+            cmd.StartInfo.FileName = exec;
+            cmd.StartInfo.RedirectStandardInput = true;
+            cmd.StartInfo.RedirectStandardOutput = true;
+            cmd.StartInfo.CreateNoWindow = false;
+            cmd.StartInfo.UseShellExecute = false;
+            cmd.Start();
+
+            await cmd.StandardInput.WriteLineAsync($"cat {sha256dirs} | gpg -s > {Path.Combine(outputDir, "SHA256SUMS.asc")}");
+            await cmd.StandardInput.FlushAsync();
+            cmd.StandardInput.Close();
+            await cmd.WaitForExitAsync();
+            Console.WriteLine(await cmd.StandardOutput.ReadToEndAsync());
         }
 
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)

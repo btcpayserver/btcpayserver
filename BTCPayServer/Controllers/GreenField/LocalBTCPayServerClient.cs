@@ -303,62 +303,80 @@ namespace BTCPayServer.Controllers.Greenfield
                 paymentRequestController, apiKeysController, notificationsController, usersController,
                 storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController, storeWebhooksController,
                 greenFieldServerInfoController, greenfieldPullPaymentController, storesController, homeController,
-                lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
-                storePaymentMethodsController, greenfieldStoreEmailController, greenfieldStoreUsersController,
-                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, storePaymentMethodsController, 
+                storePaymentMethodsController, greenfieldStoreUsersController,
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase, 
                 greenfieldStoreEmailController, greenfieldStorePayoutProcessorsController, greenfieldPayoutProcessorsController,
                 greenfieldStoreAutomatedOnChainPayoutProcessorsController,
-                greenfieldStoreAutomatedLightningPayoutProcessorsController,
+                greenfieldStoreAutomatedLightningPayoutProcessorsController,storeLnurlPayPaymentMethodsController
             };
 
-            var authoverride = new DefaultAuthorizationService(
-                serviceProvider.GetRequiredService<IAuthorizationPolicyProvider>(),
-                new AuthHandlerProvider(
-                    serviceProvider.GetRequiredService<StoreRepository>(),
-                    serviceProvider.GetRequiredService<UserManager<ApplicationUser>>(),
-                    httpContextAccessor
-                ),
-                serviceProvider.GetRequiredService<ILogger<DefaultAuthorizationService>>(),
-                serviceProvider.GetRequiredService<IAuthorizationHandlerContextFactory>(),
-                serviceProvider.GetRequiredService<IAuthorizationEvaluator>(),
-                serviceProvider.GetRequiredService<IOptions<AuthorizationOptions>>()
-            );
+            var authoverride = new AuthorizationService(new GreenfieldAuthorizationHandler(httpContextAccessor,
+                serviceProvider.GetService<UserManager<ApplicationUser>>(),
+                serviceProvider.GetService<StoreRepository>()));
 
 
             foreach (var controller in controllers)
             {
                 controller.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
                 var authInterface = typeof(IAuthorizationService);
-                foreach (FieldInfo fieldInfo in controller.GetType().GetFields()
-                             .Where(info => authInterface.IsAssignableFrom(info.FieldType)))
+                var type = controller.GetType();
+                do
                 {
-                    fieldInfo.SetValue(controller, authoverride);
-                }
+                    foreach (FieldInfo fieldInfo in type.GetFields(BindingFlags.FlattenHierarchy |
+                                                                   BindingFlags.Instance |
+                                                                   BindingFlags.NonPublic |
+                                                                   BindingFlags.Public |
+                                                                   BindingFlags.Static)
+                                 .Where(info =>authInterface == info.FieldType ||  authInterface.IsAssignableFrom(info.FieldType)))
+                    {
+                        fieldInfo.SetValue(controller, authoverride);
+                    }
+                    type = type.BaseType;
+                } while (type is not null);
+
             }
         }
 
-        class AuthHandlerProvider : IAuthorizationHandlerProvider
+        class AuthorizationService : IAuthorizationService
         {
-            private readonly IHttpContextAccessor _httpContextAccessor;
+            private readonly GreenfieldAuthorizationHandler _greenfieldAuthorizationHandler;
 
-
-            private readonly UserManager<ApplicationUser> _userManager;
-            private readonly StoreRepository _storeRepository;
-
-            public AuthHandlerProvider(StoreRepository storeRepository, UserManager<ApplicationUser> userManager,
-                IHttpContextAccessor httpContextAccessor)
+            public AuthorizationService(GreenfieldAuthorizationHandler greenfieldAuthorizationHandler)
             {
-                _storeRepository = storeRepository;
-                _userManager = userManager;
-                _httpContextAccessor = httpContextAccessor;
+                _greenfieldAuthorizationHandler = greenfieldAuthorizationHandler;
+            }
+            
+            
+            public async Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object resource,
+                IEnumerable<IAuthorizationRequirement> requirements)
+            {
+                var withuser  = user.Identity?.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}WithUser";
+                if (withuser)
+                {
+                    var newUser = new ClaimsPrincipal(new ClaimsIdentity(user.Claims,
+                        $"{GreenfieldConstants.AuthenticationType}"));
+                    var newContext = new AuthorizationHandlerContext(requirements, newUser, resource);
+                    await _greenfieldAuthorizationHandler.HandleAsync(newContext);
+                    if (newContext.HasSucceeded)
+                    {
+                        return AuthorizationResult.Success();
+                    }
+
+                    return AuthorizationResult.Failed();
+                }
+            
+                var succeed = user.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
+
+                if (succeed)
+                {
+                    return AuthorizationResult.Success();
+                }
+                return AuthorizationResult.Failed();
             }
 
-            public Task<IEnumerable<IAuthorizationHandler>> GetHandlersAsync(AuthorizationHandlerContext context)
+            public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object resource, string policyName)
             {
-                return Task.FromResult<IEnumerable<IAuthorizationHandler>>(new IAuthorizationHandler[]
-                {
-                    new LocalGreenfieldAuthorizationHandler(_httpContextAccessor, _userManager, _storeRepository)
-                });
+                throw new  NotImplementedException();
             }
         }
 

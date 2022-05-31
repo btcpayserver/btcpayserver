@@ -601,6 +601,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 JsonResult jsonResult => (T)jsonResult.Value,
                 OkObjectResult { Value: T res } => res,
+                OkObjectResult { Value: JValue res } => res.Value<T>(),
                 _ => default
             };
         }

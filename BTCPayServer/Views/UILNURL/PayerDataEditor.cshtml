@@ -65,11 +65,11 @@ errors:[],
                 if (template){
                    const json = JSON.parse(template);
                    for (const jsonKey in json) {
-                       const i = options.indexOf(jsonKey);
+                       const i = this.options.indexOf(jsonKey);
                        if (i === -1){
                             continue;
                        }
-                       options.splice(i, 1);
+                       this.options.splice(i, 1);
                        result.push(Object.assign({}, {key:jsonKey}, json[jsonKey])); 
                    }
                 }

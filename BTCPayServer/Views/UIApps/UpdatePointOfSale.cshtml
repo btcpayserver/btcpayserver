@@ -208,7 +208,7 @@
                                     <input asp-for="NotificationUrl" class="form-control" />
                                     <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                                 </div>
-                                <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
+                                <p>A <code>POST</code> callback will be sent to the specified <code>notificationUrl</code> (for on-chain transactions when there are sufficient confirmations):</p>
                                 <pre class="p-3">@Model.ExampleCallback</pre>
                                 <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
                                 <ul>

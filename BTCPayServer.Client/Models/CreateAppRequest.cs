@@ -1,5 +1,16 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace BTCPayServer.Client.Models
 {
+    public enum PosViewType
+    {
+        Static,
+        Cart,
+        Light,
+        Print
+    }
+
     public class CreateAppRequest
     {
         public string AppName { get; set; }
@@ -12,7 +23,8 @@ namespace BTCPayServer.Client.Models
         public string Title { get; set; } = null;
         public string Description { get; set; } = null;
         public string Template { get; set; } = null;
-        public string DefaultView { get; set; } = null;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PosViewType DefaultView { get; set; }
         public bool ShowCustomAmount { get; set; } = true;
         public bool ShowDiscount { get; set; } = true;
         public bool EnableTips { get; set; } = true;

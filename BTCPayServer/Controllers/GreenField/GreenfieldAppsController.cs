@@ -52,12 +52,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 AppType = AppType.PointOfSale.ToString()
             };
 
-            Enum.TryParse(request.DefaultView, out PosViewType defaultView);
-
             appData.SetSettings(new PointOfSaleSettings
             {
                 Title = request.Title,
-                DefaultView = defaultView,
+                DefaultView = (Services.Apps.PosViewType)request.DefaultView,
                 ShowCustomAmount = request.ShowCustomAmount,
                 ShowDiscount = request.ShowDiscount,
                 EnableTips = request.EnableTips,

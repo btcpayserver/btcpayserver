@@ -296,7 +296,7 @@
 
 #NotificationsDropdown {
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--btcpay-border-radius-l);
     background-color: var(--btcpay-body-bg);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 16%);
     padding: 0;

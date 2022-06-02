@@ -181,6 +181,22 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanCreatePointOfSaleAppViaAPI()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+            var app = await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { AppName = "test app from API"  });
+            
+            Assert.Equal("test app from API", app.Name);
+            Assert.Equal(user.StoreId, app.StoreId);
+            Assert.Equal("PointOfSale", app.AppType);
+        }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanDeleteUsersViaApi()
         {
             using var tester = CreateServerTester(newDb: true);

@@ -347,7 +347,7 @@ namespace BTCPayServer.Services.Apps
         {
             AppType appTypeEnum = Enum.Parse<AppType>(appType);
             AppData appData = await GetApp(appId, appTypeEnum, false);
-            var settings = appData.GetSettings<UIAppsController.PointOfSaleSettings>();
+            var settings = appData.GetSettings<PointOfSaleSettings>();
 
             string style;
             switch (appTypeEnum)

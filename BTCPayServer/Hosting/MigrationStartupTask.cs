@@ -350,7 +350,7 @@ WHERE cte.""Id""=p.""Id""
 
                     case nameof(AppType.PointOfSale):
 
-                        var settings2 = app.GetSettings<UIAppsController.PointOfSaleSettings>();
+                        var settings2 = app.GetSettings<PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))
                         {
                             settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;

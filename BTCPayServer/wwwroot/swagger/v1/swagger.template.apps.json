@@ -1,0 +1,214 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/apps/pos": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store ID",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "operationId": "Apps_CreatePointOfSaleApp",
+                "summary": "Create a new Point of Sale app",
+                "description": "Point of Sale apps allows accepting payments for items in a virtual store",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "appName": {
+                                        "type": "string",
+                                        "description": "The name of the app (shown in admin UI)",
+                                        "nullable": false
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "description": "The title of the app (shown to the user)",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "The description of the app",
+                                        "nullable": true
+                                    },
+                                    "template": {
+                                        "type": "string",
+                                        "description": "Template for items available in the app",
+                                        "nullable": true
+                                    },
+                                    "defaultView": {
+                                        "type": "string",
+                                        "description": "Template for items available in the app",
+                                        "nullable": true,
+                                        "x-enumNames": [
+                                            "Static",
+                                            "Cart",
+                                            "Light",
+                                            "Print"
+                                        ],
+                                        "enum": [
+                                            "Static",
+                                            "Cart",
+                                            "Light",
+                                            "Print"
+                                        ]
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "description": "Currency to use for the app. Defaults to the currency used by the store if not specified",
+                                        "example": "BTC",
+                                        "nullable": true
+                                    },
+                                    "showCustomAmount": {
+                                        "type": "boolean",
+                                        "description": "Whether to include a special item in the store which allows user to input a custom payment amount",
+                                        "default": true,
+                                        "nullable": true
+                                    },
+                                    "showDiscount": {
+                                        "type": "boolean",
+                                        "description": "Whether to allow user to input a discount amount. Applies to Cart view only. Not recommended for customer self-checkout",
+                                        "default": true,
+                                        "nullable": true
+                                    },
+                                    "enableTips": {
+                                        "type": "boolean",
+                                        "description": "Whether to allow user to input a tip amount. Applies to Cart and Light views only",
+                                        "default": true,
+                                        "nullable": true
+                                    },
+                                    "customAmountPayButtonText": {
+                                        "type": "string",
+                                        "description": "Payment button text which appears for items which allow user to input a custom amount",
+                                        "default": "Pay",
+                                        "nullable": true
+                                    },
+                                    "fixedAmountPayButtonText": {
+                                        "type": "string",
+                                        "description": "Payment button text which appears for items which have a fixed price",
+                                        "default": "Buy for {PRICE_HERE}",
+                                        "nullable": true
+                                    },
+                                    "tipText": {
+                                        "type": "string",
+                                        "description": "Prompt which appears next to the tip amount field if tipping is enabled",
+                                        "default": "Do you want to leave a tip?",
+                                        "nullable": true
+                                    },
+                                    "customCSSLink": {
+                                        "type": "string",
+                                        "description": "Link to a custom CSS stylesheet to be used in the app",
+                                        "nullable": true
+                                    },
+                                    "embeddedCSS": {
+                                        "type": "string",
+                                        "description": "Custom CSS to embed into the app",
+                                        "nullable": true
+                                    },
+                                    "notificationUrl": {
+                                        "type": "string",
+                                        "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                        "nullable": true
+                                    },
+                                    "redirectUrl": {
+                                        "type": "string",
+                                        "description": "URL to redirect user to once invoice is paid",
+                                        "nullable": true
+                                    },
+                                    "redirectAutomatically": {
+                                        "type": "boolean",
+                                        "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
+                                        "nullable": true
+                                    },
+                                    "requiresRefundEmail": {
+                                        "type": "boolean",
+                                        "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created app details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PointOfSaleAppData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PointOfSaleAppData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Id of the app",
+                        "example": "3ki4jsAkN4u9rv1PUzj1odX4Nx7s"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name given to the app when it was created",
+                        "example": "my test app"
+                    },
+                    "storeId": {
+                        "type": "string",
+                        "description": "Id of the store to which the app belongs",
+                        "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
+                    },
+                    "created": {
+                        "type": "integer",
+                        "example": 1651554744,
+                        "description": "UNIX timestamp for when the app was created"
+                    },
+                    "appType": {
+                        "type": "string",
+                        "example": "PointOfSale",
+                        "description": "Type of the app which was created (will always \"PointOfSale\" in this case"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Apps"
+        }
+    ]
+}

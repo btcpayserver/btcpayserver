@@ -203,7 +203,8 @@ namespace BTCPayServer.Tests
                     "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
                 request.Headers.TryAddWithoutValidation("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
-                var response = await httpClient.SendAsync(request);
+                using var cts = new CancellationTokenSource(5_000);
+                var response = await httpClient.SendAsync(request, cts.Token);
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 if (uri.Fragment.Length != 0)
                 {
@@ -223,11 +224,11 @@ namespace BTCPayServer.Tests
             }
             catch (Exception) when (retryLeft > 0)
             {
+                retryLeft--;
                 goto retry;
             }
             catch (Exception ex)
             {
-                retryLeft--;
                 var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 

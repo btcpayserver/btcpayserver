@@ -1347,6 +1347,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(0m, invoice.Amount);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
             var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+            if (!btcmethod.Activated)
+            {
+                await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id, btcmethod.PaymentMethod);
+                btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+            }
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
 

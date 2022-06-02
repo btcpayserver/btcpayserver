@@ -1274,6 +1274,10 @@ namespace BTCPayServer.Tests
 #pragma warning disable CS0618 // Type or member is obsolete
             var btc = tester.NetworkProvider.BTC.NBitcoinNetwork;
 #pragma warning restore CS0618 // Type or member is obsolete
+            if (!method.Activated)
+            {
+                await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id, method.PaymentMethod);
+            }
             await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(method.Destination, btc), Money.Coins(method.Due) + Money.Coins(1.0m));
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1628,7 +1632,11 @@ namespace BTCPayServer.Tests
                 });
             var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
             Assert.Equal(0.0001m, pm.Due);
-
+            if (!pm.Activated)
+            {
+                await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id, pm.PaymentMethod);
+                pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+            }
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
                 await tester.ExplorerNode.SendToAddressAsync(

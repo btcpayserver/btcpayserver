@@ -199,9 +199,10 @@ namespace BTCPayServer.Tests
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             s.Driver.Navigate()
                 .GoToUrl(new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}"));
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
                 Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
+                invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             });
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
                     .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))

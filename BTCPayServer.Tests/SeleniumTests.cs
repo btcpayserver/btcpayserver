@@ -1156,6 +1156,7 @@ namespace BTCPayServer.Tests
             Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
             var invoiceId = s.CreateInvoice(storeId);
+            s.GoToInvoiceCheckout(invoiceId);
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             var address = invoice.EntityToDTO().Addresses["BTC"];
 
@@ -1169,6 +1170,7 @@ namespace BTCPayServer.Tests
             //lets import and save private keys
             var root = mnemonic.DeriveExtKey();
             invoiceId = s.CreateInvoice(storeId);
+            s.GoToInvoiceCheckout(invoiceId);
             invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             address = invoice.EntityToDTO().Addresses["BTC"];
             result = await s.Server.ExplorerNode.GetAddressInfoAsync(

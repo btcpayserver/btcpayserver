@@ -159,8 +159,7 @@
                     }
                 },
                 "tags": [
-                    "POS",
-                    "Point of Sale"
+                    "Apps"
                 ],
                 "security": [
                     {
@@ -209,13 +208,7 @@
     },
     "tags": [
         {
-            "name": "App"
-        },
-        {
-            "name": "POS"
-        },
-        {
-            "name": "Point of Sale"
+            "name": "Apps"
         }
     ]
 }

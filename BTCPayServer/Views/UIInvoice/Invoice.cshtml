@@ -37,7 +37,55 @@
             const { id, status } = button.dataset
             changeInvoiceState(id, status)
         })
+        
+        const handleRefundResponse = async response => {
+            const modalBody = document.querySelector('#RefundModal .modal-body')
+            if (response.ok && response.redirected) {
+                window.location = response.url
+            } else if (response.ok) {
+                modalBody.innerHTML = await response.text()
+            } else {
+                modalBody.innerHTML = '<div class="alert alert-danger" role="alert">Failed to load refund options.</div>'
+            }
+        }
+        
+        delegate('click', '#IssueRefund', async e => {
+            e.preventDefault()
+            const { href: url } = e.target
+            const response = await fetch(url)
+            await handleRefundResponse(response)
+        })
+        
+        delegate('submit', '#RefundForm', async e => {
+            e.preventDefault()
+            const form = e.target
+            const { action: url, method } = form
+            const body = new FormData(form)
+            const response = await fetch(url, { method, body })
+            await handleRefundResponse(response)
+        })
     </script>
+}
+
+@if (Model.CanRefund)
+{
+    <div id="RefundModal" class="modal fade" tabindex="-1" aria-labelledby="RefundTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="RefundTitle">Issue Refund</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <vc:icon symbol="close" />
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 <div class="invoice-details">
@@ -51,7 +99,7 @@
             }
             @if (Model.CanRefund)
             {
-                <a id="refundlink" class="btn btn-success text-nowrap" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")">Issue Refund</a>
+                <a id="IssueRefund" class="btn btn-success text-nowrap" asp-action="Refund" asp-route-invoiceId="@Model.Id" data-bs-toggle="modal" data-bs-target="#RefundModal">Issue Refund</a>
             }
             else
             {

@@ -11,18 +11,10 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Tests.Logging;
-using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using NBitcoin.Scripting.Parser;
 using NBitpayClient;
-using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
@@ -358,7 +350,7 @@ namespace BTCPayServer.Tests
                 {
                     if (multiCurrency)
                         user.RegisterDerivationScheme("LTC");
-                    foreach (var rateSelection in new[] { "FiatTextRadio", "CurrentRateTextRadio", "RateThenTextRadio" })
+                    foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
                         await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
             }
@@ -368,7 +360,7 @@ namespace BTCPayServer.Tests
         {
             s.GoToHome();
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m, 5100.0m));
-            var invoice = await user.BitPay.CreateInvoiceAsync(new NBitpayClient.Invoice()
+            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Currency = "USD",
                 Price = 5000.0m
@@ -390,26 +382,35 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
             s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
             s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("refundlink")).Click();
+            s.Driver.FindElement(By.Id("IssueRefund")).Click();
+            
             if (multiCurrency)
             {
+                s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
+                s.Driver.WaitUntilAvailable(By.Id("SelectedPaymentMethod"), TimeSpan.FromSeconds(1));
                 s.Driver.FindElement(By.Id("SelectedPaymentMethod")).SendKeys("BTC" + Keys.Enter);
                 s.Driver.FindElement(By.Id("ok")).Click();
             }
+
+            s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
             Assert.Contains("$5,500.00", s.Driver.PageSource); // Should propose reimburse in fiat
             Assert.Contains("1.10000000 ₿", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before
             Assert.Contains("2.20000000 ₿", s.Driver.PageSource); // Should propose reimburse in BTC at the current rate
-            s.Driver.FindElement(By.Id(rateSelection)).Click();
+            s.Driver.WaitForAndClick(By.Id(rateSelection));
             s.Driver.FindElement(By.Id("ok")).Click();
+            
+            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
             Assert.Contains("pull-payments", s.Driver.Url);
-            if (rateSelection == "FiatTextRadio")
+            if (rateSelection == "FiatOption")
                 Assert.Contains("$5,500.00", s.Driver.PageSource);
-            if (rateSelection == "CurrentRateTextRadio")
+            if (rateSelection == "CurrentOption")
                 Assert.Contains("2.20000000 ₿", s.Driver.PageSource);
-            if (rateSelection == "RateThenTextRadio")
+            if (rateSelection == "RateThenOption")
                 Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
+            
             s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("refundlink")).Click();
+            s.Driver.FindElement(By.Id("IssueRefund")).Click();
+            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
             Assert.Contains("pull-payments", s.Driver.Url);
             var client = await user.CreateClient();
             var ppid = s.Driver.Url.Split('/').Last();

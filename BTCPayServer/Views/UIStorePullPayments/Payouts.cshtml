@@ -39,6 +39,15 @@
     }
 }
 
+@section PageHeadContent {
+    <style>
+        #Payouts .badge.rounded-pill {
+            font-size: var(--btcpay-font-size-s);
+            color: inherit;
+        }
+    </style>
+}
+
 @section PageFootContent {
     <script>
         delegate('click', '.selectAll', e => {
@@ -51,10 +60,6 @@
 }
 
 <partial name="_StatusMessage"/>
-
-@{
-
-}
 
 @if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
 {
@@ -70,7 +75,7 @@
 }
 <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
-<form method="post">
+<form method="post" id="Payouts">
     <input type="hidden" asp-for="PaymentMethodId"/>
     <input type="hidden" asp-for="PayoutState"/>
     <div class="d-flex justify-content-between mb-4">
@@ -82,13 +87,13 @@
                        asp-route-payoutState="@Model.PayoutState"
                        asp-route-paymentMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
                         @state.ToPrettyString()
                         @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
-                            <span>(@count)</span>
+                            <span class="badge rounded-pill fw-semibold pe-0">@count</span>
                         }
                     </a>
                 </li>
@@ -119,7 +124,11 @@
                    asp-route-pullPaymentId="@Model.PullPaymentId"
                    asp-route-paymentMethodId="@Model.PaymentMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
-                    @state.Key.GetStateString() (@state.Value)
+                    @state.Key.GetStateString() 
+                    @if (state.Value > 0)
+                    {
+                        <span class="badge rounded-pill border fw-semibold ms-1 bg-tile">@state.Value</span>
+                    }
                 </a>
             }
         </div>

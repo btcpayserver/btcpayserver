@@ -49,53 +49,49 @@
 @if (onchainPayments.Any())
 {
     var hasNetworkFee = onchainPayments.Sum(a => a.NetworkFee) > 0;
-    <div class="row">
-        <div class="col-md-12 invoice-payments">
-            <h3>On-Chain payments</h3>
-            <table class="table table-hover table-responsive-lg">
-                <thead class="thead-inverse">
-                <tr>
-                    <th>Crypto</th>
-                    <th>Index</th>
-                    <th>Deposit address</th>
-                    <th>Amount</th>
-                    @if (hasNetworkFee)
-                    {
-                    <th>
-                        Network Fee
-                        <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank"  rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                        </a>
-                    </th>
-                    }
-                    <th>Transaction Id</th>
-                    <th class="text-end">Confirmations</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var payment in onchainPayments)
+    <h3>On-Chain payments</h3>
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+        <tr>
+            <th>Crypto</th>
+            <th>Index</th>
+            <th>Deposit address</th>
+            <th>Amount</th>
+            @if (hasNetworkFee)
+            {
+            <th>
+                Network Fee
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank"  rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+            </th>
+            }
+            <th>Transaction Id</th>
+            <th class="text-end">Confirmations</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var payment in onchainPayments)
+        {
+            <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
+                <td>@payment.Crypto</td>
+                <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
+                <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
+                <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
+                @if (hasNetworkFee)
                 {
-                    <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
-                        <td>@payment.Crypto</td>
-                        <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
-                        <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
-                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
-                        @if (hasNetworkFee)
-                        {
-                            <td>@payment.NetworkFee</td>
-                        }
-                        <td style="max-width:200px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.TransactionId">
-                            <div class="wraptextAuto">
-                                <a href="@payment.TransactionLink" target="_blank" rel="noreferrer noopener">
-                                    @payment.TransactionId
-                                </a>
-                            </div>
-                        </td>
-                        <td class="text-end">@payment.Confirmations</td>
-                    </tr>
+                    <td>@payment.NetworkFee</td>
                 }
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <td style="max-width:200px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.TransactionId">
+                    <div class="wraptextAuto">
+                        <a href="@payment.TransactionLink" target="_blank" rel="noreferrer noopener">
+                            @payment.TransactionId
+                        </a>
+                    </div>
+                </td>
+                <td class="text-end">@payment.Confirmations</td>
+            </tr>
+        }
+        </tbody>
+    </table>
 }

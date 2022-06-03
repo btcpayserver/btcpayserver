@@ -1,7 +1,6 @@
 @using BTCPayServer.Client.Models
 @model (InvoiceDetailsModel Invoice, bool ShowAddress) 
 @{ var invoice = Model.Invoice; }
-@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 
 <div class="invoice-payments table-responsive-xl mb-4">
     <h3 class="mb-0">Invoice Summary</h3>
@@ -29,13 +28,11 @@
                 <td>@payment.PaymentMethod</td>
                 @if (Model.ShowAddress)
                 {
-                    <td title="@payment.Address">
-                        <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
-                    </td>
+                    <td class="text-break">@payment.Address</td>
                 }
                 <td class="text-end">@payment.Rate</td>
-                <td class="text-end">@payment.Paid</td>
-                <td class="text-end">@payment.Due</td>
+                <td class="text-end text-nowrap">@payment.Paid</td>
+                <td class="text-end text-nowrap">@payment.Due</td>
                 @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
                 {
                     <td class="text-end">@payment.Overpaid</td>
@@ -56,7 +53,7 @@
 }
 @foreach (var paymentGroup in grouped)
 {
-    <div class="table-responsive-xl">
+    <div class="invoice-payments table-responsive-xl mb-4">
         <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
     </div>
 }

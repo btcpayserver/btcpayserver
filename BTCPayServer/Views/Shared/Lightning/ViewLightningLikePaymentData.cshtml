@@ -22,28 +22,24 @@
 
 @if (offchainPayments.Any())
 {
-    <div class="row">
-        <div class="col-md-12 invoice-payments">
-            <h3>Off-Chain payments</h3>
-            <table class="table table-hover table-responsive-md">
-                <thead class="thead-inverse">
-                    <tr>
-                        <th class="w-150px">Crypto</th>
-                        <th class="w-150px">Type</th>
-                        <th>BOLT11</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var payment in offchainPayments)
-                    {
-                        <tr>
-                            <td>@payment.Crypto</td>
-                            <td>@payment.Type.ToPrettyString()</td>
-                            <td><div class="wraptextAuto">@payment.BOLT11</div></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <h3>Off-Chain payments</h3>
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+            <tr>
+                <th class="w-150px">Crypto</th>
+                <th class="w-150px">Type</th>
+                <th>BOLT11</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in offchainPayments)
+            {
+                <tr>
+                    <td>@payment.Crypto</td>
+                    <td>@payment.Type.ToPrettyString()</td>
+                    <td class="text-break">@payment.BOLT11</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }

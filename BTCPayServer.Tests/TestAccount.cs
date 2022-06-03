@@ -519,13 +519,21 @@ retry:
 
         public async Task PayInvoice(string invoiceId)
         {
-            var inv = await BitPay.GetInvoiceAsync(invoiceId);
+            var client  = await CreateClient();
+            var inv = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var pm = inv.First();
+            if (!pm.Activated)
+            {
+                await client.ActivateInvoicePaymentMethod(StoreId, invoiceId, pm.PaymentMethod);
+                inv = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+                pm = inv.First();
+            }
             var net = parent.ExplorerNode.Network;
-            this.parent.ExplorerNode.SendToAddress(BitcoinAddress.Create(inv.BitcoinAddress, net), inv.BtcDue);
+            await this.parent.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(pm.Destination, net), Money.Coins(pm.Due));
             await TestUtils.EventuallyAsync(async () =>
             {
-                var localInvoice = await BitPay.GetInvoiceAsync(invoiceId, Facade.Merchant);
-                Assert.Equal("paid", localInvoice.Status);
+                var localInvoice = await client.GetInvoice(StoreId, invoiceId);
+                Assert.Equal(InvoiceStatus.Processing, localInvoice.Status);
             });
         }
 

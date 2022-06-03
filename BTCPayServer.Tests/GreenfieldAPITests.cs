@@ -1176,11 +1176,10 @@ namespace BTCPayServer.Tests
 
             var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
                 .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
-            var invoice = user.BitPay.GetInvoice(invoiceId);
+           
             await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
-                await tester.ExplorerNode.SendToAddressAsync(
-                    BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
+                await user.PayInvoice(invoiceId);
             });
             await TestUtils.EventuallyAsync(async () =>
              {
@@ -1266,7 +1265,9 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
-            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD",  });
+            await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id, "BTC");
+            invoice = await client.GetInvoice(user.StoreId, invoice.Id);
             var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
             var method = methods.First();
             var amount = method.Amount;
@@ -1570,11 +1571,8 @@ namespace BTCPayServer.Tests
 
             //payment method activation tests
             var store = await client.GetStore(user.StoreId);
-            Assert.False(store.LazyPaymentMethods);
-            store.LazyPaymentMethods = true;
-            store = await client.UpdateStore(store.Id,
-                JObject.FromObject(store).ToObject<UpdateStoreRequest>());
             Assert.True(store.LazyPaymentMethods);
+            store.LazyPaymentMethods = true;
 
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 1, Currency = "USD" });
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);

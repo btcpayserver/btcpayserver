@@ -10,7 +10,7 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI, new()
+    public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI
     {
         readonly HttpClient _httpClient;
         public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Rates
         {
             await new SynchronizationContextRemover();
 
-            var exchangeAPI = new T();
+            var exchangeAPI = (T) await ExchangeAPI.GetExchangeAPIAsync<T>();
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 
@@ -52,11 +52,19 @@ namespace BTCPayServer.Services.Rates
                 return null;
             try
             {
-                var tickerName = await exchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
-                if (!CurrencyPair.TryParse(tickerName, out var pair))
+                CurrencyPair pair;
+                if (ticker.Value.Volume.BaseCurrency is not null && ticker.Value.Volume.QuoteCurrency is not null)
                 {
-                    notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
-                    return null;
+                    pair = new CurrencyPair(ticker.Value.Volume.BaseCurrency, ticker.Value.Volume.QuoteCurrency);
+                }
+                else
+                {
+                    var tickerName = await exchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
+                    if (!CurrencyPair.TryParse(tickerName, out pair))
+                    {
+                        notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
+                        return null;
+                    }
                 }
                 if (ReverseCurrencyPair)
                     pair = new CurrencyPair(pair.Right, pair.Left);

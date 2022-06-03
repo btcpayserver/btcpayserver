@@ -579,6 +579,10 @@ namespace BTCPayServer.Services.Invoices
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
+            if (invoice.Refunds != null)
+            {
+                entity.Refunds = invoice.Refunds.OrderBy(c => c.PullPaymentData.StartDate).ToList();
+            }
             if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.Metadata.BuyerEmail))
             {
                 entity.Metadata.BuyerEmail = entity.RefundMail;
@@ -715,6 +719,8 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Include(o => o.AddressInvoices);
             if (queryObject.IncludeEvents)
                 query = query.Include(o => o.Events);
+            if (queryObject.IncludeRefunds)
+                query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
             var data = await query.ToArrayAsync().ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
         }
@@ -825,5 +831,6 @@ namespace BTCPayServer.Services.Invoices
 
         public bool IncludeEvents { get; set; }
         public bool IncludeArchived { get; set; } = true;
+        public bool IncludeRefunds { get; set; }
     }
 }

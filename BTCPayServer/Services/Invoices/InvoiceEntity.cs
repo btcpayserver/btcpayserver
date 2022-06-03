@@ -441,6 +441,8 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceType Type { get; set; }
 
+        public List<RefundData> Refunds { get; set; }
+
         public bool IsExpired()
         {
             return DateTimeOffset.UtcNow > ExpirationTime;

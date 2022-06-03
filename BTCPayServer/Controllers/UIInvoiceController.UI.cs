@@ -93,6 +93,7 @@ namespace BTCPayServer.Controllers
                 IncludeAddresses = true,
                 IncludeEvents = true,
                 IncludeArchived = true,
+                IncludeRefunds = true,
             })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
@@ -116,7 +117,9 @@ namespace BTCPayServer.Controllers
                 ExpirationDate = invoice.ExpirationTime,
                 MonitoringDate = invoice.MonitoringExpiration,
                 Fiat = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
-                TaxIncluded = _CurrencyNameTable.DisplayFormatCurrency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
+                TaxIncluded = invoice.Metadata.TaxIncluded is null
+                    ? null
+                    : _CurrencyNameTable.DisplayFormatCurrency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 TypedMetadata = invoice.Metadata,
@@ -125,6 +128,7 @@ namespace BTCPayServer.Controllers
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
                 CanRefund = CanRefund(invoiceState),
+                Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
@@ -412,8 +416,8 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceId = new[] { invoiceId },
                 UserId = GetUserId(),
-                IncludeAddresses = true,
-                IncludeEvents = true,
+                IncludeAddresses = false,
+                IncludeEvents = false,
                 IncludeArchived = true,
             })).FirstOrDefault();
             if (invoice == null)

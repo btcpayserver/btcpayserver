@@ -1,4 +1,3 @@
-@using BTCPayServer.Abstractions.Contracts
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
@@ -75,9 +74,9 @@
         <script>
             if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
                 const { host, protocol } = window.location;
-                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: this.Context.Request.PathBase)";
+                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: Context.Request.PathBase)";
 				wsUri = (protocol === "https:" ? "wss:" : "ws:") + "//" + host + wsUri;
-                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: this.Context.Request.PathBase)";
+                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: Context.Request.PathBase)";
                 try {
                     socket = new WebSocket(wsUri);
                     socket.onmessage = e => {

@@ -109,6 +109,7 @@ namespace BTCPayServer.Services
 
             await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
 
+            user = await _userManager.FindByIdAsync(userId);
             await _userManager.DeleteAsync(user);
             await _storeRepository.CleanUnreachableStores();
         }
@@ -127,7 +128,12 @@ namespace BTCPayServer.Services
                 return false;
             }
 
-            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count(applicationUser => !IsDisabled(applicationUser)) == 1;
+            var adminUsers = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            var enabledAdminUsers = adminUsers
+                                        .Where(applicationUser => !IsDisabled(applicationUser))
+                                        .Select(applicationUser => applicationUser.Id).ToList();
+
+            return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(user.Id);
         }
     }
 }

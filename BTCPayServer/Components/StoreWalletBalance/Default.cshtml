@@ -4,30 +4,42 @@
 @{
     var storeBlob = Model.Store.GetStoreBlob();
 }
-
-<div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
-    <h6 class="mb-2">Wallet Balance</h6>
-    @if (Model.CryptoCode == "BTC")
-    {
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="DefaultCurrencyToggle" />
-            <h6 class="d-inline form-check-label mb-3">@Model.CryptoCode / @storeBlob.DefaultCurrency</h6>
-        </div>
+<style>
+    #DefaultCurrencyToggle .btn {
+        background-color: var(--btcpay-bg-tile);
+        border-color: var(--btcpay-body-border-light);
     }
-
-    <header class="mb-3">        
-		@if (Model.Balance is not null)
-		{
-		    <div class="balance" id="balance-@Model.CryptoCode"> 
+    
+    #DefaultCurrencyToggle input:not(:checked) + .btn {
+        color: var(--btcpay-body-text-muted);
+    }
+</style>
+<div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
+    <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Wallet Balance</h6>
+        @if (Model.CryptoCode != storeBlob.DefaultCurrency)
+        {
+            <div class="btn-group btn-group-sm gap-0" role="group" id="DefaultCurrencyToggle">
+                <input type="radio" class="btn-check" name="currency" id="currency_@Model.CryptoCode" value="@Model.CryptoCode" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary px-2 py-1" for="currency_@Model.CryptoCode">@Model.CryptoCode</label>
+                <input type="radio" class="btn-check" name="currency" id="currency_@storeBlob.DefaultCurrency" value="@storeBlob.DefaultCurrency" autocomplete="off">
+                <label class="btn btn-outline-secondary px-2 py-1" for="currency_@storeBlob.DefaultCurrency">@storeBlob.DefaultCurrency</label>
+            </div>
+        }
+    </div>
+    <header class="mb-3">
+        @if (Model.Balance is not null)
+        {
+            <div class="balance" id="balance-@Model.CryptoCode">
                 <h3 class="d-inline-block me-1">@Model.Balance</h3>
                 <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
             </div>
-		    <div class="balance" id="balance-@storeBlob.DefaultCurrency">
-                <h3 class="d-inline-block" id="DefaultCurrency"></h3>
-                <span class="text-secondary fw-semibold">@storeBlob.DefaultCurrency</span> 
-            </div>   
-		}
-		<div class="btn-group mt-1" role="group" aria-label="Filter">
+            <div class="balance" id="balance-@storeBlob.DefaultCurrency">
+                <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
+                <span class="text-secondary fw-semibold">@storeBlob.DefaultCurrency</span>
+            </div>
+        }
+        <div class="btn-group mt-1" role="group" aria-label="Filter">
             <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
             <label class="btn btn-link" for="filter-week">1W</label>
             <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
@@ -39,11 +51,11 @@
     <div class="ct-chart ct-major-eleventh"></div>
     <script>
         (function () {
-            const currency = "@storeBlob.DefaultCurrency.ToLower()"
-            const cryptoBalance = document.getElementById("balance-@Model.CryptoCode")
-            const defaultBalance = document.getElementById("balance-@storeBlob.DefaultCurrency")
+            const defaultCurrency = @Safe.Json(storeBlob.DefaultCurrency);
+            const cryptoBalance = document.getElementById("balance-@Model.CryptoCode");
+            const defaultBalance = document.getElementById("balance-@storeBlob.DefaultCurrency");
             
-            document.getElementById("balance-@storeBlob.DefaultCurrency").style.display = 'none'
+            document.getElementById("balance-@storeBlob.DefaultCurrency").style.display = 'none';
             const id = 'StoreWalletBalance-@Model.Store.Id';
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
             const render = data => {
@@ -84,19 +96,23 @@
                     const type = e.target.value;
                     await update(type);
                 })
-                delegate('change', '#DefaultCurrencyToggle', async e => {
+                delegate('change', '#DefaultCurrencyToggle input', async e => {
                     const { target } = e;
-                    if (target.checked) {
-                        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${currency}`);
+                    let rate = null;
+                    if (target.value === defaultCurrency) {
+                        const currencyPair = @Safe.Json($"{Model.CryptoCode}_{storeBlob.DefaultCurrency}");
+                        const response = await fetch(`@Context.Request.PathBase/api/rates?storeId=@Model.Store.Id&currencyPairs=${currencyPair}`);
                         const json = await response.json();
-                        const price = json.bitcoin[currency];
-                        document.getElementById('DefaultCurrency').innerText = (Math.round((price * @Model.Balance) * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                        cryptoBalance.style.display = 'none';
-                        defaultBalance.style.display = 'block';
-                    } else {
-                        cryptoBalance.style.display = 'block';
-                        defaultBalance.style.display = 'none';
+                        rate = json[0] && json[0].rate;
+                        if (rate) {
+                            const balance = (Math.round((rate * @Model.Balance) * 100) / 100).toString();
+                            document.getElementById('DefaultCurrencyBalance').innerText = new Intl.NumberFormat(navigator.language, { style: 'decimal', currency: defaultCurrency }).format(balance);
+                        } else {
+                            console.warn(`Fetching rate for ${currencyPair} failed.`);
+                        }
                     }
+                    cryptoBalance.style.display = rate ? 'none' : 'block';
+                    defaultBalance.style.display = rate ? 'block' : 'none';
                 });
             });
         })();

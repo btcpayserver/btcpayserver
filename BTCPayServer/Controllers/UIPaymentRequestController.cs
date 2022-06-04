@@ -139,7 +139,8 @@ namespace BTCPayServer.Controllers
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
 
             data.SetBlob(blob);
-            if (string.IsNullOrEmpty(payReqId))
+            var isNewPaymentRequest = string.IsNullOrEmpty(payReqId);
+            if (isNewPaymentRequest)
             {
                 data.Created = DateTimeOffset.UtcNow;
             }
@@ -147,8 +148,8 @@ namespace BTCPayServer.Controllers
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
             _EventAggregator.Publish(new PaymentRequestUpdated { Data = data, PaymentRequestId = data.Id, });
 
-            TempData[WellKnownTempData.SuccessMessage] = "Saved";
-            return RedirectToAction(nameof(EditPaymentRequest), new { storeId = store.Id, payReqId = data.Id });
+            TempData[WellKnownTempData.SuccessMessage] = $"Payment request [{viewModel.Title}] {(isNewPaymentRequest ? "created" : "updated")} successfully";
+            return RedirectToAction(nameof(GetPaymentRequests), new { storeId = store.Id, payReqId = data.Id });
         }
 
         [HttpGet("{payReqId}")]

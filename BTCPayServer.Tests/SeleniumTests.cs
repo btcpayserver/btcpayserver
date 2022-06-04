@@ -758,6 +758,7 @@ namespace BTCPayServer.Tests
             currencyInput.SendKeys("BTC");
             
             s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
@@ -768,6 +769,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
             s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
             s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             s.Driver.Navigate().Refresh();
             Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
@@ -776,6 +778,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
             s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
             s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             s.Driver.Navigate().Refresh();
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));

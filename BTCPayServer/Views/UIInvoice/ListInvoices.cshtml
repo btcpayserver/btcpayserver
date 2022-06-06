@@ -126,16 +126,29 @@
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/Invoices/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-            </a>
+        <small class="ps-1">
+            <a href="#descriptor" class="fa fa-question-circle-o text-secondary" data-bs-toggle="collapse"></a>
         </small>
     </h2>
     <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
         <span class="fa fa-plus"></span>
         Create Invoice
     </a>
+</div>
+
+<div id="descriptor" class="collapse bg-tile rounded-3 mb-4">
+    <div class="col-xl-8 px-4 py-4">
+        <p>
+            Payment Requests are a feature which allows BTCPay store owners to create long-lived invoices. Funds paid to a payment request use the exchange rate at the time of payment. This allows users to make payments at their convenience without having to negotiate or verify exchange rates with the store owner at the time of payment.
+        </p>
+        <p class="mb-2">
+            Users can pay requests in partial payments. The payment request will remain valid until it is paid in full or if the store owner requires an expiration time. Addresses are never reused. A new address is generated each time the user clicks pay to create an invoice for the payment request.
+        </p>
+        <p class="mb-3">
+            Store owners can also print payment requests (or export invoice data) for record-keeping and accounting. BTCPay automatically labels invoices as Payment Requests in your store's invoice list.
+        </p>
+        <a href="https://docs.btcpayserver.org/Invoices/" target="_blank" rel="noreferrer noopener">Learn More</a>
+    </div>
 </div>
 
 <partial name="_StatusMessage" />

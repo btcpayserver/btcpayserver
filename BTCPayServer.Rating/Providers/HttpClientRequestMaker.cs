@@ -108,7 +108,7 @@ namespace BTCPayServer.Services.Rates
             set;
         }
 
-        public async Task<string> MakeRequestAsync(string url, string baseUrl = null, Dictionary<string, object> payload = null, string method = null)
+        public async Task<IAPIRequestMaker.RequestResult<string>> MakeRequestAsync(string url, string baseUrl = null, Dictionary<string, object> payload = null, string method = null)
         {
             await default(SynchronizationContextRemover);
             await api.RateLimit.WaitToProceedAsync();
@@ -170,7 +170,11 @@ namespace BTCPayServer.Services.Rates
             {
                 response?.Dispose();
             }
-            return responseString;
+            return new IAPIRequestMaker.RequestResult<string>()
+            {
+                Response = responseString,
+                HTTPHeaderDate = response.Headers.Date
+            };
         }
     }
 }

@@ -10,26 +10,20 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI, new()
+    public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI
     {
         readonly HttpClient _httpClient;
-        public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
+        public ExchangeSharpRateProvider(HttpClient httpClient)
         {
             ArgumentNullException.ThrowIfNull(httpClient);
-            ReverseCurrencyPair = reverseCurrencyPair;
             _httpClient = httpClient;
-        }
-
-        public bool ReverseCurrencyPair
-        {
-            get; set;
         }
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             await new SynchronizationContextRemover();
 
-            var exchangeAPI = new T();
+            var exchangeAPI = (T) await ExchangeAPI.GetExchangeAPIAsync<T>();
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 
@@ -52,14 +46,20 @@ namespace BTCPayServer.Services.Rates
                 return null;
             try
             {
-                var tickerName = await exchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
-                if (!CurrencyPair.TryParse(tickerName, out var pair))
+                CurrencyPair pair;
+                if (ticker.Value.Volume.BaseCurrency is not null && ticker.Value.Volume.QuoteCurrency is not null)
                 {
-                    notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
-                    return null;
+                    pair = new CurrencyPair(ticker.Value.Volume.BaseCurrency, ticker.Value.Volume.QuoteCurrency);
                 }
-                if (ReverseCurrencyPair)
-                    pair = new CurrencyPair(pair.Right, pair.Left);
+                else
+                {
+                    var tickerName = await exchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
+                    if (!CurrencyPair.TryParse(tickerName, out pair))
+                    {
+                        notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
+                        return null;
+                    }
+                }
                 return new PairRate(pair, new BidAsk(ticker.Value.Bid, ticker.Value.Ask));
             }
             catch (ArgumentException)

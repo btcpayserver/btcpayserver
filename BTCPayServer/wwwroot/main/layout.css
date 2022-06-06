@@ -296,12 +296,13 @@
 
 #NotificationsDropdown {
     border: 0;
-    border-radius: 4px;
-    background: var(--btcpay-bg-tile);
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    border-radius: var(--btcpay-border-radius-l);
+    background-color: var(--btcpay-body-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 16%);
     padding: 0;
     z-index: 2000;
     top: var(--btcpay-space-xs) !important;
+    border: 1px solid var(--btcpay-body-border-medium);
 }
 
 /* Section Navigation / Subnav */

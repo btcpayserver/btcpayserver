@@ -13,16 +13,10 @@ namespace BTCPayServer.Services.Rates
     public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI
     {
         readonly HttpClient _httpClient;
-        public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
+        public ExchangeSharpRateProvider(HttpClient httpClient)
         {
             ArgumentNullException.ThrowIfNull(httpClient);
-            ReverseCurrencyPair = reverseCurrencyPair;
             _httpClient = httpClient;
-        }
-
-        public bool ReverseCurrencyPair
-        {
-            get; set;
         }
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
@@ -66,8 +60,6 @@ namespace BTCPayServer.Services.Rates
                         return null;
                     }
                 }
-                if (ReverseCurrencyPair)
-                    pair = new CurrencyPair(pair.Right, pair.Left);
                 return new PairRate(pair, new BidAsk(ticker.Value.Bid, ticker.Value.Ask));
             }
             catch (ArgumentException)

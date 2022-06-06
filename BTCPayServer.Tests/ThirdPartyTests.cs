@@ -130,14 +130,11 @@ namespace BTCPayServer.Tests
                 {
                     // This check if the currency pair is using right currency pair
                     Assert.Contains(exchangeRates.ByExchange[name],
-                        e => (
-                              e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
-                              e.CurrencyPair == new CurrencyPair("USD", "BTC") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
-                              e.CurrencyPair == new CurrencyPair("USDT", "BTC") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
-                              e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
+                        e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                                 && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );
                 }

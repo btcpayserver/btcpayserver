@@ -16,7 +16,6 @@ namespace BTCPayServer.Services.Rates
     // Make sure that only one request is sent to kraken in general
     public class KrakenExchangeRateProvider : IRateProvider
     {
-        private Task<ExchangeKrakenAPI> _Helper = ExchangeAPI.GetExchangeAPIAsync<ExchangeKrakenAPI>().ContinueWith(task => (ExchangeKrakenAPI) task.Result);
 
         public HttpClient HttpClient
         {
@@ -84,7 +83,7 @@ namespace BTCPayServer.Services.Rates
         {
             var result = new List<PairRate>();
             var symbols = await GetSymbolsAsync(cancellationToken);
-            var helper = await _Helper;
+            var helper = (ExchangeKrakenAPI)await ExchangeAPI.GetExchangeAPIAsync<ExchangeKrakenAPI>();
             var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => helper.NormalizeMarketSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
             JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);

@@ -28,14 +28,14 @@
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column">
     <div id="mainMenuHead">
+        <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span>Menu</span>
+        </button>
         <vc:store-selector />
         @if (_signInManager.IsSignedIn(User))
         {
             <vc:notifications appearance="Dropdown" return-url="@notificationsReturnUrl" />
         }
-        <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span>Menu</span>
-        </button>
     </div>
     <vc:main-nav />
 </header>

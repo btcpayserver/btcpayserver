@@ -99,6 +99,31 @@ namespace BTCPayServer.Services
             return IsRoleAdmin(await _userManager.GetRolesAsync(user));
         }
 
+        public async Task<bool> SetAdminUser(string userId, bool enableAdmin)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            IdentityResult res;
+            if (enableAdmin)
+            {
+                res = await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+            }
+            else
+            {
+                res = await _userManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
+            }
+
+            if (res.Succeeded)
+            {
+                _logger.LogInformation($"Successfully set admin status for user {user.Id}");
+            }
+            else
+            {
+                _logger.LogError($"Error setting admin status for user {user.Id}");
+            }
+
+            return res.Succeeded;
+        }
+
         public async Task DeleteUserAndAssociatedData(ApplicationUser user)
         {
             var userId = user.Id;
@@ -110,7 +135,16 @@ namespace BTCPayServer.Services
             await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
 
             user = await _userManager.FindByIdAsync(userId);
-            await _userManager.DeleteAsync(user);
+            var res = await _userManager.DeleteAsync(user);
+            if (res.Succeeded)
+            {
+                _logger.LogInformation($"User {user.Id} was successfully deleted");
+            }
+            else
+            {
+                _logger.LogError($"Failed to delete user {user.Id}");
+            } 
+
             await _storeRepository.CleanUnreachableStores();
         }
 

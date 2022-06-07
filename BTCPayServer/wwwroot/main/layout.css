@@ -128,6 +128,7 @@
     display: flex;
     align-items: center;
     z-index: 2000;
+    flex: 1;
 }
 
 #StoreSelector hr {
@@ -142,8 +143,6 @@
 #StoreSelectorToggle {
     display: flex;
     align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
     color: var(--btcpay-header-link);
 }
 
@@ -157,12 +156,19 @@
     transition: color 0.15s ease-in-out;
 }
 
+#StoreSelectorToggle .icon.icon-store {
+    margin-right: var(--btcpay-space-s);
+}
+
 #StoreSelectorToggle .icon.icon-caret-down {
+    margin-left: auto;
     color: var(--btcpay-body-text-muted);
 }
 
 #StoreSelectorToggle span {
-    margin: 0 auto 0 var(--btcpay-space-s);
+    margin-right: var(--btcpay-space-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #StoreSelectorToggle:hover,
@@ -436,10 +442,7 @@
 
     #StoreSelector {
         margin: 0 auto;
-    }
-
-    #StoreSelectorDropdown {
-        max-width: 40vw;
+        max-width: 60vw;
     }
     
     #Notifications {
@@ -452,8 +455,8 @@
         --transition-duration: var(--btcpay-transition-duration-fast);
 
         flex: 0 0 var(--button-width);
-        margin-right: calc(var(--button-padding) * -1);
-        margin-left: var(--btcpay-space-s);
+        margin-right: var(--btcpay-space-s);
+        margin-left: calc(var(--button-padding) * -1);
     }
 
     #mainMenuToggle span {
@@ -624,5 +627,16 @@
         margin-top: var(--btcpay-space-s);
         margin-right: var(--btcpay-space-l);
         margin-bottom: calc(var(--border-size) * -1);
+    }
+}
+
+@media (max-width: 449px) {
+    #StoreSelector {
+        max-width: 40vw;
+        flex-shrink: 1;
+    }
+
+    #StoreSelectorToggle .icon.icon-store {
+        display: none;
     }
 }

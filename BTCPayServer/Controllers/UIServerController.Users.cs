@@ -109,12 +109,15 @@ namespace BTCPayServer.Controllers
 
             if (viewModel.IsAdmin != wasAdmin)
             {
-                if (viewModel.IsAdmin)
-                    await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                var success = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
+                if (success)
+                {
+                    TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
+                }
                 else
-                    await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
-
-                TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "Error updating user";
+                }
             }
 
             return RedirectToAction(nameof(User), new { userId = userId });

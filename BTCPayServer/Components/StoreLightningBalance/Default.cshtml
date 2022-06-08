@@ -1,0 +1,123 @@
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Client
+@using BTCPayServer.Lightning
+@model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
+
+<div id="StoreLightningBalance-@Model.Store.Id" class="widget store-lightning-balance">
+    <header class="mb-3">
+        <h6>Lightning Balance</h6>
+        <a class role="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">Show details</a>
+    </header>
+    
+    @if (Model.Balance == null)
+    {
+        <p>@Model.ProblemDescription</p>
+    }
+    else
+    {
+        <div class="balances d-flex flex-wrap gap-3">
+            <div class="balance me-3">
+                <h3 class="d-inline-block me-1">@Model.TotalOffchain</h3>
+                <span class="text-secondary fw-semibold">@Model.CryptoCode in channels</span>
+                @if (Model.TotalOffchain != LightMoney.Zero && Model.Balance.OffchainBalance != null)
+                {
+                    <div class="balance-details collapse" id="balanceDetailsOffchain">
+                        @if (Model.Balance.OffchainBalance.Opening != LightMoney.Zero)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Opening</span>
+                                <span class="text-secondary">@Model.CryptoCode opening channels</span>
+                            </div>
+                        }
+                        <div class="mt-2">
+                            <span class="fw-semibold">@Model.Balance.OffchainBalance.Local</span>
+                            <span class="text-secondary">@Model.CryptoCode local balance</span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="fw-semibold">@Model.Balance.OffchainBalance.Remote</span>
+                            <span class="text-secondary">@Model.CryptoCode remote balance</span>
+                        </div>
+                        @if (Model.Balance.OffchainBalance.Closing != LightMoney.Zero)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Closing</span>
+                                <span class="text-secondary">@Model.CryptoCode closing channels</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="balance">
+                <h3 class="d-inline-block me-1">@Model.TotalOnchain</h3>
+                <span class="text-secondary fw-semibold">@Model.CryptoCode onchain</span>
+                @if (Model.TotalOnchain != LightMoney.Zero && Model.Balance.OnchainBalance != null)
+                {
+                    <div class="balance-details collapse" id="balanceDetailsOnchain">
+                        @if (Model.Balance.OnchainBalance.Confirmed != LightMoney.Zero)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Confirmed</span>
+                                <span class="text-secondary">@Model.CryptoCode confirmed</span>
+                            </div>
+                        }
+                        @if (Model.Balance.OnchainBalance.Unconfirmed != LightMoney.Zero)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Unconfirmed</span>
+                                <span class="text-secondary">@Model.CryptoCode unconfirmed</span>
+                            </div>
+                        }
+                        @if (Model.Balance.OnchainBalance.Reserved != LightMoney.Zero)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Reserved</span>
+                                <span class="text-secondary">@Model.CryptoCode reserved</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    
+    @if (Model.Services != null && Model.Services.Any())
+    {
+        <header class="mt-5 mb-4">
+            <h6>Lightning Services</h6>
+            <a
+                asp-controller="UIPublicLightningNodeInfo"
+                asp-action="ShowLightningNodeInfo"app-top-items
+                asp-route-cryptoCode="@Model.CryptoCode"
+                asp-route-storeId="@Model.Store.Id"
+                target="_blank"
+                id="PublicNodeInfo">
+                Node Info
+            </a>
+        </header>
+        <div id="Services" class="services-list">
+            @foreach (var service in Model.Services)
+            {
+                @if (!string.IsNullOrEmpty(service.Error))
+                {
+                    <div class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                        <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
+                    </div>
+                }
+                else if (string.IsNullOrEmpty(service.Link))
+                {
+                    <a asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                    </a>
+                }
+                else
+                {
+                    <a href="@service.Link" target="_blank" rel="noreferrer noopener" class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                    </a>
+                }
+            }
+        </div>
+    }
+</div>

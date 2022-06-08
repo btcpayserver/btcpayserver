@@ -233,12 +233,13 @@ svg.icon-note {
 /* Services */
 .services-list {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-l);
 }
 
 .services-list .service {
     --service-width: 100px;
     flex: 0 0 var(--service-width);
-    margin: 0 var(--btcpay-space-l) var(--btcpay-space-l) 0;
     text-align: center;
 }
 
@@ -334,6 +335,14 @@ svg.icon-note {
     color: var(--btcpay-body-link-accent);
 }
 
+.widget.store-lightning-balance .services-list {
+    gap: var(--btcpay-space-m);
+}
+
+.widget.store-lightning-balance .services-list .service {
+    --service-width: 4rem;
+}
+
 .widget.store-numbers {
     display: flex;
     flex-wrap: wrap;
@@ -398,6 +407,17 @@ svg.icon-note {
 @media (min-width: 576px) {
     .widget {
         --widget-padding: var(--btcpay-space-l);
+    }
+}
+
+@media (max-width: 1199px) {
+    /* Reorder so that Lightning is below the wallet balance */
+    .widget.store-wallet-balance {
+        order: -2;
+    }
+
+    .widget.store-lightning-balance {
+        order: -1;
     }
 }
 

@@ -5,12 +5,15 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -99,9 +102,45 @@ namespace BTCPayServer.Plugins
                 }
                 if (!File.Exists(pluginFilePath))
                 {
-                    _logger.LogError(
-                        $"Error when loading plugin {pluginName} - {pluginFilePath} does not exist");
-                    continue;
+                    var pluginSourceFile = Path.Combine(dir, pluginName + ".cs");
+                    if (File.Exists(pluginSourceFile))
+                    {
+                        _logger.LogInformation($"Plugin {pluginName} need to be compiled...");
+                        var syntaxTrees =
+                            Directory.EnumerateFileSystemEntries(dir, "*.cs", SearchOption.AllDirectories)
+                            .Select(async file =>
+                            {
+                                return await ParseSyntaxTree(file, Path.GetRelativePath(dir, file));
+                            })
+                            .ToArray();
+                        List<SyntaxTree> trees = new List<SyntaxTree>();
+                        foreach (var t in syntaxTrees)
+                        {
+                            trees.Add(t.GetAwaiter().GetResult());
+                        }
+                        CSharpCompilation compilation = CSharpCompilation.Create(
+                        pluginName,
+                        trees,
+                        GetReferenceAssemblies(),
+                        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                        );
+                        var result = compilation.Emit(pluginFilePath);
+                        if (!result.Success)
+                        {
+                            _logger.LogError($"Errors while building the plugin {pluginName}:");
+                            foreach (var err in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
+                            {
+                                _logger.LogError(err.ToString());
+                            }
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError(
+                            $"Error when loading plugin {pluginName} - {pluginFilePath} or {pluginSourceFile} does not exist");
+                        continue;
+                    }
                 }
 
                 try
@@ -151,6 +190,29 @@ namespace BTCPayServer.Plugins
             }
 
             return mvcBuilder;
+        }
+
+        private static IEnumerable<MetadataReference> GetReferenceAssemblies()
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(assembly.Location))
+                        continue;
+                }
+                catch
+                {
+                    continue;
+                }
+                yield return MetadataReference.CreateFromFile(assembly.Location);
+            }
+        }
+
+        private static async Task<SyntaxTree> ParseSyntaxTree(string path, string relativePath)
+        {
+            string code = await File.ReadAllTextAsync(path);
+            return CSharpSyntaxTree.ParseText(code).WithFilePath(relativePath);
         }
 
         public static void UsePlugins(this IApplicationBuilder applicationBuilder)

@@ -20,17 +20,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-        private readonly ExternalServiceTypes[] _externalServiceTypes =
-        {
-            ExternalServiceTypes.Spark,
-            ExternalServiceTypes.RTL,
-            ExternalServiceTypes.ThunderHub
-        };
-        private readonly string[] _externalServiceNames =
-        {
-            "Lightning Terminal"
-        };
-        
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
         public IActionResult Lightning(string storeId, string cryptoCode)
         {
@@ -48,7 +37,7 @@ namespace BTCPayServer.Controllers
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
                 var services = _externalServiceOptions.Value.ExternalServices.ToList()
-                    .Where(service => _externalServiceTypes.Contains(service.Type))
+                    .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
                     .Select(async service =>
                     {
                         var model = new AdditionalServiceViewModel
@@ -60,7 +49,7 @@ namespace BTCPayServer.Controllers
                         };
                         try
                         {
-                            model.Link = await GetServiceLink(service);
+                            model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _BtcpayServerOptions.NetworkType);
                         }
                         catch (Exception exception)
                         {
@@ -74,7 +63,7 @@ namespace BTCPayServer.Controllers
                 // other services
                 foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
                 {
-                    if (_externalServiceNames.Contains(key))
+                    if (ExternalServices.LightningServiceNames.Contains(key))
                     {
                         services.Add(new AdditionalServiceViewModel
                         {
@@ -397,13 +386,6 @@ namespace BTCPayServer.Controllers
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
-        }
-
-        private async Task<string> GetServiceLink(ExternalService service)
-        {
-            var connectionString = await service.ConnectionString.Expand(Request.GetAbsoluteUriNoPathBase(), service.Type, _BtcpayServerOptions.NetworkType);
-            var tokenParam = service.Type == ExternalServiceTypes.ThunderHub ? "token" : "access-key";
-            return $"{connectionString.Server}?{tokenParam}={connectionString.AccessKey}";
         }
     }
 }

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {
@@ -86,6 +88,18 @@ namespace BTCPayServer.Configuration
                 &&
                 o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         }
+    
+        public static readonly ExternalServiceTypes[] LightningServiceTypes =
+        {
+            ExternalServiceTypes.Spark,
+            ExternalServiceTypes.RTL,
+            ExternalServiceTypes.ThunderHub
+        };
+        
+        public static readonly string[] LightningServiceNames =
+        {
+            "Lightning Terminal"
+        };
     }
 
     public class ExternalService
@@ -95,6 +109,13 @@ namespace BTCPayServer.Configuration
         public ExternalConnectionString ConnectionString { get; set; }
         public string CryptoCode { get; set; }
         public string ServiceName { get; set; }
+        
+        public async Task<string> GetLink(Uri absoluteUriNoPathBase, ChainName networkType)
+        {
+            var connectionString = await ConnectionString.Expand(absoluteUriNoPathBase, Type, networkType);
+            var tokenParam = Type == ExternalServiceTypes.ThunderHub ? "token" : "access-key";
+            return $"{connectionString.Server}?{tokenParam}={connectionString.AccessKey}";
+        }
     }
 
     public enum ExternalServiceTypes

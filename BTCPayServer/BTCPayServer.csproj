@@ -182,12 +182,6 @@
     <Content Update="Views\UIStores\ShowToken.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
-    <Content Update="Views\UIStores\PayButtonEnable.cshtml">
-      <Pack>$(IncludeRazorContentInPack)</Pack>
-    </Content>
-	  <Content Update="Views\UIStores\PayButton.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
 	  <Content Update="Views\UIPublic\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

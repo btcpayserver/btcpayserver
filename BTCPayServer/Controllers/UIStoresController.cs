@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -61,7 +60,6 @@ namespace BTCPayServer.Controllers
             AppService appService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
-            NBXplorerDashboard Dashboard,
             IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _RateFactory = rateFactory;
@@ -83,7 +81,6 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
-            _Dashboard = Dashboard;
             _externalServiceOptions = externalServiceOptions;
         }
 
@@ -104,7 +101,6 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
-        private readonly NBXplorerDashboard _Dashboard;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
 
         [TempData]
@@ -443,7 +439,7 @@ namespace BTCPayServer.Controllers
             vm.DefaultPaymentMethod = chosen?.Value;
         }
 
-        PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(Data.StoreData storeData)
+        public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             
@@ -457,7 +453,7 @@ namespace BTCPayServer.Controllers
                     }).ToArray();
         }
 
-        PaymentMethodOptionViewModel.Format? GetDefaultPaymentMethodChoice(Data.StoreData storeData)
+        PaymentMethodOptionViewModel.Format? GetDefaultPaymentMethodChoice(StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
             var defaultPaymentId = storeData.GetDefaultPaymentId();
@@ -990,66 +986,6 @@ namespace BTCPayServer.Controllers
             if (User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie)
                 return null;
             return _UserManager.GetUserId(User);
-        }
-
-        [HttpPost("{storeId}/disable-anyone-can-pay")]
-        public async Task<IActionResult> DisableAnyoneCanCreateInvoice(string storeId)
-        {
-            var blob = CurrentStore.GetStoreBlob();
-            blob.AnyoneCanInvoice = false;
-            CurrentStore.SetStoreBlob(blob);
-            TempData[WellKnownTempData.SuccessMessage] = "Feature disabled";
-            await _Repo.UpdateStore(CurrentStore);
-            return RedirectToAction(nameof(PayButton), new { storeId = storeId });
-        }
-
-        [Route("{storeId}/paybutton")]
-        public async Task<IActionResult> PayButton()
-        {
-            var store = CurrentStore;
-            var storeBlob = store.GetStoreBlob();
-            if (!storeBlob.AnyoneCanInvoice)
-            {
-                return View("PayButtonEnable", null);
-            }
-
-            var apps = await _appService.GetAllApps(_UserManager.GetUserId(User), false, store.Id);
-            var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
-            var model = new PayButtonViewModel
-            {
-                Price = null,
-                Currency = storeBlob.DefaultCurrency,
-                DefaultPaymentMethod = String.Empty,
-                PaymentMethods = GetEnabledPaymentMethodChoices(store),
-                ButtonSize = 2,
-                UrlRoot = appUrl,
-                PayButtonImageUrl = appUrl + "img/paybutton/pay.svg",
-                StoreId = store.Id,
-                ButtonType = 0,
-                Min = 1,
-                Max = 20,
-                Step = "1",
-                Apps = apps
-            };
-            return View(model);
-        }
-
-        [HttpPost]
-        [Route("{storeId}/paybutton")]
-        public async Task<IActionResult> PayButton(bool enableStore)
-        {
-            var blob = CurrentStore.GetStoreBlob();
-            blob.AnyoneCanInvoice = enableStore;
-            if (CurrentStore.SetStoreBlob(blob))
-            {
-                await _Repo.UpdateStore(CurrentStore);
-                TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
-            }
-
-            return RedirectToAction(nameof(PayButton), new
-            {
-                storeId = CurrentStore.Id
-            });
         }
     }
 }

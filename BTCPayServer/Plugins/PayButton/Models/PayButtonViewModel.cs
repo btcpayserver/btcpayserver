@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Models.StoreViewModels
+namespace BTCPayServer.Plugins.PayButton.Models
 {
     public class PayButtonViewModel
     {

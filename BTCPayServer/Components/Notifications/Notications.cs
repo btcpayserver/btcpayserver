@@ -16,9 +16,10 @@ namespace BTCPayServer.Components.Notifications
             _notificationManager = notificationManager;
         }
 
-        public async Task<IViewComponentResult> InvokeAsync(string appearance)
+        public async Task<IViewComponentResult> InvokeAsync(string appearance, string returnUrl)
         {
             var vm = await _notificationManager.GetSummaryNotifications(UserClaimsPrincipal);
+            vm.ReturnUrl = returnUrl;
             var viewName = _views.Contains(appearance) ? appearance : _views[0];
             return View(viewName, vm);
         }

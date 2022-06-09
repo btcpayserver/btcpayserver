@@ -97,7 +97,6 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
             entity.SpeedPolicy = UIInvoiceController.ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter excludeFilter = null;
@@ -123,7 +122,9 @@ namespace BTCPayServer.Controllers
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
-            return await _InvoiceController.CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, false);
+            //lazy payments are forcible disabled when creating invoices through bitpay api as there is no way to activate them through it
+            entity.LazyPaymentMethods = false;
+            return await _InvoiceController.CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
                
                private void FillBuyerInfo(BitpayCreateInvoiceRequest req, InvoiceEntity invoiceEntity)

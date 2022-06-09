@@ -85,6 +85,7 @@ namespace BTCPayServer.Client.Models
             public bool? RedirectAutomatically { get; set; }
             public bool? RequiresRefundEmail { get; set; } = null;
             public string DefaultLanguage { get; set; }
+            public bool? LazyPaymentMethods { get; set; }
         }
     }
     public class InvoiceData : InvoiceDataBase

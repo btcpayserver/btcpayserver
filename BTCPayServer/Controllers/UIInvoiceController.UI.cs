@@ -1085,7 +1085,7 @@ namespace BTCPayServer.Controllers
                         PaymentMethods = model.SupportedTransactionCurrencies?.ToArray(),
                         DefaultPaymentMethod = model.DefaultPaymentMethod,
                         RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                            ? store.GetStoreBlob().RequiresRefundEmail
+                            ? null
                             : model.RequiresRefundEmail == RequiresRefundEmail.On
                     },
                     Metadata = new InvoiceMetadata()

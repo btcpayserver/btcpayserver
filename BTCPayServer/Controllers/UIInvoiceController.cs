@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
-            entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
+            entity.LazyPaymentMethods = invoice.Checkout.LazyPaymentMethods ?? storeBlob.LazyPaymentMethods;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
@@ -204,7 +204,7 @@ namespace BTCPayServer.Controllers
             }
             entity.PaymentTolerance = invoice.Checkout.PaymentTolerance ?? storeBlob.PaymentTolerance;
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
-            entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
+            entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken, entityManipulator);
@@ -294,7 +294,7 @@ namespace BTCPayServer.Controllers
                     .Select(o =>
                         (SupportedPaymentMethod: o.SupportedPaymentMethod,
                             PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler,
-                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis, lazyPaymentMethods)))
+                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis, entity.LazyPaymentMethods)))
                     .ToList())
                 {
                     var paymentMethod = await o.PaymentMethod;

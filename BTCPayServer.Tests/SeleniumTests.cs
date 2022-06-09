@@ -327,7 +327,7 @@ namespace BTCPayServer.Tests
             }
             CanSetupEmailCore(s);
             s.CreateNewStore();
-            s.GoToUrl($"stores/{s.StoreId}/emails");
+            s.GoToUrl($"stores/{s.StoreId}/email-settings");
             CanSetupEmailCore(s);
         }
 

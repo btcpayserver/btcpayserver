@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: What is your BTCPay version?
-      description: You can version in footer's bottom right corner
+      description: You can see the version in the footer's bottom right corner
       placeholder: I'm running BTCPay v 1.xxxx
     validations:
       required: true

@@ -50,7 +50,7 @@ body:
     attributes:
       label: What browser do you use?
       description: Provide your browser and it's version. If you replicated issues on multiple browsers, let us know which ones.
-      placeholder: For example: Safari 15.00, Chrome 10.0, Tor, Edge, etc
+      placeholder: For example Safari 15.00, Chrome 10.0, Tor, Edge, etc
     validations:
       required: false
   - type: textarea

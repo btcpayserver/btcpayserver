@@ -134,7 +134,8 @@ namespace BTCPayServer.Tests
                                 e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                 e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
                                 e.CurrencyPair == new CurrencyPair("BTC", "USDC") ||
-                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
+                                e.CurrencyPair == new CurrencyPair("BTC", "CAD") ||
+                                e.CurrencyPair == new CurrencyPair("BTC", "CLP"))
                                 && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );
                 }

@@ -1,3 +1,8 @@
+@using BTCPayServer.Abstractions.Extensions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.StoreSelector
+@using BTCPayServer.Components.MainNav
+@using BTCPayServer.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
@@ -5,6 +10,7 @@
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 
 @{
+    var notificationsReturnUrl = Context.Request.GetCurrentPathWithQueryString();
     var notificationDisabled = PoliciesSettings.DisableInstantNotifications;
     if (!notificationDisabled)
     {
@@ -25,7 +31,7 @@
         <vc:store-selector />
         @if (_signInManager.IsSignedIn(User))
         {
-            <vc:notifications appearance="Dropdown"/>
+            <vc:notifications appearance="Dropdown" return-url="@notificationsReturnUrl" />
         }
         <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span>Menu</span>
@@ -76,7 +82,7 @@
                 const { host, protocol } = window.location;
                 var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: Context.Request.PathBase)";
 				wsUri = (protocol === "https:" ? "wss:" : "ws:") + "//" + host + wsUri;
-                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: Context.Request.PathBase)";
+                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: Context.Request.PathBase, values: new { returnUrl = notificationsReturnUrl })";
                 try {
                     socket = new WebSocket(wsUri);
                     socket.onmessage = e => {

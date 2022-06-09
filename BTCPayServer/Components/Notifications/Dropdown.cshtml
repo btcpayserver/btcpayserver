@@ -11,9 +11,9 @@
             <span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@Model.UnseenCount</span>
         </button>
         <div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
-            <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light">
+            <div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
                 <h5 class="m-0">Notifications</h5>
-                <form id="notificationsForm" asp-controller="UINotifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
+                <form id="notificationsForm" asp-controller="UINotifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                     <button class="btn btn-link p-0" type="submit">Mark all as seen</button>
                 </form>
             </div>

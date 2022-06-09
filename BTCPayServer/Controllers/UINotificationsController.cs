@@ -43,9 +43,9 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetNotificationDropdownUI()
+        public IActionResult GetNotificationDropdownUI(string returnUrl)
         {
-            return ViewComponent("Notifications", new { appearance = "Dropdown" });
+            return ViewComponent("Notifications", new { appearance = "Dropdown", returnUrl });
         }
 
         [HttpGet]

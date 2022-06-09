@@ -1,8 +1,14 @@
 ﻿@model BTCPayServer.Controllers.UIInvoiceController.InvoiceReceiptViewModel
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     ViewData["Title"] = $"Invoice {Model.InvoiceId} Receipt";
     Layout = "_LayoutSimple";
+    Layout = "_LayoutSimple";
+    var reloadPage = false;
+    var onlyOneColumn = (!Model.ShowPayments || Model.Payments is null) && !(Model.AdditionalData?.Any() is true);
 }
 
 @section PageHeadContent {
@@ -10,45 +16,143 @@
     <style>
         #posData td > table:last-child { margin-bottom: 0 !important; }
         #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
+        footer {
+                display: none;
+            }
     </style>
 }
 
-<div class="invoice-details">
-    <div class="sticky-header-setup"></div>
-    <div class="sticky-header d-md-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-md-0">
 
-            <a asp-action="Invoice" permission="@Policies.CanViewInvoices" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.InvoiceId">Admin details</a>
+<div class="container d-flex h-100">
+    <div class="justify-content-center align-self-center text-center mx-auto px-2 w-100 m-auto">
+        <partial name="_StatusMessage"/>
+        <div class="mb-4 d-print-none d-flex justify-content-center">
 
-        </div>
-    </div>
+            <h1 >Invoice Receipt</h1>
+            <div>
+                <button class="btn btn-link d-print-none" id="btnPrint">Print</button>
 
-    <div class="row justify-content-between">
-        <div class="col-md-12">
-            <table class="table table-responsive-md mb-5">
-                <tr>
-                    <th class="fw-semibold">Created Date</th>
-                    <td>@Model.Timestamp.ToBrowserDate()</td>
-                </tr>
-
-                <tr>
-                    <th class="fw-semibold">Amount</th>
-                    <td>@Model.Amount @Model.Currency</td>
-                </tr>
-
-            </table>
-        </div>
-    </div>
-
-    @if (Model.AdditionalData.Count != 0)
-    {
-        <div class="row">
-
-            <div class="col-md-12 mb-4" id="receiptData">
-                <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+                <a asp-action="Invoice" permission="@Policies.CanViewInvoices" class="invoice-checkout-link btn btn-primary text-nowrap d-print-none" asp-route-invoiceId="@Model.InvoiceId">Admin details</a>
             </div>
         </div>
-    }
-    
+        @if (Model.Status == InvoiceStatus.Processing)
+        {
+            reloadPage = true;
+            <div class="alert alert-info">
+                The invoice has detected a payment but is still waiting to be settled. This page will refresh periodically until it is settled.
+            </div>
+        }
+        else if (Model.Status != InvoiceStatus.Settled)
+        {
+            <div class="alert alert-danger">
+                The invoice is not settled.
+            </div>
+        }
+        else
+        {
+            <div class="row mb-4">
+                <div class="col col-12 col-lg-6 mb-md-0 mb-sm-4 @(onlyOneColumn ? "offset-lg-3" : "") ">
+                    <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+                        <h2 class="h4 mb-3">Invoice Details</h2>
+                        @if (Model.ShowQR)
+                        {
+                            <div class="d-flex mb-4">
+                                <div class="col-12 px-1">
+                                    <vc:qr-code data="@this.Context.Request.GetCurrentUrl()"></vc:qr-code>
+                                </div>
+                            </div>
+                        }
+                        <div class="d-flex d-print-inline-block flex-column mb-4 px-4 ">
+                            <dt class="h3 fw-semibold text-print-default order-2 order-sm-1 ">@Model.InvoiceId</dt> <dd class="order-1 order-sm-2 ">ID</dd>
+                        </div>
+
+                        <div class="d-flex d-print-inline-block flex-column ">
+                            <dt class="h3 fw-semibold text-print-default order-2 order-sm-1 ">@Model.Timestamp.ToBrowserDate()</dt> <dd class="order-1 order-sm-2 ">DATE</dd>
+                        </div>
+
+                        <div class="d-flex d-print-inline-block flex-column ">
+                            <dt class="h3 fw-semibold text-print-default order-2 order-sm-1 ">@Model.Amount @Model.Currency</dt> <dd class="order-1 order-sm-2 ">AMOUNT</dd>
+                        </div>
+
+                        @if (Model.AdditionalData != null && Model.AdditionalData.Count != 0)
+                        {
+                            <div class="col-12" id="receiptData">
+                                <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.ShowPayments && Model.Payments is not null)
+                {
+                    <div class="col col-12 col-lg-6 mb-md-0 mb-sm-4">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+                            <h2 class="h4 mb-3 d-print-none">Payment Details</h2>
+                            <table class="table-borderless table-light">
+                                <tr>
+                                    <th class="fw-normal text-secondary">Destination</th>
+                                    <th class="fw-normal text-secondary">Received</th>
+                                    <th class="fw-normal text-secondary text-end">Paid</th>
+                                    <th class="fw-normal text-secondary text-end">Rate</th>
+                                    <th class="fw-normal text-secondary text-end">Payment</th>
+                                </tr>
+                                @foreach (var payment in Model.Payments)
+                                {
+                                    <tr class="table-borderless table-light">
+                                        <td class="text-break">
+                                            <code>@payment.Destination</code>
+                                        </td>
+                                        <td>@payment.ReceivedDate.ToString("g")</td>
+                                        <td class="text-end">@payment.PaidFormatted</td>
+                                        <td class="text-end">@payment.RateFormatted</td>
+                                        <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
+                                    </tr>
+                                    <tr class="table-borderless table-light">
+                                        <td class="fw-normal" colspan="5">
+                                            <span class="text-secondary">Transaction Id:</span>
+                                            @if (!string.IsNullOrEmpty(payment.Link))
+                                            {
+                                                <a href="@payment.Link" class="text-print-default text-break" rel="noreferrer noopener" target="_blank">@payment.Id</a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-break">@payment.Id</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+
+
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        <div class="row">
+            <div class="powered__by__btcpayserver col-12">
+                Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+
+@if (reloadPage)
+{
+    <script type="text/javascript">       
+        setTimeout(function(){
+            
+            window.location.reload();
+        }, 3000); 
+    </script>
+}
+<script type="text/javascript">
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("btnPrint").addEventListener("click", function (){
+            window.print();
+        });
+    });
+    
+</script>

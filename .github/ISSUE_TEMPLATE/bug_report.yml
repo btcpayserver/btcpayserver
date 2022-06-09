@@ -45,18 +45,14 @@ body:
       label: Relevant log output
       description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks. Logs can be found in Server Settings > Logs. Here's how you can [troubleshoot an issue](https://docs.btcpayserver.org/Troubleshooting/)
       render: shell
-  - type: dropdown
-    id: browsers
+  - type: textarea
+    id: browser
     attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
-      options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
-        - Brave
-        - Other (not applicable)
+      label: What browser do you use?
+      description: Provide your browser and it's version. If you replicated issues on multiple browsers, let us know which ones.
+      placeholder: For example: Safari 15.00, Chrome 10.0, Tor, Edge, etc
+    validations:
+      required: false
   - type: textarea
     id: additonal
     attributes:

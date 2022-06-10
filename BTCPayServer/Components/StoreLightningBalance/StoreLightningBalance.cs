@@ -81,50 +81,6 @@ public class StoreLightningBalance : ViewComponent
         {
             vm.ProblemDescription = "Cannot instantiate Lightning client.";
         }
-        
-        if (vm.LightningNodeType == LightningNodeType.Internal)
-        {
-            var services = _externalServiceOptions.Value.ExternalServices.ToList()
-                .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
-                .Select(async service =>
-                {
-                    var model = new AdditionalServiceViewModel
-                    {
-                        DisplayName = service.DisplayName,
-                        ServiceName = service.ServiceName,
-                        CryptoCode = service.CryptoCode,
-                        Type = service.Type.ToString()
-                    };
-                    try
-                    {
-                        model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
-                    }
-                    catch (Exception exception)
-                    {
-                        model.Error = exception.Message;
-                    }
-                    return model;
-                })
-                .Select(t => t.Result)
-                .ToList();
-            
-            // other services
-            foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
-            {
-                if (ExternalServices.LightningServiceNames.Contains(key))
-                {
-                    services.Add(new AdditionalServiceViewModel
-                    {
-                        DisplayName = key,
-                        ServiceName = key,
-                        Type = key.Replace(" ", ""),
-                        Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
-                    });
-                }
-            }
-
-            vm.Services = services;
-        }
 
         return View(vm);
     }
@@ -138,7 +94,7 @@ public class StoreLightningBalance : ViewComponent
             .FirstOrDefault(d => d.PaymentId == id);
         if (existing == null) return null;
         
-        if (existing.GetExternalLightningUrl() is LightningConnectionString connectionString)
+        if (existing.GetExternalLightningUrl() is {} connectionString)
         {
             return _lightningClientFactory.Create(connectionString, network);
         }

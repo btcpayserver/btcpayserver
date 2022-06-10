@@ -14,7 +14,5 @@ public class StoreLightningBalanceViewModel
     public LightMoney TotalOnchain { get; set; }
     public LightMoney TotalOffchain { get; set; }
     public LightningNodeBalance Balance { get; set; }
-    public LightningNodeType LightningNodeType { get; set; }
-    public List<AdditionalServiceViewModel> Services { get; set; }
     public string ProblemDescription { get; set; }
 }

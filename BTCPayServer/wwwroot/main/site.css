@@ -335,12 +335,12 @@ svg.icon-note {
     color: var(--btcpay-body-link-accent);
 }
 
-.widget.store-lightning-balance .services-list {
+.widget.store-lightning-services .services-list {
     gap: var(--btcpay-space-m);
 }
 
-.widget.store-lightning-balance .services-list .service {
-    --service-width: 4rem;
+.widget.store-lightning-services .services-list .service {
+    --service-width: 3rem;
 }
 
 .widget.store-numbers {
@@ -399,6 +399,10 @@ svg.icon-note {
 }
 
 @media (max-width: 575px) {
+    .widget.store-lightning-services .services-list .service {
+        --service-width: 3rem;
+    }
+    
     .widget .store-number {
         flex: 0 1 100%;
     }
@@ -410,13 +414,26 @@ svg.icon-note {
     }
 }
 
+@media (min-width: 576px) and (max-width: 1199px) {
+    .widget.store-lightning-services .services-list {
+        gap: 1.5rem;
+    }
+    .widget.store-lightning-services .services-list .service {
+        --service-width: 4rem;
+    }
+}
+
 @media (max-width: 1199px) {
     /* Reorder so that Lightning is below the wallet balance */
     .widget.store-wallet-balance {
-        order: -2;
+        order: -3;
     }
 
     .widget.store-lightning-balance {
+        order: -2;
+    }
+
+    .widget.store-lightning-services {
         order: -1;
     }
 }
@@ -424,12 +441,14 @@ svg.icon-note {
 @media (min-width: 1200px) {
     .widget.app-sales,
     .widget.setup-guide,
-    .widget.store-wallet-balance {
+    .widget.store-wallet-balance,
+    .widget.store-lightning-balance {
         --widget-chart-width: 80vw;
         grid-column-start: 1;
         grid-column-end: 9;
     }
 
+    .widget.store-lightning-services,
     .widget.app-top-items,
     .widget.store-numbers {
         grid-column-start: 9;

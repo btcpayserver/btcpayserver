@@ -245,11 +245,15 @@ namespace BTCPayServer.Services.Wallets
 
 
 
-        public async Task<ReceivedCoin[]> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<ReceivedCoin[]> GetUnspentCoins(
+            DerivationStrategyBase derivationStrategy,
+            bool excludeUnconfirmed = false,
+            CancellationToken cancellation = default(CancellationToken)
+        )
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             return (await GetUTXOChanges(derivationStrategy, cancellation))
-                          .GetUnspentUTXOs()
+                          .GetUnspentUTXOs(excludeUnconfirmed)
                           .Select(c => new ReceivedCoin()
                           {
                               KeyPath = c.KeyPath,

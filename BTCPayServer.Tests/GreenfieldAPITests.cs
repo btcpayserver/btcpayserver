@@ -2078,6 +2078,18 @@ namespace BTCPayServer.Tests
             Assert.True((await tester.ExplorerNode.TestMempoolAcceptAsync(tx)).IsAllowed);
 
             createTxRequest.NoChange = false;
+
+            // Validation for excluding unconfirmed UTXOs and manually selecting inputs at the same time
+            await AssertValidationError(new[] { "ExcludeUnconfirmed" }, async () =>
+              {
+                createTxRequest.SelectedInputs = new List<OutPoint>();
+                createTxRequest.ExcludeUnconfirmed = true;
+                tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                    createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+              });
+            createTxRequest.SelectedInputs = null;
+            createTxRequest.ExcludeUnconfirmed = false;
+
             //coin selection
             await AssertValidationError(new[] { nameof(createTxRequest.SelectedInputs) }, async () =>
               {

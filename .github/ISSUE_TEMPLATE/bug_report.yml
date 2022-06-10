@@ -1,0 +1,68 @@
+name: 🐛 Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much information as you can. It helps us better understand the problem and fix it faster.
+  - type: textarea
+    id: version
+    attributes:
+      label: What is your BTCPay version?
+      description: You can see the version in the footer's bottom right corner
+      placeholder: I'm running BTCPay v1.X.X.X
+    validations:
+      required: true
+  - type: textarea
+    id: deployment
+    attributes:
+      label: How did you deploy BTCPay Server?
+      description: Docker, manual, third-party host? Read more on deployment methods [here](https://docs.btcpayserver.org/Deployment/)
+      placeholder: I'm running BTCPay Server on a...
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How did you encounter this bug?
+      description: Step by step describe how did you encounter the bug?
+      placeholder: 1. I clicked X 2. Then I clicked Y 3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: logoutput
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks. Logs can be found in Server Settings > Logs. Here's how you can [troubleshoot an issue](https://docs.btcpayserver.org/Troubleshooting/)
+      render: shell
+  - type: textarea
+    id: browser
+    attributes:
+      label: What browser do you use?
+      description: Provide your browser and it's version. If you replicated issues on multiple browsers, let us know which ones.
+      placeholder: For example Safari 15.00, Chrome 10.0, Tor, Edge, etc
+    validations:
+      required: false
+  - type: textarea
+    id: additonal
+    attributes:
+      label: Additional information
+      description: Feel free to provide additional information. Screenshots are always helpful.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Are you sure this is a bug report?
+      description: By submitting this report, you agree that this is not a support or a feature request. For general questions please read our [documentation](https://docs.btcpayserver.org). You can ask questions in [discussions](https://github.com/btcpayserver/btcpayserver/discussions) and [on our community chat](https://chat.btcpayserver.org)
+      options:
+        - label: I confirm this is a bug report
+          required: true

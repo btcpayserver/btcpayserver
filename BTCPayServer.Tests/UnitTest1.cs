@@ -198,7 +198,7 @@ namespace BTCPayServer.Tests
             var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreSettingsRepository>();
             var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
             Assert.Null(arbValue);
-            await settingsRepo.UpdateSetting("saved","arbitrary", user.StoreId);
+            await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
             arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
             Assert.Equal("saved", arbValue);

@@ -48,7 +48,7 @@
             <label class="btn btn-link" for="filter-year">1Y</label>
         </div>
     </header>
-    <div class="ct-chart ct-major-eleventh"></div>
+    <div class="ct-chart"></div>
     <script>
         (function () {
             const defaultCurrency = @Safe.Json(storeBlob.DefaultCurrency);
@@ -58,6 +58,15 @@
             document.getElementById("balance-@storeBlob.DefaultCurrency").style.display = 'none';
             const id = 'StoreWalletBalance-@Model.Store.Id';
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
+            const chartOpts = {
+                fullWidth: true,
+                showArea: true,
+                axisY: {
+                    labelInterpolationFnc: value => rate
+                        ? displayDefaultCurrency(value, defaultCurrency).toString()
+                        : value
+                }
+              }
             const render = data => {
                 const { series, labels, balance } = data;
                 if (balance)
@@ -65,20 +74,21 @@
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
+                const renderOpts = Object.assign({}, chartOpts, { low });
                 const chart = new Chartist.Line(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
-                }, {
-                    low,
-                    fullWidth: true,
-                    showArea: true
-                });
+                }, renderOpts);
                 // prevent y-axis labels from getting cut off
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
                     if (yLabels) {
-                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 8)))
-                        chart.update(null, { axisY: { offset: width } })
+                        const factor = rate ? 6 : 8;
+                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 8)));
+                        const opts = Object.assign({}, renderOpts, { 
+                            axisY: Object.assign({}, renderOpts.axisY, { offset: width })
+                        });
+                        chart.update(null, opts);
                     }
                 }, 0)
             };

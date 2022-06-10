@@ -18,7 +18,7 @@ namespace BTCPayServer.Components.StoreWalletBalance;
 
 public class StoreWalletBalance : ViewComponent
 {
-    private string CryptoCode;
+    private string _cryptoCode;
     private const WalletHistogramType DefaultType = WalletHistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
@@ -28,18 +28,18 @@ public class StoreWalletBalance : ViewComponent
     {
         _storeRepo = storeRepo;
         _walletHistogramService = walletHistogramService;
-        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
+        _cryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)
     {
-        var walletId = new WalletId(store.Id, CryptoCode);
+        var walletId = new WalletId(store.Id, _cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
         
         var vm = new StoreWalletBalanceViewModel
         {
             Store = store,
-            CryptoCode = CryptoCode,
+            CryptoCode = _cryptoCode,
             WalletId = walletId,
             Series = data?.Series,
             Labels = data?.Labels,

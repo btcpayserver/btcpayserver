@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +14,16 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly StoreSettingsRepository _storeSettingsRepository;
+
         public ApplicationDbContext CreateDbContext()
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory)
+        public StoreRepository(ApplicationDbContextFactory contextFactory, StoreSettingsRepository storeSettingsRepository)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            _storeSettingsRepository = storeSettingsRepository;
         }
 
         public async Task<StoreData> FindStore(string storeId)
@@ -117,7 +121,7 @@ namespace BTCPayServer.Services.Stores
                 return;
             foreach (var store in await ctx.Stores.Where(s => !s.UserStores.Where(u => u.Role == StoreRoles.Owner).Any()).ToArrayAsync())
             {
-                ctx.Stores.Remove(store);
+                await RemoveStore(ctx, store);
             }
             await ctx.SaveChangesAsync();
         }
@@ -146,13 +150,19 @@ namespace BTCPayServer.Services.Stores
                     var store = await ctx.Stores.FindAsync(storeId);
                     if (store != null)
                     {
-                        ctx.Stores.Remove(store);
+                        await RemoveStore(ctx, store);
                         await ctx.SaveChangesAsync();
                     }
                 }
             }
         }
 
+        private async Task RemoveStore(ApplicationDbContext ctx, StoreData store)
+        {
+            await _storeSettingsRepository.InvalidateCacheForStore(ctx, store.Id);
+            ctx.Stores.Remove(store);
+
+        }
         public async Task CreateStore(string ownerId, StoreData storeData)
         {
             if (!string.IsNullOrEmpty(storeData.Id))

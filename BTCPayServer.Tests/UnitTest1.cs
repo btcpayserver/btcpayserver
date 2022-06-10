@@ -186,6 +186,28 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(description, json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>());
         }
+        
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanStoreArbitrarySettingsWithStore()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreSettingsRepository>();
+            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            Assert.Null(arbValue);
+            await settingsRepo.UpdateSetting("saved","arbitrary", user.StoreId);
+
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            Assert.Equal("saved", arbValue);
+            var client = await user.CreateClient();
+            await client.RemoveStore(user.StoreId);
+            tester.Stores.Clear();
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            Assert.Null(arbValue);
+        }
 
         private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
         {

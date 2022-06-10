@@ -99,6 +99,8 @@ namespace BTCPayServer.Hosting
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
+            services.TryAddSingleton<StoreSettingsRepository>();
+            services.TryAddSingleton<IStoreSettingsRepository>(provider => provider.GetService<StoreSettingsRepository>());
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());

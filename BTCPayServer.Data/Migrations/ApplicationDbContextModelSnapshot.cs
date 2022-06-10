@@ -746,6 +746,24 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Files");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.StoreSettingData", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StoreId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Name", "StoreId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("StoreSettings");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.StoreWebhookData", b =>
                 {
                     b.Property<string>("StoreId")
@@ -1258,6 +1276,17 @@ namespace BTCPayServer.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.StoreSettingData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithMany("Settings")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.StoreWebhookData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
@@ -1437,6 +1466,8 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Payouts");
 
                     b.Navigation("PullPayments");
+
+                    b.Navigation("Settings");
 
                     b.Navigation("UserStores");
                 });

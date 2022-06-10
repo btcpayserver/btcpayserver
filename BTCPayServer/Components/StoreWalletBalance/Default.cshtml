@@ -54,6 +54,8 @@
             const defaultCurrency = @Safe.Json(storeBlob.DefaultCurrency);
             const cryptoBalance = document.getElementById("balance-@Model.CryptoCode");
             const defaultBalance = document.getElementById("balance-@storeBlob.DefaultCurrency");
+            let rate = null;
+            let data = { series: @Safe.Json(Model.Series), labels: @Safe.Json(Model.Labels), balance: @Safe.Json(Model.Balance) };
             
             document.getElementById("balance-@storeBlob.DefaultCurrency").style.display = 'none';
             const id = 'StoreWalletBalance-@Model.Store.Id';
@@ -68,7 +70,9 @@
                 }
               }
             const render = data => {
-                const { series, labels, balance } = data;
+                let { series, labels, balance } = data;
+                if (rate)
+                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 if (balance)
                     document.querySelector(`#${id} h3`).innerText = balance;
                 const min = Math.min(...series);
@@ -84,7 +88,7 @@
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
                     if (yLabels) {
                         const factor = rate ? 6 : 8;
-                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 8)));
+                        const width = Math.max(...(yLabels.map(l => l.innerText.length * factor)));
                         const opts = Object.assign({}, renderOpts, { 
                             axisY: Object.assign({}, renderOpts.axisY, { offset: width })
                         });
@@ -96,11 +100,19 @@
                 const url = baseUrl.replace(/\/week$/gi, `/${type}`);
                 const response = await fetch(url);
                 if (response.ok) {
-                  const json = await response.json();
-                  render(json);
+                    data = await response.json();
+                    render(data);
                 }
             };
-            render({ series: @Safe.Json(Model.Series), labels: @Safe.Json(Model.Labels), balance: @Safe.Json(Model.Balance) });
+            const toDefaultCurrency = (value, rate) => {
+                return Math.round((value * rate) * 100) / 100;
+            }
+            const displayDefaultCurrency = (value, currency) => {
+                const locale = currency === "USD" ? 'en-US' : navigator.language;
+                const opts = { currency, style: 'decimal', minimumFractionDigits: 2 };
+                return new Intl.NumberFormat(locale, opts).format(value);
+            };
+            render(data);
             document.addEventListener('DOMContentLoaded', () => {
                 delegate('change', `#${id} [name="filter"]`, async e => {
                     const type = e.target.value;
@@ -108,18 +120,21 @@
                 })
                 delegate('change', '#DefaultCurrencyToggle input', async e => {
                     const { target } = e;
-                    let rate = null;
                     if (target.value === defaultCurrency) {
                         const currencyPair = @Safe.Json($"{Model.CryptoCode}_{storeBlob.DefaultCurrency}");
                         const response = await fetch(`@Context.Request.PathBase/api/rates?storeId=@Model.Store.Id&currencyPairs=${currencyPair}`);
                         const json = await response.json();
                         rate = json[0] && json[0].rate;
                         if (rate) {
-                            const balance = (Math.round((rate * @Model.Balance) * 100) / 100).toString();
-                            document.getElementById('DefaultCurrencyBalance').innerText = new Intl.NumberFormat(navigator.language, { style: 'decimal', currency: defaultCurrency }).format(balance);
+                            const value = toDefaultCurrency(@Model.Balance, rate);
+                            document.getElementById('DefaultCurrencyBalance').innerText = displayDefaultCurrency(value, defaultCurrency);
+                            render(data);
                         } else {
                             console.warn(`Fetching rate for ${currencyPair} failed.`);
                         }
+                    } else {
+                        rate = null;
+                        render(data);
                     }
                     cryptoBalance.style.display = rate ? 'none' : 'block';
                     defaultBalance.style.display = rate ? 'block' : 'none';

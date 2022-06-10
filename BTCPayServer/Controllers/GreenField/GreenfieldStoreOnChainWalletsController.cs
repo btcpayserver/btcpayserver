@@ -376,10 +376,20 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
+            if (request.SelectedInputs != null && request.ExcludeUnconfirmed == true)
+            {
+                ModelState.AddModelError(
+                    nameof(request.ExcludeUnconfirmed),
+                    "Can't automatically exclude unconfirmed UTXOs while selection custom inputs"
+                );
+
+                return this.CreateValidationError(ModelState);
+            }
+
             var explorerClient = _explorerClientProvider.GetExplorerClient(cryptoCode);
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
-            var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
+            var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation, request.ExcludeUnconfirmed);
             if (request.SelectedInputs != null || !utxos.Any())
             {
                 utxos = utxos.Where(coin => request.SelectedInputs?.Contains(coin.OutPoint) ?? true)

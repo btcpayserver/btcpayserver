@@ -870,6 +870,12 @@
                         "nullable": true,
                         "description": "Whether to enable RBF for the transaction. Leave blank to have it random (beneficial to privacy)"
                     },
+                    "excludeUnconfirmed": {
+                        "type": "boolean",
+                        "default": false,
+                        "nullable": true,
+                        "description": "Whether to exclude unconfirmed UTXOs from the transaction."
+                    },
                     "selectedInputs": {
                         "nullable": true,
                         "description": "Restrict the creation of the transactions from the outpoints provided ONLY (coin selection)",

@@ -1,0 +1,23 @@
+﻿@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
+@{
+    ViewData.SetActivePage(AppsNavPages.Create, "Create a new custodian account");
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<partial name="_StatusMessage" />
+
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
+        
+        VIEW CUSTODIAN ACCOUNT
+        
+    </div>
+</div>

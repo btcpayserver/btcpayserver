@@ -8,47 +8,6 @@
 		storeIds = string.Empty;
 }
 
-@section PageHeadContent {
-    <style>
-        .invoice-payments {
-            padding-left: 2rem;
-        }
-
-        .invoice-payments h3 {
-            font-size: 15px;
-            font-weight: bold;
-        }
-
-        .pavpill {
-            display: inline-block;
-            padding: 0.3em 0.5em;
-            font-size: 85%;
-            font-weight: 500;
-            line-height: 1;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: 4px;
-        }
-
-        .badge .dropdown-toggle {
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .dropdown-item {
-            cursor: pointer;
-        }
-        
-        /* pull mass action form up, so that it is besides the search form */
-        @@media (min-width: 1200px) {
-            #MassAction {
-                margin-top: -4rem;
-            }
-        }
-    </style>
-}
-
 @section PageFootContent {
     @*Without async, somehow selenium do not manage to click on links in this page*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
@@ -366,14 +325,14 @@
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
                                             {
-                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
-                                                    Mark as invalid <span class="fa fa-times"></span>
+                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                    Mark as invalid
                                                 </button>
                                             }
                                             @if (invoice.CanMarkSettled)
                                             {
-                                                <button class="dropdown-item small cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
-                                                    Mark as settled <span class="fa fa-check-circle"></span>
+                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                    Mark as settled
                                                 </button>
                                             }
                                         </div>
@@ -416,10 +375,8 @@
                         </tr>
                         <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
                             <td colspan="99" class="border-top-0">
-                                <div style="margin-left: 15px; margin-bottom: 0;">
-                                    @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                    <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
-                                </div>
+                                @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
                             </td>
                         </tr>
                     }

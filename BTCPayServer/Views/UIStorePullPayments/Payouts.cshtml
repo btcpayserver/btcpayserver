@@ -96,6 +96,13 @@
     </div>
 }
 
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+    <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId" class="btn btn-secondary">
+        Settings                
+    </a>
+</div>
+
 <form method="post" id="Payouts">
     <input type="hidden" asp-for="PaymentMethodId" />
     <input type="hidden" asp-for="PayoutState" />

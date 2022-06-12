@@ -21,7 +21,7 @@
             
             @if (!string.IsNullOrEmpty(Model.SelectedCustodian))
             {
-                <p>CONFIG FORM TOP MESSAGES GO HERE...</p>
+                <partial name="_FormTopMessages" model="Model.ConfigForm" />
             }
             else
             {
@@ -45,7 +45,7 @@
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
-                <p>CONFIG FORM SHOULD GO HERE...</p>
+                <partial name="_Form" model="Model.ConfigForm" />
             }
             
             <div class="form-group mt-4">

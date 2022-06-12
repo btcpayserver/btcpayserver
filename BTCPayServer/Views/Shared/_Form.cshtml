@@ -1,0 +1,30 @@
+@model BTCPayServer.Abstractions.Form.Form
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Form
+@using BTCPayServer.Components.Icon
+@{
+    //var parsedModel = TempData.GetStatusMessageModel();
+}
+
+@foreach (var fieldset in Model.Fieldsets)
+{
+    <fieldset>
+        <legend>@fieldset.Label</legend>
+        @foreach (var field in fieldset.Fields)
+        {
+@if ("text".Equals(field.Type))
+{
+    <div class="form-group">
+        <label class="form-label" for="@field.Name" data-required>
+            @field.Label
+        </label>
+            <input class="form-control" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value"/>
+            <p class="help-text">
+                @field.HelpText
+            </p>
+        
+    </div>
+}
+        }
+    </fieldset>
+}

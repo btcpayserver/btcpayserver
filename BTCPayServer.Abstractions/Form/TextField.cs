@@ -10,14 +10,10 @@ public class TextField : Field
         this.OriginalValue = value;
         this.Required = required;
         this.HelpText = helpText;
+        this.Type = "text";
     }
 
     // TODO JSON parsing from string to objects again probably won't work out of the box because of the different field types. 
     
-    public new string Type
-    {
-        get => "text";
-    }
-
 
 }

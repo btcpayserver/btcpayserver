@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
             
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
-            var form = await custodian.GetConfigForm(custodianAccount, locale, cancellationToken);
+            var form = await custodian.GetConfigForm(custodianAccount.Config, locale, cancellationToken);
                 
             return Ok(form);
         }
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
             
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
-            var form = await custodian.ApplyFormValuesAndValidation(custodianAccount, values, locale, cancellationToken);
+            var form = await custodian.ApplyFormValuesAndValidation(values, locale, cancellationToken);
 
             if (form.IsValid())
             {

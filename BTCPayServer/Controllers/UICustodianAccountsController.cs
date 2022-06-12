@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Custodian.Client;
@@ -16,12 +16,12 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanManageCustodianAccounts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
-    [Route("custodian-accounts")]
     public partial class UICustodianAccountsController : Controller
     {
         public UICustodianAccountsController(
@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient
-            )
+        )
         {
             _userManager = userManager;
             // _eventAggregator = eventAggregator;
@@ -44,25 +44,30 @@ namespace BTCPayServer.Controllers
         }
 
         private readonly IEnumerable<ICustodian> _custodianRegistry;
+
         private readonly UserManager<ApplicationUser> _userManager;
+
         // private readonly EventAggregator _eventAggregator;
         // private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly BTCPayServerClient _btcPayServerClient;
 
-        // public string CreatedAppId { get; set; }
+        public string CreatedCustodianAccountId { get; set; }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}")]
-        public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId)
+        public IActionResult ViewCustodianAccount(string storeId, string accountId)
         {
-            return View(new ViewCustodianAccountViewModel());
+            return (View(new ViewCustodianAccountViewModel()));
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/create")]
         public IActionResult CreateCustodianAccount(string storeId)
         {
-            return View(new CreateCustodianAccountViewModel(storeId, _custodianRegistry));
+            var vm = new CreateCustodianAccountViewModel();
+            vm.StoreId = storeId;
+            vm.SetCustodianRegistry(_custodianRegistry);
+            return View(vm);
         }
 
         [HttpPost("/stores/{storeId}/custodian-accounts/create")]
@@ -70,41 +75,51 @@ namespace BTCPayServer.Controllers
         {
             var store = GetCurrentStore();
             vm.StoreId = store.Id;
-
-            // TODO check if the custodian exists => add error if it does not
-            if (!Enum.TryParse(vm.SelectedCustodian, out AppType appType))
+            vm.SetCustodianRegistry(_custodianRegistry);
+            
+            var custodian = _custodianRegistry.GetCustodianByCode(vm.SelectedCustodian);
+            if (custodian == null)
+            {
                 ModelState.AddModelError(nameof(vm.SelectedCustodian), "Invalid Custodian");
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(vm.Name))
+                {
+                    vm.Name = custodian.Name;
+                }
+                var custodianAccountData = new CustodianAccountData
+                {
+                    CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name
+                };
 
-            
+
+                var configData = new JObject();
+                foreach (var pair in Request.Form)
+                {
+                    configData.Add(pair.Key, pair.Value.ToString());
+                }
+                
+                var configForm = await custodian.GetConfigForm(configData, "en-US");
+                if (configForm.IsValid())
+                {
+                    // Save
+                    custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
+                    TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
+                    CreatedCustodianAccountId = custodianAccountData.Id;
+
+                    return RedirectToAction(nameof(ViewCustodianAccount),
+                        new { storeId = custodianAccountData.StoreId, accountId = custodianAccountData.Id });
+                }
+
+                // Ask for more data
+                vm.ConfigForm = configForm;
+            }
             return View(vm);
-            
-            // if (!ModelState.IsValid)
-            // {
-            //     return View(vm);
-            // }
-
-            // var custodianAccountData = new CustodianAccountData
-            // {
-            //     CustodianCode = custodian,
-            //     Name = vm.AppName,
-            //     AppType = appType.ToString()
-            // };
-            //
-            // await _custodianAccountRepository.CreateOrUpdate(appData);
-            // TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
-            // CreatedAppId = appData.Id;
-            //
-            // switch (appType)
-            // {
-            //     case AppType.PointOfSale:
-            //         return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
-            //     case AppType.Crowdfund:
-            //         return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
-            //     default:
-            //         return RedirectToAction(nameof(ListApps), new { storeId = appData.StoreDataId });
-            // }
         }
-        //
+    
+
+    //
         // [HttpGet("{appId}/delete")]
         // public IActionResult DeleteApp(string appId)
         // {
@@ -137,7 +152,7 @@ namespace BTCPayServer.Controllers
         //     return currency.Trim().ToUpperInvariant();
         // }
         //
-        // private string GetUserId() => _userManager.GetUserId(User);
+        private string GetUserId() => _userManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 

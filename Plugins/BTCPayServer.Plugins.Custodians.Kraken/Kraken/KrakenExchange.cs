@@ -135,12 +135,12 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
-    public async Task<Form> GetConfigForm(CustodianAccountData custodianAccountData, string locale,
+    public async Task<Form> GetConfigForm(JObject config, string locale,
         CancellationToken cancellationToken)
     {
         // TODO "locale" is not used yet, but keeping it here so it's clear translation should be done here.
 
-        var krakenConfig = ParseConfig(custodianAccountData.Config);
+        var krakenConfig = ParseConfig(config);
 
         var form = new Form();
         var fieldset = new Fieldset { Label = "Connection Details" };
@@ -170,7 +170,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         
         try
         {
-            await GetAssetBalancesAsync(custodianAccountData.Config, cancellationToken);
+            await GetAssetBalancesAsync(config, cancellationToken);
         }
         catch (BadConfigException e)
         {
@@ -185,13 +185,11 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return form;
     }
 
-    public async Task<Form> ApplyFormValuesAndValidation(CustodianAccountData custodianAccount, JObject data,
+    public async Task<Form> ApplyFormValuesAndValidation(JObject data,
         string locale,
         CancellationToken cancellationToken)
     {
-        // Changing the config here, but not saving. The object is not used elsewhere, so there is no need to clone it.
-        custodianAccount.Config = data;
-        var form = await GetConfigForm(custodianAccount, locale, cancellationToken);
+        var form = await GetConfigForm(data, locale, cancellationToken);
         return form;
     }
 

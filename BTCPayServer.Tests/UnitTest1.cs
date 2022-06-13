@@ -195,18 +195,27 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
-            var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreSettingsRepository>();
-            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
+            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
             Assert.Null(arbValue);
             await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
             Assert.Equal("saved", arbValue);
+
+            await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
+            var arbData = await settingsRepo.GetSettingAsync<TestData>(user.StoreId, "arbitrary");
+            Assert.Equal("hello", arbData.Name);
+
             var client = await user.CreateClient();
             await client.RemoveStore(user.StoreId);
             tester.Stores.Clear();
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary", true);
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Null(arbValue);
+        }
+        class TestData
+        {
+            public string Name { get; set; }
         }
 
         private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)

@@ -102,7 +102,7 @@ namespace BTCPayServer.Data
             PullPaymentData.OnModelCreating(builder);
             RefundData.OnModelCreating(builder);
             //SettingData.OnModelCreating(builder);
-            StoreSettingData.OnModelCreating(builder);
+            StoreSettingData.OnModelCreating(builder, Database);
             StoreWebhookData.OnModelCreating(builder);
             //StoreData.OnModelCreating(builder);
             U2FDevice.OnModelCreating(builder);

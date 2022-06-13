@@ -748,18 +748,16 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.StoreSettingData", b =>
                 {
-                    b.Property<string>("Name")
+                    b.Property<string>("StoreId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("StoreId")
+                    b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Name", "StoreId");
-
-                    b.HasIndex("StoreId");
+                    b.HasKey("StoreId", "Name");
 
                     b.ToTable("StoreSettings");
                 });

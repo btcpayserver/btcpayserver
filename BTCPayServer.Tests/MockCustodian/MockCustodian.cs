@@ -51,7 +51,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(CustodianAccountData custodianAccountData, string locale, CancellationToken cancellationToken)
+    public Task<Form> GetConfigForm(JObject config, string locale, CancellationToken cancellationToken = default)
     {
         return null;
     }

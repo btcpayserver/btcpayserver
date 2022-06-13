@@ -185,14 +185,6 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return form;
     }
 
-    public async Task<Form> ApplyFormValuesAndValidation(JObject data,
-        string locale,
-        CancellationToken cancellationToken)
-    {
-        var form = await GetConfigForm(data, locale, cancellationToken);
-        return form;
-    }
-
     public async Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config,
         CancellationToken cancellationToken)
     {

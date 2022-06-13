@@ -112,8 +112,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
             
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
-            var form = await custodian.ApplyFormValuesAndValidation(values, locale, cancellationToken);
-
+            var form = await custodian.GetConfigForm(values, locale, cancellationToken);
+            
             if (form.IsValid())
             {
                 // TODO save the data to the config so it is persisted

@@ -23,6 +23,4 @@ public interface ICustodian
     public Task<Form.Form> GetConfigForm(JObject config, string locale,
         CancellationToken cancellationToken = default);
 
-    public Task<Form.Form> ApplyFormValuesAndValidation(JObject data, string locale,
-        CancellationToken cancellationToken = default);
 }

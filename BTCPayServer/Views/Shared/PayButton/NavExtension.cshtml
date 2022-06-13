@@ -3,9 +3,15 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.TagHelpers
 
-<li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-    <a asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-PayButton">
-        <vc:icon symbol="pay-button"/>
-        <span>Pay Button</span>
-    </a>
-</li>
+@{ var store = Context.GetStoreData(); }
+
+@if (store != null)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-PayButton">
+            <vc:icon symbol="pay-button"/>
+            <span>Pay Button</span>
+        </a>
+    </li>
+}
+

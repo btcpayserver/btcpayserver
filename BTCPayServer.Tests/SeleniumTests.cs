@@ -64,6 +64,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
             s.Driver.Quit();
         }
+        
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCPFP()
         {

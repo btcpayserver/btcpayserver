@@ -107,6 +107,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
+            services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);

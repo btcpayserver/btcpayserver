@@ -1,13 +1,13 @@
 ﻿@model BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration.FileSystemStorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, $"Local Filesystem Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, $"Local Filesystem Storage");
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <p>Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
     </div>
 </div>

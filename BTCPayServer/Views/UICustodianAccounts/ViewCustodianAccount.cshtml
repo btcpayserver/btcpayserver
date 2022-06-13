@@ -3,21 +3,80 @@
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account details");
+    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: "+@Model?.CustodianAccount.Name);
 }
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }
 
+
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<div class="d-sm-flex align-items-center justify-content-between mb-2">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </small>
+    </h2>
+    <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
+        <span class="fa fa-gear"></span> Configure
+    </a>
+</div>
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         
-        VIEW CUSTODIAN ACCOUNT
+        @if (@Model.GetAssetBalanceException != null)
+        {
+            <p class="alert alert-danger">
+                @Model.GetAssetBalanceException.Message
+            </p>
+        }
         
+        
+
+        <h2>Balances</h2>
+
+        <table class="table table-hover table-responsive-md">
+            <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Balance</th>
+                <th class="text-xs-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.AssetBalances != null && Model.AssetBalances.Count > 0)
+            {
+                @foreach (var pair in Model.AssetBalances)
+                {
+                    <tr>
+                        <td>@pair.Key</td>
+                        <!-- TODO format as number? How? -->
+                        <th>@pair.Value</th>
+                        <th></th>
+                    </tr>
+                }
+            }
+            else if(Model.GetAssetBalanceException == null)
+            {
+                <tr>
+                    <td colspan="999" class="text-center">No assets are stored with this custodian (yet).</td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td colspan="999" class="text-center">An error occured while loading assets and balances.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+
     </div>
 </div>

@@ -50,4 +50,18 @@ public class Form
         }
         return null;
     }
+
+    public List<string> GetAllNames()
+    {
+        var names = new List<string>();
+        foreach (var fieldset in Fieldsets)
+        {
+            foreach (var field in fieldset.Fields)
+            {
+                names.Add(field.Name);
+            }
+        }
+
+        return names;
+    }
 }

@@ -105,7 +105,7 @@
                                     @foreach (var custodianAccount in Model.CustodianAccounts)
                                     {
                                         <li class="nav-item">
-                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-accountId="@custodianAccount.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
+                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
                                                 <!--
                                                 TODO which icon should we use?
                                                 -->

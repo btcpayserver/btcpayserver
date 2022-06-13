@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
@@ -22,7 +23,7 @@ namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
-    public partial class UICustodianAccountsController : Controller
+    public class UICustodianAccountsController : Controller
     {
         public UICustodianAccountsController(
             UserManager<ApplicationUser> userManager,
@@ -56,10 +57,79 @@ namespace BTCPayServer.Controllers
         public string CreatedCustodianAccountId { get; set; }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}")]
-        public IActionResult ViewCustodianAccount(string storeId, string accountId)
+        public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId)
         {
-            return (View(new ViewCustodianAccountViewModel()));
+            var vm = new ViewCustodianAccountViewModel();
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+            {
+                return NotFound();
+            }
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+
+            vm.CustodianAccount = custodianAccount;
+            try
+            {
+                vm.AssetBalances =
+                    await custodian.GetAssetBalancesAsync(custodianAccount.GetBlob(), cancellationToken: default);
+            }
+            catch (Exception e)
+            {
+                vm.GetAssetBalanceException = e;
+            }
+
+            return View(vm);
         }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/edit")]
+        public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId)
+        {
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+            if (custodianAccount == null)
+            {
+                return NotFound();
+            }
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
+            
+            var vm = new EditCustodianAccountViewModel();
+            vm.CustodianAccount = custodianAccount;
+            vm.ConfigForm = configForm;
+            return View(vm);
+        }
+        
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/edit")]
+        public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId, EditCustodianAccountViewModel vm)
+        {
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+            if (custodianAccount == null)
+            {
+                return NotFound();
+            }
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
+
+            var newData = new JObject();
+            foreach (var pair in Request.Form)
+            {
+                newData.Add(pair.Key, pair.Value.ToString());
+            }
+            
+            var filteredConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
+            custodianAccount.SetBlob(filteredConfigData);
+
+            custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
+            
+            vm.CustodianAccount = custodianAccount;
+            vm.ConfigForm = configForm;
+            return View(vm);
+        }
+        
+        
 
         [HttpGet("/stores/{storeId}/custodian-accounts/create")]
         public IActionResult CreateCustodianAccount(string storeId)
@@ -76,7 +146,7 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             vm.StoreId = store.Id;
             vm.SetCustodianRegistry(_custodianRegistry);
-            
+
             var custodian = _custodianRegistry.GetCustodianByCode(vm.SelectedCustodian);
             if (custodian == null)
             {
@@ -88,6 +158,7 @@ namespace BTCPayServer.Controllers
                 {
                     vm.Name = custodian.Name;
                 }
+
                 var custodianAccountData = new CustodianAccountData
                 {
                     CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name
@@ -99,11 +170,12 @@ namespace BTCPayServer.Controllers
                 {
                     configData.Add(pair.Key, pair.Value.ToString());
                 }
-                
+
                 var configForm = await custodian.GetConfigForm(configData, "en-US");
                 if (configForm.IsValid())
                 {
-                    // Save
+                    // configForm.removeUnusedKeys();
+                    custodianAccountData.SetBlob(configData);
                     custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
                     TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
                     CreatedCustodianAccountId = custodianAccountData.Id;
@@ -117,9 +189,35 @@ namespace BTCPayServer.Controllers
             }
             return View(vm);
         }
-    
 
-    //
+        // The JObject may contain too much data because we used ALL post values and this may be more than we needed.
+        // Because we don't know the form fields beforehand, we will filter out the superfluous data afterwards.
+        // We will keep all the old keys + merge the new keys as per the current form.
+        // Since the form can differ by circumstances, we will never remove any keys that were previously stored. We just limit what we add.
+        private JObject RemoveUnusedFieldsFromConfig(JObject storedData, JObject newData, Form form)
+        {
+            JObject filteredData = new JObject();
+            var storedKeys = new List<string>();
+            foreach (var item in storedData)
+            {
+                storedKeys.Add(item.Key);
+            }
+
+            var formKeys = form.GetAllNames();
+
+            foreach (var item in newData)
+            {
+                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key) )
+                {
+                    filteredData[item.Key] = item.Value;
+                }
+            }
+            
+            return filteredData;
+        }
+
+
+        //
         // [HttpGet("{appId}/delete")]
         // public IActionResult DeleteApp(string appId)
         // {

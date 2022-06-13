@@ -1,20 +1,14 @@
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using BTCPayServer.Abstractions.Custodians;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.CustodianAccountViewModels
 {
     public class ViewCustodianAccountViewModel
     {
 
-        public ViewCustodianAccountViewModel(
-            )
-        {
-            
-        }
-        
-       
+        public CustodianAccountData CustodianAccount { get; set; }
+        public Dictionary<string,decimal> AssetBalances { get; set; }
+        public Exception GetAssetBalanceException { get; set; }
     }
 }

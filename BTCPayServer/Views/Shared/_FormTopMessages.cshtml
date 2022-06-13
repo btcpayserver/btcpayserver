@@ -3,10 +3,8 @@
 
 @if (Model.TopMessages.Count > 0)
 {
-    <ul>
-        @foreach (var alertMessage in Model.TopMessages)
-        {
-            <li class="alert alert-@alertMessage.Type.ToStringLowerInvariant()">@alertMessage.Message</li>
-        }
-    </ul>
+    @foreach (var alertMessage in Model.TopMessages)
+    {
+        <p class="alert alert-@alertMessage.Type.ToStringLowerInvariant()">@alertMessage.Message</p>
+    }
 }

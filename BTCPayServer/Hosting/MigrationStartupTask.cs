@@ -82,7 +82,7 @@ namespace BTCPayServer.Hosting
             try
             {
                 await Migrate(cancellationToken);
-                var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
+                var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
                 if (!settings.PaymentMethodCriteria)
                 {
                     await MigratePaymentMethodCriteria();

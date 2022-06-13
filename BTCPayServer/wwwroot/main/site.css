@@ -335,6 +335,10 @@ svg.icon-note {
     color: var(--btcpay-body-link-accent);
 }
 
+.widget.store-lightning-balance .balances {
+    gap: 1.5rem 2.25rem;
+}
+
 .widget.store-lightning-services .services-list {
     gap: var(--btcpay-space-m);
 }

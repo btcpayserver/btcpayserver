@@ -40,7 +40,7 @@
     
     @if (Model.Services != null && Model.Services.Any())
     {
-        <div permission="@Policies.CanModifyServerSettings" class="mt-4">
+        <div permission="@Policies.CanModifyServerSettings" class="mt-5">
             <h3 class="mb-3">Services</h3>
             <div id="Services" class="services-list">
                 @foreach (var service in Model.Services)

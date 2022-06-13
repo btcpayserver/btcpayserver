@@ -42,7 +42,7 @@
                 <input asp-for="SharedKey" type="hidden" />
                 <div class="form-group">
                     <label asp-for="Code" class="form-label">Verification Code</label>
-                    <input asp-for="Code" class="form-control" autocomplete="off" />
+                    <input asp-for="Code" class="form-control" autocomplete="off" autofocus style="width:14ch"/>
                     <span asp-validation-for="Code" class="text-danger"></span>
                 </div>
                 <button type="submit" class="btn btn-primary mt-2">Verify</button>

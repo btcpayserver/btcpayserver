@@ -136,35 +136,43 @@ retry:
             ScrollTo(driver, driver.FindElement(selector));
         }
         
-        public static void WaitForAndClick(this IWebDriver driver, By selector)
+        public static void WaitUntilAvailable(this IWebDriver driver, By selector, TimeSpan? waitTime = null)
         {
             // Try fast path
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
             try
             {
-                driver.FindElement(selector).Click();
+                var el = driver.FindElement(selector);
+                wait.Until(_ => el.Displayed && el.Enabled);
                 return;
             }
             catch { }
 
             // Sometimes, selenium complain, so we enter hack territory
-            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
             wait.UntilJsIsReady();
 
             int retriesLeft = 4;
-retry:
+            retry:
             try
             {
                 var el = driver.FindElement(selector);
-                wait.Until(d => el.Displayed && el.Enabled);
+                wait.Until(_ => el.Displayed && el.Enabled);
                 driver.ScrollTo(selector);
-                driver.FindElement(selector).Click();
+                driver.FindElement(selector);
             }
-            catch (ElementClickInterceptedException) when (retriesLeft > 0)
+            catch (NoSuchElementException) when (retriesLeft > 0)
             {
                 retriesLeft--;
+                if (waitTime != null) Thread.Sleep(waitTime.Value);
                 goto retry;
             }
             wait.UntilJsIsReady();
+        }
+        
+        public static void WaitForAndClick(this IWebDriver driver, By selector)
+        {
+            driver.WaitUntilAvailable(selector);
+            driver.FindElement(selector).Click();
         }
 
         public static void SetCheckbox(this IWebDriver driver, By selector, bool value)

@@ -99,6 +99,31 @@ namespace BTCPayServer.Services
             return IsRoleAdmin(await _userManager.GetRolesAsync(user));
         }
 
+        public async Task<bool> SetAdminUser(string userId, bool enableAdmin)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            IdentityResult res;
+            if (enableAdmin)
+            {
+                res = await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+            }
+            else
+            {
+                res = await _userManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
+            }
+
+            if (res.Succeeded)
+            {
+                _logger.LogInformation($"Successfully set admin status for user {user.Id}");
+            }
+            else
+            {
+                _logger.LogError($"Error setting admin status for user {user.Id}");
+            }
+
+            return res.Succeeded;
+        }
+
         public async Task DeleteUserAndAssociatedData(ApplicationUser user)
         {
             var userId = user.Id;
@@ -109,7 +134,17 @@ namespace BTCPayServer.Services
 
             await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
 
-            await _userManager.DeleteAsync(user);
+            user = await _userManager.FindByIdAsync(userId);
+            var res = await _userManager.DeleteAsync(user);
+            if (res.Succeeded)
+            {
+                _logger.LogInformation($"User {user.Id} was successfully deleted");
+            }
+            else
+            {
+                _logger.LogError($"Failed to delete user {user.Id}");
+            } 
+
             await _storeRepository.CleanUnreachableStores();
         }
 
@@ -127,7 +162,12 @@ namespace BTCPayServer.Services
                 return false;
             }
 
-            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count(applicationUser => !IsDisabled(applicationUser)) == 1;
+            var adminUsers = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            var enabledAdminUsers = adminUsers
+                                        .Where(applicationUser => !IsDisabled(applicationUser))
+                                        .Select(applicationUser => applicationUser.Id).ToList();
+
+            return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(user.Id);
         }
     }
 }

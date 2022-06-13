@@ -10922,6 +10922,15 @@ input[type="number"].hide-number-spin {
   -moz-appearance: textfield;
 }
 
+/* custom bg and border classes */
+.bg-medium {
+  background-color: var(--btcpay-body-bg-medium);
+}
+
+.border-medium {
+  border-color: var(--btcpay-body-border-medium);
+}
+
 /* set color for text on background */
 .bg-primary {
   color: var(--btcpay-primary-text);

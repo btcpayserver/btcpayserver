@@ -150,7 +150,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 }
                 catch (Exception)
                 {
-                    ModelState.AddModelError(nameof(viewModel.AccountIndex), "Could not create new account.");
+                    ModelState.AddModelError(nameof(viewModel.AccountIndex), "Could not create a new account.");
                 }
 
             }
@@ -159,12 +159,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 var valid = true;
                 if (viewModel.WalletFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletFile), "Please select the wallet file");
+                    ModelState.AddModelError(nameof(viewModel.WalletFile), "Please select the view-only wallet file");
                     valid = false;
                 }
                 if (viewModel.WalletKeysFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), "Please select the wallet.keys file");
+                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), "Please select the view-only wallet keys file");
                     valid = false;
                 }
 
@@ -177,7 +177,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                             TempData.SetStatusMessageModel(new StatusMessageModel()
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Error,
-                                Message = $"There is already an active wallet configured for {cryptoCode}. Replacing it would break any existing invoices"
+                                Message = $"There is already an active wallet configured for {cryptoCode}. Replacing it would break any existing invoices!"
                             });
                             return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod),
                                 new { cryptoCode });
@@ -227,7 +227,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                     return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new
                     {
                         cryptoCode,
-                        StatusMessage = "Wallet files uploaded. If it was valid, the wallet will become available soon"
+                        StatusMessage = "View-only wallet files uploaded. If they are valid the wallet will soon become available."
 
                     });
                 }

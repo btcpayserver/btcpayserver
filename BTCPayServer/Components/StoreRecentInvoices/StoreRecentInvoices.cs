@@ -38,6 +38,7 @@ public class StoreRecentInvoices : ViewComponent
             {
                 UserId = userId,
                 StoreId = new [] { store.Id },
+                IncludeArchived = false,
                 Take = 5
             });
         var invoices = new List<StoreRecentInvoiceViewModel>();

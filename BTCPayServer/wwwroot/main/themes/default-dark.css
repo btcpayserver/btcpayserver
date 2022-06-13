@@ -41,6 +41,7 @@
   --btcpay-secondary: transparent;
   --btcpay-secondary-text-active: var(--btcpay-primary);
   --btcpay-secondary-border: var(--btcpay-neutral-700);
+  --btcpay-secondary-rgb: 22, 27, 34;
   --btcpay-light: var(--btcpay-neutral-800);
   --btcpay-light-accent: var(--btcpay-black);
   --btcpay-light-text: var(--btcpay-neutral-200);

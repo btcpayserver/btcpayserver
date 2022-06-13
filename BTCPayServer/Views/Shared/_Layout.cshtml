@@ -1,4 +1,8 @@
-@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Extensions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.StoreSelector
+@using BTCPayServer.Components.MainNav
+@using BTCPayServer.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
@@ -6,6 +10,7 @@
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 
 @{
+    var notificationsReturnUrl = Context.Request.GetCurrentPathWithQueryString();
     var notificationDisabled = PoliciesSettings.DisableInstantNotifications;
     if (!notificationDisabled)
     {
@@ -23,14 +28,14 @@
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column">
     <div id="mainMenuHead">
-        <vc:store-selector />
-        @if (_signInManager.IsSignedIn(User))
-        {
-            <vc:notifications appearance="Dropdown"/>
-        }
         <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span>Menu</span>
         </button>
+        <vc:store-selector />
+        @if (_signInManager.IsSignedIn(User))
+        {
+            <vc:notifications appearance="Dropdown" return-url="@notificationsReturnUrl" />
+        }
     </div>
     <vc:main-nav />
 </header>
@@ -75,9 +80,9 @@
         <script>
             if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
                 const { host, protocol } = window.location;
-                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: this.Context.Request.PathBase)";
+                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: Context.Request.PathBase)";
 				wsUri = (protocol === "https:" ? "wss:" : "ws:") + "//" + host + wsUri;
-                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: this.Context.Request.PathBase)";
+                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: Context.Request.PathBase, values: new { returnUrl = notificationsReturnUrl })";
                 try {
                     socket = new WebSocket(wsUri);
                     socket.onmessage = e => {

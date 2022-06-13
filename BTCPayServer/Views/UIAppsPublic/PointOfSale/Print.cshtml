@@ -1,7 +1,9 @@
 @using BTCPayServer.Models.AppViewModels
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services.Stores
 @using LNURL
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject StoreRepository StoreRepository
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 
 <style>
@@ -16,11 +18,12 @@
 </style>
 
 @{
+    var store = await StoreRepository.FindStore(Model.StoreId);
     Layout = "_LayoutPos";
     Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
     var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
-    var supported = Model.Store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
-    if (supported != null && !Model.Store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
+    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
     {
         supported = null;
     }
@@ -30,7 +33,7 @@
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
         LNURL is not enabled on your store, which this print feature relies on.
-        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@Model.Store.Id" class="alert-link p-0">
+        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@store.Id" class="alert-link p-0">
             Enable LNURL
         </a>
     </div>

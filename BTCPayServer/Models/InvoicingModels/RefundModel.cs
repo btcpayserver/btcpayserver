@@ -6,13 +6,14 @@ namespace BTCPayServer.Models.InvoicingModels
     public enum RefundSteps
     {
         SelectPaymentMethod,
-        SelectRate,
-        SelectCustomAmount
+        SelectRate
     }
+    
     public class RefundModel
     {
         public string Title { get; set; }
         public SelectList AvailablePaymentMethods { get; set; }
+        
         [Display(Name = "Select the payment method used for refund")]
         public string SelectedPaymentMethod { get; set; }
         public RefundSteps RefundStep { get; set; }

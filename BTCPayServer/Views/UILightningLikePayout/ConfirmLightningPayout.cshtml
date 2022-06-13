@@ -5,20 +5,19 @@
     var cryptoCode = Context.GetRouteValue("cryptoCode");
 }
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<h2 class="mt-1 mb-2">@ViewData["Title"]</h2>
 <div class="row">
     <div class="col-md-12">
-        <ul class="list-group">
+        <ul class="list-group list-group-flush">
             @foreach (var item in Model)
             {
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="text-break" style="max-width:60em;">@item.Destination</div>
-                    <span class="text-capitalize badge bg-secondary">@item.Amount @cryptoCode</span>
+                <li class="list-group-item py-4 px-0">
+                    <div class="text-break">@item.Destination</div>
+                    <form method="post" class="mt-4 mb-1" id="pay-invoices-form">
+                        <button type="submit" class="btn btn-primary" id="Pay">Pay @item.Amount @cryptoCode</button>
+                        <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-secondary mx-2 px-4">Cancel</a>
+                    </form>
                 </li>
-                <form method="post" class="list-group-item justify-content-center" id="pay-invoices-form">
-                    <button type="submit" class="btn btn-primary px-5" id="Pay">Pay</button>
-                    <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-secondary mx-2 px-4">Cancel</a>
-                </form>
             }
         </ul>
     </div>

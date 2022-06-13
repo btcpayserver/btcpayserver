@@ -615,7 +615,7 @@ namespace BTCPayServer.Controllers
                 var walletTransactionsInfoAsync = await WalletRepository.GetWalletTransactionsInfo(walletId);
 
                 var utxos = await _walletProvider.GetWallet(network)
-                    .GetUnspentCoins(schemeSettings.AccountDerivation, cancellation);
+                    .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);

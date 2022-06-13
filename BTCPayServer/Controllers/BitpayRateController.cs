@@ -25,33 +25,24 @@ namespace BTCPayServer.Controllers
     [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class BitpayRateController : Controller
     {
-        public StoreData CurrentStore
-        {
-            get
-            {
-                return HttpContext.GetStoreData();
-            }
-        }
+        
+        readonly RateFetcher _rateProviderFactory;
+        readonly BTCPayNetworkProvider _networkProvider;
+        readonly CurrencyNameTable _currencyNameTable;
+        readonly StoreRepository _storeRepo;
 
-        readonly RateFetcher _RateProviderFactory;
-        readonly BTCPayNetworkProvider _NetworkProvider;
-        readonly CurrencyNameTable _CurrencyNameTable;
-        readonly StoreRepository _StoreRepo;
-
-        public TokenRepository TokenRepository { get; }
+        private StoreData CurrentStore => HttpContext.GetStoreData();
 
         public BitpayRateController(
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
-            TokenRepository tokenRepository,
             StoreRepository storeRepo,
             CurrencyNameTable currencyNameTable)
         {
-            _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
-            _NetworkProvider = networkProvider;
-            TokenRepository = tokenRepository;
-            _StoreRepo = storeRepo;
-            _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+            _rateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
+            _networkProvider = networkProvider;
+            _storeRepo = storeRepo;
+            _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
         }
 
         [Route("rates/{baseCurrency}")]
@@ -59,7 +50,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, CancellationToken cancellationToken)
         {
-            var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider);
+            var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_networkProvider);
 
             var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
                 .Select(method => method.PaymentId.CryptoCode).Distinct();
@@ -68,44 +59,37 @@ namespace BTCPayServer.Controllers
 
             var result = await GetRates2(currencypairs, null, cancellationToken);
             var rates = (result as JsonResult)?.Value as Rate[];
-            if (rates == null)
-                return result;
-            return Json(new DataWrapper<Rate[]>(rates));
+            return rates == null ? result : Json(new DataWrapper<Rate[]>(rates));
         }
 
-        [Route("rates/{baseCurrency}/{currency}")]
-        [HttpGet]
+        [HttpGet("rates/{baseCurrency}/{currency}")]
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, CancellationToken cancellationToken)
         {
             var result = await GetRates2($"{baseCurrency}_{currency}", null, cancellationToken);
-            var rates = (result as JsonResult)?.Value as Rate[];
-            if (rates == null)
-                return result;
-            return Json(new DataWrapper<Rate>(rates.First()));
+            return (result as JsonResult)?.Value is not Rate[] rates 
+                ? result
+                : Json(new DataWrapper<Rate>(rates.First()));
         }
 
-        [Route("rates")]
-        [HttpGet]
+        [HttpGet("rates")]
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, CancellationToken cancellationToken = default)
         {
             var result = await GetRates2(currencyPairs, storeId, cancellationToken);
-            var rates = (result as JsonResult)?.Value as Rate[];
-            if (rates == null)
-                return result;
-            return Json(new DataWrapper<Rate[]>(rates));
+            return (result as JsonResult)?.Value is not Rate[] rates
+                ? result
+                : Json(new DataWrapper<Rate[]>(rates));
         }
 
-        [Route("api/rates")]
-        [HttpGet]
         [AllowAnonymous]
+        [HttpGet("api/rates")]
         public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
-            var store = this.CurrentStore ?? await this._StoreRepo.FindStore(storeId);
+            var store = CurrentStore ?? await _storeRepo.FindStore(storeId);
             if (store == null)
             {
-                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
+                var err = Json(new BitpayErrorsModel { Error = "Store not found" });
                 err.StatusCode = 404;
                 return err;
             }
@@ -120,10 +104,8 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-
-            var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
-
-            HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
+            var rules = store.GetStoreBlob().GetRateRules(_networkProvider);
+            var pairs = new HashSet<CurrencyPair>();
             foreach (var currency in currencyPairs.Split(','))
             {
                 if (!CurrencyPair.TryParse(currency, out var pair))
@@ -135,25 +117,25 @@ namespace BTCPayServer.Controllers
                 pairs.Add(pair);
             }
 
-            var fetching = _RateProviderFactory.FetchRates(pairs, rules, cancellationToken);
+            var fetching = _rateProviderFactory.FetchRates(pairs, rules, cancellationToken);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>
-                            new Rate()
+                            new Rate
                             {
                                 CryptoCode = r.Pair.Left,
                                 Code = r.Pair.Right,
                                 CurrencyPair = r.Pair.ToString(),
-                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right, true).Name,
+                                Name = _currencyNameTable.GetCurrencyData(r.Pair.Right, true).Name,
                                 Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
         }
 
         private static string BuildCurrencyPairs(IEnumerable<string> currencyCodes, string baseCrypto)
         {
-            StringBuilder currencyPairsBuilder = new StringBuilder();
+            var currencyPairsBuilder = new StringBuilder();
             bool first = true;
             foreach (var currencyCode in currencyCodes)
             {
@@ -169,37 +151,19 @@ namespace BTCPayServer.Controllers
         {
 
             [JsonProperty(PropertyName = "name")]
-            public string Name
-            {
-                get;
-                set;
-            }
+            public string Name { get; set; }
+            
             [JsonProperty(PropertyName = "cryptoCode")]
-            public string CryptoCode
-            {
-                get;
-                set;
-            }
+            public string CryptoCode { get; set; }
 
             [JsonProperty(PropertyName = "currencyPair")]
-            public string CurrencyPair
-            {
-                get;
-                set;
-            }
+            public string CurrencyPair { get; set; }
 
             [JsonProperty(PropertyName = "code")]
-            public string Code
-            {
-                get;
-                set;
-            }
+            public string Code { get; set; }
+            
             [JsonProperty(PropertyName = "rate")]
-            public decimal Value
-            {
-                get;
-                set;
-            }
+            public decimal Value { get; set; }
         }
     }
 }

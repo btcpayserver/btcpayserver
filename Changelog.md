@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.4
+
+### New features:
+
+* Allow resending verification email for users (#3726) @bolatovumar
+
+### Bug fixes:
+
+* Allow pull payments denominated in SATS to be claimed (#3778) @dennisreimann
+* Balance was not updated after a wallet rescan @NicolasDorier
+
 ## 1.5.3
 
 ### New features:

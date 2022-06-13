@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.AppViewModels
@@ -66,7 +65,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
-
-        public StoreData Store { get; set; }
+        public string StoreId { get; set; }
     }
 }

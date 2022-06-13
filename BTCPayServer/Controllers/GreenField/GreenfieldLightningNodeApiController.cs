@@ -160,7 +160,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            return Ok(new JValue((await lightningClient.GetDepositAddress(cancellationToken)).ToString()));
+            var addr = await lightningClient.GetDepositAddress(cancellationToken);
+            return Ok(new JValue(addr.ToString()));
         }
 
         public virtual async Task<IActionResult> GetPayment(string cryptoCode, string paymentHash, CancellationToken cancellationToken = default)

@@ -1,0 +1,87 @@
+﻿@model RefundModel
+
+@{
+    Layout = null;
+}
+
+<form method="post" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")" id="RefundForm">
+    <input type="hidden" asp-for="RefundStep" value="@Model.RefundStep"/>
+    <input type="hidden" asp-for="Title" value="@Model.Title"/>
+    <input type="hidden" asp-for="RateThenText" value="@Model.RateThenText"/>
+    <input type="hidden" asp-for="CurrentRateText" value="@Model.CurrentRateText"/>
+    <input type="hidden" asp-for="FiatText" value="@Model.FiatText"/>
+    
+    <h5 class="mb-3">@Model.Title</h5>
+
+    @switch (Model.RefundStep)
+    {
+        case RefundSteps.SelectPaymentMethod:
+            <div class="form-group">
+                <label asp-for="SelectedPaymentMethod" class="form-label"></label>
+                <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-select"></select>
+                <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <button id="ok" type="submit" class="btn btn-primary w-100">Next</button>
+            </div>
+            break;
+            
+        case RefundSteps.SelectRate:
+            <input type="hidden" asp-for="SelectedPaymentMethod"/>
+            <input type="hidden" asp-for="CryptoAmountThen"/>
+            <input type="hidden" asp-for="FiatAmount"/>
+            <input type="hidden" asp-for="CryptoAmountNow"/>
+            <style>
+                #CustomOption ~ .form-group { display: none; }
+                #CustomOption:checked ~ .form-group { display: block; }
+            </style>
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="RateThenOption" asp-for="SelectedRefundOption" type="radio" value="RateThen" class="form-check-input"/>
+                    <label for="RateThenOption" class="form-check-label">@Model.RateThenText</label>
+                    <div class="form-text text-muted">The crypto currency price, at the rate the invoice got paid.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="CurrentRateOption" asp-for="SelectedRefundOption" type="radio" value="CurrentRate" class="form-check-input"/>
+                    <label for="CurrentRateOption" class="form-check-label">@Model.CurrentRateText</label>
+                    <div class="form-text text-muted">The crypto currency price, at the current rate.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="FiatOption" asp-for="SelectedRefundOption" type="radio" value="Fiat" class="form-check-input"/>
+                    <label for="FiatOption" class="form-check-label">@Model.FiatText</label>
+                    <div class="form-text text-muted">The invoice currency, at the rate when the refund will be sent.</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="CustomOption" asp-for="SelectedRefundOption" type="radio" value="Custom" class="form-check-input"/>
+                    <label for="CustomOption" class="form-check-label">Custom amount</label>
+                    <div class="form-text text-muted">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
+                    <div class="form-group pt-2">
+                        <label asp-for="CustomAmount" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
+                            <input asp-for="CustomCurrency" type="text" class="form-control" currency-selection style="max-width:10ch;"/>
+                        </div>
+                        <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
+                        <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <span asp-validation-for="SelectedRefundOption" class="text-danger w-100"></span>
+            </div>
+            
+            <div class="form-group">
+                <button id="ok" type="submit" class="btn btn-primary w-100">Create refund</button>
+            </div>
+            break;
+    }
+</form>

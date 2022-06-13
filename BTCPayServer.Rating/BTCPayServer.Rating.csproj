@@ -8,7 +8,7 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="NBitcoin" Version="7.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.6.3" />
+    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>

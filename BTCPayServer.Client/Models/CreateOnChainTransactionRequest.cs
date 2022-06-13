@@ -26,5 +26,6 @@ namespace BTCPayServer.Client.Models
         public List<CreateOnChainTransactionRequestDestination> Destinations { get; set; }
         [JsonProperty("rbf")]
         public bool? RBF { get; set; } = null;
+        public bool ExcludeUnconfirmed { get; set; } = false;
     }
 }

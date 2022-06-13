@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
@@ -131,5 +132,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool CanMarkSettled { get; set; }
         public bool CanMarkInvalid { get; set; }
         public bool CanMarkStatus => CanMarkSettled || CanMarkInvalid;
+        public List<RefundData> Refunds { get; set; }
     }
 }

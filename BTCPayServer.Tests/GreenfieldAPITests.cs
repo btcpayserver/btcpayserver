@@ -47,18 +47,26 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
         public async Task LocalClientTests()
         {
             using var tester = CreateServerTester();
+            tester.ActivateLightning();
             await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             await user.MakeAdmin();
+            user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
             var factory = tester.PayTester.GetService<IBTCPayServerClientFactory>();
             Assert.NotNull(factory);
-            var client = await factory.Create(user.UserId);
+            var client = await factory.Create(user.UserId, user.StoreId);
             var u = await client.GetCurrentUser();
             var s = await client.GetStores();
+            var store = await client.GetStore(user.StoreId);
+            Assert.NotNull(store);
+            var addr = await client.GetLightningDepositAddress(user.StoreId,"BTC");
+            Assert.NotNull(BitcoinAddress.Create(addr, Network.RegTest));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -179,6 +187,22 @@ namespace BTCPayServer.Tests
             await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
         }
 
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCreatePointOfSaleAppViaAPI()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+            var app = await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { AppName = "test app from API"  });
+            
+            Assert.Equal("test app from API", app.Name);
+            Assert.Equal(user.StoreId, app.StoreId);
+            Assert.Equal("PointOfSale", app.AppType);
+        }
+        
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanDeleteUsersViaApi()
@@ -2054,6 +2078,18 @@ namespace BTCPayServer.Tests
             Assert.True((await tester.ExplorerNode.TestMempoolAcceptAsync(tx)).IsAllowed);
 
             createTxRequest.NoChange = false;
+
+            // Validation for excluding unconfirmed UTXOs and manually selecting inputs at the same time
+            await AssertValidationError(new[] { "ExcludeUnconfirmed" }, async () =>
+              {
+                createTxRequest.SelectedInputs = new List<OutPoint>();
+                createTxRequest.ExcludeUnconfirmed = true;
+                tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                    createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+              });
+            createTxRequest.SelectedInputs = null;
+            createTxRequest.ExcludeUnconfirmed = false;
+
             //coin selection
             await AssertValidationError(new[] { nameof(createTxRequest.SelectedInputs) }, async () =>
               {

@@ -76,6 +76,7 @@ namespace BTCPayServer.Hosting
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
+            services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
@@ -99,6 +100,7 @@ namespace BTCPayServer.Hosting
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
+            services.TryAddSingleton<IStoreRepository>(provider => provider.GetService<StoreRepository>());
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());

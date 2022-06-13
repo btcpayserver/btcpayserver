@@ -407,7 +407,7 @@ namespace BTCPayServer.Controllers
             var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
             {
-                Name = storageSettings == null ? "Not set" : storageSettings.Provider.ToString(),
+                Name = storageSettings == null ? "Not set" : typeof(StorageProvider).DisplayName(storageSettings.Provider.ToString()),
                 Link = Url.Action("Storage")
             });
             return View(result);

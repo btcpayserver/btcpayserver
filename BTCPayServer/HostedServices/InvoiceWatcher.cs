@@ -29,7 +29,6 @@ namespace BTCPayServer.HostedServices
             public List<object> Events { get; set; } = new List<object>();
 
             bool _Dirty = false;
-            private bool _Unaffect;
 
             public void MarkDirty()
             {

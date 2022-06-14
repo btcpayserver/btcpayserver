@@ -1006,7 +1006,6 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
-
             if (command == "Test")
             {
                 try
@@ -1027,7 +1026,7 @@ namespace BTCPayServer.Controllers
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
                 }
                 catch (Exception ex)
                 {
@@ -1035,7 +1034,8 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else if (command == "ResetPassword")
+            
+            if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 settings.Password = null;
@@ -1043,17 +1043,15 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if(command == "Save")
+            
+            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (new EmailsViewModel(oldSettings).PasswordSet)
             {
-                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                if (new EmailsViewModel(oldSettings).PasswordSet)
-                {
-                    model.Settings.Password = oldSettings.Password;
-                }
-                await _SettingsRepository.UpdateSetting(model.Settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-                return RedirectToAction(nameof(Emails));
+                model.Settings.Password = oldSettings.Password;
             }
+            await _SettingsRepository.UpdateSetting(model.Settings);
+            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

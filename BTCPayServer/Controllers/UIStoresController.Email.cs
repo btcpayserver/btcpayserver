@@ -19,13 +19,13 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-
         [HttpGet("{storeId}/emails")]
-        public async Task<IActionResult> StoreEmails(string storeId)
+        public IActionResult StoreEmails(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
+            
             var blob = store.GetStoreBlob();
             var data = blob.EmailSettings;
             if (data?.IsComplete() is not true)
@@ -37,11 +37,10 @@ namespace BTCPayServer.Controllers
                 });
                  return RedirectToAction();
             }
-            return View( new StoreEmailRuleViewModel(){ Rules = blob.EmailRules??new List<StoreEmailRule>() });
-        }
 
-        
-        
+            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? new List<StoreEmailRule>() };
+            return View(vm);
+        }
 
         [HttpPost("{storeId}/emails")]
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
@@ -49,8 +48,8 @@ namespace BTCPayServer.Controllers
             vm.Rules ??= new List<StoreEmailRule>();
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                var index = int.Parse(
-                    command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1));
+                var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
+                var index = int.Parse(item);
                 vm.Rules.RemoveAt(index);
                 
                 return View(vm);
@@ -74,10 +73,10 @@ namespace BTCPayServer.Controllers
             blob.EmailRules = vm.Rules;
             store.SetStoreBlob(blob);
             await _Repo.UpdateStore(store);
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = $"Store email rules saved"
+                Message = "Store email rules saved"
             });
             return RedirectToAction("StoreEmails", new {storeId});
         }
@@ -86,20 +85,18 @@ namespace BTCPayServer.Controllers
         {
             public List<StoreEmailRule> Rules { get; set; }
         }
+        
         public class StoreEmailRule
         {
             [Required]
             public WebhookEventType Trigger { get; set; }
             public bool CustomerEmail { get; set; }
             public string To { get; set; }
-            public string CC { get; set; }
-            public string BCC { get; set; }
             public string Body { get; set; }
             public string Subject { get; set; }
         }
         
-        
-        [Route("{storeId}/email-settings")]
+        [HttpGet("{storeId}/email-settings")]
         public IActionResult StoreEmailSettings()
         {
             var store = HttpContext.GetStoreData();
@@ -109,13 +106,13 @@ namespace BTCPayServer.Controllers
             return View(new EmailsViewModel(data));
         }
 
-        [Route("{storeId}/email-settings")]
-        [HttpPost]
+        [HttpPost("{storeId}/email-settings")]
         public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
+            
             if (command == "Test")
             {
                 try
@@ -133,7 +130,7 @@ namespace BTCPayServer.Controllers
                     var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
-                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
                 }
                 catch (Exception ex)
                 {
@@ -141,23 +138,20 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else if (command == "ResetPassword")
+            
+            if (command == "ResetPassword")
             {
                 var storeBlob = store.GetStoreBlob();
                 storeBlob.EmailSettings.Password = null;
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
-                return RedirectToAction(nameof(StoreEmailSettings), new
-                {
-                    storeId
-                });
+                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
-            else // if(command == "Save")
+            else
             {
                 var storeBlob = store.GetStoreBlob();
-                var oldPassword = storeBlob.EmailSettings?.Password;
-                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet)
+                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)
                 {
                     model.Settings.Password = storeBlob.EmailSettings.Password;
                 }
@@ -165,10 +159,7 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(StoreEmailSettings), new
-                {
-                    storeId
-                });
+                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
         }
     }

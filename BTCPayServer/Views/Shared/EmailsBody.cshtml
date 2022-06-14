@@ -1,14 +1,14 @@
 @model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <div class="d-flex">
                 @if (!string.IsNullOrEmpty(Context.GetRouteValue("storeId")?.ToString()) && Model.Settings.IsComplete())
                 {
                     <a class="btn btn-secondary me-3" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                        Email rules
+                        Email Rules
                     </a>
                 }
                 <div class="dropdown only-for-js" id="quick-fill">
@@ -30,7 +30,7 @@
 
 <form method="post" autocomplete="off">
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
+        <div class="col-xl-10 col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All" class="text-danger"></div>

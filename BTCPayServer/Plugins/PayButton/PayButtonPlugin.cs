@@ -8,8 +8,8 @@ namespace BTCPayServer.Plugins.PayButton
     public class PayButtonPlugin : BaseBTCPayServerPlugin
     {
         public override string Identifier => "BTCPayServer.Plugins.PayButton";
-        public override string Name => "PayButton";
-        public override string Description => "Easily-embeddable HTML and highly-customizable payment button.";
+        public override string Name => "Pay Button";
+        public override string Description => "Easily-embeddable HTML button for accepting tips and donations .";
 
         public override void Execute(IServiceCollection services)
         {

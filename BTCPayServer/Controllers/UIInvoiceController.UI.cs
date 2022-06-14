@@ -177,14 +177,18 @@ namespace BTCPayServer.Controllers
             {
                 if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
                 {
-                    return View(new InvoiceReceiptViewModel() {InvoiceId = i.Id, Status = i.Status.ToModernStatus()});
-
+                    return View(new InvoiceReceiptViewModel
+                    {
+                        InvoiceId = i.Id,
+                        Status = i.Status.ToModernStatus()
+                    });
                 }
+                
                 i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
                 i.Metadata.AdditionalData.TryGetValue("receiptShowQR", out var showQR);
                 i.Metadata.AdditionalData.TryGetValue("receiptShowPayments", out var showPayments);
 
-                return View(new InvoiceReceiptViewModel()
+                return View(new InvoiceReceiptViewModel
                 {
                     Status = i.Status.ToModernStatus(),
                     Amount = i.Price,

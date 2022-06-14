@@ -16,7 +16,7 @@ public class AssetPairData
     public string AssetBought { set; get; }
     public string AssetSold { set; get; }
 
-    public string ToString()
+    public override string ToString()
     {
         return AssetBought + "/" + AssetSold;
     }

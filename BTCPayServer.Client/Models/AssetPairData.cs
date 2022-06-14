@@ -2,21 +2,20 @@ namespace BTCPayServer.Client.Models;
 
 public class AssetPairData
 {
-
     public AssetPairData()
     {
     }
     
-    public AssetPairData(string AssetBought, string AssetSold)
+    public AssetPairData(string assetBought, string assetSold)
     {
-        this.AssetBought = AssetBought;
-        this.AssetSold = AssetSold;
+        AssetBought = assetBought;
+        AssetSold = assetSold;
     }
     
     public string AssetBought { set; get; }
     public string AssetSold { set; get; }
 
-    public string ToString()
+    public override string ToString()
     {
         return AssetBought + "/" + AssetSold;
     }

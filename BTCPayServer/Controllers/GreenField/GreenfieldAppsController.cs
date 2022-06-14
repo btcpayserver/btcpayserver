@@ -43,8 +43,12 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return validationResult;
             }
-
-            var defaultCurrency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+            
+            var store = await _storeRepository.FindStore(storeId);
+            if (store == null)
+                return this.CreateAPIError(404, "store-not-found", "The store was not found");
+            
+            var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
             var appData = new AppData
             {
                 StoreDataId = storeId,

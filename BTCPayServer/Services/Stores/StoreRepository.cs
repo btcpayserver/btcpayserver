@@ -33,7 +33,7 @@ namespace BTCPayServer.Services.Stores
         {
             if (storeId == null)
                 return null;
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var result = await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
             return result;
         }

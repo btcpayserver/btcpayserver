@@ -164,11 +164,11 @@ namespace BTCPayServer.Plugins.Shopify
                     order = await client.GetOrder(orderId);
                 }
 
-                 return Ok(new
-                    {
-                        invoiceId = firstInvoiceSettled.Id,
-                        status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
-                    });
+                return Ok(new
+                {
+                    invoiceId = firstInvoiceSettled.Id,
+                    status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
+                });
             }
 
             if (checkOnly)
@@ -248,12 +248,20 @@ namespace BTCPayServer.Plugins.Shopify
                                 "Shopify rejected provided credentials, please correct values and try again";
                             return View(vm);
                         }
-
-                        var scopesGranted = await apiClient.CheckScopes();
-                        if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
+                        try
+                        {
+                            var scopesGranted = await apiClient.CheckScopes();
+                            if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
+                            {
+                                TempData[WellKnownTempData.ErrorMessage] =
+                                    "Please grant the private app permissions for read_orders, write_orders";
+                                return View(vm);
+                            }
+                        }
+                        catch (System.NullReferenceException)
                         {
                             TempData[WellKnownTempData.ErrorMessage] =
-                                "Please grant the private app permissions for read_orders, write_orders";
+                                       "Please verify your Shopify Store Name.";
                             return View(vm);
                         }
 

@@ -25,16 +25,19 @@
         }
     </div>
     <header class="mb-3">
-        @if (Model.Balance is not null)
+        @if (Model.Balance != null)
         {
             <div class="balance" id="Balance-@Model.CryptoCode">
                 <h3 class="d-inline-block me-1">@Model.Balance</h3>
                 <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
             </div>
-            <div class="balance" id="Balance-@Model.DefaultCurrency">
-                <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
-                <span class="text-secondary fw-semibold">@Model.DefaultCurrency</span>
-            </div>
+            @if (Model.CryptoCode != Model.DefaultCurrency)
+            {
+                <div class="balance" id="Balance-@Model.DefaultCurrency">
+                    <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
+                    <span class="text-secondary fw-semibold">@Model.DefaultCurrency</span>
+                </div>
+            }
         }
         <div class="btn-group mt-1" role="group" aria-label="Filter">
             <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
@@ -60,8 +63,6 @@
             const $cryptoBalance = document.getElementById(`Balance-${cryptoCode}`);
             const $defaultBalance = document.getElementById(`Balance-${defaultCurrency}`);
             const $defaultCurrencyBalance = document.getElementById('DefaultCurrencyBalance');
-            
-            $defaultBalance.style.display = 'none';
             
             const id = `StoreWalletBalance-${storeId}`;
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
@@ -89,6 +90,10 @@
                     labels,
                     series: [series]
                 }, renderOpts);
+                if (cryptoCode !== defaultCurrency) {
+                    $cryptoBalance.style.display = rate ? 'none' : 'block';
+                    $defaultBalance.style.display = rate ? 'block' : 'none';
+                }
                 // prevent y-axis labels from getting cut off
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
@@ -147,8 +152,6 @@
                         rate = null;
                         render(data);
                     }
-                    $cryptoBalance.style.display = rate ? 'none' : 'block';
-                    $defaultBalance.style.display = rate ? 'block' : 'none';
                 });
             });
         })();

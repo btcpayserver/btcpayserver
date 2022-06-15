@@ -106,7 +106,7 @@
             <button href="#" class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it." disabled>Issue refund</button>
         }
         <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
-            <button type="submit" class="btn @(Model.Archived ? "btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
+            <button type="submit" class="btn btn-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
                     <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this invoice">Unarchive</span>

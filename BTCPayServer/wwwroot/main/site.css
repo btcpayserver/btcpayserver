@@ -124,6 +124,17 @@ a.unobtrusive-link {
 }
 
 /* Info icons in main headline */
+svg.icon.icon-info {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--btcpay-neutral-500);
+}
+
+h2 svg.icon.icon-info {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 h2 small .fa-question-circle-o {
     position: relative;
     top: -.1rem;

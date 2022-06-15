@@ -153,11 +153,7 @@ function inputChanges(event, buttonSize) {
         html += '  </div>\n';
     }
 
-    if (
-        allowDefaultPaymentMethodSelection &&
-        // Only add default payment method to HTML if user explicitly selected it
-        event && event.target.id === 'default-payment-method' && event.target.value !== ""
-    )
+    if (allowDefaultPaymentMethodSelection && srvModel.defaultPaymentMethod !== "")
     {
         html += addInput("defaultPaymentMethod", srvModel.defaultPaymentMethod)
     }

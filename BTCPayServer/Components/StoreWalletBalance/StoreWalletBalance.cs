@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Dapper;
@@ -22,11 +23,17 @@ public class StoreWalletBalance : ViewComponent
     private const WalletHistogramType DefaultType = WalletHistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
+    private readonly CurrencyNameTable _currencies;
     private readonly WalletHistogramService _walletHistogramService;
 
-    public StoreWalletBalance(StoreRepository storeRepo, WalletHistogramService walletHistogramService, BTCPayNetworkProvider networkProvider)
+    public StoreWalletBalance(
+        StoreRepository storeRepo,
+        CurrencyNameTable currencies,
+        WalletHistogramService walletHistogramService, 
+        BTCPayNetworkProvider networkProvider)
     {
         _storeRepo = storeRepo;
+        _currencies = currencies;
         _walletHistogramService = walletHistogramService;
         _cryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
@@ -35,11 +42,14 @@ public class StoreWalletBalance : ViewComponent
     {
         var walletId = new WalletId(store.Id, _cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
+        var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
         
         var vm = new StoreWalletBalanceViewModel
         {
             Store = store,
             CryptoCode = _cryptoCode,
+            CurrencyData = _currencies.GetCurrencyData(defaultCurrency, true),
+            DefaultCurrency = defaultCurrency,
             WalletId = walletId,
             Series = data?.Series,
             Labels = data?.Labels,

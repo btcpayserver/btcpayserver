@@ -125,8 +125,6 @@ a.unobtrusive-link {
 
 /* Info icons in main headline */
 svg.icon.icon-info {
-    width: 1.25rem;
-    height: 1.25rem;
     color: var(--btcpay-neutral-500);
 }
 

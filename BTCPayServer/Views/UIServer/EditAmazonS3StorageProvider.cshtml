@@ -1,12 +1,12 @@
 @model BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration.AmazonS3StorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "Amazon S3 Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "Amazon S3 Storage");
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         <form method="post">
             <div class="form-group">
                 <label asp-for="ContainerName" class="form-label"></label>

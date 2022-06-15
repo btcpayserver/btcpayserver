@@ -292,8 +292,7 @@ namespace BTCPayServer.Controllers
             return View(_policiesSettings);
         }
 
-        [Route("server/policies")]
-        [HttpPost]
+        [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
 
@@ -352,10 +351,9 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public async Task<IActionResult> Services()
+        public IActionResult Services()
         {
-            var result = new ServicesViewModel();
-            result.ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList();
+            var result = new ServicesViewModel { ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList() };
 
             // other services
             foreach (var externalService in _externalServiceOptions.Value.OtherExternalServices)
@@ -363,7 +361,7 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = externalService.Key,
-                    Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
+                    Link = Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
             if (CanShowSSHService())
@@ -371,13 +369,13 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = "SSH",
-                    Link = this.Url.Action(nameof(SSHService))
+                    Link = Url.Action(nameof(SSHService))
                 });
             }
             result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
             {
                 Name = "Dynamic DNS",
-                Link = this.Url.Action(nameof(DynamicDnsServices))
+                Link = Url.Action(nameof(DynamicDnsServices))
             });
             foreach (var torService in _torServices.Services)
             {
@@ -402,14 +400,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-
-            // external storage services
-            var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
-            result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
-            {
-                Name = storageSettings == null ? "Not set" : storageSettings.Provider.ToString(),
-                Link = Url.Action("Storage")
-            });
+            
             return View(result);
         }
 
@@ -462,8 +453,6 @@ namespace BTCPayServer.Controllers
             }
             return null;
         }
-
-
 
         [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, ulong? nonce = null)

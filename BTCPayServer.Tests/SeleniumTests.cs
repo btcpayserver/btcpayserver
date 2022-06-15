@@ -759,35 +759,38 @@ namespace BTCPayServer.Tests
             currencyInput.SendKeys("BTC");
             
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            var editUrl = s.Driver.Url;
+            
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            var viewUrl = s.Driver.Url;
+            
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
             Assert.Equal("Pay Invoice",
                 s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
 
             // expire
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            s.GoToUrl(editUrl);
             s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            s.Driver.Navigate().Refresh();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            
+            s.GoToUrl(viewUrl);
             Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
 
             // unexpire
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            s.GoToUrl(editUrl);
             s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            s.Driver.Navigate().Refresh();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            
+            s.GoToUrl(viewUrl);
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
             Assert.Equal("Pay Invoice",
                 s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
             
             // archive (from details page)
+            s.GoToUrl(editUrl);
             var payReqId = s.Driver.Url.Split('/').Last();
             s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
             Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);
@@ -1365,11 +1368,10 @@ namespace BTCPayServer.Tests
 
             newStore = s.CreateNewStore();
             s.AddLightningNode();
+            
             //Currently an onchain wallet is required to use the Lightning payouts feature..
             s.GenerateWallet("BTC", "", true, true);
-
             s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
-
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
             var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));

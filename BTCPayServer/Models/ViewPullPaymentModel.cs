@@ -19,6 +19,7 @@ namespace BTCPayServer.Models
         public ViewPullPaymentModel(PullPaymentData data, DateTimeOffset now)
         {
             Id = data.Id;
+            StoreId = data.StoreId;
             var blob = data.GetBlob();
             PaymentMethods = blob.SupportedPaymentMethods;
             SelectedPaymentMethod = PaymentMethods.First().ToString();
@@ -64,6 +65,8 @@ namespace BTCPayServer.Models
             }
         }
 
+        public string StoreId { get; set; }
+
         public string SelectedPaymentMethod { get; set; }
 
         public PaymentMethodId[] PaymentMethods { get; set; }
@@ -87,7 +90,7 @@ namespace BTCPayServer.Models
         public string Description { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
-        public List<PayoutLine> Payouts { get; set; } = new List<PayoutLine>();
+        public List<PayoutLine> Payouts { get; set; } = new ();
         public DateTimeOffset StartDate { get; set; }
         public DateTime LastRefreshed { get; set; }
         public CurrencyData CurrencyData { get; set; }

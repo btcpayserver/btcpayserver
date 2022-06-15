@@ -29,7 +29,7 @@
 }
 
 @section PageHeadContent {
-    <style type="text/css">
+    <style>
         .tooltip-inner {
             text-align: left;
         }
@@ -112,11 +112,13 @@
         {
             <tr>
                 <td>
-                    <a asp-action="ViewPullPayment"
-                       asp-controller="UIPullPayment"
-                       asp-route-pullPaymentId="@pp.Id" target="_blank">
+                    <a class="pp-payout"
+                       asp-action="Payouts"
+                       asp-route-storeId="@Context.GetRouteValue("storeId")"
+                       asp-route-pullPaymentId="@pp.Id">
                         @pp.Name
                     </a>
+                </td>
                 <td>@pp.StartDate.ToBrowserDate()</td>
                 <td>@pp.AutoApproveClaims</td>
                 <td class="align-middle">
@@ -130,11 +132,10 @@
                     </div>
                 </td>
                 <td class="text-end">
-                    <a class="pp-payout"
-                       asp-action="Payouts"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
+                    <a asp-action="ViewPullPayment"
+                       asp-controller="UIPullPayment"
                        asp-route-pullPaymentId="@pp.Id">
-                        Payouts
+                        View
                     </a>
                     @if (!pp.Archived)
                     {

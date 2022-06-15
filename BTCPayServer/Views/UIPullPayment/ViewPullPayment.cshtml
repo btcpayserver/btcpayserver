@@ -1,9 +1,12 @@
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Services.ThemeSettings Theme
 
 @using NUglify.Helpers
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
+@using BTCPayServer.Components.ThemeSwitch
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BundlerMinifier.TagHelpers
+@using BTCPayServer.TagHelpers
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
@@ -25,7 +28,7 @@
     }
 }
 <!DOCTYPE html>
-<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
@@ -43,8 +46,8 @@
         @if (Model.IsPending)
         {
             <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-none">
-                <div class="container">
-                    <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="w-100">
+                <div class="container gap-3">
+                    <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="flex-fill">
                         <div class="row align-items-center" style="width:calc(100% + 30px)">
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
                                 <div class="input-group">
@@ -145,9 +148,9 @@
                     <div class="col">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             <h2 class="h4 mb-0">Claims</h2>
-                            <div class="table-responsive">
-                                @if (Model.Payouts.Any())
-                                {
+                            @if (Model.Payouts.Any())
+                            {
+                                <div class="table-responsive">
                                     <table class="table my-0">
                                         <thead>
                                         <tr class="table-borderless">
@@ -180,18 +183,23 @@
                                         }
                                         </tbody>
                                     </table>
-                                }
-                                else
-                                {
-                                    <p class="text-muted mt-3 mb-0">No claim made yet.</p>
-                                }
-                            </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mt-3 mb-0">No claim made yet.</p>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         </main>
         <footer class="pt-2 pb-4 d-print-none">
+            <p class="container text-center" permission="@Policies.CanViewStoreSettings">
+                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.StoreId">
+                    Back to payouts
+                </a>
+            </p>
             <div class="container d-flex flex-wrap align-items-center justify-content-center">
                 <span class="text-muted mx-2">
                     Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>

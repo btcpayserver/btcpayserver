@@ -48,9 +48,15 @@ namespace BTCPayServer.Plugins.Shopify
             using var resp = await _httpClient.SendAsync(req);
 
             var strResp = await resp.Content.ReadAsStringAsync();
-            if (strResp?.StartsWith("{\"errors\":\"[API] Invalid API key or access token", StringComparison.OrdinalIgnoreCase) == true)
-                throw new ShopifyApiException("Invalid API key or access token");
-
+            if (strResp.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+            {
+                if (JObject.Parse(strResp)["errors"]?.Value<string>() is string error)
+                {
+                    if (error == "Not Found")
+                        error = "Shop not found";
+                    throw new ShopifyApiException(error);
+                }
+            }
             return strResp;
         }
 
@@ -73,7 +79,8 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<string[]> CheckScopes()
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, null, "admin/oauth/access_scopes.json");
-            return JObject.Parse(await SendRequest(req))["access_scopes"].Values<JToken>()
+            var c = JObject.Parse(await SendRequest(req));
+            return c["access_scopes"].Values<JToken>()
                 .Select(token => token["handle"].Value<string>()).ToArray();
         }
 

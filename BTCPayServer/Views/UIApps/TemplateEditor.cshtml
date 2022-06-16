@@ -2,7 +2,7 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group mb-0">
-        <h3 class="mt-5 mb-4">@Model.title </h3>
+        <h3 class="mt-5 mb-4">@Model.title</h3>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
@@ -37,7 +37,7 @@
                 <button type="button" class="btn btn-primary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
                     Toggle raw editor
                 </button>
             </div>
@@ -66,7 +66,6 @@
                                     </select>
                                 </div>
                                 <div class="col-sm-3" v-show="editingItem.custom !== 'topup'">
-
                                     <label class="form-label">&nbsp</label>
                                     <input class="form-control mb-2"
                                            inputmode="decimal"
@@ -76,6 +75,7 @@
                                            type="number"
                                            required
                                            v-model="editingItem.price" ref="txtPrice" />
+                                    
                                 </div>
                             </div>
                             <div class="form-group">
@@ -144,12 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
             this.loadYml();
             this.getInputElement().on("input change", this.loadYml.bind(this));            
             this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
-            this.toggleTemplateElement();
         },
         methods: {
-            toggleTemplateElement: function(){
-                this.getInputElement().parent().toggle();
-            },
             getImage: function(item){
                 var image = this.unEscapeKey(item.image) || "~/img/img-placeholder.svg";
                 var url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;

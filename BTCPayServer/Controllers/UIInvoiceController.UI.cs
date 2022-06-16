@@ -156,6 +156,7 @@ namespace BTCPayServer.Controllers
             public InvoiceStatus Status { get; set; }
             public string InvoiceId { get; set; }
             public string Currency { get; set; }
+            public string StoreName { get; set; }
             public decimal Amount { get; set; }
             public DateTimeOffset Timestamp { get; set; }
             public Dictionary<string, object>? AdditionalData { get; set; }
@@ -168,10 +169,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> InvoiceReceipt(string invoiceId)
         {
             var i = await _InvoiceRepository.GetInvoice(invoiceId);
+            var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (i is not null && i.InvoicePublicReceipt is null)
             {
-                i.InvoicePublicReceipt = (await _StoreRepository.GetStoreByInvoiceId(i.Id))?.GetStoreBlob()
-                    .InvoicePublicReceipt;
+                i.InvoicePublicReceipt = store?.GetStoreBlob().InvoicePublicReceipt;
             }
             if (i?.InvoicePublicReceipt is true)
             {
@@ -180,6 +181,7 @@ namespace BTCPayServer.Controllers
                     return View(new InvoiceReceiptViewModel
                     {
                         InvoiceId = i.Id,
+                        StoreName = store.StoreName,
                         Status = i.Status.ToModernStatus()
                     });
                 }
@@ -187,9 +189,10 @@ namespace BTCPayServer.Controllers
                 i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
                 i.Metadata.AdditionalData.TryGetValue("receiptShowQR", out var showQR);
                 i.Metadata.AdditionalData.TryGetValue("receiptShowPayments", out var showPayments);
-
+                
                 return View(new InvoiceReceiptViewModel
                 {
+                    StoreName = store.StoreName,
                     Status = i.Status.ToModernStatus(),
                     Amount = i.Price,
                     Currency = i.Currency,

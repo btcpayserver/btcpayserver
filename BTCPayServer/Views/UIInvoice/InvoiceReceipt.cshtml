@@ -32,18 +32,6 @@
 </head>
 <body>
     <div class="min-vh-100 d-flex flex-column">
-        <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-none">
-            <div class="container flex-wrap gap-3">
-                <h1 class="h3">Receipt</h1>
-                <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
-                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-                        <i class="fa fa-print"></i>&nbsp;Print
-                    </button>
-                    <a asp-action="Invoice" permission="@Policies.CanViewInvoices" class="invoice-checkout-link btn btn-primary text-nowrap d-print-none" asp-route-invoiceId="@Model.InvoiceId">Admin details</a>
-                </div>
-            </div>
-        </nav>
-        
         <main class="flex-grow-1 py-4">
             <div class="container">
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
@@ -85,6 +73,9 @@
                                         <dt class="h4 mb-0 fw-semibold text-break">@Model.InvoiceId</dt>
                                     </div>
                                 </dl>
+                                <button type="button" class="btn btn-outline-secondary d-print-none" onclick="window.print()">
+                                    <i class="fa fa-print"></i>&nbsp;Print
+                                </button>
                             </div>
                         </div>
 
@@ -144,6 +135,11 @@
             </div>
         </main>
         <footer class="pt-2 pb-4 d-print-none">
+            <p class="container text-center" permission="@Policies.CanViewStoreSettings">
+                <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId" permission="@Policies.CanViewInvoices" class="invoice-checkout-link btn btn-primary text-nowrap d-print-none">
+                    Admin details
+                </a>
+            </p>
             <div class="container d-flex flex-wrap align-items-center justify-content-center">
                 <span class="text-muted mx-2">
                     Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>

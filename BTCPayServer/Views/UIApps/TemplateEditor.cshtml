@@ -1,4 +1,4 @@
-@model (string templateId, string title)
+@model (string templateId, string title, string currency)
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group mb-0">
@@ -65,17 +65,21 @@
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-3" v-show="editingItem.custom !== 'topup'">
-                                    <label class="form-label">&nbsp</label>
-                                    <input class="form-control mb-2"
-                                           inputmode="decimal"
-                                           pattern="\d*"
-                                           step="any"
-                                           min="0"
-                                           type="number"
-                                           required
-                                           v-model="editingItem.price" ref="txtPrice" />
-                                    
+                                <div class="col-sm-6" v-show="editingItem.custom !== 'topup'">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="input-group mb-2">
+                                        <input class="form-control"
+                                               inputmode="decimal"
+                                               pattern="\d*"
+                                               step="any"
+                                               min="0"
+                                               type="number"
+                                               required
+                                               v-model="editingItem.price"
+                                               ref="txtPrice"
+                                               aria-describedby="currency-addon"/>
+                                        <span class="input-group-text" id="currency-addon">@Model.currency</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">

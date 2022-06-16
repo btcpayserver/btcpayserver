@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
-        public IActionResult UpdateCrowdfund(string appId)
+        public async Task<IActionResult> UpdateCrowdfund(string appId)
         {
             var app = GetCurrentApp();
             if (app == null)
@@ -37,6 +37,7 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
+                StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.TargetCurrency),
                 AppName = app.Name,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,

@@ -1,8 +1,5 @@
-using System.Collections.Generic;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
-using BTCPayServer.Models;
-using BTCPayServer.Models.StoreViewModels;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 

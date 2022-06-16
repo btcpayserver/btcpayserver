@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
@@ -12,6 +13,7 @@ using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using NBXplorer;
 using NBXplorer.Client;
 
@@ -19,43 +21,59 @@ namespace BTCPayServer.Components.StoreWalletBalance;
 
 public class StoreWalletBalance : ViewComponent
 {
-    private string _cryptoCode;
     private const WalletHistogramType DefaultType = WalletHistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
     private readonly CurrencyNameTable _currencies;
     private readonly WalletHistogramService _walletHistogramService;
+    private readonly BTCPayWalletProvider _walletProvider;
+    private readonly BTCPayNetworkProvider _networkProvider;
 
     public StoreWalletBalance(
         StoreRepository storeRepo,
         CurrencyNameTable currencies,
         WalletHistogramService walletHistogramService, 
+        BTCPayWalletProvider walletProvider,
         BTCPayNetworkProvider networkProvider)
     {
         _storeRepo = storeRepo;
         _currencies = currencies;
+        _walletProvider = walletProvider;
         _walletHistogramService = walletHistogramService;
-        _cryptoCode = networkProvider.DefaultNetwork.CryptoCode;
+        _networkProvider = networkProvider;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store)
     {
-        var walletId = new WalletId(store.Id, _cryptoCode);
+        var cryptoCode = _networkProvider.DefaultNetwork.CryptoCode;
+        var walletId = new WalletId(store.Id, cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
         var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
         
         var vm = new StoreWalletBalanceViewModel
         {
             Store = store,
-            CryptoCode = _cryptoCode,
+            CryptoCode = cryptoCode,
             CurrencyData = _currencies.GetCurrencyData(defaultCurrency, true),
             DefaultCurrency = defaultCurrency,
             WalletId = walletId,
-            Series = data?.Series,
-            Labels = data?.Labels,
-            Balance = data?.Balance,
             Type = DefaultType
         };
+
+        if (data != null)
+        {
+            vm.Balance = data.Balance;
+            vm.Series = data.Series;
+            vm.Labels = data.Labels;
+        }
+        else
+        {
+            using CancellationTokenSource cts = new (TimeSpan.FromSeconds(3));
+            var wallet = _walletProvider.GetWallet(_networkProvider.DefaultNetwork);
+            var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+            var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
+            vm.Balance = balance.Available.GetValue();
+        }
 
         return View(vm);
     }

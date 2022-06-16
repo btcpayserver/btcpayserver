@@ -39,16 +39,30 @@
                 </div>
             }
         }
-        <div class="btn-group mt-1" role="group" aria-label="Filter">
-            <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
-            <label class="btn btn-link" for="filter-week">1W</label>
-            <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
-            <label class="btn btn-link" for="filter-month">1M</label>
-            <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
-            <label class="btn btn-link" for="filter-year">1Y</label>
-        </div>
+        @if (Model.Series != null)
+        {
+            <div class="btn-group mt-1" role="group" aria-label="Filter">
+                <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                <label class="btn btn-link" for="filter-week">1W</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                <label class="btn btn-link" for="filter-month">1M</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                <label class="btn btn-link" for="filter-year">1Y</label>
+            </div>
+        }
     </header>
-    <div class="ct-chart"></div>
+    @if (Model.Series != null)
+    {
+        <div class="ct-chart"></div>
+    }
+    else
+    {
+        <p>
+            We would like to show you a chart of your balance.
+            Please <a href="https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Migration.md" target="_blank" rel="noreferrer noopener">migrate to the new NBXplorer backend</a>
+            for that data to become available.
+        </p>
+    }
     <script>
         (function () {
             const balance = @Safe.Json(Model.Balance);
@@ -78,10 +92,16 @@
             
             const render = data => {
                 let { series, labels, balance } = data;
-                if (rate)
-                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 if (balance)
                     document.querySelector(`#${id} h3`).innerText = balance;
+                if (cryptoCode !== defaultCurrency) {
+                    $cryptoBalance.style.display = rate ? 'none' : 'block';
+                    $defaultBalance.style.display = rate ? 'block' : 'none';
+                }
+                if (!series) return;
+                
+                if (rate)
+                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
@@ -90,10 +110,6 @@
                     labels,
                     series: [series]
                 }, renderOpts);
-                if (cryptoCode !== defaultCurrency) {
-                    $cryptoBalance.style.display = rate ? 'none' : 'block';
-                    $defaultBalance.style.display = rate ? 'block' : 'none';
-                }
                 // prevent y-axis labels from getting cut off
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];

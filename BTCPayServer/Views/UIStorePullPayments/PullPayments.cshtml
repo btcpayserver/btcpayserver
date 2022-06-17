@@ -41,15 +41,28 @@
 <div class="sticky-header d-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info" />
-            </a>
-        </small>
-    </h2>
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
+</h2>
     <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create Pull Payment
     </a>
+</div>
+
+<div id="descriptor" class="collapse bg-tile rounded-3">
+    <div class="d-flex px-4 py-4 mb-4">
+        <div class="flex-fill">
+            <p class="mb-2">Pull Payments allow the receiver to submit a request to pull payments from your wallet at a time the receiver sees fit.</p>
+            <p class="mb-3">You can then approve and release funds to the receiver at your convenience.</p>
+            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener">Learn More</a>
+        </div>
+        <div class="">
+            <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+                <vc:icon symbol="close" />
+            </button>
+        </div>
+    </div>
 </div>
 
 <partial name="_StatusMessage" />
@@ -59,10 +72,10 @@
         @foreach (var state in Enum.GetValues(typeof(PullPaymentState)).Cast<PullPaymentState>())
         {
             <a id="@state-view"
-                asp-action="PullPayments"
-                asp-route-storeId="@Context.GetRouteValue("storeId")"
-                asp-route-pullPaymentState="@state"
-                class="nav-link @(state == Model.ActiveState ? "active" : "")" role="tab">@state</a>
+               asp-action="PullPayments"
+               asp-route-storeId="@Context.GetRouteValue("storeId")"
+               asp-route-pullPaymentState="@state"
+               class="nav-link @(state == Model.ActiveState ? "active" : "")" role="tab">@state</a>
         }
     </div>
 </nav>
@@ -92,7 +105,6 @@
     <table class="table table-hover table-responsive-lg">
         <thead class="thead-inverse">
             <tr>
-                <th scope="col">Name</th>
                 <th scope="col">
                     <a asp-action="PullPayments"
                        asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
@@ -103,6 +115,7 @@
                         <span class="fa @(sortIconClass)"></span>
                     </a>
                 </th>
+                <th scope="col">Name</th>
                 <th scope="col">Automatically Approved</th>
                 <th scope="col">Refunded</th>
                 <th scope="col" class="text-end">Actions</th>
@@ -164,13 +177,13 @@
         </tbody>
     </table>
 
-    <vc:pager view-model="Model"/>
+    <vc:pager view-model="Model" />
 
-    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))"/>
+    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />
 
     @section PageFootContent {
         <script>
-         const ppProgresses = document.getElementsByClassName("ppProgress");
+            const ppProgresses = document.getElementsByClassName("ppProgress");
             for (var i = 0; i < ppProgresses.length; i++) {
                 var pp = ppProgresses[i];
                 var ppId = pp.getAttribute("data-pp");

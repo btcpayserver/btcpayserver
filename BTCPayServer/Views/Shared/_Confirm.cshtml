@@ -27,7 +27,7 @@
             $text.removeAttribute('hidden')
             $continue.setAttribute('disabled', 'disabled')
             $inputText.textContent = confirmInput
-            $input.setAttribute("autocomplete", "off");
+            $input.setAttribute("autocomplete", "off")
             $input.addEventListener('input', event => {
                 event.target.value.trim() === confirmInput
                     ? $continue.removeAttribute('disabled')
@@ -36,6 +36,14 @@
         } else {
             $text.setAttribute('hidden', 'hidden')
             $continue.removeAttribute('disabled')
+        }
+    });
+    modal.addEventListener('shown.bs.modal', event => {
+        const $target = event.relatedTarget
+        const $input = document.getElementById('ConfirmInput')
+        const { confirmInput } = $target.dataset
+        if (confirmInput) {
+            $input.focus();
         }
     });
 </script>

@@ -533,6 +533,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _storeLightningNodeApiController.GetInfo(cryptoCode, token));
         }
 
+        public override async Task<LightningNodeBalanceData> GetLightningNodeBalance(string storeId, string cryptoCode,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningNodeBalanceData>(
+                await _storeLightningNodeApiController.GetBalance(cryptoCode));
+        }
+
         public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
             ConnectToNodeRequest request, CancellationToken token = default)
         {
@@ -585,6 +592,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningNodeInformationData>(
                 await _lightningNodeApiController.GetInfo(cryptoCode));
+        }
+
+        public override async Task<LightningNodeBalanceData> GetLightningNodeBalance(string cryptoCode,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningNodeBalanceData>(
+                await _lightningNodeApiController.GetBalance(cryptoCode));
         }
 
         public override async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request,

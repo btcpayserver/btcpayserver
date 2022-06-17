@@ -26,7 +26,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
 
-
         public GreenfieldInternalLightningNodeApiController(
             BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
@@ -44,6 +43,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public override Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
         {
             return base.GetInfo(cryptoCode, cancellationToken);
+        }
+
+        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/balance")]
+        public override Task<IActionResult> GetBalance(string cryptoCode, CancellationToken cancellationToken = default)
+        {
+            return base.GetBalance(cryptoCode, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,

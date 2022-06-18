@@ -153,8 +153,11 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         fieldset.Fields.Add(apiKeyField);
         fieldset.Fields.Add(privateKeyField);
 
-        // TODO: Instead of showing all, maybe show the withdrawal destinations for all assets that: (1) we have an existing config value for and (2) all assets stored with the custodian.
-        var withdrawalFieldset = new Fieldset { Label = "Withdrawal Destinations" };
+        // TODO: Instead of showing all, maybe show the withdrawal destinations for all assets that:
+        // 1. we have an existing config value for,
+        // 2. all assets stored with the custodian and
+        // 3. all assets our store supports
+        var withdrawalFieldset = new Fieldset { Label = "Withdrawals" };
         form.Fieldsets.Add(withdrawalFieldset);
 
         var paymentMethods = GetWithdrawablePaymentMethods();
@@ -165,7 +168,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             withdrawalFieldset.Fields.Add(new TextField(paymentMethod,
                 "WithdrawToAddressNamePerPaymentMethod[" + paymentMethod + "]",
                 value,
-                false, "The exact name of the withdrawal destination stored in your Kraken account for " + paymentMethod));
+                false, "The exact name of the withdrawal destination stored in your Kraken account for youor store's "+paymentMethod+" wallet."));
         }
         
         try

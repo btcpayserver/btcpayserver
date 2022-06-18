@@ -25,6 +25,9 @@
     <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
         <span class="fa fa-gear"></span> Configure
     </a>
+    <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
+            <span class="fa fa-trash"></span> Delete
+        </a>
 </div>
 
 <div class="row">

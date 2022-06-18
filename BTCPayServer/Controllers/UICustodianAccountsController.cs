@@ -94,15 +94,16 @@ namespace BTCPayServer.Controllers
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
             var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
-            
+
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
             return View(vm);
         }
-        
+
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/edit")]
-        public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId, EditCustodianAccountViewModel vm)
+        public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId,
+            EditCustodianAccountViewModel vm)
         {
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
@@ -118,18 +119,17 @@ namespace BTCPayServer.Controllers
             {
                 newData.Add(pair.Key, pair.Value.ToString());
             }
-            
+
             var filteredConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
             custodianAccount.SetBlob(filteredConfigData);
 
             custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
-            
+
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
             return View(vm);
         }
-        
-        
+
 
         [HttpGet("/stores/{storeId}/custodian-accounts/create")]
         public IActionResult CreateCustodianAccount(string storeId)
@@ -187,7 +187,30 @@ namespace BTCPayServer.Controllers
                 // Ask for more data
                 vm.ConfigForm = configForm;
             }
+
             return View(vm);
+        }
+
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/delete")]
+        public async Task<IActionResult> DeleteCustodianAccount(string storeId, string accountId)
+        {
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+            if (custodianAccount == null)
+            {
+                return NotFound();
+            }
+
+            var isDeleted = await _custodianAccountRepository.Remove(custodianAccount.Id, custodianAccount.StoreId);
+            if (isDeleted)
+            {
+                TempData[WellKnownTempData.SuccessMessage] = "Custodian account deleted";
+                return RedirectToAction("Dashboard", "UIStores", new { storeId });
+            }
+
+            TempData[WellKnownTempData.ErrorMessage] = "Could not delete custodian account";
+            return RedirectToAction(nameof(ViewCustodianAccount),
+                new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
         }
 
         // The JObject may contain too much data because we used ALL post values and this may be more than we needed.
@@ -207,12 +230,12 @@ namespace BTCPayServer.Controllers
 
             foreach (var item in newData)
             {
-                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key) )
+                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key))
                 {
                     filteredData[item.Key] = item.Value;
                 }
             }
-            
+
             return filteredData;
         }
 

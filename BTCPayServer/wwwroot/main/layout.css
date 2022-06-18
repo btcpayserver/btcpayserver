@@ -553,7 +553,7 @@
         --header-height: var(--desktop-header-height);
         --content-padding-top: 5rem;
         --content-padding-bottom: 5rem;
-        --content-padding-horizontal: var(--btcpay-space-xl);
+        --content-padding-horizontal: 5rem;
     }
     
     #mainMenu {

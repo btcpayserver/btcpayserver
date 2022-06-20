@@ -25,27 +25,44 @@
         }
     </div>
     <header class="mb-3">
-        @if (Model.Balance is not null)
+        @if (Model.Balance != null)
         {
             <div class="balance" id="Balance-@Model.CryptoCode">
                 <h3 class="d-inline-block me-1">@Model.Balance</h3>
                 <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
             </div>
-            <div class="balance" id="Balance-@Model.DefaultCurrency">
-                <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
-                <span class="text-secondary fw-semibold">@Model.DefaultCurrency</span>
+            @if (Model.CryptoCode != Model.DefaultCurrency)
+            {
+                <div class="balance" id="Balance-@Model.DefaultCurrency">
+                    <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
+                    <span class="text-secondary fw-semibold">@Model.DefaultCurrency</span>
+                </div>
+            }
+        }
+        @if (Model.Series != null)
+        {
+            <div class="btn-group mt-1" role="group" aria-label="Filter">
+                <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                <label class="btn btn-link" for="filter-week">1W</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                <label class="btn btn-link" for="filter-month">1M</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                <label class="btn btn-link" for="filter-year">1Y</label>
             </div>
         }
-        <div class="btn-group mt-1" role="group" aria-label="Filter">
-            <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
-            <label class="btn btn-link" for="filter-week">1W</label>
-            <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
-            <label class="btn btn-link" for="filter-month">1M</label>
-            <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
-            <label class="btn btn-link" for="filter-year">1Y</label>
-        </div>
     </header>
-    <div class="ct-chart"></div>
+    @if (Model.Series != null)
+    {
+        <div class="ct-chart"></div>
+    }
+    else
+    {
+        <p>
+            We would like to show you a chart of your balance.
+            Please <a href="https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Migration.md" target="_blank" rel="noreferrer noopener">migrate to the new NBXplorer backend</a>
+            for that data to become available.
+        </p>
+    }
     <script>
         (function () {
             const balance = @Safe.Json(Model.Balance);
@@ -61,8 +78,6 @@
             const $defaultBalance = document.getElementById(`Balance-${defaultCurrency}`);
             const $defaultCurrencyBalance = document.getElementById('DefaultCurrencyBalance');
             
-            $defaultBalance.style.display = 'none';
-            
             const id = `StoreWalletBalance-${storeId}`;
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
             const chartOpts = {
@@ -77,10 +92,16 @@
             
             const render = data => {
                 let { series, labels, balance } = data;
-                if (rate)
-                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 if (balance)
                     document.querySelector(`#${id} h3`).innerText = balance;
+                if (cryptoCode !== defaultCurrency) {
+                    $cryptoBalance.style.display = rate ? 'none' : 'block';
+                    $defaultBalance.style.display = rate ? 'block' : 'none';
+                }
+                if (!series) return;
+                
+                if (rate)
+                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
@@ -147,8 +168,6 @@
                         rate = null;
                         render(data);
                     }
-                    $cryptoBalance.style.display = rate ? 'none' : 'block';
-                    $defaultBalance.style.display = rate ? 'block' : 'none';
                 });
             });
         })();

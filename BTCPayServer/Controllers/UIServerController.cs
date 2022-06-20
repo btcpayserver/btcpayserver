@@ -1034,7 +1034,6 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            
             if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
@@ -1043,15 +1042,17 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            
-            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-            if (new EmailsViewModel(oldSettings).PasswordSet)
+            else // if (command == "Save")
             {
-                model.Settings.Password = oldSettings.Password;
+                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                if (new EmailsViewModel(oldSettings).PasswordSet)
+                {
+                    model.Settings.Password = oldSettings.Password;
+                }
+                await _SettingsRepository.UpdateSetting(model.Settings);
+                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+                return RedirectToAction(nameof(Emails));
             }
-            await _SettingsRepository.UpdateSetting(model.Settings);
-            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

@@ -138,7 +138,6 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            
             if (command == "ResetPassword")
             {
                 var storeBlob = store.GetStoreBlob();
@@ -148,7 +147,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
-            else
+            else // if (command == "Save")
             {
                 var storeBlob = store.GetStoreBlob();
                 if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)

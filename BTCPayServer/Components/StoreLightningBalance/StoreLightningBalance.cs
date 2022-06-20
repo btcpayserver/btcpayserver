@@ -76,6 +76,11 @@ public class StoreLightningBalance : ViewComponent
                 // not all implementations support balance fetching
                 vm.ProblemDescription = "Your node does not support balance fetching.";
             }
+            catch
+            {
+                // general error
+                vm.ProblemDescription = "Could not fetch Lightning balance.";
+            }
         }
         else
         {

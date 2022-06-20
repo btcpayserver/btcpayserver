@@ -29,7 +29,7 @@
 }
 
 @section PageHeadContent {
-    <style type="text/css">
+    <style>
         .tooltip-inner {
             text-align: left;
         }
@@ -90,30 +90,36 @@
     }
     <table class="table table-hover table-responsive-lg">
         <thead class="thead-inverse">
-        <tr>
-            <th scope="col">
-                <a
-                    asp-action="PullPayments"
-                    asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
-                    asp-route-pullPaymentState="@Model.ActiveState"
-                    class="text-nowrap"
-                    title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
-                    Start
-                    <span class="fa @(sortIconClass)"></span>
-                </a>
-            </th>
-            <th scope="col">Name</th>
-            <th scope="col">Automatically Approved</th>
-            <th scope="col">Refunded</th>
-            <th scope="col" class="text-end" >Actions</th>
-        </tr>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">
+                    <a asp-action="PullPayments"
+                       asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
+                       asp-route-pullPaymentState="@Model.ActiveState"
+                       class="text-nowrap"
+                       title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
+                        Start
+                        <span class="fa @(sortIconClass)"></span>
+                    </a>
+                </th>
+                <th scope="col">Automatically Approved</th>
+                <th scope="col">Refunded</th>
+                <th scope="col" class="text-end">Actions</th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var pp in Model.PullPayments)
         {
             <tr>
+                <td>
+                    <a class="pp-payout"
+                       asp-action="Payouts"
+                       asp-route-storeId="@Context.GetRouteValue("storeId")"
+                       asp-route-pullPaymentId="@pp.Id">
+                        @pp.Name
+                    </a>
+                </td>
                 <td>@pp.StartDate.ToBrowserDate()</td>
-                <td>@pp.Name</td>
                 <td>@pp.AutoApproveClaims</td>
                 <td class="align-middle">
                     <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
@@ -130,25 +136,19 @@
                        asp-controller="UIPullPayment"
                        asp-route-pullPaymentId="@pp.Id">
                         View
-                    </a> -
-                    <a class="pp-payout"
-                       asp-action="Payouts"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
-                       asp-route-pullPaymentId="@pp.Id">
-                        Payouts
                     </a>
                     @if (!pp.Archived)
                     {
-                       <span permission="@Policies.CanModifyStoreSettings"> - </span>
+                        <span permission="@Policies.CanModifyStoreSettings"> - </span>
                         <a asp-action="ArchivePullPayment"
-                        permission="@Policies.CanModifyStoreSettings" 
-                        asp-route-storeId="@Context.GetRouteValue("storeId")"
-                        asp-route-pullPaymentId="@pp.Id"
-                        data-bs-toggle="modal"
-                        data-bs-target="#ConfirmModal"
-                        data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
+                           permission="@Policies.CanModifyStoreSettings"
+                           asp-route-storeId="@Context.GetRouteValue("storeId")"
+                           asp-route-pullPaymentId="@pp.Id"
+                           data-bs-toggle="modal"
+                           data-bs-target="#ConfirmModal"
+                           data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
                             Archive
-                        </a> 
+                        </a>
                     }
                 </td>
             </tr>

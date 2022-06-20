@@ -85,70 +85,74 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="TargetCurrency" class="form-label"></label>
-                    <input asp-for="TargetCurrency" class="form-control" placeholder="Use store's default settings" />
+                    <input asp-for="TargetCurrency" class="form-control" currency-selection style="max-width:10ch;" />
+                    <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
                     <span asp-validation-for="TargetCurrency" class="text-danger"></span>
                 </div>
             </div>
-                <div class="row g-3">
-                    <div class="col col-12 col-sm-6">
-                        <div class="form-group">
-                            <label asp-for="StartDate" class="form-label"></label>
-                            <div class="input-group flex-nowrap">
-                                <input type="datetime-local" asp-for="StartDate"
-                                       value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                       class="form-control flatdtpicker"
-                                       placeholder="No start date has been set" />
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class="fa fa-times"></span>
-                                </button>
-                            </div>
-                            <span asp-validation-for="StartDate" class="text-danger"></span>
+            <div class="row g-3">
+                <div class="col col-12 col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="StartDate" class="form-label"></label>
+                        <div class="input-group flex-nowrap">
+                            <input type="datetime-local" asp-for="StartDate"
+                                   value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
+                                   placeholder="No start date has been set" />
+                            <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
-                    </div>
-                    <div class="col col-12 col-sm-6">
-                        <div class="form-group">
-                            <label asp-for="EndDate" class="form-label"></label>
-                            <div class="input-group flex-nowrap">
-                                <input type="datetime-local" asp-for="EndDate"
-                                       value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                       class="form-control flatdtpicker"
-                                       placeholder="No end date has been set" />
-                                <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
-                                    <span class="fa fa-times"></span>
-                                </button>
-                            </div>
-                            <span asp-validation-for="EndDate" class="text-danger"></span>
-                        </div>
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="form-group mb-0" id="ResetRow" hidden="@(Model.StartDate == null)">
-                    <label asp-for="ResetEvery" class="form-label"></label>
-                    <div class="input-group">
-                        <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control" min="0">
-                        <select class="form-select" asp-for="ResetEvery">
-                            @foreach (var opt in Model.ResetEveryValues)
-                            {
-                                <option value="@opt">@opt</option>
-                            }
-                        </select>
+                <div class="col col-12 col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="EndDate" class="form-label"></label>
+                        <div class="input-group flex-nowrap">
+                            <input type="datetime-local" asp-for="EndDate"
+                                   value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
+                                   placeholder="No end date has been set" />
+                            <button class="btn btn-secondary input-group-clear input-group-text" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
-                    <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
                 </div>
             </div>
+            <div class="form-group mb-0" id="ResetRow" hidden="@(Model.StartDate == null)">
+                <label asp-for="ResetEvery" class="form-label"></label>
+                <div class="input-group">
+                    <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control" min="0">
+                    <select class="form-select" asp-for="ResetEvery">
+                        @foreach (var opt in Model.ResetEveryValues)
+                        {
+                            <option value="@opt">@opt</option>
+                        }
+                    </select>
+                </div>
+                <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
+            </div>
         </div>
+    </div>
     <div class="row">
-        <div class="col-xxl-constrain">
-            <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
+        <div class="col-xl-10 col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks", Model.TargetCurrency ?? Model.StoreDefaultCurrency)" />
+        </div>
+    </div>
+    <div class="row collapse" id="RawEditor">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group pt-3">
+                <label asp-for="PerksTemplate" class="form-label"></label>
+                <textarea asp-for="PerksTemplate" rows="10" cols="40" class="form-control"></textarea>
+                <span asp-validation-for="PerksTemplate" class="text-danger"></span>
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <div class="form-group">
-                <label asp-for="PerksTemplate" class="form-label"></label>
-                <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
-                <span asp-validation-for="PerksTemplate" class="text-danger"></span>
-            </div>
-        
             <h3 class="mt-5 mb-4">Contributions</h3>
             <div class="form-check mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />

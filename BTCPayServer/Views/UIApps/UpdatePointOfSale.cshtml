@@ -34,7 +34,8 @@
             </div>
             <div class="form-group">
                 <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" currency-selection class="form-control" placeholder="Use store's default settings" />
+                <input asp-for="Currency" class="form-control" currency-selection style="max-width:10ch;" />
+                <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>
@@ -50,10 +51,14 @@
     </div>
     <div class="row">
         <div class="col-xxl-constrain">
-            <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
-            <div class="form-group mb-0">
+            <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+        </div>
+    </div>
+    <div class="row collapse" id="RawEditor">
+        <div class="col-xxl-constrain">
+            <div class="form-group pt-3">
                 <label asp-for="Template" class="form-label"></label>
-                <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
+                <textarea asp-for="Template" rows="10" cols="40" class="form-control"></textarea>
                 <span asp-validation-for="Template" class="text-danger"></span>
             </div>
         </div>

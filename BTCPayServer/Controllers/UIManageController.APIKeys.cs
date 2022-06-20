@@ -191,6 +191,7 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
+            var storeIds = vm.SpecificStores.ToArray();
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
             
@@ -198,20 +199,18 @@ namespace BTCPayServer.Controllers
             
             // Go over each permission and associated store IDs and join them
             // so that permission for a specific store is parsed correctly
-            for (var i = 0; i < permissions.Length; i++)
+            foreach (var permission in permissions)
             {
-                var currPerm = permissions[i];
-                var storeIds = vm.SpecificStores.ToArray();
-                if (storeIds.Length > 0)
+                if (!Policies.IsStorePolicy(permission) || storeIds.Length == 0)
                 {
-                    for (var x = 0; x < storeIds.Length; x++)
-                    {
-                        permissionsWithStoreIDs.Add($"{currPerm}:{storeIds[x]}");
-                    }
+                    permissionsWithStoreIDs.Add(permission);
                 }
                 else
                 {
-                    permissionsWithStoreIDs.Add(currPerm);
+                    foreach (var t in storeIds)
+                    {
+                        permissionsWithStoreIDs.Add($"{permission}:{t}");
+                    }
                 }
             }
 
@@ -220,7 +219,7 @@ namespace BTCPayServer.Controllers
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
                 var permissionValue = vm.PermissionValues[index];
-                var wanted = parsedPermissions?.SingleOrDefault(permission =>
+                var wanted = parsedPermissions.SingleOrDefault(permission =>
                     permission.Key.Equals(permissionValue.Permission,
                         StringComparison.InvariantCultureIgnoreCase));
                 if (vm.Strict && !(wanted?.Any() ?? false))
@@ -240,6 +239,9 @@ namespace BTCPayServer.Controllers
                         continue;
                     }
 
+                    // Set the value to true and adjust the other fields based on the policy type
+                    permissionValue.Value = true;
+                    
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
@@ -250,7 +252,6 @@ namespace BTCPayServer.Controllers
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.AllStores;
                         permissionValue.SpecificStores = new List<string>();
-                        permissionValue.Value = true;
                     }
                 }
             }

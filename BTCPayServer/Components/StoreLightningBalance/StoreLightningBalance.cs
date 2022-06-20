@@ -61,13 +61,13 @@ public class StoreLightningBalance : ViewComponent
                 var balance = await lightningClient.GetBalance();
                 vm.Balance = balance;
                 vm.TotalOnchain = balance.OnchainBalance != null
-                    ? balance.OnchainBalance.Confirmed + balance.OnchainBalance.Reserved +
-                      balance.OnchainBalance.Unconfirmed
-                    : LightMoney.Zero;
+                    ? (balance.OnchainBalance.Confirmed?? 0) + (balance.OnchainBalance.Reserved ?? 0) +
+                      (balance.OnchainBalance.Unconfirmed ?? 0)
+                    : null;
                 vm.TotalOffchain = balance.OffchainBalance != null
-                    ? balance.OffchainBalance.Opening + balance.OffchainBalance.Local +
-                      balance.OffchainBalance.Closing
-                    : LightMoney.Zero;
+                    ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +
+                      (balance.OffchainBalance.Closing?? 0)
+                    : null;
             }
             catch (NotSupportedException)
             {

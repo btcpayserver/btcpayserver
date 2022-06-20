@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -52,18 +53,20 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(invoiceEvent.Invoice.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var dest = actionableRule.To ?? string.Empty;
-                        if (actionableRule.CustomerEmail &&
-                            !string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.BuyerEmail))
+                        var dest = actionableRule.To.Split(",", StringSplitOptions.RemoveEmptyEntries).Where(IsValidEmailAddress);
+                        if (actionableRule.CustomerEmail && IsValidEmailAddress(invoiceEvent.Invoice.Metadata.BuyerEmail))
                         {
-                            dest += $",{invoiceEvent.Invoice.Metadata.BuyerEmail}";
+                            dest = dest.Append(invoiceEvent.Invoice.Metadata.BuyerEmail);
                         }
 
-                        actionableRule.To.Split(",", StringSplitOptions.RemoveEmptyEntries);
-                        sender.SendEmail(dest, actionableRule.Subject, actionableRule.Body);
+                        var recipients = string.Join(",", dest);
+                        sender.SendEmail(recipients, actionableRule.Subject, actionableRule.Body);
                     }
                 }
             }
         }
     }
+
+    private bool IsValidEmailAddress(string address) => 
+        !string.IsNullOrEmpty(address) && MailAddress.TryCreate(address, out _);
 }

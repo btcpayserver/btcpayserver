@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.PluginPacker",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Custodians.Kraken", "Plugins\BTCPayServer.Plugins.Custodians.Kraken\BTCPayServer.Plugins.Custodians.Kraken.csproj", "{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Custodians.MockCustodian", "Plugins\BTCPayServer.Plugins.Custodians.MockCustodian\BTCPayServer.Plugins.Custodians.MockCustodian.csproj", "{49E1FE45-FE71-49DF-8701-8394E974BE82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Altcoins-Debug|Any CPU = Altcoins-Debug|Any CPU
@@ -295,6 +297,30 @@ Global
 		{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B}.Release|x64.Build.0 = Release|Any CPU
 		{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B}.Release|x86.ActiveCfg = Release|Any CPU
 		{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B}.Release|x86.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x64.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x64.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x86.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x86.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|Any CPU.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x64.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x64.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x86.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x86.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x64.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x86.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x64.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x64.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x86.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -306,5 +332,6 @@ Global
 		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 		{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
+		{49E1FE45-FE71-49DF-8701-8394E974BE82} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 	EndGlobalSection
 EndGlobal

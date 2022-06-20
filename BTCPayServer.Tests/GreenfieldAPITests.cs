@@ -1,28 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
-using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Custodians.MockCustodian;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Custodian.Client;
-using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -31,9 +26,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
-using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
 {
@@ -2565,7 +2558,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Single(custodians);
+            Assert.NotEmpty(custodians);
         }
 
 

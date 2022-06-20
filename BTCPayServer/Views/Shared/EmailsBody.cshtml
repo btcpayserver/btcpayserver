@@ -2,15 +2,9 @@
 
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h3 class="mb-0">Email Server</h3>
             <div class="d-flex">
-                @if (!string.IsNullOrEmpty(Context.GetRouteValue("storeId")?.ToString()) && Model.Settings.IsComplete())
-                {
-                    <a class="btn btn-secondary me-3" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                        Email Rules
-                    </a>
-                }
                 <div class="dropdown only-for-js" id="quick-fill">
                     <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
                         Quick Fill

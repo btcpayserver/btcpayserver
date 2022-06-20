@@ -3,15 +3,15 @@
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: "+@Model?.CustodianAccount.Name);
+    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }
 
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-2">
     <h2 class="mb-0">
@@ -26,21 +26,20 @@
         <span class="fa fa-gear"></span> Configure
     </a>
     <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
-            <span class="fa fa-trash"></span> Delete
-        </a>
+        <span class="fa fa-trash"></span> Delete
+    </a>
 </div>
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        
+
         @if (@Model.GetAssetBalanceException != null)
         {
             <p class="alert alert-danger">
                 @Model.GetAssetBalanceException.Message
             </p>
         }
-        
-        
+
 
         <h2>Balances</h2>
 
@@ -49,6 +48,8 @@
             <tr>
                 <th>Asset</th>
                 <th>Balance</th>
+                <th>Unit Price (Bid)</th>
+                <th>Unit Price (Ask)</th>
                 <th class="text-xs-right">Actions</th>
             </tr>
             </thead>
@@ -61,11 +62,23 @@
                         <td>@pair.Key</td>
                         <!-- TODO format as number? How? -->
                         <th>@pair.Value</th>
+                        <th>
+                            @if (@Model.AssetBids.ContainsKey(pair.Key))
+                            {
+                                @Model.AssetBids[pair.Key]
+                            }
+                        </th>
+                        <th>
+                            @if (@Model.AssetAsks.ContainsKey(pair.Key))
+                            {
+                                @Model.AssetAsks[pair.Key]
+                            }
+                        </th>
                         <th></th>
                     </tr>
                 }
             }
-            else if(Model.GetAssetBalanceException == null)
+            else if (Model.GetAssetBalanceException == null)
             {
                 <tr>
                     <td colspan="999" class="text-center">No assets are stored with this custodian (yet).</td>

@@ -70,10 +70,47 @@ namespace BTCPayServer.Controllers
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
 
             vm.CustodianAccount = custodianAccount;
+            var store = GetCurrentStore();
+            var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
+            var defaultCurrency = storeBlob.DefaultCurrency;
+            vm.DefaultCurrency = defaultCurrency;
+
+            
+
             try
             {
                 vm.AssetBalances =
                     await custodian.GetAssetBalancesAsync(custodianAccount.GetBlob(), cancellationToken: default);
+                
+                if (custodian is ICanTrade tradingCustodian)
+                {
+                    vm.AssetBids = new Dictionary<string, decimal>();
+                    vm.AssetAsks = new Dictionary<string, decimal>();
+
+                    var config = custodianAccount.GetBlob();
+                    
+                    foreach (var pair in vm.AssetBalances)
+                    {
+                        var asset = pair.Key;
+                        if (!asset.Equals(defaultCurrency))
+                        {
+                            try
+                            {
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(defaultCurrency,asset,
+                                    config, default);
+
+                                vm.AssetBids.Add(asset, quote.Bid);
+                                vm.AssetAsks.Add(asset, quote.Ask);
+                            }
+                            catch (WrongTradingPairException e)
+                            {
+                                // Cannot trade this asset, just ignore
+                            }
+                        }
+                    }
+                    
+                }
+                
             }
             catch (Exception e)
             {

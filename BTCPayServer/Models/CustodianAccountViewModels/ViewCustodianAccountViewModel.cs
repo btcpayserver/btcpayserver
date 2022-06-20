@@ -9,6 +9,9 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
 
         public CustodianAccountData CustodianAccount { get; set; }
         public Dictionary<string,decimal> AssetBalances { get; set; }
+        public Dictionary<string,decimal> AssetBids { get; set; }
+        public Dictionary<string,decimal> AssetAsks { get; set; }
         public Exception GetAssetBalanceException { get; set; }
+        public string DefaultCurrency { get; set; }
     }
 }

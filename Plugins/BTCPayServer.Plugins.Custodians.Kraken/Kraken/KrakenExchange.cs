@@ -263,19 +263,15 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             return "BTC";
         }
 
-        if (krakenAsset.Equals("XLTC", StringComparison.InvariantCulture))
+        if (krakenAsset.StartsWith("Z", StringComparison.InvariantCulture))
         {
-            return "LTC";
+            // Fiat starts with a "Z" like "ZUSD" or "ZEUR"
+            return krakenAsset.Substring(1);
         }
-
-        if (krakenAsset.Equals("ZEUR", StringComparison.InvariantCulture))
+        if (krakenAsset.StartsWith("X", StringComparison.InvariantCulture))
         {
-            return "EUR";
-        }
-
-        if (krakenAsset.Equals("ZUSD", StringComparison.InvariantCulture))
-        {
-            return "USD";
+            // Other cryptos start with a "X" like "XXRP" and "XREP"
+            return krakenAsset.Substring(1);
         }
 
         return krakenAsset;

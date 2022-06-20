@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -261,7 +262,6 @@ namespace BTCPayServer.Tests
             params string[] expectedPermissionsArr)
         {
             var expectedPermissions = Permission.ToPermissions(expectedPermissionsArr).ToArray();
-            expectedPermissions ??= new Permission[0];
             var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(accessToken, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
             var permissions = apikeydata.Permissions;
             TestLogs.LogInformation($"TestApiAgainstAccessToken: Permissions {permissions.Length}");
@@ -289,19 +289,21 @@ namespace BTCPayServer.Tests
             var secondUser = tester.NewAccount();
             await secondUser.GrantAccessAsync();
 
-            var canModifyAllStores = Permission.Create(Policies.CanModifyStoreSettings, null);
-            var canModifyServer = Permission.Create(Policies.CanModifyServerSettings, null);
-            var unrestricted = Permission.Create(Policies.Unrestricted, null);
+            var canModifyAllStores = Permission.Create(Policies.CanModifyStoreSettings);
+            var canModifyServer = Permission.Create(Policies.CanModifyServerSettings);
+            var unrestricted = Permission.Create(Policies.Unrestricted);
             var selectiveStorePermissions = permissions.Where(p => p.Scope != null && p.Policy == Policies.CanModifyStoreSettings);
             
             TestLogs.LogInformation("Testing can edit store for first user");
-            if (permissions.Contains(canModifyAllStores) || selectiveStorePermissions.Any())
+            IEnumerable<Permission> storePermissions = selectiveStorePermissions as Permission[] ?? selectiveStorePermissions.ToArray();
+            
+            if (permissions.Contains(canModifyAllStores) || storePermissions.Any())
             {
                 var resultStores =
                     await TestApiAgainstAccessToken<StoreData[]>(accessToken, $"{TestApiPath}/me/stores",
                         tester.PayTester.HttpClient);
 
-                foreach (var selectiveStorePermission in selectiveStorePermissions)
+                foreach (var selectiveStorePermission in storePermissions)
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                         $"{TestApiPath}/me/stores/{selectiveStorePermission.Scope}/can-edit",
@@ -312,7 +314,7 @@ namespace BTCPayServer.Tests
                 }
 
                 bool shouldBeAuthorized = false;
-                if (permissions.Contains(canModifyAllStores) || selectiveStorePermissions.Contains(Permission.Create(Policies.CanViewStoreSettings, testAccount.StoreId)))
+                if (permissions.Contains(canModifyAllStores) || storePermissions.Contains(Permission.Create(Policies.CanViewStoreSettings, testAccount.StoreId)))
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                         $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
@@ -321,7 +323,7 @@ namespace BTCPayServer.Tests
                         data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
                     shouldBeAuthorized = true;
                 }
-                if (permissions.Contains(canModifyAllStores) || selectiveStorePermissions.Contains(Permission.Create(Policies.CanModifyStoreSettings, testAccount.StoreId)))
+                if (permissions.Contains(canModifyAllStores) || storePermissions.Contains(Permission.Create(Policies.CanModifyStoreSettings, testAccount.StoreId)))
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                         $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
@@ -403,7 +405,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Testing CanModifyServer expectation met");
         }
 
-        public async Task<T> TestApiAgainstAccessToken<T>(string apikey, string url, HttpClient client)
+        private async Task<T> TestApiAgainstAccessToken<T>(string apikey, string url, HttpClient client)
         {
             var uri = new Uri(client.BaseAddress, url);
             var httpRequest = new HttpRequestMessage(HttpMethod.Get, uri);

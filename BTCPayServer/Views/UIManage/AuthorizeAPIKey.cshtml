@@ -83,6 +83,17 @@
             <span asp-validation-for="Label" class="text-danger"></span>
         </div>
         
+        @if (Model.NeedsStorePermission && Model.SpecificStores.Any())
+        {
+            <h2 class="h5 fw-semibold mt-4">Stores</h2>
+            <ul>
+                @foreach (var storeId in Model.SpecificStores)
+                {
+                    <li>@Model.Stores.First(s => s.Id == storeId).StoreName</li>
+                }
+            </ul>
+        }
+        
         <h2 class="h5 fw-semibold mt-4">Permissions</h2>
         @if (!permissions.Any())
         {
@@ -94,7 +105,7 @@
         else
         {
             <div class="list-group list-group-flush mt-3">
-                @for (int i = 0; i < Model.PermissionValues.Count; i++)
+                @for (var i = 0; i < Model.PermissionValues.Count; i++)
                 {
                     <input type="hidden" asp-for="PermissionValues[i].Forbidden"/>
                     <input type="hidden" asp-for="PermissionValues[i].Permission"/>
@@ -102,67 +113,30 @@
                     @if (Model.PermissionValues[i].Forbidden && !Model.Strict)
                     {
                         continue;
-                    }                        
-                    @if (Policies.IsStorePolicy(Model.PermissionValues[i].Permission))
-                    {
-                        <div class="list-group-item form-group">
-                            <div class="form-check">
-                                @if (Model.Strict || Model.PermissionValues[i].Forbidden)
-                                {
-                                    <input id="@Model.PermissionValues[i].Permission" type="hidden" asp-for="PermissionValues[i].Value"/>
-                                    <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input" disabled />
-                                }
-                                else
-                                {
-                                    <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
-                                }
-                                @* Wrapper div prevents the label to be muted in case of disabled checkbox (strict mode) *@
-                                <div>
-                                    <label for="@Model.PermissionValues[i].Permission" class="form-check-label">@Model.PermissionValues[i].Title</label>
-                                </div>
-                                <div class="form-text text-muted">@Model.PermissionValues[i].Description</div>
-                                <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
-
-                                @if (Model.PermissionValues[i].Forbidden)
-                                {
-                                    <br/>
-                                    <span class="text-danger">
-                                        This permission is not available for your account.
-                                    </span>
-                                }
-                            </div>
-                        </div>
                     }
-                    else
-                    {
-                        <div class="list-group-item form-group">
-                            <div class="form-check">
-                                @if (Model.Strict || Model.PermissionValues[i].Forbidden)
-                                {
-                                    <input id="@Model.PermissionValues[i].Permission" type="hidden" asp-for="PermissionValues[i].Value"/>
-                                    <input type="checkbox" checked="@Model.PermissionValues[i].Value" disabled class="form-check-input"/>
-                                }
-                                else
-                                {
-                                    <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
-                                }
-                                @* Wrapper div prevents the label to be muted in case of disabled checkbox (strict mode) *@
-                                <div>
-                                    <label for="@Model.PermissionValues[i].Permission" class="form-check-label">@Model.PermissionValues[i].Title</label>
-                                </div>
-                                <div class="form-text text-muted">@Model.PermissionValues[i].Description</div>
-                                <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
-                                
-                                @if (Model.PermissionValues[i].Forbidden)
-                                {
-                                    <br/>
-                                    <span class="text-danger">
-                                        This permission is not available for your account.
-                                    </span>
-                                }
+                    <div class="list-group-item form-group">
+                        <div class="form-check">
+                            @if (Model.Strict || Model.PermissionValues[i].Forbidden)
+                            {
+                                <input id="@Model.PermissionValues[i].Permission" type="hidden" asp-for="PermissionValues[i].Value"/>
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" checked="@Model.PermissionValues[i].Value" class="form-check-input" disabled />
+                            }
+                            else
+                            {
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
+                            }
+                            @* Wrapper div prevents the label to be muted in case of disabled checkbox (strict mode) *@
+                            <div>
+                                <label for="@Model.PermissionValues[i].Permission" class="form-check-label">@Model.PermissionValues[i].Title</label>
                             </div>
+                            <div class="form-text text-muted">@Model.PermissionValues[i].Description</div>
+                            <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                            @if (Model.PermissionValues[i].Forbidden)
+                            {
+                                <div class="text-danger">This permission is not available for your account.</div>
+                            }
                         </div>
-                    }
+                    </div>
                 }
             </div>
         }

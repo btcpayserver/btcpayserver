@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.Extensions;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -57,6 +58,7 @@ namespace BTCPayServer.Tests
             s.GoToProfile(ManageNavPages.APIKeys);
             s.Driver.FindElement(By.Id("AddApiKey")).Click();
             Assert.Contains("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
+            
             //server management should show now
             s.Driver.SetCheckbox(By.Id("btcpay.server.canmodifyserversettings"), true);
             s.Driver.SetCheckbox(By.Id("btcpay.store.canmodifystoresettings"), true);
@@ -136,10 +138,26 @@ namespace BTCPayServer.Tests
             var appidentifier = "testapp";
             var callbackUrl = s.ServerUri + "postredirect-callback-test";
             var authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
+                new[] { Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
+            
+            // No upfront store selection with only server settings
+            TestLogs.LogInformation($"Going to auth URL {authUrl}");
+            s.GoToUrl(authUrl);
+            Assert.Contains(appidentifier, s.Driver.PageSource);
+            Assert.False(s.Driver.FindElement(By.Id("SpecificStores")).Displayed);
+            
+            // Now with store settings
+            authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
             TestLogs.LogInformation($"Going to auth URL {authUrl}");
             s.GoToUrl(authUrl);
             Assert.Contains(appidentifier, s.Driver.PageSource);
+            
+            // Select a store
+            var select = new SelectElement(s.Driver.FindElement(By.Id("SpecificStores")));
+            select.SelectByIndex(0);
+            s.Driver.FindElement(By.Id("continue")).Click();
+            
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("type").ToLowerInvariant());
             Assert.Equal("true", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("value").ToLowerInvariant());
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("btcpay.server.canmodifyserversettings")).GetAttribute("type").ToLowerInvariant());
@@ -168,13 +186,17 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("On auth URL 2");
             Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
 
+            // Select a store
+            select = new SelectElement(s.Driver.FindElement(By.Id("SpecificStores")));
+            select.SelectByIndex(0);
+            s.Driver.FindElement(By.Id("continue")).Click();
+
             Assert.Equal("checkbox", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("type").ToLowerInvariant());
             Assert.Equal("true", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("value").ToLowerInvariant());
             Assert.Equal("checkbox", s.Driver.FindElement(By.Id("btcpay.server.canmodifyserversettings")).GetAttribute("type").ToLowerInvariant());
             Assert.Equal("true", s.Driver.FindElement(By.Id("btcpay.server.canmodifyserversettings")).GetAttribute("value").ToLowerInvariant());
 
             s.Driver.SetCheckbox(By.Id("btcpay.server.canmodifyserversettings"), false);
-            Assert.Contains("change-store-mode", s.Driver.PageSource);
             
             TestLogs.LogInformation("Going to callback URL 2");
             s.Driver.WaitForAndClick(By.Id("consent-yes"));

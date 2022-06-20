@@ -28,7 +28,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         public string Description { get; set; }
 
-        [Display(Name = "Featured Image")]
+        [Display(Name = "Featured Image URL")]
         public string MainImageUrl { get; set; }
 
         [Display(Name = "Callback Notification URL")]

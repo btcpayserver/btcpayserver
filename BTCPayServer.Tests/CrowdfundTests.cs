@@ -56,7 +56,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
             redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
             Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
-            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
         }
 
@@ -70,7 +70,7 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             var apps = user.GetController<UIAppsController>();
-            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var vm = apps.CreateApp(user.StoreId).AssertViewModel<CreateAppViewModel>();
             vm.AppName = "test";
             vm.SelectedAppType = AppType.Crowdfund.ToString();
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -79,8 +79,7 @@ namespace BTCPayServer.Tests
             apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
 
             //Scenario 1: Not Enabled - Not Allowed
-            var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(apps.UpdateCrowdfund(app.Id)).Model);
+            var crowdfundViewModel = await apps.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
             crowdfundViewModel.TargetCurrency = "BTC";
             crowdfundViewModel.Enabled = false;
             crowdfundViewModel.EndDate = null;
@@ -167,8 +166,7 @@ namespace BTCPayServer.Tests
             apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
 
             TestLogs.LogInformation("We create an invoice with a hardcap");
-            var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(apps.UpdateCrowdfund(app.Id)).Model);
+            var crowdfundViewModel = await apps.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
             crowdfundViewModel.Enabled = true;
             crowdfundViewModel.EndDate = null;
             crowdfundViewModel.TargetAmount = 100;

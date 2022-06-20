@@ -30,12 +30,11 @@ namespace BTCPayServer.Controllers
             var data = blob.EmailSettings;
             if (data?.IsComplete() is not true)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html =  $"You need to configure email settings before this feature works. <a class='alert-link' href='{this.Url.Action("StoreEmailSettings", new {storeId})}'>Configure now</a>. "
+                    Severity = StatusMessageModel.StatusSeverity.Warning,
+                    Html =  $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new {storeId})}'>Configure now</a>."
                 });
-                 return RedirectToAction();
             }
 
             var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? new List<StoreEmailRule>() };

@@ -63,14 +63,16 @@
                 <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group mb-0">
-                <div class="d-flex align-items-center mb-3">
+            <div class="form-group">
+                <div class="d-flex align-items-center">
                     <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
-                    <label asp-for="Enabled" class="form-label mb-0"></label>
+                    <div>
+                        <label asp-for="Enabled" class="form-label mb-1"></label>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
+                        <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
+                        <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
+                    </div>
                 </div>
-                <span asp-validation-for="Enabled" class="text-danger"></span>
-                <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
-                <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
             </div>
         </div>
     </div>
@@ -122,18 +124,32 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group mb-0" id="ResetRow" hidden="@(Model.StartDate == null)">
-                <label asp-for="ResetEvery" class="form-label"></label>
-                <div class="input-group">
-                    <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control" min="0">
-                    <select class="form-select" asp-for="ResetEvery">
-                        @foreach (var opt in Model.ResetEveryValues)
-                        {
-                            <option value="@opt">@opt</option>
-                        }
-                    </select>
+            
+            <div class="form-group mt-2" id="ResetRow" hidden="@(Model.StartDate == null)">
+                <div class="d-flex align-items-center mb-3">
+                    <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
+                    <div>
+                        <label asp-for="IsRecurring" class="form-label mb-1">Recurring Goal</label>
+                        <span asp-validation-for="IsRecurring" class="text-danger"></span>
+                        <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
+                    </div>
                 </div>
-                <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
+                
+                <div class="collapse @(Model.IsRecurring ? "show" : "")" id="ResetEverySettings">
+                    <div class="form-group mb-0 pt-2 w-250px">
+                        <label asp-for="ResetEvery" class="form-label"></label>
+                        <div class="input-group">
+                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control" min="0">
+                            <select class="form-select w-auto" asp-for="ResetEvery">
+                                @foreach (var opt in Model.ResetEveryValues)
+                                {
+                                    <option value="@opt">@opt</option>
+                                }
+                            </select>
+                        </div>
+                        <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -336,7 +352,7 @@
                             // Show the reset row if start date is selected.
                             // Since start date must be selected in order for the reset options to be set
                             // we don't need to show it by default and can show it only when start date is selected
-                            resetRow.removeAttribute('hidden');
+                                resetRow.removeAttribute('hidden');
                         }
                     });
                 }

@@ -331,15 +331,18 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             
             // Store Emails
-            s.GoToUrl($"stores/{s.StoreId}/email-settings");
-            Assert.DoesNotContain("Email Rules", s.Driver.PageSource);
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+            
+            s.GoToStore(StoreNavPages.Emails);
             CanSetupEmailCore(s);
-            Assert.Contains("Email Rules", s.Driver.PageSource);
             
             // Store Email Rules
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
             Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
+            Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
             
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
             var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));

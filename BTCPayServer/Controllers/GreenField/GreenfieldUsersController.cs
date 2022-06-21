@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly SettingsRepository _settingsRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly IPasswordValidator<ApplicationUser> _passwordValidator;
-        private readonly RateLimitService _throttleService;
+        private readonly IRateLimitService _throttleService;
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
             PoliciesSettings policiesSettings,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
-            RateLimitService throttleService,
+            IRateLimitService throttleService,
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
             UserService userService,

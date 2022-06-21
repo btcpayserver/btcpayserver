@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
+using NicolasDorier.RateLimits;
 using static BTCPayServer.Controllers.UIAppsController;
 
 namespace BTCPayServer.Controllers
@@ -116,6 +117,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(AppType.PointOfSale)]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount,
@@ -292,6 +294,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
 

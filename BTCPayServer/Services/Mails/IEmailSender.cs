@@ -1,8 +1,10 @@
+using System.Net.Mail;
+
 namespace BTCPayServer.Services.Mails
 {
     public interface IEmailSender
     {
-        void SendEmail(string email, string subject, string message);
-        void SendEmail(string[] email, string[] cc, string[] bcc, string subject, string message);
+        void SendEmail(MailAddress email, string subject, string message);
+        void SendEmail(MailAddress[] email, MailAddress[] cc, MailAddress[] bcc, string subject, string message);
     }
 }

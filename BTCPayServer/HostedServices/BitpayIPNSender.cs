@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mail;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -134,7 +135,7 @@ namespace BTCPayServer.HostedServices
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
-                    invoice.NotificationEmail,
+                    new MailAddress(invoice.NotificationEmail),
                     $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }

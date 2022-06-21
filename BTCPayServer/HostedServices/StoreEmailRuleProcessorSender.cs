@@ -59,8 +59,8 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                             dest = dest.Append(invoiceEvent.Invoice.Metadata.BuyerEmail);
                         }
 
-                        var recipients = string.Join(",", dest);
-                        sender.SendEmail(recipients, actionableRule.Subject, actionableRule.Body);
+                        var recipients = dest.Select(address => new MailAddress(address)).ToArray();
+                        sender.SendEmail(recipients, null, null, actionableRule.Subject, actionableRule.Body);
                     }
                 }
             }

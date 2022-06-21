@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using System.Text.Encodings.Web;
 using BTCPayServer.Services.Mails;
 
@@ -18,7 +19,7 @@ namespace BTCPayServer.Services
 
         public static void SendEmailConfirmation(this IEmailSender emailSender, string email, string link)
         {
-            emailSender.SendEmail(email, "Confirm your email",
+            emailSender.SendEmail(new MailAddress(email), "Confirm your email",
                 $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
 
@@ -26,7 +27,7 @@ namespace BTCPayServer.Services
         {
             var subject = $"{(newPassword ? "Set" : "Update")}  Password";
             var body = $"A request has been made to {(newPassword ? "set" : "update")} your BTCPay Server password. Please confirm your password by clicking below. <br/><br/> {CallToAction(subject, HtmlEncoder.Default.Encode(link))}";
-            emailSender.SendEmail(email,
+            emailSender.SendEmail(new MailAddress(email),
                 subject,
                 $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>");
         }

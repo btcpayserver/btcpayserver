@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
@@ -19,12 +20,12 @@ namespace BTCPayServer.Services.Mails
             _JobClient = jobClient ?? throw new ArgumentNullException(nameof(jobClient));
         }
 
-        public void SendEmail(string email, string subject, string message)
+        public void SendEmail(MailAddress email, string subject, string message)
         {
-            SendEmail(new[] {email}, Array.Empty<string>(), Array.Empty<string>(), subject, message);
+            SendEmail(new[] {email}, Array.Empty<MailAddress>(), Array.Empty<MailAddress>(), subject, message);
         }
 
-        public void SendEmail(string[] email, string[] cc, string[] bcc, string subject, string message)
+        public void SendEmail(MailAddress[] email, MailAddress[] cc, MailAddress[] bcc, string subject, string message)
         { 
             _JobClient.Schedule(async (cancellationToken) =>
             {
@@ -36,14 +37,16 @@ namespace BTCPayServer.Services.Mails
                 }
 
                 using var smtp = await emailSettings.CreateSmtpClient();
-                var mail = emailSettings.CreateMailMessage(email.Select(s => new MailboxAddress(s, s)).ToArray(),
-                    cc.Select(s => new MailboxAddress(s, s)).ToArray(),
-                    bcc.Select(s => new MailboxAddress(s, s)).ToArray(), subject, message, true);
+                var mail = emailSettings.CreateMailMessage(email.Select(ToMailboxAddress).ToArray(),
+                    cc.Select(ToMailboxAddress).ToArray(), bcc.Select(ToMailboxAddress).ToArray(),
+                    subject, message, true);
                 await smtp.SendAsync(mail, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
             }, TimeSpan.Zero);
         }
 
         public abstract Task<EmailSettings> GetEmailSettings();
+
+        private MailboxAddress ToMailboxAddress(MailAddress a) => new (a.ToString(), a.ToString());
     }
 }

@@ -21,29 +21,36 @@
     }
     else
     {
-        <div class="balances d-flex flex-wrap">
-            <div class="balance me-3">
-                <h3 class="d-inline-block me-1">@Model.TotalOffchain</h3>
-                <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode in channels</span>
-                @if (Model.TotalOffchain != LightMoney.Zero && Model.Balance.OffchainBalance != null)
-                {
+        <div class="balances d-flex flex-wrap gap-3">
+            @if (Model.TotalOffchain != LightMoney.Zero && Model.Balance.OffchainBalance != null)
+            {
+                <div class="balance">
+                    <h3 class="d-inline-block me-1">@Model.TotalOffchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode in channels</span>
+
                     <div class="balance-details collapse" id="balanceDetailsOffchain">
-                        @if (Model.Balance.OffchainBalance.Opening != LightMoney.Zero)
+                        @if (Model.Balance.OffchainBalance.Opening != null && Model.Balance.OffchainBalance.Opening != LightMoney.Zero)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold">@Model.Balance.OffchainBalance.Opening</span>
                                 <span class="text-secondary text-nowrap">@Model.CryptoCode opening channels</span>
                             </div>
                         }
-                        <div class="mt-2">
-                            <span class="fw-semibold">@Model.Balance.OffchainBalance.Local</span>
-                            <span class="text-secondary text-nowrap">@Model.CryptoCode local balance</span>
-                        </div>
-                        <div class="mt-2">
-                            <span class="fw-semibold">@Model.Balance.OffchainBalance.Remote</span>
-                            <span class="text-secondary text-nowrap">@Model.CryptoCode remote balance</span>
-                        </div>
-                        @if (Model.Balance.OffchainBalance.Closing != LightMoney.Zero)
+                        @if (Model.Balance.OffchainBalance.Local != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Local</span>
+                                <span class="text-secondary text-nowrap">@Model.CryptoCode local balance</span>
+                            </div>
+                        }
+                        @if (Model.Balance.OffchainBalance.Remote != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Remote</span>
+                                <span class="text-secondary text-nowrap">@Model.CryptoCode remote balance</span>
+                            </div>
+                        }
+                        @if (Model.Balance.OffchainBalance.Closing != null && Model.Balance.OffchainBalance.Closing != LightMoney.Zero)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold">@Model.Balance.OffchainBalance.Closing</span>
@@ -51,29 +58,29 @@
                             </div>
                         }
                     </div>
-                }
-            </div>
-            <div class="balance">
-                <h3 class="d-inline-block me-1">@Model.TotalOnchain</h3>
-                <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode on-chain</span>
-                @if (Model.TotalOnchain != LightMoney.Zero && Model.Balance.OnchainBalance != null)
-                {
+                </div>
+            }
+            @if (Model.TotalOnchain != LightMoney.Zero && Model.Balance.OnchainBalance != null)
+            {
+                <div class="balance">
+                    <h3 class="d-inline-block me-1">@Model.TotalOnchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode on-chain</span>
                     <div class="balance-details collapse" id="balanceDetailsOnchain">
-                        @if (Model.Balance.OnchainBalance.Confirmed != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Confirmed != null && Model.Balance.OnchainBalance.Confirmed != LightMoney.Zero)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold">@Model.Balance.OnchainBalance.Confirmed</span>
                                 <span class="text-secondary text-nowrap">@Model.CryptoCode confirmed</span>
                             </div>
                         }
-                        @if (Model.Balance.OnchainBalance.Unconfirmed != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Unconfirmed != null && Model.Balance.OnchainBalance.Unconfirmed != LightMoney.Zero)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold">@Model.Balance.OnchainBalance.Unconfirmed</span>
                                 <span class="text-secondary text-nowrap">@Model.CryptoCode unconfirmed</span>
                             </div>
                         }
-                        @if (Model.Balance.OnchainBalance.Reserved != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Reserved != null && Model.Balance.OnchainBalance.Reserved != LightMoney.Zero)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold">@Model.Balance.OnchainBalance.Reserved</span>
@@ -81,8 +88,8 @@
                             </div>
                         }
                     </div>
-                }
-            </div>
+                </div>
+            }
         </div>
         @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null && (Model.TotalOffchain != LightMoney.Zero || Model.TotalOnchain != LightMoney.Zero))
         {

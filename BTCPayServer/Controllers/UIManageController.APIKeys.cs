@@ -97,84 +97,14 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
-            var requestPermissions = Permission.ToPermissions(permissions);
+            var requestPermissions = Permission.ToPermissions(permissions).ToList();
             
             if (redirect?.IsAbsoluteUri is false)
             {
                 redirect = null;
             }
-            if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
-            {
-                //check if there is an app identifier that matches and belongs to the current user
-                var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
-                {
-                    UserId = new[] { _userManager.GetUserId(User) }
-                });
-                foreach (var key in keys)
-                {
-                    var blob = key.GetBlob();
 
-                    if (blob.ApplicationIdentifier != applicationIdentifier || blob.ApplicationAuthority != redirect.AbsoluteUri)
-                    {
-                        continue;
-                    }
-
-                    //matched the identifier and authority, but we need to check if what the app is requesting in terms of permissions is enough
-                    var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions)
-                        .GroupBy(permission => permission.Policy);
-                    var fail = false;
-                    foreach (var permission in requestPermissions.GroupBy(permission => permission.Policy))
-                    {
-                        var presentPermission =
-                            alreadyPresentPermissions.SingleOrDefault(grouping => permission.Key == grouping.Key);
-                        if (strict && presentPermission == null)
-                        {
-                            fail = true;
-                            break;
-                        }
-
-                        if (Policies.IsStorePolicy(permission.Key))
-                        {
-                            if (!selectiveStores && permission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
-                            {
-
-                                TempData.SetStatusMessageModel(new StatusMessageModel()
-                                {
-                                    Severity = StatusMessageModel.StatusSeverity.Error,
-                                    Message =
-                                        "Cannot request specific store permission when selectiveStores is not enable"
-                                });
-                                return RedirectToAction("APIKeys");
-                            }
-                            if (!selectiveStores && presentPermission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
-                            {
-                                fail = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (fail)
-                    {
-                        continue;
-                    }
-
-                    //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
-                    return View("ConfirmAPIKey", new AuthorizeApiKeysViewModel
-                    {
-                        ApiKey = key.Id,
-                        RedirectUrl = redirect,
-                        Label = applicationName,
-                        ApplicationName = applicationName,
-                        SelectiveStores = selectiveStores,
-                        Strict = strict,
-                        Permissions = string.Join(';', permissions),
-                        ApplicationIdentifier = applicationIdentifier
-                    });
-                }
-            }
-
-            var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel
+            var vm = new AuthorizeApiKeysViewModel
             {
                 RedirectUrl = redirect,
                 Label = applicationName,
@@ -183,86 +113,27 @@ namespace BTCPayServer.Controllers
                 Strict = strict,
                 Permissions = string.Join(';', requestPermissions),
                 ApplicationIdentifier = applicationIdentifier
-            });
+            };
+            
+            var existingApiKey = await CheckForMatchingApiKey(applicationIdentifier, redirect, requestPermissions, strict);
+            if (existingApiKey != null)
+            {
+                vm.ApiKey = existingApiKey.Id;
+                return View("ConfirmAPIKey", vm);
+            }
+
+            vm = await SetViewModelValues(vm);
             AdjustVMForAuthorization(vm);
 
             return View(vm);
         }
 
-        private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
-        {
-            var storeIds = vm.SpecificStores.ToArray();
-            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
-            var permissionsWithStoreIDs = new List<string>();
-            
-            vm.NeedsStorePermission = permissions.Any(Policies.IsStorePolicy) || !vm.Strict;
-            
-            // Go over each permission and associated store IDs and join them
-            // so that permission for a specific store is parsed correctly
-            foreach (var permission in permissions)
-            {
-                if (!Policies.IsStorePolicy(permission) || storeIds.Length == 0)
-                {
-                    permissionsWithStoreIDs.Add(permission);
-                }
-                else
-                {
-                    foreach (var t in storeIds)
-                    {
-                        permissionsWithStoreIDs.Add($"{permission}:{t}");
-                    }
-                }
-            }
-
-            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray()).GroupBy(permission => permission.Policy);
-
-            for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
-            {
-                var permissionValue = vm.PermissionValues[index];
-                var wanted = parsedPermissions.SingleOrDefault(permission =>
-                    permission.Key.Equals(permissionValue.Permission,
-                        StringComparison.InvariantCultureIgnoreCase));
-                if (vm.Strict && !(wanted?.Any() ?? false))
-                {
-                    vm.PermissionValues.RemoveAt(index);
-                    continue;
-                }
-                if (wanted?.Any() ?? false)
-                {
-                    var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
-                    var command = commandParts.Length > 1 ? commandParts[1] : null;
-                    var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
-                    
-                    // Don't want to accidentally change mode for the user if they are explicitly performing some action
-                    if (isPerformingAnAction)
-                    {
-                        continue;
-                    }
-
-                    // Set the value to true and adjust the other fields based on the policy type
-                    permissionValue.Value = true;
-                    
-                    if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
-                        wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
-                    {
-                        permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
-                        permissionValue.SpecificStores = wanted.Select(permission => permission.Scope).ToList();
-                    }
-                    else
-                    {
-                        permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.AllStores;
-                        permissionValue.SpecificStores = new List<string>();
-                    }
-                }
-            }
-        }
-
         [HttpPost("~/api-keys/authorize")]
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
         {
-            await SetViewModelValues(viewModel);
-
+            viewModel = await SetViewModelValues(viewModel);
             AdjustVMForAuthorization(viewModel);
+            
             var ar = HandleCommands(viewModel);
             if (ar != null)
             {
@@ -332,6 +203,13 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction("APIKeys", new { key = key.Id });
 
                 default:
+                    var requestPermissions = Permission.ToPermissions(viewModel.Permissions?.Split(';').ToArray()).ToList();
+                    var existingApiKey = await CheckForMatchingApiKey(viewModel.ApplicationIdentifier, viewModel.RedirectUrl, requestPermissions, viewModel.Strict);
+                    if (existingApiKey != null)
+                    {
+                        viewModel.ApiKey = existingApiKey.Id;
+                        return View("ConfirmAPIKey", viewModel);
+                    }
                     return View(viewModel);
             }
         }
@@ -361,6 +239,131 @@ namespace BTCPayServer.Controllers
                 Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
             });
             return RedirectToAction("APIKeys");
+        }
+
+        private async Task<APIKeyData> CheckForMatchingApiKey(string applicationIdentifier, Uri redirect,
+            IEnumerable<Permission> requestPermissions, bool strict)
+        {
+            if (string.IsNullOrEmpty(applicationIdentifier) || redirect == null)
+            {
+                return null;
+            }
+                
+            //check if there is an app identifier that matches and belongs to the current user
+            var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
+            {
+                UserId = new[] { _userManager.GetUserId(User) }
+            });
+            foreach (var key in keys)
+            {
+                var blob = key.GetBlob();
+                if (blob.ApplicationIdentifier != applicationIdentifier || blob.ApplicationAuthority != redirect.AbsoluteUri)
+                {
+                    continue;
+                }
+
+                //matched the identifier and authority, but we need to check if what the app is requesting in terms of permissions is enough
+                var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions)
+                    .GroupBy(permission => permission.Policy);
+                var fail = false;
+                foreach (var permission in requestPermissions.GroupBy(permission => permission.Policy))
+                {
+                    var presentPermission =
+                        alreadyPresentPermissions.SingleOrDefault(grouping => permission.Key == grouping.Key);
+                    if (strict && presentPermission == null)
+                    {
+                        fail = true;
+                        break;
+                    }
+
+                    if (Policies.IsStorePolicy(permission.Key))
+                    {
+                        if (presentPermission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
+                        {
+                            fail = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (fail)
+                {
+                    continue;
+                }
+
+                //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
+                return key;
+            }
+
+            return null;
+        }
+
+        private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
+        {
+            var storeIds = vm.SpecificStores.ToArray();
+            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            var permissionsWithStoreIDs = new List<string>();
+            
+            vm.NeedsStorePermission = permissions.Any(Policies.IsStorePolicy) || !vm.Strict;
+            
+            // Go over each permission and associated store IDs and join them
+            // so that permission for a specific store is parsed correctly
+            foreach (var permission in permissions)
+            {
+                if (!Policies.IsStorePolicy(permission) || storeIds.Length == 0)
+                {
+                    permissionsWithStoreIDs.Add(permission);
+                }
+                else
+                {
+                    foreach (var t in storeIds)
+                    {
+                        permissionsWithStoreIDs.Add($"{permission}:{t}");
+                    }
+                }
+            }
+
+            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray()).GroupBy(permission => permission.Policy);
+
+            for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
+            {
+                var permissionValue = vm.PermissionValues[index];
+                var wanted = parsedPermissions.SingleOrDefault(permission =>
+                    permission.Key.Equals(permissionValue.Permission,
+                        StringComparison.InvariantCultureIgnoreCase));
+                if (vm.Strict && !(wanted?.Any() ?? false))
+                {
+                    vm.PermissionValues.RemoveAt(index);
+                    continue;
+                }
+                if (wanted?.Any() ?? false)
+                {
+                    var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                    var command = commandParts.Length > 1 ? commandParts[1] : null;
+                    var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
+                    
+                    // Don't want to accidentally change mode for the user if they are explicitly performing some action
+                    if (isPerformingAnAction)
+                    {
+                        continue;
+                    }
+
+                    // Set the value to true and adjust the other fields based on the policy type
+                    permissionValue.Value = true;
+                    
+                    if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
+                        wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
+                    {
+                        permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
+                        permissionValue.SpecificStores = wanted.Select(permission => permission.Scope).ToList();
+                    }
+                    else
+                    {
+                        permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.AllStores;
+                        permissionValue.SpecificStores = new List<string>();
+                    }
+                }
+            }
         }
 
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)

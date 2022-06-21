@@ -2,44 +2,36 @@
 
 @{
     var displayName = Model.ApplicationName ?? Model.ApplicationIdentifier;
-    ViewData["Title"] = $"Are you sure about exposing your API Key to {displayName}?";
-    Layout = null;
+    ViewData["Title"] = $"Authorize {displayName ?? "Application"}";
+    Layout = "_LayoutWizard";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <partial name="LayoutHead" />
-</head>
-<body class="bg-light">
-    <div class="modal-dialog modal-dialog-centered min-vh-100">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title w-100 text-center">@ViewData["Title"]</h3>
-            </div>
-
-            <div class="modal-body text-center">
-                You've previously generated the API Key <code>@Model.ApiKey</code> specifically for
-                <strong>@displayName</strong> with the URL <code>@Model.RedirectUrl</code>.
-            </div>
-
-            <form method="post" class="modal-footer justify-content-center" asp-controller="UIManage" asp-action="AuthorizeAPIKey">
-                <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
-                <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
-                <input type="hidden" asp-for="ApiKey" value="@Model.ApiKey"/>
-                <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
-                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
-                <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
-                <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
-
-                <button type="submit" class="btn btn-primary w-25 mx-2" id="continue" name="command" value="Confirm">Confirm</button>
-                <button type="submit" class="btn btn-secondary w-25 mx-2 only-for-js" id="back">Go back</button>
-            </form>
-        </div>
-    </div>
-    <partial name="LayoutFoot" />
+@section PageFootContent {
     <script>
         delegate('click', '#back', () => { history.back() });
     </script>
-</body>
-</html>
+}
+
+<partial name="_StatusMessage" />
+
+<form method="post" asp-controller="UIManage" asp-action="AuthorizeAPIKey">
+    <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
+    <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
+    <input type="hidden" asp-for="ApiKey" value="@Model.ApiKey"/>
+    <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
+    <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+    <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
+    <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
+    <header class="text-center">
+        <h1>@ViewData["Title"]</h1>
+        <p class="lead text-secondary mt-3">Are you sure about exposing your API Key to @displayName?</p>
+    </header>
+    <p>
+        You've previously generated the API Key <code>@Model.ApiKey</code> specifically for
+        <strong>@displayName</strong> with the URL <code>@Model.RedirectUrl</code>.
+    </p>
+    <div class="d-flex gap-3">
+        <button class="btn btn-primary" name="command" id="continue" type="submit" value="Confirm">Authorize app</button>
+        <button class="btn btn-secondary" name="command" id="back" type="button">Cancel</button>
+    </div>
+</form>

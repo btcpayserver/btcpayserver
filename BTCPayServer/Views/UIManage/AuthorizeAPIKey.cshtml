@@ -2,9 +2,10 @@
 @model BTCPayServer.Controllers.UIManageController.AuthorizeApiKeysViewModel
 
 @{
-    Layout = "_LayoutWizard";
-    ViewData["Title"] = $"Authorize {Model.ApplicationName ?? "Application"}";
+    var displayName = Model.ApplicationName ?? Model.ApplicationIdentifier;
     var permissions = Permission.ToPermissions(Model.Permissions.Split(';')).GroupBy(permission => permission.Policy);
+    ViewData["Title"] = $"Authorize {displayName ?? "Application"}";
+    Layout = "_LayoutWizard";
 }
 
 @section Navbar {
@@ -40,7 +41,7 @@
     <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
     <header class="text-center">
         <h1>@ViewData["Title"]</h1>
-        <p class="lead text-secondary mt-3">@(Model.ApplicationName ?? "An application") is requesting access to your BTCPay Server account.</p>
+        <p class="lead text-secondary mt-3">@(displayName ?? "An application") is requesting access to your BTCPay Server account.</p>
     </header>
     <div asp-validation-summary="All" class="text-danger"></div>
     

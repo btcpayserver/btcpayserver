@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -9,6 +8,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 
 namespace BTCPayServer.HostedServices;
 
@@ -59,7 +59,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                             dest = dest.Append(invoiceEvent.Invoice.Metadata.BuyerEmail);
                         }
 
-                        var recipients = dest.Select(address => new MailAddress(address)).ToArray();
+                        var recipients = dest.Select(address => new MailboxAddress(address, address)).ToArray();
                         sender.SendEmail(recipients, null, null, actionableRule.Subject, actionableRule.Body);
                     }
                 }
@@ -68,5 +68,5 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
     }
 
     private bool IsValidEmailAddress(string address) => 
-        !string.IsNullOrEmpty(address) && MailAddress.TryCreate(address, out _);
+        !string.IsNullOrEmpty(address) && MailboxAddress.TryParse(address, out _);
 }

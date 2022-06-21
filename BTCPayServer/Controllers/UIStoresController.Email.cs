@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -11,8 +10,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.VisualBasic;
 using MimeKit;
 
 namespace BTCPayServer.Controllers

@@ -2,20 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
+using MimeKit;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json;
@@ -135,7 +132,7 @@ namespace BTCPayServer.HostedServices
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
-                    new MailAddress(invoice.NotificationEmail),
+                    new MailboxAddress(invoice.NotificationEmail, invoice.NotificationEmail),
                     $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }

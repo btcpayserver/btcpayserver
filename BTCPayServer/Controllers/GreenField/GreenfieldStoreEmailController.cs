@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -13,6 +11,7 @@ using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -46,7 +45,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateAPIError(404,"smtp-not-configured", "Store does not have an SMTP server configured.");
             }
 
-            var to = new MailAddress(request.Email);
+            var to = new MailboxAddress(request.Email, request.Email);
             emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }

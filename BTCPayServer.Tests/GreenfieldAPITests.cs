@@ -2353,9 +2353,7 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertAPIError("store-user-role-orphaned", async () => await user2Client.RemoveStoreUser(user.StoreId, user2.UserId));
-
         }
-
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
@@ -2369,7 +2367,7 @@ namespace BTCPayServer.Tests
             await adminClient.UpdateStoreEmailSettings(admin.StoreId,
                 new EmailSettingsData());
 
-            var data = new EmailSettingsData()
+            var data = new EmailSettingsData
             {
                 From = "admin@admin.com",
                 Login = "admin@admin.com",
@@ -2382,11 +2380,10 @@ namespace BTCPayServer.Tests
             Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(data));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,
-                    new EmailSettingsData() { From = "ass" }));
-
+                    new EmailSettingsData { From = "invalid" }));
 
             await adminClient.SendEmail(admin.StoreId,
-                new SendEmailRequest() { Body = "lol", Subject = "subj", Email = "sdasdas" });
+                new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

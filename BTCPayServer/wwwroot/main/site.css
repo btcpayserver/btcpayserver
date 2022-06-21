@@ -126,11 +126,16 @@ a.unobtrusive-link {
 /* Info icons in main headline */
 svg.icon.icon-info {
     color: var(--btcpay-neutral-500);
+    transition: 200ms;
 }
 
 h2 svg.icon.icon-info {
     width: 1.5rem;
     height: 1.5rem;
+}
+
+svg.icon.icon-info:hover {
+    color: var(--btcpay-primary);
 }
 
 h2 small .fa-question-circle-o {

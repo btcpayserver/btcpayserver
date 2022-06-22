@@ -122,8 +122,13 @@ namespace BTCPayServer.Controllers
                         TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                         return View(model);
                     }
+                    if (!MailboxAddress.TryParse(model.TestEmail, out MailboxAddress testEmail))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "Invalid test email";
+                        return View(model);
+                    }
                     using var client = await model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false);
+                    var message = model.Settings.CreateMailMessage(testEmail, "BTCPay test", "BTCPay test", false);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                     TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";

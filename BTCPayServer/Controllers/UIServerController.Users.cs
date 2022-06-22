@@ -303,7 +303,7 @@ namespace BTCPayServer.Controllers
             var code = await _UserManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
 
-            var address = new MailboxAddress(user.Email, user.Email);
+            var address = new MailboxAddress(user.UserName, user.Email);
             (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(address, callbackUrl);
 
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";

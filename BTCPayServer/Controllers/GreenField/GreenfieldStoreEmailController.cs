@@ -39,13 +39,16 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return this.CreateAPIError(404, "store-not-found", "The store was not found");
             }
+            if (!MailboxAddress.TryParse(request.Email, out MailboxAddress to))
+            {
+                ModelState.AddModelError(nameof(request.Email), "Invalid email");
+                return this.CreateValidationError(ModelState);
+            }
             var emailSender = await _emailSenderFactory.GetEmailSender(storeId);
-            if (emailSender is null )
+            if (emailSender is null)
             {
                 return this.CreateAPIError(404,"smtp-not-configured", "Store does not have an SMTP server configured.");
             }
-
-            var to = new MailboxAddress(request.Email, request.Email);
             emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }

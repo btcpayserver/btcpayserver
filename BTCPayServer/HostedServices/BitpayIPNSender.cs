@@ -120,7 +120,9 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (sendMail && !String.IsNullOrEmpty(invoice.NotificationEmail))
+            if (sendMail &&
+                invoice.NotificationEmail is String e &&
+                MailboxAddress.TryParse(e, out MailboxAddress notificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -132,7 +134,7 @@ namespace BTCPayServer.HostedServices
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
-                    new MailboxAddress(invoice.NotificationEmail, invoice.NotificationEmail),
+                    notificationEmail,
                     $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }

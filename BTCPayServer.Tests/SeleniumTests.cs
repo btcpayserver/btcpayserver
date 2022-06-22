@@ -1940,6 +1940,7 @@ retry:
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
+            s.Driver.FindElement(By.Id("Settings_From")).SendKeys("Firstname Lastname <email@example.com>");
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");

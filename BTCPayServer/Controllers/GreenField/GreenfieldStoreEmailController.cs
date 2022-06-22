@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return this.CreateAPIError(404, "store-not-found", "The store was not found");
             }
-            if (!MailboxAddress.TryParse(request.Email, out MailboxAddress to))
+            if (!MailboxAddressValidator.TryParse(request.Email, out var to))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
                 return this.CreateValidationError(ModelState);
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return StoreNotFound();
             }
 
-            if (!string.IsNullOrEmpty(request.From) && !EmailValidator.IsEmail(request.From))
+            if (!string.IsNullOrEmpty(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
             {
                 request.AddModelError(e => e.From,
                     "Invalid email address", this);

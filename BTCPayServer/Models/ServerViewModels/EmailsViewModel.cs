@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
@@ -19,7 +20,7 @@ namespace BTCPayServer.Models.ServerViewModels
             get; set;
         }
         public bool PasswordSet { get; set; }
-        [EmailAddress]
+        [MailboxAddressAttribute]
         [Display(Name = "Test Email")]
         public string TestEmail
         {

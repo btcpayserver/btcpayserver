@@ -40,16 +40,8 @@
                 <span asp-validation-for="Settings.Port" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.FromDisplay" class="form-label">Sender's display name</label>
-                <input asp-for="Settings.FromDisplay" class="form-control"/>
-                <small class="form-text text-muted">
-                    Some email providers (like Gmail) don't allow you to set your display name, so this setting may not have any effect.
-                </small>
-                <span asp-validation-for="Settings.FromDisplay" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Settings.From" class="form-label">Sender's Email Address</label>
-                <input asp-for="Settings.From" class="form-control"/>
+                <input asp-for="Settings.From" class="form-control" placeholder="Firstname Lastname <email@example.com>" />
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -89,7 +81,7 @@
                     To test your settings, enter an email address below.
                 </p>
                 <label asp-for="TestEmail" class="form-label"></label>
-                <input asp-for="TestEmail" class="form-control" />
+                <input asp-for="TestEmail" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test">Send Test Email</button>

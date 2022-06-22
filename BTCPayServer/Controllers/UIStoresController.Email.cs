@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Controllers
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
                 var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
-                var index = int.Parse(item);
+                var index = int.Parse(item, CultureInfo.InvariantCulture);
                 vm.Rules.RemoveAt(index);
                 
                 return View(vm);
@@ -117,18 +118,13 @@ namespace BTCPayServer.Controllers
                     {
                         model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
                     }
-                    if (!model.Settings.IsComplete())
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
+                    model.Settings.Validate("Settings.", ModelState);
+                    if (string.IsNullOrEmpty(model.TestEmail))
+                        ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
+                    if (!ModelState.IsValid)
                         return View(model);
-                    }
-                    if (!MailboxAddress.TryParse(model.TestEmail, out MailboxAddress testEmail))
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] = "Invalid test email";
-                        return View(model);
-                    }
                     using var client = await model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(testEmail, "BTCPay test", "BTCPay test", false);
+                    var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                     TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
@@ -150,6 +146,11 @@ namespace BTCPayServer.Controllers
             }
             else // if (command == "Save")
             {
+                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+                {
+                    ModelState.AddModelError("Settings.From", "Invalid email");
+                    return View(model);
+                }
                 var storeBlob = store.GetStoreBlob();
                 if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)
                 {

@@ -118,7 +118,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!string.IsNullOrEmpty(request.Email) && !Validation.EmailValidator.IsEmail(request.Email))
+            if (!string.IsNullOrEmpty(request.Email) && !MailboxAddressValidator.IsMailboxAddress(request.Email))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }

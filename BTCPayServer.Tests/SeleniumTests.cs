@@ -319,6 +319,8 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
+            
+            // Server Emails
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
             if (s.Driver.PageSource.Contains("Configured"))
             {
@@ -327,8 +329,30 @@ namespace BTCPayServer.Tests
             }
             CanSetupEmailCore(s);
             s.CreateNewStore();
-            s.GoToUrl($"stores/{s.StoreId}/emails");
+            
+            // Store Emails
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+            
+            s.GoToStore(StoreNavPages.Emails);
             CanSetupEmailCore(s);
+            
+            // Store Email Rules
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
+            Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
+            Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
+            select.SelectByText("InvoiceSettled", true);
+            s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
+            s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
+            s.Driver.FindElement(By.Id("Rules_0__Body")).SendKeys("Your invoice is settled");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+            Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]

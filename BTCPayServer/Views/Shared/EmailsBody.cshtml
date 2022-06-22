@@ -1,19 +1,21 @@
 @model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
-            <div class="dropdown only-for-js" id="quick-fill">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
-                    Quick Fill
-                </button>
-                <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
-                    <a class="dropdown-item" href="" data-server="smtp.gmail.com" data-port="587">Gmail.com</a>
-                    <a class="dropdown-item" href="" data-server="mail.yahoo.com" data-port="587">Yahoo.com</a>
-                    <a class="dropdown-item" href="" data-server="smtp.mailgun.org" data-port="587">Mailgun</a>
-                    <a class="dropdown-item" href="" data-server="smtp.office365.com" data-port="587">Office365</a>
-                    <a class="dropdown-item" href="" data-server="smtp.sendgrid.net" data-port="587">SendGrid</a>
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h3 class="mb-0">Email Server</h3>
+            <div class="d-flex">
+                <div class="dropdown only-for-js" id="quick-fill">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
+                        Quick Fill
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
+                        <a class="dropdown-item" href="" data-server="smtp.gmail.com" data-port="587">Gmail.com</a>
+                        <a class="dropdown-item" href="" data-server="mail.yahoo.com" data-port="587">Yahoo.com</a>
+                        <a class="dropdown-item" href="" data-server="smtp.mailgun.org" data-port="587">Mailgun</a>
+                        <a class="dropdown-item" href="" data-server="smtp.office365.com" data-port="587">Office365</a>
+                        <a class="dropdown-item" href="" data-server="smtp.sendgrid.net" data-port="587">SendGrid</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -22,7 +24,7 @@
 
 <form method="post" autocomplete="off">
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
+        <div class="col-xl-10 col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All" class="text-danger"></div>

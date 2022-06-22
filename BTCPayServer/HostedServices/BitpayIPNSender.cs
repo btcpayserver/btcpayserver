@@ -5,16 +5,14 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
+using MimeKit;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json;
@@ -122,7 +120,9 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (sendMail && !String.IsNullOrEmpty(invoice.NotificationEmail))
+            if (sendMail &&
+                invoice.NotificationEmail is String e &&
+                MailboxAddress.TryParse(e, out MailboxAddress notificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -134,7 +134,7 @@ namespace BTCPayServer.HostedServices
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
-                    invoice.NotificationEmail,
+                    notificationEmail,
                     $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }

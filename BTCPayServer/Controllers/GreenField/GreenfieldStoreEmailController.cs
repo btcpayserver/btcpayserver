@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -12,6 +11,7 @@ using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -39,13 +39,17 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return this.CreateAPIError(404, "store-not-found", "The store was not found");
             }
+            if (!MailboxAddress.TryParse(request.Email, out MailboxAddress to))
+            {
+                ModelState.AddModelError(nameof(request.Email), "Invalid email");
+                return this.CreateValidationError(ModelState);
+            }
             var emailSender = await _emailSenderFactory.GetEmailSender(storeId);
-            if (emailSender is null )
+            if (emailSender is null)
             {
                 return this.CreateAPIError(404,"smtp-not-configured", "Store does not have an SMTP server configured.");
             }
-            
-            emailSender.SendEmail(request.Email, request.Subject, request.Body);
+            emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }
         

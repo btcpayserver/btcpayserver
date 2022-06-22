@@ -1006,7 +1006,6 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
-
             if (command == "Test")
             {
                 try
@@ -1021,13 +1020,18 @@ namespace BTCPayServer.Controllers
                         TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                         return View(model);
                     }
+                    if (!MailboxAddress.TryParse(model.TestEmail, out MailboxAddress testEmail))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "Invalid test email";
+                        return View(model);
+                    }
                     using (var client = await model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false))
+                    using (var message = model.Settings.CreateMailMessage(testEmail, "BTCPay test", "BTCPay test", false))
                     {
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
                 }
                 catch (Exception ex)
                 {
@@ -1035,7 +1039,7 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else if (command == "ResetPassword")
+            if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 settings.Password = null;
@@ -1043,7 +1047,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if(command == "Save")
+            else // if (command == "Save")
             {
                 var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 if (new EmailsViewModel(oldSettings).PasswordSet)

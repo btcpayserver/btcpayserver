@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using BTCPayServer.Services.Mails;
+using MimeKit;
 
 namespace BTCPayServer.Services
 {
@@ -16,19 +17,17 @@ namespace BTCPayServer.Services
             return button;
         }
 
-        public static void SendEmailConfirmation(this IEmailSender emailSender, string email, string link)
+        public static void SendEmailConfirmation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
-            emailSender.SendEmail(email, "Confirm your email",
+            emailSender.SendEmail(address, "Confirm your email",
                 $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
 
-        public static void SendSetPasswordConfirmation(this IEmailSender emailSender, string email, string link, bool newPassword)
+        public static void SendSetPasswordConfirmation(this IEmailSender emailSender, MailboxAddress address, string link, bool newPassword)
         {
             var subject = $"{(newPassword ? "Set" : "Update")}  Password";
             var body = $"A request has been made to {(newPassword ? "set" : "update")} your BTCPay Server password. Please confirm your password by clicking below. <br/><br/> {CallToAction(subject, HtmlEncoder.Default.Encode(link))}";
-            emailSender.SendEmail(email,
-                subject,
-                $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>");
+            emailSender.SendEmail(address, subject, $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>");
         }
     }
 }

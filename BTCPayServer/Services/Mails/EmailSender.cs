@@ -1,10 +1,9 @@
 using System;
-using System.Net.Mail;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
 using MimeKit;
-using NBitcoin;
 
 namespace BTCPayServer.Services.Mails
 {
@@ -20,8 +19,13 @@ namespace BTCPayServer.Services.Mails
             _JobClient = jobClient ?? throw new ArgumentNullException(nameof(jobClient));
         }
 
-        public void SendEmail(string email, string subject, string message)
+        public void SendEmail(MailboxAddress email, string subject, string message)
         {
+            SendEmail(new[] {email}, Array.Empty<MailboxAddress>(), Array.Empty<MailboxAddress>(), subject, message);
+        }
+
+        public void SendEmail(MailboxAddress[] email, MailboxAddress[] cc, MailboxAddress[] bcc, string subject, string message)
+        { 
             _JobClient.Schedule(async (cancellationToken) =>
             {
                 var emailSettings = await GetEmailSettings();
@@ -30,8 +34,9 @@ namespace BTCPayServer.Services.Mails
                     Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                     return;
                 }
+
                 using var smtp = await emailSettings.CreateSmtpClient();
-                var mail = emailSettings.CreateMailMessage(new MailboxAddress(email, email), subject, message, true);
+                var mail = emailSettings.CreateMailMessage(email, cc, bcc, subject, message, true);
                 await smtp.SendAsync(mail, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
             }, TimeSpan.Zero);

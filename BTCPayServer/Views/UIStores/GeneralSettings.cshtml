@@ -87,30 +87,6 @@
             
             <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
         </form>
-        
-        <h3 class="mt-5 mb-3">Services</h3>
-        <div class="table-responsive-md">
-            <table class="table table-hover mt-1 mb-5">
-                <thead>
-                <tr>
-                    <th>Service</th>
-                    <th class="text-end w-100px">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>
-                        Email
-                    </td>
-                    <td class="text-end">
-                        <a asp-action="Emails" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                            Setup
-                        </a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
         @if (Model.CanDelete)
         {
             <h3 class="mt-5 mb-3">Additional Actions</h3>

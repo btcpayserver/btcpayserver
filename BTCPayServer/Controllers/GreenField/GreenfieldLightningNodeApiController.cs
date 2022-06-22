@@ -53,34 +53,27 @@ namespace BTCPayServer.Controllers.Greenfield
         public virtual async Task<IActionResult> GetBalance(string cryptoCode, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            try
+            var balance = await lightningClient.GetBalance(cancellationToken);
+            return Ok(new LightningNodeBalanceData
             {
-                var balance = await lightningClient.GetBalance(cancellationToken);
-                return Ok(new LightningNodeBalanceData
-                {
-                    OnchainBalance = balance.OnchainBalance != null
-                        ? new OnchainBalanceData
-                        {
-                            Confirmed = balance.OnchainBalance.Confirmed,
-                            Unconfirmed = balance.OnchainBalance.Unconfirmed,
-                            Reserved = balance.OnchainBalance.Reserved
-                        }
-                        : null,
-                    OffchainBalance = balance.OffchainBalance != null
-                        ? new OffchainBalanceData
-                        {
-                            Opening = balance.OffchainBalance.Opening,
-                            Local = balance.OffchainBalance.Local,
-                            Remote = balance.OffchainBalance.Remote,
-                            Closing = balance.OffchainBalance.Closing,
-                        }
-                        : null
-                });
-            }
-            catch (Exception ex)
-            {
-                return this.CreateAPIError("generic-error", ex.Message);
-            }
+                OnchainBalance = balance.OnchainBalance != null
+                    ? new OnchainBalanceData
+                    {
+                        Confirmed = balance.OnchainBalance.Confirmed,
+                        Unconfirmed = balance.OnchainBalance.Unconfirmed,
+                        Reserved = balance.OnchainBalance.Reserved
+                    }
+                    : null,
+                OffchainBalance = balance.OffchainBalance != null
+                    ? new OffchainBalanceData
+                    {
+                        Opening = balance.OffchainBalance.Opening,
+                        Local = balance.OffchainBalance.Local,
+                        Remote = balance.OffchainBalance.Remote,
+                        Closing = balance.OffchainBalance.Closing,
+                    }
+                    : null
+            });
         }
 
         public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request, CancellationToken cancellationToken = default)

@@ -127,6 +127,8 @@ a.unobtrusive-link {
 svg.icon.icon-info {
     color: var(--btcpay-neutral-500);
     transition: 200ms;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 h2 svg.icon.icon-info {

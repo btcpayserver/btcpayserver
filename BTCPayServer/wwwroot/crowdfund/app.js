@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 amount: null,
                 expanded: false,
                 lnurl: window.lnurl,
-                currentMode: 'standard'
             }
         },
         computed: {
@@ -46,6 +45,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             },
             expand: function(){
                 if(this.canExpand){
+                    console.log('lol');
                     this.expanded = true;
                 }
             },

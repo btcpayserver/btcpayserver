@@ -189,18 +189,42 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreatePointOfSaleAppViaAPI()
+        public async Task CanCreateReadAndDeletePointOfSaleApp()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
+
+            // Test creating a POS app
             var app = await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { AppName = "test app from API"  });
-            
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
+
+            // Make sure we return a 404 if we try to get an app that doesn't exist
+            await AssertHttpError(404, async () => {
+                await client.GetApp("some random ID lol");
+            });
+
+            // Test that we can retrieve the app data
+            var retrievedApp = await client.GetApp(app.Id);
+            Assert.Equal(app.Name, retrievedApp.Name);
+            Assert.Equal(app.StoreId, retrievedApp.StoreId);
+            Assert.Equal(app.AppType, retrievedApp.AppType);
+
+            // Make sure we return a 404 if we try to delete an app that doesn't exist
+            await AssertHttpError(404, async () =>
+            {
+                await client.DeleteApp("some random ID lol");
+            });
+
+            // Test deleting the newly created app
+            await client.DeleteApp(retrievedApp.Id);
+            await AssertHttpError(404, async () => {
+                await client.GetApp(retrievedApp.Id);
+            });
         }
         
         [Fact(Timeout = TestTimeout)]

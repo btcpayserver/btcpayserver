@@ -1,23 +1,36 @@
+@using BTCPayServer.Services.Apps
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
 
 @{
     var action = $"Update{Model.App.AppType}";
+    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "contribution" : "sale";
 }
 
-<div class="widget app-top-items">
+<div id="AppTopItems-@Model.App.Id" class="widget app-top-items">
     <header class="mb-3">
-        <h3>Top Perks</h3>
+        <h3>Top @(Model.App.AppType == nameof(AppType.Crowdfund) ? "Perks" : "Items")</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">View All</a>
     </header>
     @if (Model.Entries.Any())
     {
+        <div class="ct-chart mb-3"></div>
+        <script>
+            (function () {
+                const id = @Safe.Json($"AppTopItems-{Model.App.Id}");
+                const labels = @Safe.Json(Model.Entries.Select(i => i.Title));
+                const series = @Safe.Json(Model.Entries.Select(i => i.SalesCount));
+                new Chartist.Pie(`#${id} .ct-chart`, { labels, series }, {
+                    labelDirection: 'explode'
+                });
+            })();
+        </script>
         <div class="app-items">
             @foreach (var entry in Model.Entries)
             {
                 <div class="app-item">
                     <span class="app-item-name">@entry.Title</span>
                     <span class="app-item-value">
-                        @entry.SalesCount sale@(entry.SalesCount == 1 ? "" : "s"),
+                        @entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),
                         @entry.TotalFormatted total
                     </span>
                 </div>
@@ -27,7 +40,7 @@
     else
     {
         <p class="text-secondary mt-3">
-            No contributions have been made yet.
+            No @($"{label}s") have been made yet.
         </p>
     }
 </div>

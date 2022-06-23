@@ -223,7 +223,7 @@ namespace BTCPayServer.Controllers
                     Currency = settings.Currency,
                     Price = price,
                     BuyerEmail = email,
-                    OrderId = orderId ?? AppService.GetPosOrderId(appId),
+                    OrderId = orderId ?? AppService.GetAppOrderId(app),
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
@@ -378,7 +378,7 @@ namespace BTCPayServer.Controllers
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
-                    OrderId = AppService.GetCrowdfundOrderId(appId),
+                    OrderId = AppService.GetAppOrderId(app),
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,

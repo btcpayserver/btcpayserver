@@ -233,7 +233,7 @@ namespace BTCPayServer.Controllers
 
             if (entity.Metadata.BuyerEmail != null)
             {
-                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail))
+                if (!MailboxAddressValidator.IsMailboxAddress(entity.Metadata.BuyerEmail))
                     throw new BitpayHttpException(400, "Invalid email");
                 entity.RefundMail = entity.Metadata.BuyerEmail;
             }

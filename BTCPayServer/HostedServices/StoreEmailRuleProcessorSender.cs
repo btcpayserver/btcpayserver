@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,20 +53,18 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(invoiceEvent.Invoice.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var dest = actionableRule.To.Split(",", StringSplitOptions.RemoveEmptyEntries).Where(IsValidEmailAddress);
-                        if (actionableRule.CustomerEmail && IsValidEmailAddress(invoiceEvent.Invoice.Metadata.BuyerEmail))
+                        var recipients = actionableRule.To.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                            .Select(o => { MailboxAddressValidator.TryParse(o, out var mb); return mb; })
+                            .Where(o => o != null)
+                            .ToList();
+                        if (actionableRule.CustomerEmail && MailboxAddressValidator.TryParse(invoiceEvent.Invoice.Metadata.BuyerEmail, out var bmb))
                         {
-                            dest = dest.Append(invoiceEvent.Invoice.Metadata.BuyerEmail);
+                            recipients.Add(bmb);
                         }
-
-                        var recipients = dest.Select(address => new MailboxAddress(address, address)).ToArray();
-                        sender.SendEmail(recipients, null, null, actionableRule.Subject, actionableRule.Body);
+                        sender.SendEmail(recipients.ToArray(), null, null, actionableRule.Subject, actionableRule.Body);
                     }
                 }
             }
         }
     }
-
-    private bool IsValidEmailAddress(string address) => 
-        !string.IsNullOrEmpty(address) && MailboxAddress.TryParse(address, out _);
 }

@@ -122,7 +122,7 @@ namespace BTCPayServer.HostedServices
 
             if (sendMail &&
                 invoice.NotificationEmail is String e &&
-                MailboxAddress.TryParse(e, out MailboxAddress notificationEmail))
+                MailboxAddressValidator.TryParse(e, out MailboxAddress notificationEmail))
             {
                 var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
                 var store = await _StoreRepository.FindStore(invoice.StoreId);

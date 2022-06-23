@@ -55,8 +55,7 @@ namespace BTCPayServer.HostedServices
                             new HostString(userRegisteredEvent.RequestUri.Host, userRegisteredEvent.RequestUri.Port),
                             userRegisteredEvent.RequestUri.PathAndQuery);
                         userRegisteredEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-                        address = new MailboxAddress(userRegisteredEvent.User.Email,
-                            userRegisteredEvent.User.Email);
+                        address = userRegisteredEvent.User.GetMailboxAddress();
                         (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(address, callbackUrl);
                     }
                     else if (!await _userManager.HasPasswordAsync(userRegisteredEvent.User))
@@ -86,8 +85,7 @@ passwordSetter:
                             userPasswordResetRequestedEvent.RequestUri.Port),
                         userPasswordResetRequestedEvent.RequestUri.PathAndQuery);
                     userPasswordResetRequestedEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-                    address = new MailboxAddress(userPasswordResetRequestedEvent.User.Email,
-                        userPasswordResetRequestedEvent.User.Email);
+                    address = userPasswordResetRequestedEvent.User.GetMailboxAddress();
                     (await _emailSenderFactory.GetEmailSender())
                         .SendSetPasswordConfirmation(address, callbackUrl, newPassword);
                     break;

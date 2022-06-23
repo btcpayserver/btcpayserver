@@ -50,7 +50,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [EmailAddress]
+        [MailboxAddress]
         [DisplayName("Buyer Email")]
         public string BuyerEmail
         {
@@ -76,7 +76,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [EmailAddress]
+        [MailboxAddress]
         [DisplayName("Notification Email")]
         public string NotificationEmail
         {

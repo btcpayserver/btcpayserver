@@ -40,12 +40,21 @@ namespace BTCPayServer.Controllers.Greenfield
             _lightningClientFactory = lightningClientFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
+        
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/info")]
         public override Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
         {
             return base.GetInfo(cryptoCode, cancellationToken);
+        }
+
+        [Authorize(Policy = Policies.CanUseLightningNodeInStore,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/balance")]
+        public override Task<IActionResult> GetBalance(string cryptoCode, CancellationToken cancellationToken = default)
+        {
+            return base.GetBalance(cryptoCode, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,

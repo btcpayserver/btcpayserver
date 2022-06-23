@@ -48,6 +48,54 @@
                 ]
             }
         },
+        "/api/v1/server/lightning/{cryptoCode}/balance": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get node balance",
+                "parameters": [
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cryptoCode of the lightning-node to query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    }
+                ],
+                "description": "View balance of the lightning node",
+                "operationId": "InternalLightningNodeApi_GetBalance",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance for on-chain and off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningNodeBalanceData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/server/lightning/{cryptoCode}/connect": {
             "post": {
                 "tags": [

@@ -50,7 +50,64 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.cancreatelightninginvoice"
+                            "btcpay.store.canuselightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/lightning/{cryptoCode}/balance": {
+            "get": {
+                "tags": [
+                    "Lightning (Store)"
+                ],
+                "summary": "Get node balance",
+                "parameters": [
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cryptoCode of the lightning-node to query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store id with the lightning-node configuration to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View balance of the lightning node",
+                "operationId": "StoreLightningNodeApi_GetBalance",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance for on-chain and off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningNodeBalanceData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canuselightningnode"
                         ],
                         "Basic": []
                     }

@@ -237,6 +237,12 @@ namespace BTCPayServer
             var lnAddress = username is null ? null : $"{username}@{Request.Host}";
             List<string[]> lnurlMetadata = new();
 
+            var redirectUrl = app?.AppType switch
+            {
+                nameof(AppType.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                                               HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
+                _ => null
+            };
             var invoiceRequest = new CreateInvoiceRequest
             {
                 Amount = invoiceAmount,
@@ -245,7 +251,8 @@ namespace BTCPayServer
                     PaymentMethods = new[] { pmi.ToStringNormalized() },
                     Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
                         ? blob.InvoiceExpiration
-                        : TimeSpan.FromMinutes(2)
+                        : TimeSpan.FromMinutes(2),
+                    RedirectURL = redirectUrl
                 },
                 Currency = currencyCode,
                 Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
@@ -258,7 +265,7 @@ namespace BTCPayServer
                     {
                         ItemCode = item.Id, 
                         ItemDesc = item.Description, 
-                        OrderId = AppService.GetPosOrderId(app.Id)
+                        OrderId = AppService.GetAppOrderId(app)
                     }.ToJObject();
             }
             

@@ -75,7 +75,10 @@ namespace BTCPayServer.Services.Mails
                     client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 #pragma warning restore CA5359 // Do Not Disable Certificate Validation
                 }
-                await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
+                var sslOptions = MailKit.Security.SecureSocketOptions.Auto;
+                if (Port is int p && p == 25) // Workaround for https://github.com/jstedfast/MailKit/pull/1398
+                    sslOptions = MailKit.Security.SecureSocketOptions.None;
+                await client.ConnectAsync(Server, Port.Value, sslOptions, connectCancel.Token);
                 if ((client.Capabilities & SmtpCapabilities.Authentication) != 0)
                     await client.AuthenticateAsync(Login ?? string.Empty, Password ?? string.Empty, connectCancel.Token);
             }

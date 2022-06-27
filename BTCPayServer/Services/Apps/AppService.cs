@@ -28,8 +28,6 @@ namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
-        const string PosPriceKey = "fiatPrice";
-        
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
@@ -246,19 +244,11 @@ namespace BTCPayServer.Services.Apps
                     // The item code should be present for all types other than the cart and keypad
                     !string.IsNullOrEmpty(entity.Metadata.ItemCode)
                 ))
-                .Aggregate(new List<InvoiceEntity>(), AggregateInvoiceEntitiesForStats(items, PosPriceKey))
-                .GroupBy(entity => entity.Metadata.ItemCode)
+                .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
+                .GroupBy(entity => entity.ItemCode)
                 .Select(entities =>
                 {
-                    var total = entities
-                        .Sum(entity => entity.AdditionalData.ContainsKey(PosPriceKey)
-                            ? (decimal)entity.AdditionalData[PosPriceKey]
-                            : entity.GetPayments(true).Sum(pay => {
-                                var paymentMethodId = pay.GetPaymentMethodId();
-                                var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
-                                return rate * value;
-                            }));
+                    var total = entities.Sum(entity => entity.FiatPrice);
                     var itemCode = entities.Key;
                     var item = items.FirstOrDefault(p => p.Id == itemCode);
                     return new ItemStats
@@ -299,8 +289,8 @@ namespace BTCPayServer.Services.Apps
                      // The item code should be present for all types other than the cart and keypad
                      !string.IsNullOrEmpty(entity.Metadata.ItemCode)
                 ))
-                .Aggregate(new List<InvoiceEntity>(), AggregateInvoiceEntitiesForStats(items, PosPriceKey))
-                .GroupBy(entity => entity.InvoiceTime.Date)
+                .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
+                .GroupBy(entity => entity.Date)
                 .Select(entities => new SalesStatsItem
                 {
                     Date = entities.Key,
@@ -329,14 +319,35 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
-        private static Func<List<InvoiceEntity>, InvoiceEntity, List<InvoiceEntity>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items, string posPriceKey)
+        private class InvoiceStatsItem
+        {
+            public string ItemCode { get; set; }
+            public decimal FiatPrice { get; set; }
+            public DateTime Date { get; set; }
+        }
+        
+        private static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items)
         {
             return (res, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Metadata.ItemCode))
                 {
                     var item = items.FirstOrDefault(p => p.Id == e.Metadata.ItemCode);
-                    if (item != null) res.Add(e);
+                    if (item == null) return res;
+                    
+                    var fiatPrice = e.GetPayments(true).Sum(pay =>
+                    {
+                        var paymentMethodId = pay.GetPaymentMethodId();
+                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
+                        return rate * value;
+                    });
+                    res.Add(new InvoiceStatsItem
+                    {
+                        ItemCode = e.Metadata.ItemCode,
+                        FiatPrice = fiatPrice,
+                        Date = e.InvoiceTime.Date
+                    });
                 }
                 else if (!string.IsNullOrEmpty(e.Metadata.PosData))
                 {
@@ -347,54 +358,16 @@ namespace BTCPayServer.Services.Apps
                     {
                         var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
                         if (item == null) continue;
-                            
-                        // FIXME: Clone object, there must be a better approach
-                        var clone = new InvoiceEntity
+                        
+                        for (var i = 0; i < lineItem.Count; i++)
                         {
-                            Networks = e.Networks,
-                            Version = e.Version,
-                            Id = e.Id,
-                            StoreId = e.StoreId,
-                            SpeedPolicy = e.SpeedPolicy,
-                            DefaultLanguage = e.DefaultLanguage,
-                            InvoiceTime = e.InvoiceTime,
-                            ExpirationTime = e.ExpirationTime,
-                            Price = e.Price,
-                            Currency = e.Currency,
-                            DefaultPaymentMethod = e.DefaultPaymentMethod,
-                            InternalTags = e.InternalTags,
-                            Status = e.Status,
-                            ExceptionStatus = e.ExceptionStatus,
-                            Refundable = e.Refundable,
-                            RequiresRefundEmail = e.RequiresRefundEmail,
-                            RefundMail = e.RefundMail,
-                            RedirectURLTemplate = e.RedirectURLTemplate,
-                            RedirectAutomatically = e.RedirectAutomatically,
-                            FullNotifications = e.FullNotifications,
-                            NotificationEmail = e.NotificationEmail,
-                            NotificationURLTemplate = e.NotificationURLTemplate,
-                            ServerUrl = e.ServerUrl,
-                            MonitoringExpiration = e.MonitoringExpiration,
-                            AvailableAddressHashes = e.AvailableAddressHashes,
-                            ExtendedNotifications = e.ExtendedNotifications,
-                            Events = e.Events,
-                            PaymentTolerance = e.PaymentTolerance,
-                            Archived = e.Archived,
-                            Type = e.Type,
-                            Refunds = e.Refunds,
-                            // new, because we will modify Metadata and AdditionalData
-                            AdditionalData = new Dictionary<string, JToken>
-                            {
-                                {posPriceKey, lineItem.Price.Value}
-                            },
-                            Metadata = new InvoiceMetadata
+                            res.Add(new InvoiceStatsItem
                             {
                                 ItemCode = item.Id,
-                                ItemDesc = item.Description
-                            }
-                        };
-                            
-                        for (var i = 0; i < lineItem.Count; i++) res.Add(clone);
+                                FiatPrice = lineItem.Price.Value,
+                                Date = e.InvoiceTime.Date
+                            });
+                        }
                     }
                 }
                 return res;

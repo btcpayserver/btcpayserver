@@ -86,6 +86,38 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(appData));
         }
 
+        [HttpGet("~/api/v1/apps/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            return Ok(ToModel(app));
+        }
+
+        [HttpDelete("~/api/v1/apps/{appId}")]
+        public async Task<IActionResult> DeleteApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, null);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            await _appService.DeleteApp(app);
+
+            return Ok();
+        }
+
+        private IActionResult AppNotFound()
+        {
+            return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
+        }
+
         private PointOfSaleAppData ToModel(AppData appData)
         {
             return new PointOfSaleAppData

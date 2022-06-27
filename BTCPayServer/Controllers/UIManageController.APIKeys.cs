@@ -300,7 +300,6 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var storeIds = vm.SpecificStores.ToArray();
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
             
@@ -310,16 +309,13 @@ namespace BTCPayServer.Controllers
             // so that permission for a specific store is parsed correctly
             foreach (var permission in permissions)
             {
-                if (!Policies.IsStorePolicy(permission) || storeIds.Length == 0)
+                if (!Policies.IsStorePolicy(permission) || string.IsNullOrEmpty(vm.StoreId))
                 {
                     permissionsWithStoreIDs.Add(permission);
                 }
                 else
                 {
-                    foreach (var t in storeIds)
-                    {
-                        permissionsWithStoreIDs.Add($"{permission}:{t}");
-                    }
+                    permissionsWithStoreIDs.Add($"{permission}:{vm.StoreId}");
                 }
             }
 
@@ -581,7 +577,7 @@ namespace BTCPayServer.Controllers
             public string Permissions { get; set; }
             public string ApiKey { get; set; }
             public bool NeedsStorePermission { get; set; }
-            public List<string> SpecificStores { get; set; } = new ();
+            public string StoreId { get; set; }
         }
 
         public class ApiKeysViewModel

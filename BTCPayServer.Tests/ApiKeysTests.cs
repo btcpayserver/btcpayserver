@@ -128,7 +128,7 @@ namespace BTCPayServer.Tests
             // No upfront store selection with only server settings
             s.GoToUrl(authUrl);
             Assert.Contains(appidentifier, s.Driver.PageSource);
-            Assert.False(s.Driver.FindElement(By.Id("SpecificStores")).Displayed);
+            Assert.False(s.Driver.FindElement(By.Id("StoreId")).Displayed);
             
             // Now with store settings
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
@@ -137,7 +137,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(appidentifier, s.Driver.PageSource);
             
             // Select a store
-            var select = new SelectElement(s.Driver.FindElement(By.Id("SpecificStores")));
+            var select = new SelectElement(s.Driver.FindElement(By.Id("StoreId")));
             select.SelectByIndex(0);
             s.Driver.FindElement(By.Id("continue")).Click();
             
@@ -162,7 +162,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
 
             // Select a store
-            select = new SelectElement(s.Driver.FindElement(By.Id("SpecificStores")));
+            select = new SelectElement(s.Driver.FindElement(By.Id("StoreId")));
             select.SelectByIndex(0);
             s.Driver.FindElement(By.Id("continue")).Click();
 

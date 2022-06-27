@@ -96,12 +96,12 @@
     right: 50%;
 }
 .flatpickr-calendar:before {
-    border-width: 5px;
-    margin: 0 -5px;
+    border-width: 8px;
+    margin: 0 -8px;
 }
 .flatpickr-calendar:after {
-    border-width: 4px;
-    margin: 0 -4px;
+    border-width: 7px;
+    margin: 0 -7px;
 }
 .flatpickr-calendar.arrowTop:before,
 .flatpickr-calendar.arrowTop:after {
@@ -111,7 +111,7 @@
     border-bottom-color: var(--btcpay-body-border-medium);
 }
 .flatpickr-calendar.arrowTop:after {
-    border-bottom-color: #fff;
+    border-bottom-color: var(--btcpay-body-border-medium);
 }
 .flatpickr-calendar.arrowBottom:before,
 .flatpickr-calendar.arrowBottom:after {
@@ -121,7 +121,7 @@
     border-top-color: var(--btcpay-body-border-medium);
 }
 .flatpickr-calendar.arrowBottom:after {
-    border-top-color: #fff;
+    border-top-color: var(--btcpay-body-border-medium);
 }
 .flatpickr-calendar:focus {
     outline: 0;
@@ -753,6 +753,9 @@ span.flatpickr-weekday {
     cursor: pointer;
     text-align: center;
     font-weight: 400;
+}
+.flatdtpicker[readonly] {
+    background-color: var(--btcpay-form-bg);
 }
 .flatpickr-input[readonly] {
     cursor: pointer;

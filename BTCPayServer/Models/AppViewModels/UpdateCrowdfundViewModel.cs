@@ -77,6 +77,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Reset goal every")]
         public string ResetEvery { get; set; } = nameof(CrowdfundResetEvery.Never);
 
+        [Display(Name = "Reset goal every")]
         public int ResetEveryAmount { get; set; } = 1;
 
         [Display(Name = "Do not allow additional contributions after target has been reached")]

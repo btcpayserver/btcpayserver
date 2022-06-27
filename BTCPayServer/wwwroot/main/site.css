@@ -20,6 +20,10 @@ hr.primary {
     display: none;
 }
 
+.input-group-clear .icon {
+    --btn-icon-size: .65rem;
+}
+
 .note-editable {
     color: var(--btcpay-form-text);
     background-color: var(--btcpay-form-bg);
@@ -219,6 +223,7 @@ h2 small .fa-question-circle-o {
     border: 1px dotted var(--btcpay-neutral-400);
 }
 
+/* Icons */
 svg.icon {
     display: inline-block;
     width: 1rem;

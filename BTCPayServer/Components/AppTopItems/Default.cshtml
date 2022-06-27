@@ -17,21 +17,30 @@
         <script>
             (function () {
                 const id = @Safe.Json($"AppTopItems-{Model.App.Id}");
-                const labels = @Safe.Json(Model.Entries.Select(i => i.Title));
                 const series = @Safe.Json(Model.Entries.Select(i => i.SalesCount));
-                new Chartist.Pie(`#${id} .ct-chart`, { labels, series }, {
-                    labelDirection: 'explode'
+                new Chartist.Bar(`#${id} .ct-chart`, { series }, {
+                    distributeSeries: true,
+                    horizontalBars: true,
+                    showLabel: false,
+                    stackBars: true,
+                    axisY: {
+                        offset: 0
+                    }
                 });
             })();
         </script>
         <div class="app-items">
-            @foreach (var entry in Model.Entries)
+            @for (var i = 0; i < Model.Entries.Count; i++)
             {
-                <div class="app-item">
-                    <span class="app-item-name">@entry.Title</span>
+                var entry = Model.Entries[i];
+                <div class="app-item ct-series-@i">
+                    <span class="app-item-name">
+                        <span class="app-item-point ct-point"></span>
+                        @entry.Title
+                    </span>
                     <span class="app-item-value">
-                        @entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),
-                        @entry.TotalFormatted total
+                        <span class="text-muted">@entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),</span>
+                        @entry.TotalFormatted
                     </span>
                 </div>
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
@@ -27,7 +28,7 @@ public class AppTopItems : ViewComponent
         var vm = new AppTopItemsViewModel
         {
             App = app,
-            Entries = entries
+            Entries = entries.ToList()
         };
 
         return View(vm);

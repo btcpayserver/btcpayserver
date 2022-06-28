@@ -72,7 +72,7 @@ namespace BTCPayServer.PluginPacker
             {
                 await CreateShasums("powershell.exe", sha256dirs, outputDir);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 try
                 {

@@ -291,20 +291,13 @@
                             </ul>
                         }
                     </div>
-                    @{
-                        var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-                        var pluginCommands = Model.Commands.GroupBy(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-                    }
                     <div class="card-footer border-0 pb-3">
-                        @if (pending)
+                        @{ var pending = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)); }
+                        @if (!pending.Equals(default))
                         {
-                            @foreach (var command in pluginCommands)
-                            {
-                                
-                                <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                    <button type="submit" class="btn btn-outline-secondary">Cancel pending @command.Last().command</button>
-                                </form>
-                            }
+                            <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pending.command</button>
+                            </form>
                         }
                         else if (DependenciesMet(plugin.Dependencies))
                         {

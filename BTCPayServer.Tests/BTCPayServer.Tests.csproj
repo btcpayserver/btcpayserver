@@ -51,7 +51,6 @@
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
-    <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Custodians.MockCustodian\BTCPayServer.Plugins.Custodians.MockCustodian.csproj" />
   </ItemGroup>
 
 </Project>

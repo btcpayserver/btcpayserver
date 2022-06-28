@@ -39,7 +39,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.PluginPacker",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Custodians.Kraken", "Plugins\BTCPayServer.Plugins.Custodians.Kraken\BTCPayServer.Plugins.Custodians.Kraken.csproj", "{67E66BEF-ED0D-4CDD-8002-E1AD63F27C2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Custodians.MockCustodian", "Plugins\BTCPayServer.Plugins.Custodians.MockCustodian\BTCPayServer.Plugins.Custodians.MockCustodian.csproj", "{49E1FE45-FE71-49DF-8701-8394E974BE82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Custodians.FakeCustodian", "Plugins\BTCPayServer.Plugins.Custodians.FakeCustodian\BTCPayServer.Plugins.Custodians.FakeCustodian.csproj", "{49E1FE45-FE71-49DF-8701-8394E974BE82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

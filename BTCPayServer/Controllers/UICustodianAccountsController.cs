@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -18,6 +19,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -69,38 +72,56 @@ namespace BTCPayServer.Controllers
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
 
+            vm.Custodian = custodian;
             vm.CustodianAccount = custodianAccount;
             var store = GetCurrentStore();
             var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
             var defaultCurrency = storeBlob.DefaultCurrency;
             vm.DefaultCurrency = defaultCurrency;
 
-            
 
             try
             {
-                vm.AssetBalances =
+                var assetBalances = new Dictionary<string, AssetBalanceInfo>();
+                var assetBalancesData =
                     await custodian.GetAssetBalancesAsync(custodianAccount.GetBlob(), cancellationToken: default);
-                
+
+                foreach (var pair in assetBalancesData)
+                {
+                    var asset = pair.Key;
+
+                    assetBalances.Add(asset,
+                        new AssetBalanceInfo
+                        {
+                            Asset = asset,
+                            Qty = pair.Value
+                        }
+                    );
+                }
+
+
                 if (custodian is ICanTrade tradingCustodian)
                 {
-                    vm.AssetBids = new Dictionary<string, decimal>();
-                    vm.AssetAsks = new Dictionary<string, decimal>();
-
                     var config = custodianAccount.GetBlob();
-                    
-                    foreach (var pair in vm.AssetBalances)
+                    var tradableAssetPairs = tradingCustodian.GetTradableAssetPairs();
+
+                    foreach (var pair in assetBalances)
                     {
                         var asset = pair.Key;
+                        var assetBalance = assetBalances[asset];
+                        var qty = pair.Value;
+
                         if (!asset.Equals(defaultCurrency))
                         {
                             try
                             {
-                                var quote = await tradingCustodian.GetQuoteForAssetAsync(defaultCurrency,asset,
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(defaultCurrency, asset,
                                     config, default);
-
-                                vm.AssetBids.Add(asset, quote.Bid);
-                                vm.AssetAsks.Add(asset, quote.Ask);
+                                assetBalance.Ask = quote.Ask;
+                                assetBalance.Bid = quote.Bid;
+                                assetBalance.FiatAsset = defaultCurrency;
+                                assetBalance.TradableAssetPairs =
+                                    tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
                             }
                             catch (WrongTradingPairException e)
                             {
@@ -108,9 +129,37 @@ namespace BTCPayServer.Controllers
                             }
                         }
                     }
-                    
+                }
+
+                if (custodian is ICanWithdraw withdrawableCustodian)
+                {
+                    var withdrawableePaymentMethods = withdrawableCustodian.GetWithdrawablePaymentMethods();
+                    foreach (var withdrawableePaymentMethod in withdrawableePaymentMethods)
+                    {
+                        var withdrawableAsset = withdrawableePaymentMethod.Split("-")[0];
+                        if (assetBalances.ContainsKey(withdrawableAsset))
+                        {
+                            var assetBalance = assetBalances[withdrawableAsset];
+                            assetBalance.CanWithdraw = true;
+                        }
+                    }
                 }
                 
+                if (custodian is ICanDeposit depositableCustodian)
+                {
+                    var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
+                    foreach (var depositablePaymentMethod in depositablePaymentMethods)
+                    {
+                        var depositableAsset = depositablePaymentMethod.Split("-")[0];
+                        if (assetBalances.ContainsKey(depositableAsset))
+                        {
+                            var assetBalance = assetBalances[depositableAsset];
+                            assetBalance.CanDeposit = true;
+                        }
+                    }
+                }
+
+                vm.AssetBalances = assetBalances;
             }
             catch (Exception e)
             {

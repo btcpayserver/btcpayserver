@@ -23,12 +23,16 @@
             {
                 <partial name="_FormTopMessages" model="Model.ConfigForm" />
             }
-            else
+            else if(Model.Custodians.Count() > 0)
             {
                 <div class="form-group">
                     <label asp-for="SelectedCustodian" class="form-label" data-required></label>
                     <select asp-for="SelectedCustodian" asp-items="Model.Custodians" class="form-select"></select>
                 </div>
+            }
+            else
+            {
+                <p>No custodians available. Install some plugins to add custodian / exchange support.</p>
             }
             
             @if (!string.IsNullOrEmpty(Model.SelectedCustodian))

@@ -148,6 +148,7 @@
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	  <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Custodians.Kraken\BTCPayServer.Plugins.Custodians.Kraken.csproj" />
+	  <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Custodians.FakeCustodian\BTCPayServer.Plugins.Custodians.FakeCustodian.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

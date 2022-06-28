@@ -1,5 +1,3 @@
-using System;
-using NBXplorer;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data;

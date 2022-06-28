@@ -135,7 +135,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
-    public async Task<Form> GetConfigForm(JObject config, string locale,
+    public async Task<Form>? GetConfigForm(JObject config, string locale,
         CancellationToken cancellationToken)
     {
         // TODO "locale" is not used yet, but keeping it here so it's clear translation should be done here.

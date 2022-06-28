@@ -1,6 +1,7 @@
 ﻿@using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Custodians
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
@@ -13,11 +14,12 @@
 
 <partial name="_StatusMessage"/>
 
-<div class="d-sm-flex align-items-center justify-content-between mb-2">
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
-            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener">
+            <a href="https://docs.btcpayserver.org/Custodians/" class="ms-1" target="_blank" rel="noreferrer noopener">
                 <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
             </a>
         </small>
@@ -40,9 +42,7 @@
             </p>
         }
 
-
         <h2>Balances</h2>
-
         <table class="table table-hover table-responsive-md">
             <thead>
             <tr>
@@ -50,31 +50,42 @@
                 <th>Balance</th>
                 <th>Unit Price (Bid)</th>
                 <th>Unit Price (Ask)</th>
+                <th>Fiat Value</th>
                 <th class="text-xs-right">Actions</th>
             </tr>
             </thead>
             <tbody>
             @if (Model.AssetBalances != null && Model.AssetBalances.Count > 0)
             {
-                @foreach (var pair in Model.AssetBalances)
+                @foreach (var pair in Model.AssetBalances.OrderBy(key => key.Key))
                 {
                     <tr>
                         <td>@pair.Key</td>
                         <!-- TODO format as number? How? -->
-                        <th>@pair.Value</th>
+                        <th>@pair.Value.Qty</th>
                         <th>
-                            @if (@Model.AssetBids.ContainsKey(pair.Key))
-                            {
-                                @Model.AssetBids[pair.Key]
-                            }
+                            @pair.Value.Bid
                         </th>
                         <th>
-                            @if (@Model.AssetAsks.ContainsKey(pair.Key))
+                            @pair.Value.Ask
+                        </th>
+                        <th>
+                            @(pair.Value.Qty * pair.Value.Bid) @pair.Value.FiatAsset
+                        </th>
+                        <th>
+                            @if (pair.Value.TradableAssetPairs != null)
                             {
-                                @Model.AssetAsks[pair.Key]
+                                <a data-bs-toggle="modal" data-bs-target="#tradeModal" href="#">Trade</a>
+                            }
+                            @if (pair.Value.CanDeposit)
+                            {
+                                <a data-bs-toggle="modal" data-bs-target="#depositModal" href="#">Deposit</a>
+                            }
+                            @if (pair.Value.CanWithdraw)
+                            {
+                                <a data-bs-toggle="modal" data-bs-target="#withdrawModal" href="#">Withdraw</a>
                             }
                         </th>
-                        <th></th>
                     </tr>
                 }
             }
@@ -92,7 +103,84 @@
             }
             </tbody>
         </table>
+        
+        
+        <h2>Features</h2>
+        <p>The @Model.Custodian.Name custodian supports:</p>
+        <ul>
+            <li>Viewing asset balances</li>
+            @if (Model.Custodian is ICanTrade)
+            {
+                <li>Trading</li>
+            }
+            @if (Model.Custodian is ICanDeposit)
+            {
+                <li>Depositing</li>
+            }
+            @if (Model.Custodian is ICanWithdraw)
+            {
+                <li>Withdrawing</li>
+            }
+        </ul>
 
 
+    </div>
+</div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="withdrawModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Withdraw</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Withdrawals are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/#tag/Custodians/paths/~1api~1v1~1stores~1{storeId}~1custodian-accounts~1{accountId}~1withdrawals/post">Greenfield API</a> to execute a withdrawal.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="depositModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Deposit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Deposits are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/#tag/Custodians/paths/~1api~1v1~1stores~1{storeId}~1custodian-accounts~1{accountId}~1addresses~1{paymentMethod}/get">Greenfield API</a> to get a deposit address to send your assets to.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="tradeModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Trades are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/#tag/Custodians/paths/~1api~1v1~1stores~1{storeId}~1custodian-accounts~1{accountId}~1trades~1market/post"> Greenfield API</a> to convert an asset to another via a market order.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>

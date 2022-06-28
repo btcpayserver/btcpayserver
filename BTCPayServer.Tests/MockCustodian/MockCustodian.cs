@@ -1,9 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Plugins.Custodians.MockCustodian;
+namespace BTCPayServer.Services.Custodian.Client.MockCustodian;
 
 public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 {

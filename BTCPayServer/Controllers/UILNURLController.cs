@@ -117,78 +117,96 @@ namespace BTCPayServer
             };
             if (pr is not null)
             {
-                if(BOLT11PaymentRequest.TryParse(pr, out var result, network.NBitcoinNetwork) )
-                {
-                    if (result.MinimumAmount >= request.MinWithdrawable &&
-                        result.MinimumAmount <= request.MaxWithdrawable)
-                    {
-                        var store = await _storeRepository.FindStore(pp.StoreId);
-                        var pm = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                            .OfType<LightningSupportedPaymentMethod>()
-                            .FirstOrDefault(method => method.PaymentId == pmi);
-                        if (pm is null)
-                        {
-                            return NotFound();
-                        }
-
-                        var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest()
-                        {
-                            Destination = new BoltInvoiceClaimDestination(pr, result),
-                            PaymentMethodId = pmi,
-                            PullPaymentId = pullPaymentId,
-                            StoreId = pp.StoreId,
-                            Value = result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)
-                        });
-
-                        if (claimResponse.Result == ClaimRequest.ClaimResult.Ok)
-                        {
-                            if (claimResponse.PayoutData.State == PayoutState.AwaitingPayment)
-                            {
-                                var client =
-                                    _lightningLikePaymentHandler.CreateLightningClient(pm, network);
-                                PayResponse payResult;
-                                try
-                                {
-                                    payResult = await client.Pay(pr);
-                                }
-                                catch (Exception e)
-                                {
-
-                                    payResult = new PayResponse(PayResult.Error);
-                                }
-
-                                switch (payResult.Result)
-                                {
-                                    case PayResult.Ok:
-                                        await _pullPaymentHostedService.MarkPaid(new PayoutPaidRequest()
-                                        {
-                                            PayoutId = claimResponse.PayoutData.Id,
-                                            Proof = new ManualPayoutProof { }
-                                        });
-
-                                        return Ok(new LNUrlStatusResponse {Status = "OK"});
-                                    default:
-                                        await _pullPaymentHostedService.Cancel(
-                                            new PullPaymentHostedService.CancelRequest(new string[]
-                                            {
-                                                claimResponse.PayoutData.Id
-                                            }));
-
-                                        return Ok(new LNUrlStatusResponse
-                                        {
-                                            Status = "ERROR", Reason = "Pr could not be paid"
-                                        });
-                                }
-                            }
-
-                            return Ok(new LNUrlStatusResponse {Status = "OK"});
-                        }
-                        return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr could not be paid"});
-                    }
-                }else
+                if (!BOLT11PaymentRequest.TryParse(pr, out var result, network.NBitcoinNetwork) || result is null)
                 {
                     return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr was not a valid BOLT11"});
                 }
+
+                if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
+                    return BadRequest(new LNUrlStatusResponse
+                    {
+                        Status = "ERROR", Reason = "Pr was not within bounds"
+                    });
+                var store = await _storeRepository.FindStore(pp.StoreId);
+                var pm = store!.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                    .OfType<LightningSupportedPaymentMethod>()
+                    .FirstOrDefault(method => method.PaymentId == pmi);
+                if (pm is null)
+                {
+                    return NotFound();
+                }
+
+                var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest()
+                {
+                    Destination = new BoltInvoiceClaimDestination(pr, result),
+                    PaymentMethodId = pmi,
+                    PullPaymentId = pullPaymentId,
+                    StoreId = pp.StoreId,
+                    Value = result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)
+                });
+
+                if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
+                    return BadRequest(new LNUrlStatusResponse
+                    {
+                        Status = "ERROR", Reason = "Pr could not be paid"
+                    });
+                switch (claimResponse.PayoutData.State)
+                {
+                    case PayoutState.AwaitingPayment:
+                    {
+                        var client =
+                            _lightningLikePaymentHandler.CreateLightningClient(pm, network);
+                        PayResponse payResult;
+                        try
+                        {
+                            payResult = await client.Pay(pr);
+                        }
+                        catch (Exception e)
+                        {
+                            payResult = new PayResponse(PayResult.Error, e.Message);
+                        }
+
+                        switch (payResult.Result)
+                        {
+                            case PayResult.Ok:
+                                await _pullPaymentHostedService.MarkPaid(new PayoutPaidRequest()
+                                {
+                                    PayoutId = claimResponse.PayoutData.Id,
+                                    Proof = new ManualPayoutProof { }
+                                });
+
+                                return Ok(new LNUrlStatusResponse {Status = "OK"});
+                            default:
+                                await _pullPaymentHostedService.Cancel(
+                                    new PullPaymentHostedService.CancelRequest(new string[]
+                                    {
+                                        claimResponse.PayoutData.Id
+                                    }));
+
+                                return Ok(new LNUrlStatusResponse
+                                {
+                                    Status = "ERROR",
+                                    Reason = $"Pr could not be paid because {payResult.ErrorDetail}"
+                                });
+                        }
+                    }
+                    case PayoutState.AwaitingApproval:
+                        return Ok(new LNUrlStatusResponse
+                        {
+                            Status = "OK",
+                            Reason =
+                                "The payment request has been recorded, but still needs to be approved before execution."
+                        });
+                    case PayoutState.InProgress:
+                    case PayoutState.Completed:
+                        return Ok(new LNUrlStatusResponse {Status = "OK"});
+                    case PayoutState.Cancelled:
+                        return BadRequest(new LNUrlStatusResponse
+                        {
+                            Status = "ERROR", Reason = "Pr could not be paid"
+                        });
+                }
+
                 return Ok(request);
             }
             else

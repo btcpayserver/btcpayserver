@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;

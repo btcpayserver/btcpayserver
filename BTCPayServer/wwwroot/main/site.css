@@ -1,3 +1,13 @@
+/* Variables */
+:root {
+    --chart-main-rgb: 68, 164, 49;
+    --chart-series-a-rgb: var(--chart-main-rgb);
+    --chart-series-b-rgb: 245, 0, 0;
+    --chart-series-c-rgb: 0, 109, 242;
+    --chart-series-d-rgb: 255, 188, 4;
+    --chart-series-e-rgb: 160, 98, 75;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;
@@ -102,7 +112,6 @@ h2 small .fa-question-circle-o {
     top: -.1rem;
     font-size: var(--btcpay-font-size-l);
 }
-
 
 /* Invoices */
 .invoice-payments {
@@ -391,6 +400,27 @@ svg.icon-note {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
+.widget.app-top-items .ct-chart,
+.widget.app-top-items .ct-chart .ct-chart-bar {
+    height: 30px;
+}
+
+.widget.app-top-items .ct-chart .ct-chart-bar {
+    margin-left: -.4rem;
+    margin-right: -.5rem;
+    width: calc(100% + 1rem) !important;
+}
+
+.widget.app-top-items .ct-bar {
+    stroke-linecap: round;
+    stroke-width: 10px;
+}
+
+.widget.app-top-items .ct-grids,
+.widget.app-top-items .ct-labels {
+    display: none;
+}
+
 .widget.app-top-items .app-items {
     display: flex;
     flex-direction: column;
@@ -399,8 +429,18 @@ svg.icon-note {
 
 .widget.app-top-items .app-item {
     display: flex;
-    align-items: end;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-xs);
+    align-items: center;
     justify-content: space-between;
+}
+
+.widget.app-top-items .app-item-point {
+    display: inline-block;
+    width: var(--btcpay-space-s);
+    height: var(--btcpay-space-s);
+    margin-right: var(--btcpay-space-s);
+    border-radius: 50%;
 }
 
 .widget.app-top-items .app-item-value {

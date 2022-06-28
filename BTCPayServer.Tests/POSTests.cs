@@ -29,12 +29,13 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
             var apps = user.GetController<UIAppsController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var appType = AppType.PointOfSale.ToString();
             vm.AppName = "test";
-            vm.SelectedAppType = AppType.PointOfSale.ToString();
+            vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
-            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
+            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType });
             var vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             vmpos.Template = @"
 apple:

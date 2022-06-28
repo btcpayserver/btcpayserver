@@ -158,17 +158,16 @@ namespace BTCPayServer.Controllers
                 var userId = GetUserId();
                 var apps = await _appService.GetAllApps(userId, false, store.Id);
                 vm.Apps = apps
-                    .Where(a => a.AppType == AppType.Crowdfund.ToString())
                     .Select(a =>
                     {
-                        var appData = _appService.GetAppDataIfOwner(userId, a.Id, AppType.Crowdfund).Result;
+                        var appData = _appService.GetAppDataIfOwner(userId, a.Id).Result;
                         appData.StoreData = store;
                         return appData;
                     })
                     .ToList();
             }
             
-            return View("Dashboard", vm);
+            return View(vm);
         }
 
         [HttpPost]

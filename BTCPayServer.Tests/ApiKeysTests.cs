@@ -128,11 +128,17 @@ namespace BTCPayServer.Tests
             // No upfront store selection with only server settings
             s.GoToUrl(authUrl);
             Assert.Contains(appidentifier, s.Driver.PageSource);
-            Assert.False(s.Driver.FindElement(By.Id("StoreId")).Displayed);
+            Assert.True(s.Driver.ElementDoesNotExist(By.CssSelector("select#StoreId")));
+            
+            // No upfront store selection with selectiveStores being false
+            authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: false, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
+            s.GoToUrl(authUrl);
+            Assert.True(s.Driver.ElementDoesNotExist(By.CssSelector("select#StoreId")));
             
             // Now with store settings
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: true, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
             s.GoToUrl(authUrl);
             Assert.Contains(appidentifier, s.Driver.PageSource);
             
@@ -156,7 +162,7 @@ namespace BTCPayServer.Tests
                 (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, applicationDetails: (null, new Uri(callbackUrl))).ToString();
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (null, new Uri(callbackUrl))).ToString();
 
             s.GoToUrl(authUrl);
             Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
@@ -186,6 +192,12 @@ namespace BTCPayServer.Tests
 
             //if it's the same, go to the confirm page
             s.GoToUrl(authUrl);
+            
+            // Select the same store
+            select = new SelectElement(s.Driver.FindElement(By.Id("StoreId")));
+            select.SelectByIndex(0);
+            s.Driver.FindElement(By.Id("continue")).Click();
+            
             Assert.Contains("previously generated the API Key", s.Driver.PageSource);
             s.Driver.WaitForAndClick(By.Id("continue"));
             Assert.Equal(callbackUrl, s.Driver.Url);
@@ -195,6 +207,12 @@ namespace BTCPayServer.Tests
                 new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
 
             s.GoToUrl(authUrl);
+            
+            // Select the same store
+            select = new SelectElement(s.Driver.FindElement(By.Id("StoreId")));
+            select.SelectByIndex(0);
+            s.Driver.FindElement(By.Id("continue")).Click();
+            
             Assert.DoesNotContain("previously generated the API Key", s.Driver.PageSource);
             Assert.False(s.Driver.Url.StartsWith("https://international.com/callback"));
 

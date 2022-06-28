@@ -2,9 +2,9 @@
 @inject SignInManager<ApplicationUser> _signInManager
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
-
 @functions {
     @* ReSharper disable once CSharpWarnings::CS1998 *@
+	#pragma warning disable 1998
     private async Task LogoContent()
     {
         var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
@@ -14,13 +14,12 @@
             <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
         }
     }
-
     private string StoreName(string title)
     {
         return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
     }
+	#pragma warning restore 1998
 }
-
 @if (Model.CurrentStoreId == null)
 {
     <a href="~/" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>

@@ -1,4 +1,4 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
+ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -224,10 +224,6 @@
 	  <Content Update="Views\UIWallets\_ViewStart.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <AdditionalFiles Include="Components\StoreLightningBalance\Default.cshtml" />
 	</ItemGroup>
 
 	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1invoices_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1misc_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1users_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1webhooks_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>

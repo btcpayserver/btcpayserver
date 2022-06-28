@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Components.StoreLightningBalance;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -13,6 +14,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +22,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
+
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
         public IActionResult Lightning(string storeId, string cryptoCode)
         {
@@ -348,6 +351,50 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
         }
+        
+        [HttpGet("{storeId}/lightning/{cryptoCode}/balance")]
+        public async Task<IActionResult> LightningBalance(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+            
+            var lightningClient = GetLightningClient(store, cryptoCode);
+            var vm = new StoreLightningBalanceViewModel();
+        
+            if (lightningClient != null)
+            {
+                try
+                {
+                    var balance = await lightningClient.GetBalance();
+                    vm.Balance = balance;
+                    vm.TotalOnchain = balance.OnchainBalance != null
+                        ? (balance.OnchainBalance.Confirmed?? 0) + (balance.OnchainBalance.Reserved ?? 0) +
+                          (balance.OnchainBalance.Unconfirmed ?? 0)
+                        : null;
+                    vm.TotalOffchain = balance.OffchainBalance != null
+                        ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +
+                          (balance.OffchainBalance.Closing?? 0)
+                        : null;
+                }
+                catch (NotSupportedException)
+                {
+                    // not all implementations support balance fetching
+                    vm.ProblemDescription = "Your node does not support balance fetching.";
+                }
+                catch
+                {
+                    // general error
+                    vm.ProblemDescription = "Could not fetch Lightning balance.";
+                }
+            }
+            else
+            {
+                vm.ProblemDescription = "Cannot instantiate Lightning client.";
+            }
+
+            return Json(vm);
+        }
 
         private bool CanUseInternalLightning()
         {
@@ -386,6 +433,27 @@ namespace BTCPayServer.Controllers
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
+        }
+    
+        private ILightningClient? GetLightningClient(StoreData store, string cryptoCode)
+        {
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            if (existing == null) return null;
+        
+            if (existing.GetExternalLightningUrl() is {} connectionString)
+            {
+                return _lightningClientFactory.Create(connectionString, network);
+            }
+            if (existing.IsInternalNode && _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
+            {
+                return _lightningClientFactory.Create(internalLightningNode, network);
+            }
+
+            return null;
         }
     }
 }

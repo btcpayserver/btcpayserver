@@ -330,6 +330,15 @@ svg.icon-note {
     margin-bottom: 0;
 }
 
+.widget .currency-toggle .btn {
+    background-color: var(--btcpay-bg-tile);
+    border-color: var(--btcpay-body-border-light);
+}
+
+.widget .currency-toggle input:not(:checked) + .btn {
+    color: var(--btcpay-body-text-muted);
+}
+
 .widget .btn-group {
     display: inline-flex;
     gap: var(--btcpay-space-m);

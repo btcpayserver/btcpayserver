@@ -6,7 +6,15 @@
     <div id="StoreLightningServices-@Model.Store.Id" class="widget store-lightning-services">
         <header class="mb-4">
             <h6>Lightning Services</h6>
-            <a class asp-controller="UIStores" asp-action="Lightning" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@Model.CryptoCode">Details</a>
+            <a
+                asp-controller="UIPublicLightningNodeInfo"
+                asp-action="ShowLightningNodeInfo"app-top-items
+                asp-route-cryptoCode="@Model.CryptoCode"
+                asp-route-storeId="@Model.Store.Id"
+                target="_blank"
+                id="PublicNodeInfo">
+                Node Info
+            </a>
         </header>
         <div id="Services" class="services-list">
             @foreach (var service in Model.Services)

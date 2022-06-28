@@ -87,7 +87,7 @@
                     }
                     else if (isSettled)
                     {
-                        if (Model.Payments?.Any() is true)
+                        if (Model.ShowPayments && Model.Payments?.Any() is true)
                         {
                             <div id="PaymentDetails" class="bg-tile p-3 p-sm-4 rounded">
                                 <h2 class="h4 mb-3 d-print-none">Payment Details</h2>

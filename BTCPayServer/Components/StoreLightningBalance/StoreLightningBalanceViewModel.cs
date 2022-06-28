@@ -1,8 +1,6 @@
-using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services.Rates;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 

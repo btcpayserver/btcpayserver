@@ -60,6 +60,8 @@ namespace BTCPayServer.Controllers
             AppService appService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
+            LightningClientFactoryService lightningClientFactory,
+            IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _RateFactory = rateFactory;
@@ -82,6 +84,8 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
+            _lightningNetworkOptions = lightningNetworkOptions;
+            _lightningClientFactory = lightningClientFactory;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
@@ -102,6 +106,8 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
+        private readonly LightningClientFactoryService _lightningClientFactory;
 
         [TempData]
         public bool StoreNotConfigured

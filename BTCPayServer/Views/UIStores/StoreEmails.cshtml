@@ -5,7 +5,7 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", Context.GetStoreData().Id);
 }
-<form class="row" asp-action="StoreEmails" asp-route-storeId="@Context.GetStoreData().Id">
+<form class="row" asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id">
     <div class="col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>

@@ -48,11 +48,7 @@ namespace BTCPayServer.Controllers
                 var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
                 var index = int.Parse(item, CultureInfo.InvariantCulture);
                 vm.Rules.RemoveAt(index);
-                
-                return View(vm);
-            }
-
-            if (command == "add")
+            } else if (command == "add")
             {
                 vm.Rules.Add(new StoreEmailRule());
                 

@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
+            var resetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery);
             var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
-                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                ResetEvery = resetEvery,
+                IsRecurring = resetEvery != nameof(CrowdfundResetEvery.Never),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
@@ -92,6 +94,11 @@ namespace BTCPayServer.Controllers
             if (vm.TargetAmount is decimal v && v == 0.0m)
             {
                 vm.TargetAmount = null;
+            }
+
+            if (!vm.IsRecurring)
+            {
+                vm.ResetEvery = nameof(CrowdfundResetEvery.Never);
             }
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)

@@ -6,12 +6,11 @@ namespace BTCPayServer.Services.Apps
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public bool Enabled { get; set; }
-
+        public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-
         public string TargetCurrency { get; set; }
+
         decimal? _TargetAmount;
         public decimal? TargetAmount
         {
@@ -38,7 +37,7 @@ namespace BTCPayServer.Services.Apps
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
         public string DisqusShortname { get; set; }
-        public bool AnimationsEnabled { get; set; } = true;
+        public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
         [Obsolete("Use AppData.TagAllInvoices instead")]
@@ -53,46 +52,33 @@ namespace BTCPayServer.Services.Apps
 
         public string[] Sounds { get; set; } =
         {
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/dominating.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/doublekill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/doublekill2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/eagleeye.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/firstblood.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/firstblood2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/firstblood3.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/flawless.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/godlike.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/hattrick.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/headhunter.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/headshot.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/headshot2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/headshot3.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/holyshit.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/killingspree.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/knife.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/knife2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/knife3.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/ludicrouskill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/megakill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/monsterkill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/multikill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/nade.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/ownage.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/payback.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/prepare.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/prepare2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/prepare3.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/prepare4.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/rampage.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/suicide.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/suicide2.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/suicide3.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/suicide4.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/teamkiller.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/triplekill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/ultrakill.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/unstoppable.wav",
-            "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/whickedsick.wav"
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/dominating.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/doublekill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/doublekill2.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/eagleeye.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/firstblood.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/firstblood2.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/firstblood3.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/godlike.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/hattrick.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/headhunter.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/headshot.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/headshot2.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/headshot3.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/holyshit.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/killingspree.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/ludicrouskill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/megakill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/monsterkill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/multikill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/ownage.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/payback.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/rampage.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/teamkiller.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/triplekill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/ultrakill.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/unstoppable.wav",
+            "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/whickedsick.wav"
         };
     }
     public enum CrowdfundResetEvery

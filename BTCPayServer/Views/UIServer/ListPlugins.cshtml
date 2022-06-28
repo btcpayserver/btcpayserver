@@ -292,13 +292,11 @@
                         }
                     </div>
                     <div class="card-footer border-0 pb-3">
-                        @{ var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)); }
-                        @if (pending)
+                        @{ var pending = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)); }
+                        @if (!pending.Equals(default))
                         {
-                            var (command, _) = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @command</button>
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pending.command</button>
                             </form>
                         }
                         else if (DependenciesMet(plugin.Dependencies))

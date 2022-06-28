@@ -203,12 +203,16 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction("APIKeys", new { key = key.Id });
 
                 default:
-                    var requestPermissions = Permission.ToPermissions(viewModel.Permissions?.Split(';').ToArray()).ToList();
-                    var existingApiKey = await CheckForMatchingApiKey(requestPermissions, viewModel);
-                    if (existingApiKey != null)
+                    var perms = viewModel.Permissions?.Split(';').ToArray() ?? Array.Empty<string>();
+                    if (perms.Any())
                     {
-                        viewModel.ApiKey = existingApiKey.Id;
-                        return View("ConfirmAPIKey", viewModel);
+                        var requestPermissions = Permission.ToPermissions(perms).ToList();
+                        var existingApiKey = await CheckForMatchingApiKey(requestPermissions, viewModel);
+                        if (existingApiKey != null)
+                        {
+                            viewModel.ApiKey = existingApiKey.Id;
+                            return View("ConfirmAPIKey", viewModel);
+                        }
                     }
                     return View(viewModel);
             }

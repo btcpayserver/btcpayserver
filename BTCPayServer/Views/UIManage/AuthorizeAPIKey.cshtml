@@ -4,7 +4,8 @@
 @{
     var displayName = Model.ApplicationName ?? Model.ApplicationIdentifier;
     var store = string.IsNullOrEmpty(Model.StoreId) ? null : Model.Stores.FirstOrDefault(s => s.Id == Model.StoreId);
-    var permissions = Permission.ToPermissions(Model.Permissions.Split(';')).GroupBy(permission => permission.Policy);
+    var permissions = Model.Permissions?.Split(';') ?? Array.Empty<string>();
+    var groupedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
     ViewData["Title"] = $"Authorize {displayName ?? "Application"}";
     Layout = "_LayoutWizard";
 }
@@ -86,7 +87,7 @@
         </div>
         
         <h2 class="h5 fw-semibold mt-4">Permissions</h2>
-        @if (!permissions.Any())
+        @if (!groupedPermissions.Any())
         {
             <p>
                 There are no associated permissions to the API key being requested by the application.

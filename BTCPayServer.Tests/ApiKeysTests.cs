@@ -234,6 +234,14 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation($"Checking API key permissions: {allAPIKey}");
             var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(allAPIKey, "api/v1/api-keys/current", tester.PayTester.HttpClient);
             Assert.Equal(checkedPermissionCount, apikeydata.Permissions.Length);
+            
+            TestLogs.LogInformation("Checking empty permissions");
+            authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri, Array.Empty<string>(), false, true).ToString();
+            s.GoToUrl(authUrl);
+            select = new SelectElement(s.Driver.FindElement(By.Id("StoreId")));
+            select.SelectByIndex(0);
+            s.Driver.FindElement(By.Id("continue")).Click();
+            Assert.Contains("There are no associated permissions to the API key being requested", s.Driver.PageSource);
         }
 
         async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount,

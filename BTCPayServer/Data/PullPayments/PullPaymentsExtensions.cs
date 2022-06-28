@@ -17,7 +17,7 @@ namespace BTCPayServer.Data
             data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob));
         }
 
-        public static bool IsSupported(this PullPaymentData data, BTCPayServer.Payments.PaymentMethodId paymentId)
+        public static bool IsSupported(this PullPaymentData data, Payments.PaymentMethodId paymentId)
         {
             return data.GetBlob().SupportedPaymentMethods.Contains(paymentId);
         }

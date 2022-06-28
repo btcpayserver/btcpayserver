@@ -1,9 +1,10 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Services.ThemeSettings Theme
-
+@inject BTCPayNetworkProvider BtcPayNetworkProvider
 @using NUglify.Helpers
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
+@using BTCPayServer.Payments
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BundlerMinifier.TagHelpers
 @using BTCPayServer.TagHelpers
@@ -25,6 +26,22 @@
             default:
                 return "bg-warning";
         }
+    }
+    
+    
+    string lnurl = null;
+    string lnurlUri = null;
+
+    var pms = Model.PaymentMethods.FirstOrDefault(id => id.PaymentType == LightningPaymentType.Instance && BtcPayNetworkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
+    if (pms is not null && Model.Currency.Equals(pms.CryptoCode, StringComparison.InvariantCultureIgnoreCase))
+    {
+        var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
+        {
+            cryptoCode = pms.CryptoCode,
+            pullPaymentId = Model.Id
+        }, Context.Request.Scheme, Context.Request.Host.ToString()));
+        lnurl = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString();
+        lnurlUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString();
     }
 }
 <!DOCTYPE html>
@@ -51,6 +68,12 @@
                         <div class="row align-items-center" style="width:calc(100% + 30px)">
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
                                 <div class="input-group">
+                                    @if (lnurl is not null)
+                                    {
+                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" data-lnurl data-lnurl-bech32="@lnurl" data-lnurl-uri="@lnurlUri">
+                                            <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
+                                        </button>
+                                    }
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
                                     @if (Model.PaymentMethods.Length == 1)
                                     {
@@ -212,8 +235,28 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
+  @if (lnurl is not null)
+	{
+	    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+	    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+	    <partial name="ShowQR"/>
+	}
     <script>
         document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+         const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
+         delegate('click', 'button[data-lnurl]', event => {
+                    const { lnurlBech32,lnurlUri } = event.target.dataset
+                    qrApp.data = null;
+                    qrApp.dataPerMode = {
+                        Bech32: lnurlBech32,
+                        URI: lnurlUri
+                    };
+                    qrApp.clickable = true;
+                    qrApp.allowedModes = ["Bech32", "URI"];
+                    qrApp.currentMode = "URI";
+                    $("#scan-qr-modal").modal("show")
+                })
+                
     </script>
 </body>
 </html>

@@ -4,10 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
@@ -18,6 +21,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using PayoutData = BTCPayServer.Data.PayoutData;
+using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
 
 namespace BTCPayServer.HostedServices
@@ -167,7 +171,8 @@ namespace BTCPayServer.HostedServices
             RateFetcher rateFetcher,
             IEnumerable<IPayoutHandler> payoutHandlers,
             ILogger<PullPaymentHostedService> logger,
-            Logs logs) : base(logs)
+            Logs logs,
+            CurrencyNameTable currencyNameTable) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -177,6 +182,7 @@ namespace BTCPayServer.HostedServices
             _rateFetcher = rateFetcher;
             _payoutHandlers = payoutHandlers;
             _logger = logger;
+            _currencyNameTable = currencyNameTable;
         }
 
         Channel<object> _Channel;
@@ -188,6 +194,7 @@ namespace BTCPayServer.HostedServices
         private readonly RateFetcher _rateFetcher;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly ILogger<PullPaymentHostedService> _logger;
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
@@ -609,6 +616,47 @@ namespace BTCPayServer.HostedServices
             return cts.Task;
         }
 
+
+        public PullPaymentsModel.PullPaymentModel.ProgressModel CalculatePullPaymentProgress(PullPaymentData pp, DateTimeOffset now)
+        {
+            var ppBlob = pp.GetBlob();
+            
+            var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
+            var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);
+            var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||
+                                                        p.State == PayoutState.InProgress) && p.IsInPeriod(pp, now))
+                .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
+            var period = pp.GetPeriod(now);
+            var totalAwaiting = pp.Payouts.Where(p => (p.State == PayoutState.AwaitingPayment ||
+                                                       p.State == PayoutState.AwaitingApproval) &&
+                                                      p.IsInPeriod(pp, now)).Select(o =>
+                o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
+            ;
+            var currencyData = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
+            return new PullPaymentsModel.PullPaymentModel.ProgressModel()
+            {
+                CompletedPercent = (int)(totalCompleted / ppBlob.Limit * 100m),
+                AwaitingPercent = (int)(totalAwaiting / ppBlob.Limit * 100m),
+                AwaitingFormatted = totalAwaiting.ToString("C", nfi),
+                Awaiting = totalAwaiting,
+                Completed = totalCompleted,
+                CompletedFormatted = totalCompleted.ToString("C", nfi),
+                Limit = ppBlob.Limit.RoundToSignificant(currencyData.Divisibility),
+                LimitFormatted = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
+                ResetIn = period?.End is { } nr ? ZeroIfNegative(nr - now).TimeString() : null,
+                EndIn = pp.EndDate is { } end ? ZeroIfNegative(end - now).TimeString() : null,
+            };
+        }
+        
+        
+        public TimeSpan ZeroIfNegative(TimeSpan time)
+        {
+            if (time < TimeSpan.Zero)
+                time = TimeSpan.Zero;
+            return time;
+        }
+        
+        
 
         class InternalPayoutPaidRequest
         {

@@ -8,11 +8,11 @@
                         <vc:icon symbol="close"/>
                     </button>
                 </div>
-                <div class="modal-body ">
-                    <div class="qr-container text-center mt-3" style="min-height: 256px;">
+                <div class="modal-body text-center ">
+                    <component :is="clickable? 'a': 'div'" class="qr-container text-center mt-3" :href="data" style="min-height: 256px;">
                         <qrcode v-bind:value="currentFragment" :options="{ width: 256,height:256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }">
                         </qrcode>
-                    </div>
+                    </component>
                     <ul class="nav justify-content-center mt-4 mb-3" v-if="allowedModes.length > 1">
                         <li class="nav-item" v-for="allowedMode in allowedModes">
                             <a class="btcpay-pill"
@@ -45,6 +45,8 @@
  			title: title,
  			speed: 500,
  			data: data,
+ 			dataPerMode: {},
+ 			clickable: false,
  			fragments: [],
  			active: false,
  			modalId: modalId,
@@ -75,7 +77,11 @@
  		watch:
  		{
  		    currentMode: function(){
- 				this.setFragments();
+ 				if (this.dataPerMode && this.dataPerMode[this.currentMode]){
+                    this.data = this.dataPerMode[this.currentMode];
+                }
+                 this.setFragments();
+                 
  		    },
  			data: function ()
  			{

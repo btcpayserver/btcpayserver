@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 ApplicationIdentifier = applicationIdentifier
             };
             
-            var existingApiKey = await CheckForMatchingApiKey(applicationIdentifier, redirect, requestPermissions, strict);
+            var existingApiKey = await CheckForMatchingApiKey(requestPermissions, vm);
             if (existingApiKey != null)
             {
                 vm.ApiKey = existingApiKey.Id;
@@ -204,7 +204,7 @@ namespace BTCPayServer.Controllers
 
                 default:
                     var requestPermissions = Permission.ToPermissions(viewModel.Permissions?.Split(';').ToArray()).ToList();
-                    var existingApiKey = await CheckForMatchingApiKey(viewModel.ApplicationIdentifier, viewModel.RedirectUrl, requestPermissions, viewModel.Strict);
+                    var existingApiKey = await CheckForMatchingApiKey(requestPermissions, viewModel);
                     if (existingApiKey != null)
                     {
                         viewModel.ApiKey = existingApiKey.Id;
@@ -241,10 +241,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("APIKeys");
         }
 
-        private async Task<APIKeyData> CheckForMatchingApiKey(string applicationIdentifier, Uri redirect,
-            IEnumerable<Permission> requestPermissions, bool strict)
+        private async Task<APIKeyData> CheckForMatchingApiKey(IEnumerable<Permission> requestedPermissions, AuthorizeApiKeysViewModel vm)
         {
-            if (string.IsNullOrEmpty(applicationIdentifier) || redirect == null)
+            if (string.IsNullOrEmpty(vm.ApplicationIdentifier) || vm.RedirectUrl == null)
             {
                 return null;
             }
@@ -257,28 +256,29 @@ namespace BTCPayServer.Controllers
             foreach (var key in keys)
             {
                 var blob = key.GetBlob();
-                if (blob.ApplicationIdentifier != applicationIdentifier || blob.ApplicationAuthority != redirect.AbsoluteUri)
+                if (blob.ApplicationIdentifier != vm.ApplicationIdentifier || blob.ApplicationAuthority != vm.RedirectUrl.AbsoluteUri)
                 {
                     continue;
                 }
+                
+                var requestedGrouped = requestedPermissions.GroupBy(permission => permission.Policy);
+                var existingGrouped = Permission.ToPermissions(blob.Permissions).GroupBy(permission => permission.Policy);
 
                 //matched the identifier and authority, but we need to check if what the app is requesting in terms of permissions is enough
-                var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions)
-                    .GroupBy(permission => permission.Policy);
                 var fail = false;
-                foreach (var permission in requestPermissions.GroupBy(permission => permission.Policy))
+                foreach (var requested in requestedGrouped)
                 {
-                    var presentPermission =
-                        alreadyPresentPermissions.SingleOrDefault(grouping => permission.Key == grouping.Key);
-                    if (strict && presentPermission == null)
+                    var existing = existingGrouped.SingleOrDefault(grouping => requested.Key == grouping.Key);
+                    if (vm.Strict && existing == null)
                     {
                         fail = true;
                         break;
                     }
 
-                    if (Policies.IsStorePolicy(permission.Key))
+                    if (Policies.IsStorePolicy(requested.Key))
                     {
-                        if (presentPermission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
+                        if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) || 
+                            (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))) )
                         {
                             fail = true;
                             break;
@@ -303,7 +303,7 @@ namespace BTCPayServer.Controllers
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
             
-            vm.NeedsStorePermission = permissions.Any(Policies.IsStorePolicy) || !vm.Strict;
+            vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(Policies.IsStorePolicy) || !vm.Strict);
             
             // Go over each permission and associated store IDs and join them
             // so that permission for a specific store is parsed correctly

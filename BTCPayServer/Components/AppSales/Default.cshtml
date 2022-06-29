@@ -13,22 +13,45 @@
         <h3>@Model.App.Name @label</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
-    <p>@Model.SalesCount Total @label</p>
-    <div class="ct-chart"></div>
-    <script>
-        (function () {
-            const id = @Safe.Json($"AppSales-{Model.App.Id}");
-            const labels = @Safe.Json(Model.Series.Select(i => i.Label));
-            const series = @Safe.Json(Model.Series.Select(i => i.SalesCount));
-            const min = Math.min(...series);
-            const max = Math.max(...series);
-            const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-            new Chartist.Bar(`#${id} .ct-chart`, {
-                labels,
-                series: [series]
-            }, {
-                low,
-            });
-        })();
-    </script>
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("AppSales", "UIApps", new { appId = Model.App.Id }));
+                const appId = @Safe.Json(Model.App.Id);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`AppSales-${appId}`).outerHTML = await response.text();
+                    const initScript = document.querySelector(`#AppSales-${appId} script`);
+                    if (initScript) eval(initScript.innerHTML);
+                }
+            })();
+        </script>
+    }
+    else
+    {
+        <p>@Model.SalesCount Total @label</p>
+        <div class="ct-chart"></div>
+        <script>
+            (function () {
+                const id = @Safe.Json($"AppSales-{Model.App.Id}");
+                const labels = @Safe.Json(Model.Series.Select(i => i.Label));
+                const series = @Safe.Json(Model.Series.Select(i => i.SalesCount));
+                const min = Math.min(...series);
+                const max = Math.max(...series);
+                const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
+                new Chartist.Bar(`#${id} .ct-chart`, {
+                    labels,
+                    series: [series]
+                }, {
+                    low,
+                });
+            })();
+        </script>
+    }
 </div>

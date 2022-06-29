@@ -21,13 +21,11 @@ namespace BTCPayServer.Components.StoreRecentTransactions;
 
 public class StoreRecentTransactions : ViewComponent
 {
-    private string CryptoCode;
     private readonly StoreRepository _storeRepo;
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly BTCPayWalletProvider _walletProvider;
-
-    public BTCPayNetworkProvider NetworkProvider { get; }
-    public NBXplorerConnectionFactory ConnectionFactory { get; }
+    private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly NBXplorerConnectionFactory _connectionFactory;
 
     public StoreRecentTransactions(
         StoreRepository storeRepo,
@@ -37,25 +35,29 @@ public class StoreRecentTransactions : ViewComponent
         ApplicationDbContextFactory dbContextFactory)
     {
         _storeRepo = storeRepo;
-        NetworkProvider = networkProvider;
-        ConnectionFactory = connectionFactory;
+        _networkProvider = networkProvider;
+        _connectionFactory = connectionFactory;
         _walletProvider = walletProvider;
         _dbContextFactory = dbContextFactory;
-        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
-
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store)
+    public async Task<IViewComponentResult> InvokeAsync(StoreRecentTransactionsViewModel vm)
     {
-        var walletId = new WalletId(store.Id, CryptoCode);
-        var derivationSettings = store.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
+        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
+
+        vm.WalletId = new WalletId(vm.Store.Id, vm.CryptoCode);
+        
+        if (vm.InitialRendering) return View(vm);
+        
+        var derivationSettings = vm.Store.GetDerivationSchemeSettings(_networkProvider, vm.CryptoCode);
         var transactions = new List<StoreRecentTransactionViewModel>();
         if (derivationSettings?.AccountDerivation is not null)
         {
-            if (ConnectionFactory.Available)
+            if (_connectionFactory.Available)
             {
                 var wallet_id = derivationSettings.GetNBXWalletId();
-                await using var conn = await ConnectionFactory.OpenConnection();
+                await using var conn = await _connectionFactory.OpenConnection();
                 var rows = await conn.QueryAsync(
                     "SELECT t.tx_id, t.seen_at, to_btc(balance_change::NUMERIC) balance_change, (t.blk_id IS NOT NULL) confirmed " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, 5, 0) " +
@@ -64,24 +66,22 @@ public class StoreRecentTransactions : ViewComponent
                     new
                     {
                         wallet_id,
-                        code = CryptoCode,
+                        code = vm.CryptoCode,
                         interval = TimeSpan.FromDays(31)
                     });
                 var network = derivationSettings.Network;
-                foreach (var r in rows)
+                transactions.AddRange(from r in rows
+                let seenAt = new DateTimeOffset((DateTime)r.seen_at)
+                let balanceChange = new Money((decimal)r.balance_change, MoneyUnit.BTC)
+                select new StoreRecentTransactionViewModel
                 {
-                    var seenAt = new DateTimeOffset(((DateTime)r.seen_at));
-                    var balanceChange = new Money((decimal)r.balance_change, MoneyUnit.BTC);
-                    transactions.Add(new StoreRecentTransactionViewModel()
-                    {
-                        Timestamp = seenAt,
-                        Id = r.tx_id,
-                        Balance = balanceChange.ShowMoney(network),
-                        IsConfirmed = r.confirmed,
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, r.tx_id),
-                        Positive = balanceChange.GetValue(network) >= 0,
-                    });
-                }
+                    Timestamp = seenAt,
+                    Id = r.tx_id,
+                    Balance = balanceChange.ShowMoney(network),
+                    IsConfirmed = r.confirmed,
+                    Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, r.tx_id),
+                    Positive = balanceChange.GetValue(network) >= 0,
+                });
             }
             else
             {
@@ -105,13 +105,8 @@ public class StoreRecentTransactions : ViewComponent
             }
         }
 
-
-        var vm = new StoreRecentTransactionsViewModel
-        {
-            Store = store,
-            WalletId = walletId,
-            Transactions = transactions
-        };
+        vm.Transactions = transactions;
+        
         return View(vm);
     }
 }

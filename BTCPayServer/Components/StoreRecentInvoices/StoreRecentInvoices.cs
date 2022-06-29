@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,22 +33,25 @@ public class StoreRecentInvoices : ViewComponent
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store)
+    public async Task<IViewComponentResult> InvokeAsync(StoreRecentInvoicesViewModel vm)
     {
+        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
+        if (vm.InitialRendering) return View(vm);
+        
         var userId = _userManager.GetUserId(UserClaimsPrincipal);
         var invoiceEntities = await _invoiceRepo.GetInvoices(new InvoiceQuery
             {
                 UserId = userId,
-                StoreId = new [] { store.Id },
+                StoreId = new [] { vm.Store.Id },
                 IncludeArchived = false,
                 IncludeRefunds = true,
                 Take = 5
             });
-        var invoices = new List<StoreRecentInvoiceViewModel>();
-        foreach (var invoice in invoiceEntities)
-        {
-            var state = invoice.GetInvoiceState();
-            invoices.Add(new StoreRecentInvoiceViewModel
+        
+        vm.Invoices = (from invoice in invoiceEntities
+            let state = invoice.GetInvoiceState()
+            select new StoreRecentInvoiceViewModel
             {
                 Date = invoice.InvoiceTime,
                 Status = state,
@@ -55,13 +59,7 @@ public class StoreRecentInvoices : ViewComponent
                 InvoiceId = invoice.Id,
                 OrderId = invoice.Metadata.OrderId ?? string.Empty,
                 AmountCurrency = _currencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
-            });
-        }
-        var vm = new StoreRecentInvoicesViewModel
-        {
-            Store = store,
-            Invoices = invoices
-        };
+            }).ToList();
 
         return View(vm);
     }

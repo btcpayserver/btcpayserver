@@ -9,4 +9,5 @@ public class AppSalesViewModel
     public AppData App { get; set; }
     public int SalesCount { get; set; }
     public IEnumerable<SalesStatsItem> Series { get; set; }
+    public bool InitialRendering { get; set; }
 }

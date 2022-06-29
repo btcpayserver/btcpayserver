@@ -1,7 +1,7 @@
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel
 
-<div class="widget store-recent-transactions">
+<div class="widget store-recent-transactions" id="StoreRecentTransactions-@Model.Store.Id">
     <header>
         <h3>Recent Transactions</h3>
         @if (Model.Transactions.Any())
@@ -9,7 +9,25 @@
             <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
         }
     </header>
-    @if (Model.Transactions.Any())
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("RecentTransactions", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.Store.Id);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreRecentTransactions-${storeId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
+    else if (Model.Transactions.Any())
     {
         <table class="table table-hover mt-3 mb-0">
             <thead>

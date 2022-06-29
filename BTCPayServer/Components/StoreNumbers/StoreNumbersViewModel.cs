@@ -1,4 +1,3 @@
-using System.Collections;
 using BTCPayServer.Data;
 
 namespace BTCPayServer.Components.StoreNumbers;
@@ -10,5 +9,7 @@ public class StoreNumbersViewModel
     public int PayoutsPending { get; set; }
     public int? Transactions { get; set; }
     public int RefundsIssued { get; set; }
-    public int TransactionDays { get; set; }
+    public int TransactionDays { get; set; } = 7;
+    public bool InitialRendering { get; set; }
+    public string CryptoCode { get; set; }
 }

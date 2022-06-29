@@ -345,28 +345,8 @@
                 </div>
                 <p class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
 
-                <ul class="nav justify-content-center text-dark my-2" v-if="expanded && lnurl">
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           v-bind:class="{ 'active': 'standard' == currentMode}" href="#" v-on:click="currentMode = 'standard'">
-                            Standard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           v-bind:class="{ 'active': 'lnurl' == currentMode}" href="#" v-on:click="currentMode = 'lnurl'">
-                            LNURL
-                        </a>
-                    </li>
-                </ul>
-                <div class="d-flex flex-column align-items-center" style="max-width:500px;" v-if="expanded && 'lnurl' == currentMode" :id="'perk-form'+ perk.id">
-                    <qrcode class="rounded-2" style="width:256px; height: 256px;" v-bind:value="lnurlItems[perk.id??'']" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }"></qrcode>
-                    <a :href="lnurlItems[perk.id??'']" class="btn btn-secondary d-print-none mt-3 lnurl" style="width:256px;" rel="noreferrer noopener">
-                        Open in wallet
-                    </a>
-                </div>
-
-                <div class="input-group" style="max-width:500px;" v-else-if="expanded && 'standard' == currentMode" :id="'perk-form'+ perk.id">
+               
+                <div class="input-group" style="max-width:500px;" v-else-if="expanded" :id="'perk-form'+ perk.id">
                     <input
                         v-if="perk.price.type !== 0"
                         :disabled="!active"

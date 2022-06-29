@@ -15,7 +15,7 @@
         </div>
     </a>
     <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">
-        @if (!Model.Network.ReadonlyWallet)
+        @if (!Model.Network.ReadonlyWallet && ViewData.IsActivePage(WalletsNavPages.Send) is null)
         {
             <a class="btn btn-primary" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@Model.WalletId" id="WalletNav-Send">Send</a>
         }

@@ -20,4 +20,5 @@ public class StoreLightningBalanceViewModel
     public LightMoney TotalOffchain { get; set; }
     public LightningNodeBalance Balance { get; set; }
     public string ProblemDescription { get; set; }
+    public bool InitialRendering { get; set; }
 }

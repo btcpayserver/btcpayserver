@@ -1,3 +1,8 @@
+@using BTCPayServer.Components.StoreLightningBalance
+@using BTCPayServer.Components.StoreNumbers
+@using BTCPayServer.Components.StoreWalletBalance
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model StoreDashboardViewModel;
 
 @inject BTCPayNetworkProvider networkProvider
@@ -56,6 +61,28 @@
     /* include chart library inline so that it instantly renders */
     <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true">
     <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
+    <script>
+        const DashboardUtils = {
+            toDefaultCurrency(amount, rate) {
+                return Math.round((amount * rate) * 100) / 100;
+            },
+            displayDefaultCurrency(amount, rate, currency, divisibility) {
+                const value = DashboardUtils.toDefaultCurrency(amount, rate);
+                const locale = currency === 'USD' ? 'en-US' : navigator.language;
+                const opts = { currency, style: 'decimal', minimumFractionDigits: divisibility };
+                return new Intl.NumberFormat(locale, opts).format(value);
+            },
+            async fetchRate(currencyPair) {
+                const storeId = @Safe.Json(Context.GetRouteValue("storeId"));
+                const pathBase = @Safe.Json(Context.Request.PathBase);
+                const response = await fetch(`${pathBase}/api/rates?storeId=${storeId}&currencyPairs=${currencyPair}`);
+                const json = await response.json();
+                const rate = json[0] && json[0].rate;
+                if (rate) return rate;
+                else console.warn(`Fetching rate for ${currencyPair} failed.`);
+            }
+        };
+    </script>
     <div id="Dashboard" class="mt-4">
         @if (Model.WalletEnabled)
         {
@@ -87,7 +114,7 @@
         <vc:store-numbers store="@store"/>
         @if (Model.LightningEnabled)
         {
-            <vc:store-lightning-balance store="@store"/>
+            <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, InitialRendering = true })"/>
             <vc:store-lightning-services store="@store"/>
         }
         @if (Model.WalletEnabled)

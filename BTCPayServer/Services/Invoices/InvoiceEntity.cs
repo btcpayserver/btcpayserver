@@ -440,10 +440,11 @@ namespace BTCPayServer.Services.Invoices
         [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceType Type { get; set; }
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? InvoicePublicReceipt { get; set; }
 
         public List<RefundData> Refunds { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
 
         public bool IsExpired()
         {

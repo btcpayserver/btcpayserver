@@ -714,6 +714,11 @@
                         "nullable": true,
                         "$ref": "#/components/schemas/CheckoutOptions",
                         "description": "Additional settings to customize the checkout flow"
+                    },
+                    "receipt": {
+                        "nullable": true,
+                        "$ref": "#/components/schemas/ReceiptOptions",
+                        "description": "Additional settings to customize the public receipt"
                     }
                 }
             },
@@ -1054,15 +1059,31 @@
                         "nullable": true,
                         "description": "Invoice will require user to provide a refund email if this option is set to `true`. Has no effect if `buyerEmail` metadata is set as there is no email to collect in this case."
                     },
-                    "invoicePublicReceipt": {
-                        "type": "boolean",
-                        "nullable": true,
-                        "description": "A public page will be accessible once the invoice is settled. If `receiptData` metadata is set, it will be \"pretty rendered\" on the page."
-                    },
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,
                         "description": "The language code (eg. en-US, en, fr-FR...) of the language presented to your customer in the checkout page. BTCPay Server tries to match the best language available. If null or not set, will fallback on the store's default language. You can see the list of language codes with [this operation](#operation/langCodes)."
+                    }
+                }
+            },
+            "ReceiptOptions": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "A public page will be accessible once the invoice is settled. Defaults to the store's settings. (The default store settings is false)."
+                    },
+                    "hideQR": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Hide the QR code on the receipt page"
+                    },
+                    "hidePayments": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Hide the payment data on the receipt page"
                     }
                 }
             },

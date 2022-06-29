@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
                 CanRefund = CanRefund(invoiceState),
                 Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
-                ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && invoice.InvoicePublicReceipt.GetValueOrDefault(store.GetStoreBlob().InvoicePublicReceipt),
+                ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? store.GetStoreBlob().InvoicePublicReceipt),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList(),
@@ -160,84 +160,81 @@ namespace BTCPayServer.Controllers
             public decimal Amount { get; set; }
             public DateTimeOffset Timestamp { get; set; }
             public Dictionary<string, object>? AdditionalData { get; set; }
-            public bool ShowQR { get; set; }
-            public bool ShowPayments { get; set; }
-            public List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>? Payments { get; set; }
+            public bool HideQR { get; set; }
+            public bool HidePayments { get; set; }
+            public List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment?>? Payments { get; set; }
         }
         
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId)
         {
             var i = await _InvoiceRepository.GetInvoice(invoiceId);
+            if (i is null)
+                return NotFound();
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
-            if (i is not null && i.InvoicePublicReceipt is null)
+            if (store is null)
+                return NotFound();
+            i.ReceiptOptions ??=
+                new InvoiceDataBase.ReceiptOptions() {Enabled = store.GetStoreBlob().InvoicePublicReceipt};
+
+            if (i is not {ReceiptOptions.Enabled: true}) return NotFound();
+            if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
-                i.InvoicePublicReceipt = store?.GetStoreBlob().InvoicePublicReceipt;
-            }
-            if (i?.InvoicePublicReceipt is true)
-            {
-                if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
-                {
-                    return View(new InvoiceReceiptViewModel
-                    {
-                        InvoiceId = i.Id,
-                        StoreName = store.StoreName,
-                        Status = i.Status.ToModernStatus()
-                    });
-                }
-                
-                i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
-                i.Metadata.AdditionalData.TryGetValue("receiptShowQR", out var showQR);
-                i.Metadata.AdditionalData.TryGetValue("receiptShowPayments", out var showPayments);
-                
                 return View(new InvoiceReceiptViewModel
                 {
-                    StoreName = store.StoreName,
-                    Status = i.Status.ToModernStatus(),
-                    Amount = i.Price,
-                    Currency = i.Currency,
-                    Timestamp = i.InvoiceTime,
                     InvoiceId = i.Id,
-                    ShowPayments  = showPayments?.Value<bool>() is true,
-                    Payments = (showPayments?.Value<bool>() is true? i.GetPayments(true).Select(paymentEntity =>
-                        {
-                            var paymentData = paymentEntity.GetCryptoPaymentData();
-                            var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                            if (paymentData is null || paymentMethodId is null)
-                            {
-                                return null;
-                            }
-
-                            string txId = paymentData.GetPaymentId();
-                            string? link = GetTransactionLink(paymentMethodId, txId);
-                            var paymentMethod = i.GetPaymentMethod(paymentMethodId);
-                            var amount = paymentData.GetValue();
-                            var rate = paymentMethod.Rate;
-                            var paid = (amount - paymentEntity.NetworkFee) * rate;
-
-                            return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
-                            {
-                                Amount = amount,
-                                Paid = paid,
-                                ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                                PaidFormatted = _CurrencyNameTable.FormatCurrency(paid, i.Currency),
-                                RateFormatted = _CurrencyNameTable.FormatCurrency(rate, i.Currency),
-                                PaymentMethod = paymentMethodId.ToPrettyString(),
-                                Link = link,
-                                Id = txId,
-                                Destination = paymentData.GetDestination()
-                            };
-                        })
-                        .Where(payment => payment != null)
-                        .ToList()! : null)!,
-                    ShowQR = showQR?.Value<bool>() is true,
-                    AdditionalData = receiptData is null
-                        ? new Dictionary<string, object>()
-                        : PosDataParser.ParsePosData(receiptData.ToString())
+                    StoreName = store.StoreName,
+                    Status = i.Status.ToModernStatus()
                 });
             }
+                
+            i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
+                
+            return View(new InvoiceReceiptViewModel
+            {
+                StoreName = store.StoreName,
+                Status = i.Status.ToModernStatus(),
+                Amount = i.Price,
+                Currency = i.Currency,
+                Timestamp = i.InvoiceTime,
+                InvoiceId = i.Id,
+                HidePayments  = i.ReceiptOptions.HidePayments,
+                Payments = i.ReceiptOptions.HidePayments? null : i.GetPayments(true).Select(paymentEntity =>
+                    {
+                        var paymentData = paymentEntity.GetCryptoPaymentData();
+                        var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                        if (paymentData is null || paymentMethodId is null)
+                        {
+                            return null;
+                        }
 
-            return NotFound();
+                        string txId = paymentData.GetPaymentId();
+                        string? link = GetTransactionLink(paymentMethodId, txId);
+                        var paymentMethod = i.GetPaymentMethod(paymentMethodId);
+                        var amount = paymentData.GetValue();
+                        var rate = paymentMethod.Rate;
+                        var paid = (amount - paymentEntity.NetworkFee) * rate;
+
+                        return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                        {
+                            Amount = amount,
+                            Paid = paid,
+                            ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                            PaidFormatted = _CurrencyNameTable.FormatCurrency(paid, i.Currency),
+                            RateFormatted = _CurrencyNameTable.FormatCurrency(rate, i.Currency),
+                            PaymentMethod = paymentMethodId.ToPrettyString(),
+                            Link = link,
+                            Id = txId,
+                            Destination = paymentData.GetDestination()
+                        };
+                    })
+                    .Where(payment => payment != null)
+                    .ToList(),
+                HideQR = i.ReceiptOptions.HideQR,
+                AdditionalData = receiptData is null
+                    ? new Dictionary<string, object>()
+                    : PosDataParser.ParsePosData(receiptData.ToString())
+            });
 
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)

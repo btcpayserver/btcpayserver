@@ -159,7 +159,8 @@ namespace BTCPayServer.Controllers
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
-            entity.InvoicePublicReceipt = storeBlob.InvoicePublicReceipt;
+            entity.ReceiptOptions = new InvoiceDataBase.ReceiptOptions();
+            entity.ReceiptOptions.Enabled ??= storeBlob.InvoicePublicReceipt;
 
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
@@ -171,7 +172,8 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.ExpirationTime = entity.InvoiceTime + (invoice.Checkout.Expiration ?? storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + (invoice.Checkout.Monitoring ?? storeBlob.MonitoringExpiration);
-            entity.InvoicePublicReceipt = invoice.Checkout.InvoicePublicReceipt ?? storeBlob.InvoicePublicReceipt;
+            entity.ReceiptOptions = invoice.Receipt ?? new InvoiceDataBase.ReceiptOptions();
+            entity.ReceiptOptions.Enabled ??= storeBlob.InvoicePublicReceipt;
             if (invoice.Metadata != null)
                 entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
@@ -190,7 +192,6 @@ namespace BTCPayServer.Controllers
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
-            entity.InvoicePublicReceipt = invoice.Checkout.InvoicePublicReceipt ?? storeBlob.InvoicePublicReceipt;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)

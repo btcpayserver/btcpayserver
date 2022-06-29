@@ -19,6 +19,14 @@ namespace BTCPayServer.Client.Models
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
+        public ReceiptOptions Receipt { get; set; } = new ReceiptOptions();
+
+        public class ReceiptOptions
+        {
+            public bool? Enabled { get; set; }
+            public bool HideQR { get; set; }
+            public bool HidePayments { get; set; }
+        }
         public class CheckoutOptions
         {
 
@@ -41,8 +49,6 @@ namespace BTCPayServer.Client.Models
 
             public bool? RedirectAutomatically { get; set; }
             public bool? RequiresRefundEmail { get; set; } = null;
-            
-            public bool? InvoicePublicReceipt { get; set; }
             public string DefaultLanguage { get; set; }
         }
     }

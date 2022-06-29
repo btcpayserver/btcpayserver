@@ -430,9 +430,9 @@ namespace BTCPayServer.Controllers.Greenfield
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RequiresRefundEmail = entity.RequiresRefundEmail,
-                    InvoicePublicReceipt = entity.InvoicePublicReceipt,
                     RedirectURL = entity.RedirectURLTemplate
-                }
+                },
+                Receipt = entity.ReceiptOptions
             };
         }
     }

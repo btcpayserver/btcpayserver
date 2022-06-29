@@ -58,7 +58,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }));
         }
     });
-    
     // rich text editor
     if ($.summernote) {
         $('.richtext').summernote({

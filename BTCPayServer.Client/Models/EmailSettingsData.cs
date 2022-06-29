@@ -25,4 +25,5 @@ public class EmailSettingsData
     {
         get; set;
     }
+    public bool DisableCertificateCheck { get; set; }
 }

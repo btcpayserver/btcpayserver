@@ -82,7 +82,19 @@ namespace BTCPayServer.Hosting
             try
             {
                 await Migrate(cancellationToken);
-                var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
+                var settings = (await _Settings.GetSettingAsync<MigrationSettings>());
+                if (settings is null)
+                {
+                    // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
+                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
+                    foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
+                    {
+                        prop.SetValue(settings, true);
+                    }
+                    settings.CheckedFirstRun = false;
+                    await _Settings.UpdateSetting(settings);
+                }
+
                 if (!settings.PaymentMethodCriteria)
                 {
                     await MigratePaymentMethodCriteria();
@@ -196,12 +208,45 @@ namespace BTCPayServer.Hosting
                     settings.AddStoreToPayout = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateEmailServerDisableTLSCerts)
+                {
+                    await MigrateEmailServerDisableTLSCerts();
+                    settings.MigrateEmailServerDisableTLSCerts = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        // In the past, if a server was considered local network, then we would disable TLS checks.
+        // Now we don't do it anymore, as we have an explicit flag (DisableCertificateCheck) to control the behavior.
+        // But we need to migrate old users that relied on the behavior before.
+        private async Task MigrateEmailServerDisableTLSCerts()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var serverEmailSettings = await _Settings.GetSettingAsync<Services.Mails.EmailSettings>();
+            if (serverEmailSettings?.Server is String server)
+            {
+                serverEmailSettings.DisableCertificateCheck = Extensions.IsLocalNetwork(server);
+                if (serverEmailSettings.DisableCertificateCheck)
+                    await _Settings.UpdateSetting(serverEmailSettings);
+            }
+            var stores = await ctx.Stores.ToArrayAsync();
+            foreach (var store in stores)
+            {
+                var storeBlob = store.GetStoreBlob();
+                if (storeBlob.EmailSettings?.Server is String storeServer)
+                {
+                    storeBlob.EmailSettings.DisableCertificateCheck = Extensions.IsLocalNetwork(storeServer);
+                    if (storeBlob.EmailSettings.DisableCertificateCheck)
+                        store.SetStoreBlob(storeBlob);
+                }
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateLighingAddressDatabaseMigration()

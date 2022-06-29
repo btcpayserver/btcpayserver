@@ -70,6 +70,21 @@
                 }
             </div>
             <input asp-for="PasswordSet" type="hidden"/>
+			<div class="my-4">
+                <button class="btn btn-link text-primary p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+                    Advanced settings
+                </button>
+                <div id="AdvancedSettings" class="collapse">
+                    <div class="pt-3 pb-1">
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="Settings.DisableCertificateCheck" class="form-check-input" />
+                                <label asp-for="Settings.DisableCertificateCheck" class="form-check-label">Disable TLS certificate security checks</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary mt-2" name="command" value="Save" id="Save">Save</button>
         </div>
     </div>

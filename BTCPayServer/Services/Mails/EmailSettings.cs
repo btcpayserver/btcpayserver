@@ -68,7 +68,7 @@ namespace BTCPayServer.Services.Mails
             using var connectCancel = new CancellationTokenSource(10000);
             try
             {
-                if (Extensions.IsLocalNetwork(Server))
+                if (DisableCertificateCheck)
                 {
                     client.CheckCertificateRevocation = false;
 #pragma warning disable CA5359 // Do Not Disable Certificate Validation

@@ -62,7 +62,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(invoiceEvent.Invoice.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var recipients = actionableRule.To.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries)??Array.Empty<string>())
                             .Select(o =>
                             {
                                 MailboxAddressValidator.TryParse(o, out var mb);

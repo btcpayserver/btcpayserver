@@ -20,13 +20,13 @@
                 }
                 else if (string.IsNullOrEmpty(service.Link))
                 {
-                    <a asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
+                    <a title="@service.DisplayName" asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
                         <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
                     </a>
                 }
                 else
                 {
-                    <a href="@service.Link" target="_blank" rel="noreferrer noopener" class="service" id="@($"Service-{service.ServiceName}")">
+                    <a title="@service.DisplayName" href="@service.Link" target="_blank" rel="noreferrer noopener" class="service" id="@($"Service-{service.ServiceName}")">
                         <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
                     </a>
                 }

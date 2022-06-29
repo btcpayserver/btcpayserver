@@ -24,12 +24,19 @@
             </a>
         </small>
     </h2>
-    <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
-        <span class="fa fa-gear"></span> Configure
-    </a>
-    <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
-        <span class="fa fa-trash"></span> Delete
-    </a>
+    <div class="d-flex gap-3 mt-3 mt-sm-0">
+        <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
+            <span class="fa fa-gear"></span> Configure
+        </a>
+        <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
+            <span class="fa fa-trash"></span> Delete
+        </a>
+        <!--
+        <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+        <a class="btn btn-secondary" id="ViewApp" target="app_" href="/apps/MQ2sCVsmQ95JBZ4aZDtoSwMAnBY/pos">View</a>
+        -->
+    </div>
+
 </div>
 
 <div class="row">
@@ -103,8 +110,8 @@
             }
             </tbody>
         </table>
-        
-        
+
+
         <h2>Features</h2>
         <p>The @Model.Custodian.Name custodian supports:</p>
         <ul>

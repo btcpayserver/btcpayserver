@@ -15,12 +15,22 @@
 @if ("text".Equals(field.Type))
 {
     <div class="form-group">
-        <label class="form-label" for="@field.Name" data-required>
-            @field.Label
-        </label>
+        @if (field.Required)
+        {
+            <label class="form-label" for="@field.Name" data-required>
+                @field.Label
+            </label>
+        }
+        else
+        {
+            <label class="form-label" for="@field.Name">
+                @field.Label
+            </label>
+        }
+        
         <input class="form-control" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
         <small id="HelpText@field.Name" class="form-text text-muted">
-          @field.HelpText
+            @field.HelpText
         </small>
 
     </div>

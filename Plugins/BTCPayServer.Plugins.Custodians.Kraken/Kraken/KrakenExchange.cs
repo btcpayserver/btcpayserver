@@ -168,7 +168,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             withdrawalFieldset.Fields.Add(new TextField(paymentMethod,
                 "WithdrawToAddressNamePerPaymentMethod[" + paymentMethod + "]",
                 value,
-                false, "The exact name of the withdrawal destination stored in your Kraken account for youor store's "+paymentMethod+" wallet."));
+                false, "The exact name of the withdrawal destination stored in your Kraken account for your store's "+paymentMethod+" wallet."));
         }
         
         try

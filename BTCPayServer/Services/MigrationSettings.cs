@@ -31,5 +31,6 @@ namespace BTCPayServer.Services
         public bool LighingAddressSettingRename { get; set; }
         public bool LighingAddressDatabaseMigration { get; set; }
         public bool AddStoreToPayout { get; set; }
+        public bool MigrateEmailServerDisableTLSCerts { get; set; }
     }
 }

@@ -1,0 +1,36 @@
+@using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+	ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
+}
+
+<partial name="_StatusMessage" />
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+
+<div class="row">
+	<div class="col-xl-8 col-xxl-constrain">
+        <div class="alert alert-warning alert-dismissible mb-4" role="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <vc:icon symbol="close" />
+            </button>
+            <h5 class="alert-heading">Warning: Payment button should only be used for tips and donations</h5>
+            <p>
+                Using the payment button for e-commerce integrations is not recommended since order relevant information can be modified by the user.
+                For e-commerce, you should use our 
+                <a href="https://docs.btcpayserver.org/API/Greenfield/v1/" class="alert-link" target="_blank" rel="noreferrer noopener">Greenfield API</a>.
+                If this store process commercial transactions, we advise you to 
+                <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.
+            </p>
+        </div>
+		<p>
+			To start using Pay Button, you need to enable this feature explicitly.
+			Once you do so, anyone could create an invoice on your store (via API, for example).
+		</p>
+		<form method="post">
+			@Html.Hidden("EnableStore", true)
+			<button name="command" id="enable-pay-button" type="submit" value="save" class="btn btn-primary">
+				Enable
+			</button>
+		</form>
+	</div>
+</div>

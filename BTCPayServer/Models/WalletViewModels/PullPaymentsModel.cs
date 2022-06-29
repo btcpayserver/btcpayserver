@@ -16,11 +16,14 @@ namespace BTCPayServer.Models.WalletViewModels
             {
                 public int CompletedPercent { get; set; }
                 public int AwaitingPercent { get; set; }
-                public string Completed { get; set; }
-                public string Awaiting { get; set; }
-                public string Limit { get; set; }
+                public string CompletedFormatted { get; set; }
+                public string AwaitingFormatted { get; set; }
+                public string LimitFormatted { get; set; }
                 public string ResetIn { get; set; }
                 public string EndIn { get; set; }
+                public decimal Awaiting { get; set; }
+                public decimal Completed { get; set; }
+                public decimal Limit { get; set; }
             }
             public string Id { get; set; }
             public string Name { get; set; }

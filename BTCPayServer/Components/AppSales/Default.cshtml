@@ -1,19 +1,23 @@
+@using BTCPayServer.Services.Apps
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 
 @{
     var action = $"Update{Model.App.AppType}";
+    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">
     <header class="mb-3">
-        <h3>@Model.App.Name Contributions</h3>
+        <h3>@Model.App.Name @label</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
-    <p>@Model.SalesCount Total Contributions</p>
-    <div class="ct-chart ct-major-octave"></div>
+    <p>@Model.SalesCount Total @label</p>
+    <div class="ct-chart"></div>
     <script>
         (function () {
-            const id = 'AppSales-@Model.App.Id';
+            const id = @Safe.Json($"AppSales-{Model.App.Id}");
             const labels = @Safe.Json(Model.Series.Select(i => i.Label));
             const series = @Safe.Json(Model.Series.Select(i => i.SalesCount));
             const min = Math.min(...series);

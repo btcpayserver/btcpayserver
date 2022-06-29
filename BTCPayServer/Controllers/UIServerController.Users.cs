@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
+using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
@@ -302,7 +303,7 @@ namespace BTCPayServer.Controllers
             var code = await _UserManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
 
-            (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.Email, callbackUrl);
+            (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
 
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
             return RedirectToAction(nameof(ListUsers));

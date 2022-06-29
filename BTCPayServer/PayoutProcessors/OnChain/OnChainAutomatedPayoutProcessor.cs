@@ -130,7 +130,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     workingTx = txBuilder.BuildTransaction(true);
                     transfersProcessing.Add(transferRequest);
                 }
-                catch (NotEnoughFundsException e)
+                catch (NotEnoughFundsException)
                 {
                     
                     failedAmount = blob.CryptoAmount;

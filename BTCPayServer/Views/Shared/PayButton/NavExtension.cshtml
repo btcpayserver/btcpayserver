@@ -1,0 +1,17 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.TagHelpers
+
+@{ var store = Context.GetStoreData(); }
+
+@if (store != null)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" id="StoreNav-PayButton">
+            <vc:icon symbol="pay-button"/>
+            <span>Pay Button</span>
+        </a>
+    </li>
+}
+

@@ -15,7 +15,6 @@ namespace BTCPayServer.Data
         public bool TagAllInvoices { get; set; }
         public string Settings { get; set; }
 
-
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<AppData>()
@@ -28,9 +27,7 @@ namespace BTCPayServer.Data
         // utility methods
         public T GetSettings<T>() where T : class, new()
         {
-            if (String.IsNullOrEmpty(Settings))
-                return new T();
-            return JsonConvert.DeserializeObject<T>(Settings);
+            return string.IsNullOrEmpty(Settings) ? new T() : JsonConvert.DeserializeObject<T>(Settings);
         }
 
         public void SetSettings(object value)

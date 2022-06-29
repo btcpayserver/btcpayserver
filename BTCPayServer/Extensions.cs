@@ -22,6 +22,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
@@ -255,6 +256,11 @@ namespace BTCPayServer
                 prefCookie.CurrentStoreId = storeId;
                 ctx.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
             }
+        }
+
+        public static string GetCurrentStoreId(this HttpContext ctx)
+        {
+            return ctx.GetImplicitStoreId() ?? ctx.GetUserPrefsCookie()?.CurrentStoreId;
         }
 
         public static StoreData GetStoreData(this HttpContext ctx)

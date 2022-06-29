@@ -1,1 +1,1 @@
-dotnet run --no-launch-profile --no-build -c Release -p .\BTCPayServer\BTCPayServer.csproj -- $args
+dotnet run --no-launch-profile --no-build -c Release --project .\BTCPayServer\BTCPayServer.csproj -- $args

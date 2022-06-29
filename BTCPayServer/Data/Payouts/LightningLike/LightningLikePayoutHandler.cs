@@ -64,7 +64,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             try
             {
                 string lnurlTag = null;
-                var lnurl = EmailValidator.IsEmail(destination)
+                var lnurl = MailboxAddressValidator.IsMailboxAddress(destination)
                     ? LNURL.LNURL.ExtractUriFromInternetIdentifier(destination)
                     : LNURL.LNURL.Parse(destination, out lnurlTag);
 

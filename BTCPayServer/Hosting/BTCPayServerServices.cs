@@ -98,6 +98,7 @@ namespace BTCPayServer.Hosting
             if (configuration.SupportChain("yec") || configuration.SupportChain("zec"))
                 services.AddZcashLike();
 #endif
+            services.AddScoped<IScopeProvider, ScopeProvider>();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<IStoreRepository>(provider => provider.GetService<StoreRepository>());
@@ -332,13 +333,15 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             services.AddSingleton<HostedServices.WebhookSender>();
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
+            services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
 
 
             services.AddSingleton<BitcoinLikePayoutHandler>();
             services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<BitcoinLikePayoutHandler>());
-            services.AddSingleton<IPayoutHandler, LightningLikePayoutHandler>();
+            services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<LightningLikePayoutHandler>());
+            services.AddSingleton<LightningLikePayoutHandler>();
 
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
@@ -437,28 +440,7 @@ namespace BTCPayServer.Hosting
             {
                 options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
-            services.AddSingleton(provider =>
-            {
-                var btcPayEnv = provider.GetService<BTCPayServerEnvironment>();
-                var rateLimits = new RateLimitService();
-                if (btcPayEnv.IsDeveloping)
-                {
-                    rateLimits.SetZone($"zone={ZoneLimits.Login} rate=1000r/min burst=100 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=3 nodelay");
-                }
-                else
-                {
-                    rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
-                }
-                return rateLimits;
-            });
+            services.AddRateLimits();
             services.AddLogging(logBuilder =>
             {
                 var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);

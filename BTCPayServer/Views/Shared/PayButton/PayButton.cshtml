@@ -1,5 +1,8 @@
-@inject BTCPayServer.Security.ContentSecurityPolicies csp 
-@model PayButtonViewModel
+@inject Security.ContentSecurityPolicies csp 
+@using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.TagHelpers
+@model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
     csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
@@ -137,9 +140,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
-                <p><strong>Warning:</strong> This feature should not be activated on a BTCPay Server store processing commercial transactions.</p>
-                <p>By activating this feature, a malicious user can trick you into thinking an order has been processed by creating a new invoice, reusing the same Order Id of another valid order but different amount or currency.</p>
-                <p>If this store process commercial transactions, we advise you to <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.</p>
+                <h5 class="alert-heading">Warning: Payment button should only be used for tips and donations</h5>
+                <p>
+                    Using the payment button for e-commerce integrations is not recommended since order relevant information can be modified by the user.
+                    For e-commerce, you should use our 
+                    <a href="https://docs.btcpayserver.org/API/Greenfield/v1/" class="alert-link" target="_blank" rel="noreferrer noopener">Greenfield API</a>.
+                    If this store process commercial transactions, we advise you to 
+                    <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.
+                </p>
                 <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
                     <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
                 </form>

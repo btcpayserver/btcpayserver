@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
-            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
                 InvoiceId = new[] { invoiceId },
                 UserId = GetUserId(),
@@ -99,6 +99,9 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            if (store == null)
+                return NotFound();
+            
             var invoiceState = invoice.GetInvoiceState();
             var model = new InvoiceDetailsModel
             {
@@ -541,7 +544,11 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
+            
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            if (store == null)
+                return null;
+            
             bool isDefaultPaymentId = false;
             if (paymentMethodId is null)
             {

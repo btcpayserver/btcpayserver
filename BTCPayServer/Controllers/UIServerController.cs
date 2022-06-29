@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -25,6 +26,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
+using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -292,8 +294,7 @@ namespace BTCPayServer.Controllers
             return View(_policiesSettings);
         }
 
-        [Route("server/policies")]
-        [HttpPost]
+        [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
 
@@ -352,10 +353,9 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public async Task<IActionResult> Services()
+        public IActionResult Services()
         {
-            var result = new ServicesViewModel();
-            result.ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList();
+            var result = new ServicesViewModel { ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList() };
 
             // other services
             foreach (var externalService in _externalServiceOptions.Value.OtherExternalServices)
@@ -363,7 +363,7 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = externalService.Key,
-                    Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
+                    Link = Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
             if (CanShowSSHService())
@@ -371,13 +371,13 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = "SSH",
-                    Link = this.Url.Action(nameof(SSHService))
+                    Link = Url.Action(nameof(SSHService))
                 });
             }
             result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
             {
                 Name = "Dynamic DNS",
-                Link = this.Url.Action(nameof(DynamicDnsServices))
+                Link = Url.Action(nameof(DynamicDnsServices))
             });
             foreach (var torService in _torServices.Services)
             {
@@ -402,14 +402,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-
-            // external storage services
-            var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
-            result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
-            {
-                Name = storageSettings == null ? "Not set" : storageSettings.Provider.ToString(),
-                Link = Url.Action("Storage")
-            });
+            
             return View(result);
         }
 
@@ -462,8 +455,6 @@ namespace BTCPayServer.Controllers
             }
             return null;
         }
-
-
 
         [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, ulong? nonce = null)
@@ -1017,7 +1008,6 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
-
             if (command == "Test")
             {
                 try
@@ -1027,18 +1017,18 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                         model.Settings.Password = settings.Password;
                     }
-                    if (!model.Settings.IsComplete())
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
+                    model.Settings.Validate("Settings.", ModelState);
+                    if (string.IsNullOrEmpty(model.TestEmail))
+                        ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
+                    if (!ModelState.IsValid)
                         return View(model);
-                    }
                     using (var client = await model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(new MailboxAddress(model.TestEmail, model.TestEmail), "BTCPay test", "BTCPay test", false))
+                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false))
                     {
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
                 }
                 catch (Exception ex)
                 {
@@ -1046,16 +1036,21 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else if (command == "ResetPassword")
+            if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 settings.Password = null;
-                await _SettingsRepository.UpdateSetting(model.Settings);
+                await _SettingsRepository.UpdateSetting(settings);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if(command == "Save")
+            else // if (command == "Save")
             {
+                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+                {
+                    ModelState.AddModelError("Settings.From", "Invalid email");
+                    return View(model);
+                }
                 var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 if (new EmailsViewModel(oldSettings).PasswordSet)
                 {

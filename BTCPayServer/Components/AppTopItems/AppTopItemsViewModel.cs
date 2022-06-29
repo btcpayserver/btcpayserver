@@ -7,5 +7,5 @@ namespace BTCPayServer.Components.AppTopItems;
 public class AppTopItemsViewModel
 {
     public AppData App { get; set; }
-    public IEnumerable<ItemStats> Entries { get; set; }
+    public List<ItemStats> Entries { get; set; }
 }

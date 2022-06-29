@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
     public class UpdateCustomerModel
     {
-        [EmailAddress]
+        [MailboxAddress]
         [Required]
         public string Email
         {

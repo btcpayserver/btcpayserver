@@ -1,0 +1,26 @@
+@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePage(StoreNavPages.Emails, "Emails", Context.GetStoreData().Id);
+}
+
+<div class="row mb-4">
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h3 class="mb-0">Email Rules</h3>
+            <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id" id="ConfigureEmailRules">
+                Configure
+            </a>
+        </div>
+        <p>
+            <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
+            allow BTCPay Server to send customized emails from your store based on events.
+        </p>
+    </div>
+</div>
+
+<partial name="EmailsBody" model="Model" />
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

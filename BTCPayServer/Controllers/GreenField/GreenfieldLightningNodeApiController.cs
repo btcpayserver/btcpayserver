@@ -24,6 +24,7 @@ namespace BTCPayServer.Controllers.Greenfield
             // Do not mark handled, it is possible filters above have better errors
         }
     }
+    
     public abstract class GreenfieldLightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -46,6 +47,32 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 BlockHeight = info.BlockHeight,
                 NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
+            });
+        }
+
+        public virtual async Task<IActionResult> GetBalance(string cryptoCode, CancellationToken cancellationToken = default)
+        {
+            var lightningClient = await GetLightningClient(cryptoCode, true);
+            var balance = await lightningClient.GetBalance(cancellationToken);
+            return Ok(new LightningNodeBalanceData
+            {
+                OnchainBalance = balance.OnchainBalance != null
+                    ? new OnchainBalanceData
+                    {
+                        Confirmed = balance.OnchainBalance.Confirmed,
+                        Unconfirmed = balance.OnchainBalance.Unconfirmed,
+                        Reserved = balance.OnchainBalance.Reserved
+                    }
+                    : null,
+                OffchainBalance = balance.OffchainBalance != null
+                    ? new OffchainBalanceData
+                    {
+                        Opening = balance.OffchainBalance.Opening,
+                        Local = balance.OffchainBalance.Local,
+                        Remote = balance.OffchainBalance.Remote,
+                        Closing = balance.OffchainBalance.Closing,
+                    }
+                    : null
             });
         }
 

@@ -26,23 +26,22 @@ namespace BTCPayServer.HostedServices
                 Invoice = invoice;
             }
             public InvoiceEntity Invoice { get; set; }
-            public List<object> Events { get; set; } = new List<object>();
+            public List<object> Events { get; set; } = new ();
 
-            bool _Dirty = false;
-            private bool _Unaffect;
+            bool _dirty;
 
             public void MarkDirty()
             {
-                _Dirty = true;
+                _dirty = true;
             }
 
-            public bool Dirty => _Dirty;
+            public bool Dirty => _dirty;
 
-            bool _IsBlobUpdated;
-            public bool IsBlobUpdated => _IsBlobUpdated;
+            bool _isBlobUpdated;
+            public bool IsBlobUpdated => _isBlobUpdated;
             public void BlobUpdated()
             {
-                _IsBlobUpdated = true;
+                _isBlobUpdated = true;
             }
         }
 
@@ -66,10 +65,10 @@ namespace BTCPayServer.HostedServices
             _explorerClientProvider = explorerClientProvider;
             _notificationSender = notificationSender;
             _paymentService = paymentService;
-            this.Logs = logs;
+            Logs = logs;
         }
 
-        readonly CompositeDisposable leases = new CompositeDisposable();
+        readonly CompositeDisposable _leases = new ();
 
 
         private void UpdateInvoice(UpdateInvoiceContext context)
@@ -270,11 +269,11 @@ namespace BTCPayServer.HostedServices
             _Loop = StartLoop(_Cts.Token);
             _ = WaitPendingInvoices();
 
-            leases.Add(_eventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
+            _leases.Add(_eventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
             {
                 Watch(b.InvoiceId);
             }));
-            leases.Add(_eventAggregator.SubscribeAsync<Events.InvoiceEvent>(async b =>
+            _leases.Add(_eventAggregator.SubscribeAsync<Events.InvoiceEvent>(async b =>
             {
                 if (InvoiceEventNotification.HandlesEvent(b.Name))
                 {
@@ -410,7 +409,7 @@ namespace BTCPayServer.HostedServices
         {
             if (_Cts == null)
                 return;
-            leases.Dispose();
+            _leases.Dispose();
             _Cts.Cancel();
             try
             {

@@ -25,18 +25,20 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
-        public IActionResult UpdateCrowdfund(string appId)
+        public async Task<IActionResult> UpdateCrowdfund(string appId)
         {
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
+            var resetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery);
             var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
+                StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.TargetCurrency),
                 AppName = app.Name,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
@@ -56,10 +58,11 @@ namespace BTCPayServer.Controllers
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
-                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                ResetEvery = resetEvery,
+                IsRecurring = resetEvery != nameof(CrowdfundResetEvery.Never),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
@@ -91,6 +94,11 @@ namespace BTCPayServer.Controllers
             if (vm.TargetAmount is decimal v && v == 0.0m)
             {
                 vm.TargetAmount = null;
+            }
+
+            if (!vm.IsRecurring)
+            {
+                vm.ResetEvery = nameof(CrowdfundResetEvery.Never);
             }
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)

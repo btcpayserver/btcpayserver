@@ -1,12 +1,12 @@
 @model BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration.GoogleCloudStorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "Google Cloud Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "Google Cloud Storage");
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         <form method="post">
             <div class="form-group">
                 <label asp-for="ContainerName" class="form-label">Container Name</label>

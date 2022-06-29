@@ -12,7 +12,9 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -45,6 +47,8 @@ namespace BTCPayServer
         private readonly UIInvoiceController _invoiceController;
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
+        private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
+        private readonly PullPaymentHostedService _pullPaymentHostedService;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -54,7 +58,9 @@ namespace BTCPayServer
             AppService appService,
             UIInvoiceController invoiceController,
             LinkGenerator linkGenerator,
-            LightningAddressService lightningAddressService)
+            LightningAddressService lightningAddressService,
+            LightningLikePayoutHandler lightningLikePayoutHandler,
+            PullPaymentHostedService pullPaymentHostedService)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -65,9 +71,137 @@ namespace BTCPayServer
             _invoiceController = invoiceController;
             _linkGenerator = linkGenerator;
             _lightningAddressService = lightningAddressService;
+            _lightningLikePayoutHandler = lightningLikePayoutHandler;
+            _pullPaymentHostedService = pullPaymentHostedService;
         }
 
 
+        [HttpGet("withdraw/pp/{pullPaymentId}")]
+        public async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr)
+        {
+            
+            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            if (network is null || !network.SupportLightning)
+            {
+                return NotFound();
+            }
+
+            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, true);
+            if (!pp.IsRunning() || !pp.IsSupported(pmi))
+            {
+                return NotFound();
+            }
+
+            var blob = pp.GetBlob();
+            if (!blob.Currency.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return NotFound();
+            }
+
+            var progress = _pullPaymentHostedService.CalculatePullPaymentProgress(pp, DateTimeOffset.UtcNow);
+           
+            var remaining = progress.Limit - progress.Completed - progress.Awaiting;
+            var request = new LNURLWithdrawRequest()
+            {
+                MaxWithdrawable = LightMoney.FromUnit(remaining, LightMoneyUnit.BTC),
+                K1 = pullPaymentId,
+                BalanceCheck = new Uri(Request.GetCurrentUrl()),
+                CurrentBalance = LightMoney.FromUnit(remaining, LightMoneyUnit.BTC),
+                MinWithdrawable =
+                    LightMoney.FromUnit(
+                        Math.Min(await _lightningLikePayoutHandler.GetMinimumPayoutAmount(pmi, null), remaining),
+                        LightMoneyUnit.BTC),
+                Tag = "withdrawRequest",
+                Callback = new Uri(Request.GetCurrentUrl()),
+            };
+            if (pr is null)
+            {
+                return Ok(request);
+            }
+
+            if (!BOLT11PaymentRequest.TryParse(pr, out var result, network.NBitcoinNetwork) || result is null)
+            {
+                return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr was not a valid BOLT11"});
+            }
+
+            if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
+                return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr was not within bounds"});
+            var store = await _storeRepository.FindStore(pp.StoreId);
+            var pm = store!.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(method => method.PaymentId == pmi);
+            if (pm is null)
+            {
+                return NotFound();
+            }
+
+            var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest()
+            {
+                Destination = new BoltInvoiceClaimDestination(pr, result),
+                PaymentMethodId = pmi,
+                PullPaymentId = pullPaymentId,
+                StoreId = pp.StoreId,
+                Value = result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)
+            });
+
+            if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
+                return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr could not be paid"});
+            switch (claimResponse.PayoutData.State)
+            {
+                case PayoutState.AwaitingPayment:
+                {
+                    var client =
+                        _lightningLikePaymentHandler.CreateLightningClient(pm, network);
+                    PayResponse payResult;
+                    try
+                    {
+                        payResult = await client.Pay(pr);
+                    }
+                    catch (Exception e)
+                    {
+                        payResult = new PayResponse(PayResult.Error, e.Message);
+                    }
+
+                    switch (payResult.Result)
+                    {
+                        case PayResult.Ok:
+                            await _pullPaymentHostedService.MarkPaid(new PayoutPaidRequest()
+                            {
+                                PayoutId = claimResponse.PayoutData.Id, Proof = new ManualPayoutProof { }
+                            });
+
+                            return Ok(new LNUrlStatusResponse {Status = "OK"});
+                        default:
+                            await _pullPaymentHostedService.Cancel(
+                                new PullPaymentHostedService.CancelRequest(new string[]
+                                {
+                                    claimResponse.PayoutData.Id
+                                }));
+
+                            return Ok(new LNUrlStatusResponse
+                            {
+                                Status = "ERROR",
+                                Reason = $"Pr could not be paid because {payResult.ErrorDetail}"
+                            });
+                    }
+                }
+                case PayoutState.AwaitingApproval:
+                    return Ok(new LNUrlStatusResponse
+                    {
+                        Status = "OK",
+                        Reason =
+                            "The payment request has been recorded, but still needs to be approved before execution."
+                    });
+                case PayoutState.InProgress:
+                case PayoutState.Completed:
+                    return Ok(new LNUrlStatusResponse {Status = "OK"});
+                case PayoutState.Cancelled:
+                    return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Pr could not be paid"});
+            }
+
+            return Ok(request);
+        }
         [HttpGet("pay/app/{appId}/{itemCode}")]
         public async Task<IActionResult> GetLNURLForApp(string cryptoCode, string appId, string itemCode = null)
         {
@@ -237,6 +371,12 @@ namespace BTCPayServer
             var lnAddress = username is null ? null : $"{username}@{Request.Host}";
             List<string[]> lnurlMetadata = new();
 
+            var redirectUrl = app?.AppType switch
+            {
+                nameof(AppType.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                                               HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
+                _ => null
+            };
             var invoiceRequest = new CreateInvoiceRequest
             {
                 Amount = invoiceAmount,
@@ -245,7 +385,8 @@ namespace BTCPayServer
                     PaymentMethods = new[] { pmi.ToStringNormalized() },
                     Expiration = blob.InvoiceExpiration < TimeSpan.FromMinutes(2)
                         ? blob.InvoiceExpiration
-                        : TimeSpan.FromMinutes(2)
+                        : TimeSpan.FromMinutes(2),
+                    RedirectURL = redirectUrl
                 },
                 Currency = currencyCode,
                 Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
@@ -258,7 +399,7 @@ namespace BTCPayServer
                     {
                         ItemCode = item.Id, 
                         ItemDesc = item.Description, 
-                        OrderId = AppService.GetPosOrderId(app.Id)
+                        OrderId = AppService.GetAppOrderId(app)
                     }.ToJObject();
             }
             

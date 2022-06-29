@@ -16,7 +16,7 @@ namespace BTCPayServer.Controllers
     public partial class UIAppsController
     {
         [HttpGet("{appId}/settings/pos")]
-        public IActionResult UpdatePointOfSale(string appId)
+        public async Task<IActionResult> UpdatePointOfSale(string appId)
         {
             var app = GetCurrentApp();
             if (app == null)
@@ -25,11 +25,13 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
+            
             var vm = new UpdatePointOfSaleViewModel
             {
                 Id = appId,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
+                StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.Currency),
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
@@ -47,7 +49,7 @@ namespace BTCPayServer.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
-                SearchTerm = $"storeid:{app.StoreDataId}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 RequiresRefundEmail = settings.RequiresRefundEmail
             };

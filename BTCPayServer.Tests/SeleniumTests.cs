@@ -64,6 +64,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
             s.Driver.Quit();
         }
+        
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCPFP()
         {
@@ -318,6 +319,8 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
+            
+            // Server Emails
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
             if (s.Driver.PageSource.Contains("Configured"))
             {
@@ -326,8 +329,30 @@ namespace BTCPayServer.Tests
             }
             CanSetupEmailCore(s);
             s.CreateNewStore();
-            s.GoToUrl($"stores/{s.StoreId}/emails");
+            
+            // Store Emails
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+            
+            s.GoToStore(StoreNavPages.Emails);
             CanSetupEmailCore(s);
+            
+            // Store Email Rules
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
+            Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
+            Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
+            select.SelectByText("InvoiceSettled", true);
+            s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
+            s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
+            s.Driver.FindElement(By.Id("Rules_0__Body")).SendKeys("Your invoice is settled");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+            Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -758,35 +783,38 @@ namespace BTCPayServer.Tests
             currencyInput.SendKeys("BTC");
             
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            var editUrl = s.Driver.Url;
+            
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            var viewUrl = s.Driver.Url;
+            
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
             Assert.Equal("Pay Invoice",
                 s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
 
             // expire
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            s.GoToUrl(editUrl);
             s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            s.Driver.Navigate().Refresh();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            
+            s.GoToUrl(viewUrl);
             Assert.Equal("Expired", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
 
             // unexpire
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            s.GoToUrl(editUrl);
             s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.Driver.FindElement(By.XPath($"//a[starts-with(@id, 'Edit-')]")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            s.Driver.Navigate().Refresh();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            
+            s.GoToUrl(viewUrl);
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
             Assert.Equal("Pay Invoice",
                 s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
             
             // archive (from details page)
+            s.GoToUrl(editUrl);
             var payReqId = s.Driver.Url.Split('/').Last();
             s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
             Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);
@@ -1364,11 +1392,10 @@ namespace BTCPayServer.Tests
 
             newStore = s.CreateNewStore();
             s.AddLightningNode();
+            
             //Currently an onchain wallet is required to use the Lightning payouts feature..
             s.GenerateWallet("BTC", "", true, true);
-
             s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
-
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
             var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));
@@ -1462,6 +1489,70 @@ namespace BTCPayServer.Tests
 
             Assert.Contains(PayoutState.AwaitingPayment.GetStateString(), s.Driver.PageSource);
 
+            //lnurl-w support check
+            
+            s.GoToStore(s.StoreId,StoreNavPages.PullPayments);
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
+            s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
+            s.Driver.FindElement(By.Id("Currency")).Clear();
+            s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            var lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
+            Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(info.BalanceCheck, s.Server.PayTester.HttpClient));
+            Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            
+            var bolt2 = (await s.Server.CustomerLightningD.CreateInvoice(
+                new LightMoney(0.0000001m, LightMoneyUnit.BTC),
+                $"LNurl w payout test {DateTime.UtcNow.Ticks}",
+                TimeSpan.FromHours(1), CancellationToken.None));
+            var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
+                
+                Assert.Contains(PayoutState.Completed.GetStateString(), s.Driver.PageSource);
+               Assert.Equal( LightningInvoiceStatus.Paid, (await  s.Server.CustomerLightningD.GetInvoice(bolt2.Id)).Status );
+            });
+            
+            s.GoToStore(s.StoreId,StoreNavPages.PullPayments);
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
+            s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), false);
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
+            s.Driver.FindElement(By.Id("Currency")).Clear();
+            s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
+            Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(info.BalanceCheck, s.Server.PayTester.HttpClient));
+            Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
+            
+            bolt2 = (await s.Server.CustomerLightningD.CreateInvoice(
+                new LightMoney(0.0000001m, LightMoneyUnit.BTC),
+                $"LNurl w payout test {DateTime.UtcNow.Ticks}",
+                TimeSpan.FromHours(1), CancellationToken.None));
+            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
+                
+                Assert.Contains(PayoutState.AwaitingApproval.GetStateString(), s.Driver.PageSource);
+            });
         }
 
         [Fact]
@@ -1913,6 +2004,7 @@ retry:
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
+            s.Driver.FindElement(By.Id("Settings_From")).SendKeys("Firstname Lastname <email@example.com>");
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");

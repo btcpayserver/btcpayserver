@@ -20,11 +20,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 using Language = BTCPayServer.Client.Models.Language;
@@ -75,6 +73,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly GreenfieldStoreAutomatedLightningPayoutProcessorsController
             _greenfieldStoreAutomatedLightningPayoutProcessorsController;
 
+        private readonly GreenfieldAppsController _greenFieldAppsController;
+
         private readonly IServiceProvider _serviceProvider;
 
         public BTCPayServerClientFactory(StoreRepository storeRepository,
@@ -106,6 +106,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenfieldStoreAutomatedOnChainPayoutProcessorsController,
             GreenfieldStoreAutomatedLightningPayoutProcessorsController
                 greenfieldStoreAutomatedLightningPayoutProcessorsController,
+            GreenfieldAppsController greenFieldAppsController,
             IServiceProvider serviceProvider)
         {
             _storeRepository = storeRepository;
@@ -137,6 +138,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenfieldStoreAutomatedOnChainPayoutProcessorsController;
             _greenfieldStoreAutomatedLightningPayoutProcessorsController =
                 greenfieldStoreAutomatedLightningPayoutProcessorsController;
+            _greenFieldAppsController = greenFieldAppsController;
             _serviceProvider = serviceProvider;
         }
 
@@ -214,6 +216,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 _greenfieldPayoutProcessorsController,
                 _greenfieldStoreAutomatedOnChainPayoutProcessorsController,
                 _greenfieldStoreAutomatedLightningPayoutProcessorsController,
+                _greenFieldAppsController,
                 new LocalHttpContextAccessor() {HttpContext = context}
             );
         }
@@ -259,6 +262,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private readonly GreenfieldStoreUsersController _greenfieldStoreUsersController;
 
+        private readonly GreenfieldAppsController _greenFieldAppsController;
+
         public LocalBTCPayServerClient(
             IServiceProvider serviceProvider,
             GreenfieldStoreOnChainPaymentMethodsController chainPaymentMethodsController,
@@ -287,6 +292,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenfieldStoreAutomatedOnChainPayoutProcessorsController,
             GreenfieldStoreAutomatedLightningPayoutProcessorsController
                 greenfieldStoreAutomatedLightningPayoutProcessorsController,
+            GreenfieldAppsController greenFieldAppsController,
             IHttpContextAccessor httpContextAccessor) : base(new Uri("https://dummy.local"), "", "")
         {
             _chainPaymentMethodsController = chainPaymentMethodsController;
@@ -315,6 +321,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 greenfieldStoreAutomatedOnChainPayoutProcessorsController;
             _greenfieldStoreAutomatedLightningPayoutProcessorsController =
                 greenfieldStoreAutomatedLightningPayoutProcessorsController;
+            _greenFieldAppsController = greenFieldAppsController;
 
             var controllers = new[]
             {
@@ -533,6 +540,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _storeLightningNodeApiController.GetInfo(cryptoCode, token));
         }
 
+        public override async Task<LightningNodeBalanceData> GetLightningNodeBalance(string storeId, string cryptoCode,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningNodeBalanceData>(
+                await _storeLightningNodeApiController.GetBalance(cryptoCode));
+        }
+
         public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
             ConnectToNodeRequest request, CancellationToken token = default)
         {
@@ -585,6 +599,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningNodeInformationData>(
                 await _lightningNodeApiController.GetInfo(cryptoCode));
+        }
+
+        public override async Task<LightningNodeBalanceData> GetLightningNodeBalance(string cryptoCode,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningNodeBalanceData>(
+                await _lightningNodeApiController.GetBalance(cryptoCode));
         }
 
         public override async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request,
@@ -1263,6 +1284,25 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<PayoutData[]>(
                 await _greenfieldPullPaymentController
                     .GetStorePayouts(storeId, includeCancelled));
+        }
+
+        public override async Task<PointOfSaleAppData> CreatePointOfSaleApp(
+           string storeId,
+            CreatePointOfSaleAppRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<PointOfSaleAppData>(
+                await _greenFieldAppsController.CreatePointOfSaleApp(storeId, request));
+        }
+
+        public override async Task<AppDataBase> GetApp(string appId, CancellationToken token = default)
+        {
+            return GetFromActionResult<AppDataBase>(
+                await _greenFieldAppsController.GetApp(appId));
+        }
+
+        public override async Task DeleteApp(string appId, CancellationToken token = default)
+        {
+            HandleActionResult(await _greenFieldAppsController.DeleteApp(appId));
         }
     }
 }

@@ -170,11 +170,77 @@
                     }
                 ]
             }
+        },
+        "/api/v1/apps/{appId}": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetPointOfSaleApp",
+                "summary": "Get basic app data",
+                "description": "Returns basic app data shared between all types of apps",
+                "responses": {
+                    "200": {
+                        "description": "Basic app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BasicAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_DeletePointOfSaleApp",
+                "summary": "Delete app",
+                "description": "Deletes apps with specified ID",
+                "responses": {
+                    "200": {
+                        "description": "App was deleted"
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
             "PointOfSaleAppData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BasicAppData"
+                    },
+                    {
+                    }
+                ]
+            },
+            "BasicAppData": {
                 "type": "object",
                 "properties": {
                     "id": {
@@ -200,7 +266,7 @@
                     "appType": {
                         "type": "string",
                         "example": "PointOfSale",
-                        "description": "Type of the app which was created (will always \"PointOfSale\" in this case"
+                        "description": "Type of the app which was created"
                     }
                 }
             }

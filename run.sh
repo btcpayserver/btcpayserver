@@ -1,3 +1,3 @@
 #!/bin/bash
 
-dotnet run --no-launch-profile --no-build -c Release -p "BTCPayServer/BTCPayServer.csproj" -- $@
+dotnet run --no-launch-profile --no-build -c Release --project "BTCPayServer/BTCPayServer.csproj" -- $@

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 
@@ -10,6 +11,7 @@ namespace BTCPayServer.Models.AppViewModels
     {
         public string StoreId { get; set; }
         public string StoreName { get; set; }
+        public string StoreDefaultCurrency { get; set; }
 
         [Required]
         [MaxLength(50)]
@@ -27,7 +29,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         public string Description { get; set; }
 
-        [Display(Name = "Featured Image")]
+        [Display(Name = "Featured Image URL")]
         public string MainImageUrl { get; set; }
 
         [Display(Name = "Callback Notification URL")]
@@ -67,11 +69,15 @@ namespace BTCPayServer.Models.AppViewModels
         [Range(0, double.PositiveInfinity)]
         public decimal? TargetAmount { get; set; }
 
-        public IEnumerable<string> ResetEveryValues = Enum.GetNames(typeof(CrowdfundResetEvery));
+        public IEnumerable<string> ResetEveryValues = Enum.GetNames(typeof(CrowdfundResetEvery))
+            .Where(i => i != nameof(CrowdfundResetEvery.Never));
+
+        public bool IsRecurring { get; set; }
 
         [Display(Name = "Reset goal every")]
         public string ResetEvery { get; set; } = nameof(CrowdfundResetEvery.Never);
 
+        [Display(Name = "Reset goal every")]
         public int ResetEveryAmount { get; set; } = 1;
 
         [Display(Name = "Do not allow additional contributions after target has been reached")]

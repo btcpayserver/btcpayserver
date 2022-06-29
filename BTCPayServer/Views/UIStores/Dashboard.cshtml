@@ -85,6 +85,11 @@
             </div>
         }
         <vc:store-numbers store="@store"/>
+        @if (Model.LightningEnabled)
+        {
+            <vc:store-lightning-balance store="@store"/>
+            <vc:store-lightning-services store="@store"/>
+        }
         @if (Model.WalletEnabled)
         {
             <vc:store-recent-transactions store="@store"/>

@@ -197,6 +197,68 @@
                     }
                 }
             },
+            "LightningNodeBalanceData": {
+                "type": "object",
+                "properties": {
+                    "onchain": {
+                        "type": "object",
+                        "description": "On-chain balance of the Lightning node",
+                        "nullable": true,
+                        "$ref": "#/components/schemas/OnchainBalanceData"
+                    },
+                    "offchain": {
+                        "type": "object",
+                        "description": "Off-chain balance of the Lightning node",
+                        "nullable": true,
+                        "$ref": "#/components/schemas/OffchainBalanceData"
+                    }
+                }
+            },
+            "OnchainBalanceData": {
+                "type": "object",
+                "properties": {
+                    "confirmed": {
+                        "type": "string",
+                        "description": "The confirmed amount in millisatoshi",
+                        "nullable": true
+                    },
+                    "unconfirmed": {
+                        "type": "string",
+                        "description": "The unconfirmed amount in millisatoshi",
+                        "nullable": true
+                    },
+                    "reserved": {
+                        "type": "string",
+                        "description": "The reserved amount in millisatoshi",
+                        "nullable": true
+                    }
+                }
+            },
+            "OffchainBalanceData": {
+                "type": "object",
+                "properties": {
+                    "opening": {
+                        "type": "string",
+                        "description": "The amount of current channel openings in millisatoshi",
+                        "nullable": true
+                    },
+                    "local": {
+                        "type": "string",
+                        "description": "The amount that is available on the local end of active channels in millisatoshi",
+                        "nullable": true
+                    },
+                    "remote": {
+                        "type": "string",
+                        "description": "The amount that is available on the remote end of active channels in millisatoshi",
+                        "nullable": true
+                    },
+                    "closing": {
+                        "type": "string",
+                        "description": "The amount of current channel closings in millisatoshi",
+                        "nullable": true
+                    }
+                }
+            },
             "PayLightningInvoiceRequest": {
                 "type": "object",
                 "properties": {

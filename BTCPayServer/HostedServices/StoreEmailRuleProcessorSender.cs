@@ -92,6 +92,6 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
             .Replace("{Invoice.Price}", i.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", i.Currency)
             .Replace("{Invoice.Status}", i.Status.ToString())
-            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
+            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString());
     }
 }

@@ -59,7 +59,7 @@
                         </div>
                         <div class="form-group">
                             <label asp-for="Rules[index].Body" class="form-label" ></label>
-                            <textarea asp-for="Rules[index].Body" class="form-control richtext" rows="4"></textarea>
+                            <textarea asp-for="Rules[index].Body" class="form-control" rows="4"></textarea>
                             <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
                         </div>
                     </li>
@@ -74,11 +74,6 @@
         }
     </div>
 </form>
-@section PageHeadContent {
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true"/>
-}
-
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
-    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }

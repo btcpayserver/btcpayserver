@@ -75,7 +75,6 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                         {
                             recipients.Add(bmb);
                         }
-                        //TODO: FIX ME! how do we determine host when we have no context?
                         var i = GreenfieldInvoiceController.ToModel(invoiceEvent.Invoice, _linkGenerator, null);
                         sender.SendEmail(recipients.ToArray(), null, null, Interpolator(actionableRule.Subject, i),
                             Interpolator(actionableRule.Body, i));
@@ -92,8 +91,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
             .Replace("{Invoice.StoreId}", i.StoreId)
             .Replace("{Invoice.Price}", i.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", i.Currency)
-            .Replace("{Invoice.Currency}", i.Status.ToString())
+            .Replace("{Invoice.Status}", i.Status.ToString())
             .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
-            .Replace("{Invoice.CheckoutLink}", i.CheckoutLink);
     }
 }

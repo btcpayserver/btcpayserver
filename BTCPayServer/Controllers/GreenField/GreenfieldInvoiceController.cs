@@ -396,7 +396,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return ToModel(entity, _linkGenerator, Request);
         }
 
-        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, HttpRequest request)
+        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, HttpRequest? request)
         {
             var statuses = new List<InvoiceStatus>();
             var state = entity.GetInvoiceState();
@@ -418,7 +418,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Amount = entity.Price,
                 Type = entity.Type,
                 Id = entity.Id,
-                CheckoutLink = linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
+                CheckoutLink = request is null? null: linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
                 Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,

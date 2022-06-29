@@ -1546,7 +1546,7 @@ namespace BTCPayServer.Tests
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
-            await TestUtils.EventuallyAsync(async () =>
+            TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);

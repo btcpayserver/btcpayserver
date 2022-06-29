@@ -98,6 +98,7 @@ namespace BTCPayServer.Hosting
             if (configuration.SupportChain("yec") || configuration.SupportChain("zec"))
                 services.AddZcashLike();
 #endif
+            services.AddScoped<IScopeProvider, ScopeProvider>();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<IStoreRepository>(provider => provider.GetService<StoreRepository>());

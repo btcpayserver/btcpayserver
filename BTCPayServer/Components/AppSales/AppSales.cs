@@ -9,6 +9,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.AppSales;
 
+public enum AppSalesPeriod
+{
+    Week,
+    Month
+}
+
 public class AppSales : ViewComponent
 {
     private readonly AppService _appService;

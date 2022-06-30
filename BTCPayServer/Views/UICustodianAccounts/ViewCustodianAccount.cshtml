@@ -18,11 +18,11 @@
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/Custodians/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-            </a>
-        </small>
+        @* <small> *@
+        @*     <a href="https://docs.btcpayserver.org/Custodians/" class="ms-1" target="_blank" rel="noreferrer noopener"> *@
+        @*         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span> *@
+        @*     </a> *@
+        @* </small> *@
     </h2>
     <div class="d-flex gap-3 mt-3 mt-sm-0">
         <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">

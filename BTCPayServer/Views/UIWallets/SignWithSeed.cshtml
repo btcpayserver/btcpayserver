@@ -1,21 +1,24 @@
+@using BTCPayServer.Controllers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model SignWithSeedViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, "Sign PSBT", walletId);
-	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section Navbar {
-	@if (returnUrl is string)
-	{
-    <a href="@returnUrl" id="GoBack">
-        <vc:icon symbol="back" />
-    </a>
-    <a href="@returnUrl" class="cancel">
+    @if (backUrl != null)
+    {
+        <a href="@backUrl" id="GoBack">
+            <vc:icon symbol="back" />
+        </a>
+    }
+    <a href="@cancelUrl" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
-	}
 }
 
 <header class="text-center">
@@ -37,8 +40,10 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl">
+<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId">
     <partial name="SigningContext" for="SigningContext"/>
+    <input type="hidden" asp-for="ReturnUrl" />
+    <input type="hidden" asp-for="BackUrl" />
     <div class="form-group">
         <label asp-for="SeedOrKey" class="form-label"></label>
         <input asp-for="SeedOrKey" class="form-control" autocomplete="off" autocorrect="off" autocapitalize="off"/>

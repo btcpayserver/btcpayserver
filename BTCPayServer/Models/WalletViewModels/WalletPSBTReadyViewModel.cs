@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
@@ -31,6 +32,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public List<DestinationViewModel> Destinations { get; set; } = new List<DestinationViewModel>();
         public List<InputViewModel> Inputs { get; set; } = new List<InputViewModel>();
         public string FeeRate { get; set; }
+        public string BackUrl { get; set; }
+        public string ReturnUrl { get; set; }
 
         internal void SetErrors(IList<PSBTError> errors)
         {

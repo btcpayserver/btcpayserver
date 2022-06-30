@@ -1,21 +1,25 @@
+@using BTCPayServer.Controllers
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSendVaultModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId);
-	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section Navbar {
-	@if (returnUrl is string)
-	{
-    <a href="@returnUrl" id="GoBack">
-        <vc:icon symbol="back" />
-    </a>
-    <a href="@returnUrl" class="cancel">
+    @if (backUrl != null)
+    {
+        <a href="@backUrl" id="GoBack">
+            <vc:icon symbol="back" />
+        </a>
+    }
+    <a href="@cancelUrl" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
-	}
 }
 
 <header class="text-center">
@@ -31,9 +35,11 @@
 </div>
 
 <div id="body" class="my-4">
-    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl" method="post" style="display:none;">
+    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">
         <input type="hidden" id="WalletId" asp-for="WalletId" />
         <input type="hidden" asp-for="WebsocketPath" />
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
         <partial name="SigningContext" for="SigningContext" />
     </form>
     <div id="vaultPlaceholder"></div>

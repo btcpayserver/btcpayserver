@@ -1,17 +1,24 @@
+@using BTCPayServer.Controllers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSigningOptionsModel
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     var walletId = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId.ToString());
 }
 
 @section Navbar {
-    <a href="@Model.ReturnUrl">
-        <vc:icon symbol="back" />
-    </a>
-    <a href="@Model.ReturnUrl" class="cancel">
+    @if (backUrl != null)
+    {
+        <a href="@backUrl" id="GoBack">
+            <vc:icon symbol="back" />
+        </a>
+    }
+    <a href="@cancelUrl" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }
@@ -21,8 +28,10 @@
     <p class="lead text-secondary mt-3">You can sign the transaction using one of the following methods.</p>
 </header>
 
-<form method="post" asp-action="WalletSign" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl">
+<form method="post" asp-action="WalletSign" asp-route-walletId="@walletId">
     <partial name="SigningContext" for="SigningContext" />
+    <input type="hidden" asp-for="ReturnUrl" />
+    <input type="hidden" asp-for="BackUrl" />
 
     @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).VaultSupported)
     {

@@ -1,9 +1,27 @@
-﻿@model WalletPSBTViewModel
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Controllers
+@using BTCPayServer.TagHelpers
+@using BundlerMinifier.TagHelpers
+@model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    Layout = "../Shared/_NavLayout.cshtml";
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+    Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
+}
+
+@section Navbar {
+    @if (backUrl != null)
+    {
+        <a href="@backUrl" id="GoBack">
+            <vc:icon symbol="back" />
+        </a>
+    }
+    <a href="@cancelUrl" id="CancelWizard" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
 }
 
 @section PageHeadContent {
@@ -23,42 +41,43 @@
     </script>
 }
 
-<h3 class="mb-3">@ViewData["Title"]</h3>
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3 mx-md-5">You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
+</header>
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        @if (Model.Errors != null && Model.Errors.Count != 0)
-        {
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                    <vc:icon symbol="close" />
-                </button>
-                @foreach (var error in Model.Errors)
-                {
-                    <span>@error</span>
-                    <br/>
-                }
-            </div>
-        }
+<div class="my-5">
+    @if (Model.Errors != null && Model.Errors.Count != 0)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <vc:icon symbol="close" />
+            </button>
+            @foreach (var error in Model.Errors)
+            {
+                <span>@error</span>
+                <br/>
+            }
+        </div>
+    }
 
-        <p>You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
-        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data">
-            <div class="form-group">
-                <label asp-for="PSBT" class="form-label"></label>
-                <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
-                <span asp-validation-for="PSBT" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UploadedPSBTFile" class="form-label"></label>
-                <input asp-for="UploadedPSBTFile" type="file" class="form-control">
-            </div>
-            <div class="d-flex">
-                <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode">Decode PSBT</button>
-                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
-            </div>
-        </form>
-
-    </div>
+    <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
+        <div class="form-group">
+            <label asp-for="PSBT" class="form-label"></label>
+            <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
+            <span asp-validation-for="PSBT" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="UploadedPSBTFile" class="form-label"></label>
+            <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+        </div>
+        <div class="d-flex">
+            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode">Decode PSBT</button>
+            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+        </div>
+    </form>
 </div>
 <partial name="ShowQR"/>
 <partial name="CameraScanner"/>

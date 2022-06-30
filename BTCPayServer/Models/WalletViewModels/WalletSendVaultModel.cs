@@ -4,6 +4,8 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         public string WalletId { get; set; }
         public string WebsocketPath { get; set; }
-        public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
+        public string BackUrl { get; set; }
+        public string ReturnUrl { get; set; }
+        public SigningContextModel SigningContext { get; set; } = new ();
     }
 }

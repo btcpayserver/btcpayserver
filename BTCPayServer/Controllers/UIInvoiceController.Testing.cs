@@ -34,7 +34,8 @@ namespace BTCPayServer.Controllers
 
             // TODO support altcoins, not just bitcoin
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
-            var paymentMethodId = store.GetDefaultPaymentId() ?? store.GetEnabledPaymentIds(_NetworkProvider).FirstOrDefault(p => p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
+            var paymentMethodId = new [] {store.GetDefaultPaymentId()}.Concat(store.GetEnabledPaymentIds(_NetworkProvider))
+                .FirstOrDefault(p => p!= null && p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
             var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
             var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
             var BtcAmount = request.Amount;

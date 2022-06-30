@@ -187,7 +187,10 @@ namespace BTCPayServer.Controllers
 
             var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
             var pmis = paymentMethods.Select(method => method.GetId()).ToList();
-            var options = (await payoutHandlers.GetSupportedPaymentMethods(invoice.StoreData)).Where(id => pmis.Contains(id)).ToList();
+            pmis = pmis.Concat(pmis.Where(id => id.PaymentType == LNURLPayPaymentType.Instance)
+                .Select(id => new PaymentMethodId(id.CryptoCode, LightningPaymentType.Instance))).ToList();
+            var relevant = payoutHandlers.Where(handler => pmis.Any(handler.CanHandle));
+            var options = (await relevant.GetSupportedPaymentMethods(invoice.StoreData)).Where(id => pmis.Contains(id)).ToList();
             if (!options.Any())
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()

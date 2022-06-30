@@ -570,7 +570,6 @@ namespace BTCPayServer.Services.Invoices
             entity.ExceptionStatus = state.ExceptionStatus;
             entity.Status = state.Status;
             entity.RefundMail = invoice.CustomerEmail;
-            entity.Refundable = false;
             if (invoice.AddressInvoices != null)
             {
                 entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId().ToString()).ToHashSet();

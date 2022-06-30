@@ -193,19 +193,17 @@ namespace BTCPayServer.Controllers
             var options = (await relevant.GetSupportedPaymentMethods(invoice.StoreData)).Where(id => pmis.Contains(id)).ToList();
             if (!options.Any())
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "There were no payment methods available to provide refunds with for this invoice."
-                });
-                return RedirectToAction(nameof(Invoice), new { invoiceId });
+                var vm = new RefundModel { Title = "No matching payment method" };
+                ModelState.AddModelError(nameof(vm.AvailablePaymentMethods), 
+                    "There are no payment methods available to provide refunds with for this invoice.");
+                return View("_RefundModal", vm);
             }
 
             var defaultRefund = invoice.Payments
                 .Select(p => p.GetBlob(_NetworkProvider))
                 .Select(p => p?.GetPaymentMethodId())
                 .FirstOrDefault(p => p != null && options.Contains(p));
-            // TODO: What if no option?
+
             var refund = new RefundModel
             {
                 Title = "Payment method",

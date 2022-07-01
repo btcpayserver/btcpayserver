@@ -355,7 +355,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{walletId}/receive")]
-        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId)
+        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            [FromQuery] string returnUrl = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -375,25 +376,26 @@ namespace BTCPayServer.Controllers
                     Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
                         new { walletId.CryptoCode })));
             }
-            return View(new WalletReceiveViewModel()
+            return View(new WalletReceiveViewModel
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
                 CryptoImage = GetImage(paymentMethod.PaymentId, network),
-                PaymentLink = bip21.ToString()
+                PaymentLink = bip21.ToString(),
+                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath
             });
         }
 
         [HttpPost("{walletId}/receive")]
         public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            WalletReceiveViewModel viewModel, string command)
+            WalletReceiveViewModel vm, string command)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
             DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
             switch (command)
@@ -402,7 +404,7 @@ namespace BTCPayServer.Controllers
                     var address = await _walletReceiveService.UnReserveAddress(walletId);
                     if (!string.IsNullOrEmpty(address))
                     {
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
                             AllowDismiss = true,
                             Message = $"Address {address} was unreserved.",
@@ -419,7 +421,7 @@ namespace BTCPayServer.Controllers
                         await SendFreeMoney(cheater, walletId, paymentMethod);
                     break;
             }
-            return RedirectToAction(nameof(WalletReceive), new { walletId });
+            return RedirectToAction(nameof(WalletReceive), new { walletId, returnUrl = vm.ReturnUrl });
         }
 
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
@@ -1368,6 +1370,7 @@ namespace BTCPayServer.Controllers
         public string CryptoCode { get; set; }
         public string Address { get; set; }
         public string PaymentLink { get; set; }
+        public string? ReturnUrl { get; set; }
     }
 
     public class SendToAddressResult

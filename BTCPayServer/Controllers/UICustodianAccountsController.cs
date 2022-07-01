@@ -91,7 +91,11 @@ namespace BTCPayServer.Controllers
                         var asset = pair.Key;
                         var assetBalance = assetBalances[asset];
 
-                        if (!asset.Equals(defaultCurrency))
+                        if (asset.Equals(defaultCurrency))
+                        {
+                            assetBalance.FormattedFiatValue = _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty, defaultCurrency);
+                        }
+                        else
                         {
                             try
                             {

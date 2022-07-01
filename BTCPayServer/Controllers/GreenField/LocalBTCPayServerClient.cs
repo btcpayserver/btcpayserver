@@ -176,7 +176,10 @@ namespace BTCPayServer.Controllers.Greenfield
             else
             {
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(),
+                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>()
+                        {
+                            new(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, Roles.ServerAdmin)
+                        },
                         $"Local{GreenfieldConstants.AuthenticationType}"));
             }
 

@@ -9,13 +9,11 @@ COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPaySe
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
 COPY BTCPayServer.Data/BTCPayServer.Data.csproj BTCPayServer.Data/BTCPayServer.Data.csproj
 COPY BTCPayServer.Client/BTCPayServer.Client.csproj BTCPayServer.Client/BTCPayServer.Client.csproj
-COPY Plugins/BTCPayServer.Plugins.Custodians.Kraken/BTCPayServer.Plugins.Custodians.Kraken.csproj Plugins/BTCPayServer.Plugins.Custodians.Kraken/BTCPayServer.Plugins.Custodians.Kraken.csproj
 RUN cd BTCPayServer && dotnet restore
 COPY BTCPayServer.Common/. BTCPayServer.Common/.
 COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
 COPY BTCPayServer.Data/. BTCPayServer.Data/.
 COPY BTCPayServer.Client/. BTCPayServer.Client/.
-COPY Plugins/BTCPayServer.Plugins.Custodians.Kraken/. Plugins/BTCPayServer.Plugins.Custodians.Kraken/.
 COPY BTCPayServer.Abstractions/. BTCPayServer.Abstractions/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj

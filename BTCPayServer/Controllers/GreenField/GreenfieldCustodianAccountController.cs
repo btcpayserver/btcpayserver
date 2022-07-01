@@ -93,6 +93,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> FetchCustodianAccountConfigForm(string storeId, string accountId,
             [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
         {
+            // TODO this endpoint needs tests
             var custodianAccountData = await GetCustodianAccount(storeId, accountId);
             var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
             
@@ -105,9 +106,10 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
         [Authorize(Policy = Policies.CanManageCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> SubmitCustodianAccountConfigForm(string storeId, string accountId, JObject values,
+        public async Task<IActionResult> PostCustodianAccountConfigForm(string storeId, string accountId, JObject values,
             [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
         {
+            // TODO this endpoint needs tests
             var custodianAccountData = await GetCustodianAccount(storeId, accountId);
             var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
             

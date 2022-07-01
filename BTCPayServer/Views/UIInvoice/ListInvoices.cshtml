@@ -352,6 +352,10 @@
                                 {
                                     <span class="badge">@paymentType.GetBadge()</span>
                                 }
+                                @if (invoice.HasRefund)
+                                {
+                                    <span class="badge bg-warning">Refund</span>
+                                }
                             </td>
                             <td class="text-end text-nowrap">@invoice.AmountCurrency</td>
                             <td class="text-end text-nowrap">

@@ -23,9 +23,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
         data: function () {
             return {
                 amount: null,
-                expanded: false,
-                lnurl: window.lnurl,
-                currentMode: 'standard'
+                expanded: false
             }
         },
         computed: {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
@@ -39,6 +40,7 @@ public class StoreRecentInvoices : ViewComponent
                 UserId = userId,
                 StoreId = new [] { store.Id },
                 IncludeArchived = false,
+                IncludeRefunds = true,
                 Take = 5
             });
         var invoices = new List<StoreRecentInvoiceViewModel>();
@@ -49,6 +51,7 @@ public class StoreRecentInvoices : ViewComponent
             {
                 Date = invoice.InvoiceTime,
                 Status = state,
+                HasRefund = invoice.Refunds.Any(),
                 InvoiceId = invoice.Id,
                 OrderId = invoice.Metadata.OrderId ?? string.Empty,
                 AmountCurrency = _currencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),

@@ -826,6 +826,7 @@ namespace BTCPayServer.Controllers
             invoiceQuery.StoreId = model.StoreIds;
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
+            invoiceQuery.IncludeRefunds = true;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             model.IncludeArchived = invoiceQuery.IncludeArchived;
@@ -845,6 +846,7 @@ namespace BTCPayServer.Controllers
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),
+                    HasRefund = invoice.Refunds.Any(data => !data.PullPaymentData.Archived)
                 });
             }
             return View(model);

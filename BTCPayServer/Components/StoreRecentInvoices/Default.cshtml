@@ -38,6 +38,12 @@
                                 @($"({invoice.Status.ExceptionStatus.ToString()})")
                             }
                         </span>
+                        @if (invoice.HasRefund)
+                        {
+                            <span class="badge bg-warning">
+                                Refund
+                            </span>
+                        }
                     </td>
                     <td class="text-end">@invoice.AmountCurrency</td>
                 </tr>

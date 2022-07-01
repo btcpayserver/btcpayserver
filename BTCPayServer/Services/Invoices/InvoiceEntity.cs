@@ -392,7 +392,7 @@ namespace BTCPayServer.Services.Invoices
             return GetPayments(network.CryptoCode, accountedOnly);
         }
 #pragma warning restore CS0618
-        public bool Refundable { get; set; }
+        // public bool Refundable { get; set; }
         public bool? RequiresRefundEmail { get; set; } = null;
         public string RefundMail { get; set; }
         [JsonProperty("redirectURL")]
@@ -465,7 +465,6 @@ namespace BTCPayServer.Services.Invoices
                 ExceptionStatus = ExceptionStatus == InvoiceExceptionStatus.None ? new JValue(false) : new JValue(ExceptionStatusString),
 #pragma warning restore CS0618 // Type or member is obsolete
                 Currency = Currency,
-                Flags = new Flags() { Refundable = Refundable },
                 PaymentSubtotals = new Dictionary<string, decimal>(),
                 PaymentTotals = new Dictionary<string, decimal>(),
                 SupportedTransactionCurrencies = new Dictionary<string, NBitpayClient.InvoiceSupportedTransactionCurrency>(),

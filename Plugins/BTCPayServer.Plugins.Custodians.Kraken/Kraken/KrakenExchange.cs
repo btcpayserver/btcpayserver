@@ -106,7 +106,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         {
             throw;
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             throw new AssetBalancesUnavailableException(e);
         }
@@ -147,7 +147,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
 
         var apiKeyField = new TextField("API Key", "ApiKey", krakenConfig.ApiKey, true, "Enter your Kraken API Key");
         var privateKeyField = new TextField("Private Key", "PrivateKey", krakenConfig.PrivateKey,
-            true,"Enter your Kraken Private Key");
+            true, "Enter your Kraken Private Key");
 
         form.Fieldsets.Add(fieldset);
         fieldset.Fields.Add(apiKeyField);
@@ -165,12 +165,12 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         foreach (var paymentMethod in paymentMethods)
         {
             var value = krakenConfig?.WithdrawToAddressNamePerPaymentMethod?[paymentMethod];
-            withdrawalFieldset.Fields.Add(new TextField(paymentMethod,
-                "WithdrawToAddressNamePerPaymentMethod[" + paymentMethod + "]",
+            withdrawalFieldset.Fields.Add(new TextField($"Store's destination for {paymentMethod}",
+                "WithdrawToAddressNamePerPaymentMethod[" + paymentMethod+"]",
                 value,
-                false, "The exact name of the withdrawal destination stored in your Kraken account for your store's "+paymentMethod+" wallet."));
+                false, "The exact name of the withdrawal destination stored in your Kraken account for your store's " + paymentMethod + " wallet."));
         }
-        
+
         try
         {
             await GetAssetBalancesAsync(config, cancellationToken);
@@ -182,7 +182,8 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
                 var field = form.GetFieldByName(badConfigKey);
                 field.ValidationErrors.Add("Invalid " + field.Label);
             }
-            form.TopMessages.Add(new AlertMessage(AlertMessage.AlertMessageType.Danger,"Cannot connect to Kraken. Please check your API and private keys."));
+
+            form.TopMessages.Add(new AlertMessage(AlertMessage.AlertMessageType.Danger, "Cannot connect to Kraken. Please check your API and private keys."));
         }
 
         return form;
@@ -268,6 +269,7 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             // Fiat starts with a "Z" like "ZUSD" or "ZEUR"
             return krakenAsset.Substring(1);
         }
+
         if (krakenAsset.StartsWith("X", StringComparison.InvariantCulture))
         {
             // Other cryptos start with a "X" like "XXRP" and "XREP"
@@ -647,6 +649,10 @@ public class KrakenExchange : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             if (errorMessageArray.Count > 0)
             {
                 var errorMessage = errorMessageArray[0].ToString();
+                if (errorMessage.Equals("EAPI:Invalid key", StringComparison.InvariantCulture))
+                {
+                    throw new BadConfigException(new[] { "ApiKey" });
+                }
                 if (errorMessage.Equals("EGeneral:Permission denied", StringComparison.InvariantCulture))
                 {
                     throw new PermissionDeniedCustodianApiException(this);

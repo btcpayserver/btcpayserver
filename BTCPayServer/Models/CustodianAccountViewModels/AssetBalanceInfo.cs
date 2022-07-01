@@ -12,8 +12,10 @@ public class AssetBalanceInfo
     public decimal? Ask { get; set; }
     public decimal Qty { get; set; }
     public string FiatAsset { get; set; }
+    public string FormattedFiatValue { get; set; }
     public IEnumerable<AssetPairData> TradableAssetPairs { get; set; }
     public bool CanWithdraw { get; set; }
     public bool CanDeposit { get; set; }
-
+    public string FormattedBid { get; set; }
+    public string FormattedAsk { get; set; }
 }

@@ -1,10 +1,4 @@
 @model BTCPayServer.Abstractions.Form.Form
-@using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.Form
-@using BTCPayServer.Components.Icon
-@{
-    //var parsedModel = TempData.GetStatusMessageModel();
-}
 
 @foreach (var fieldset in Model.Fieldsets)
 {
@@ -27,8 +21,8 @@
                 @field.Label
             </label>
         }
-        
-        <input class="form-control" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
+
+        <input class="form-control @(@field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
         <small id="HelpText@field.Name" class="form-text text-muted">
             @field.HelpText
         </small>

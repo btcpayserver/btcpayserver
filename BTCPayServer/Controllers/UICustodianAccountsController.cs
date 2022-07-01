@@ -7,14 +7,10 @@ using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.CustodianAccountViewModels;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Custodian.Client;
-using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -29,33 +25,22 @@ namespace BTCPayServer.Controllers
     public class UICustodianAccountsController : Controller
     {
         public UICustodianAccountsController(
+            CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            // EventAggregator eventAggregator,
-            // CurrencyNameTable currencies,
-            StoreRepository storeRepository,
             CustodianAccountRepository custodianAccountRepository,
-            IEnumerable<ICustodian> custodianRegistry,
-            BTCPayServerClient btcPayServerClient
+            IEnumerable<ICustodian> custodianRegistry
         )
         {
+            _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _userManager = userManager;
-            // _eventAggregator = eventAggregator;
-            // _currencies = currencies;
-            _storeRepository = storeRepository;
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
-            _btcPayServerClient = btcPayServerClient;
         }
 
         private readonly IEnumerable<ICustodian> _custodianRegistry;
-
         private readonly UserManager<ApplicationUser> _userManager;
-
-        // private readonly EventAggregator _eventAggregator;
-        // private readonly CurrencyNameTable _currencies;
-        private readonly StoreRepository _storeRepository;
         private readonly CustodianAccountRepository _custodianAccountRepository;
-        private readonly BTCPayServerClient _btcPayServerClient;
+        private readonly CurrencyNameTable _currencyNameTable;
 
         public string CreatedCustodianAccountId { get; set; }
 
@@ -91,11 +76,7 @@ namespace BTCPayServer.Controllers
                     var asset = pair.Key;
 
                     assetBalances.Add(asset,
-                        new AssetBalanceInfo
-                        {
-                            Asset = asset,
-                            Qty = pair.Value
-                        }
+                        new AssetBalanceInfo { Asset = asset, Qty = pair.Value }
                     );
                 }
 
@@ -109,7 +90,6 @@ namespace BTCPayServer.Controllers
                     {
                         var asset = pair.Key;
                         var assetBalance = assetBalances[asset];
-                        var qty = pair.Value;
 
                         if (!asset.Equals(defaultCurrency))
                         {
@@ -117,11 +97,13 @@ namespace BTCPayServer.Controllers
                             {
                                 var quote = await tradingCustodian.GetQuoteForAssetAsync(defaultCurrency, asset,
                                     config, default);
-                                assetBalance.Ask = quote.Ask;
                                 assetBalance.Bid = quote.Bid;
+                                assetBalance.Ask = quote.Ask;
                                 assetBalance.FiatAsset = defaultCurrency;
-                                assetBalance.TradableAssetPairs =
-                                    tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
+                                assetBalance.FormattedBid = _currencyNameTable.DisplayFormatCurrency(quote.Bid, quote.FromAsset);
+                                assetBalance.FormattedAsk = _currencyNameTable.DisplayFormatCurrency(quote.Ask, quote.FromAsset);
+                                assetBalance.FormattedFiatValue = _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid, pair.Value.FiatAsset);
+                                assetBalance.TradableAssetPairs = tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
                             }
                             catch (WrongTradingPairException e)
                             {
@@ -144,7 +126,7 @@ namespace BTCPayServer.Controllers
                         }
                     }
                 }
-                
+
                 if (custodian is ICanDeposit depositableCustodian)
                 {
                     var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
@@ -191,6 +173,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId,
             EditCustodianAccountViewModel vm)
         {
+            // The locale is not important yet, but keeping it here so we can find it easily when localization becomes a thing.
+            var locale = "en-US";
+
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
             {
@@ -198,21 +183,37 @@ namespace BTCPayServer.Controllers
             }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
-            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
+            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), locale);
 
             var newData = new JObject();
             foreach (var pair in Request.Form)
             {
-                newData.Add(pair.Key, pair.Value.ToString());
+                if ("CustodianAccount.Name".Equals(pair.Key))
+                {
+                    custodianAccount.Name = pair.Value;
+                }
+                else
+                {
+                    // TODO support posted array notation, like a field called "WithdrawToAddressNamePerPaymentMethod[BTC-OnChain]". The data should be nested in the JSON.
+                    newData.Add(pair.Key, pair.Value.ToString());
+                }
             }
 
-            var filteredConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
-            custodianAccount.SetBlob(filteredConfigData);
+            var newConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
+            var newConfigForm = await custodian.GetConfigForm(newConfigData, locale);
 
-            custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
+            if (newConfigForm.IsValid())
+            {
+                custodianAccount.SetBlob(newConfigData);
+                custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
 
+                return RedirectToAction(nameof(ViewCustodianAccount),
+                    new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
+            }
+
+            // Form not valid: The user must fix the errors before we can save
             vm.CustodianAccount = custodianAccount;
-            vm.ConfigForm = configForm;
+            vm.ConfigForm = newConfigForm;
             return View(vm);
         }
 
@@ -245,10 +246,7 @@ namespace BTCPayServer.Controllers
                     vm.Name = custodian.Name;
                 }
 
-                var custodianAccountData = new CustodianAccountData
-                {
-                    CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name
-                };
+                var custodianAccountData = new CustodianAccountData { CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name };
 
 
                 var configData = new JObject();
@@ -325,44 +323,6 @@ namespace BTCPayServer.Controllers
             return filteredData;
         }
 
-
-        //
-        // [HttpGet("{appId}/delete")]
-        // public IActionResult DeleteApp(string appId)
-        // {
-        //     var app = GetCurrentApp();
-        //     if (app == null)
-        //         return NotFound();
-        //
-        //     return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
-        // }
-        //
-        // [HttpPost("{appId}/delete")]
-        // public async Task<IActionResult> DeleteAppPost(string appId)
-        // {
-        //     var app = GetCurrentApp();
-        //     if (app == null)
-        //         return NotFound();
-        //
-        //     if (await _appService.DeleteApp(app))
-        //         TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
-        //
-        //     return RedirectToAction(nameof(ListApps), new { storeId = app.StoreDataId });
-        // }
-        //
-        // async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
-        // {
-        //     if (string.IsNullOrWhiteSpace(currency))
-        //     {
-        //         currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
-        //     }
-        //     return currency.Trim().ToUpperInvariant();
-        // }
-        //
-        private string GetUserId() => _userManager.GetUserId(User);
-
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-
-        // private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

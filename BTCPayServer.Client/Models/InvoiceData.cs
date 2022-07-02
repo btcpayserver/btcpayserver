@@ -24,8 +24,34 @@ namespace BTCPayServer.Client.Models
         public class ReceiptOptions
         {
             public bool? Enabled { get; set; }
-            public bool HideQR { get; set; }
-            public bool HidePayments { get; set; }
+            public bool? ShowQR { get; set; }
+            public bool? ShowPayments { get; set; }
+
+#nullable enable
+            public static ReceiptOptions Merge(ReceiptOptions? storeLevelOption, ReceiptOptions? invoiceLevelOption)
+            {
+                storeLevelOption ??= new ReceiptOptions();
+                invoiceLevelOption ??= new ReceiptOptions();
+                var store = JObject.FromObject(storeLevelOption);
+                var inv = JObject.FromObject(invoiceLevelOption);
+                var result = JObject.FromObject(CreateDefault());
+                var mergeSettings = new JsonMergeSettings() { MergeNullValueHandling = MergeNullValueHandling.Ignore };
+                result.Merge(store, mergeSettings);
+                result.Merge(inv, mergeSettings);
+                var options = result.ToObject<ReceiptOptions>()!;
+                return options;
+            }
+
+            public static ReceiptOptions CreateDefault()
+            {
+                return new ReceiptOptions()
+                {
+                    ShowQR = true,
+                    Enabled = true,
+                    ShowPayments = true
+                };
+            }
+#nullable restore
         }
         public class CheckoutOptions
         {

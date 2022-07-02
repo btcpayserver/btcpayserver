@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Controllers.UIInvoiceController.InvoiceReceiptViewModel
+@model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.TagHelpers
@@ -53,7 +53,7 @@
                         }
                         else
                         {
-                            if (!Model.HideQR)
+                            if (Model.ReceiptOptions.ShowQR is true)
                             {
                                 <div class="mx-auto">
                                     <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
@@ -74,8 +74,8 @@
                                     <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
                                 </div>
                                 <div class="d-flex flex-column">
-                                    <dd class="text-muted mb-0 fw-semibold">Invoice ID</dd>
-                                    <dt class="fs-5 mb-0 text-break fw-semibold">@Model.InvoiceId</dt>
+                                    <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
+                                    <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
                                 </div>
                             </dl>
                         }
@@ -87,7 +87,7 @@
                     }
                     else if (isSettled)
                     {
-                        if (!Model.HidePayments && Model.Payments?.Any() is true)
+                        if (Model.Payments?.Any() is true)
                         {
                             <div id="PaymentDetails" class="bg-tile p-3 p-sm-4 rounded">
                                 <h2 class="h4 mb-3 d-print-none">Payment Details</h2>

@@ -159,8 +159,6 @@ namespace BTCPayServer.Controllers
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
-            entity.ReceiptOptions = new InvoiceDataBase.ReceiptOptions();
-            entity.ReceiptOptions.Enabled ??= storeBlob.InvoicePublicReceipt;
 
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
         }
@@ -173,7 +171,6 @@ namespace BTCPayServer.Controllers
             entity.ExpirationTime = entity.InvoiceTime + (invoice.Checkout.Expiration ?? storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + (invoice.Checkout.Monitoring ?? storeBlob.MonitoringExpiration);
             entity.ReceiptOptions = invoice.Receipt ?? new InvoiceDataBase.ReceiptOptions();
-            entity.ReceiptOptions.Enabled ??= storeBlob.InvoicePublicReceipt;
             if (invoice.Metadata != null)
                 entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();

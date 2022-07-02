@@ -132,6 +132,30 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanMergeReceiptOptions()
+        {
+            var r = InvoiceDataBase.ReceiptOptions.Merge(null, null);
+            Assert.True(r?.Enabled);
+            Assert.True(r?.ShowPayments);
+            Assert.True(r?.ShowQR);
+
+            r = InvoiceDataBase.ReceiptOptions.Merge(new InvoiceDataBase.ReceiptOptions(), null);
+            Assert.True(r?.Enabled);
+            Assert.True(r?.ShowPayments);
+            Assert.True(r?.ShowQR);
+
+            r = InvoiceDataBase.ReceiptOptions.Merge(new InvoiceDataBase.ReceiptOptions() { Enabled = false }, null);
+            Assert.False(r?.Enabled);
+            Assert.True(r?.ShowPayments);
+            Assert.True(r?.ShowQR);
+
+            r = InvoiceDataBase.ReceiptOptions.Merge(new InvoiceDataBase.ReceiptOptions() { Enabled = false, ShowQR = false }, new InvoiceDataBase.ReceiptOptions() { Enabled = true });
+            Assert.True(r?.Enabled);
+            Assert.True(r?.ShowPayments);
+            Assert.False(r?.ShowQR);
+        }
+
+        [Fact]
         public void CanParsePaymentMethodId()
         {
             var id = PaymentMethodId.Parse("BTC");

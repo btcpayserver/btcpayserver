@@ -103,7 +103,8 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return NotFound();
-            
+
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions);
             var invoiceState = invoice.GetInvoiceState();
             var model = new InvoiceDetailsModel
             {
@@ -135,7 +136,7 @@ namespace BTCPayServer.Controllers
                 CanRefund = CanRefund(invoiceState),
                 Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
-                ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? store.GetStoreBlob().InvoicePublicReceipt),
+                ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList(),
@@ -149,21 +150,6 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
-
-
-        public class InvoiceReceiptViewModel
-        {
-            public InvoiceStatus Status { get; set; }
-            public string InvoiceId { get; set; }
-            public string Currency { get; set; }
-            public string StoreName { get; set; }
-            public decimal Amount { get; set; }
-            public DateTimeOffset Timestamp { get; set; }
-            public Dictionary<string, object>? AdditionalData { get; set; }
-            public bool HideQR { get; set; }
-            public bool HidePayments { get; set; }
-            public List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment?>? Payments { get; set; }
-        }
         
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId)
@@ -174,21 +160,22 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-            i.ReceiptOptions ??=
-                new InvoiceDataBase.ReceiptOptions() {Enabled = store.GetStoreBlob().InvoicePublicReceipt};
 
-            if (i is not {ReceiptOptions.Enabled: true}) return NotFound();
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
+
+            if (receipt.Enabled is not true) return NotFound();
             if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
                 return View(new InvoiceReceiptViewModel
                 {
                     InvoiceId = i.Id,
+                    OrderId = i.Metadata?.OrderId,
                     StoreName = store.StoreName,
                     Status = i.Status.ToModernStatus()
                 });
             }
-                
-            i.Metadata.AdditionalData.TryGetValue("receiptData", out var receiptData);
+            JToken? receiptData = null;
+            i.Metadata?.AdditionalData.TryGetValue("receiptData", out receiptData);
                 
             return View(new InvoiceReceiptViewModel
             {
@@ -198,8 +185,8 @@ namespace BTCPayServer.Controllers
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 InvoiceId = i.Id,
-                HidePayments  = i.ReceiptOptions.HidePayments,
-                Payments = i.ReceiptOptions.HidePayments? null : i.GetPayments(true).Select(paymentEntity =>
+                OrderId = i.Metadata?.OrderId,
+                Payments = receipt.ShowPayments is false ? null : i.GetPayments(true).Select(paymentEntity =>
                     {
                         var paymentData = paymentEntity.GetCryptoPaymentData();
                         var paymentMethodId = paymentEntity.GetPaymentMethodId();
@@ -230,7 +217,7 @@ namespace BTCPayServer.Controllers
                     })
                     .Where(payment => payment != null)
                     .ToList(),
-                HideQR = i.ReceiptOptions.HideQR,
+                ReceiptOptions = receipt,
                 AdditionalData = receiptData is null
                     ? new Dictionary<string, object>()
                     : PosDataParser.ParsePosData(receiptData.ToString())

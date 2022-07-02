@@ -1073,17 +1073,19 @@
                     "enabled": {
                         "type": "boolean",
                         "nullable": true,
-                        "description": "A public page will be accessible once the invoice is settled. Defaults to the store's settings. (The default store settings is false)."
+                        "description": "A public page will be accessible once the invoice is settled. If null or unspecified, it will fallback to the store's settings. (The default store settings is true)"
                     },
-                    "hideQR": {
+                    "showQR": {
                         "type": "boolean",
-                        "default": false,
-                        "description": "Hide the QR code on the receipt page"
+                        "nullable": true,
+                        "default": null,
+                        "description": "Show the QR code of the receipt in the public receipt page. If null or unspecified, it will fallback to the store's settings. (The default store setting is true)"
                     },
-                    "hidePayments": {
+                    "showPayments": {
                         "type": "boolean",
-                        "default": false,
-                        "description": "Hide the payment data on the receipt page"
+                        "nullable": true,
+                        "default": null,
+                        "description": "Show the payment list in the public receipt page. If null or unspecified, it will fallback to the store's settings. (The default store setting is true)"
                     }
                 }
             },

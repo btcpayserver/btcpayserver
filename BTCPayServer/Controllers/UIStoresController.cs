@@ -385,7 +385,7 @@ namespace BTCPayServer.Controllers
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
-            vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(Client.Models.InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null));
+            vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
 

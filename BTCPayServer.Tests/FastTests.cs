@@ -153,6 +153,15 @@ namespace BTCPayServer.Tests
             Assert.True(r?.Enabled);
             Assert.True(r?.ShowPayments);
             Assert.False(r?.ShowQR);
+
+            StoreBlob blob = new StoreBlob();
+            Assert.True(blob.ReceiptOptions.Enabled);
+            blob = JsonConvert.DeserializeObject<StoreBlob>("{}");
+            Assert.True(blob.ReceiptOptions.Enabled);
+            blob = JsonConvert.DeserializeObject<StoreBlob>("{\"receiptOptions\":{\"enabled\": false}}");
+            Assert.False(blob.ReceiptOptions.Enabled);
+            blob = JsonConvert.DeserializeObject<StoreBlob>(JsonConvert.SerializeObject(blob));
+            Assert.False(blob.ReceiptOptions.Enabled);
         }
 
         [Fact]

@@ -1069,7 +1069,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
             receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
-            s.Driver.FindElement(By.Id("GoBack")).Click();
+            s.Driver.FindElement(By.Id("CancelWizard")).Click();
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
             s.GenerateWallet(cryptoCode, "", true);

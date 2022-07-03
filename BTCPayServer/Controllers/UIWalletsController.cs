@@ -604,7 +604,6 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
 
-            vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
             vm.SupportRBF = network.SupportRBF;
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))

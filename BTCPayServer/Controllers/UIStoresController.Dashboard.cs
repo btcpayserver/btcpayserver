@@ -39,9 +39,11 @@ namespace BTCPayServer.Controllers
             
             var userId = GetUserId();
             var apps = await _appService.GetAllApps(userId, false, store.Id);
-            vm.Apps = apps
-                .Select(a => _appService.GetAppDataIfOwner(userId, a.Id).Result)
-                .ToList();
+            foreach (var app in apps)
+            {
+                var appData = await _appService.GetAppDataIfOwner(userId, app.Id);
+                vm.Apps.Add(appData);
+            }
 
             return View(vm);
         }

@@ -11,5 +11,5 @@ public class StoreDashboardViewModel
     public bool WalletEnabled { get; set; }
     public bool LightningEnabled { get; set; }
     public bool IsSetUp { get; set; }
-    public List<AppData> Apps { get; set; }
+    public List<AppData> Apps { get; set; } = new();
 }

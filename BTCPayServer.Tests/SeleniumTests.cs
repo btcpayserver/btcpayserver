@@ -11,7 +11,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -94,9 +93,8 @@ namespace BTCPayServer.Tests
             s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("BumpFee")).Click();
-            var err = s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
-            Assert.Contains("any UTXO available", err.Text);
             Assert.Contains($"/stores/{s.StoreId}/invoices", s.Driver.Url);
+            Assert.Contains("any UTXO available", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
 
             // But we should be able to bump from the wallet's page
             s.GoToWallet(navPages: WalletsNavPages.Transactions);
@@ -104,8 +102,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("BumpFee")).Click();
             s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
-            s.FindAlertMessage();
             Assert.Contains($"/wallets/{s.WalletId}", s.Driver.Url);
+            Assert.Contains("Transaction broadcasted successfully", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1046,6 +1044,7 @@ namespace BTCPayServer.Tests
             //you cannot use the Sign with NBX option without saving private keys when generating the wallet.
             Assert.DoesNotContain("nbx-seed", s.Driver.PageSource);
 
+            s.Driver.FindElement(By.Id("CancelWizard")).Click();
             s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
             //generate a receiving address
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
@@ -1070,6 +1069,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
             receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
+            s.Driver.FindElement(By.Id("CancelWizard")).Click();
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
             s.GenerateWallet(cryptoCode, "", true);
@@ -1164,6 +1164,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(parsedBip21.Address.ToString(),
                 s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).GetAttribute("value"));
 
+            s.Driver.FindElement(By.Id("CancelWizard")).Click();
             s.GoToWalletSettings(cryptoCode);
             var settingsUrl = s.Driver.Url;
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
@@ -1299,6 +1300,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
             s.FindAlertMessage();
 
+            s.GoToWallet(null, WalletsNavPages.Transactions);
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();

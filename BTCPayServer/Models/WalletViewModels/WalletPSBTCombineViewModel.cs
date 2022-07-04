@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,9 @@ namespace BTCPayServer.Models.WalletViewModels
         public string PSBT { get; set; }
         [Display(Name = "Upload PSBT from file...")]
         public IFormFile UploadedPSBTFile { get; set; }
+        
+        public string BackUrl { get; set; }
+        public string ReturnUrl { get; set; }
 
         public PSBT GetSourcePSBT(Network network)
         {

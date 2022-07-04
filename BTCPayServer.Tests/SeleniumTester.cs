@@ -544,6 +544,7 @@ namespace BTCPayServer.Tests
                 }
             }
             Driver.Navigate().Refresh();
+            Driver.FindElement(By.Id("CancelWizard")).Click();
             return addressStr;
         }
 

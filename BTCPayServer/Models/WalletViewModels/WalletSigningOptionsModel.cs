@@ -1,18 +1,11 @@
-using System.Collections.Generic;
+using System;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSigningOptionsModel
     {
-        public WalletSigningOptionsModel(
-            SigningContextModel signingContext,
-            string returnUrl)
-        {
-            SigningContext = signingContext;
-            ReturnUrl = returnUrl;
-        }
-
-        public SigningContextModel SigningContext { get; }
-        public string ReturnUrl { get; }
+        public SigningContextModel SigningContext { get; set; }
+        public string BackUrl { get; set; }
+        public string ReturnUrl { get; set; }
     }
 }

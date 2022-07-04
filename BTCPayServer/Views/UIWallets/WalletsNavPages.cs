@@ -5,7 +5,6 @@ namespace BTCPayServer.Views.Wallets
         Index,
         Send,
         Transactions,
-        Rescan,
         PSBT,
         Receive,
         Settings

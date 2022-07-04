@@ -2,7 +2,7 @@
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Rescan, "Rescan Wallet", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Settings, "Rescan Wallet", walletId);
 }
 
 <h3 class="mb-3">@ViewData["Title"]</h3>

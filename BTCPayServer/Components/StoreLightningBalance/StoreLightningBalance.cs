@@ -10,6 +10,7 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,7 @@ public class StoreLightningBalance : ViewComponent
 {
     private string _cryptoCode;
     private readonly StoreRepository _storeRepo;
+    private readonly CurrencyNameTable _currencies;
     private readonly BTCPayServerOptions _btcpayServerOptions;
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly LightningClientFactoryService _lightningClientFactory;
@@ -28,6 +30,7 @@ public class StoreLightningBalance : ViewComponent
 
     public StoreLightningBalance(
         StoreRepository storeRepo,
+        CurrencyNameTable currencies,
         BTCPayNetworkProvider networkProvider,
         BTCPayServerOptions btcpayServerOptions,
         LightningClientFactoryService lightningClientFactory,
@@ -35,6 +38,7 @@ public class StoreLightningBalance : ViewComponent
         IOptions<ExternalServicesOptions> externalServiceOptions)
     {
         _storeRepo = storeRepo;
+        _currencies = currencies;
         _networkProvider = networkProvider;
         _btcpayServerOptions = btcpayServerOptions;
         _externalServiceOptions = externalServiceOptions;
@@ -43,48 +47,40 @@ public class StoreLightningBalance : ViewComponent
         _cryptoCode = _networkProvider.DefaultNetwork.CryptoCode;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store)
+    public async Task<IViewComponentResult> InvokeAsync(StoreLightningBalanceViewModel vm)
     {
-        var walletId = new WalletId(store.Id, _cryptoCode);
-        var lightningClient = GetLightningClient(store);
-        var vm = new StoreLightningBalanceViewModel
-        {
-            Store = store,
-            CryptoCode = _cryptoCode,
-            WalletId = walletId
-        };
+        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
         
-        if (lightningClient != null)
-        {
-            try
-            {
-                var balance = await lightningClient.GetBalance();
-                vm.Balance = balance;
-                vm.TotalOnchain = balance.OnchainBalance != null
-                    ? (balance.OnchainBalance.Confirmed?? 0) + (balance.OnchainBalance.Reserved ?? 0) +
-                      (balance.OnchainBalance.Unconfirmed ?? 0)
-                    : null;
-                vm.TotalOffchain = balance.OffchainBalance != null
-                    ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +
-                      (balance.OffchainBalance.Closing?? 0)
-                    : null;
-            }
-            catch (NotSupportedException)
-            {
-                // not all implementations support balance fetching
-                vm.ProblemDescription = "Your node does not support balance fetching.";
-            }
-            catch
-            {
-                // general error
-                vm.ProblemDescription = "Could not fetch Lightning balance.";
-            }
-        }
-        else
-        {
-            vm.ProblemDescription = "Cannot instantiate Lightning client.";
-        }
+        vm.CryptoCode = _cryptoCode;
+        vm.DefaultCurrency = vm.Store.GetStoreBlob().DefaultCurrency;
+        vm.CurrencyData = _currencies.GetCurrencyData(vm.DefaultCurrency, true);
 
+        if (vm.InitialRendering) return View(vm);
+        
+        try
+        {
+            var lightningClient = GetLightningClient(vm.Store);
+            var balance = await lightningClient.GetBalance();
+            vm.Balance = balance;
+            vm.TotalOnchain = balance.OnchainBalance != null
+                ? (balance.OnchainBalance.Confirmed?? 0) + (balance.OnchainBalance.Reserved ?? 0) +
+                  (balance.OnchainBalance.Unconfirmed ?? 0)
+                : null;
+            vm.TotalOffchain = balance.OffchainBalance != null
+                ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +
+                  (balance.OffchainBalance.Closing?? 0)
+                : null;
+        }
+        catch (NotSupportedException)
+        {
+            // not all implementations support balance fetching
+            vm.ProblemDescription = "Your node does not support balance fetching.";
+        }
+        catch
+        {
+            // general error
+            vm.ProblemDescription = "Could not fetch Lightning balance.";
+        }
         return View(vm);
     }
     

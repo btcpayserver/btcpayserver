@@ -1,60 +1,78 @@
 @using BTCPayServer.Lightning
+@using BTCPayServer.TagHelpers
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
 
 <div id="StoreLightningBalance-@Model.Store.Id" class="widget store-lightning-balance">
-    <header class="mb-3">
+    <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Lightning Balance</h6>
-        <a
-            asp-controller="UIPublicLightningNodeInfo"
-            asp-action="ShowLightningNodeInfo"app-top-items
-            asp-route-cryptoCode="@Model.CryptoCode"
-            asp-route-storeId="@Model.Store.Id"
-            target="_blank"
-            id="PublicNodeInfo">
-            Node Info
-        </a>
-    </header>
-    
-    @if (Model.Balance == null)
+        @if (Model.CryptoCode != Model.DefaultCurrency && Model.Balance != null)
+        {
+            <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                <input type="radio" class="btn-check" name="StoreLightningBalance-currency" id="StoreLightningBalance-currency_@Model.CryptoCode" value="@Model.CryptoCode" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@Model.CryptoCode">@Model.CryptoCode</label>
+                <input type="radio" class="btn-check" name="StoreLightningBalance-currency" id="StoreLightningBalance-currency_@Model.DefaultCurrency" value="@Model.DefaultCurrency" autocomplete="off">
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@Model.DefaultCurrency">@Model.DefaultCurrency</label>
+            </div>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(Model.ProblemDescription))
     {
         <p>@Model.ProblemDescription</p>
     }
-    else
+    else if (Model.Balance != null)
     {
-        <div class="balances d-flex flex-wrap gap-3">
+        <div class="balances d-flex flex-wrap">
             @if (Model.TotalOffchain != LightMoney.Zero && Model.Balance.OffchainBalance != null)
             {
                 <div class="balance">
-                    <h3 class="d-inline-block me-1">@Model.TotalOffchain</h3>
-                    <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode in channels</span>
+                    <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain">@Model.TotalOffchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@Model.CryptoCode</span> in channels
+                    </span>
 
                     <div class="balance-details collapse" id="balanceDetailsOffchain">
                         @if (Model.Balance.OffchainBalance.Opening != null && Model.Balance.OffchainBalance.Opening != LightMoney.Zero)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Opening</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode opening channels</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Opening">
+                                    @Model.Balance.OffchainBalance.Opening
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> opening channels
+                                </span>
                             </div>
                         }
                         @if (Model.Balance.OffchainBalance.Local != null)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Local</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode local balance</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Local">
+                                    @Model.Balance.OffchainBalance.Local
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> local balance
+                                </span>
                             </div>
                         }
                         @if (Model.Balance.OffchainBalance.Remote != null)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Remote</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode remote balance</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Remote">
+                                    @Model.Balance.OffchainBalance.Remote
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> remote balance
+                                </span>
                             </div>
                         }
                         @if (Model.Balance.OffchainBalance.Closing != null && Model.Balance.OffchainBalance.Closing != LightMoney.Zero)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OffchainBalance.Closing</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode closing channels</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Closing">
+                                    @Model.Balance.OffchainBalance.Closing
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> closing channels
+                                </span>
                             </div>
                         }
                     </div>
@@ -63,28 +81,42 @@
             @if (Model.TotalOnchain != LightMoney.Zero && Model.Balance.OnchainBalance != null)
             {
                 <div class="balance">
-                    <h3 class="d-inline-block me-1">@Model.TotalOnchain</h3>
-                    <span class="text-secondary fw-semibold text-nowrap">@Model.CryptoCode on-chain</span>
+                    <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain">@Model.TotalOnchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@Model.CryptoCode</span> on-chain
+                    </span>
                     <div class="balance-details collapse" id="balanceDetailsOnchain">
                         @if (Model.Balance.OnchainBalance.Confirmed != null && Model.Balance.OnchainBalance.Confirmed != LightMoney.Zero)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Confirmed</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode confirmed</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Confirmed">
+                                    @Model.Balance.OnchainBalance.Confirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> confirmed
+                                </span>
                             </div>
                         }
                         @if (Model.Balance.OnchainBalance.Unconfirmed != null && Model.Balance.OnchainBalance.Unconfirmed != LightMoney.Zero)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Unconfirmed</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode unconfirmed</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Unconfirmed">
+                                    @Model.Balance.OnchainBalance.Unconfirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> unconfirmed
+                                </span>
                             </div>
                         }
                         @if (Model.Balance.OnchainBalance.Reserved != null && Model.Balance.OnchainBalance.Reserved != LightMoney.Zero)
                         {
                             <div class="mt-2">
-                                <span class="fw-semibold">@Model.Balance.OnchainBalance.Reserved</span>
-                                <span class="text-secondary text-nowrap">@Model.CryptoCode reserved</span>
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Reserved">
+                                    @Model.Balance.OnchainBalance.Reserved
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@Model.CryptoCode</span> reserved
+                                </span>
                             </div>
                         }
                     </div>
@@ -96,4 +128,55 @@
             <a class="d-inline-block mt-3" role="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">Show details</a>
         }
     }
+    else
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("LightningBalance", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.Store.Id);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
 </div>
+<script>
+    (function () {
+        const storeId = @Safe.Json(Model.Store.Id);
+        const cryptoCode = @Safe.Json(Model.CryptoCode);
+        const defaultCurrency = @Safe.Json(Model.DefaultCurrency);
+        const divisibility = @Safe.Json(Model.CurrencyData.Divisibility);
+        const id = `StoreLightningBalance-${storeId}`;
+        
+        const render = rate => {
+            const currency = rate ? defaultCurrency : cryptoCode;
+            document.querySelectorAll(`#${id} .currency`).forEach(c => c.innerText = currency) 
+            document.querySelectorAll(`#${id} [data-balance]`).forEach(c => {
+                const value = Number.parseFloat(c.dataset.balance);
+                c.innerText = rate
+                    ? DashboardUtils.displayDefaultCurrency(value, rate, currency, divisibility)
+                    : value
+            });
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            delegate('change', `#${id} .currency-toggle input`, async e => {
+                const { target } = e;
+                if (target.value === defaultCurrency) {
+                    const rate = await DashboardUtils.fetchRate(`${cryptoCode}_${defaultCurrency}`);
+                    if (rate) render(rate);
+                } else {
+                    render(null);
+                }
+            });
+        });
+    })();
+</script>
+

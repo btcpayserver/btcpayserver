@@ -132,44 +132,6 @@ namespace BTCPayServer.Controllers
 
         public StoreData CurrentStore => HttpContext.GetStoreData();
 
-        [HttpGet("{storeId}")]
-        public async Task<IActionResult> Dashboard()
-        {
-            var store = CurrentStore;
-            var storeBlob = store.GetStoreBlob();
-
-            AddPaymentMethods(store, storeBlob,
-                out var derivationSchemes, out var lightningNodes);
-
-            var walletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled);
-            var lightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled);
-            var vm = new StoreDashboardViewModel
-            {
-                WalletEnabled = walletEnabled,
-                LightningEnabled = lightningEnabled,
-                StoreId = CurrentStore.Id,
-                StoreName = CurrentStore.StoreName,
-                IsSetUp = walletEnabled || lightningEnabled
-            };
-            
-            // Widget data
-            if (vm.WalletEnabled || vm.LightningEnabled)
-            {
-                var userId = GetUserId();
-                var apps = await _appService.GetAllApps(userId, false, store.Id);
-                vm.Apps = apps
-                    .Select(a =>
-                    {
-                        var appData = _appService.GetAppDataIfOwner(userId, a.Id).Result;
-                        appData.StoreData = store;
-                        return appData;
-                    })
-                    .ToList();
-            }
-            
-            return View(vm);
-        }
-
         [HttpPost]
         [Route("{storeId}/users")]
         public async Task<IActionResult> StoreUsers(StoreUsersViewModel vm)

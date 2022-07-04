@@ -348,11 +348,6 @@ namespace BTCPayServer.Controllers
                 : Json(data);
         }
 
-        private static string GetLabelTarget(WalletId walletId, uint256 txId)
-        {
-            return $"{walletId}:{txId}";
-        }
-
         [HttpGet("{walletId}/receive")]
         public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId)
         {

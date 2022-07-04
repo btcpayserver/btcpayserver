@@ -1,43 +1,26 @@
 @using BTCPayServer.Services.Wallets
 @model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
 
-<style>
-    #DefaultCurrencyToggle .btn {
-        background-color: var(--btcpay-bg-tile);
-        border-color: var(--btcpay-body-border-light);
-    }
-    
-    #DefaultCurrencyToggle input:not(:checked) + .btn {
-        color: var(--btcpay-body-text-muted);
-    }
-</style>
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Wallet Balance</h6>
         @if (Model.CryptoCode != Model.DefaultCurrency)
         {
-            <div class="btn-group btn-group-sm gap-0" role="group" id="DefaultCurrencyToggle">
-                <input type="radio" class="btn-check" name="currency" id="currency_@Model.CryptoCode" value="@Model.CryptoCode" autocomplete="off" checked>
-                <label class="btn btn-outline-secondary px-2 py-1" for="currency_@Model.CryptoCode">@Model.CryptoCode</label>
-                <input type="radio" class="btn-check" name="currency" id="currency_@Model.DefaultCurrency" value="@Model.DefaultCurrency" autocomplete="off">
-                <label class="btn btn-outline-secondary px-2 py-1" for="currency_@Model.DefaultCurrency">@Model.DefaultCurrency</label>
+            <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                <input type="radio" class="btn-check" name="StoreWalletBalance-currency" id="StoreWalletBalance-currency_@Model.CryptoCode" value="@Model.CryptoCode" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreWalletBalance-currency_@Model.CryptoCode">@Model.CryptoCode</label>
+                <input type="radio" class="btn-check" name="StoreWalletBalance-currency" id="StoreWalletBalance-currency_@Model.DefaultCurrency" value="@Model.DefaultCurrency" autocomplete="off">
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreWalletBalance-currency_@Model.DefaultCurrency">@Model.DefaultCurrency</label>
             </div>
         }
     </div>
     <header class="mb-3">
         @if (Model.Balance != null)
         {
-            <div class="balance" id="Balance-@Model.CryptoCode">
-                <h3 class="d-inline-block me-1">@Model.Balance</h3>
-                <span class="text-secondary fw-semibold">@Model.CryptoCode</span>
+            <div class="balance">
+                <h3 class="d-inline-block me-1" data-balance="@Model.Balance">@Model.Balance</h3>
+                <span class="text-secondary fw-semibold currency">@Model.CryptoCode</span>
             </div>
-            @if (Model.CryptoCode != Model.DefaultCurrency)
-            {
-                <div class="balance" id="Balance-@Model.DefaultCurrency">
-                    <h3 class="d-inline-block" id="DefaultCurrencyBalance"></h3>
-                    <span class="text-secondary fw-semibold">@Model.DefaultCurrency</span>
-                </div>
-            }
         }
         @if (Model.Series != null)
         {
@@ -65,18 +48,12 @@
     }
     <script>
         (function () {
-            const balance = @Safe.Json(Model.Balance);
             const storeId = @Safe.Json(Model.Store.Id);
             const cryptoCode = @Safe.Json(Model.CryptoCode);
             const defaultCurrency = @Safe.Json(Model.DefaultCurrency);
             const divisibility = @Safe.Json(Model.CurrencyData.Divisibility);
-            const pathBase = @Safe.Json(Context.Request.PathBase);
             let data = { series: @Safe.Json(Model.Series), labels: @Safe.Json(Model.Labels), balance: @Safe.Json(Model.Balance) };
             let rate = null;
-            
-            const $cryptoBalance = document.getElementById(`Balance-${cryptoCode}`);
-            const $defaultBalance = document.getElementById(`Balance-${defaultCurrency}`);
-            const $defaultCurrencyBalance = document.getElementById('DefaultCurrencyBalance');
             
             const id = `StoreWalletBalance-${storeId}`;
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
@@ -85,23 +62,23 @@
                 showArea: true,
                 axisY: {
                     labelInterpolationFnc: value => rate
-                        ? displayDefaultCurrency(value, defaultCurrency).toString()
+                        ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility).toString()
                         : value
                 }
             };
             
             const render = data => {
-                let { series, labels, balance } = data;
-                if (balance)
-                    document.querySelector(`#${id} h3`).innerText = balance;
-                if (cryptoCode !== defaultCurrency) {
-                    $cryptoBalance.style.display = rate ? 'none' : 'block';
-                    $defaultBalance.style.display = rate ? 'block' : 'none';
-                }
+                let { series, labels } = data;
+                const currency = rate ? defaultCurrency : cryptoCode;
+                document.querySelectorAll(`#${id} .currency`).forEach(c => c.innerText = currency) 
+                document.querySelectorAll(`#${id} [data-balance]`).forEach(c => {
+                    const value = Number.parseFloat(c.dataset.balance);
+                    c.innerText = rate
+                        ? DashboardUtils.displayDefaultCurrency(value, rate, currency, divisibility)
+                        : value
+                });
                 if (!series) return;
                 
-                if (rate)
-                    series = data.series.map(i => toDefaultCurrency(i, rate));
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
@@ -110,6 +87,7 @@
                     labels,
                     series: [series]
                 }, renderOpts);
+                
                 // prevent y-axis labels from getting cut off
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
@@ -133,16 +111,6 @@
                 }
             };
             
-            const toDefaultCurrency = (value, rate) => {
-                return Math.round((value * rate) * 100) / 100;
-            };
-            
-            const displayDefaultCurrency = (value, currency) => {
-                const locale = currency === "USD" ? 'en-US' : navigator.language;
-                const opts = { currency, style: 'decimal', minimumFractionDigits: divisibility };
-                return new Intl.NumberFormat(locale, opts).format(value);
-            };
-            
             render(data);
             
             document.addEventListener('DOMContentLoaded', () => {
@@ -150,20 +118,11 @@
                     const type = e.target.value;
                     await update(type);
                 })
-                delegate('change', '#DefaultCurrencyToggle input', async e => {
+                delegate('change', `#${id} .currency-toggle input`, async e => {
                     const { target } = e;
                     if (target.value === defaultCurrency) {
-                        const currencyPair = `${cryptoCode}_${defaultCurrency}`;
-                        const response = await fetch(`${pathBase}/api/rates?storeId=${storeId}&currencyPairs=${currencyPair}`);
-                        const json = await response.json();
-                        rate = json[0] && json[0].rate;
-                        if (rate) {
-                            const value = toDefaultCurrency(balance, rate);
-                            $defaultCurrencyBalance.innerText = displayDefaultCurrency(value, defaultCurrency);
-                            render(data);
-                        } else {
-                            console.warn(`Fetching rate for ${currencyPair} failed.`);
-                        }
+                        rate = await DashboardUtils.fetchRate(`${cryptoCode}_${defaultCurrency}`);
+                        if (rate) render(data);
                     } else {
                         rate = null;
                         render(data);

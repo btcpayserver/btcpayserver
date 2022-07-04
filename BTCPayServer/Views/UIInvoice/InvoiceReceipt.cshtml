@@ -1,10 +1,12 @@
 @model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Rates
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.Services.ThemeSettings Theme
+@inject CurrencyNameTable CurrencyNameTable
 
 @{
     Layout = null;
@@ -41,13 +43,13 @@
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
                         @if (isProcessing)
                         {
-                            <div class="lead text-center text-muted py-5 px-4 fw-semibold">
+                            <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-processing">
                                 The invoice has detected a payment but is still waiting to be settled.
                             </div>
                         }
                         else if (!isSettled)
                         {
-                            <div class="lead text-center text-muted py-5 px-4 fw-semibold">
+                            <div class="lead text-center text-muted py-5 px-4 fw-semibold"  id="invoice-unsettled">
                                 The invoice is not settled.
                             </div>
                         }
@@ -67,16 +69,19 @@
                                         </button>
                                         <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
                                     </div>
-                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@Model.Amount @Model.Currency</dt>
+                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@CurrencyNameTable.DisplayFormatCurrency(Model.Amount, Model.Currency)</dt>
                                 </div>
                                 <div class="d-flex flex-column">
                                     <dd class="text-muted mb-0 fw-semibold">Date</dd>
                                     <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
                                 </div>
-                                <div class="d-flex flex-column">
-                                    <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
-                                    <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
-                                </div>
+                                @if (!string.IsNullOrEmpty(Model.OrderId))
+                                {
+                                    <div class="d-flex flex-column">
+                                        <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
+                                        <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
+                                    </div>
+                                }
                             </dl>
                         }
                     </div>

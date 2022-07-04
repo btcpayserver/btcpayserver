@@ -68,5 +68,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool RedirectAutomatically { get; set; }
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
+        public string? ReceiptLink { get; set; }
     }
 }

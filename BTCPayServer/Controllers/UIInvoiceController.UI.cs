@@ -28,6 +28,7 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
@@ -714,6 +715,15 @@ namespace BTCPayServer.Controllers
             }
             lang ??= storeBlob.DefaultLang;
 
+            var receiptEnabled = invoice.ReceiptOptions?.Enabled ?? storeBlob.ReceiptOptions.Enabled ?? false;
+            var receiptUrl = receiptEnabled? _linkGenerator.GetUriByAction(
+                nameof(UIInvoiceController.InvoiceReceipt),
+                "UIInvoice",
+                new {invoiceId},
+                Request.Scheme,
+                Request.Host,
+                Request.PathBase) : null;
+            
             var model = new PaymentModel
             {
                 Activated = paymentMethodDetails.Activated,
@@ -739,7 +749,8 @@ namespace BTCPayServer.Controllers
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.Metadata.ItemDesc,
                 Rate = ExchangeRate(paymentMethod),
-                MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? "/",
+                MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? receiptUrl ??  "/",
+                ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
                 TxCount = accounting.TxRequired,

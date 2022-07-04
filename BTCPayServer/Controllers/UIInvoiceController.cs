@@ -22,6 +22,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using NBitpayClient;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -44,6 +45,7 @@ namespace BTCPayServer.Controllers
         private readonly LanguageService _languageService;
         private readonly ExplorerClientProvider _ExplorerClients;
         private readonly UIWalletsController _walletsController;
+        private readonly LinkGenerator _linkGenerator;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -62,7 +64,8 @@ namespace BTCPayServer.Controllers
             WebhookSender webhookNotificationManager,
             LanguageService languageService,
             ExplorerClientProvider explorerClients,
-            UIWalletsController walletsController)
+            UIWalletsController walletsController,
+            LinkGenerator linkGenerator)
         {
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
@@ -78,6 +81,7 @@ namespace BTCPayServer.Controllers
             _languageService = languageService;
             this._ExplorerClients = explorerClients;
             _walletsController = walletsController;
+            _linkGenerator = linkGenerator;
         }
 
 

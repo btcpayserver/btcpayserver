@@ -189,18 +189,42 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreatePointOfSaleAppViaAPI()
+        public async Task CanCreateReadAndDeletePointOfSaleApp()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
+
+            // Test creating a POS app
             var app = await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { AppName = "test app from API"  });
-            
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
+
+            // Make sure we return a 404 if we try to get an app that doesn't exist
+            await AssertHttpError(404, async () => {
+                await client.GetApp("some random ID lol");
+            });
+
+            // Test that we can retrieve the app data
+            var retrievedApp = await client.GetApp(app.Id);
+            Assert.Equal(app.Name, retrievedApp.Name);
+            Assert.Equal(app.StoreId, retrievedApp.StoreId);
+            Assert.Equal(app.AppType, retrievedApp.AppType);
+
+            // Make sure we return a 404 if we try to delete an app that doesn't exist
+            await AssertHttpError(404, async () =>
+            {
+                await client.DeleteApp("some random ID lol");
+            });
+
+            // Test deleting the newly created app
+            await client.DeleteApp(retrievedApp.Id);
+            await AssertHttpError(404, async () => {
+                await client.GetApp(retrievedApp.Id);
+            });
         }
         
         [Fact(Timeout = TestTimeout)]
@@ -2353,9 +2377,7 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertAPIError("store-user-role-orphaned", async () => await user2Client.RemoveStoreUser(user.StoreId, user2.UserId));
-
         }
-
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
@@ -2369,7 +2391,7 @@ namespace BTCPayServer.Tests
             await adminClient.UpdateStoreEmailSettings(admin.StoreId,
                 new EmailSettingsData());
 
-            var data = new EmailSettingsData()
+            var data = new EmailSettingsData
             {
                 From = "admin@admin.com",
                 Login = "admin@admin.com",
@@ -2382,11 +2404,10 @@ namespace BTCPayServer.Tests
             Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(data));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,
-                    new EmailSettingsData() { From = "ass" }));
-
+                    new EmailSettingsData { From = "invalid" }));
 
             await adminClient.SendEmail(admin.StoreId,
-                new SendEmailRequest() { Body = "lol", Subject = "subj", Email = "sdasdas" });
+                new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

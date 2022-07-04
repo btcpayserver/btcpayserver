@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {
@@ -15,13 +17,13 @@ namespace BTCPayServer.Configuration
                                 "lnd server: 'server=https://lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "lnd server: 'server=https://lnd.example.com;macaroondirectorypath=/root/.lnd;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "Error: {1}",
-                                "LND (gRPC server)");
+                                "LND (gRPC)");
             Load(configuration, cryptoCode, "lndrest", ExternalServiceTypes.LNDRest, "Invalid setting {0}, " + Environment.NewLine +
                                 "lnd server: 'server=https://lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "lnd server: 'server=https://lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "lnd server: 'server=https://lnd.example.com;macaroondirectorypath=/root/.lnd;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "Error: {1}",
-                                "LND (REST server)");
+                                "LND (REST)");
             Load(configuration, cryptoCode, "lndseedbackup", ExternalServiceTypes.LNDSeedBackup, "Invalid setting {0}, " + Environment.NewLine +
                                 "lnd seed backup: /etc/merchant_lnd/data/chain/bitcoin/regtest/walletunlock.json'" + Environment.NewLine +
                                 "Error: {1}",
@@ -29,11 +31,11 @@ namespace BTCPayServer.Configuration
             Load(configuration, cryptoCode, "spark", ExternalServiceTypes.Spark, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/spark/btc/;cookiefile=/etc/clightning_bitcoin_spark/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
-                                "C-Lightning (Spark server)");
+                                "Core Lightning (Spark)");
             Load(configuration, cryptoCode, "rtl", ExternalServiceTypes.RTL, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/rtl/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
-                                "Ride the Lightning server");
+                                "Ride The Lightning");
             Load(configuration, cryptoCode, "thunderhub", ExternalServiceTypes.ThunderHub, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/thub/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
@@ -41,12 +43,12 @@ namespace BTCPayServer.Configuration
             Load(configuration, cryptoCode, "clightningrest", ExternalServiceTypes.CLightningRest, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/clightning-rest/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
-                                "C-Lightning REST");
+                                "Core Lightning (REST)");
             Load(configuration, cryptoCode, "charge", ExternalServiceTypes.Charge, "Invalid setting {0}, " + Environment.NewLine +
                                 $"lightning charge server: 'type=charge;server=https://charge.example.com;api-token=2abdf302...'" + Environment.NewLine +
                                 $"lightning charge server: 'type=charge;server=https://charge.example.com;cookiefilepath=/root/.charge/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
-                                "C-Lightning (Charge server)");
+                                "Core Lightning (Charge)");
 
         }
 
@@ -86,6 +88,18 @@ namespace BTCPayServer.Configuration
                 &&
                 o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         }
+    
+        public static readonly ExternalServiceTypes[] LightningServiceTypes =
+        {
+            ExternalServiceTypes.Spark,
+            ExternalServiceTypes.RTL,
+            ExternalServiceTypes.ThunderHub
+        };
+        
+        public static readonly string[] LightningServiceNames =
+        {
+            "Lightning Terminal"
+        };
     }
 
     public class ExternalService
@@ -95,6 +109,13 @@ namespace BTCPayServer.Configuration
         public ExternalConnectionString ConnectionString { get; set; }
         public string CryptoCode { get; set; }
         public string ServiceName { get; set; }
+        
+        public async Task<string> GetLink(Uri absoluteUriNoPathBase, ChainName networkType)
+        {
+            var connectionString = await ConnectionString.Expand(absoluteUriNoPathBase, Type, networkType);
+            var tokenParam = Type == ExternalServiceTypes.ThunderHub ? "token" : "access-key";
+            return $"{connectionString.Server}?{tokenParam}={connectionString.AccessKey}";
+        }
     }
 
     public enum ExternalServiceTypes

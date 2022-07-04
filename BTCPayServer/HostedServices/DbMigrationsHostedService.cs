@@ -120,10 +120,10 @@ namespace BTCPayServer.HostedServices
             Logs.PayServer.LogInformation($"Full invoice search import successful");
         }
 
-        private Task<int> CountInvoices()
+        private async Task<int> CountInvoices()
         {
             using var ctx = _dbContextFactory.CreateContext();
-            return ctx.Invoices.CountAsync();
+            return await ctx.Invoices.CountAsync();
         }
     }
 }

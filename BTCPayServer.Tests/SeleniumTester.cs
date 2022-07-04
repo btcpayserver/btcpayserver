@@ -362,6 +362,10 @@ namespace BTCPayServer.Tests
 
         public void Logout()
         {
+            if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
+            {
+                Driver.Navigate().GoToUrl(ServerUri);
+            }
             Driver.FindElement(By.Id("Nav-Account")).Click();
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
@@ -540,6 +544,7 @@ namespace BTCPayServer.Tests
                 }
             }
             Driver.Navigate().Refresh();
+            Driver.FindElement(By.Id("CancelWizard")).Click();
             return addressStr;
         }
 

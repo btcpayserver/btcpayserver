@@ -236,16 +236,14 @@ namespace BTCPayServer.Plugins.Shopify
                             TempData[WellKnownTempData.ErrorMessage] = "Please provide valid Shopify credentials";
                             return View(vm);
                         }
-
                         var apiClient = new ShopifyApiClient(_clientFactory, shopify.CreateShopifyApiCredentials());
                         try
                         {
                             await apiClient.OrdersCount();
                         }
-                        catch (ShopifyApiException)
+                        catch (ShopifyApiException err)
                         {
-                            TempData[WellKnownTempData.ErrorMessage] =
-                                "Shopify rejected provided credentials, please correct values and try again";
+                            TempData[WellKnownTempData.ErrorMessage] = err.Message;
                             return View(vm);
                         }
 

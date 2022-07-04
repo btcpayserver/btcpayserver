@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
             _EventAggregator.Publish(new PaymentRequestUpdated { Data = data, PaymentRequestId = data.Id, });
 
-            TempData[WellKnownTempData.SuccessMessage] = $"Payment request [{viewModel.Title}] {(isNewPaymentRequest ? "created" : "updated")} successfully";
+            TempData[WellKnownTempData.SuccessMessage] = $"Payment request \"{viewModel.Title}\" {(isNewPaymentRequest ? "created" : "updated")} successfully";
             return RedirectToAction(nameof(GetPaymentRequests), new { storeId = store.Id, payReqId = data.Id });
         }
 

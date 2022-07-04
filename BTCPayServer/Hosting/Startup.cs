@@ -33,6 +33,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Hosting
 {
@@ -207,28 +208,45 @@ namespace BTCPayServer.Hosting
             IServiceProvider prov,
             BTCPayServerOptions options,
             IOptions<DataDirectories> dataDirectories,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IRateLimitService rateLimits)
         {
             Logs.Configure(loggerFactory);
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, dataDirectories);
+                ConfigureCore(app, env, prov, dataDirectories, rateLimits);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, dataDirectories);
+                    ConfigureCore(appChild, env, prov, dataDirectories, rateLimits);
                 });
             }
         }
-        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories)
+        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories, IRateLimitService rateLimits)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                rateLimits.SetZone($"zone={ZoneLimits.Login} rate=1000r/min burst=100 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.PublicInvoices} rate=1000r/min burst=100 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=3 nodelay");
             }
+            else
+            {
+                rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.PublicInvoices} rate=4r/min burst=10 delay=3");
+                rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
+                rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
+            }
+
             app.UseHeadersOverride();
             var forwardingOptions = new ForwardedHeadersOptions()
             {

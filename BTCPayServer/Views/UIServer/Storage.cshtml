@@ -1,12 +1,12 @@
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "Storage");
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         @if (Model.ShowChangeWarning)
         {
             <div class="alert alert-danger mb-4">

@@ -126,30 +126,6 @@
         </table>
     </div>
 }
-<div class="mb-5">
-    <h4 class="mb-3">External storage services</h4>
-    <p class="text-secondary mb-0">Integrated storage providers to store file uploads from BTCPay Server.</p>
-
-    <table class="table table-hover mt-2">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th style="text-align: right">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var s in Model.ExternalStorageServices)
-        {
-            <tr>
-                <td>@s.Name</td>
-                <td style="text-align: right">
-                    <a href="@s.Link" rel="noreferrer noopener">Edit</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

@@ -5,6 +5,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
@@ -64,7 +65,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [Display(Name = "Store")]
         public SelectList Stores { get; set; }
 
-        [EmailAddress]
+        [MailboxAddress]
         public string Email { get; set; }
 
         [MaxLength(500)]

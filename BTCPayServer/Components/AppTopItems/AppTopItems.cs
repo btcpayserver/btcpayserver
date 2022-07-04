@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
@@ -20,11 +22,13 @@ public class AppTopItems : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(AppData app)
     {
-        var entries = await _appService.GetPerkStats(app);
+        var entries = Enum.Parse<AppType>(app.AppType) == AppType.Crowdfund
+            ? await _appService.GetPerkStats(app)
+            : await _appService.GetItemStats(app);
         var vm = new AppTopItemsViewModel
         {
             App = app,
-            Entries = entries
+            Entries = entries.ToList()
         };
 
         return View(vm);

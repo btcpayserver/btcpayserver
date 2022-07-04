@@ -51,12 +51,10 @@ namespace BTCPayServer.Data
             var period = pp.GetPeriod(now);
             if (period is { } p)
             {
-                return p.Start <= Date && (p.End is DateTimeOffset end ? Date < end : true);
+                return p.Start <= Date && (p.End is not { } end || Date < end);
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
     }
 }

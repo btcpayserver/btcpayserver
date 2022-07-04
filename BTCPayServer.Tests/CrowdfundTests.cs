@@ -35,15 +35,16 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var appType = AppType.Crowdfund.ToString();
             Assert.NotNull(vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";
-            vm.SelectedAppType = AppType.Crowdfund.ToString();
+            vm.SelectedAppType = appType;
             var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
             Assert.Equal(nameof(apps.UpdateCrowdfund), redirectToAction.ActionName);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
-            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
+            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType});
             var appList2 =
                 Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
             Assert.Single(appList.Apps);
@@ -56,7 +57,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
             redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
             Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
-            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
         }
 
@@ -70,17 +71,17 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             var apps = user.GetController<UIAppsController>();
-            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var vm = apps.CreateApp(user.StoreId).AssertViewModel<CreateAppViewModel>();
+            var appType = AppType.Crowdfund.ToString();
             vm.AppName = "test";
-            vm.SelectedAppType = AppType.Crowdfund.ToString();
+            vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
-            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
+            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType });
 
             //Scenario 1: Not Enabled - Not Allowed
-            var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(apps.UpdateCrowdfund(app.Id)).Model);
+            var crowdfundViewModel = await apps.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
             crowdfundViewModel.TargetCurrency = "BTC";
             crowdfundViewModel.Enabled = false;
             crowdfundViewModel.EndDate = null;
@@ -159,16 +160,16 @@ namespace BTCPayServer.Tests
             await user.SetNetworkFeeMode(NetworkFeeMode.Never);
             var apps = user.GetController<UIAppsController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var appType = AppType.Crowdfund.ToString();
             vm.AppName = "test";
-            vm.SelectedAppType = AppType.Crowdfund.ToString();
+            vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
-            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName });
+            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType });
 
             TestLogs.LogInformation("We create an invoice with a hardcap");
-            var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(apps.UpdateCrowdfund(app.Id)).Model);
+            var crowdfundViewModel = await apps.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
             crowdfundViewModel.Enabled = true;
             crowdfundViewModel.EndDate = null;
             crowdfundViewModel.TargetAmount = 100;

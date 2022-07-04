@@ -174,6 +174,16 @@ retry:
             driver.WaitUntilAvailable(selector);
             driver.FindElement(selector).Click();
         }
+        
+        public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
+        {
+            Assert.Throws<NoSuchElementException>(() =>
+            {
+                driver.FindElement(selector);
+            });
+
+            return true;
+        }
 
         public static void SetCheckbox(this IWebDriver driver, By selector, bool value)
         {

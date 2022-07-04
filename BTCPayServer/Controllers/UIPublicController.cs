@@ -6,9 +6,11 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
@@ -37,6 +39,7 @@ namespace BTCPayServer.Controllers
         [Route("api/v1/invoices")]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayButtonHandle([FromForm] PayButtonViewModel model, CancellationToken cancellationToken)
         {
             var store = await _StoreRepository.FindStore(model.StoreId);

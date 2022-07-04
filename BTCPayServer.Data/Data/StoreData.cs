@@ -47,5 +47,6 @@ namespace BTCPayServer.Data
         public IEnumerable<PayoutProcessorData> PayoutProcessors { get; set; }
         public IEnumerable<PayoutData> Payouts { get; set; }
         public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
+        public IEnumerable<StoreSettingData> Settings { get; set; }
     }
 }

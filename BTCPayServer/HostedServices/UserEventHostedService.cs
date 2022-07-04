@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 
 namespace BTCPayServer.HostedServices
 {
@@ -39,6 +40,7 @@ namespace BTCPayServer.HostedServices
         {
             string code;
             string callbackUrl;
+            MailboxAddress address;
             UserPasswordResetRequestedEvent userPasswordResetRequestedEvent;
             switch (evt)
             {
@@ -53,8 +55,8 @@ namespace BTCPayServer.HostedServices
                             new HostString(userRegisteredEvent.RequestUri.Host, userRegisteredEvent.RequestUri.Port),
                             userRegisteredEvent.RequestUri.PathAndQuery);
                         userRegisteredEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-                        (await _emailSenderFactory.GetEmailSender())
-                            .SendEmailConfirmation(userRegisteredEvent.User.Email, callbackUrl);
+                        address = userRegisteredEvent.User.GetMailboxAddress();
+                        (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(address, callbackUrl);
                     }
                     else if (!await _userManager.HasPasswordAsync(userRegisteredEvent.User))
                     {
@@ -83,9 +85,9 @@ passwordSetter:
                             userPasswordResetRequestedEvent.RequestUri.Port),
                         userPasswordResetRequestedEvent.RequestUri.PathAndQuery);
                     userPasswordResetRequestedEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
+                    address = userPasswordResetRequestedEvent.User.GetMailboxAddress();
                     (await _emailSenderFactory.GetEmailSender())
-                        .SendSetPasswordConfirmation(userPasswordResetRequestedEvent.User.Email, callbackUrl,
-                            newPassword);
+                        .SendSetPasswordConfirmation(address, callbackUrl, newPassword);
                     break;
             }
         }

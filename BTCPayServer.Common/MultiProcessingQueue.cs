@@ -106,9 +106,11 @@ namespace BTCPayServer
                 {
                 }
             }
-            cancellationToken.ThrowIfCancellationRequested();
             lock (_Queues)
             {
+                if (_Queues.Count is 0)
+                    return;
+                cancellationToken.ThrowIfCancellationRequested();
                 Cleanup();
             }
         }

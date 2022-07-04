@@ -1,4 +1,4 @@
-﻿namespace BTCPayServer.Client.Models;
+namespace BTCPayServer.Client.Models;
 
 public class EmailSettingsData
 {
@@ -21,13 +21,9 @@ public class EmailSettingsData
     {
         get; set;
     }
-
-    public string FromDisplay
-    {
-        get; set;
-    }
     public string From
     {
         get; set;
     }
+    public bool DisableCertificateCheck { get; set; }
 }

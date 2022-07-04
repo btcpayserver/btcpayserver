@@ -22,16 +22,12 @@ namespace BTCPayServer.Payments.Lightning
         public LightningConnectionString? GetExternalLightningUrl()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (!string.IsNullOrEmpty(LightningConnectionString))
+            if (string.IsNullOrEmpty(LightningConnectionString)) return null;
+            if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(LightningConnectionString, false, out var connectionString, out var error))
             {
-                if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(LightningConnectionString, false, out var connectionString, out var error))
-                {
-                    throw new FormatException(error);
-                }
-                return connectionString;
+                throw new FormatException(error);
             }
-            else
-                return null;
+            return connectionString;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

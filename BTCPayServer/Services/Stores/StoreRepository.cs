@@ -1,37 +1,44 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Stores
 {
-    public class StoreRepository
+    public class StoreRepository : IStoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
+
+        public JsonSerializerSettings SerializerSettings { get; }
+
         public ApplicationDbContext CreateDbContext()
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory)
+        public StoreRepository(ApplicationDbContextFactory contextFactory, JsonSerializerSettings serializerSettings)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            SerializerSettings = serializerSettings;
         }
 
-        public async Task<StoreData> FindStore(string storeId)
+        public async Task<StoreData?> FindStore(string storeId)
         {
             if (storeId == null)
                 return null;
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var result = await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
             return result;
         }
 
-        public async Task<StoreData> FindStore(string storeId, string userId)
+        public async Task<StoreData?> FindStore(string storeId, string userId)
         {
             ArgumentNullException.ThrowIfNull(userId);
             await using var ctx = _ContextFactory.CreateContext();
@@ -50,13 +57,14 @@ namespace BTCPayServer.Services.Stores
                     return us.Store;
                 }).FirstOrDefault();
         }
-
+#nullable disable
         public class StoreUser
         {
             public string Id { get; set; }
             public string Email { get; set; }
             public string Role { get; set; }
         }
+#nullable enable
         public async Task<StoreUser[]> GetStoreUsers(string storeId)
         {
             ArgumentNullException.ThrowIfNull(storeId);
@@ -72,7 +80,7 @@ namespace BTCPayServer.Services.Stores
                 }).ToArrayAsync();
         }
 
-        public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string> storeIds = null)
+        public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string>? storeIds = null)
         {
             using var ctx = _ContextFactory.CreateContext();
             return (await ctx.UserStore
@@ -86,7 +94,7 @@ namespace BTCPayServer.Services.Stores
                 }).ToArray();
         }
 
-        public async Task<StoreData> GetStoreByInvoiceId(string invoiceId)
+        public async Task<StoreData?> GetStoreByInvoiceId(string invoiceId)
         {
             await using var context = _ContextFactory.CreateContext();
             var matched = await context.Invoices.Include(data => data.StoreData)
@@ -152,7 +160,6 @@ namespace BTCPayServer.Services.Stores
                 }
             }
         }
-
         public async Task CreateStore(string ownerId, StoreData storeData)
         {
             if (!string.IsNullOrEmpty(storeData.Id))
@@ -194,7 +201,7 @@ namespace BTCPayServer.Services.Stores
                             .Select(s => s.Webhook).ToArrayAsync();
         }
 
-        public async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId)
+        public async Task<WebhookDeliveryData?> GetWebhookDelivery(string storeId, string webhookId, string deliveryId)
         {
             ArgumentNullException.ThrowIfNull(webhookId);
             ArgumentNullException.ThrowIfNull(storeId);
@@ -256,7 +263,7 @@ namespace BTCPayServer.Services.Stores
             return data.Id;
         }
 
-        public async Task<WebhookData> GetWebhook(string storeId, string webhookId)
+        public async Task<WebhookData?> GetWebhook(string storeId, string webhookId)
         {
             ArgumentNullException.ThrowIfNull(webhookId);
             ArgumentNullException.ThrowIfNull(storeId);
@@ -266,7 +273,7 @@ namespace BTCPayServer.Services.Stores
                 .Select(s => s.Webhook)
                 .FirstOrDefaultAsync();
         }
-        public async Task<WebhookData> GetWebhook(string webhookId)
+        public async Task<WebhookData?> GetWebhook(string webhookId)
         {
             ArgumentNullException.ThrowIfNull(webhookId);
             using var ctx = _ContextFactory.CreateContext();
@@ -323,8 +330,11 @@ namespace BTCPayServer.Services.Stores
         {
             using var ctx = _ContextFactory.CreateContext();
             var existing = await ctx.FindAsync<StoreData>(store.Id);
-            ctx.Entry(existing).CurrentValues.SetValues(store);
-            await ctx.SaveChangesAsync().ConfigureAwait(false);
+            if (existing is not null)
+            {
+                ctx.Entry(existing).CurrentValues.SetValues(store);
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
+            }
         }
 
         public async Task<bool> DeleteStore(string storeId)
@@ -355,6 +365,51 @@ namespace BTCPayServer.Services.Stores
                 goto retry;
             }
             return true;
+        }
+
+        private T? Deserialize<T>(string value) where T : class
+        {
+            return JsonConvert.DeserializeObject<T>(value, SerializerSettings);
+        }
+
+        private string Serialize<T>(T obj)
+        {
+            return JsonConvert.SerializeObject(obj, SerializerSettings);
+        }
+        public async Task<T?> GetSettingAsync<T>(string storeId, string name) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var data = await ctx.StoreSettings.Where(s => s.Name == name && s.StoreId == storeId).FirstOrDefaultAsync();
+            return data == null ? default : this.Deserialize<T>(data.Value);
+
+        }
+
+        public async Task UpdateSetting<T>(string storeId, string name, T obj) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            StoreSettingData? settings = null;
+            if (obj is null)
+            {
+                ctx.StoreSettings.RemoveRange(ctx.StoreSettings.Where(data => data.Name == name && data.StoreId == storeId));
+            }
+            else
+            {
+                settings = new StoreSettingData() { Name = name, StoreId = storeId, Value = Serialize(obj) };
+                ctx.Attach(settings);
+                ctx.Entry(settings).State = EntityState.Modified;
+            }
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                if (settings is not null)
+                {
+                    ctx.Entry(settings).State = EntityState.Added;
+                    await ctx.SaveChangesAsync();
+                }
+            }
         }
 
         private static bool IsDeadlock(DbUpdateException ex)

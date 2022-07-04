@@ -24,7 +24,8 @@ body {
     }
 }
 
-#wizard-navbar a {
+#wizard-navbar a,
+#wizard-navbar button {
     position: relative;
     color: var(--btcpay-body-text);
     display: inline-flex;
@@ -33,9 +34,12 @@ body {
     width: 56px;
     height: 56px;
     border-radius: 50%;
+    border: none;
+    background: none;
 }
 
-#wizard-navbar a::after {
+#wizard-navbar a::after,
+#wizard-navbar button::after {
     position: absolute;
     top: 0;
     left: 0;
@@ -48,16 +52,19 @@ body {
     background-color: transparent;
 }
 
-#wizard-navbar a svg.icon {
+#wizard-navbar a svg.icon,
+#wizard-navbar button svg.icon{
     width: 19px;
     height: 16px;
 }
 
-#wizard-navbar a:hover::after {
+#wizard-navbar a:hover::after,
+#wizard-navbar button:hover::after{
     background-color: var(--btcpay-body-bg-hover);
 }
 
-#wizard-navbar a:active::after {
+#wizard-navbar a:active::after,
+#wizard-navbar button:active::after {
     transform: scale(.825);
 }
 

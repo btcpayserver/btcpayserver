@@ -3,11 +3,16 @@
     ViewData.SetActivePage(ServerNavPages.Files, "File Storage");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
-
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-
+    <div class="col">
+        <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
+            <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]" class="btn btn-secondary d-flex align-items-center">
+                <vc:icon symbol="settings"/>
+                <span class="ms-1">Settings</span>
+            </a>
+        </div>
+        
         @if (!Model.StorageConfigured)
         {
             <p>
@@ -41,27 +46,27 @@
             {
                 <table class="table table-hover table-responsive-md">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Timestamp</th>
-                            <th>User</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var file in Model.Files)
-                        {
-                            <tr>
-                                <td>@file.FileName</td>
-                                <td>@file.Timestamp.ToBrowserDate()</td>
-                                <td>@file.ApplicationUser.UserName</td>
-                                <td class="text-end">
-                                    <a href="@Url.Action("Files", "UIServer", new { fileIds = new string[] { file.Id} })">Get Link</a>
-                                    - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
-                                    - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var file in Model.Files)
+                    {
+                        <tr>
+                            <td>@file.FileName</td>
+                            <td>@file.Timestamp.ToBrowserDate()</td>
+                            <td>@file.ApplicationUser.UserName</td>
+                            <td class="text-end">
+                                <a href="@Url.Action("Files", "UIServer", new { fileIds = new string[] { file.Id } })">Get Link</a>
+                                - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
+                                - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             }
@@ -91,9 +96,9 @@
                                 <strong>URL:</strong>
                                 <a asp-action="GetFile" asp-controller="UIStorage" asp-route-fileId="@fileId" target="_blank">
                                     @Url.Action("GetFile", "UIStorage", new
-                               {
-                                   fileId = fileId
-                               }, Context.Request.Scheme, Context.Request.Host.ToString())
+                                    {
+                                        fileId = fileId
+                                    }, Context.Request.Scheme, Context.Request.Host.ToString())
                                 </a>
                             </li>
                             <li class="list-group-item">

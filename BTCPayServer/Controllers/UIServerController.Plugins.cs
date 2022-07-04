@@ -66,6 +66,7 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
+        
         [HttpPost("server/plugins/cancel")]
         public IActionResult CancelPluginCommands(
             [FromServices] PluginService pluginService, string plugin)
@@ -93,7 +94,6 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-
                     pluginService.InstallPlugin(plugin);
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel()

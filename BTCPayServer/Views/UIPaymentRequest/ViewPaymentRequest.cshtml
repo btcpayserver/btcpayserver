@@ -1,6 +1,11 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
+@using BTCPayServer.Components.ThemeSwitch
+@using BTCPayServer.TagHelpers
+@using BundlerMinifier.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
@@ -361,6 +366,11 @@
             </div>
         </main>
         <footer class="pt-2 pb-4 d-print-none">
+            <p class="container text-center" permission="@Policies.CanModifyStoreSettings">
+                <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id">
+                    Edit payment request
+                </a>
+            </p>
             <div class="container d-flex flex-wrap align-items-center justify-content-center">
                 <span class="text-muted mx-2">
                     Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>

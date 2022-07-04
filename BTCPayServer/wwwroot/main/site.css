@@ -1,3 +1,13 @@
+/* Variables */
+:root {
+    --chart-main-rgb: 68, 164, 49;
+    --chart-series-a-rgb: var(--chart-main-rgb);
+    --chart-series-b-rgb: 245, 0, 0;
+    --chart-series-c-rgb: 0, 109, 242;
+    --chart-series-d-rgb: 255, 188, 4;
+    --chart-series-e-rgb: 160, 98, 75;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;
@@ -18,6 +28,10 @@ hr.primary {
 .hide-when-js,
 .input-group-clear {
     display: none;
+}
+
+.input-group-clear .icon {
+    --btn-icon-size: .65rem;
 }
 
 .note-editable {
@@ -99,6 +113,22 @@ h2 small .fa-question-circle-o {
     font-size: var(--btcpay-font-size-l);
 }
 
+/* Invoices */
+.invoice-payments {
+    padding: var(--btcpay-space-m) var(--btcpay-space-l);
+}
+.invoice-details-row {
+    background: var(--btcpay-bg-tile);
+}
+.badge .dropdown-toggle {
+    cursor: pointer;
+    padding: 0;
+}
+@media (min-width: 1200px) {
+    #MassAction {
+        margin-top: -4rem;
+    }
+}
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -202,6 +232,7 @@ h2 small .fa-question-circle-o {
     border: 1px dotted var(--btcpay-neutral-400);
 }
 
+/* Icons */
 svg.icon {
     display: inline-block;
     width: 1rem;
@@ -216,12 +247,13 @@ svg.icon-note {
 /* Services */
 .services-list {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-l);
 }
 
 .services-list .service {
     --service-width: 100px;
     flex: 0 0 var(--service-width);
-    margin: 0 var(--btcpay-space-l) var(--btcpay-space-l) 0;
     text-align: center;
 }
 
@@ -298,6 +330,15 @@ svg.icon-note {
     margin-bottom: 0;
 }
 
+.widget .currency-toggle .btn {
+    background-color: var(--btcpay-bg-tile);
+    border-color: var(--btcpay-body-border-light);
+}
+
+.widget .currency-toggle input:not(:checked) + .btn {
+    color: var(--btcpay-body-text-muted);
+}
+
 .widget .btn-group {
     display: inline-flex;
     gap: var(--btcpay-space-m);
@@ -315,6 +356,18 @@ svg.icon-note {
 
 .widget input:checked + .btn-link {
     color: var(--btcpay-body-link-accent);
+}
+
+.widget.store-lightning-balance .balances {
+    gap: 1.5rem 2.25rem;
+}
+
+.widget.store-lightning-services .services-list {
+    gap: var(--btcpay-space-m);
+}
+
+.widget.store-lightning-services .services-list .service {
+    --service-width: 3rem;
 }
 
 .widget.store-numbers {
@@ -356,6 +409,27 @@ svg.icon-note {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
+.widget.app-top-items .ct-chart,
+.widget.app-top-items .ct-chart .ct-chart-bar {
+    height: 30px;
+}
+
+.widget.app-top-items .ct-chart .ct-chart-bar {
+    margin-left: -.4rem;
+    margin-right: -.5rem;
+    width: calc(100% + 1rem) !important;
+}
+
+.widget.app-top-items .ct-bar {
+    stroke-linecap: round;
+    stroke-width: 10px;
+}
+
+.widget.app-top-items .ct-grids,
+.widget.app-top-items .ct-labels {
+    display: none;
+}
+
 .widget.app-top-items .app-items {
     display: flex;
     flex-direction: column;
@@ -364,8 +438,18 @@ svg.icon-note {
 
 .widget.app-top-items .app-item {
     display: flex;
-    align-items: end;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-xs);
+    align-items: center;
     justify-content: space-between;
+}
+
+.widget.app-top-items .app-item-point {
+    display: inline-block;
+    width: var(--btcpay-space-s);
+    height: var(--btcpay-space-s);
+    margin-right: var(--btcpay-space-s);
+    border-radius: 50%;
 }
 
 .widget.app-top-items .app-item-value {
@@ -373,6 +457,10 @@ svg.icon-note {
 }
 
 @media (max-width: 575px) {
+    .widget.store-lightning-services .services-list .service {
+        --service-width: 3rem;
+    }
+    
     .widget .store-number {
         flex: 0 1 100%;
     }
@@ -384,15 +472,41 @@ svg.icon-note {
     }
 }
 
+@media (min-width: 576px) and (max-width: 1199px) {
+    .widget.store-lightning-services .services-list {
+        gap: 1.5rem;
+    }
+    .widget.store-lightning-services .services-list .service {
+        --service-width: 4rem;
+    }
+}
+
+@media (max-width: 1199px) {
+    /* Reorder so that Lightning is below the wallet balance */
+    .widget.store-wallet-balance {
+        order: -3;
+    }
+
+    .widget.store-lightning-balance {
+        order: -2;
+    }
+
+    .widget.store-lightning-services {
+        order: -1;
+    }
+}
+
 @media (min-width: 1200px) {
     .widget.app-sales,
     .widget.setup-guide,
-    .widget.store-wallet-balance {
+    .widget.store-wallet-balance,
+    .widget.store-lightning-balance {
         --widget-chart-width: 80vw;
         grid-column-start: 1;
         grid-column-end: 9;
     }
 
+    .widget.store-lightning-services,
     .widget.app-top-items,
     .widget.store-numbers {
         grid-column-start: 9;

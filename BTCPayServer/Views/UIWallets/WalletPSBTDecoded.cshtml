@@ -1,13 +1,18 @@
+@using BTCPayServer.Controllers
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BundlerMinifier.TagHelpers
 @model WalletPSBTViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	var isReady = !Model.HasErrors;
 	var isSignable = !isReady;
 	var needsExport = !isSignable && !isReady;
 	Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
-	var returnUrl = this.Context.Request.Query["returnUrl"].FirstOrDefault();
 }
 
 @section PageHeadContent {
@@ -38,12 +43,15 @@
 }
 
 @section Navbar {
-	@if (returnUrl is string)
-	{
-    <a href="@returnUrl" class="cancel">
+    @if (backUrl != null)
+    {
+        <a href="@backUrl" id="GoBack">
+            <vc:icon symbol="back" />
+        </a>
+    }
+    <a href="@cancelUrl" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
-	}
 }
 
 <header class="text-center mb-3">
@@ -59,17 +67,21 @@
         <input type="hidden" asp-for="NBXSeedAvailable"/>
         <input type="hidden" asp-for="PSBT"/>
         <input type="hidden" asp-for="FileName"/>
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
-            <button type="submit" id="SignTransaction" name="command" value="sign" asp-route-returnUrl="@returnUrl" class="btn btn-primary">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
         </div>
     </form>
 } 
 else if (isReady)
 {
-    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" asp-route-returnUrl="@returnUrl" class="my-5">
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
         <input type="hidden" asp-for="SigningKey" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
             @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
             {
@@ -105,6 +117,8 @@ else
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
                     <input type="hidden" asp-for="CryptoCode"/>
                     <input type="hidden" asp-for="PSBT"/>
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" asp-for="BackUrl" />
                     <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
                         <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt">Download PSBT file</button>
                         <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
@@ -152,6 +166,8 @@ else
             <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
                 <div class="accordion-body">
                     <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data" class="mb-2">
+                        <input type="hidden" asp-for="ReturnUrl" />
+                        <input type="hidden" asp-for="BackUrl" />
                         <div class="form-group">
                             <label for="ImportedPSBT" class="form-label">PSBT content</label>
                             <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
@@ -180,6 +196,8 @@ else
             <div class="accordion-body">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
                     <input type="hidden" asp-for="PSBT"/>
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" asp-for="BackUrl" />
                     <p class="mb-2">For exporting the signed PSBT and transaction information to a wallet, update the PSBT.</p>
                     <button id="update-psbt" type="submit" name="command" value="update" class="btn btn-secondary">Update PSBT</button>
                     <p class="mt-4 mb-2">For batching transactions, you can combine this PSBT with another one.</p>

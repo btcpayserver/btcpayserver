@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -17,6 +16,7 @@ using Ganss.XSS;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -46,7 +46,7 @@ namespace BTCPayServer.Services.Apps
             _storeRepository = storeRepository;
             _HtmlSanitizer = htmlSanitizer;
         }
-
+        
         public async Task<object> GetAppInfo(string appId)
         {
             var app = await GetApp(appId, AppType.Crowdfund, true);
@@ -200,8 +200,9 @@ namespace BTCPayServer.Services.Apps
             var currencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true);
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             var perkCount = paidInvoices
-                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode) &&
-                                 entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase))
+                .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) && 
+                    // we need the item code to know which perk it is and group by that
+                    !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                 .GroupBy(entity => entity.Metadata.ItemCode)
                 .Select(entities =>
                 {
@@ -229,14 +230,67 @@ namespace BTCPayServer.Services.Apps
             return perkCount;
         }
 
-        public async Task<SalesStats> GetSalesStats(AppData appData, int numberOfDays = 7)
+        public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
         {
+            var settings = appData.GetSettings<PointOfSaleSettings>();
             var invoices = await GetInvoicesForApp(appData);
             var paidInvoices = invoices.Where(IsPaid).ToArray();
+            var currencyData = _Currencies.GetCurrencyData(settings.Currency, true);
+            var items = Parse(settings.Template, settings.Currency);
+            var itemCount = paidInvoices
+                .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
+                    // The POS data is present for the cart view, where multiple items can be bought
+                    !string.IsNullOrEmpty(entity.Metadata.PosData) ||
+                    // The item code should be present for all types other than the cart and keypad
+                    !string.IsNullOrEmpty(entity.Metadata.ItemCode)
+                ))
+                .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
+                .GroupBy(entity => entity.ItemCode)
+                .Select(entities =>
+                {
+                    var total = entities.Sum(entity => entity.FiatPrice);
+                    var itemCode = entities.Key;
+                    var item = items.FirstOrDefault(p => p.Id == itemCode);
+                    return new ItemStats
+                    {
+                        ItemCode = itemCode,
+                        Title = item?.Title ?? itemCode,
+                        SalesCount = entities.Count(),
+                        Total = total,
+                        TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.Currency}"
+                    };
+                })
+                .OrderByDescending(stats => stats.SalesCount);
+            
+            return itemCount;
+        }
+
+        public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
+        {
+            ViewPointOfSaleViewModel.Item[] items = null;
+            switch (app.AppType)
+            {
+                case nameof(AppType.Crowdfund):
+                    var cfS = app.GetSettings<CrowdfundSettings>();
+                    items = Parse(cfS.PerksTemplate, cfS.TargetCurrency);
+                    break;
+                case nameof(AppType.PointOfSale):
+                    var posS = app.GetSettings<PointOfSaleSettings>();
+                    items = Parse(posS.Template, posS.Currency);
+                    break;
+            }
+            
+            var invoices = await GetInvoicesForApp(app);
+            var paidInvoices = invoices.Where(IsPaid).ToArray();
             var series = paidInvoices
-                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode) &&
-                                 entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays))
-                .GroupBy(entity => entity.InvoiceTime.Date)
+                .Where(entity => entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays) && (
+                     // The POS data is present for the cart view, where multiple items can be bought
+                     !string.IsNullOrEmpty(entity.Metadata.PosData) ||
+                     // The item code should be present for all types other than the cart and keypad
+                     !string.IsNullOrEmpty(entity.Metadata.ItemCode)
+                ))
+                .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
+                .GroupBy(entity => entity.Date)
                 .Select(entities => new SalesStatsItem
                 {
                     Date = entities.Key,
@@ -260,8 +314,63 @@ namespace BTCPayServer.Services.Apps
             
             return new SalesStats
             {
-                SalesCount = paidInvoices.Length,
+                SalesCount = series.Sum(i => i.SalesCount),
                 Series = series.OrderBy(i => i.Label)
+            };
+        }
+
+        private class InvoiceStatsItem
+        {
+            public string ItemCode { get; set; }
+            public decimal FiatPrice { get; set; }
+            public DateTime Date { get; set; }
+        }
+        
+        private static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items)
+        {
+            return (res, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Metadata.ItemCode))
+                {
+                    var item = items.FirstOrDefault(p => p.Id == e.Metadata.ItemCode);
+                    if (item == null) return res;
+                    
+                    var fiatPrice = e.GetPayments(true).Sum(pay =>
+                    {
+                        var paymentMethodId = pay.GetPaymentMethodId();
+                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
+                        return rate * value;
+                    });
+                    res.Add(new InvoiceStatsItem
+                    {
+                        ItemCode = e.Metadata.ItemCode,
+                        FiatPrice = fiatPrice,
+                        Date = e.InvoiceTime.Date
+                    });
+                }
+                else if (!string.IsNullOrEmpty(e.Metadata.PosData))
+                {
+                    // flatten single items from POS data
+                    var data = JsonConvert.DeserializeObject<PosAppData>(e.Metadata.PosData);
+                    if (data is not { Cart.Length: > 0 }) return res;
+                    foreach (var lineItem in data.Cart)
+                    {
+                        var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
+                        if (item == null) continue;
+                        
+                        for (var i = 0; i < lineItem.Count; i++)
+                        {
+                            res.Add(new InvoiceStatsItem
+                            {
+                                ItemCode = item.Id,
+                                FiatPrice = lineItem.Price.Value,
+                                Date = e.InvoiceTime.Date
+                            });
+                        }
+                    }
+                }
+                return res;
             };
         }
 
@@ -270,8 +379,14 @@ namespace BTCPayServer.Services.Apps
             return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid;
         }
 
-        public static string GetPosOrderId(string appId) => $"pos-app_{appId}";
-        public static string GetCrowdfundOrderId(string appId) => $"crowdfund-app_{appId}";
+        public static string GetAppOrderId(AppData app) =>
+            app.AppType switch
+            {
+                nameof(AppType.Crowdfund) => $"crowdfund-app_{app.Id}",
+                nameof(AppType.PointOfSale) => $"pos-app_{app.Id}",
+                _ => throw new ArgumentOutOfRangeException(nameof(app), app.AppType)
+            };
+
         public static string GetAppInternalTag(string appId) => $"APP#{appId}";
         public static string[] GetAppInternalTags(InvoiceEntity invoice)
         {
@@ -283,7 +398,7 @@ namespace BTCPayServer.Services.Apps
             var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 StoreId = new[] { appData.StoreData.Id },
-                OrderId = appData.TagAllInvoices ? null : new[] { GetCrowdfundOrderId(appData.Id) },
+                OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
                 Status = new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),

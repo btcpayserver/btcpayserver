@@ -53,6 +53,7 @@ namespace BTCPayServer.Data
         public DbSet<PullPaymentData> PullPayments { get; set; }
         public DbSet<RefundData> Refunds { get; set; }
         public DbSet<SettingData> Settings { get; set; }
+        public DbSet<StoreSettingData> StoreSettings { get; set; }
         public DbSet<StoreWebhookData> StoreWebhooks { get; set; }
         public DbSet<StoreData> Stores { get; set; }
         public DbSet<U2FDevice> U2FDevices { get; set; }
@@ -101,6 +102,7 @@ namespace BTCPayServer.Data
             PullPaymentData.OnModelCreating(builder);
             RefundData.OnModelCreating(builder);
             //SettingData.OnModelCreating(builder);
+            StoreSettingData.OnModelCreating(builder, Database);
             StoreWebhookData.OnModelCreating(builder);
             //StoreData.OnModelCreating(builder);
             U2FDevice.OnModelCreating(builder);

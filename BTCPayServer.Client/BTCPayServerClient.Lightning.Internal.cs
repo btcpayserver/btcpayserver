@@ -17,6 +17,15 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Get), token);
             return await HandleResponse<LightningNodeInformationData>(response);
         }
+        
+        public virtual async Task<LightningNodeBalanceData> GetLightningNodeBalance(string cryptoCode,
+            CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/server/lightning/{cryptoCode}/balance",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<LightningNodeBalanceData>(response);
+        }
 
         public virtual async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request,
             CancellationToken token = default)

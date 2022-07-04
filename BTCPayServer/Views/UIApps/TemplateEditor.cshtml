@@ -1,8 +1,8 @@
-@model (string templateId, string title)
+@model (string templateId, string title, string currency)
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group mb-0">
-        <h3 class="mt-5 mb-4">@Model.title </h3>
+        <h3 class="mt-5 mb-4">@Model.title</h3>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
@@ -37,7 +37,7 @@
                 <button type="button" class="btn btn-primary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
                     Toggle raw editor
                 </button>
             </div>
@@ -46,7 +46,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
+                        <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Add"}} Item</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
                             <vc:icon symbol="close"/>
                         </button>
@@ -54,60 +54,69 @@
                     <div class="modal-body" v-if="editingItem">
                         <div class="mb-3">
                             <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
+                            <div class="form-group">
+                                <label class="form-label" data-required>Title</label>
+                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
+                            </div>
                             <div class="form-group row">
                                 <div class="col-sm-6">
-                                    <label class="form-label" data-required>Title</label>
-                                    <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle"/>
-                                </div>
-                                <div class="col-sm-3 px-0">
                                     <label class="form-label">Price</label>
                                     <select class="form-select" v-model="editingItem.custom">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-3" v-show="editingItem.custom !== 'topup'">
-                                    
-                                    <label class="form-label">&nbsp</label>
-                                    <input class="form-control mb-2"
-                                           inputmode="decimal"
-                                           pattern="\d*"
-                                           step="any"
-                                           min="0"
-                                           type="number"
-                                           required
-                                           v-model="editingItem.price" ref="txtPrice"/>
+                                <div class="col-sm-6" v-show="editingItem.custom !== 'topup'">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="input-group mb-2">
+                                        <input class="form-control"
+                                               inputmode="decimal"
+                                               pattern="\d*"
+                                               step="any"
+                                               min="0"
+                                               type="number"
+                                               required
+                                               v-model="editingItem.price"
+                                               ref="txtPrice"
+                                               aria-describedby="currency-addon"/>
+                                        <span class="input-group-text" id="currency-addon">@Model.currency</span>
+                                    </div>
                                 </div>
-
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Image</label>
-                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage"/>
+                                <label class="form-label">Image Url</label>
+                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage" />
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description</label>
                                 <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
-                                <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory"/>
+                                <label class="form-label">Inventory</label>
+                                <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
+                                <p class="form-text text-muted">
+                                    Leave blank to not use this feature.
+                                </p>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Id (leave blank to generate from title)</label>
-                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
+                                <label class="form-label">ID</label>
+                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
+                                <p class="form-text text-muted">
+                                    Leave blank to generate ID from title.
+                                </p>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Buy Button Text</label>
-                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
+                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
                             </div>
                             <div class="form-group d-flex align-items-center">
-                                <input type="checkbox" id="Disabled" class="btcpay-toggle me-2" v-model="editingItem.disabled"/>
+                                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem.disabled" />
                                 <label class="form-label mb-0">Disabled</label>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
-                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save Changes</button>
+                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save</button>
                     </div>
                 </div>
             </div>
@@ -139,12 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
             this.loadYml();
             this.getInputElement().on("input change", this.loadYml.bind(this));            
             this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
-            this.toggleTemplateElement();
         },
         methods: {
-            toggleTemplateElement: function(){
-                this.getInputElement().parent().toggle();
-            },
             getImage: function(item){
                 var image = this.unEscapeKey(item.image) || "~/img/img-placeholder.svg";
                 var url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;

@@ -1,24 +1,46 @@
+@using BTCPayServer.Services.Apps
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
 
 @{
     var action = $"Update{Model.App.AppType}";
+    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "contribution" : "sale";
 }
 
-<div class="widget app-top-items">
+<div id="AppTopItems-@Model.App.Id" class="widget app-top-items">
     <header class="mb-3">
-        <h3>Top Perks</h3>
+        <h3>Top @(Model.App.AppType == nameof(AppType.Crowdfund) ? "Perks" : "Items")</h3>
         <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">View All</a>
     </header>
     @if (Model.Entries.Any())
     {
+        <div class="ct-chart mb-3"></div>
+        <script>
+            (function () {
+                const id = @Safe.Json($"AppTopItems-{Model.App.Id}");
+                const series = @Safe.Json(Model.Entries.Select(i => i.SalesCount));
+                new Chartist.Bar(`#${id} .ct-chart`, { series }, {
+                    distributeSeries: true,
+                    horizontalBars: true,
+                    showLabel: false,
+                    stackBars: true,
+                    axisY: {
+                        offset: 0
+                    }
+                });
+            })();
+        </script>
         <div class="app-items">
-            @foreach (var entry in Model.Entries)
+            @for (var i = 0; i < Model.Entries.Count; i++)
             {
-                <div class="app-item">
-                    <span class="app-item-name">@entry.Title</span>
+                var entry = Model.Entries[i];
+                <div class="app-item ct-series-@i">
+                    <span class="app-item-name">
+                        <span class="app-item-point ct-point"></span>
+                        @entry.Title
+                    </span>
                     <span class="app-item-value">
-                        @entry.SalesCount sale@(entry.SalesCount == 1 ? "" : "s"),
-                        @entry.TotalFormatted total
+                        <span class="text-muted">@entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),</span>
+                        @entry.TotalFormatted
                     </span>
                 </div>
             }
@@ -27,7 +49,7 @@
     else
     {
         <p class="text-secondary mt-3">
-            No contributions have been made yet.
+            No @($"{label}s") have been made yet.
         </p>
     }
 </div>

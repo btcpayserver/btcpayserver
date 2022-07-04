@@ -41,7 +41,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public bool CanHandle(PaymentMethodId paymentMethod)
         {
-            return paymentMethod.PaymentType == LightningPaymentType.Instance &&
+            return (paymentMethod.PaymentType == LightningPaymentType.Instance  ||  paymentMethod.PaymentType == LNURLPayPaymentType.Instance ) &&
                    _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.SupportLightning is true;
         }
 
@@ -64,7 +64,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             try
             {
                 string lnurlTag = null;
-                var lnurl = EmailValidator.IsEmail(destination)
+                var lnurl = MailboxAddressValidator.IsMailboxAddress(destination)
                     ? LNURL.LNURL.ExtractUriFromInternetIdentifier(destination)
                     : LNURL.LNURL.Parse(destination, out lnurlTag);
 

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
+using NicolasDorier.RateLimits;
 using static BTCPayServer.Controllers.UIAppsController;
 
 namespace BTCPayServer.Controllers
@@ -116,6 +117,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(AppType.PointOfSale)]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount,
@@ -221,7 +223,7 @@ namespace BTCPayServer.Controllers
                     Currency = settings.Currency,
                     Price = price,
                     BuyerEmail = email,
-                    OrderId = orderId ?? AppService.GetPosOrderId(appId),
+                    OrderId = orderId ?? AppService.GetAppOrderId(app),
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
@@ -292,6 +294,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
 
@@ -375,7 +378,7 @@ namespace BTCPayServer.Controllers
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
-                    OrderId = AppService.GetCrowdfundOrderId(appId),
+                    OrderId = AppService.GetAppOrderId(app),
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,

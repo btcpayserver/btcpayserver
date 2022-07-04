@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PayoutData = BTCPayServer.Data.PayoutData;
+using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -216,52 +217,26 @@ namespace BTCPayServer.Controllers
                     break;
             }
 
-            var pps = (await ppsQuery
-                    .Skip(vm.Skip)
-                    .Take(vm.Count)
-                    .ToListAsync()
-                );
-            foreach (var pp in pps)
+            var pps = await ppsQuery
+                .Skip(vm.Skip)
+                .Take(vm.Count)
+                .ToListAsync();
+            vm.PullPayments.AddRange(pps.Select(pp =>
             {
-                var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||
-                                                            p.State == PayoutState.InProgress) && p.IsInPeriod(pp, now))
-                    .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum();
-                var totalAwaiting = pp.Payouts.Where(p => (p.State == PayoutState.AwaitingPayment ||
-                                                           p.State == PayoutState.AwaitingApproval) &&
-                                                          p.IsInPeriod(pp, now)).Select(o =>
-                    o.GetBlob(_jsonSerializerSettings).Amount).Sum();
-                ;
-                var ppBlob = pp.GetBlob();
-                var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
-                var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);
-                var period = pp.GetPeriod(now);
-                vm.PullPayments.Add(new PullPaymentsModel.PullPaymentModel()
+                var blob = pp.GetBlob();
+                return new PullPaymentsModel.PullPaymentModel()
                 {
                     StartDate = pp.StartDate,
                     EndDate = pp.EndDate,
                     Id = pp.Id,
-                    Name = ppBlob.Name,
-                    Progress = new PullPaymentsModel.PullPaymentModel.ProgressModel()
-                    {
-                        CompletedPercent = (int)(totalCompleted / ppBlob.Limit * 100m),
-                        AwaitingPercent = (int)(totalAwaiting / ppBlob.Limit * 100m),
-                        Awaiting = totalAwaiting.RoundToSignificant(ni.Divisibility).ToString("C", nfi),
-                        Completed = totalCompleted.RoundToSignificant(ni.Divisibility).ToString("C", nfi),
-                        Limit = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
-                        ResetIn = period?.End is DateTimeOffset nr ? ZeroIfNegative(nr - now).TimeString() : null,
-                        EndIn = pp.EndDate is DateTimeOffset end ? ZeroIfNegative(end - now).TimeString() : null,
-                    },
-                    Archived = pp.Archived,
-                    AutoApproveClaims = ppBlob.AutoApproveClaims
-                });
-            }
+                    Name = blob.Name,
+                    AutoApproveClaims = blob.AutoApproveClaims,
+                    Progress = _pullPaymentService.CalculatePullPaymentProgress(pp, now),
+                    Archived = pp.Archived
+                };
+            }));
+
             return View(vm);
-        }
-        public TimeSpan ZeroIfNegative(TimeSpan time)
-        {
-            if (time < TimeSpan.Zero)
-                time = TimeSpan.Zero;
-            return time;
         }
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]

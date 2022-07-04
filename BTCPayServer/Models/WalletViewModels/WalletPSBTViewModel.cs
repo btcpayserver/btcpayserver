@@ -51,6 +51,7 @@ namespace BTCPayServer.Models.WalletViewModels
             return psbt;
         }
         public bool InvalidPSBT { get; set; }
+
         async Task<PSBT> GetPSBTCore(Network network)
         {
             if (UploadedPSBTFile != null)

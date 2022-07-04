@@ -13,7 +13,7 @@
     </header>
     @if (Model.Invoices.Any())
     {
-        <table class="table table-hover">
+        <table class="table table-hover mt-3 mb-0">
             <thead>
             <tr>
                 <th class="w-125px">Date</th>
@@ -38,6 +38,12 @@
                                 @($"({invoice.Status.ExceptionStatus.ToString()})")
                             }
                         </span>
+                        @if (invoice.HasRefund)
+                        {
+                            <span class="badge bg-warning">
+                                Refund
+                            </span>
+                        }
                     </td>
                     <td class="text-end">@invoice.AmountCurrency</td>
                 </tr>

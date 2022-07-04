@@ -1364,7 +1364,7 @@ namespace BTCPayServer.Controllers
         public string CryptoCode { get; set; }
         public string Address { get; set; }
         public string PaymentLink { get; set; }
-        public string? ReturnUrl { get; set; }
+        public string ReturnUrl { get; set; }
     }
 
     public class SendToAddressResult

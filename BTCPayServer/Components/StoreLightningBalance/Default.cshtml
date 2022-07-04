@@ -146,24 +146,6 @@
             })();
         </script>
     }
-    else
-    {
-        <div class="loading d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-        <script>
-            (async () => {
-                const url = @Safe.Json(Url.Action("LightningBalance", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
-                const storeId = @Safe.Json(Model.Store.Id);
-                const response = await fetch(url);
-                if (response.ok) {
-                    document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
-                }
-            })();
-        </script>
-    }
 </div>
 <script>
     (function () {
@@ -197,4 +179,3 @@
         });
     })();
 </script>
-

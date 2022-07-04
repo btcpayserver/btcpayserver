@@ -689,13 +689,11 @@
                 "description": "",
                 "x-enumNames": [
                     "Unconfirmed",
-                    "Confirmed",
-                    "Replaced"
+                    "Confirmed"
                 ],
                 "enum": [
                     "Unconfirmed",
-                    "Confirmed",
-                    "Replaced"
+                    "Confirmed"
                 ]
             },
             "LabelData": {

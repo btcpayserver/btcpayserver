@@ -474,8 +474,7 @@ namespace BTCPayServer
                 var isTopup = i.IsUnsetTopUp();
                 var lnurlSupportedPaymentMethod =
                     i.GetSupportedPaymentMethod<LNURLPaySupportedPaymentMethod>(pmi).FirstOrDefault();
-                if (lnurlSupportedPaymentMethod is null ||
-                    (!isTopup && !lnurlSupportedPaymentMethod.EnableForStandardInvoices))
+                if (lnurlSupportedPaymentMethod is null)
                 {
                     return NotFound();
                 }

@@ -75,6 +75,10 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+        public string ExplorerPostgres
+        {
+            get; set;
+        }
 
         IWebHost _Host;
         public int Port
@@ -154,6 +158,9 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"mysql=" + MySQL);
             else if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
+
+            if (!string.IsNullOrEmpty(ExplorerPostgres))
+                config.AppendLine($"explorer.postgres=" + ExplorerPostgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
             await File.WriteAllTextAsync(confPath, config.ToString());
 

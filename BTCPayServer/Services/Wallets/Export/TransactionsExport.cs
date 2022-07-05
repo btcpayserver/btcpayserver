@@ -26,14 +26,14 @@ namespace BTCPayServer.Services.Wallets.Export
             _walletTransactionsInfo = walletTransactionsInfo;
         }
 
-        public string Process(IEnumerable<TransactionInformation> inputList, string fileFormat)
+        public string Process(IEnumerable<TransactionHistoryLine> inputList, string fileFormat)
         {
             var list = inputList.Select(tx =>
             {
                 var model = new ExportTransaction
                 {
                     TransactionId = tx.TransactionId.ToString(),
-                    Timestamp = tx.Timestamp,
+                    Timestamp = tx.SeenAt,
                     Amount = tx.BalanceChange.ShowMoney(_wallet.Network),
                     Currency = _wallet.Network.CryptoCode,
                     IsConfirmed = tx.Confirmations != 0

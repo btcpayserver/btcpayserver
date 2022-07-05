@@ -187,41 +187,33 @@ namespace BTCPayServer.Controllers.Greenfield
             var walletId = new WalletId(storeId, cryptoCode);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
 
-            var txs = await wallet.FetchTransactions(derivationScheme.AccountDerivation);
-            var filteredFlatList = new List<TransactionInformation>();
-            if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Confirmed))
+            var preFiltering = true;
+            if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))
+                preFiltering = false;
+            var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0, preFiltering ? limit : int.MaxValue);
+            if (!preFiltering)
             {
-                filteredFlatList.AddRange(txs.ConfirmedTransactions.Transactions);
-            }
-
-            if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Unconfirmed))
-            {
-                filteredFlatList.AddRange(txs.UnconfirmedTransactions.Transactions);
-            }
-
-            if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Replaced))
-            {
-                filteredFlatList.AddRange(txs.ReplacedTransactions.Transactions);
-            }
-
-            if (labelFilter != null)
-            {
-                filteredFlatList = filteredFlatList.Where(information => 
+                var filteredList = new List<TransactionHistoryLine>(txs.Count);
+                foreach (var t in txs)
                 {
-                    walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
-
-                    if (transactionInfo != null)
+                    if (!string.IsNullOrWhiteSpace(labelFilter))
                     {
-                        return transactionInfo.Labels.ContainsKey(labelFilter);
+                        walletTransactionsInfoAsync.TryGetValue(t.TransactionId.ToString(), out var transactionInfo);
+                        if (transactionInfo?.Labels.ContainsKey(labelFilter) is true)
+                            filteredList.Add(t);
                     }
-                    else 
+                    if (statusFilter?.Any() is true)
                     {
-                        return false;
+                        if (statusFilter.Contains(TransactionStatus.Confirmed) && t.Confirmations != 0)
+                            filteredList.Add(t);
+                        else if (statusFilter.Contains(TransactionStatus.Unconfirmed) && t.Confirmations == 0)
+                            filteredList.Add(t);
                     }
-                }).ToList();
+                }
+                txs = filteredList;
             }
 
-            var result = filteredFlatList.Skip(skip).Take(limit).Select(information =>
+            var result = txs.Skip(skip).Take(limit).Select(information =>
             {
                 walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
                 return ToModel(transactionInfo, information, wallet);
@@ -671,7 +663,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         private OnChainWalletTransactionData ToModel(WalletTransactionInfo? walletTransactionsInfoAsync,
-            TransactionInformation tx,
+            TransactionHistoryLine tx,
             BTCPayWallet wallet)
         {
             return new OnChainWalletTransactionData()
@@ -683,9 +675,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,
                 Confirmations = tx.Confirmations,
-                Timestamp = tx.Timestamp,
-                Status = tx.Confirmations > 0 ? TransactionStatus.Confirmed :
-                    tx.ReplacedBy != null ? TransactionStatus.Replaced : TransactionStatus.Unconfirmed
+                Timestamp = tx.SeenAt,
+                Status = tx.Confirmations > 0 ? TransactionStatus.Confirmed : TransactionStatus.Unconfirmed
             };
         }
     }

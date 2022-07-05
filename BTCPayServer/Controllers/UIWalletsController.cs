@@ -281,7 +281,7 @@ namespace BTCPayServer.Controllers
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
-            var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
+            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, skip, count);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
@@ -301,14 +301,13 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                foreach (var tx in transactions.UnconfirmedTransactions.Transactions
-                             .Concat(transactions.ConfirmedTransactions.Transactions).ToArray())
+                foreach (var tx in transactions)
                 {
                     var vm = new ListTransactionsViewModel.TransactionViewModel();
                     vm.Id = tx.TransactionId.ToString();
                     vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink,
                         vm.Id);
-                    vm.Timestamp = tx.Timestamp;
+                    vm.Timestamp = tx.SeenAt;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
                     vm.IsConfirmed = tx.Confirmations != 0;
@@ -1326,12 +1325,8 @@ namespace BTCPayServer.Controllers
             
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
-            var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
+            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
-            var input = transactions.UnconfirmedTransactions.Transactions
-                .Concat(transactions.ConfirmedTransactions.Transactions)
-                .OrderByDescending(t => t.Timestamp)
-                .ToList();
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);
 

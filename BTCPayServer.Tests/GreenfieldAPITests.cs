@@ -2693,8 +2693,36 @@ namespace BTCPayServer.Tests
             Assert.NotNull(custodians);
             Assert.NotEmpty(custodians);
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreRateConfigTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertHttpError(401, async () => await unauthClient.GetRateSources());
 
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var clientBasic = await user.CreateClient();
+            Assert.NotEmpty(await clientBasic.GetRateSources());
+            Assert.NotNull(await clientBasic.GetStoreRateConfiguration(user.StoreId));
+            Assert.Equal(0.9m,
+                Assert.Single(await clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() {UseScript = true, Script = "BTC_XYZ = 1;", Spread = 0.1m,},
+                    new[] {"BTC_XYZ"})).Rate);
 
+            Assert.True((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() {UseScript = true, Script = "BTC_XYZ = 1", Spread = 0.1m,}))
+                .UseScript);
+            
+            Assert.NotNull((await clientBasic.GetStoreRateConfiguration(user.StoreId)).Script);
+            Assert.NotNull((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() {UseScript = false}))
+                .PreferredSource);
+        }
+        
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CustodianAccountControllerTests()

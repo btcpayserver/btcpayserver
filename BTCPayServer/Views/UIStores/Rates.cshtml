@@ -159,13 +159,15 @@
                 </div>
             }
             <div class="form-group">
-                <label class="d-flex align-items-center mb-2">
+                <label class="d-flex align-items-center">
                     <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
-                    <span>Advanced rate rule scripting</span>
-                </label>    
-                <p class="text-muted small form-text">
-                    @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
-                </p>
+                    <div class="">
+                        <span>Advanced rate rule scripting</span>
+                        <p class="text-muted small form-text mb-0">
+                            @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
+                        </p>
+                    </div>
+                </label>
             </div>
             <div class="form-group">
                 <label asp-for="Spread" class="form-label"></label>
@@ -176,7 +178,7 @@
                 <span asp-validation-for="Spread" class="text-danger"></span>
             </div>
             <h3 class="mt-5 mb-3">Testing</h3>
-            
+
             <div class="form-group">
                 <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                 <div class="d-flex">
@@ -184,8 +186,8 @@
                     <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
-            </div>  
-                
+            </div>
+
             <h3 class="mt-5 mb-3">Default Currency Pairs</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="BitpayRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>

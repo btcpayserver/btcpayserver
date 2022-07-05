@@ -32,7 +32,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override PaymentType PaymentType => MoneroPaymentType.Instance;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
-            StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
+            StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             
             if (preparePaymentObject is null)

@@ -153,7 +153,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
-            BTCPayNetwork network, object preparePaymentObject)
+            BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             if (preparePaymentObject is null)
             {

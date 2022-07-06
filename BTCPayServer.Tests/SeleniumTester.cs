@@ -86,9 +86,19 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        public void PayInvoice()
+        public void PayInvoice(bool mine = false)
         {
             Driver.FindElement(By.Id("FakePayment")).Click();
+            if (mine)
+            {
+                MineBlockOnInvoiceCheckout();
+            }
+        }
+
+        public void MineBlockOnInvoiceCheckout()
+        {
+            Driver.FindElement(By.CssSelector("#mine-block button")).Click();
+
         }
 
         /// <summary>

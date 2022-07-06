@@ -48,5 +48,6 @@
   "Pay with Changelly": "Betalen met Changelly",
   "Close": "Sluiten",
   "NotPaid_ExtraTransaction": "Het factuur is niet volledig betaald. Stuur nog een transactie om het resterende bedrag te betalen.",
-  "Recommended_Fee": "Aanbevolen vergoeding: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Aanbevolen vergoeding: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
@@ -19,6 +20,48 @@ namespace BTCPayServer.Client.Models
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
+        public ReceiptOptions Receipt { get; set; } = new ReceiptOptions();
+
+        public class ReceiptOptions
+        {
+            public bool? Enabled { get; set; }
+            public bool? ShowQR { get; set; }
+            public bool? ShowPayments { get; set; }
+            [JsonExtensionData]
+            public IDictionary<string, JToken> AdditionalData { get; set; }
+
+#nullable enable
+            /// <summary>
+            /// Make sure that the return has all values set by order of priority: invoice/store/default
+            /// </summary>
+            /// <param name="storeLevelOption"></param>
+            /// <param name="invoiceLevelOption"></param>
+            /// <returns></returns>
+            public static ReceiptOptions Merge(ReceiptOptions? storeLevelOption, ReceiptOptions? invoiceLevelOption)
+            {
+                storeLevelOption ??= new ReceiptOptions();
+                invoiceLevelOption ??= new ReceiptOptions();
+                var store = JObject.FromObject(storeLevelOption);
+                var inv = JObject.FromObject(invoiceLevelOption);
+                var result = JObject.FromObject(CreateDefault());
+                var mergeSettings = new JsonMergeSettings() { MergeNullValueHandling = MergeNullValueHandling.Ignore };
+                result.Merge(store, mergeSettings);
+                result.Merge(inv, mergeSettings);
+                var options = result.ToObject<ReceiptOptions>()!;
+                return options;
+            }
+
+            public static ReceiptOptions CreateDefault()
+            {
+                return new ReceiptOptions()
+                {
+                    ShowQR = true,
+                    Enabled = true,
+                    ShowPayments = true
+                };
+            }
+#nullable restore
+        }
         public class CheckoutOptions
         {
 

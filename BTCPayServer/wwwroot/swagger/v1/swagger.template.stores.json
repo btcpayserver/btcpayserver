@@ -329,6 +329,11 @@
                         "default": false,
                         "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
                     },
+                    "receipt": {
+                        "nullable": true,
+                        "$ref": "#/components/schemas/ReceiptOptions",
+                        "description": "Additional settings to customize the public receipt"
+                    },
                     "lightningAmountInSatoshi": {
                         "type": "boolean",
                         "default": false,

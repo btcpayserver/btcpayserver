@@ -48,5 +48,6 @@
   "Pay with Changelly": "תשלום עם Changelly",
   "Close": "סגירה",
   "NotPaid_ExtraTransaction": "החשבונית לא שולמה במלואה. נא לשלוח תשלום נוסף לכיסוי סכום החוב.",
-  "Recommended_Fee": "עמלה מומלצת: {{feeRate}} סאט/בית"
+  "Recommended_Fee": "עמלה מומלצת: {{feeRate}} סאט/בית",
+  "View receipt": "View receipt"
 }

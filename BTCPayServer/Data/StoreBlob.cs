@@ -30,6 +30,7 @@ namespace BTCPayServer.Data
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
+            ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
         }
         
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
@@ -104,7 +105,10 @@ namespace BTCPayServer.Data
         public bool AutoDetectLanguage { get; set; }
 
         public bool RateScripting { get; set; }
-
+#nullable enable
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
+#nullable restore
         public string RateScript { get; set; }
 
         public bool AnyoneCanInvoice { get; set; }

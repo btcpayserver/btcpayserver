@@ -48,5 +48,6 @@
   "Pay with Changelly": "通过Changelly支付",
   "Close": "关闭",
   "NotPaid_ExtraTransaction": "发票还没有付清。请订单到期之前发送另一笔交易完成支付。",
-  "Recommended_Fee": "推荐费率：:{{feeRate}} sat/byte"
+  "Recommended_Fee": "推荐费率：:{{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

@@ -48,5 +48,6 @@
   "Pay with Changelly": "Borga með Changelly",
   "Close": "Loka",
   "NotPaid_ExtraTransaction": "Reikningurinn hefur ekki verið greiddur að fullu. Vinsamlegast greiddu restina.",
-  "Recommended_Fee": "Ráðlögð þóknun: {{feeRate}} sat/bæti"
+  "Recommended_Fee": "Ráðlögð þóknun: {{feeRate}} sat/bæti",
+  "View receipt": "View receipt"
 }

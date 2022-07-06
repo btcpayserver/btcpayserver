@@ -48,5 +48,6 @@
   "Pay with Changelly": "Plati sa Changelly",
   "Close": "Zatvori",
   "NotPaid_ExtraTransaction": "Račun nije plaćen u cijelosti. Pošaljite još jednu transakciju kako biste pokrili iznos koji dospijeva.",
-  "Recommended_Fee": "Preporučena naknada: {{feeRate}} sat / bajt"
+  "Recommended_Fee": "Preporučena naknada: {{feeRate}} sat / bajt",
+  "View receipt": "View receipt"
 }

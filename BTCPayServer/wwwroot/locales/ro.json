@@ -48,5 +48,6 @@
   "Pay with Changelly": "Platiți cu Changelly",
   "Close": "Închideți",
   "NotPaid_ExtraTransaction": "Factura nu a fost achitată integral. Vă rugăm să trimiteți o altă plată pentru a acoperi suma datorată.",
-  "Recommended_Fee": "Taxa recomandată: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Taxa recomandată: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

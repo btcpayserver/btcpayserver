@@ -48,5 +48,6 @@
   "Pay with Changelly": "Changelly vasitəsilə ödə",
   "Close": "Qapat",
   "NotPaid_ExtraTransaction": "Faktura tam ödənilməyib. Lütfən məbləği tam ödəmək üçün daha bir tranzaksiya həyata keçirin.",
-  "Recommended_Fee": "Tövsiyə edilən komissiya: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Tövsiyə edilən komissiya: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

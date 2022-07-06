@@ -48,5 +48,6 @@
   "Pay with Changelly": "Оплатить с помощью Changelly",
   "Close": "Закрыть",
   "NotPaid_ExtraTransaction": "Счет не был оплачен полностью. Пожалуйста, отправьте еще одну транзакцию для покрытия суммы задолженности.",
-  "Recommended_Fee": "Рекомендуемая комиссия: {{feeRate}} сат/байт"
+  "Recommended_Fee": "Рекомендуемая комиссия: {{feeRate}} сат/байт",
+  "View receipt": "View receipt"
 }

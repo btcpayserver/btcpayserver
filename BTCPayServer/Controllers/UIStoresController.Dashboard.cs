@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("{storeId}/lightning/{cryptoCode}/balance")]
-        public async Task<IActionResult> LightningBalance(string storeId, string cryptoCode)
+        public IActionResult LightningBalance(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)

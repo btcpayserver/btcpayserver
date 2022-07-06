@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
@@ -8,26 +9,30 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.AppSales;
 
+public enum AppSalesPeriod
+{
+    Week,
+    Month
+}
+
 public class AppSales : ViewComponent
 {
     private readonly AppService _appService;
-    private readonly StoreRepository _storeRepo;
 
-    public AppSales(AppService appService, StoreRepository storeRepo)
+    public AppSales(AppService appService)
     {
         _appService = appService;
-        _storeRepo = storeRepo;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(AppData app)
+    public async Task<IViewComponentResult> InvokeAsync(AppSalesViewModel vm)
     {
-        var stats = await _appService.GetSalesStats(app);
-        var vm = new AppSalesViewModel
-        {
-            App = app,
-            SalesCount = stats.SalesCount,
-            Series = stats.Series
-        };
+        if (vm.App == null) throw new ArgumentNullException(nameof(vm.App));
+        if (vm.InitialRendering) return View(vm);
+        
+        var stats = await _appService.GetSalesStats(vm.App);
+
+        vm.SalesCount = stats.SalesCount;
+        vm.Series = stats.Series;
 
         return View(vm);
     }

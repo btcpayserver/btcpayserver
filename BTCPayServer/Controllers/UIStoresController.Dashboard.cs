@@ -1,22 +1,13 @@
 #nullable enable
-using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Components.StoreLightningBalance;
-using BTCPayServer.Configuration;
+using BTCPayServer.Components.StoreNumbers;
+using BTCPayServer.Components.StoreRecentInvoices;
+using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
-using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Controllers
 {
@@ -39,36 +30,66 @@ namespace BTCPayServer.Controllers
                 LightningEnabled = lightningEnabled,
                 StoreId = CurrentStore.Id,
                 StoreName = CurrentStore.StoreName,
+                CryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode,
                 IsSetUp = walletEnabled || lightningEnabled
             };
             
             // Widget data
-            if (vm.WalletEnabled || vm.LightningEnabled)
-            {
-                var userId = GetUserId();
-                var apps = await _appService.GetAllApps(userId, false, store.Id);
-                vm.Apps = apps
-                    .Select(a =>
-                    {
-                        var appData = _appService.GetAppDataIfOwner(userId, a.Id).Result;
-                        appData.StoreData = store;
-                        return appData;
-                    })
-                    .ToList();
-            }
+            if (!vm.WalletEnabled && !vm.LightningEnabled) return View(vm);
             
+            var userId = GetUserId();
+            var apps = await _appService.GetAllApps(userId, false, store.Id);
+            foreach (var app in apps)
+            {
+                var appData = await _appService.GetAppDataIfOwner(userId, app.Id);
+                vm.Apps.Add(appData);
+            }
+
             return View(vm);
         }
-        
-        [HttpGet("{storeId}/lightning/{cryptoCode}/balance")]
+
+        [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
         public IActionResult LightningBalance(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
-            var vm = new StoreLightningBalanceViewModel { Store = store };
+            var vm = new StoreLightningBalanceViewModel { Store = store, CryptoCode = cryptoCode };
             return ViewComponent("StoreLightningBalance", new { vm });
+        }
+        
+        [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
+        public IActionResult StoreNumbers(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var vm = new StoreNumbersViewModel { Store = store, CryptoCode = cryptoCode  };
+            return ViewComponent("StoreNumbers", new { vm });
+        }
+        
+        [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-transactions")]
+        public IActionResult RecentTransactions(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var vm = new StoreRecentTransactionsViewModel { Store = store, CryptoCode = cryptoCode  };
+            return ViewComponent("StoreRecentTransactions", new { vm });
+        }
+        
+        [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-invoices")]
+        public IActionResult RecentInvoices(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var vm = new StoreRecentInvoicesViewModel { Store = store, CryptoCode = cryptoCode  };
+            return ViewComponent("StoreRecentInvoices", new { vm });
         }
     }
 }

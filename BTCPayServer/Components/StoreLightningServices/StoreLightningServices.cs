@@ -18,7 +18,6 @@ namespace BTCPayServer.Components.StoreLightningServices;
 
 public class StoreLightningServices : ViewComponent
 {
-    private readonly string _cryptoCode;
     private readonly BTCPayServerOptions _btcpayServerOptions;
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
@@ -31,60 +30,54 @@ public class StoreLightningServices : ViewComponent
         _networkProvider = networkProvider;
         _btcpayServerOptions = btcpayServerOptions;
         _externalServiceOptions = externalServiceOptions;
-        _cryptoCode = _networkProvider.DefaultNetwork.CryptoCode;
     }
 
-    public IViewComponentResult Invoke(StoreData store)
+    public IViewComponentResult Invoke(StoreLightningServicesViewModel vm)
     {
-        var vm = new StoreLightningServicesViewModel
-        {
-            Store = store,
-            CryptoCode = _cryptoCode,
-        };
+        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
+        if (vm.LightningNodeType != LightningNodeType.Internal) return View(vm);
         
-        if (vm.LightningNodeType == LightningNodeType.Internal)
-        {
-            var services = _externalServiceOptions.Value.ExternalServices.ToList()
-                .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
-                .Select(async service =>
-                {
-                    var model = new AdditionalServiceViewModel
-                    {
-                        DisplayName = service.DisplayName,
-                        ServiceName = service.ServiceName,
-                        CryptoCode = service.CryptoCode,
-                        Type = service.Type.ToString()
-                    };
-                    try
-                    {
-                        model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
-                    }
-                    catch (Exception exception)
-                    {
-                        model.Error = exception.Message;
-                    }
-                    return model;
-                })
-                .Select(t => t.Result)
-                .ToList();
-            
-            // other services
-            foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+        var services = _externalServiceOptions.Value.ExternalServices.ToList()
+            .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
+            .Select(async service =>
             {
-                if (ExternalServices.LightningServiceNames.Contains(key))
+                var model = new AdditionalServiceViewModel
                 {
-                    services.Add(new AdditionalServiceViewModel
-                    {
-                        DisplayName = key,
-                        ServiceName = key,
-                        Type = key.Replace(" ", ""),
-                        Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
-                    });
+                    DisplayName = service.DisplayName,
+                    ServiceName = service.ServiceName,
+                    CryptoCode = service.CryptoCode,
+                    Type = service.Type.ToString()
+                };
+                try
+                {
+                    model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
                 }
+                catch (Exception exception)
+                {
+                    model.Error = exception.Message;
+                }
+                return model;
+            })
+            .Select(t => t.Result)
+            .ToList();
+            
+        // other services
+        foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+        {
+            if (ExternalServices.LightningServiceNames.Contains(key))
+            {
+                services.Add(new AdditionalServiceViewModel
+                {
+                    DisplayName = key,
+                    ServiceName = key,
+                    Type = key.Replace(" ", ""),
+                    Link = Request.GetAbsoluteUriNoPathBase(value).AbsoluteUri
+                });
             }
-
-            vm.Services = services;
         }
+
+        vm.Services = services;
 
         return View(vm);
     }

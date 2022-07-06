@@ -21,32 +21,27 @@ namespace BTCPayServer.Components.StoreRecentTransactions;
 
 public class StoreRecentTransactions : ViewComponent
 {
-    private string CryptoCode;
-    private readonly StoreRepository _storeRepo;
-    private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly BTCPayWalletProvider _walletProvider;
-
     public BTCPayNetworkProvider NetworkProvider { get; }
 
     public StoreRecentTransactions(
-        StoreRepository storeRepo,
         BTCPayNetworkProvider networkProvider,
-        NBXplorerConnectionFactory connectionFactory,
-        BTCPayWalletProvider walletProvider,
-        ApplicationDbContextFactory dbContextFactory)
+        BTCPayWalletProvider walletProvider)
     {
-        _storeRepo = storeRepo;
         NetworkProvider = networkProvider;
         _walletProvider = walletProvider;
-        _dbContextFactory = dbContextFactory;
-        CryptoCode = networkProvider.DefaultNetwork.CryptoCode;
     }
 
-
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store)
+    public async Task<IViewComponentResult> InvokeAsync(StoreRecentTransactionsViewModel vm)
     {
-        var walletId = new WalletId(store.Id, CryptoCode);
-        var derivationSettings = store.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
+        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
+
+        vm.WalletId = new WalletId(vm.Store.Id, vm.CryptoCode);
+        
+        if (vm.InitialRendering) return View(vm);
+        
+        var derivationSettings = vm.Store.GetDerivationSchemeSettings(NetworkProvider, vm.CryptoCode);
         var transactions = new List<StoreRecentTransactionViewModel>();
         if (derivationSettings?.AccountDerivation is not null)
         {
@@ -66,13 +61,8 @@ public class StoreRecentTransactions : ViewComponent
                 .ToList();
         }
 
-
-        var vm = new StoreRecentTransactionsViewModel
-        {
-            Store = store,
-            WalletId = walletId,
-            Transactions = transactions
-        };
+        vm.Transactions = transactions;
+        
         return View(vm);
     }
 }

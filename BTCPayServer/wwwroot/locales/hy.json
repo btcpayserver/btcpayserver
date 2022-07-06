@@ -48,5 +48,6 @@
   "Pay with Changelly": "Վճարել Changelly-ով",
   "Close": "Փակել",
   "NotPaid_ExtraTransaction": "Հաշիվը ամբողջությամբ չի վճարվել: Խնդրում ենք ուղարկել մեկ այլ գործարք՝ մնացած գումարը վճարելու համար:",
-  "Recommended_Fee": "Առաջարկվող վճար: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Առաջարկվող վճար: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

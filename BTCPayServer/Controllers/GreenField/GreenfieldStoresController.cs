@@ -25,13 +25,11 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
-        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, BTCPayNetworkProvider btcPayNetworkProvider)
+        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
         }
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
@@ -129,6 +127,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
@@ -166,6 +165,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
+            blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;

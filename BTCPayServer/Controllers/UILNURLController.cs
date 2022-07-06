@@ -342,7 +342,8 @@ namespace BTCPayServer
                 return NotFound("Store not found");
             }
 
-            currencyCode ??= store.GetStoreBlob().DefaultCurrency ?? cryptoCode;
+            var storeBlob = store.GetStoreBlob();
+            currencyCode ??= storeBlob.DefaultCurrency ?? cryptoCode;
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var lnpmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var methods = store.GetSupportedPaymentMethods(_btcPayNetworkProvider);
@@ -429,7 +430,6 @@ namespace BTCPayServer
             {
                 lnurlMetadata.Add(new[] {"text/identifier", lnAddress});
             }
-
             return Ok(new LNURLPayRequest
             {
                 Tag = "payRequest",
@@ -474,8 +474,7 @@ namespace BTCPayServer
                 var isTopup = i.IsUnsetTopUp();
                 var lnurlSupportedPaymentMethod =
                     i.GetSupportedPaymentMethod<LNURLPaySupportedPaymentMethod>(pmi).FirstOrDefault();
-                if (lnurlSupportedPaymentMethod is null ||
-                    (!isTopup && !lnurlSupportedPaymentMethod.EnableForStandardInvoices))
+                if (lnurlSupportedPaymentMethod is null)
                 {
                     return NotFound();
                 }
@@ -513,6 +512,18 @@ namespace BTCPayServer
                     return BadRequest(new LNUrlStatusResponse {Status = "ERROR", Reason = "Amount is out of bounds."});
                 }
 
+                LNURLPayRequest.LNURLPayRequestCallbackResponse.ILNURLPayRequestSuccessAction successAction = null;
+
+                if ((i.ReceiptOptions?.Enabled ??blob.ReceiptOptions.Enabled ) is true)
+                {
+                    successAction =
+                        new LNURLPayRequest.LNURLPayRequestCallbackResponse.LNURLPayRequestSuccessActionUrl()
+                        {
+                            Tag = "url",
+                            Description = "Thank you for your purchase. Here is your receipt",
+                            Url = _linkGenerator.GetUriByAction(HttpContext, "InvoiceReceipt", "UIInvoice", new { invoiceId})
+                        };
+                }
                 if (amount.HasValue && string.IsNullOrEmpty(paymentMethodDetails.BOLT11) ||
                     paymentMethodDetails.GeneratedBoltAmount != amount)
                 {
@@ -573,7 +584,8 @@ namespace BTCPayServer
                         paymentMethodDetails, pmi));
                     return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
                     {
-                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11
+                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11,
+                        SuccessAction = successAction
                     });
                 }
 
@@ -588,7 +600,8 @@ namespace BTCPayServer
 
                     return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
                     {
-                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11
+                        Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11,
+                        SuccessAction = successAction
                     });
                 }
 

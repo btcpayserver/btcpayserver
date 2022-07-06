@@ -48,5 +48,6 @@
   "Pay with Changelly": "Maksa käyttäen Changelly:ä",
   "Close": "Sulje",
   "NotPaid_ExtraTransaction": "Laskua ei ole maksettu kokonaan. Lähetä uusi maksu erääntyvän summan kattamiseksi.",
-  "Recommended_Fee": "Suositeltu siirtomaksu: {{feeRate}} sat/tavu"
+  "Recommended_Fee": "Suositeltu siirtomaksu: {{feeRate}} sat/tavu",
+  "View receipt": "View receipt"
 }

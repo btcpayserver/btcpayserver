@@ -46,10 +46,12 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
             LNURLPaySupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
-            BTCPayNetwork network, object preparePaymentObject)
+            BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
+            var lnPmi = new PaymentMethodId(supportedPaymentMethod.CryptoCode, PaymentTypes.LightningLike);
             if (!supportedPaymentMethod.EnableForStandardInvoices &&
-                paymentMethod.ParentEntity.Type == InvoiceType.Standard)
+                paymentMethod.ParentEntity.Type == InvoiceType.Standard &&  
+                invoicePaymentMethods.Contains(lnPmi))
             {
                 throw new PaymentMethodUnavailableException("LNURL is not enabled for standard invoices");
             }

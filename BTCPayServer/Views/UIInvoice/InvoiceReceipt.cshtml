@@ -1,0 +1,170 @@
+@model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Rates
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.ThemeSettings Theme
+@inject CurrencyNameTable CurrencyNameTable
+
+@{
+    Layout = null;
+    ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    var isProcessing = Model.Status == InvoiceStatus.Processing;
+    var isSettled = Model.Status == InvoiceStatus.Settled;
+}
+
+<!DOCTYPE html>
+<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<head>
+    <partial name="LayoutHead" />
+    <meta name="robots" content="noindex,nofollow">
+    @if (isProcessing)
+    {
+        <script type="text/javascript">       
+            setTimeout(() => { window.location.reload(); }, 10000); 
+        </script>
+    }
+    <style>
+        #InvoiceSummary { gap: var(--btcpay-space-l); }
+        #posData td > table:last-child { margin-bottom: 0 !important; }
+        #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
+    </style>
+</head>
+<body>
+    <div class="min-vh-100 d-flex flex-column">
+        <main class="flex-grow-1 py-5">
+            <div class="container" style="max-width:720px;">
+                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
+                
+                <div class="d-flex flex-column justify-content-center gap-4">
+                    <h1 class="h3 text-center">@ViewData["Title"]</h1>
+                    <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
+                        @if (isProcessing)
+                        {
+                            <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-processing">
+                                The invoice has detected a payment but is still waiting to be settled.
+                            </div>
+                        }
+                        else if (!isSettled)
+                        {
+                            <div class="lead text-center text-muted py-5 px-4 fw-semibold"  id="invoice-unsettled">
+                                The invoice is not settled.
+                            </div>
+                        }
+                        else
+                        {
+                            if (Model.ReceiptOptions.ShowQR is true)
+                            {
+                                <div class="mx-auto">
+                                    <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
+                                </div>
+                            }
+                            <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <button type="button" class="btn btn-link p-0 d-print-none fw-semibold order-1" onclick="window.print()">
+                                            Print
+                                        </button>
+                                        <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
+                                    </div>
+                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@CurrencyNameTable.DisplayFormatCurrency(Model.Amount, Model.Currency)</dt>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <dd class="text-muted mb-0 fw-semibold">Date</dd>
+                                    <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.OrderId))
+                                {
+                                    <div class="d-flex flex-column">
+                                        <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
+                                        <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
+                                    </div>
+                                }
+                            </dl>
+                        }
+                    </div>
+                    
+                    @if (isProcessing)
+                    {
+                        <small class="d-block text-muted text-center px-4">This page will refresh periodically until the invoice is settled.</small>
+                    }
+                    else if (isSettled)
+                    {
+                        if (Model.Payments?.Any() is true)
+                        {
+                            <div id="PaymentDetails" class="bg-tile p-3 p-sm-4 rounded">
+                                <h2 class="h4 mb-3 d-print-none">Payment Details</h2>
+                                <div class="table-responsive my-0">
+                                    <table class="table my-0">
+                                        <tr>
+                                            <th class="fw-normal text-secondary">Destination</th>
+                                            <th class="fw-normal text-secondary">Received</th>
+                                            <th class="fw-normal text-secondary text-end">Paid</th>
+                                            <th class="fw-normal text-secondary text-end">Rate</th>
+                                            <th class="fw-normal text-secondary text-end">Payment</th>
+                                        </tr>
+                                        @foreach (var payment in Model.Payments)
+                                        {
+                                            <tr class="table-borderless table-light">
+                                                <td class="text-break">
+                                                    <code>@payment.Destination</code>
+                                                </td>
+                                                <td>@payment.ReceivedDate.ToString("g")</td>
+                                                <td class="text-end">@payment.PaidFormatted</td>
+                                                <td class="text-end">@payment.RateFormatted</td>
+                                                <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
+                                            </tr>
+                                            <tr class="table-borderless table-light">
+                                                <td class="fw-normal" colspan="5">
+                                                    <span class="text-secondary">Transaction Id:</span>
+                                                    @if (!string.IsNullOrEmpty(payment.Link))
+                                                    {
+                                                        <a href="@payment.Link" class="text-print-default text-break" rel="noreferrer noopener" target="_blank">@payment.Id</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-break">@payment.Id</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                        if (Model.AdditionalData?.Any() is true)
+                        {
+                            <div id="AdditionalData" class="bg-tile p-3 p-sm-4 rounded">
+                                <h2 class="h4 mb-3 d-print-none">Additional Data</h2>
+                                <div class="table-responsive my-0">
+                                    <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </main>
+        <footer class="pt-2 pb-4 d-print-none">
+            <p class="container text-center" permission="@Policies.CanViewInvoices">
+                <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId">
+                    Admin details
+                </a>
+            </p>
+            <div class="container d-flex flex-wrap align-items-center justify-content-center">
+                <span class="text-muted mx-2">
+                    Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
+                </span>
+                @if (!Theme.CustomTheme)
+                {
+                    <vc:theme-switch css-class="text-muted mx-2" responsive="none"/>
+                }
+            </div>
+        </footer>
+    </div>
+    <partial name="LayoutFoot"/>
+</body>
+</html>
+

@@ -24,13 +24,13 @@
         }
         @if (Model.Series != null)
         {
-            <div class="btn-group mt-1" role="group" aria-label="Filter">
-                <input type="radio" class="btn-check" name="filter" id="filter-week" value="week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
-                <label class="btn btn-link" for="filter-week">1W</label>
-                <input type="radio" class="btn-check" name="filter" id="filter-month" value="month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
-                <label class="btn btn-link" for="filter-month">1M</label>
-                <input type="radio" class="btn-check" name="filter" id="filter-year" value="year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
-                <label class="btn btn-link" for="filter-year">1Y</label>
+            <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodWeek-@Model.Store.Id" value="@WalletHistogramType.Week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                <label class="btn btn-link" for="StoreWalletBalancePeriodWeek-@Model.Store.Id">1W</label>
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodMonth-@Model.Store.Id" value="@WalletHistogramType.Month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                <label class="btn btn-link" for="StoreWalletBalancePeriodMonth-@Model.Store.Id">1M</label>
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodYear-@Model.Store.Id" value="@WalletHistogramType.Year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                <label class="btn btn-link" for="StoreWalletBalancePeriodYear-@Model.Store.Id">1Y</label>
             </div>
         }
     </header>
@@ -114,7 +114,7 @@
             render(data);
             
             document.addEventListener('DOMContentLoaded', () => {
-                delegate('change', `#${id} [name="filter"]`, async e => {
+                delegate('change', `#${id} [name="StoreWalletBalancePeriod-${storeId}"]`, async e => {
                     const type = e.target.value;
                     await update(type);
                 })

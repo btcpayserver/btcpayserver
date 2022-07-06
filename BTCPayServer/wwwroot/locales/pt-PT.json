@@ -48,5 +48,6 @@
   "Pay with Changelly": "Pagar com Changelly",
   "Close": "Fechar",
   "NotPaid_ExtraTransaction": "A fatura não foi paga na totalidade. Por favor, faça outra transação para cobrir o valor em falta.",
-  "Recommended_Fee": "Taxa recomendada: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Taxa recomendada: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

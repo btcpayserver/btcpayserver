@@ -55,6 +55,19 @@
                 <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
+			<h3 class="mb-3">Public receipt</h3>
+            <div class="form-check my-1">
+                <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input" />
+                <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
+            </div>
+			<div class="form-check my-1">
+                <input asp-for="ReceiptOptions.ShowPayments" type="checkbox" class="form-check-input" />
+                <label asp-for="ReceiptOptions.ShowPayments" class="form-check-label"></label>
+            </div>
+			<div class="form-check my-1">
+                <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="form-check-input" />
+                <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
+            </div>
 
 
             <h3 class="mt-5 mb-3">Language</h3>

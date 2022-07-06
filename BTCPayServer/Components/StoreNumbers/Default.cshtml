@@ -1,30 +1,51 @@
 @model BTCPayServer.Components.StoreNumbers.StoreNumbersViewModel
 
-<div class="widget store-numbers">
-    <div class="store-number">
-        <header>
-            <h6>Payouts Pending</h6>
-            <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id">Manage</a>
-        </header>
-        <div class="h3">@Model.PayoutsPending</div>
-    </div>
-	@if (Model.Transactions is not null)
-	{
-		<div class="store-number">
-			<header>
-				<h6>TXs in the last @Model.TransactionDays days</h6>
-				@if (Model.Transactions.Value > 0)
-				{
-					<a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
-				}
-			</header>
-        <div class="h3">@Model.Transactions.Value</div>
-		</div>
-	}
-    <div class="store-number">
-        <header>
-            <h6>Refunds Issued</h6>
-        </header>
-        <div class="h3">@Model.RefundsIssued</div>
-    </div>
+<div class="widget store-numbers" id="StoreNumbers-@Model.Store.Id">
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("StoreNumbers", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.Store.Id);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreNumbers-${storeId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
+    else
+    {
+        <div class="store-number">
+            <header>
+                <h6>Payouts Pending</h6>
+                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id">Manage</a>
+            </header>
+            <div class="h3">@Model.PayoutsPending</div>
+        </div>
+        @if (Model.Transactions is not null)
+        {
+            <div class="store-number">
+                <header>
+                    <h6>TXs in the last @Model.TransactionDays days</h6>
+                    @if (Model.Transactions.Value > 0)
+                    {
+                        <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+                    }
+                </header>
+                <div class="h3">@Model.Transactions.Value</div>
+            </div>
+        }
+        <div class="store-number">
+            <header>
+                <h6>Refunds Issued</h6>
+            </header>
+            <div class="h3">@Model.RefundsIssued</div>
+        </div>
+    }
 </div>

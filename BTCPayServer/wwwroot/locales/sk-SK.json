@@ -48,5 +48,6 @@
   "Pay with Changelly": "Zaplatiť cez Changelly",
   "Close": "Zatvoriť",
   "NotPaid_ExtraTransaction": "Faktúra nebola uhradená v plnej výške. Prosím pošlite inú transakciu na pokrytie dlžnej sumy.",
-  "Recommended_Fee": "Odporúčaný poplatok: {{feeRate}} sat/bajt"
+  "Recommended_Fee": "Odporúčaný poplatok: {{feeRate}} sat/bajt",
+  "View receipt": "View receipt"
 }

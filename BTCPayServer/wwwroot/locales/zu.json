@@ -48,5 +48,6 @@
   "Pay with Changelly": "Khokha nge-Changelly",
   "Close": "Vala",
   "NotPaid_ExtraTransaction": "I-invoice ayikakhokhelwa ngokugcwele. Sicela uthumele enye imali oyokhokha ukuze ukhokhe inani elifanele.",
-  "Recommended_Fee": "Imali enconyiwe: {{feeRate}} sat / byte"
+  "Recommended_Fee": "Imali enconyiwe: {{feeRate}} sat / byte",
+  "View receipt": "View receipt"
 }

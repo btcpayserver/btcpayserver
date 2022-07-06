@@ -48,5 +48,6 @@
   "Pay with Changelly": "Changelly ile Öde",
   "Close": "Kapat",
   "NotPaid_ExtraTransaction": "Fatura tam olarak ödenmedi. Lütfen ödenmesi gereken tutarı karşılamak için başka bir işlem gönderin.",
-  "Recommended_Fee": "Önerilen ücret: {{feeRate}} sat/bayt"
+  "Recommended_Fee": "Önerilen ücret: {{feeRate}} sat/bayt",
+  "View receipt": "View receipt"
 }

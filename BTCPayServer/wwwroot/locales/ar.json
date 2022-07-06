@@ -48,5 +48,6 @@
   "Pay with Changelly": "ادفع عن طريق خدمة Changelly",
   "Close": "اغلاق",
   "NotPaid_ExtraTransaction": "لم يتم دفع الفاتورة بشكل كامل. من فضلك ارسل تحويلة اخري تغطي الثمن المتبقي.",
-  "Recommended_Fee": "العمولة المنصوح بها: {{feeRate}} sat/byte"
+  "Recommended_Fee": "العمولة المنصوح بها: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

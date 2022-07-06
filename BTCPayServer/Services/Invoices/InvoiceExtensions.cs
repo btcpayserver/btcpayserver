@@ -30,10 +30,11 @@ namespace BTCPayServer.Services.Invoices
                 InvoiceLogs logs = new InvoiceLogs();
                 try
                 {
+                    var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
                     logs.Write($"{paymentMethodId}: Activating", InvoiceEventData.EventSeverity.Info);
                     var newDetails = await
                         payHandler.CreatePaymentMethodDetails(logs, supportPayMethod, paymentMethod, store, network,
-                            prepare);
+                            prepare, pmis);
                     eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
                     await invoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, eligibleMethodToActivate);
                     eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));

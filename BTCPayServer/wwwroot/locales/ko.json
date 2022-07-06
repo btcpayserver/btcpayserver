@@ -48,5 +48,6 @@
   "Pay with Changelly": "Changelly를 이용해 지불하기",
   "Close": "닫기",
   "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "추천하는 수수료: {{feeRate}} sat/byte"
+  "Recommended_Fee": "추천하는 수수료: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

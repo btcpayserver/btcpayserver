@@ -283,12 +283,7 @@ namespace BTCPayServer.Services.Apps
             var invoices = await GetInvoicesForApp(app);
             var paidInvoices = invoices.Where(IsPaid).ToArray();
             var series = paidInvoices
-                .Where(entity => entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays) && (
-                     // The POS data is present for the cart view, where multiple items can be bought
-                     !string.IsNullOrEmpty(entity.Metadata.PosData) ||
-                     // The item code should be present for all types other than the cart and keypad
-                     !string.IsNullOrEmpty(entity.Metadata.ItemCode)
-                ))
+                .Where(entity => entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays))
                 .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
                 .GroupBy(entity => entity.Date)
                 .Select(entities => new SalesStatsItem
@@ -330,26 +325,7 @@ namespace BTCPayServer.Services.Apps
         {
             return (res, e) =>
             {
-                if (!string.IsNullOrEmpty(e.Metadata.ItemCode))
-                {
-                    var item = items.FirstOrDefault(p => p.Id == e.Metadata.ItemCode);
-                    if (item == null) return res;
-                    
-                    var fiatPrice = e.GetPayments(true).Sum(pay =>
-                    {
-                        var paymentMethodId = pay.GetPaymentMethodId();
-                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
-                        return rate * value;
-                    });
-                    res.Add(new InvoiceStatsItem
-                    {
-                        ItemCode = e.Metadata.ItemCode,
-                        FiatPrice = fiatPrice,
-                        Date = e.InvoiceTime.Date
-                    });
-                }
-                else if (!string.IsNullOrEmpty(e.Metadata.PosData))
+                if (!string.IsNullOrEmpty(e.Metadata.PosData))
                 {
                     // flatten single items from POS data
                     var data = JsonConvert.DeserializeObject<PosAppData>(e.Metadata.PosData);
@@ -369,6 +345,22 @@ namespace BTCPayServer.Services.Apps
                             });
                         }
                     }
+                }
+                else
+                {
+                    var fiatPrice = e.GetPayments(true).Sum(pay =>
+                    {
+                        var paymentMethodId = pay.GetPaymentMethodId();
+                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
+                        return rate * value;
+                    });
+                    res.Add(new InvoiceStatsItem
+                    {
+                        ItemCode = e.Metadata.ItemCode,
+                        FiatPrice = fiatPrice,
+                        Date = e.InvoiceTime.Date
+                    });
                 }
                 return res;
             };

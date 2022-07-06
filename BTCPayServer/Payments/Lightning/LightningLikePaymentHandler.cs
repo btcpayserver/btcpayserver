@@ -53,7 +53,7 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
-            BTCPayNetwork network, object preparePaymentObject)
+            BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             if (supportedPaymentMethod.DisableBOLT11PaymentOption)
             {

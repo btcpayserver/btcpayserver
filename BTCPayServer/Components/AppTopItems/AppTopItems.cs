@@ -12,24 +12,22 @@ namespace BTCPayServer.Components.AppTopItems;
 public class AppTopItems : ViewComponent
 {
     private readonly AppService _appService;
-    private readonly StoreRepository _storeRepo;
 
-    public AppTopItems(AppService appService, StoreRepository storeRepo)
+    public AppTopItems(AppService appService)
     {
         _appService = appService;
-        _storeRepo = storeRepo;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(AppData app)
+    public async Task<IViewComponentResult> InvokeAsync(AppTopItemsViewModel vm)
     {
-        var entries = Enum.Parse<AppType>(app.AppType) == AppType.Crowdfund
-            ? await _appService.GetPerkStats(app)
-            : await _appService.GetItemStats(app);
-        var vm = new AppTopItemsViewModel
-        {
-            App = app,
-            Entries = entries.ToList()
-        };
+        if (vm.App == null) throw new ArgumentNullException(nameof(vm.App));
+        if (vm.InitialRendering) return View(vm);
+        
+        var entries = Enum.Parse<AppType>(vm.App.AppType) == AppType.Crowdfund
+            ? await _appService.GetPerkStats(vm.App)
+            : await _appService.GetItemStats(vm.App);
+        
+        vm.Entries = entries.ToList();
 
         return View(vm);
     }

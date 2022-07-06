@@ -48,5 +48,6 @@
   "Pay with Changelly": "Плати с Changelly",
   "Close": "Затвори",
   "NotPaid_ExtraTransaction": "Фактурата не а платена изцяло. Моля пратете остатъка в допълнителна транзакция. ",
-  "Recommended_Fee": "Препоръчена тарифа: {{feeRate}} сат/байт (sat/byte)"
+  "Recommended_Fee": "Препоръчена тарифа: {{feeRate}} сат/байт (sat/byte)",
+  "View receipt": "View receipt"
 }

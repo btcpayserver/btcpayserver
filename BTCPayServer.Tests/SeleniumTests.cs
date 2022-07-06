@@ -14,6 +14,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
@@ -436,6 +437,61 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
+        }
+        
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseInvoiceReceipts()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.AddDerivationScheme();
+            s.GoToInvoices();
+            var i = s.CreateInvoice();
+            s.GoToInvoiceCheckout(i);
+            s.PayInvoice(true);
+            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.DoesNotContain("invoice-unsettled", s.Driver.PageSource);
+                Assert.DoesNotContain("invoice-processing", s.Driver.PageSource);
+            }); 
+            
+            Assert.Contains(s.Server.PayTester.GetService<CurrencyNameTable>().DisplayFormatCurrency(100, "USD"), 
+                s.Driver.PageSource);
+            Assert.Contains(i, s.Driver.PageSource);
+
+            s.GoToInvoices(s.StoreId);
+            i = s.CreateInvoice();
+            s.GoToInvoiceCheckout(i);
+            var receipturl = s.Driver.Url + "/receipt";
+            s.Driver.Navigate().GoToUrl(receipturl);
+            s.Driver.FindElement(By.Id("invoice-unsettled"));
+            
+            s.GoToInvoices(s.StoreId);
+            s.GoToInvoiceCheckout(i);
+            var checkouturi = s.Driver.Url;
+            s.PayInvoice();
+            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.DoesNotContain("invoice-unsettled", s.Driver.PageSource);
+                Assert.Contains("invoice-processing", s.Driver.PageSource);
+            }); 
+            s.GoToUrl(checkouturi);
+            s.MineBlockOnInvoiceCheckout();
+            
+            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.DoesNotContain("invoice-unsettled", s.Driver.PageSource);
+                Assert.DoesNotContain("invoice-processing", s.Driver.PageSource);
+            }); 
+            
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -32,7 +32,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public override PaymentType PaymentType => ZcashPaymentType.Instance;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, ZcashSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
-            StoreData store, ZcashLikeSpecificBtcPayNetwork network, object preparePaymentObject)
+            StoreData store, ZcashLikeSpecificBtcPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             
             if (preparePaymentObject is null)

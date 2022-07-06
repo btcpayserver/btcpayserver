@@ -48,5 +48,6 @@
   "Pay with Changelly": "Paga con Changelly",
   "Close": "Chiudi",
   "NotPaid_ExtraTransaction": "La fattura non è stata pagata per intero. Per favore effettua una nuova transazione per coprire l'importo dovuto.",
-  "Recommended_Fee": "Fee raccomandate: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Fee raccomandate: {{feeRate}} sat/byte",
+  "View receipt": "View receipt"
 }

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -47,6 +48,26 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
 
+        public class ReceiptOptionsViewModel
+        {
+            public static ReceiptOptionsViewModel Create(Client.Models.InvoiceDataBase.ReceiptOptions opts)
+            {
+                return JObject.FromObject(opts).ToObject<ReceiptOptionsViewModel>();
+            }
+            [Display(Name = "Enable public receipt page for settled invoices")]
+            public bool Enabled { get; set; }
+            
+            [Display(Name = "Show the QR code of the receipt in the public receipt page")]
+            public bool ShowQR { get; set; }
+
+            [Display(Name = "Show the payment list in the public receipt page")]
+            public bool ShowPayments { get; set; }
+            public Client.Models.InvoiceDataBase.ReceiptOptions ToDTO()
+            {
+                return JObject.FromObject(this).ToObject<Client.Models.InvoiceDataBase.ReceiptOptions>();
+            }
+        }
+        public ReceiptOptionsViewModel ReceiptOptions { get; set; } = ReceiptOptionsViewModel.Create(Client.Models.InvoiceDataBase.ReceiptOptions.CreateDefault());
         public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
     }
 

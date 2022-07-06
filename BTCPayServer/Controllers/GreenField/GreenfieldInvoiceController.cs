@@ -12,6 +12,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
@@ -389,7 +390,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 ReceivedDate = paymentEntity.ReceivedTime.DateTime
             };
         }
+
         private InvoiceData ToModel(InvoiceEntity entity)
+        {
+            return ToModel(entity, _linkGenerator, Request);
+        }
+
+        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, HttpRequest? request)
         {
             var statuses = new List<InvoiceStatus>();
             var state = entity.GetInvoiceState();
@@ -411,7 +418,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Amount = entity.Price,
                 Type = entity.Type,
                 Id = entity.Id,
-                CheckoutLink = _linkGenerator.CheckoutLink(entity.Id, Request.Scheme, Request.Host, Request.PathBase),
+                CheckoutLink = request is null? null: linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
                 Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
@@ -431,7 +438,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RequiresRefundEmail = entity.RequiresRefundEmail,
                     RedirectURL = entity.RedirectURLTemplate
-                }
+                },
+                Receipt = entity.ReceiptOptions
             };
         }
     }

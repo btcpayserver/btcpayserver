@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreName { get; set; }
         public decimal Amount { get; set; }
         public DateTimeOffset Timestamp { get; set; }
-        public Dictionary<string, object>? AdditionalData { get; set; }
+        public Dictionary<string, object> AdditionalData { get; set; }
         public ReceiptOptions ReceiptOptions { get; set; }
         public List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment> Payments { get; set; }
     }

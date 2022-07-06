@@ -112,13 +112,6 @@ namespace BTCPayServer.Payments
             throw new NotSupportedException("Invalid supportedPaymentMethod");
         }
 
-        public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, ISupportedPaymentMethod supportedPaymentMethod,
-            PaymentMethod paymentMethod, StoreData store, BTCPayNetworkBase network, object preparePaymentObject,
-            HashSet<PaymentMethodId> invoicePaymentMethods)
-        {
-            throw new NotImplementedException();
-        }
-
         object IPaymentMethodHandler.PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {

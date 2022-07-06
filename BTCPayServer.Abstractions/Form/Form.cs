@@ -29,13 +29,6 @@ public class Form
         return true;
     }
 
-    public void SetValue(string name, string value)
-    {
-        // TODO easy method for setting values on any field
-        
-        throw new System.NotImplementedException();
-    }
-
     public Field GetFieldByName(string name)
     {
         foreach (var fieldset in Fieldsets)

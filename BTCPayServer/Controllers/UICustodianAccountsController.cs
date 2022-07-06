@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Rates;
@@ -22,6 +23,7 @@ namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
+    [ExperimentalRouteAttribute]
     public class UICustodianAccountsController : Controller
     {
         public UICustodianAccountsController(

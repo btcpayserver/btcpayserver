@@ -59,7 +59,7 @@ namespace BTCPayServer.Client.Models
 
         public bool PayJoinEnabled { get; set; }
         
-        public InvoiceData.ReceiptOptions ReceiptOptions { get; set; }
+        public InvoiceData.ReceiptOptions Receipt { get; set; }
 
 
         [JsonExtensionData]

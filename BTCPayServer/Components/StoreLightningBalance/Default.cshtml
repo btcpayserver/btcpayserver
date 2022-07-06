@@ -22,7 +22,7 @@
     else if (Model.Balance != null)
     {
         <div class="balances d-flex flex-wrap">
-            @if (Model.TotalOffchain != LightMoney.Zero && Model.Balance.OffchainBalance != null)
+            @if (Model.Balance.OffchainBalance != null)
             {
                 <div class="balance">
                     <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain">@Model.TotalOffchain</h3>
@@ -31,7 +31,7 @@
                     </span>
 
                     <div class="balance-details collapse" id="balanceDetailsOffchain">
-                        @if (Model.Balance.OffchainBalance.Opening != null && Model.Balance.OffchainBalance.Opening != LightMoney.Zero)
+                        @if (Model.Balance.OffchainBalance.Opening != null)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Opening">
@@ -64,7 +64,7 @@
                                 </span>
                             </div>
                         }
-                        @if (Model.Balance.OffchainBalance.Closing != null && Model.Balance.OffchainBalance.Closing != LightMoney.Zero)
+                        @if (Model.Balance.OffchainBalance.Closing != null)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Closing">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
             }
-            @if (Model.TotalOnchain != LightMoney.Zero && Model.Balance.OnchainBalance != null)
+            @if (Model.Balance.OnchainBalance != null)
             {
                 <div class="balance">
                     <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain">@Model.TotalOnchain</h3>
@@ -86,7 +86,7 @@
                         <span class="currency">@Model.CryptoCode</span> on-chain
                     </span>
                     <div class="balance-details collapse" id="balanceDetailsOnchain">
-                        @if (Model.Balance.OnchainBalance.Confirmed != null && Model.Balance.OnchainBalance.Confirmed != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Confirmed != null)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Confirmed">
@@ -97,7 +97,7 @@
                                 </span>
                             </div>
                         }
-                        @if (Model.Balance.OnchainBalance.Unconfirmed != null && Model.Balance.OnchainBalance.Unconfirmed != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Unconfirmed != null)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Unconfirmed">
@@ -108,7 +108,7 @@
                                 </span>
                             </div>
                         }
-                        @if (Model.Balance.OnchainBalance.Reserved != null && Model.Balance.OnchainBalance.Reserved != LightMoney.Zero)
+                        @if (Model.Balance.OnchainBalance.Reserved != null)
                         {
                             <div class="mt-2">
                                 <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Reserved">
@@ -123,7 +123,7 @@
                 </div>
             }
         </div>
-        @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null && (Model.TotalOffchain != LightMoney.Zero || Model.TotalOnchain != LightMoney.Zero))
+        @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null)
         {
             <a class="d-inline-block mt-3" role="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">Show details</a>
         }

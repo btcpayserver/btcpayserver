@@ -281,7 +281,10 @@ namespace BTCPayServer.Controllers
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
-            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, skip, count);
+
+            // We can't filter at the database level if we need to apply label filter
+            var preFiltering = string.IsNullOrEmpty(labelFilter);
+            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
@@ -326,7 +329,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 model.Total = model.Transactions.Count;
-                model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).Skip(skip).Take(count)
+                model.Transactions = model.Transactions.Skip(skip).Take(count)
                     .ToList();
             }
 

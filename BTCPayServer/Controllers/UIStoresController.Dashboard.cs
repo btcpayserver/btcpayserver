@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
 
             return View(vm);
         }
-        
+
         [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
         public IActionResult LightningBalance(string storeId, string cryptoCode)
         {

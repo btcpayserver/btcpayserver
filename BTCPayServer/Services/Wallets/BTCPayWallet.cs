@@ -1,4 +1,5 @@
 using System;
+using Dapper;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,12 +40,13 @@ namespace BTCPayServer.Services.Wallets
     }
     public class BTCPayWallet
     {
+        public NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
         public Logs Logs { get; }
 
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
-            ApplicationDbContextFactory dbContextFactory, Logs logs)
+            ApplicationDbContextFactory dbContextFactory, NBXplorerConnectionFactory nbxplorerConnectionFactory, Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
             ArgumentNullException.ThrowIfNull(memoryCache);
@@ -52,6 +54,7 @@ namespace BTCPayServer.Services.Wallets
             _Client = client;
             _Network = network;
             _dbContextFactory = dbContextFactory;
+            NbxplorerConnectionFactory = nbxplorerConnectionFactory;
             _MemoryCache = memoryCache;
         }
 
@@ -199,9 +202,81 @@ namespace BTCPayServer.Services.Wallets
             return await completionSource.Task;
         }
 
-        public async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
+        List<TransactionInformation> dummy = new List<TransactionInformation>();
+        public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
         {
-            return FilterValidTransactions(await _Client.GetTransactionsAsync(derivationStrategyBase));
+            // This is two paths:
+            // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
+            // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
+            var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
+            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
+            {
+                var txs = await FetchTransactions(derivationStrategyBase);
+                var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
+                    .OrderByDescending(t => t.Timestamp)
+                    .Skip(skip is null ? 0 : skip.Value)
+                    .Take(count is null ? int.MaxValue : count.Value);
+                var lines = new List<TransactionHistoryLine>(Math.Min((count is int v ? v : int.MaxValue), txs.UnconfirmedTransactions.Transactions.Count + txs.ConfirmedTransactions.Transactions.Count));
+                DateTimeOffset? timestampLimit = interval is TimeSpan i ? DateTimeOffset.UtcNow - i : null;
+                foreach (var t in txinfos)
+                {
+                    if (timestampLimit is DateTimeOffset l &&
+                        t.Timestamp <= l)
+                        break;
+                    lines.Add(FromTransactionInformation(t));
+                }
+                return lines;
+            }
+            // This call is more efficient for big wallets, as it doesn't need to load all transactions from the history
+            else
+            {
+                await using var ctx = await NbxplorerConnectionFactory.OpenConnection();
+                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(
+                    "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
+                    "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
+                    "JOIN txs t USING (code, tx_id) " +
+                    "ORDER BY r.seen_at DESC", new
+                    {
+                        wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, derivationStrategyBase.ToString()),
+                        code = Network.CryptoCode,
+                        count,
+                        skip,
+                        interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
+                    });
+                rows.TryGetNonEnumeratedCount(out int c);
+                var lines = new List<TransactionHistoryLine>(c);
+                foreach (var row in rows)
+                {
+                    lines.Add(new TransactionHistoryLine()
+                    {
+                        BalanceChange = string.IsNullOrEmpty(row.asset_id) ? Money.Satoshis(row.balance_change) : new AssetMoney(uint256.Parse(row.asset_id), row.balance_change),
+                        Height = row.blk_height,
+                        SeenAt = row.seen_at,
+                        TransactionId = uint256.Parse(row.tx_id),
+                        Confirmations = row.confs,
+                        BlockHash = string.IsNullOrEmpty(row.asset_id) ? null : uint256.Parse(row.blk_id)
+                    });
+                }
+                return lines;
+            }
+        }
+
+        private static TransactionHistoryLine FromTransactionInformation(TransactionInformation t)
+        {
+            return new TransactionHistoryLine()
+            {
+                BalanceChange = t.BalanceChange,
+                Confirmations = t.Confirmations,
+                Height = t.Height,
+                SeenAt = t.Timestamp,
+                TransactionId = t.TransactionId
+            };
+        }
+
+        private async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
+        {
+            var transactions = await _Client.GetTransactionsAsync(derivationStrategyBase);
+            return FilterValidTransactions(transactions);
         }
 
         private GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
@@ -226,7 +301,7 @@ namespace BTCPayServer.Services.Wallets
             };
         }
 
-        public async Task<TransactionInformation> FetchTransaction(DerivationStrategyBase derivationStrategyBase, uint256 transactionId)
+        public async Task<TransactionHistoryLine> FetchTransaction(DerivationStrategyBase derivationStrategyBase, uint256 transactionId)
         {
             var tx = await _Client.GetTransactionAsync(derivationStrategyBase, transactionId);
             if (tx is null || !_Network.FilterValidTransactions(new List<TransactionInformation>() { tx }).Any())
@@ -234,7 +309,7 @@ namespace BTCPayServer.Services.Wallets
                 return null;
             }
 
-            return tx;
+            return FromTransactionInformation(tx);
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)
@@ -242,8 +317,6 @@ namespace BTCPayServer.Services.Wallets
             var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
-
-
 
         public async Task<ReceivedCoin[]> GetUnspentCoins(
             DerivationStrategyBase derivationStrategy,
@@ -275,5 +348,15 @@ namespace BTCPayServer.Services.Wallets
                 return result;
             });
         }
+    }
+
+    public class TransactionHistoryLine
+    {
+        public DateTimeOffset SeenAt { get; set; }
+        public long? Height { get; set; }
+        public long Confirmations { get; set; }
+        public uint256 TransactionId { get; set; }
+        public uint256 BlockHash { get; set; }
+        public IMoney BalanceChange { get; set; }
     }
 }

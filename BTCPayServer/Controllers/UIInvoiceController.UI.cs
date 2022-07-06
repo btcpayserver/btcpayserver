@@ -715,7 +715,7 @@ namespace BTCPayServer.Controllers
             }
             lang ??= storeBlob.DefaultLang;
 
-            var receiptEnabled = invoice.ReceiptOptions?.Enabled ?? storeBlob.ReceiptOptions.Enabled ?? false;
+            var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
             var receiptUrl = receiptEnabled? _linkGenerator.GetUriByAction(
                 nameof(UIInvoiceController.InvoiceReceipt),
                 "UIInvoice",

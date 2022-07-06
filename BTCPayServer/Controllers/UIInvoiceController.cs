@@ -281,18 +281,20 @@ namespace BTCPayServer.Controllers
 
                 // This loop ends with .ToList so we are querying all payment methods at once
                 // instead of sequentially to improve response time
-                foreach (var o in store.GetSupportedPaymentMethods(_NetworkProvider)
+                var x1 = store.GetSupportedPaymentMethods(_NetworkProvider)
                     .Where(s => !excludeFilter.Match(s.PaymentId) &&
                                 _paymentMethodHandlerDictionary.Support(s.PaymentId))
                     .Select(c =>
                         (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
                             SupportedPaymentMethod: c,
                             Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
-                    .Where(c => c.Network != null)
+                    .Where(c => c.Network != null).ToList();
+                var pmis = x1.Select(tuple => tuple.SupportedPaymentMethod.PaymentId).ToHashSet();
+                foreach (var o in x1
                     .Select(o =>
                         (SupportedPaymentMethod: o.SupportedPaymentMethod,
                             PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler,
-                                o.SupportedPaymentMethod, o.Network, entity, store, logs)))
+                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis)))
                     .ToList())
                 {
                     var paymentMethod = await o.PaymentMethod;
@@ -362,9 +364,12 @@ namespace BTCPayServer.Controllers
             }).ToArray());
         }
 
-        private async Task<PaymentMethod?> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair,
-            IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetworkBase network, InvoiceEntity entity,
-            StoreData store, InvoiceLogs logs)
+        private async Task<PaymentMethod?> CreatePaymentMethodAsync(
+            Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair,
+            IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetworkBase network,
+            InvoiceEntity entity,
+            StoreData store, InvoiceLogs logs,
+            HashSet<PaymentMethodId> invoicePaymentMethods)
         {
             try
             {
@@ -396,7 +401,7 @@ namespace BTCPayServer.Controllers
 
                 using (logs.Measure($"{logPrefix} Payment method details creation"))
                 {
-                    var paymentDetails = await handler.CreatePaymentMethodDetails(logs, supportedPaymentMethod, paymentMethod, store, network, preparePayment);
+                    var paymentDetails = await handler.CreatePaymentMethodDetails(logs, supportedPaymentMethod, paymentMethod, store, network, preparePayment, invoicePaymentMethods);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 

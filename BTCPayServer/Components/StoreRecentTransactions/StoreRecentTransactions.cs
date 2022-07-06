@@ -41,7 +41,7 @@ public class StoreRecentTransactions : ViewComponent
         
         if (vm.InitialRendering) return View(vm);
         
-        var derivationSettings = vm.Store.GetDerivationSchemeSettings(_networkProvider, vm.CryptoCode);
+        var derivationSettings = vm.Store.GetDerivationSchemeSettings(NetworkProvider, vm.CryptoCode);
         var transactions = new List<StoreRecentTransactionViewModel>();
         if (derivationSettings?.AccountDerivation is not null)
         {

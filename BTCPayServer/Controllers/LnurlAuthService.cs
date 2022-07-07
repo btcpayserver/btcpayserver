@@ -77,7 +77,6 @@ namespace BTCPayServer
             }
             catch (Exception e)
             {
-                _logger.LogInformation($"Could not authenticate lnurlauth challenge: {e.Message}\n{e.StackTrace}");
                 return false;
             }
         }

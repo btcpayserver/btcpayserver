@@ -53,9 +53,7 @@ namespace BTCPayServer.Controllers
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
 
             if (custodianAccount == null)
-            {
                 return NotFound();
-            }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
             if (custodian == null)
@@ -167,9 +165,7 @@ namespace BTCPayServer.Controllers
         {
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
-            {
                 return NotFound();
-            }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
             if (custodian == null)
@@ -194,9 +190,7 @@ namespace BTCPayServer.Controllers
 
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
-            {
                 return NotFound();
-            }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
             if (custodian == null)
@@ -259,40 +253,37 @@ namespace BTCPayServer.Controllers
             if (custodian == null)
             {
                 ModelState.AddModelError(nameof(vm.SelectedCustodian), "Invalid Custodian");
+                return View(vm);
             }
-            else
+            if (string.IsNullOrEmpty(vm.Name))
             {
-                if (string.IsNullOrEmpty(vm.Name))
-                {
-                    vm.Name = custodian.Name;
-                }
-
-                var custodianAccountData = new CustodianAccountData { CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name };
-
-
-                var configData = new JObject();
-                foreach (var pair in Request.Form)
-                {
-                    configData.Add(pair.Key, pair.Value.ToString());
-                }
-
-                var configForm = await custodian.GetConfigForm(configData, "en-US");
-                if (configForm.IsValid())
-                {
-                    // configForm.removeUnusedKeys();
-                    custodianAccountData.SetBlob(configData);
-                    custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
-                    TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
-                    CreatedCustodianAccountId = custodianAccountData.Id;
-
-                    return RedirectToAction(nameof(ViewCustodianAccount),
-                        new { storeId = custodianAccountData.StoreId, accountId = custodianAccountData.Id });
-                }
-
-                // Ask for more data
-                vm.ConfigForm = configForm;
+                vm.Name = custodian.Name;
             }
 
+            var custodianAccountData = new CustodianAccountData { CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name };
+
+
+            var configData = new JObject();
+            foreach (var pair in Request.Form)
+            {
+                configData.Add(pair.Key, pair.Value.ToString());
+            }
+
+            var configForm = await custodian.GetConfigForm(configData, "en-US");
+            if (configForm.IsValid())
+            {
+                // configForm.removeUnusedKeys();
+                custodianAccountData.SetBlob(configData);
+                custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
+                TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
+                CreatedCustodianAccountId = custodianAccountData.Id;
+
+                return RedirectToAction(nameof(ViewCustodianAccount),
+                    new { storeId = custodianAccountData.StoreId, accountId = custodianAccountData.Id });
+            }
+
+            // Ask for more data
+            vm.ConfigForm = configForm;
             return View(vm);
         }
 

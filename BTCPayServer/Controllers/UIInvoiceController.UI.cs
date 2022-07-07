@@ -170,6 +170,7 @@ namespace BTCPayServer.Controllers
                 {
                     InvoiceId = i.Id,
                     OrderId = i.Metadata?.OrderId,
+                    OrderUrl = i.Metadata?.OrderUrl,
                     StoreName = store.StoreName,
                     Status = i.Status.ToModernStatus()
                 });
@@ -186,6 +187,7 @@ namespace BTCPayServer.Controllers
                 Timestamp = i.InvoiceTime,
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
+                OrderUrl = i.Metadata?.OrderUrl,
                 Payments = receipt.ShowPayments is false ? null : i.GetPayments(true).Select(paymentEntity =>
                     {
                         var paymentData = paymentEntity.GetCryptoPaymentData();

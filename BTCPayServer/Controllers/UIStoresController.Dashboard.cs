@@ -1,7 +1,6 @@
 #nullable enable
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Components.StoreLightningBalance;
 using BTCPayServer.Components.StoreNumbers;
 using BTCPayServer.Components.StoreRecentInvoices;
 using BTCPayServer.Components.StoreRecentTransactions;
@@ -49,17 +48,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View(vm);
-        }
-
-        [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
-        public IActionResult LightningBalance(string storeId, string cryptoCode)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var vm = new StoreLightningBalanceViewModel { Store = store, CryptoCode = cryptoCode };
-            return ViewComponent("StoreLightningBalance", new { vm });
         }
         
         [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]

@@ -1,0 +1,327 @@
+﻿@using BTCPayServer.Services.Rates
+@using Microsoft.Extensions.Options
+@using BTCPayServer.Configuration
+@using BTCPayServer.Lightning
+@using BTCPayServer.Services
+@using BTCPayServer.Data
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Rating
+@using System.Threading
+@using BTCPayServer.Services.Stores
+@using Microsoft.AspNetCore.Http
+@using NBitcoin
+@inject CurrencyNameTable Currencies;
+@inject BTCPayNetworkProvider NetworkProvider;
+@inject LightningClientFactoryService LightningClientFactory;
+@inject IOptions<LightningNetworkOptions> LightningNetworkOptions;
+@inject RateFetcher RateProviderFactory
+@inject StoreRepository StoreRepository;
+@inject IHttpContextAccessor HttpContextAccessor;
+
+<div id="StoreLightningBalance-@StoreId" class="widget store-lightning-balance">
+    <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Lightning Balance</h6>
+        @if (CanSwitchCurrencies)
+        {
+            <EditForm Model="@this">
+                <InputRadioGroup 
+                    Name="StoreLightningBalance-currency"
+                    TValue="string" 
+                    Value="CurrentCurrency" 
+                    ValueChanged="SwitchCurrencies" 
+                    ValueExpression="() => CurrentCurrency ">
+
+                    <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                        <InputRadio Value="@CryptoCode" class="btn-check" name="StoreLightningBalance-currency" id="@($"StoreLightningBalance-currency_{CryptoCode}")"/>
+                        <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@CryptoCode">@CryptoCode</label>
+                        <InputRadio Value="@DefaultCurrency" class="btn-check" name="StoreLightningBalance-currency" id="@($"StoreLightningBalance-currency_{DefaultCurrency}")"/>
+                        <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@DefaultCurrency">@DefaultCurrency</label>
+                    </div>
+                </InputRadioGroup>
+            </EditForm>
+        }
+    </div>
+    @if (Loading || SwitchingCurrencies)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(ProblemDescription))
+    {
+        <p>@ProblemDescription</p>
+        <button type="button" @onclick="Load" class="btn btn-link" >Retry</button>
+    }
+    else if (Balance != null)
+    {
+        <div class="balances d-flex flex-wrap">
+            @if (Balance.OffchainBalance != null)
+            {
+                <div class="balance">
+                    <h3 class="d-inline-block me-1">@TotalOffchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@CurrentCurrency</span> in channels
+                    </span>
+
+                    <div class="balance-details collapse" id="balanceDetailsOffchain">
+                        @if (Balance.OffchainBalance.Opening != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OffchainBalance.Opening
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> opening channels
+                                </span>
+                            </div>
+                        }
+                        @if (Balance.OffchainBalance.Local != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OffchainBalance.Local
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> local balance
+                                </span>
+                            </div>
+                        }
+                        @if (Balance.OffchainBalance.Remote != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OffchainBalance.Remote
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> remote balance
+                                </span>
+                            </div>
+                        }
+                        @if (Balance.OffchainBalance.Closing != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OffchainBalance.Closing
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> closing channels
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            @if (Balance.OnchainBalance != null)
+            {
+                <div class="balance">
+                    <h3 class="d-inline-block me-1">@TotalOnchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@CurrentCurrency</span> on-chain
+                    </span>
+                    <div class="balance-details collapse" id="balanceDetailsOnchain">
+                        @if (Balance.OnchainBalance.Confirmed != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OnchainBalance.Confirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> confirmed
+                                </span>
+                            </div>
+                        }
+                        @if (Balance.OnchainBalance.Unconfirmed != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OnchainBalance.Unconfirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> unconfirmed
+                                </span>
+                            </div>
+                        }
+                        @if (Balance.OnchainBalance.Reserved != null)
+                        {
+                            <div class="mt-2">
+                                <span class="fw-semibold">
+                                    @Balance.OnchainBalance.Reserved
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    <span class="currency">@CurrentCurrency</span> reserved
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        @if (Balance.OffchainBalance != null && Balance.OnchainBalance != null)
+        {
+            <a class="d-inline-block mt-3" role="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">Show details</a>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CryptoCode
+    {
+        get => _cryptoCode;
+        set
+        {
+            var wasLoaded = _store is not null;
+            CurrencyRate = null;
+            _cryptoCode = value;
+            if(wasLoaded)
+                InvokeAsync(ReloadData);
+        }
+    }
+
+    [Parameter]
+    public string StoreId
+    {
+        get => _storeId;
+        set
+        {
+            var wasLoaded = _store is not null;
+            _store = null;
+            CurrencyRate = null;
+            _storeId = value;
+            if(wasLoaded)
+                InvokeAsync(ReloadData);
+        }
+    }
+    // We use this flag so that when asp.net prerenders the html on load, it shows the loading view
+    private bool _firstRun = true;
+    private string _storeId;
+    private string _cryptoCode;
+    private bool ShowDefaultCurrency { get; set; } = false;
+    private string CurrentCurrency => ShowDefaultCurrency && CurrencyRate is not null ? DefaultCurrency : CryptoCode;
+    private bool CanSwitchCurrencies => !Loading && !SwitchingCurrencies && DefaultCurrency != CryptoCode && string.IsNullOrEmpty(ProblemDescription);
+    private string DefaultCurrency { get; set; }
+    private CurrencyData CurrencyData { get; set; }
+    private Money TotalOnchain { get; set; }
+    private LightMoney TotalOffchain { get; set; }
+    private LightningNodeBalance Balance { get; set; }
+    private string ProblemDescription { get; set; }
+    private bool Loading { get; set; } = true;
+    private bool SwitchingCurrencies { get; set; }
+    private decimal? CurrencyRate { get; set; }
+
+    private StoreData _store;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // We check this to see if we are pre-rendering the component -- we wanrt to call the services AFTER the page is rendered to the user
+        if (HttpContextAccessor.HttpContext?.Response.HasStarted is true)
+            InvokeAsync(Load);
+    }
+
+    private async Task ReloadData()
+    {
+        await Load();
+        if (ShowDefaultCurrency)
+        {
+            ShowDefaultCurrency = false;
+            await SwitchCurrencies();
+        }
+    }
+
+    private async Task Load()
+    {
+        if (Loading && !_firstRun)
+        {
+            return;
+        }
+        _firstRun = false;
+        Loading = true;
+        try
+        {
+            ProblemDescription = null;
+            _store ??= await StoreRepository.FindStore(StoreId);
+            DefaultCurrency = _store.GetStoreBlob().DefaultCurrency;
+            CurrencyData = Currencies.GetCurrencyData(DefaultCurrency, true);
+            var lightningClient = GetLightningClient(_store, CryptoCode);
+            var balance = await lightningClient.GetBalance();
+            Balance = balance;
+            TotalOnchain = balance.OnchainBalance != null
+                ? (balance.OnchainBalance.Confirmed ?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
+                  (balance.OnchainBalance.Unconfirmed ?? 0L)
+                : null;
+            TotalOffchain = balance.OffchainBalance != null
+                ? (balance.OffchainBalance.Opening ?? 0) + (balance.OffchainBalance.Local ?? 0) +
+                  (balance.OffchainBalance.Closing ?? 0)
+                : null;
+        }
+        catch (NotSupportedException)
+        {
+            // not all implementations support balance fetching
+            ProblemDescription = "Your node does not support balance fetching.";
+        }
+        catch
+        {
+            // general error
+            ProblemDescription = "Could not fetch Lightning balance.";
+        }
+        finally
+        {
+            Loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SwitchCurrencies(string? currency = null)
+    {
+        if (SwitchingCurrencies || Loading)
+        {
+            return;
+        }
+        if (currency?.Equals(CurrentCurrency) is true)
+        {
+            return;
+        }
+        SwitchingCurrencies = true;
+        if (CurrencyRate is null)
+        {
+            try
+            {
+                var rateRules = _store.GetStoreBlob().GetRateRules(NetworkProvider);
+                CurrencyRate = (await RateProviderFactory.FetchRate(new CurrencyPair(CryptoCode, DefaultCurrency), rateRules, CancellationToken.None)).BidAsk.Bid;
+            }
+            catch (Exception)
+            {
+                SwitchingCurrencies = false;
+                return;
+            }
+        }
+        ShowDefaultCurrency = !ShowDefaultCurrency;
+        SwitchingCurrencies = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private ILightningClient GetLightningClient(StoreData store, string cryptoCode)
+    {
+        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+        var existing = store.GetSupportedPaymentMethods(NetworkProvider)
+            .OfType<LightningSupportedPaymentMethod>()
+            .FirstOrDefault(d => d.PaymentId == id);
+        if (existing == null) return null;
+
+        if (existing.GetExternalLightningUrl() is {} connectionString)
+        {
+            return LightningClientFactory.Create(connectionString, network);
+        }
+        if (existing.IsInternalNode && LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
+        {
+            return LightningClientFactory.Create(internalLightningNode, network);
+        }
+
+        return null;
+    }
+}

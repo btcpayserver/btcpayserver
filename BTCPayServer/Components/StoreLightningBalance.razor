@@ -3,20 +3,13 @@
 @using BTCPayServer.Configuration
 @using BTCPayServer.Lightning
 @using BTCPayServer.Services
-@using BTCPayServer.Data
-@using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
-@using BTCPayServer.Rating
-@using System.Threading
-@using BTCPayServer.Services.Stores
 @using Microsoft.AspNetCore.Http
 @using NBitcoin
 @inject CurrencyNameTable Currencies;
 @inject BTCPayNetworkProvider NetworkProvider;
 @inject LightningClientFactoryService LightningClientFactory;
 @inject IOptions<LightningNetworkOptions> LightningNetworkOptions;
-@inject RateFetcher RateProviderFactory
-@inject StoreRepository StoreRepository;
 @inject IHttpContextAccessor HttpContextAccessor;
 
 <div id="StoreLightningBalance-@StoreId" class="widget store-lightning-balance">
@@ -25,12 +18,10 @@
         @if (CanSwitchCurrencies)
         {
             <EditForm Model="@this">
-                <InputRadioGroup 
+                <InputRadioGroup
                     Name="StoreLightningBalance-currency"
-                    TValue="string" 
-                    Value="CurrentCurrency" 
-                    ValueChanged="SwitchCurrencies" 
-                    ValueExpression="() => CurrentCurrency ">
+                    TValue="string"
+                    @bind-Value="CurrentCurrency">
 
                     <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
                         <InputRadio Value="@CryptoCode" class="btn-check" name="StoreLightningBalance-currency" id="@($"StoreLightningBalance-currency_{CryptoCode}")"/>
@@ -42,7 +33,7 @@
             </EditForm>
         }
     </div>
-    @if (Loading || SwitchingCurrencies)
+    @if (Loading)
     {
         <div class="loading d-flex justify-content-center p-3">
             <div class="spinner-border text-light" role="status">
@@ -53,7 +44,7 @@
     @if (!string.IsNullOrEmpty(ProblemDescription))
     {
         <p>@ProblemDescription</p>
-        <button type="button" @onclick="Load" class="btn btn-link" >Retry</button>
+        <button type="button" @onclick="Load" class="btn btn-link">Retry</button>
     }
     else if (Balance != null)
     {
@@ -168,68 +159,51 @@
 
 @code {
     [Parameter]
-    public string CryptoCode
+    public string CryptoCode { get; set; }
+
+    [Parameter]
+    public string StoreId { get; set; }
+
+    [Parameter]
+    public string DefaultCurrency { get; set; }
+
+    [Parameter]
+    public string LightningConnectionString { get; set; }
+
+    [Parameter]
+    public decimal? CurrencyRate { get; set; }
+
+    // We use this flag so that when asp.net pre-renders the html on load, it shows the loading view
+    private bool _firstRun = true;
+    private bool ShowDefaultCurrency { get; set; }
+
+    private string CurrentCurrency
     {
-        get => _cryptoCode;
+        get => ShowDefaultCurrency && CurrencyRate is not null ? DefaultCurrency : CryptoCode;
         set
         {
-            var wasLoaded = _store is not null;
-            CurrencyRate = null;
-            _cryptoCode = value;
-            if(wasLoaded)
-                InvokeAsync(ReloadData);
+            var setValue = value != CryptoCode;
+            if (ShowDefaultCurrency == setValue) return;
+            ShowDefaultCurrency = setValue;
+            InvokeAsync(StateHasChanged);
         }
     }
 
-    [Parameter]
-    public string StoreId
-    {
-        get => _storeId;
-        set
-        {
-            var wasLoaded = _store is not null;
-            _store = null;
-            CurrencyRate = null;
-            _storeId = value;
-            if(wasLoaded)
-                InvokeAsync(ReloadData);
-        }
-    }
-    // We use this flag so that when asp.net prerenders the html on load, it shows the loading view
-    private bool _firstRun = true;
-    private string _storeId;
-    private string _cryptoCode;
-    private bool ShowDefaultCurrency { get; set; } = false;
-    private string CurrentCurrency => ShowDefaultCurrency && CurrencyRate is not null ? DefaultCurrency : CryptoCode;
-    private bool CanSwitchCurrencies => !Loading && !SwitchingCurrencies && DefaultCurrency != CryptoCode && string.IsNullOrEmpty(ProblemDescription);
-    private string DefaultCurrency { get; set; }
+    private bool CanSwitchCurrencies => !Loading && DefaultCurrency != CryptoCode && string.IsNullOrEmpty(ProblemDescription) && CurrencyRate is not null;
+
     private CurrencyData CurrencyData { get; set; }
     private Money TotalOnchain { get; set; }
     private LightMoney TotalOffchain { get; set; }
     private LightningNodeBalance Balance { get; set; }
     private string ProblemDescription { get; set; }
     private bool Loading { get; set; } = true;
-    private bool SwitchingCurrencies { get; set; }
-    private decimal? CurrencyRate { get; set; }
-
-    private StoreData _store;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        // We check this to see if we are pre-rendering the component -- we wanrt to call the services AFTER the page is rendered to the user
+        // We check this to see if we are pre-rendering the component -- we want to call the services AFTER the page is rendered to the user
         if (HttpContextAccessor.HttpContext?.Response.HasStarted is true)
             InvokeAsync(Load);
-    }
-
-    private async Task ReloadData()
-    {
-        await Load();
-        if (ShowDefaultCurrency)
-        {
-            ShowDefaultCurrency = false;
-            await SwitchCurrencies();
-        }
     }
 
     private async Task Load()
@@ -243,10 +217,8 @@
         try
         {
             ProblemDescription = null;
-            _store ??= await StoreRepository.FindStore(StoreId);
-            DefaultCurrency = _store.GetStoreBlob().DefaultCurrency;
-            CurrencyData = Currencies.GetCurrencyData(DefaultCurrency, true);
-            var lightningClient = GetLightningClient(_store, CryptoCode);
+            CurrencyData ??= Currencies.GetCurrencyData(DefaultCurrency, true);
+            var lightningClient = GetLightningClient();
             var balance = await lightningClient.GetBalance();
             Balance = balance;
             TotalOnchain = balance.OnchainBalance != null
@@ -275,53 +247,16 @@
         }
     }
 
-    private async Task SwitchCurrencies(string? currency = null)
+    private ILightningClient GetLightningClient()
     {
-        if (SwitchingCurrencies || Loading)
-        {
-            return;
-        }
-        if (currency?.Equals(CurrentCurrency) is true)
-        {
-            return;
-        }
-        SwitchingCurrencies = true;
-        if (CurrencyRate is null)
-        {
-            try
-            {
-                var rateRules = _store.GetStoreBlob().GetRateRules(NetworkProvider);
-                CurrencyRate = (await RateProviderFactory.FetchRate(new CurrencyPair(CryptoCode, DefaultCurrency), rateRules, CancellationToken.None)).BidAsk.Bid;
-            }
-            catch (Exception)
-            {
-                SwitchingCurrencies = false;
-                return;
-            }
-        }
-        ShowDefaultCurrency = !ShowDefaultCurrency;
-        SwitchingCurrencies = false;
-        await InvokeAsync(StateHasChanged);
-    }
+        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(CryptoCode);
+        var isInternal = LightningConnectionString == LightningSupportedPaymentMethod.InternalNode;
 
-    private ILightningClient GetLightningClient(StoreData store, string cryptoCode)
-    {
-        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-        var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-        var existing = store.GetSupportedPaymentMethods(NetworkProvider)
-            .OfType<LightningSupportedPaymentMethod>()
-            .FirstOrDefault(d => d.PaymentId == id);
-        if (existing == null) return null;
-
-        if (existing.GetExternalLightningUrl() is {} connectionString)
+        return isInternal switch
         {
-            return LightningClientFactory.Create(connectionString, network);
-        }
-        if (existing.IsInternalNode && LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
-        {
-            return LightningClientFactory.Create(internalLightningNode, network);
-        }
-
-        return null;
+            false when Lightning.LightningConnectionString.TryParse(LightningConnectionString, out var connectionString) => LightningClientFactory.Create(connectionString, network),
+            true when LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(CryptoCode, out var internalLightningNode) => LightningClientFactory.Create(internalLightningNode, network),
+            _ => null
+            };
     }
 }

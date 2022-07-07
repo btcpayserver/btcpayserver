@@ -6,11 +6,23 @@
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Components.AppTopItems
 @using BTCPayServer.Components
+@using BTCPayServer.Rating
+@using BTCPayServer.Services.Rates
+@using System.Threading
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
 @model StoreDashboardViewModel;
+@inject RateFetcher RateProviderFactory
 
+@inject BTCPayNetworkProvider NetworkProvider;
 @{
     ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
+    var blob = store.GetStoreBlob();
+    var rateRules = blob.GetRateRules(NetworkProvider);
+    var defaultCurrency = blob.DefaultCurrency;
+    var currencyRate = (await RateProviderFactory.FetchRate(new CurrencyPair(Model.CryptoCode, defaultCurrency), rateRules, CancellationToken.None))?.BidAsk?.Bid;
+
 }
 @section PageHeadContent {
     <base href="~/" />
@@ -122,7 +134,21 @@
         <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
         @if (Model.LightningEnabled)
         {
-            @(await Html.RenderComponentAsync<StoreLightningBalance>(RenderMode.ServerPrerendered, new {Model.CryptoCode, StoreId=store.Id}))
+            
+                
+            var id = new PaymentMethodId(Model.CryptoCode, PaymentTypes.LightningLike);
+            var existing = store.GetSupportedPaymentMethods(NetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            var lnConnString = existing.InternalNodeRef ?? existing.LightningConnectionString;
+            @(await Html.RenderComponentAsync<StoreLightningBalance>(RenderMode.ServerPrerendered, new
+            {
+                Model.CryptoCode, 
+                StoreId=store.Id,
+                DefaultCurrency = defaultCurrency,
+                LightningConnectionString = lnConnString,
+                CurrencyRate = currencyRate
+            }))
             <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel {Store = store, CryptoCode = Model.CryptoCode})"/>
         }
         @if (Model.WalletEnabled)

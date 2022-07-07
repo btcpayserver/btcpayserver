@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Invoices;
@@ -35,7 +36,8 @@ namespace BTCPayServer.Components.MainNav
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            CustodianAccountRepository custodianAccountRepository )
+            CustodianAccountRepository custodianAccountRepository,
+            PoliciesSettings policiesSettings)
         {
             _storeRepo = storeRepo;
             _appService = appService;
@@ -44,6 +46,7 @@ namespace BTCPayServer.Components.MainNav
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _custodianAccountRepository = custodianAccountRepository;
+            PoliciesSettings = policiesSettings;
         }
 
         public async Task<IViewComponentResult> InvokeAsync()
@@ -72,15 +75,21 @@ namespace BTCPayServer.Components.MainNav
                     AppType = a.AppType,
                     IsOwner = a.IsOwner
                 }).ToList();
-                
-                // Custodian Accounts
-                var custodianAccounts = await _custodianAccountRepository.FindByStoreId(store.Id);
-                vm.CustodianAccounts = custodianAccounts;
+
+
+                if (PoliciesSettings.Experimental)
+                {
+                    // Custodian Accounts
+                    var custodianAccounts = await _custodianAccountRepository.FindByStoreId(store.Id);
+                    vm.CustodianAccounts = custodianAccounts;
+                }
             }
 
             return View(vm);
         }
 
         private string UserId => _userManager.GetUserId(HttpContext.User);
+
+        public PoliciesSettings PoliciesSettings { get; }
     }
 }

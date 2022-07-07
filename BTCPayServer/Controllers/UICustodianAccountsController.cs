@@ -58,6 +58,11 @@ namespace BTCPayServer.Controllers
             }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
 
             vm.Custodian = custodian;
             vm.CustodianAccount = custodianAccount;
@@ -167,6 +172,11 @@ namespace BTCPayServer.Controllers
             }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
             var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
 
             var vm = new EditCustodianAccountViewModel();
@@ -189,6 +199,11 @@ namespace BTCPayServer.Controllers
             }
 
             var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
             var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), locale);
 
             var newData = new JObject();

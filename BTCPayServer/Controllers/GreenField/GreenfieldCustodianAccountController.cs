@@ -83,6 +83,10 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
             var custodianAccountData = await GetCustodianAccount(storeId, accountId);
+            if (custodianAccountData == null)
+            {
+                return this.CreateAPIError(404, "custodian-account-not-found", "The custodian account was not found.");
+            }
             var custodianAccount = await ToModel(custodianAccountData, assetBalances, cancellationToken);
             return Ok(custodianAccount);
         }

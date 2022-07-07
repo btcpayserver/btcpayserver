@@ -1,4 +1,3 @@
-@using BTCPayServer.Components.StoreLightningBalance
 @using BTCPayServer.Components.StoreLightningServices
 @using BTCPayServer.Components.StoreNumbers
 @using BTCPayServer.Components.StoreRecentInvoices
@@ -8,14 +7,18 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Components.AppTopItems
+@using BTCPayServer.Components
 @model StoreDashboardViewModel;
 
 @{
     ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
 }
-
-<partial name="_StatusMessage" />
+@section PageHeadContent {
+    <base href="~/" />
+    <script src="_framework/blazor.server.js"></script>
+}
+<partial name="_StatusMessage"/>
 
 <div class="d-flex align-items-center justify-content-between">
     <h2 class="mb-0">@ViewData["Title"]</h2>
@@ -117,8 +120,8 @@
         <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
         @if (Model.LightningEnabled)
         {
-            <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
-            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })"/>
+            @(await Html.RenderComponentAsync<StoreLightningBalance>(RenderMode.ServerPrerendered, new {Model.CryptoCode, StoreId=store.Id}))
+            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel {Store = store, CryptoCode = Model.CryptoCode})"/>
         }
         @if (Model.WalletEnabled)
         {

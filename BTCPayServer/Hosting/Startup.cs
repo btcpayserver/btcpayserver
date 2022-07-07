@@ -145,6 +145,7 @@ namespace BTCPayServer.Hosting
             .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
 
+            services.AddServerSideBlazor();
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);
 
@@ -273,7 +274,8 @@ namespace BTCPayServer.Hosting
                     ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
                 }
             });
-
+            // Blazor's js file is not served if we do not do another call to UseStaticFiles with empty overload
+            app.UseStaticFiles();
             app.UseProviderStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
@@ -293,6 +295,7 @@ namespace BTCPayServer.Hosting
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
+                endpoints.MapBlazorHub();
             });
             app.UsePlugins();
         }

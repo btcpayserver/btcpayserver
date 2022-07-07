@@ -140,23 +140,28 @@
             <th class="fw-semibold">Invoice Id</th>
             <td>@Model.Id</td>
         </tr>
-        @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+        @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
         {
             <tr>
                 <th class="fw-semibold">Order Id</th>
                 <td>
-
-                    <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
-                        @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
-                        {
-                            <span>View Order</span>
-                        }
-                        else
-                        {
-                            @Model.TypedMetadata.OrderId
-                        }
-                    </a>
-
+					@if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+					{
+						<a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+							@if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+							{
+								<span>View Order</span>
+							}
+							else
+							{
+								@Model.TypedMetadata.OrderId
+							}
+						</a>
+					}
+					else
+					{
+						<span>@Model.TypedMetadata.OrderId</span>
+					}
                 </td>
             </tr>
         }

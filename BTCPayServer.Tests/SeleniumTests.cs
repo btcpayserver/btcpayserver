@@ -417,24 +417,23 @@ namespace BTCPayServer.Tests
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
 
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-            Assert.Contains("Settled (marked)", s.Driver.PageSource);
+            s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
         }
@@ -562,7 +561,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no invoices matching your criteria.", s.Driver.PageSource);
             var invoiceId = s.CreateInvoice();
             s.FindAlertMessage();
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+            
             var invoiceUrl = s.Driver.Url;
 
             //let's test archiving an invoice

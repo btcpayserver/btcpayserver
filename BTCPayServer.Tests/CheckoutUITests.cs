@@ -37,9 +37,6 @@ namespace BTCPayServer.Tests
             s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
             s.GoToHome();
             s.CreateInvoice();
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-            s.Driver.AssertNoError();
-            s.Driver.Navigate().Back();
             s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
 
@@ -102,9 +99,6 @@ namespace BTCPayServer.Tests
 
             // Now create an invoice that doesn't require a refund email
             s.CreateInvoice(100, "USD", "", null, false);
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-            s.Driver.AssertNoError();
-            s.Driver.Navigate().Back();
             s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
             s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
@@ -115,9 +109,6 @@ namespace BTCPayServer.Tests
 
             // Now create an invoice that requires refund email but already has one set, email input shouldn't show up
             s.CreateInvoice(100, "USD", "a@g.com", null, true);
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-            s.Driver.AssertNoError();
-            s.Driver.Navigate().Back();
             s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
             s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));

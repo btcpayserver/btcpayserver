@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
 
@@ -80,10 +82,51 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId,
             [FromQuery] bool assetBalances = false, CancellationToken cancellationToken = default)
         {
-            var custodianAccountData = await GetCustodian(storeId, accountId);
+            var custodianAccountData = await GetCustodianAccount(storeId, accountId);
+            if (custodianAccountData == null)
+            {
+                return this.CreateAPIError(404, "custodian-account-not-found", "The custodian account was not found.");
+            }
             var custodianAccount = await ToModel(custodianAccountData, assetBalances, cancellationToken);
             return Ok(custodianAccount);
         }
+        
+        // [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
+        // [Authorize(Policy = Policies.CanManageCustodianAccounts,
+        //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        // public async Task<IActionResult> FetchCustodianAccountConfigForm(string storeId, string accountId,
+        //     [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
+        // {
+        //     // TODO this endpoint needs tests
+        //     var custodianAccountData = await GetCustodianAccount(storeId, accountId);
+        //     var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
+        //     
+        //     var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+        //     var form = await custodian.GetConfigForm(custodianAccount.Config, locale, cancellationToken);
+        //         
+        //     return Ok(form);
+        // }
+        //
+        // [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
+        // [Authorize(Policy = Policies.CanManageCustodianAccounts,
+        //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        // public async Task<IActionResult> PostCustodianAccountConfigForm(string storeId, string accountId, JObject values,
+        //     [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
+        // {
+        //     // TODO this endpoint needs tests
+        //     var custodianAccountData = await GetCustodianAccount(storeId, accountId);
+        //     var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
+        //     
+        //     var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+        //     var form = await custodian.GetConfigForm(values, locale, cancellationToken);
+        //     
+        //     if (form.IsValid())
+        //     {
+        //         // TODO save the data to the config so it is persisted
+        //     }
+        //     
+        //     return Ok(form);
+        // }
 
         private async Task<bool> CanSeeCustodianAccountConfig()
         {
@@ -138,7 +181,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             request ??= new CreateCustodianAccountRequest();
 
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(request.CustodianCode);
 
             // TODO If storeId is not valid, we get a foreign key SQL error. Is this okay or do we want to check the storeId first?
@@ -171,7 +214,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
             var config = custodianAccount.GetBlob();
 
@@ -198,7 +241,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
@@ -248,7 +291,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     $"Please use 'BTC' instead of 'SATS'.");
             }
 
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
 
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
@@ -267,7 +310,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanTrade tradableCustodian)
@@ -292,7 +335,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreateWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)
@@ -309,7 +352,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        async Task<CustodianAccountData> GetCustodian(string storeId, string accountId)
+        async Task<CustodianAccountData> GetCustodianAccount(string storeId, string accountId)
         {
             var cust = await _custodianAccountRepository.FindById(storeId, accountId);
             if (cust is null)
@@ -335,7 +378,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken cancellationToken = default)
         {
-            var custodianAccount = await GetCustodian(storeId, accountId);
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
             var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
 
             if (custodian is ICanWithdraw withdrawableCustodian)

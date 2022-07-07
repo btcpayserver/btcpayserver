@@ -8,7 +8,14 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using BTCPayServer.Components.Icon
+@using BTCPayServer.Components.ThemeSwitch
+@using BTCPayServer.Components.UIExtensionPoint
+@using BTCPayServer.Security
 @using BTCPayServer.Services
+@using BTCPayServer.TagHelpers
+@using BTCPayServer.Views.CustodianAccounts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
 @inject PoliciesSettings PoliciesSettings
@@ -92,6 +99,30 @@
                                         
                                     </li>
                                 }
+                                
+                                @if (PoliciesSettings.Experimental)
+                                {
+                                    @foreach (var custodianAccount in Model.CustodianAccounts)
+                                    {
+                                        <li class="nav-item">
+                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
+                                                <!--
+                                                TODO which icon should we use?
+                                                -->
+                                                <span>@custodianAccount.Name</span>
+                                                <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    <li class="nav-item">
+                                        <a asp-area="" asp-controller="UICustodianAccounts" asp-action="CreateCustodianAccount" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.Create)" id="StoreNav-CreateApp">
+                                            <vc:icon symbol="new"/>
+                                            <span>Add Custodian</span>
+                                            <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
+                                        </a>
+                                    </li>
+                                }
+                                
                             </ul>
                         </div>
                     </div>

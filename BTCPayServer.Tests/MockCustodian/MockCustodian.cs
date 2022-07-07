@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
@@ -48,6 +49,11 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
             { "BTC", BalanceBTC }, { "LTC", BalanceLTC }, { "USD", BalanceUSD }, { "EUR", BalanceEUR },
         };
         return Task.FromResult(r);
+    }
+
+    public Task<Form> GetConfigForm(JObject config, string locale, CancellationToken cancellationToken = default)
+    {
+        return null;
     }
 
     public Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)

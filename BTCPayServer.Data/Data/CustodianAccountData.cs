@@ -19,6 +19,7 @@ public class CustodianAccountData
     [MaxLength(50)]
     public string CustodianCode { get; set; }
     
+    [Required]
     [MaxLength(50)]
     public string Name { get; set; }
     

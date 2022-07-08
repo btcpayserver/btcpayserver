@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.6.0
+
+### New features:
+
+* Dashboard: Add Lightning balances and easy access to lightning services (#3838) @dennisreimann
+* Dashboard: Add Point Of Sale data (#3897) @dennisreimann @dstrukt
+* Greenfield: Basic API Get and Delete operations for apps (#3894) @bolatovumar
+* Greenfield: Add Lightning balance endpoint (#3887) @dennisreimann
+* Greenfield: Allow excluding unconfirmed UTXOs when creating a new transaction (#3737) @bolatovumar
+* Checkout: Public invoice's receipt (#3612) @Kukks
+* Can disable TLS certificate check for email servers @NicolasDorier
+* Can add sender's name to any field accepting an email destination, for example `Nicolas Dorier <blah@example.com>` rather than just `blah@example.com` (#3891) @NicolasDorier
+* Support LNURL Withdraw in payouts (#3709) @Kukks
+* Can send parametized emails based on invoice events (#3611) @Kukks
+* Dashboard: Added toggle button to switch to store default currency (#3752) @SakshamSolanki @dennisreimann 
+* Support Lightning node connection string with onion addresses (#3845) @Kukks
+* New rate provider: BUDA a chilean exchange (#3766) @Kukks
+* Add Refunds list to Invoice details page (#3815) @Kukks
+
+### Bug fixes:
+
+* UI: Fix cancel plugin command (#3903) @dennisreimann 
+* Crowdfunding: Fix the links for the default Quake sounds (#3745) @dennisreimann
+* UI: Fix nav height issue on mobile devices (#3888) @bolatovumar
+* UI: Fix mark all notifications as seen return URL (#3848) @dennisreimann
+* UI: When disabling a user, then it as an admin, attempting to remove or enable the user would fail while showing success in the UI (#3829 #3832) @rustywave
+* Deleting an admin gives a 500 error, and cannot disable the same user (#3785 #3818) @rustywave
+* Fix some rate providers (#3813) @Kukks
+* Dashboard: Do not display archived invoices in recent invoices (#3783) @dennisreimann
+* Error happening when broadcasting transactions weren't shown in the UI @NicolasDorier
+* If LNURL for standard invoice was disabled, and PoS print view used, the QR code would throw error 404 (#3930) @Kukks
+
+### Improvements:
+
+* Don't show "Set up a Lightning node" when LN is not supported (#3935) @bolatovumar
+* Redirect to invoice details instead of list upon creation (#3936) @bolatovumar
+* Better UI/UX for on-chain send and receive (#3921) @dennisreimann @dstrukt
+* Add refund badge to invoice lists (#3918) @Kukks
+* Creating and editing a payment request now redirect to the payment request list (#3825) @rustywave
+* Crowdfunding: Several UI/UX improvement for the settings (#3708 #3488) @dennisreimann @dstrukt
+* Improve the refund flow (#3715 #3731) @dstrukt @dennisreimann
+* Improve email settings validation and UX (#3891) @NicolasDorier
+* Add spam rate limits for public invoice endpoints (#3782 #3889) @NicolasDorier
+* Greenfield doc: Adding description to `speedPolicy` parameter (#3877) @ndeet
+* UI: Improvement of Crowdfund & PoS Modal (#3806) @dstrukt @dennisreimann
+* Server Settings: Consolidate Storage and Files (#3863) @dennisreimann
+* Move `View` action to the `Name` column in Payouts & Payment Requests (#3873) @dstrukt @dennisreimann
+* UI: Properly report Shopify errors when testing new settings (#3853) @NicolasDorier
+* Mobile header improvements (#3826) @dennisreimann
+* Notification modal improvements (#3784) @dstrukt
+* Improve payouts UI (#3792) @dstrukt @dennisreimann
+* Update language to explicitly request view-only wallet files (b1f62f74cde09d124fe308f5af9e255522add288) @sethforprivacy
+* Open public app views in new tab/window (#3920) @dennisreimann
+
 ## 1.5.4
 
 ### New features:

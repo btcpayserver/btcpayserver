@@ -37,7 +37,8 @@ public class StoreLightningServices : ViewComponent
         if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
         if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
         if (vm.LightningNodeType != LightningNodeType.Internal) return View(vm);
-        
+        if (!User.IsInRole(Roles.ServerAdmin)) return View(vm);
+
         var services = _externalServiceOptions.Value.ExternalServices.ToList()
             .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
             .Select(async service =>
@@ -51,7 +52,7 @@ public class StoreLightningServices : ViewComponent
                 };
                 try
                 {
-                    model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
+                    model.Link = service.GetRedirectLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
                 }
                 catch (Exception exception)
                 {

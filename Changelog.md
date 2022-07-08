@@ -31,6 +31,7 @@
 * Dashboard: Do not display archived invoices in recent invoices (#3783) @dennisreimann
 * Error happening when broadcasting transactions weren't shown in the UI @NicolasDorier
 * If LNURL for standard invoice was disabled, and PoS print view used, the QR code would throw error 404 (#3930) @Kukks
+* On Ubuntu 22.04 the server restart/update feature from UI didn't work due to incompatible SSH client key algo @NicolasDorier @petzsch
 
 ### Improvements:
 

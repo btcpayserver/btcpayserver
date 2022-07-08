@@ -1011,7 +1011,7 @@ namespace BTCPayServer.Tests
             var actualSig = headers["BTCPay-Sig"].First();
             var bytes = await request.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
             var expectedSig =
-                $"sha256={Encoders.Hex.EncodeData(new HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld")).ComputeHash(bytes))}";
+                $"sha256={Encoders.Hex.EncodeData(NBitcoin.Crypto.Hashes.HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld"), bytes))}";
             Assert.Equal(expectedSig, actualSig);
             request.Response.StatusCode = 200;
             server.Done();

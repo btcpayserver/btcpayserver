@@ -219,17 +219,17 @@
                 "properties": {
                     "confirmed": {
                         "type": "string",
-                        "description": "The confirmed amount in millisatoshi",
+                        "description": "The confirmed amount in satoshi",
                         "nullable": true
                     },
                     "unconfirmed": {
                         "type": "string",
-                        "description": "The unconfirmed amount in millisatoshi",
+                        "description": "The unconfirmed amount in satoshi",
                         "nullable": true
                     },
                     "reserved": {
                         "type": "string",
-                        "description": "The reserved amount in millisatoshi",
+                        "description": "The reserved amount in satoshi",
                         "nullable": true
                     }
                 }

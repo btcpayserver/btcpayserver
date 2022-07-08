@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;

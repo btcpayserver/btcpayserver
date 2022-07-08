@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
                                 assetBalance.FormattedFiatValue = _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid, pair.Value.FiatAsset);
                                 assetBalance.TradableAssetPairs = tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
                             }
-                            catch (WrongTradingPairException e)
+                            catch (WrongTradingPairException)
                             {
                                 // Cannot trade this asset, just ignore
                             }

@@ -817,6 +817,7 @@ namespace BTCPayServer.Tests
             return ex;
         }
 
+        [Obsolete("Use AssertApiError() instead, as it also checks the API error code")]
         private async Task AssertHttpError(int code, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<GreenfieldAPIException>(act);
@@ -2704,7 +2705,16 @@ namespace BTCPayServer.Tests
             Assert.Equal(singleViewerCustodianAccount.CustodianCode, custodian.Code);
             Assert.Null(singleViewerCustodianAccount.Config);
 
-
+            // Fetching the config form for 1 custodian account
+            // Unauth
+            await AssertApiError(401, "forbidden", async () => await unauthClient.GetCustodianAccountConfigForm(storeId, accountId));
+            
+            // Auth, but wrong permission
+            // TODO complete this
+            
+            // Correct auth: you get the config form
+            // TODO complete this
+            
 
             // Test updating the custodian account we created
             var updateCustodianAccountRequest = createCustodianAccountRequest;

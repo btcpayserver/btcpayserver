@@ -91,22 +91,22 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(custodianAccount);
         }
         
-        // [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
-        // [Authorize(Policy = Policies.CanManageCustodianAccounts,
-        //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        // public async Task<IActionResult> FetchCustodianAccountConfigForm(string storeId, string accountId,
-        //     [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
-        // {
-        //     // TODO this endpoint needs tests
-        //     var custodianAccountData = await GetCustodianAccount(storeId, accountId);
-        //     var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
-        //     
-        //     var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
-        //     var form = await custodian.GetConfigForm(custodianAccount.Config, locale, cancellationToken);
-        //         
-        //     return Ok(form);
-        // }
-        //
+        [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
+        [Authorize(Policy = Policies.CanManageCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> FetchCustodianAccountConfigForm(string storeId, string accountId,
+            [FromQuery] string locale = "en-US", CancellationToken cancellationToken = default)
+        {
+            // TODO this endpoint needs tests
+            var custodianAccountData = await GetCustodianAccount(storeId, accountId);
+            var custodianAccount = await ToModel(custodianAccountData, false, cancellationToken);
+            
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+            var form = await custodian.GetConfigForm(custodianAccount.Config, locale, cancellationToken);
+                
+            return Ok(form);
+        }
+        
         // [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
         // [Authorize(Policy = Policies.CanManageCustodianAccounts,
         //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

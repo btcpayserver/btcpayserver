@@ -52,7 +52,7 @@ public class StoreLightningServices : ViewComponent
                 };
                 try
                 {
-                    model.Link = service.GetRedirectLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
+                    model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
                 }
                 catch (Exception exception)
                 {

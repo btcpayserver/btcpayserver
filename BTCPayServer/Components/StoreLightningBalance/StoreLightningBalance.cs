@@ -61,8 +61,8 @@ public class StoreLightningBalance : ViewComponent
             var balance = await lightningClient.GetBalance();
             vm.Balance = balance;
             vm.TotalOnchain = balance.OnchainBalance != null
-                ? (balance.OnchainBalance.Confirmed?? 0) + (balance.OnchainBalance.Reserved ?? 0) +
-                  (balance.OnchainBalance.Unconfirmed ?? 0)
+                ? (balance.OnchainBalance.Confirmed?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
+                  (balance.OnchainBalance.Unconfirmed ?? 0L)
                 : null;
             vm.TotalOffchain = balance.OffchainBalance != null
                 ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +

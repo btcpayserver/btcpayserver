@@ -145,23 +145,23 @@
             <tr>
                 <th class="fw-semibold">Order Id</th>
                 <td>
-					@if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
-					{
-						<a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
-							@if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
-							{
-								<span>View Order</span>
-							}
-							else
-							{
-								@Model.TypedMetadata.OrderId
-							}
-						</a>
-					}
-					else
-					{
-						<span>@Model.TypedMetadata.OrderId</span>
-					}
+                    @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+                    {
+                        <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+                            @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                            {
+                                <span>View Order</span>
+                            }
+                            else
+                            {
+                                @Model.TypedMetadata.OrderId
+                            }
+                        </a>
+                    }
+                    else
+                    {
+                        <span>@Model.TypedMetadata.OrderId</span>
+                    }
                 </td>
             </tr>
         }
@@ -412,12 +412,14 @@
     </div>
 }
 </div>
+
+<h3 class="mb-0">Invoice Summary</h3>
 <partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
 
 @if (Model.Deliveries.Count != 0)
 {
+    <h3 class="mb-3 mt-4">Webhooks</h3>
     <div class="table-responsive-xl">
-        <h3 class="mb-3 mt-4">Webhooks</h3>
         <table class="table table-hover table-responsive-md mb-5">
             <thead class="thead-inverse">
             <tr>
@@ -491,8 +493,8 @@
 
 @if ((Model.Refunds?.Count ?? 0) > 0)
 {
+    <h3 class="mb-3 mt-4">Refunds</h3>
     <div class="table-responsive-xl">
-        <h3 class="mb-3 mt-4">Refunds</h3>
         <table class="table table-hover table-responsive-md mb-5">
             <thead class="thead-inverse">
             <tr>

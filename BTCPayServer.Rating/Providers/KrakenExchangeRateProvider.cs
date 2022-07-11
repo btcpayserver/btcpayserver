@@ -108,6 +108,8 @@ namespace BTCPayServer.Services.Rates
                         else
                         {
                             global = await helper.ExchangeMarketSymbolToGlobalMarketSymbolAsync(symbol);
+                            var s = global.Split('-');
+                            global = $"{s[1]}_{s[0]}";
                         }
                         if (CurrencyPair.TryParse(global, out var pair))
                             result.Add(new PairRate(pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));

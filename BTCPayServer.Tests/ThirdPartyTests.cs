@@ -128,6 +128,10 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
+                    if (name == "kraken")
+                    {
+                        Assert.Contains(exchangeRates.ByExchange[name], e => e.CurrencyPair == new CurrencyPair("XMR", "BTC"));
+                    }
                     // This check if the currency pair is using right currency pair
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||

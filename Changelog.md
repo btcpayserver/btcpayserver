@@ -3,7 +3,7 @@
 ## 1.6.1
 
 This fix a critical issue introduced by 1.6.0.
-If you are using kraken rate provider with altcoins integration, you need to update urgently.
+If you are using altcoins integration, you need to update urgently as some change rate may be inverted for some pairs.
 
 ### Bug fixes:
 

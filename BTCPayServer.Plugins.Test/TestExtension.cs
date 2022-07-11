@@ -19,6 +19,7 @@ namespace BTCPayServer.Plugins.Test
         {
             services.AddSingleton<IUIExtension>(new UIExtension("TestExtensionNavExtension", "header-nav"));
             services.AddHostedService<ApplicationPartsLogger>();
+            services.AddHostedService<TestPluginMigrationRunner>();
             services.AddSingleton<TestPluginService>();
             services.AddSingleton<TestPluginDbContextFactory>();
             services.AddDbContext<TestPluginDbContext>((provider, o) =>
@@ -26,14 +27,6 @@ namespace BTCPayServer.Plugins.Test
                 var factory = provider.GetRequiredService<TestPluginDbContextFactory>();
                 factory.ConfigureBuilder(o);
             });
-        }
-
-        public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
-        {
-            base.Execute(applicationBuilder, applicationBuilderApplicationServices);
-            applicationBuilderApplicationServices.GetService<TestPluginDbContextFactory>().CreateContext().Database.Migrate();
-            applicationBuilderApplicationServices.GetService<TestPluginService>().AddTestDataRecord().GetAwaiter().GetResult();
-
         }
     }
 }

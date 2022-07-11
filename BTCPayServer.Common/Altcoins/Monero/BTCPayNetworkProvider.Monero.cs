@@ -18,7 +18,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[]
                 {
                     "XMR_X = XMR_BTC * BTC_X",
-                    "XMR_BTC = kraken(XMR_BTC)"
+                    "XMR_BTC = kraken(BTC_XMR)"
                 },
                 CryptoImagePath = "/imlegacy/monero.svg",
                 UriScheme = "monero"

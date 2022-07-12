@@ -139,13 +139,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     async Task<bool> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
         BOLT11PaymentRequest bolt11PaymentRequest)
     {
-        var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-        if (boltAmount != payoutBlob.CryptoAmount)
-        {
-            return false;
-        }
-
-        var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
-        return result.Result == PayResult.Ok;
+        return (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData, bolt11PaymentRequest,
+            payoutData.GetPaymentMethodId())).Result == PayResult.Ok;
     }
 }

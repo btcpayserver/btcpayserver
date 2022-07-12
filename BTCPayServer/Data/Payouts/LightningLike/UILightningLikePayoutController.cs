@@ -249,7 +249,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return View("LightningPayoutResult", results);
         }
         
-        async Task<ResultVM> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, PaymentMethodId pmi)
+        public static async Task<ResultVM> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, PaymentMethodId pmi)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
             if (boltAmount != payoutBlob.CryptoAmount)
@@ -258,7 +258,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     PayoutId = payoutData.Id,
                     Result = PayResult.Error,
-                    Message = $"The BOLT11 invoice amount ({_currencyNameTable.DisplayFormatCurrency(boltAmount, pmi.CryptoCode)}) did not match the payout's amount ({_currencyNameTable.DisplayFormatCurrency(payoutBlob.CryptoAmount.GetValueOrDefault(), pmi.CryptoCode)})",
+                    Message = $"The BOLT11 invoice amount ({boltAmount} {pmi.CryptoCode}) did not match the payout's amount ({payoutBlob.CryptoAmount.GetValueOrDefault()} {pmi.CryptoCode})",
                     Destination = payoutBlob.Destination
                 };
             }

@@ -23,7 +23,7 @@
                     </ul>
                     <div v-if="showData && data">
                         <div class="input-group input-group-sm" :data-clipboard="data">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="data">
+                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="data" id="qr-code-data-input">
                             <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm="">Copy</button>
                         </div>
                     </div>

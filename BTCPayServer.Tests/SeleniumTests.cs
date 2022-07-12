@@ -1577,7 +1577,9 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
-            var lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            var lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
             Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
             Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
@@ -1609,7 +1611,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
-            lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
+           
+            s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
             Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
             Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));

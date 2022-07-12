@@ -70,7 +70,7 @@
                                 <div class="input-group">
                                     @if (lnurl is not null)
                                     {
-                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
+                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
                                             <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
                                         </button>
                                     }
@@ -248,8 +248,7 @@
 
     <script>
 	    
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+        document.addEventListener("DOMContentLoaded", () => {
             const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
             qrApp.data = null;
             qrApp.showData = true;
@@ -264,5 +263,10 @@
     });
     </script>
   }
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+        });
+</script>
 </body>
 </html>

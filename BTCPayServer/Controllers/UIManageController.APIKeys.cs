@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel
             {
                 Title = "Delete API key",
-                DescriptionHtml = true,
                 Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
                 Action = "Delete",
                 ActionName = nameof(DeleteAPIKeyPost)

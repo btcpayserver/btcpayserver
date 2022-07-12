@@ -80,7 +80,9 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                 switch (claim.destination)
                 {
                     case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
-                        var endpoint = LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out var tag);
+                        var endpoint = MailboxAddressValidator.IsMailboxAddress(lnurlPayClaimDestinaton.LNURL)
+                            ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
+                            : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
                         var httpClient = _payoutHandler.CreateClient(endpoint);
                         var lnurlInfo =
                             (LNURLPayRequest)await LNURL.LNURL.FetchInformation(endpoint, "payRequest",

@@ -123,7 +123,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             await SetStoreContext();
             
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var payoutHandler = _payoutHandlers.FindPayoutHandler(pmi);
+            var payoutHandler = (LightningLikePayoutHandler) _payoutHandlers.FindPayoutHandler(pmi);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
 
@@ -132,47 +132,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
 
             //we group per store and init the transfers by each
-            async Task TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest)
-            {
-                var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-                if (boltAmount != payoutBlob.CryptoAmount)
-                {
-                    results.Add(new ResultVM
-                    {
-                        PayoutId = payoutData.Id,
-                        Result = PayResult.Error,
-                        Message = $"The BOLT11 invoice amount ({_currencyNameTable.DisplayFormatCurrency(boltAmount, pmi.CryptoCode)}) did not match the payout's amount ({_currencyNameTable.DisplayFormatCurrency(payoutBlob.CryptoAmount.GetValueOrDefault(), pmi.CryptoCode)})",
-                        Destination = payoutBlob.Destination
-                    });
-                    return;
-                }
-                var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
-                if (result.Result == PayResult.Ok)
-                {
-                    var message = result.Details?.TotalAmount != null
-                        ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
-                        : null;
-                    results.Add(new ResultVM
-                    {
-                        PayoutId = payoutData.Id,
-                        Result = result.Result,
-                        Destination = payoutBlob.Destination,
-                        Message = message
-                    });
-                    payoutData.State = PayoutState.Completed;
-                }
-                else
-                {
-                    results.Add(new ResultVM
-                    {
-                        PayoutId = payoutData.Id,
-                        Result = result.Result,
-                        Destination = payoutBlob.Destination,
-                        Message = result.ErrorDetail
-                    });
-                }
-            }
-
+          
             var authorizedForInternalNode = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
             foreach (var payoutDatas in payouts)
             {
@@ -205,6 +165,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                         _lightningClientFactoryService);
                 foreach (var payoutData in payoutDatas)
                 {
+                    ResultVM result;
                     var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
                     var claim = await payoutHandler.ParseClaimDestination(pmi, blob.Destination);
                     try
@@ -212,7 +173,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                         switch (claim.destination)
                         {
                             case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
-                                var endpoint = LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
+                                var endpoint = MailboxAddressValidator.IsMailboxAddress(lnurlPayClaimDestinaton.LNURL)
+                                    ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
+                                    : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
                                 var lightningPayoutHandler = (LightningLikePayoutHandler)payoutHandler;
                                 var httpClient = lightningPayoutHandler.CreateClient(endpoint);
                                 var lnurlInfo =
@@ -221,14 +184,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
                                 if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
                                 {
-                                    results.Add(new ResultVM
+                                    result= new ResultVM
                                     {
                                         PayoutId = payoutData.Id,
                                         Result = PayResult.Error,
                                         Destination = blob.Destination,
                                         Message =
                                             $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
-                                    });
+                                    };
                                 }
                                 else
                                 {
@@ -237,53 +200,93 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                         var lnurlPayRequestCallbackResponse =
                                             await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
 
-                                        await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork));
+                                        result = await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork), pmi);
                                     }
                                     catch (LNUrlException e)
                                     {
-                                        results.Add(new ResultVM
+                                        result = new ResultVM
                                         {
                                             PayoutId = payoutData.Id,
                                             Result = PayResult.Error,
                                             Destination = blob.Destination,
                                             Message = e.Message
-                                        });
+                                        };
                                     }
                                 }
 
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
+                               result =  await TrypayBolt(client, blob, payoutData, item1.PaymentRequest, pmi);
 
                                 break;
                             default:
-                                results.Add(new ResultVM
+                                result= new ResultVM
                                 {
                                     PayoutId = payoutData.Id,
                                     Result = PayResult.Error,
                                     Destination = blob.Destination,
                                     Message = claim.error
-                                });
+                                };
                                 break;
                         }
                     }
                     catch (Exception exception)
                     {
-                        results.Add(new ResultVM
+                        result = new ResultVM
                         {
                             PayoutId = payoutData.Id,
                             Result = PayResult.Error,
                             Destination = blob.Destination,
                             Message = exception.Message
-                        });
+                        };
                     }
+                    results.Add(result);
                 }
             }
 
             await ctx.SaveChangesAsync();
             return View("LightningPayoutResult", results);
         }
+        
+        async Task<ResultVM> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, PaymentMethodId pmi)
+        {
+            var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+            if (boltAmount != payoutBlob.CryptoAmount)
+            {
+                return new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = PayResult.Error,
+                    Message = $"The BOLT11 invoice amount ({_currencyNameTable.DisplayFormatCurrency(boltAmount, pmi.CryptoCode)}) did not match the payout's amount ({_currencyNameTable.DisplayFormatCurrency(payoutBlob.CryptoAmount.GetValueOrDefault(), pmi.CryptoCode)})",
+                    Destination = payoutBlob.Destination
+                };
+            }
+            var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(), new PayInvoiceParams());
+            if (result.Result == PayResult.Ok)
+            {
+                var message = result.Details?.TotalAmount != null
+                    ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
+                    : null;
+                payoutData.State = PayoutState.Completed;
+                return new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = result.Result,
+                    Destination = payoutBlob.Destination,
+                    Message = message
+                };
+            }
+
+            return new ResultVM
+            {
+                PayoutId = payoutData.Id,
+                Result = result.Result,
+                Destination = payoutBlob.Destination,
+                Message = result.ErrorDetail
+            };
+        }
+
 
         private async Task SetStoreContext()
         {

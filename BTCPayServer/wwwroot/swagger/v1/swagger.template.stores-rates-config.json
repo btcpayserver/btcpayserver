@@ -21,14 +21,14 @@
                                 }
                             }
                         }
-                    },
-                    "security": [
-                        {
-                            "API_Key": [],
-                            "Basic": []
-                        }
-                    ]
-                }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/rates/configuration": {

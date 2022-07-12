@@ -114,9 +114,6 @@ h2 small .fa-question-circle-o {
 }
 
 /* Invoices */
-.invoice-payments {
-    padding: var(--btcpay-space-m) var(--btcpay-space-l);
-}
 .invoice-details-row {
     background: var(--btcpay-bg-tile);
 }

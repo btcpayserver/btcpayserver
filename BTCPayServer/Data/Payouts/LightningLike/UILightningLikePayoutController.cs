@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using NBitcoin;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
@@ -173,45 +174,15 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                         switch (claim.destination)
                         {
                             case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
-                                var endpoint = MailboxAddressValidator.IsMailboxAddress(lnurlPayClaimDestinaton.LNURL)
-                                    ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
-                                    : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
-                                var lightningPayoutHandler = (LightningLikePayoutHandler)payoutHandler;
-                                var httpClient = lightningPayoutHandler.CreateClient(endpoint);
-                                var lnurlInfo =
-                                    (LNURLPayRequest)await LNURL.LNURL.FetchInformation(endpoint, "payRequest",
-                                        httpClient);
-                                var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
-                                if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
+                                var lnurlResult = await GetInvoiceFromLNURL(payoutData, payoutHandler, blob,
+                                    lnurlPayClaimDestinaton, network.NBitcoinNetwork);
+                                if (lnurlResult.Item2 is not null)
                                 {
-                                    result= new ResultVM
-                                    {
-                                        PayoutId = payoutData.Id,
-                                        Result = PayResult.Error,
-                                        Destination = blob.Destination,
-                                        Message =
-                                            $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
-                                    };
+                                    result = lnurlResult.Item2;
                                 }
                                 else
                                 {
-                                    try
-                                    {
-                                        var lnurlPayRequestCallbackResponse =
-                                            await lnurlInfo.SendRequest(lm, network.NBitcoinNetwork, httpClient);
-
-                                        result = await TrypayBolt(client, blob, payoutData, lnurlPayRequestCallbackResponse.GetPaymentRequest(network.NBitcoinNetwork), pmi);
-                                    }
-                                    catch (LNUrlException e)
-                                    {
-                                        result = new ResultVM
-                                        {
-                                            PayoutId = payoutData.Id,
-                                            Result = PayResult.Error,
-                                            Destination = blob.Destination,
-                                            Message = e.Message
-                                        };
-                                    }
+                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, pmi);
                                 }
 
                                 break;
@@ -248,6 +219,49 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             await ctx.SaveChangesAsync();
             return View("LightningPayoutResult", results);
         }
+        public static async Task<(BOLT11PaymentRequest, ResultVM)> GetInvoiceFromLNURL(PayoutData payoutData,
+            LightningLikePayoutHandler handler,PayoutBlob blob, LNURLPayClaimDestinaton lnurlPayClaimDestinaton, Network network)
+        {
+            var endpoint = MailboxAddressValidator.IsMailboxAddress(lnurlPayClaimDestinaton.LNURL)
+                ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
+                : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
+            var httpClient = handler.CreateClient(endpoint);
+            var lnurlInfo =
+                (LNURLPayRequest)await LNURL.LNURL.FetchInformation(endpoint, "payRequest",
+                    httpClient);
+            var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
+            if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
+            {
+                return (null, new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = PayResult.Error,
+                    Destination = blob.Destination,
+                    Message =
+                        $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
+                });
+            }
+            
+            try
+            {
+                var lnurlPayRequestCallbackResponse =
+                    await lnurlInfo.SendRequest(lm, network, httpClient);
+
+                return (lnurlPayRequestCallbackResponse.GetPaymentRequest(network), null);
+            }
+            catch (LNUrlException e)
+            {
+                return (null,
+                    new ResultVM
+                    {
+                        PayoutId = payoutData.Id,
+                        Result = PayResult.Error,
+                        Destination = blob.Destination,
+                        Message = e.Message
+                    });
+            }
+        }
+        
         
         public static async Task<ResultVM> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, PaymentMethodId pmi)
         {

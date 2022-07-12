@@ -70,7 +70,7 @@
                                 <div class="input-group">
                                     @if (lnurl is not null)
                                     {
-                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" data-lnurl data-lnurl-bech32="@lnurl" data-lnurl-uri="@lnurlUri">
+                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
                                             <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
                                         </button>
                                     }
@@ -236,27 +236,37 @@
     </div>
     <partial name="LayoutFoot" />
   @if (lnurl is not null)
-	{
-	    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-	    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-	    <partial name="ShowQR"/>
-	}
+  {
+      var note = "You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.";
+      if (!Model.AutoApprove)
+      {
+          note += "<br/><span class='fw-bold'>Please note that this pull payment does not automatically send out funds, and so will process payment after LNURL-withdraw flow is completed.</span>";
+      }
+      <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+      <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+      <partial name="ShowQR"/>
+
     <script>
-        document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
-         const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
-         delegate('click', 'button[data-lnurl]', event => {
-                    const { lnurlBech32,lnurlUri } = event.target.dataset
-                    qrApp.data = null;
-                    qrApp.dataPerMode = {
-                        Bech32: lnurlBech32,
-                        URI: lnurlUri
-                    };
-                    qrApp.clickable = true;
-                    qrApp.allowedModes = ["Bech32", "URI"];
-                    qrApp.currentMode = "URI";
-                    $("#scan-qr-modal").modal("show")
-                })
-                
+	    
+        document.addEventListener("DOMContentLoaded", () => {
+            const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
+            qrApp.data = null;
+            qrApp.showData = true;
+            qrApp.dataPerMode = {
+                Bech32: @Safe.Json(lnurl),
+                URI: @Safe.Json(lnurlUri)
+            };
+            qrApp.clickable = true;
+            qrApp.allowedModes = ["Bech32", "URI"];
+            qrApp.currentMode = "URI";
+            qrApp.note = @Safe.Json(note);
+    });
     </script>
+  }
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+        });
+</script>
 </body>
 </html>

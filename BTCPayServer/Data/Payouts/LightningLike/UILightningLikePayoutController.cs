@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -12,7 +11,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
@@ -37,7 +35,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly IOptions<LightningNetworkOptions> _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly StoreRepository _storeRepository;
-        private readonly CurrencyNameTable _currencyNameTable;
 
         public UILightningLikePayoutController(ApplicationDbContextFactory applicationDbContextFactory,
             UserManager<ApplicationUser> userManager,
@@ -45,7 +42,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
             StoreRepository storeRepository,
-            CurrencyNameTable currencyNameTable,
             LightningClientFactoryService lightningClientFactoryService,
             IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService)
         {
@@ -57,7 +53,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _lightningClientFactoryService = lightningClientFactoryService;
             _options = options;
             _storeRepository = storeRepository;
-            _currencyNameTable = currencyNameTable;
             _authorizationService = authorizationService;
         }
 
@@ -222,7 +217,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public static async Task<(BOLT11PaymentRequest, ResultVM)> GetInvoiceFromLNURL(PayoutData payoutData,
             LightningLikePayoutHandler handler,PayoutBlob blob, LNURLPayClaimDestinaton lnurlPayClaimDestinaton, Network network)
         {
-            var endpoint = MailboxAddressValidator.IsMailboxAddress(lnurlPayClaimDestinaton.LNURL)
+            var endpoint = lnurlPayClaimDestinaton.LNURL.IsValidEmail()
                 ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
                 : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
             var httpClient = handler.CreateClient(endpoint);

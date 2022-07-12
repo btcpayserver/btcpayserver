@@ -41,6 +41,27 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        //from https://stackoverflow.com/a/1374644/275504
+        public static bool IsValidEmail(this string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return false;
+            }
+            var trimmedEmail = email.Trim();
+
+            if (trimmedEmail.EndsWith(".")) {
+                return false; // suggested by @TK-421
+            }
+            try {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == trimmedEmail;
+            }
+            catch {
+                return false;
+            }
+        }
+        
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
         {
             endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;

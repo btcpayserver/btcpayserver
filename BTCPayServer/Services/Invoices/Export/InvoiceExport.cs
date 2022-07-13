@@ -6,6 +6,7 @@ using System.Linq;
 using BTCPayServer.Services.Rates;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Services.Invoices.Export
 {
@@ -68,6 +69,9 @@ namespace BTCPayServer.Services.Invoices.Export
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
                 invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
 
+                // Only gets first refund, if available
+                var refund = invoice.Refunds.FirstOrDefault()?.PullPaymentData?.GetBlob();
+
                 var target = new ExportInvoiceHolder
                 {
                     ReceivedDate = payment.ReceivedTime.UtcDateTime,
@@ -99,7 +103,9 @@ namespace BTCPayServer.Services.Invoices.Export
                     InvoiceItemDesc = invoice.Metadata.ItemDesc,
                     InvoicePrice = invoice.Price,
                     InvoiceCurrency = invoice.Currency,
-                    BuyerEmail = invoice.Metadata.BuyerEmail
+                    BuyerEmail = invoice.Metadata.BuyerEmail,
+                    RefundAmount = (refund is not null) ? refund.Limit.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                    RefundCurrency = (refund is not null) ? refund.Currency : string.Empty            
                 };
 
                 exportList.Add(target);
@@ -138,5 +144,7 @@ namespace BTCPayServer.Services.Invoices.Export
         public string InvoiceStatus { get; set; }
         public string InvoiceExceptionStatus { get; set; }
         public string BuyerEmail { get; set; }
+        public string RefundAmount { get; set; }
+        public string RefundCurrency { get; set; }
     }
 }

@@ -417,24 +417,23 @@ namespace BTCPayServer.Tests
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
 
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-            Assert.Contains("Settled (marked)", s.Driver.PageSource);
+            s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.ClassName("changeInvoiceStateToggle")).Click();
+            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
             s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
         }
@@ -562,7 +561,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no invoices matching your criteria.", s.Driver.PageSource);
             var invoiceId = s.CreateInvoice();
             s.FindAlertMessage();
-            s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+            
             var invoiceUrl = s.Driver.Url;
 
             //let's test archiving an invoice
@@ -1012,7 +1011,7 @@ namespace BTCPayServer.Tests
             var actualSig = headers["BTCPay-Sig"].First();
             var bytes = await request.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
             var expectedSig =
-                $"sha256={Encoders.Hex.EncodeData(new HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld")).ComputeHash(bytes))}";
+                $"sha256={Encoders.Hex.EncodeData(NBitcoin.Crypto.Hashes.HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld"), bytes))}";
             Assert.Equal(expectedSig, actualSig);
             request.Response.StatusCode = 200;
             server.Done();
@@ -1578,7 +1577,9 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
-            var lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            var lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
             Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
             Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
@@ -1610,7 +1611,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC" + Keys.Enter);
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
-            lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.CssSelector("button[data-lnurl]")).GetAttribute("data-lnurl-uri"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            lnurl =  new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
+           
+            s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
             Assert.Equal(info.MaxWithdrawable, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
             Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));

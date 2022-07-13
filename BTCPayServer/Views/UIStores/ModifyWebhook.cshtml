@@ -140,5 +140,7 @@
         delegate('change', '#Everything', function (e) {
             e.target.dataset.value = e.target.value;
         });
+
+        document.querySelector('#Everything').dataset.value = @Html.Raw(Json.Serialize(Model.Everything));
     </script>
 }

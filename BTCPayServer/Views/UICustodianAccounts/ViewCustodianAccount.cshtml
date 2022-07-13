@@ -1,0 +1,190 @@
+﻿@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Custodians
+@model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
+@{
+    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+}
+
+
+<partial name="_StatusMessage"/>
+
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-sm-flex align-items-center justify-content-between">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+    </h2>
+    <div class="d-flex gap-3 mt-3 mt-sm-0">
+        <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
+            <span class="fa fa-gear"></span> Configure
+        </a>
+        <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
+            <span class="fa fa-trash"></span> Delete
+        </a>
+        <!--
+        <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+        <a class="btn btn-secondary" id="ViewApp" target="app_" href="/apps/MQ2sCVsmQ95JBZ4aZDtoSwMAnBY/pos">View</a>
+        -->
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+
+        @if (@Model.GetAssetBalanceException != null)
+        {
+            <p class="alert alert-danger">
+                @Model.GetAssetBalanceException.Message
+            </p>
+        }
+
+        <h2>Balances</h2>
+        <div class="table-responsive">
+            <table class="table table-hover table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th class="text-end">Balance</th>
+                    <th class="text-end">Unit Price (Bid)</th>
+                    <th class="text-end">Unit Price (Ask)</th>
+                    <th class="text-end">Fiat Value</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.AssetBalances != null && Model.AssetBalances.Count > 0)
+                {
+                    @foreach (var pair in Model.AssetBalances.OrderBy(key => key.Key))
+                    {
+                        <tr>
+                            <td>@pair.Key</td>
+                            <!-- TODO format as number? How? -->
+                            <th class="text-end">@pair.Value.Qty</th>
+                            <th class="text-end">
+                                @pair.Value.FormattedBid
+                            </th>
+                            <th class="text-end">
+                                @pair.Value.FormattedAsk
+                            </th>
+                            <th class="text-end">
+                                @(pair.Value.FormattedFiatValue)
+                            </th>
+                            <th class="text-end">
+                                @if (pair.Value.TradableAssetPairs != null)
+                                {
+                                    <a data-bs-toggle="modal" data-bs-target="#tradeModal" href="#">Trade</a>
+                                }
+                                @if (pair.Value.CanDeposit)
+                                {
+                                    <a data-bs-toggle="modal" data-bs-target="#depositModal" href="#">Deposit</a>
+                                }
+                                @if (pair.Value.CanWithdraw)
+                                {
+                                    <a data-bs-toggle="modal" data-bs-target="#withdrawModal" href="#">Withdraw</a>
+                                }
+                            </th>
+                        </tr>
+                    }
+                }
+                else if (Model.GetAssetBalanceException == null)
+                {
+                    <tr>
+                        <td colspan="999" class="text-center">No assets are stored with this custodian (yet).</td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="999" class="text-center">An error occured while loading assets and balances.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+
+        <h2>Features</h2>
+        <p>The @Model.Custodian.Name custodian supports:</p>
+        <ul>
+            <li>Viewing asset balances</li>
+            @if (Model.Custodian is ICanTrade)
+            {
+                <li>Trading (Greenfield API only, for now)</li>
+            }
+            @if (Model.Custodian is ICanDeposit)
+            {
+                <li>Depositing (Greenfield API only, for now)</li>
+            }
+            @if (Model.Custodian is ICanWithdraw)
+            {
+                <li>Withdrawing (Greenfield API only, for now)</li>
+            }
+        </ul>
+
+
+    </div>
+</div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="withdrawModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Withdraw</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Withdrawals are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/" target="_blank">Greenfield API "Withdraw to store wallet" endpoint</a> to execute a withdrawal.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="depositModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Deposit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Deposits are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/" target="_blank">Greenfield API "Get a deposit address for custodian" endpoint</a> to get a deposit address to send your assets to.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="tradeModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Trades are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/" target="_blank"> Greenfield API "Trade one asset for another" endpoint</a> to convert an asset to another via a market order.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

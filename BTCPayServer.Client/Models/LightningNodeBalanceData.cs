@@ -1,5 +1,6 @@
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
@@ -25,14 +26,14 @@ namespace BTCPayServer.Client.Models
 
     public class OnchainBalanceData
     {
-        [JsonConverter(typeof(LightMoneyJsonConverter))]
-        public LightMoney Confirmed { get; set; }
+        [JsonConverter(typeof(JsonConverters.MoneyJsonConverter))]
+        public Money Confirmed { get; set; }
+
+        [JsonConverter(typeof(JsonConverters.MoneyJsonConverter))]
+        public Money Unconfirmed { get; set; }
         
-        [JsonConverter(typeof(LightMoneyJsonConverter))]
-        public LightMoney Unconfirmed { get; set; }
-        
-        [JsonConverter(typeof(LightMoneyJsonConverter))]
-        public LightMoney Reserved { get; set; }
+        [JsonConverter(typeof(JsonConverters.MoneyJsonConverter))]
+        public Money Reserved { get; set; }
     }
 
     public class OffchainBalanceData

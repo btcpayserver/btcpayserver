@@ -52,7 +52,6 @@ namespace BTCPayServer.Services.Custodian.Client
             await using var context = _contextFactory.CreateContext();
             IQueryable<CustodianAccountData> query = context.CustodianAccount
                 .Where(ca => ca.StoreId == storeId);
-            //.SelectMany(c => c.StoreData.Invoices);
 
             var data = await query.ToArrayAsync( cancellationToken).ConfigureAwait(false);
             return data;

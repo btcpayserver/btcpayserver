@@ -8,6 +8,15 @@
 		storeIds = string.Empty;
 }
 
+@section PageHeadContent
+{
+    <style>
+        .invoice-payments {
+            padding-left: var(--btcpay-space-l);
+        }
+    </style>
+}
+
 @section PageFootContent {
     @*Without async, somehow selenium do not manage to click on links in this page*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>

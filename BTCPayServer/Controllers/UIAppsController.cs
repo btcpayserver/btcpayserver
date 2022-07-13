@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
             if (await _appService.DeleteApp(app))
                 TempData[WellKnownTempData.SuccessMessage] = "App deleted successfully.";
 
-            return RedirectToAction(nameof(ListApps), new { storeId = app.StoreDataId });
+            return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId = app.StoreDataId });
         }
 
         async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)

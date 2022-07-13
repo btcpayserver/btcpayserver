@@ -21,6 +21,7 @@ namespace BTCPayServer.Services.Rates
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             var response = await _httpClient.GetAsync("https://api.exchange.ripio.com/api/v1/rate/all/", cancellationToken);
+            response.EnsureSuccessStatusCode();
             var jarray = (JArray)(await response.Content.ReadAsAsync<JArray>(cancellationToken));
             return jarray
                 .Children<JObject>()

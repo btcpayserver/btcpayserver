@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29411.108
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer", "BTCPayServer\BTCPayServer.csproj", "{949A0870-8D8C-4DE5-8845-DDD560489177}"
 EndProject
@@ -13,12 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		amd64.Dockerfile = amd64.Dockerfile
 		arm32v7.Dockerfile = arm32v7.Dockerfile
 		arm64v8.Dockerfile = arm64v8.Dockerfile
+		Changelog.md = Changelog.md
 		Build\Common.csproj = Build\Common.csproj
 		.circleci\config.yml = .circleci\config.yml
 		docker-entrypoint.sh = docker-entrypoint.sh
 		.circleci\run-tests.sh = .circleci\run-tests.sh
 		Build\Version.csproj = Build\Version.csproj
-		Changelog.md = Changelog.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCPayServer.Rating\BTCPayServer.Rating.csproj", "{6DC77459-D52F-45EE-B3F3-315043D33A1B}"
@@ -29,13 +29,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Data", "BTCPay
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Client", "BTCPayServer.Client\BTCPayServer.Client.csproj", "{21A13304-7168-49A0-86C2-0A1A9453E9C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Abstractions", "BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj", "{A0D50BB6-FE2C-4671-8693-F7582B66178F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Abstractions", "BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj", "{A0D50BB6-FE2C-4671-8693-F7582B66178F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.Test", "BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj", "{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Plugins.Test", "BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj", "{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{1FC7F660-ADF1-4D55-B61A-85C6AB083C33}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.PluginPacker", "BTCPayServer.PluginPacker\BTCPayServer.PluginPacker.csproj", "{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.PluginPacker", "BTCPayServer.PluginPacker\BTCPayServer.PluginPacker.csproj", "{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Plugins.Custodians.FakeCustodian", "Plugins\BTCPayServer.Plugins.Custodians.FakeCustodian\BTCPayServer.Plugins.Custodians.FakeCustodian.csproj", "{49E1FE45-FE71-49DF-8701-8394E974BE82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -269,15 +271,39 @@ Global
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x64.Build.0 = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.ActiveCfg = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x64.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x64.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x86.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Debug|x86.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|Any CPU.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x64.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x64.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x86.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Altcoins-Release|x86.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x64.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Debug|x86.Build.0 = Debug|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x64.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x64.Build.0 = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x86.ActiveCfg = Release|Any CPU
+		{49E1FE45-FE71-49DF-8701-8394E974BE82}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}
 	EndGlobalSection
 EndGlobal

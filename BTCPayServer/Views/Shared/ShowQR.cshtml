@@ -21,6 +21,13 @@
                             </a>
                         </li>
                     </ul>
+                    <div v-if="showData && data">
+                        <div class="input-group input-group-sm" :data-clipboard="data">
+                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="data" id="qr-code-data-input">
+                            <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm="">Copy</button>
+                        </div>
+                    </div>
+                    <p v-if="note" v-html="note" class="text-muted mt-3"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -50,7 +57,9 @@
  			fragments: [],
  			active: false,
  			modalId: modalId,
+ 			note: "",
  			currentMode: "bcur",
+ 			showData: false,
  			allowedModes: ["static","bcur"]
  		},
  		computed:
@@ -77,7 +86,7 @@
  		watch:
  		{
  		    currentMode: function(){
- 				if (this.dataPerMode && this.dataPerMode[this.currentMode]){
+ 				if (this.dataPerMode && this.currentMode in this.dataPerMode){
                     this.data = this.dataPerMode[this.currentMode];
                 }
                  this.setFragments();

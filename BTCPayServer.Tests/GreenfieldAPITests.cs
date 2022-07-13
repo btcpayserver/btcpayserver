@@ -1,28 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
-using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -31,9 +26,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
-using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
 {
@@ -2586,7 +2579,7 @@ namespace BTCPayServer.Tests
             var clientBasic = await user.CreateClient();
             var custodians = await clientBasic.GetCustodians();
             Assert.NotNull(custodians);
-            Assert.Single(custodians);
+            Assert.NotEmpty(custodians);
         }
 
 
@@ -2680,13 +2673,23 @@ namespace BTCPayServer.Tests
             Assert.Single(viewerCustodianAccounts);
             Assert.Equal(viewerCustodianAccounts.First().CustodianCode, custodian.Code);
             Assert.Null(viewerCustodianAccounts.First().Config);
+            
+            // Wrong store ID
+            await AssertApiError(403, "missing-permission", async () => await adminClient.GetCustodianAccounts("WRONG-STORE-ID"));
+            
 
             
-            // Try to fetch 1
+            // Try to fetch 1 custodian account
             // Admin
             var singleAdminCustodianAccount = await adminClient.GetCustodianAccount(storeId, accountId);
             Assert.NotNull(singleAdminCustodianAccount);
             Assert.Equal(singleAdminCustodianAccount.CustodianCode, custodian.Code);
+            
+            // Wrong store ID
+            await AssertApiError(403, "missing-permission",async () => await adminClient.GetCustodianAccount("WRONG-STORE-ID", accountId));
+            
+            // Wrong account ID
+            await AssertApiError(404, "custodian-account-not-found",async () => await adminClient.GetCustodianAccount(storeId, "WRONG-ACCOUNT-ID"));
 
             // Manager can see, including config
             var singleManagerCustodianAccount = await managerClient.GetCustodianAccount(storeId, accountId);
@@ -2789,8 +2792,6 @@ namespace BTCPayServer.Tests
             // Load a custodian, we use the first one we find.
             var custodians  = tester.PayTester.GetService<IEnumerable<ICustodian>>();
             var mockCustodian = custodians.First(c => c.Code == "mock");
-
-            
             
              // Create custodian account
              var createCustodianAccountRequest = new CreateCustodianAccountRequest();

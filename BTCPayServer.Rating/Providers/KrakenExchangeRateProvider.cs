@@ -103,14 +103,14 @@ namespace BTCPayServer.Services.Rates
                             var p2 = symbol.Substring(mapped1.KrakenTicker.Length);
                             if (_TickerMapping.TryGetValue(p2, out var mapped2))
                                 p2 = mapped2;
-                            global = $"{p2}_{mapped1.PayTicker}";
+                            global = $"{mapped1.PayTicker}_{p2}";
                         }
                         else
                         {
                             global = await helper.ExchangeMarketSymbolToGlobalMarketSymbolAsync(symbol);
                         }
                         if (CurrencyPair.TryParse(global, out var pair))
-                            result.Add(new PairRate(pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));
+                            result.Add(new PairRate(pair, new BidAsk(ticker.Bid, ticker.Ask)));
                         else
                             notFoundSymbols.TryAdd(symbol, symbol);
                     }

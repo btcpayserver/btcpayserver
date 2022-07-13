@@ -10,6 +10,7 @@ public class StoreDashboardViewModel
     public string StoreName { get; set; }
     public bool WalletEnabled { get; set; }
     public bool LightningEnabled { get; set; }
+    public bool LightningSupported { get; set; }
     public bool IsSetUp { get; set; }
     public List<AppData> Apps { get; set; } = new();
 }

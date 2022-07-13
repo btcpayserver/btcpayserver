@@ -128,6 +128,10 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
+                    if (name == "kraken")
+                    {
+                        Assert.Contains(exchangeRates.ByExchange[name], e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
+                    }
                     // This check if the currency pair is using right currency pair
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
@@ -149,6 +153,13 @@ namespace BTCPayServer.Tests
 
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
+
+            using (var c = new HttpClient())
+            {
+                var p = new ExchangeSharpRateProvider<ExchangeSharp.ExchangeKrakenAPI>(c);
+                var rates = p.GetRatesAsync(default).GetAwaiter().GetResult();
+                Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XXMR", "XXBT") && e.BidAsk.Bid < 1.0m);
+            }
         }
 
         [Fact]

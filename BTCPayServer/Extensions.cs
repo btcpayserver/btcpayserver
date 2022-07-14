@@ -10,9 +10,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -27,39 +24,26 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBXplorer.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
-        //from https://stackoverflow.com/a/1374644/275504
         public static bool IsValidEmail(this string email)
         {
             if (string.IsNullOrEmpty(email))
             {
                 return false;
             }
-            var trimmedEmail = email.Trim();
 
-            if (trimmedEmail.EndsWith(".")) {
-                return false; // suggested by @TK-421
-            }
-            try {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == trimmedEmail;
-            }
-            catch {
-                return false;
-            }
+            return MailboxAddressValidator.TryParse(email, out var ma) && ma.ToString() == ma.Address;
         }
         
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)

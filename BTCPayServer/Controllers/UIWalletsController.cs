@@ -328,7 +328,7 @@ namespace BTCPayServer.Controllers
                         model.Transactions.Add(vm);
                 }
 
-                model.Total = model.Transactions.Count;
+                model.Total = preFiltering ? null : model.Transactions.Count;
                 model.Transactions = model.Transactions.Skip(skip).Take(count)
                     .ToList();
             }

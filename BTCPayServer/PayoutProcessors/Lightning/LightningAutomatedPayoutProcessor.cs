@@ -80,35 +80,18 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                 switch (claim.destination)
                 {
                     case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
-                        var endpoint = LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out var tag);
-                        var httpClient = _payoutHandler.CreateClient(endpoint);
-                        var lnurlInfo =
-                            (LNURLPayRequest)await LNURL.LNURL.FetchInformation(endpoint, "payRequest",
-                                httpClient);
-                        var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
-                        if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
+                        var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData, _payoutHandler, blob,
+                            lnurlPayClaimDestinaton, _network.NBitcoinNetwork);
+                        if (lnurlResult.Item2 is not null)
                         {
                             continue;
                         }
-                        else
-                        {
-                            try
-                            {
-                                var lnurlPayRequestCallbackResponse =
-                                    await lnurlInfo.SendRequest(lm, _network.NBitcoinNetwork, httpClient);
 
-                                if (await TrypayBolt(client, blob, payoutData,
-                                        lnurlPayRequestCallbackResponse
-                                            .GetPaymentRequest(_network.NBitcoinNetwork)))
-                                {
-                                    ctx.Attach(payoutData);
-                                    payoutData.State = PayoutState.Completed;
-                                }
-                            }
-                            catch (LNUrlException)
-                            {
-                                continue;
-                            }
+                        if (await TrypayBolt(client, blob, payoutData,
+                                lnurlResult.Item1))
+                        {
+                            ctx.Attach(payoutData);
+                            payoutData.State = PayoutState.Completed;
                         }
 
                         break;
@@ -137,13 +120,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     async Task<bool> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
         BOLT11PaymentRequest bolt11PaymentRequest)
     {
-        var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-        if (boltAmount != payoutBlob.CryptoAmount)
-        {
-            return false;
-        }
-
-        var result = await lightningClient.Pay(bolt11PaymentRequest.ToString());
-        return result.Result == PayResult.Ok;
+        return (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData, bolt11PaymentRequest,
+            payoutData.GetPaymentMethodId())).Result == PayResult.Ok;
     }
 }

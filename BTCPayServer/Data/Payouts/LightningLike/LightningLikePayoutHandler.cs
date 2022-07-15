@@ -9,7 +9,6 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
-using BTCPayServer.Validation;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -64,7 +63,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             try
             {
                 string lnurlTag = null;
-                var lnurl = MailboxAddressValidator.IsMailboxAddress(destination)
+                var lnurl = destination.IsValidEmail()
                     ? LNURL.LNURL.ExtractUriFromInternetIdentifier(destination)
                     : LNURL.LNURL.Parse(destination, out lnurlTag);
 

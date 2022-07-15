@@ -2,10 +2,8 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Extensions
-@inject BTCPayNetworkProvider _btcPayNetworkProvider
 
 @model BTCPayServer.Components.WalletNav.WalletNavViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 
 <div class="d-sm-flex align-items-center justify-content-between">
     <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">

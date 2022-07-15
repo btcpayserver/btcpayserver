@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
-namespace BTCPayServer.TagHelpers;
 
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 [HtmlTargetElement(Attributes = nameof(Permission))]
 public class PermissionTagHelper : TagHelper

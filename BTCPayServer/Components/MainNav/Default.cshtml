@@ -6,24 +6,18 @@
 @using BTCPayServer.Views.PaymentRequest
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using BTCPayServer.Components.Icon
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Components.UIExtensionPoint
-@using BTCPayServer.Security
 @using BTCPayServer.Services
-@using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.CustodianAccounts
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
 @inject PoliciesSettings PoliciesSettings
 @inject ThemeSettings Theme
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
-
 
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
     <div class="accordion px-3 px-lg-4">

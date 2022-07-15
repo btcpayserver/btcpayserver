@@ -1,7 +1,6 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }

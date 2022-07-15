@@ -1,15 +1,9 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
-@using BTCPayServer.TagHelpers
-@using BundlerMinifier.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject ISettingsRepository _settingsRepository
 @inject BTCPayServer.Services.ThemeSettings Theme
 @{
     ViewData["Title"] = Model.Title;

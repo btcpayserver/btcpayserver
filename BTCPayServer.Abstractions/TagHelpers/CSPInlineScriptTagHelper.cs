@@ -1,8 +1,8 @@
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using NBitcoin;
-namespace BTCPayServer.TagHelpers;
 
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 /// <summary>
 /// Add a nonce-* so the inline-script can pass CSP rule when they are rendered server-side

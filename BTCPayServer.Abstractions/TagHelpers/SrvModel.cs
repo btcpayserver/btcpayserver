@@ -1,9 +1,9 @@
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Security;
-using BTCPayServer.Services;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using NBitcoin;
-namespace BTCPayServer.TagHelpers;
+
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 [HtmlTargetElement("srv-model")]
 public class SrvModel : TagHelper

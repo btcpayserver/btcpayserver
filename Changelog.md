@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.6.2
+
+### Bug fixes:
+
+* Fix: Cannot withdraw refund (payouts) with LNURL (#3953 #3953) @Kukks
+* Fix: Cannot withdraw refund (payouts) with LN Address (#3953 #3960) @Kukks
+* Fix: Missing pager in the wallet transaction list @NicolasDorier
+* Fix: webhook "Send specific events" display issue (#3959) @rustywave
+
+### Improvements:
+
+* Added HRF and Strike to the list of supporters #3965 @dennisreimann
+* Invoice summary: Fix indentation and heading levels (#3956) @dennisreimann
+
 ## 1.6.1
 
 This fix a critical issue introduced by 1.6.0.

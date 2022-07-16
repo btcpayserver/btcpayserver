@@ -132,13 +132,13 @@ namespace BTCPayServer.Controllers.Greenfield
             _httpContextAccessor = httpContextAccessor;
             _serviceProvider = serviceProvider;
         }
-
-
+        
         private T GetController<T>() where T : ControllerBase
         {
             var authoverride = new AuthorizationService(new GreenfieldAuthorizationHandler(_httpContextAccessor,
                 _serviceProvider.GetService<UserManager<ApplicationUser>>(),
-                _serviceProvider.GetService<StoreRepository>()));
+                _serviceProvider.GetService<StoreRepository>(),
+                _serviceProvider.GetService<IPluginHookService>()));
 
             var controller =  _serviceProvider.GetService<T>();
             controller.ControllerContext.HttpContext = _httpContextAccessor.HttpContext;
@@ -171,7 +171,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 _greenfieldAuthorizationHandler = greenfieldAuthorizationHandler;
             }
-
 
             public async Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object resource,
                 IEnumerable<IAuthorizationRequirement> requirements)

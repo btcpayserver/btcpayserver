@@ -84,6 +84,10 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.server", StringComparison.OrdinalIgnoreCase);
         }
+        public static bool IsPluginPolicy(string policy)
+        {
+            return policy.StartsWith("btcpay.plugin", StringComparison.OrdinalIgnoreCase);
+        }
     }
     public class Permission
     {

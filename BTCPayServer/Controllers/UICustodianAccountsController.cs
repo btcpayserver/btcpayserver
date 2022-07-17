@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -7,6 +8,8 @@ using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
@@ -26,30 +29,32 @@ namespace BTCPayServer.Controllers
     [ExperimentalRouteAttribute]
     public class UICustodianAccountsController : Controller
     {
+        private readonly IEnumerable<ICustodian> _custodianRegistry;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CustodianAccountRepository _custodianAccountRepository;
+        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly BTCPayServerClient _btcPayServerClient;
+
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             CustodianAccountRepository custodianAccountRepository,
-            IEnumerable<ICustodian> custodianRegistry
+            IEnumerable<ICustodian> custodianRegistry,
+            BTCPayServerClient btcPayServerClient
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _userManager = userManager;
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
+            _btcPayServerClient = btcPayServerClient;
         }
-
-        private readonly IEnumerable<ICustodian> _custodianRegistry;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly CustodianAccountRepository _custodianAccountRepository;
-        private readonly CurrencyNameTable _currencyNameTable;
 
         public string CreatedCustodianAccountId { get; set; }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}")]
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId)
         {
-            var vm = new ViewCustodianAccountViewModel();
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
 
             if (custodianAccount == null)
@@ -62,14 +67,33 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var vm = new ViewCustodianAccountViewModel();
             vm.Custodian = custodian;
             vm.CustodianAccount = custodianAccount;
+
+            return View(vm);
+        }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}.json")]
+        public async Task<IActionResult> ViewCustodianAccountAjax(string storeId, string accountId)
+        {
+            var vm = new ViewCustodianAccountBalancesViewModel();
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+                return NotFound();
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
+
             var store = GetCurrentStore();
             var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
             var defaultCurrency = storeBlob.DefaultCurrency;
-            vm.DefaultCurrency = defaultCurrency;
-
-
+            vm.StoreDefaultFiat = defaultCurrency;
             try
             {
                 var assetBalances = new Dictionary<string, AssetBalanceInfo>();
@@ -81,7 +105,12 @@ namespace BTCPayServer.Controllers
                     var asset = pair.Key;
 
                     assetBalances.Add(asset,
-                        new AssetBalanceInfo { Asset = asset, Qty = pair.Value }
+                        new AssetBalanceInfo
+                        {
+                            Asset = asset,
+                            Qty = pair.Value,
+                            FormattedQty = pair.Value.ToString(CultureInfo.InvariantCulture)
+                        }
                     );
                 }
 
@@ -95,10 +124,14 @@ namespace BTCPayServer.Controllers
                     {
                         var asset = pair.Key;
                         var assetBalance = assetBalances[asset];
+                        assetBalance.TradableAssetPairs =
+                            tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
 
                         if (asset.Equals(defaultCurrency))
                         {
-                            assetBalance.FormattedFiatValue = _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty, defaultCurrency);
+                            assetBalance.FormattedFiatValue =
+                                _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty, defaultCurrency);
+                            assetBalance.FiatValue = pair.Value.Qty;
                         }
                         else
                         {
@@ -108,11 +141,14 @@ namespace BTCPayServer.Controllers
                                     config, default);
                                 assetBalance.Bid = quote.Bid;
                                 assetBalance.Ask = quote.Ask;
-                                assetBalance.FiatAsset = defaultCurrency;
-                                assetBalance.FormattedBid = _currencyNameTable.DisplayFormatCurrency(quote.Bid, quote.FromAsset);
-                                assetBalance.FormattedAsk = _currencyNameTable.DisplayFormatCurrency(quote.Ask, quote.FromAsset);
-                                assetBalance.FormattedFiatValue = _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid, pair.Value.FiatAsset);
-                                assetBalance.TradableAssetPairs = tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
+                                assetBalance.FormattedBid =
+                                    _currencyNameTable.DisplayFormatCurrency(quote.Bid, quote.FromAsset);
+                                assetBalance.FormattedAsk =
+                                    _currencyNameTable.DisplayFormatCurrency(quote.Ask, quote.FromAsset);
+                                assetBalance.FormattedFiatValue =
+                                    _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid,
+                                        defaultCurrency);
+                                assetBalance.FiatValue = pair.Value.Qty * quote.Bid;
                             }
                             catch (WrongTradingPairException)
                             {
@@ -136,8 +172,10 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
+                vm.CanDeposit = false;
                 if (custodian is ICanDeposit depositableCustodian)
                 {
+                    vm.CanDeposit = true;
                     var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
                     foreach (var depositablePaymentMethod in depositablePaymentMethods)
                     {
@@ -154,10 +192,10 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception e)
             {
-                vm.GetAssetBalanceException = e;
+                vm.AssetBalanceExceptionMessage = e.Message;
             }
 
-            return View(vm);
+            return Ok(vm);
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/edit")]
@@ -173,6 +211,7 @@ namespace BTCPayServer.Controllers
                 // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
                 return NotFound();
             }
+
             var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
 
             var vm = new EditCustodianAccountViewModel();
@@ -198,6 +237,7 @@ namespace BTCPayServer.Controllers
                 // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
                 return NotFound();
             }
+
             var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), locale);
 
             var newData = new JObject();
@@ -255,12 +295,16 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.SelectedCustodian), "Invalid Custodian");
                 return View(vm);
             }
+
             if (string.IsNullOrEmpty(vm.Name))
             {
                 vm.Name = custodian.Name;
             }
 
-            var custodianAccountData = new CustodianAccountData { CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name };
+            var custodianAccountData = new CustodianAccountData
+            {
+                CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name
+            };
 
 
             var configData = new JObject();
@@ -333,6 +377,103 @@ namespace BTCPayServer.Controllers
             }
 
             return filteredData;
+        }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
+        public async Task<IActionResult> GetTradePrepareAjax(string storeId, string accountId,
+            [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
+        {
+            if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
+            {
+                return BadRequest();
+            }
+
+            TradePrepareViewModel vm = new();
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+                return NotFound();
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
+
+            var store = GetCurrentStore();
+            var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
+            var defaultCurrency = storeBlob.DefaultCurrency;
+
+            try
+            {
+                var assetBalancesData =
+                    await custodian.GetAssetBalancesAsync(custodianAccount.GetBlob(), cancellationToken: default);
+
+                if (custodian is ICanTrade tradingCustodian)
+                {
+                    var config = custodianAccount.GetBlob();
+
+                    foreach (var pair in assetBalancesData)
+                    {
+                        var oneAsset = pair.Key;
+                        if (assetToTrade.Equals(oneAsset))
+                        {
+                            vm.MaxQtyToTrade = pair.Value;
+                            //vm.FormattedMaxQtyToTrade = pair.Value;
+
+                            if (assetToTrade.Equals(assetToTradeInto))
+                            {
+                                // We cannot trade the asset for itself
+                                return BadRequest();
+                            }
+
+                            try
+                            {
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(assetToTrade, assetToTradeInto,
+                                    config, default);
+
+                                // Should we use "bid" or "ask"? Depends on the pair... are we buying or selling?
+                                // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
+                                vm.Price = quote.Ask;
+
+                                // vm.FormattedPrice =
+                                //     _currencyNameTable.DisplayFormatCurrency(vm.Price, assetToTrade);
+                                // vm.FormattedFiatValue =
+                                //     _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid,
+                                //         pair.Value.FiatAsset);
+                                // vm.FiatValue = vm.Qty * vm.Price;
+                            }
+                            catch (WrongTradingPairException)
+                            {
+                                // Cannot trade this asset, just ignore
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest();
+            }
+
+            return Ok(vm);
+        }
+
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/trade")]
+        public async Task<IActionResult> Trade(string storeId, string accountId,
+            [FromBody] TradeRequestData request)
+        {
+            try
+            {
+                var result = await _btcPayServerClient.MarketTradeCustodianAccountAsset(storeId, accountId, request);
+                return Ok(result);
+            }
+            catch (GreenfieldAPIException e)
+            {
+                // TODO how to we return the same response as the original?
+                return BadRequest(e);
+            }
         }
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

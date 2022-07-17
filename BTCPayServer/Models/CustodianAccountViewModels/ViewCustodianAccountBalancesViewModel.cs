@@ -1,0 +1,14 @@
+using System;
+using System.Collections.Generic;
+
+namespace BTCPayServer.Models.CustodianAccountViewModels
+{
+    public class ViewCustodianAccountBalancesViewModel
+    {
+        public Dictionary<string,AssetBalanceInfo> AssetBalances { get; set; }
+        public string AssetBalanceExceptionMessage { get; set; }
+        
+        public string StoreDefaultFiat { get; set; }
+        public bool CanDeposit { get; set; }
+    }
+}

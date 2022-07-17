@@ -56,9 +56,14 @@ namespace BTCPayServer.Client
             return await HandleResponse<DepositAddressData>(response);
         }
 
-        public virtual async Task<MarketTradeResponseData> TradeMarket(string storeId, string accountId, TradeRequestData request, CancellationToken token = default)
+        public virtual async Task<MarketTradeResponseData> MarketTradeCustodianAccountAsset(string storeId, string accountId, TradeRequestData request, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market", bodyPayload: request, method: HttpMethod.Post), token);
+            
+            //var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/users", null, request, HttpMethod.Post), token);
+            //return await HandleResponse<ApplicationUserData>(response);
+            var internalRequest = CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market", null,
+                    request, HttpMethod.Post);
+            var response = await _httpClient.SendAsync(internalRequest, token);
             return await HandleResponse<MarketTradeResponseData>(response);
         }
 

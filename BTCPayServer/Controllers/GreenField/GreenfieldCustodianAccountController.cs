@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> TradeMarket(string storeId, string accountId,
+        public async Task<IActionResult> MarketTradeCustodianAccountAsset(string storeId, string accountId,
             TradeRequestData request, CancellationToken cancellationToken = default)
         {
             // TODO add SATS check everywhere. We cannot change to 'BTC' ourselves because the qty / price would be different too.

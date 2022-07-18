@@ -5,10 +5,10 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.Crowdfund.Controllers;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -23,25 +23,31 @@ namespace BTCPayServer.Controllers
     {
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
-            EventAggregator eventAggregator,
-            CurrencyNameTable currencies,
             StoreRepository storeRepository,
             AppService appService)
         {
             _userManager = userManager;
-            _eventAggregator = eventAggregator;
-            _currencies = currencies;
             _storeRepository = storeRepository;
             _appService = appService;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly EventAggregator _eventAggregator;
-        private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
+        
+        
+        public class AppUpdated
+        {
+            public string AppId { get; set; }
+            public object Settings { get; set; }
+            public string StoreId { get; set; }
+            public override string ToString()
+            {
+                return string.Empty;
+            }
+        }
 
         [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
@@ -139,8 +145,8 @@ namespace BTCPayServer.Controllers
 
             return appType switch
             {
-                AppType.PointOfSale => RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id }),
-                AppType.Crowdfund => RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id }),
+                AppType.PointOfSale => RedirectToAction(nameof(UIPointOfSaleController.UpdatePointOfSale), "UIPointOfSale", new { appId = appData.Id }),
+                AppType.Crowdfund => RedirectToAction(nameof(UICrowdfundController.UpdateCrowdfund), "UICrowdfund", new { appId = appData.Id }),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

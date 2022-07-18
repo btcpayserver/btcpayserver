@@ -1,7 +1,5 @@
-@model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
-@inject ISettingsRepository SettingsRepository
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Models.AppViewModels
+@model BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel
+@using BTCPayServer.Plugins.Crowdfund.Models
 @inject BTCPayServer.Services.ThemeSettings Theme
 @{
     ViewData["Title"] = Model.Title;

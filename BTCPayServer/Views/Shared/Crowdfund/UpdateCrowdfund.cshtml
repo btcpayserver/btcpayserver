@@ -1,6 +1,10 @@
 @using System.Globalization
+@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
-@model UpdateCrowdfundViewModel
+@using BTCPayServer.TagHelpers
+@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
 }

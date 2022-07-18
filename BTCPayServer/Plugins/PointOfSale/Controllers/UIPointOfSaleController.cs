@@ -7,14 +7,36 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Client;
+using BTCPayServer.Data;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
-    public partial class UIAppsController
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [AutoValidateAntiforgeryToken]
+    [Route("apps")]
+    public class UIPointOfSaleController : Controller
     {
+        public UIPointOfSaleController(
+            CurrencyNameTable currencies,
+            StoreRepository storeRepository,
+            AppService appService)
+        {
+            _currencies = currencies;
+            _storeRepository = storeRepository;
+            _appService = appService;
+        }
+
+        private readonly CurrencyNameTable _currencies;
+        private readonly StoreRepository _storeRepository;
+        private readonly AppService _appService;
+        
         [HttpGet("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId)
         {
@@ -88,7 +110,7 @@ namespace BTCPayServer.Controllers
             }
 
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
-            return View(vm);
+            return View("PointOfSale/UpdatePointOfSale", vm);
         }
 
         [HttpPost("{appId}/settings/pos")]
@@ -99,7 +121,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             if (!ModelState.IsValid)
-                return View(vm);
+                return View("PointOfSale/UpdatePointOfSale", vm);
 
             vm.Currency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.Currency);
             if (_currencies.GetCurrencyData(vm.Currency, false) == null)
@@ -114,7 +136,7 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
             {
-                return View(vm);
+                return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
             app.Name = vm.AppName;
@@ -157,5 +179,16 @@ namespace BTCPayServer.Controllers
 
             return list.Split(separator, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
         }
+
+        async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
+        {
+            if (string.IsNullOrWhiteSpace(currency))
+            {
+                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+            }
+            return currency.Trim().ToUpperInvariant();
+        }
+        
+        private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

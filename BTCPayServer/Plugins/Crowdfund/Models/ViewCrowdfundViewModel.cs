@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Rates;
 
-namespace BTCPayServer.Models.AppViewModels
+namespace BTCPayServer.Plugins.Crowdfund.Models
 {
     public class ViewCrowdfundViewModel
     {

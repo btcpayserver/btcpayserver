@@ -195,7 +195,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreateReadAndDeletePointOfSaleApp()
+        public async Task CanCreateReadUpdateAndDeletePointOfSaleApp()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -203,8 +203,58 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
 
-            // Test creating a POS app
-            var app = await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { AppName = "test app from API"  });
+            // Test validation for creating the app
+            await AssertValidationError(new[] { "AppName" },
+                async () => await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() {}));
+            await AssertValidationError(new[] { "AppName" },
+                async () => await client.CreatePointOfSaleApp(
+                    user.StoreId,
+                    new CreatePointOfSaleAppRequest()
+                    {
+                        AppName = "this is a really long app name this is a really long app name this is a really long app name",
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "Currency" },
+                async () => await client.CreatePointOfSaleApp(
+                    user.StoreId,
+                    new CreatePointOfSaleAppRequest()
+                    {
+                        AppName = "good name",
+                        Currency = "fake currency"
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "Template" },
+                async () => await client.CreatePointOfSaleApp(
+                    user.StoreId,
+                    new CreatePointOfSaleAppRequest()
+                    {
+                        AppName = "good name",
+                        Template = "lol invalid template"
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "AppName", "Currency", "Template" },
+                async () => await client.CreatePointOfSaleApp(
+                    user.StoreId,
+                    new CreatePointOfSaleAppRequest()
+                    {
+                        Currency = "fake currency",
+                        Template = "lol invalid template"
+                    }
+                )
+            );
+
+            // Test creating a POS app successfully
+            var app = await client.CreatePointOfSaleApp(
+                user.StoreId,
+                new CreatePointOfSaleAppRequest()
+                {
+                    AppName = "test app from API",
+                    Currency = "JPY"
+                }
+            );
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
@@ -219,6 +269,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.Name, retrievedApp.Name);
             Assert.Equal(app.StoreId, retrievedApp.StoreId);
             Assert.Equal(app.AppType, retrievedApp.AppType);
+
+            // Test that we can update the app data
+            await client.PutPointOfSaleApp(app.Id, new CreatePointOfSaleAppRequest() { AppName = "new app name" });
+            retrievedApp = await client.GetApp(app.Id);
+            Assert.Equal("new app name", retrievedApp.Name);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>

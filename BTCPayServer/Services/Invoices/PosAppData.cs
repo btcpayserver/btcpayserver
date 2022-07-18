@@ -1,4 +1,5 @@
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Invoices;

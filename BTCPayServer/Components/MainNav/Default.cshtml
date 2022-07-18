@@ -100,9 +100,7 @@
                                     {
                                         <li class="nav-item">
                                             <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
-                                                <!--
-                                                TODO which icon should we use?
-                                                -->
+                                                @* TODO which icon should we use? *@
                                                 <span>@custodianAccount.Name</span>
                                                 <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
                                             </a>
@@ -171,12 +169,7 @@
                             <ul class="navbar-nav">
                                 @foreach (var app in Model.Apps)
                                 {
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="UIApps" asp-action="@app.Action" asp-route-appId="@app.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
-                                            <vc:icon symbol="@app.AppType.ToLower()"/>
-                                            <span>@app.AppName</span>
-                                        </a>
-                                    </li>
+                                    <vc:ui-extension-point location="apps-nav" model="@app"/>
                                 }
                                 <li class="nav-item">
                                     <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Create)" id="StoreNav-CreateApp">

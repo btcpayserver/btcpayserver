@@ -5,7 +5,7 @@ using System.Linq;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 
-namespace BTCPayServer.Models.AppViewModels
+namespace BTCPayServer.Plugins.Crowdfund.Models
 {
     public class UpdateCrowdfundViewModel
     {

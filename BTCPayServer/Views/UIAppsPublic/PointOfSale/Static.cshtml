@@ -1,5 +1,6 @@
 @using BTCPayServer.Models.AppViewModels
-@model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
+@using BTCPayServer.Plugins.PointOfSale.Models
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     Layout = "_LayoutPos";
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);

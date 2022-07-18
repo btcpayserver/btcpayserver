@@ -12,6 +12,8 @@ using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;

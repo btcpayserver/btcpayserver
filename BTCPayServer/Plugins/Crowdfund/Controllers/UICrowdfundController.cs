@@ -3,25 +3,38 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
-using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Controllers;
+using BTCPayServer.Data;
+using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Plugins.Crowdfund.Controllers
 {
-    public partial class UIAppsController
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [AutoValidateAntiforgeryToken]
+    [Route("apps")]
+    public class UICrowdfundController : Controller
     {
-        public class AppUpdated
+        public UICrowdfundController(
+            EventAggregator eventAggregator,
+            CurrencyNameTable currencies,
+            StoreRepository storeRepository,
+            AppService appService)
         {
-            public string AppId { get; set; }
-            public object Settings { get; set; }
-            public string StoreId { get; set; }
-            public override string ToString()
-            {
-                return string.Empty;
-            }
+            _eventAggregator = eventAggregator;
+            _currencies = currencies;
+            _storeRepository = storeRepository;
+            _appService = appService;
         }
+
+        private readonly EventAggregator _eventAggregator;
+        private readonly CurrencyNameTable _currencies;
+        private readonly StoreRepository _storeRepository;
+        private readonly AppService _appService;
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
@@ -69,7 +82,7 @@ namespace BTCPayServer.Controllers
                 Sounds = string.Join(Environment.NewLine, settings.Sounds),
                 AnimationColors = string.Join(Environment.NewLine, settings.AnimationColors)
             };
-            return View(vm);
+            return View("Crowdfund/UpdateCrowdfund", vm);
         }
 
         [HttpPost("{appId}/settings/crowdfund")]
@@ -138,7 +151,7 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(vm);
+                return View("Crowdfund/UpdateCrowdfund", vm);
             }
 
             app.Name = vm.AppName;
@@ -176,7 +189,7 @@ namespace BTCPayServer.Controllers
 
             await _appService.UpdateOrCreateApp(app);
 
-            _eventAggregator.Publish(new AppUpdated()
+            _eventAggregator.Publish(new UIAppsController.AppUpdated
             {
                 AppId = appId,
                 StoreId = app.StoreDataId,
@@ -185,5 +198,16 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
+
+        async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
+        {
+            if (string.IsNullOrWhiteSpace(currency))
+            {
+                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+            }
+            return currency.Trim().ToUpperInvariant();
+        }
+        
+        private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

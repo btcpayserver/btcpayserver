@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
 
-namespace BTCPayServer.Models.AppViewModels
+namespace BTCPayServer.Plugins.PointOfSale.Models
 {
     public class ViewPointOfSaleViewModel
     {

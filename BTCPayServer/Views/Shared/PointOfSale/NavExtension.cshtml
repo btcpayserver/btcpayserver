@@ -1,0 +1,20 @@
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.TagHelpers
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Services.Apps
+@model BTCPayServer.Components.MainNav.StoreApp
+
+@{ var store = Context.GetStoreData(); }
+
+@if (store != null && Model.AppType == AppType.PointOfSale)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@Model.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, Model.Id)" id="@($"StoreNav-App-{Model.Id}")">
+            <vc:icon symbol="@Model.AppType.ToString().ToLower()"/>
+            <span>@Model.AppName</span>
+        </a>
+    </li>
+}
+

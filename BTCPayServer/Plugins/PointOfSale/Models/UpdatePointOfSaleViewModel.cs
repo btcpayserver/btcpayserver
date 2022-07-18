@@ -4,7 +4,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Models.AppViewModels
+namespace BTCPayServer.Plugins.PointOfSale.Models
 {
     public class UpdatePointOfSaleViewModel
     {

@@ -1,10 +1,11 @@
 @using BTCPayServer.Models.AppViewModels
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services.Stores
 @using LNURL
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @inject StoreRepository StoreRepository
-@model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
 <style>
     /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */

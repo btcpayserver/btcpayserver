@@ -15,9 +15,11 @@
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <form asp-action="EditCustodianAccount">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
+        <form asp-action="EditCustodianAccount" class="mb-5">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
             <partial name="_FormTopMessages" model="Model.ConfigForm"/>
 
             <div class="form-group">
@@ -32,5 +34,8 @@
                 <input type="submit" value="Continue" class="btn btn-primary" id="Save"/>
             </div>
         </form>
+        <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-outline-danger" role="button" id="DeleteCustodianAccountConfig">
+            <span class="fa fa-trash"></span> Delete this custodian account
+        </a>
     </div>
 </div>

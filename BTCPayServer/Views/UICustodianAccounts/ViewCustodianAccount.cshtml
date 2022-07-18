@@ -10,42 +10,34 @@
     <partial name="_ValidationScriptsPartial"/>
 }
 
-
-<partial name="_StatusMessage"/>
-
 <style>
     .trade-qty label{display: block; }
 </style>
 
 <div id="custodianAccountView" v-cloak>
-
     <div class="sticky-header-setup"></div>
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
+    <div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
         <h2 class="mb-0">
             @ViewData["Title"]
         </h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <a class="btn btn-primary mt-3 mt-sm-0" role="button" v-if="account && account.canDeposit" v-on:click="openDepositModal()" href="#">
+        <div class="d-flex flex-wrap gap-3">
+            <a class="btn btn-primary" role="button" v-if="account && account.canDeposit" v-on:click="openDepositModal()" href="#">
                 <span class="fa fa-download"></span> Deposit
             </a>
-            <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="EditCustodianAccountConfig">
+            <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary" role="button" id="EditCustodianAccountConfig">
                 <span class="fa fa-gear"></span> Configure
-            </a>
-            <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-danger mt-3 mt-sm-0" role="button" id="DeleteCustodianAccountConfig">
-                <span class="fa fa-trash"></span> Delete
             </a>
             <!--
             <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
             <a class="btn btn-secondary" id="ViewApp" target="app_" href="/apps/MQ2sCVsmQ95JBZ4aZDtoSwMAnBY/pos">View</a>
             -->
         </div>
-
     </div>
 
+    <partial name="_StatusMessage"/>
 
     <div class="row">
         <div class="col-xl-12">
-
             <div v-if="!account" class="loading d-flex justify-content-center p-3">
                 <div class="spinner-border text-light" role="status">
                     <span class="visually-hidden">Loading...</span>

@@ -15,14 +15,12 @@ new Vue({
             isUpdating: false,
             updateTradePriceXhr: null,
             priceRefresherInterval: null,
-
             assetToTrade: null,
             assetToTradeInto: null,
             qty: null,
             maxQtyToTrade: null,
             price: null
         }
-
     },
     computed: {
         tradeQtyToReceive: function () {
@@ -69,9 +67,9 @@ new Vue({
         },
         openTradeModal: function (row) {
             let _this = this;
-            this.trade.row = row
+            this.trade.row = row;
             this.trade.results = null;
-
+            this.trade.errorMsg = null;
             this.trade.assetToTrade = row.asset;
             if (row.asset === this.account.storeDefaultFiat) {
                 this.trade.assetToTradeInto = "BTC";

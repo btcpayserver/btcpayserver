@@ -18,6 +18,7 @@ using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -58,8 +59,19 @@ namespace BTCPayServer.Tests
             var s = await client.GetStores();
             var store = await client.GetStore(user.StoreId);
             Assert.NotNull(store);
-            var addr = await client.GetLightningDepositAddress(user.StoreId,"BTC");
+            var addr = await client.GetLightningDepositAddress(user.StoreId, "BTC");
             Assert.NotNull(BitcoinAddress.Create(addr, Network.RegTest));
+
+            await user.CreateStoreAsync();
+            var store1 = user.StoreId;
+            await user.CreateStoreAsync();
+            var store2 = user.StoreId;
+            var store1Client = await factory.Create(null, store1);
+            var store2Client = await factory.Create(null, store2);
+            var store1Res = await store1Client.GetStore(store1);
+            var store2Res = await store2Client.GetStore(store2);
+            Assert.Equal(store1, store1Res.Id);
+            Assert.Equal(store2, store2Res.Id);
         }
 
         [Fact(Timeout = TestTimeout)]

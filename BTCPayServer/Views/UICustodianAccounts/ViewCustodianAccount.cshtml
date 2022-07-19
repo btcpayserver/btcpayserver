@@ -173,11 +173,11 @@
                         <p v-if="trade.errorMsg" class="alert alert-danger">{{ trade.errorMsg }}</p>
 
                         <div class="row mb-2 trade-qty">
-                            <div class="col-5">
+                            <div class="col-side">
                                 <label class="form-label">
                                     Convert
                                     <div class="input-group">
-                                        <input name="Qty" type="number" min="0" :max="trade.maxQtyToTrade" class="form-control" v-model="trade.qty"/>
+                                        <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" class="form-control qty" v-model="trade.qty"/>
                                         <select name="FromAsset" v-model="trade.assetToTrade" class="form-control">
                                             <option v-for="option in availableAssetsToTrade" v-bind:value="option">
                                                 {{ option }}
@@ -186,18 +186,18 @@
                                     </div>
                                 </label>
                             </div>
-                            <div class="col-2 text-center">
+                            <div class="col-center text-center">
                                 &nbsp;
                                 <br/>
-                                <button type="button" class="btn btn-secondary" v-on:click="swapTradeAssets()" aria-label="Swap assets">
+                                <button type="button" class="btn btn-secondary btn-square" v-on:click="swapTradeAssets()" aria-label="Swap assets">
                                     <i class="fa fa-arrows-h" aria-hidden="true"></i>
                                 </button>
                             </div>
-                            <div class="col-5">
+                            <div class="col-side">
                                 <label class="form-label">
                                     Into
                                     <div class="input-group">
-                                        <input disabled="disabled" type="number" class="form-control" v-model="tradeQtyToReceive"/>
+                                        <input disabled="disabled" type="number" class="form-control qty" v-model="tradeQtyToReceive"/>
                                         <select name="ToAsset" v-model="trade.assetToTradeInto" class="form-control">
                                             <option v-for="option in availableAssetsToTradeInto" v-bind:value="option">
                                                 {{ option }}
@@ -247,10 +247,10 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="entry in trade.results.ledgerEntries" v-bind:class="{ 'table-success': entry.qty > 0, 'table-danger': entry.qty < 0 }">
-                                <td class="text-end"><span v-if="entry.qty > 0">+</span> {{ entry.qty }}</td>
-                                <td>{{ entry.asset }}</td>
-                                <td>
+                            <tr v-for="entry in trade.results.ledgerEntries">
+                                <td class="text-end" v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }"><span v-if="entry.qty > 0">+</span>{{ entry.qty }}</td>
+                                <td v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }">{{ entry.asset }}</td>
+                                <td v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }">
                                     <span v-if="entry.type !== 'Trade'">{{ entry.type}}</span>
                                 </td>
                             </tr>

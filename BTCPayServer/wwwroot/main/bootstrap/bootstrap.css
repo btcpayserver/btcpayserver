@@ -2195,7 +2195,7 @@ textarea.form-control-lg {
   line-height: 1.6;
   color: var(--btcpay-form-text);
   background-color: var(--btcpay-form-bg);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236E7681' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 12px;
@@ -2661,7 +2661,7 @@ textarea.form-control-lg {
 
 .was-validated .form-select:valid:not([multiple]):not([size]), .was-validated .form-select:valid:not([multiple])[size="1"], .form-select.is-valid:not([multiple]):not([size]), .form-select.is-valid:not([multiple])[size="1"] {
   padding-right: 4.125rem;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236E7681' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
   background-position: right 0.75rem center, center right 2.25rem;
   background-size: 16px 12px, calc(0.8em + 0.5rem) calc(0.8em + 0.5rem);
 }
@@ -2757,7 +2757,7 @@ textarea.form-control-lg {
 
 .was-validated .form-select:invalid:not([multiple]):not([size]), .was-validated .form-select:invalid:not([multiple])[size="1"], .form-select.is-invalid:not([multiple]):not([size]), .form-select.is-invalid:not([multiple])[size="1"] {
   padding-right: 4.125rem;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236E7681' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
   background-position: right 0.75rem center, center right 2.25rem;
   background-size: 16px 12px, calc(0.8em + 0.5rem) calc(0.8em + 0.5rem);
 }
@@ -10613,6 +10613,21 @@ fieldset:disabled .btn {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
+[list] {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236E7681' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+[list]::-webkit-list-button {
+  content: none;
+}
 /* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
 * {
   --btcpay-scrollbar-width: 0.375rem;
@@ -10863,6 +10878,10 @@ main [class^="table-responsive"] {
   border-bottom-width: 0;
 }
 
+.table > thead:not(caption) > * > th {
+  color: var(--btcpay-body-text-muted);
+}
+
 /* custom utility classes */
 .bg-tile {
   background-color: var(--btcpay-bg-tile);
@@ -10968,7 +10987,7 @@ input[type="number"].hide-number-spin {
 
 /* Forms */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-select:not(:disabled,.disabled,.is-valid,.is-invalid):hover,
@@ -11220,9 +11239,13 @@ input[type="number"].hide-number-spin {
   flex-shrink: 0;
   border: 0;
   border-radius: calc(var(--toggle-height) / 2);
-  background: var(--btcpay-neutral-500);
+  background: var(--btcpay-toggle-bg);
   font-size: 0;
   cursor: pointer;
+}
+
+.btcpay-toggle:hover {
+  background: var(--btcpay-toggle-bg-hover);
 }
 
 input.btcpay-toggle {
@@ -11233,7 +11256,12 @@ input.btcpay-toggle {
 
 input.btcpay-toggle:checked,
 .btcpay-toggle.btcpay-toggle--active {
-  background: var(--btcpay-primary);
+  background: var(--btcpay-toggle-bg-active);
+}
+
+input.btcpay-toggle:checked:hover,
+.btcpay-toggle.btcpay-toggle--active:hover {
+  background: var(--btcpay-toggle-bg-active-hover);
 }
 
 .btcpay-toggle::after {

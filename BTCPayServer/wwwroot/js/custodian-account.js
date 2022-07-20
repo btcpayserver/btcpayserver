@@ -105,12 +105,12 @@ new Vue({
             }
             this.modals.deposit.show();
         },
-        onTradeSubmit: function (e) {
+        onTradeSubmit: async function (e) {
             e.preventDefault();
 
-            let form = jQuery(e.currentTarget);
-            let url = form.attr('action');
-            let method = form.attr('method');
+            const form = e.currentTarget;
+            const url = form.getAttribute('action');
+            const method = form.getAttribute('method');
 
             this.trade.isExecuting = true;
 
@@ -118,46 +118,37 @@ new Vue({
             this.modals.trade._config.backdrop = 'static';
             this.modals.trade._config.keyboard = false;
 
-            let _this = this;
-
-            let token = $("input[name='__RequestVerificationToken']").val();
-            window.jQuery.ajax({
-                method: method,
-                url: url,
+            const _this = this;
+            const token = document.querySelector("input[name='__RequestVerificationToken']").value;
+                
+            const response = await fetch(url, {
+                method,
                 headers: {
-                    "RequestVerificationToken": token
+                    'Content-Type' : 'application/json',
+                    'RequestVerificationToken': token
                 },
-                contentType : 'application/json',
-                data: JSON.stringify({
+                body: JSON.stringify({
                     fromAsset: _this.trade.assetToTrade,
                     toAsset: _this.trade.assetToTradeInto,
                     qty: _this.trade.qty
-                }),
-                success: function (data) {
-                    _this.trade.results = data;
-                    _this.trade.errorMsg = null;
-
-                    _this.setTradePriceRefresher(false);
-                    _this.refreshAccountBalances();
-                },
-                complete: function (xhr, status) {
-                    _this.modals.trade._config.backdrop = true;
-                    _this.modals.trade._config.keyboard = true;
-
-                    _this.trade.isExecuting = false;
-                },
-                error: function (xhr, textStatus, errorThrown) {
-                    let errorMsg = "Error";
-                    if(xhr.responseText){
-                        try {
-                            let data = JSON.parse(xhr.responseText);
-                            errorMsg = data.message;
-                        }catch(e){}
-                    }
-                    _this.trade.errorMsg = errorMsg;
-                }
+                })
             });
+            
+            let data = null;
+            try { data = await response.json(); } catch (e) {}
 
+            if (response.ok) {
+                _this.trade.results = data;
+                _this.trade.errorMsg = null;
+
+                _this.setTradePriceRefresher(false);
+                _this.refreshAccountBalances();
+            } else {
+                _this.trade.errorMsg = data && data.message || "Error";
+            }
+            _this.modals.trade._config.backdrop = true;
+            _this.modals.trade._config.keyboard = true;
+            _this.trade.isExecuting = false;
         },
 
         setTradePriceRefresher: function (enabled) {
@@ -185,8 +176,7 @@ new Vue({
             this.trade.isUpdating = true;
 
             if (this.isAjaxRunning(this.trade.updateTradePriceXhr)) {
-                // Previous request is still running. No need to hammer the seerver.
-                console.log("Previous request is still running. No need to hammer the seerver.");
+                console.log("Previous request is still running. No need to hammer the server.");
                 return;
             }
 

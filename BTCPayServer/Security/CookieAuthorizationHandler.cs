@@ -150,8 +150,9 @@ namespace BTCPayServer.Security
                 default:
                     if (Policies.IsPluginPolicy(requirement.Policy))
                     {
-                        var args = new AuthorizationFilterArguments(context, requirement, _httpContext);
-                        success = (bool)await _pluginHookService.ApplyFilter("handle-authorization-requirement", args);
+                        var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
+                            new AuthorizationFilterHandle(context, requirement, _httpContext));
+                        success = handle.Success;
                     }
                     break;
             }

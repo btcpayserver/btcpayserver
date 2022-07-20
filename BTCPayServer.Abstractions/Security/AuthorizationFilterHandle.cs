@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Security;
 
-public class AuthorizationFilterArguments
+public class AuthorizationFilterHandle
 {
     public AuthorizationHandlerContext Context { get; }
     public PolicyRequirement Requirement { get; }
     public HttpContext HttpContext { get; }
-        
-    public AuthorizationFilterArguments(
+    public bool Success { get; }
+
+    public AuthorizationFilterHandle(
         AuthorizationHandlerContext context,
         PolicyRequirement requirement,
         HttpContext httpContext)

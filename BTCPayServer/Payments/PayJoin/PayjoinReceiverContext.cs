@@ -14,14 +14,14 @@ namespace BTCPayServer.Payments.PayJoin
     {
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClient _explorerClient;
-        private readonly PayJoinRepository _payJoinRepository;
+        private readonly UTXOLocker _utxoLocker;
         private readonly BTCPayServer.Logging.Logs BTCPayLogs;
-        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, PayJoinRepository payJoinRepository, BTCPayServer.Logging.Logs logs)
+        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, UTXOLocker utxoLocker, BTCPayServer.Logging.Logs logs)
         {
             this.BTCPayLogs = logs;
             _invoiceRepository = invoiceRepository;
             _explorerClient = explorerClient;
-            _payJoinRepository = payJoinRepository;
+            _utxoLocker = utxoLocker;
         }
         public Invoice Invoice { get; set; }
         public NBitcoin.Transaction OriginalTransaction { get; set; }
@@ -40,7 +40,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
             if (!success && LockedUTXOs != null)
             {
-                disposing.Add(_payJoinRepository.TryUnlock(LockedUTXOs));
+                disposing.Add(_utxoLocker.TryUnlock(LockedUTXOs));
             }
             try
             {

@@ -331,8 +331,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-
-        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/delete")]
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/delete")]
         public async Task<IActionResult> DeleteCustodianAccount(string storeId, string accountId)
         {
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
@@ -345,7 +344,7 @@ namespace BTCPayServer.Controllers
             if (isDeleted)
             {
                 TempData[WellKnownTempData.SuccessMessage] = "Custodian account deleted";
-                return RedirectToAction("Dashboard", "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
             }
 
             TempData[WellKnownTempData.ErrorMessage] = "Could not delete custodian account";

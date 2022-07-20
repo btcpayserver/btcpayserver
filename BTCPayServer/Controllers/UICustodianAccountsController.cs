@@ -471,8 +471,8 @@ namespace BTCPayServer.Controllers
             }
             catch (GreenfieldAPIException e)
             {
-                // TODO how to we return the same response as the original?
-                return BadRequest(e);
+                var result = new ObjectResult(e.APIError) { StatusCode = e.HttpCode };
+                return result;
             }
         }
 

@@ -2890,6 +2890,10 @@ namespace BTCPayServer.Tests
             
             // TODO Test: Trade with percentage qty
             
+            // Test: Trade with wrong decimal format (example: JavaScript scientific format)
+            var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "6.1e-7"};
+            await AssertApiError(400,"bad-qty-format", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongQtyTradeRequest));
+            
             // Test: Trade, wrong assets method
             var wrongAssetsTradeRequest = new TradeRequestData {FromAsset = "WRONG", ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
             await AssertHttpError(WrongTradingPairException.HttpCode, async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongAssetsTradeRequest));
@@ -2901,8 +2905,8 @@ namespace BTCPayServer.Tests
             await AssertHttpError(403, async () => await tradeClient.MarketTradeCustodianAccountAsset("WRONG-STORE-ID", accountId, tradeRequest));
             
             // Test: Trade, correct assets, wrong amount
-            var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongQtyTradeRequest));
+            var insufficientFundsTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
+            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, insufficientFundsTradeRequest));
 
 
             // Test: GetTradeQuote, unauth

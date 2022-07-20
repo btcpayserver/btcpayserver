@@ -148,16 +148,12 @@ new Vue({
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     let errorMsg = "Error";
-
-                    debugger;
                     if(xhr.responseText){
                         try {
                             let data = JSON.parse(xhr.responseText);
-                            errorMsg = data.error;
+                            errorMsg = data.message;
                         }catch(e){}
                     }
-                    
-                    // TODO parse response + get error message from that
                     _this.trade.errorMsg = errorMsg;
                 }
             });

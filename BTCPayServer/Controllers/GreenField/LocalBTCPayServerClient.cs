@@ -484,6 +484,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     throw new GreenfieldValidationException(validationErrors.ToArray());
                 case BadRequestObjectResult { Value: GreenfieldAPIError error }:
                     throw new GreenfieldAPIException(400, error);
+                case ObjectResult { Value: GreenfieldAPIError error }:
+                    throw new GreenfieldAPIException(400, error);
                 case NotFoundResult _:
                     throw new GreenfieldAPIException(404, new GreenfieldAPIError("not-found", ""));
                 default:

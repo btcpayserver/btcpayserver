@@ -3,7 +3,7 @@ using System.Linq;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-namespace BTCPayServer.Abstractions.TagHelpers
+namespace BTCPayServer.TagHelpers
 {
     [HtmlTargetElement("input", Attributes = "currency-selection")]
     public class CurrenciesSuggestionsTagHelper : TagHelper

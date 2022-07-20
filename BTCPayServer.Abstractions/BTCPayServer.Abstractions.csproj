@@ -39,6 +39,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
-    <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
   </ItemGroup>
 </Project>

@@ -947,7 +947,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public bool PreferOnion { get; set; }
 
-        public PaymentMethodId GetId()
+        public virtual PaymentMethodId GetId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             return new PaymentMethodId(CryptoCode, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(PaymentType));

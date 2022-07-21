@@ -19,6 +19,8 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Free;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -633,6 +635,13 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
+           
+            if (invoice.Type == InvoiceType.Standard && invoice.Price == 0 &&
+                !invoice.GetPaymentMethods().Any())
+            {
+                invoice.SetPaymentMethod(new FreePaymentMethod());
+            }
+            
             
             bool isDefaultPaymentId = false;
             if (paymentMethodId is null)
@@ -698,7 +707,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var accounting = paymentMethod.Calculate();
 
-            var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
+            var paymentMethodHandler = _paymentMethodHandlerDictionary.Support(paymentMethodId)? _paymentMethodHandlerDictionary[paymentMethodId]: null;
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
@@ -736,7 +745,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
-                CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
+                CryptoImage = paymentMethodHandler is null? "":  Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ShowMoney(divisibility),
                 InvoiceCurrency = invoice.Currency,
@@ -774,15 +783,15 @@ namespace BTCPayServer.Controllers
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
-                                              var availableCryptoHandler = _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
+                                              var availableCryptoHandler = _paymentMethodHandlerDictionary.Support(availableCryptoPaymentMethodId)? _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId]: null;
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
                                                   CryptoCode = kv.Network?.CryptoCode ?? kv.GetId().CryptoCode,
-                                                  PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
+                                                  PaymentMethodName = availableCryptoHandler?.GetPaymentMethodName(availableCryptoPaymentMethodId),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,
-                                                  CryptoImage = Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
+                                                  CryptoImage =availableCryptoHandler is null? null: Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
                                                   Link = Url.Action(nameof(Checkout),
                                                       new
                                                       {
@@ -794,8 +803,8 @@ namespace BTCPayServer.Controllers
                                           .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
-            paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
-            model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
+            paymentMethodHandler?.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
+            model.UISettings = paymentMethodHandler?.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();

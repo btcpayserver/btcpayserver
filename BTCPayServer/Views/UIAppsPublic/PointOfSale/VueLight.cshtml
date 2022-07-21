@@ -37,6 +37,29 @@
         <input class="form-control" type="hidden" name="amount" v-model="payTotalNumeric">
     </form>
 
+    @if (Model.ShowDiscount)
+    {
+        <div class="input-group mt-4">
+            <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
+            <input
+                class="js-cart-discount form-control"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                v-model="discountPercent"
+                v-on:change="onDiscountChange"
+                name="discount"
+                placeholder="Discount in %"
+            >
+            <a
+                class="js-cart-discount-remove btn btn-danger"
+                href="#"
+                v-on:click="removeDiscount"
+            ><i class="fa fa-times"></i></a>
+        </div>
+    }
+
     @if (Model.EnableTips)
     {
         <p class="pt-5 h5">@Model.CustomTipText</p>

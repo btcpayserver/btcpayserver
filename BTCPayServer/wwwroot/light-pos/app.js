@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 payTotalNumeric: 0,
                 tipTotal: null,
                 tipTotalNumeric: 0,
+                discountPercent: null,
+                discountTotalNumeric: 0,
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
                 keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'C'],
@@ -64,6 +66,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.payTotalNumeric = 0;
                 this.tipTotal = null;
                 this.tipTotalNumeric = 0;
+                this.discountPercent = null;
+                this.discountTotalNumeric = 0;
             },
             handleFormSubmit: function() {
                 this.payButtonLoading = true;
@@ -100,6 +104,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.payTotalNumeric = parseFloat(payTotal);
                 this.tipTotalNumeric = 0;
                 this.tipTotal = null;
+                this.discountTotalNumeric = 0;
+                this.discountPercent = null;
             },
             tipClicked: function(percentage) {
                 this.payTotalNumeric -= this.tipTotalNumeric;
@@ -114,6 +120,28 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 this.payTotal = this.payTotalNumeric.toString(10);
                 this.tipTotalNumeric = 0;
                 this.tipTotal = null;
+            },
+            removeDiscount: function() {
+                this.payTotalNumeric += this.discountTotalNumeric;
+                this.payTotal = this.payTotalNumeric.toString(10);
+                this.discountTotalNumeric = 0;
+                this.discountPercent = null;
+
+                // Remove the tips as well as it won't be the right number anymore after discount is removed
+                this.removeTip();
+            },
+            onDiscountChange: function(e){
+                // Remove tip if we are changing discount % as it won't be the right number anymore
+                this.removeTip();
+
+                var discountPercent = parseInt(e.target.value, 10);
+                console.log(discountPercent);
+
+                this.payTotalNumeric += this.discountTotalNumeric;
+                this.discountTotalNumeric = parseFloat((this.payTotalNumeric * (discountPercent / 100)).toFixed(this.srvModel.currencyInfo.divisibility));
+                this.payTotalNumeric = parseFloat((this.payTotalNumeric - this.discountTotalNumeric).toFixed(this.srvModel.currencyInfo.divisibility));
+
+                this.payTotal = this.payTotalNumeric.toString(10);
             },
         }
     });

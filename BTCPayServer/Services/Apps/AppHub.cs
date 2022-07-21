@@ -47,7 +47,8 @@ namespace BTCPayServer.Services.Apps
                 switch (result)
                 {
                     case OkObjectResult okObjectResult:
-                        await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] { okObjectResult.Value.ToString() });
+                        if(!model.IgnoreInvoice)
+                            await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] { okObjectResult.Value.ToString() });
                         break;
                     case ObjectResult objectResult:
                         await Clients.Caller.SendCoreAsync(InvoiceError, new[] { objectResult.Value });

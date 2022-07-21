@@ -28,7 +28,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.price.type !== 2 || this.perk.price.value) && (this.perk.inventory==null || this.perk.inventory > 0)
+                return !this.expanded 
+                    && this.active && 
+                    (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {
@@ -40,7 +42,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                     return;
                 }
                 
-                eventAggregator.$emit("contribute", {amount: parseFloat(this.amount), choiceKey: this.perk.id});
+                eventAggregator.$emit("contribute", {amount: parseFloat(this.amount), choiceKey: this.perk.id, ignoreInvoice: this.perk.price && this.perk.price.type === 2 && !this.perk.price.value});
             },
             expand: function(){
                 if(this.canExpand){

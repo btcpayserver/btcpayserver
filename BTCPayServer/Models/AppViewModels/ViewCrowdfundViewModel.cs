@@ -88,5 +88,6 @@ namespace BTCPayServer.Models.AppViewModels
         public string ChoiceKey { get; set; }
         public bool RedirectToCheckout { get; set; }
         public string RedirectUrl { get; set; }
+        public bool IgnoreInvoice { get; set; }
     }
 }

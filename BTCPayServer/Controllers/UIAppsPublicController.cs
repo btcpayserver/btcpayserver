@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using NicolasDorier.RateLimits;
-using static BTCPayServer.Controllers.UIAppsController;
 
 namespace BTCPayServer.Controllers
 {
@@ -227,8 +226,7 @@ namespace BTCPayServer.Controllers
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
-                                : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                                : Request.GetDisplayUrl(),
+                                : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl: null,
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
@@ -239,7 +237,12 @@ namespace BTCPayServer.Controllers
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string>() { AppService.GetAppInternalTag(appId) },
-                    cancellationToken);
+                    cancellationToken, (entity) =>
+                    {
+                        entity.Metadata.OrderUrl = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
+                            : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
+                            : Request.GetDisplayUrl();
+                    } );
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }
             catch (BitpayHttpException e)
@@ -377,31 +380,32 @@ namespace BTCPayServer.Controllers
             try
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
-                {
-                    OrderId = AppService.GetAppOrderId(app),
-                    Currency = settings.TargetCurrency,
-                    ItemCode = request.ChoiceKey ?? string.Empty,
-                    ItemDesc = title,
-                    BuyerEmail = request.Email,
-                    Price = price,
-                    NotificationURL = settings.NotificationUrl,
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    SupportedTransactionCurrencies = paymentMethods,
-                    RedirectURL = request.RedirectUrl ??
-                                     HttpContext.Request.GetAbsoluteUri($"/apps/{appId}/crowdfund")
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string> { AppService.GetAppInternalTag(appId) },
-                    cancellationToken: cancellationToken);
+                    {
+                        OrderId = AppService.GetAppOrderId(app),
+                        Currency = settings.TargetCurrency,
+                        ItemCode = request.ChoiceKey ?? string.Empty,
+                        ItemDesc = title,
+                        BuyerEmail = request.Email,
+                        Price = price,
+                        NotificationURL = settings.NotificationUrl,
+                        FullNotifications = true,
+                        ExtendedNotifications = true,
+                        SupportedTransactionCurrencies = paymentMethods,
+                        RedirectURL = request.RedirectUrl,
+                    }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string>() {AppService.GetAppInternalTag(appId)},
+                    cancellationToken, (entity) =>
+                    {
+                        entity.Metadata.OrderUrl = HttpContext.Request.GetAbsoluteUri($"/apps/{appId}/crowdfund");
+                    });
+
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice",
-                        new { invoiceId = invoice.Data.Id });
+                        new {invoiceId = invoice.Data.Id});
                 }
-                else
-                {
-                    return Ok(invoice.Data.Id);
-                }
+
+                return Ok(invoice.Data.Id);
             }
             catch (BitpayHttpException e)
             {

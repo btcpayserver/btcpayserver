@@ -94,12 +94,23 @@
 @functions {
     private void PayFormInputContent(string buttonText,ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType itemPriceType, decimal? minPriceValue = null, decimal? priceValue = null)
     {
-        <div class="input-group">
-            <span class="input-group-text">@Model.CurrencySymbol</span>
-            <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-            <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue" readonly="@(itemPriceType == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)">
-               <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
-        </div>
+        if (itemPriceType == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed && priceValue == 0)
+        {
+            <div class="input-group  ">
+                <input class="form-control" type="text" readonly  value="Free"/>
+                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
+            </div>
+        }
+        else
+        {
+            <div class="input-group">
+                <span class="input-group-text">@Model.CurrencySymbol</span>
+                <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
+                <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue" readonly="@(itemPriceType == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)">
+                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
+            </div>
+        }
+        
     }
 
     private void CardBody(string title, string description)

@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 // Remove tip if we are changing discount % as it won't be the right number anymore
                 this.removeTip();
 
-                const discountPercent = parseInt(e.target.value, 10);
+                const discountPercent = parseFloat(e.target.value);
                 const { divisibility } = this.srvModel.currencyInfo;
 
                 this.payTotalNumeric += this.discountTotalNumeric;

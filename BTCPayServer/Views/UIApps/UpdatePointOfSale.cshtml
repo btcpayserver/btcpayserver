@@ -89,11 +89,11 @@
                 <h3 class="mt-5 mb-4">Discounts</h3>
                 <div class="form-group d-flex align-items-center">
                     <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
-                    <label asp-for="ShowDiscount" class="form-label mb-0"></label>
+                    <div>
+                        <label asp-for="ShowDiscount" class="form-label mb-0"></label>
+                        <div class="text-muted">Not recommended for customer self-checkout.</div>
+                    </div>
                     <span asp-validation-for="ShowDiscount" class="text-danger"></span>
-                </div>
-                <div class="mt-2">
-                    <span class="text-secondary">Not recommended for customer self-checkout.</span>
                 </div>
             </section>
             <section id="custom-payments" class="p-0">

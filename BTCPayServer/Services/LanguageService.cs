@@ -7,6 +7,7 @@ using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -27,19 +28,29 @@ namespace BTCPayServer.Services
 
     public class LanguageService
     {
+        private readonly ILogger<LanguageService> _logger;
         private readonly Language[] _languages;
 
-        public LanguageService(IWebHostEnvironment environment)
+        public LanguageService(IWebHostEnvironment environment, ILogger<LanguageService> logger)
         {
+            _logger = logger;
             var path = environment.WebRootPath;
             path = Path.Combine(path, "locales");
             var files = Directory.GetFiles(path, "*.json");
             var result = new List<Language>();
             foreach (var file in files)
             {
-                using var stream = new StreamReader(file);
-                var json = stream.ReadToEnd();
-                result.Add(JObject.Parse(json).ToObject<Language>());
+                try
+                {
+
+                    using var stream = new StreamReader(file);
+                    var json = stream.ReadToEnd();
+                    result.Add(JObject.Parse(json).ToObject<Language>());
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"Could not parse language file {file}");
+                }
             }
 
             _languages = result.ToArray();

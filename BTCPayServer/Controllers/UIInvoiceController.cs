@@ -87,14 +87,14 @@ namespace BTCPayServer.Controllers
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(BitpayCreateInvoiceRequest invoice,
             StoreData store, string serverUrl, List<string>? additionalTags = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
-            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken);
+            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken, entityManipulator);
             var resp = entity.EntityToDTO();
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default,  Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
@@ -164,10 +164,10 @@ namespace BTCPayServer.Controllers
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
 
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default,  Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
@@ -207,10 +207,10 @@ namespace BTCPayServer.Controllers
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken, entityManipulator);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default,  Action<InvoiceEntity>? entityManipulator = null)
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
@@ -327,6 +327,10 @@ namespace BTCPayServer.Controllers
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
             }
 
+            if (entityManipulator != null)
+            {
+                entityManipulator.Invoke(entity);
+            }
             using (logs.Measure("Saving invoice"))
             {
                 entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);

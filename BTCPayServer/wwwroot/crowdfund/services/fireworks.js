@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded",function (ev) {
     var c = document.getElementById("fireworks");
-if (!c.getContext) return;
+if (!c || !c.getContext) return;
 var ctx = c.getContext("2d");
 if (!ctx) return;
 

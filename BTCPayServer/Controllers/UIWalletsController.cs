@@ -609,24 +609,12 @@ namespace BTCPayServer.Controllers
 
                 var utxos = await _walletProvider.GetWallet(network)
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
-                var locks = await _utxoLocker.FindLocks(utxos.Select(coin => coin.OutPoint).ToArray());
-                
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
                     var labels = info?.Labels == null
                         ? new List<ColoredLabel>()
                         : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request).ToList();
-                    if (locks.Contains(coin.OutPoint))
-                    {
-                        labels.Add(new ColoredLabel()
-                        {
-                            Color = "red",
-                            Text = "Reserved",
-                            Tooltip = "This utxo has been reserved for use in an interactive transaction.",
-                            TextColor = "white"
-                        });
-                    }
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),

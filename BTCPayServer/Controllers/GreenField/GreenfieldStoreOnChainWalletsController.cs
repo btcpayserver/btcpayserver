@@ -321,19 +321,10 @@ namespace BTCPayServer.Controllers.Greenfield
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
             
-            var locks = await _utxoLocker.FindLocks(utxos.Select(coin => coin.OutPoint).ToArray());
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
                     var labels = info?.Labels ?? new Dictionary<string, LabelData>();
-                    if (locks.Contains(coin.OutPoint))
-                    {
-                        labels.Add("reserved", new LabelData()
-                        {
-                            Type = "reserved",
-                            Text = "Reserved",
-                        });
-                    }
                     return new OnChainWalletUTXOData()
                     {
                         Outpoint = coin.OutPoint,

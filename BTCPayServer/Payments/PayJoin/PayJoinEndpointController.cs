@@ -511,7 +511,7 @@ namespace BTCPayServer.Payments.PayJoin
                         }))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
             
-            labels.Add(GetExpectedHash(newPsbt, coins), new List<(string color, Label label)>()
+            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<(string color, Label label)>()
             {
                 UpdateTransactionLabel.PayjoinLabelTemplate()
             });

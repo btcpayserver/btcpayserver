@@ -204,6 +204,10 @@
   --btcpay-form-shadow-focus: var(--btcpay-primary-shadow);
   --btcpay-form-shadow-valid: var(--btcpay-success-shadow);
   --btcpay-form-shadow-invalid: var(--btcpay-danger-shadow);
+  --btcpay-toggle-bg: var(--btcpay-neutral-500);
+  --btcpay-toggle-bg-hover: var(--btcpay-neutral-600);
+  --btcpay-toggle-bg-active: var(--btcpay-primary);
+  --btcpay-toggle-bg-active-hover: var(--btcpay-primary-600);
   --btcpay-footer-bg: var(--btcpay-body-bg);
   --btcpay-footer-text: var(--btcpay-neutral-500);
   --btcpay-footer-link: var(--btcpay-neutral-500);

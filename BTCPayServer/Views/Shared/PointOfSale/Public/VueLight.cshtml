@@ -1,6 +1,6 @@
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 <div id="app" class="l-pos-wrapper" v-cloak>
-    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit">
+    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit">
         <div class="l-pos-header bg-primary py-3 px-3">
             @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
             {

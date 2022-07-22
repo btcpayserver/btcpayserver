@@ -1,0 +1,18 @@
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@{
+    Layout = "PointOfSale/Public/_LayoutPos";
+}
+
+<partial name="_StatusMessage" />
+
+@if (Context.Request.Query.ContainsKey("simple"))
+{
+    <partial name="PointOfSale/Public/MinimalLight" model="Model" />
+}
+else
+{
+    <noscript>
+        <partial name="PointOfSale/Public/MinimalLight" model="Model" />
+    </noscript>
+    <partial name="PointOfSale/Public/VueLight" model="Model" />
+}

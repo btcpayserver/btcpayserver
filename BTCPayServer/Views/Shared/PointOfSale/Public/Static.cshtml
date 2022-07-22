@@ -1,8 +1,7 @@
-@using BTCPayServer.Models.AppViewModels
 @using BTCPayServer.Plugins.PointOfSale.Models
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "_LayoutPos";
+    Layout = "PointOfSale/Public/_LayoutPos";
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
@@ -18,15 +17,14 @@
             </div>
         }
         <div class="card-deck my-3 mx-auto">
-            @for (int x = 0; x < Model.Items.Length; x++)
+            @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
                 var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                buttonText = buttonText.Replace("{0}",item.Price.Formatted)
-                    ?.Replace("{Price}",item.Price.Formatted);
+                buttonText = buttonText.Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted);
                 
                 <div class="card px-0" data-id="@x">
-                    @if (!String.IsNullOrWhiteSpace(item.Image))
+                    @if (!string.IsNullOrWhiteSpace(item.Image))
                     {
                         <img class="card-img-top" src="@item.Image" alt="Card image cap" asp-append-version="true">
                     }
@@ -36,7 +34,7 @@
                         {
                             @if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                                 {
-                                    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>
                                         <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                         @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
@@ -44,7 +42,7 @@
                                 }
                                 else
                                 {
-                                    <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
+                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
                                         <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                         <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
                                             @Safe.Raw(buttonText)
@@ -54,7 +52,6 @@
                         }
                         @if (item.Inventory.HasValue)
                         {
-
                             <div class="w-100 pt-2 text-center text-muted">
                                 @if (item.Inventory > 0)
                                 {
@@ -78,7 +75,7 @@
                 <div class="card px-0">
                     @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
                     <div class="card-footer bg-transparent border-0 pb-3">
-                        <form method="post" asp-controller="UIAppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                        <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                             @{PayFormInputContent(Model.CustomButtonText, ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum);}
                         </form>
                         @if (anyInventoryItems)
@@ -111,14 +108,13 @@
                 <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
             </div>
         }
-        
     }
 
     private void CardBody(string title, string description)
     {
         <div class="card-body my-auto pb-0">
             <h5 class="card-title">@title</h5>
-            @if (!String.IsNullOrWhiteSpace(description))
+            @if (!string.IsNullOrWhiteSpace(description))
             {
                 <p class="card-text">@Safe.Raw(description)</p>
             }

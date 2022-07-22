@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class UIAppsController : Controller
@@ -37,7 +36,6 @@ namespace BTCPayServer.Controllers
 
         public string CreatedAppId { get; set; }
         
-        
         public class AppUpdated
         {
             public string AppId { get; set; }
@@ -48,7 +46,23 @@ namespace BTCPayServer.Controllers
                 return string.Empty;
             }
         }
+        
+        [HttpGet("/apps/{appId}")]
+        public async Task<IActionResult> RedirectToApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, null);
+            if (app is null)
+                return NotFound();
+            
+            return app.AppType switch
+            {
+                nameof(AppType.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),
+                nameof(AppType.PointOfSale) => RedirectToAction(nameof(UIPointOfSaleController.ViewPointOfSale), "UIPointOfSale", new { appId }),
+                _ => NotFound()
+            };
+        }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
             string storeId,
@@ -94,6 +108,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps/create")]
         public IActionResult CreateApp(string storeId)
         {
@@ -103,6 +118,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("/stores/{storeId}/apps/create")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
@@ -151,6 +167,7 @@ namespace BTCPayServer.Controllers
             };
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/delete")]
         public IActionResult DeleteApp(string appId)
         {
@@ -161,6 +178,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/delete")]
         public async Task<IActionResult> DeleteAppPost(string appId)
         {

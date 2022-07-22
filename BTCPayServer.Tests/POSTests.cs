@@ -55,7 +55,7 @@ donation:
 ";
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-            var publicApps = user.GetController<UIAppsPublicController>();
+            var publicApps = user.GetController<UIPointOfSaleController>();
             var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
 
             // apple shouldn't be available since we it's set to "disabled: true" above

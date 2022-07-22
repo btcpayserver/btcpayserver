@@ -97,8 +97,8 @@ namespace BTCPayServer.Tests
 
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel, "save").Result);
 
-            var anonAppPubsController = tester.PayTester.GetController<UIAppsPublicController>();
-            var publicApps = user.GetController<UIAppsPublicController>();
+            var anonAppPubsController = tester.PayTester.GetController<UICrowdfundController>();
+            var crowdfundController = user.GetController<UICrowdfundController>();
 
             Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(app.Id, new ContributeToCrowdfund()
             {
@@ -108,12 +108,12 @@ namespace BTCPayServer.Tests
             Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id, string.Empty));
 
             //Scenario 2: Not Enabled But Admin - Allowed
-            Assert.IsType<OkObjectResult>(await publicApps.ContributeToCrowdfund(app.Id, new ContributeToCrowdfund()
+            Assert.IsType<OkObjectResult>(await crowdfundController.ContributeToCrowdfund(app.Id, new ContributeToCrowdfund()
             {
                 RedirectToCheckout = false,
                 Amount = new decimal(0.01)
             }, default));
-            Assert.IsType<ViewResult>(await publicApps.ViewCrowdfund(app.Id, string.Empty));
+            Assert.IsType<ViewResult>(await crowdfundController.ViewCrowdfund(app.Id, string.Empty));
             Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id, string.Empty));
 
             //Scenario 3: Enabled But Start Date > Now - Not Allowed
@@ -190,8 +190,7 @@ namespace BTCPayServer.Tests
             crowdfundViewModel.EnforceTargetAmount = true;
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel, "save").Result);
 
-            var anonAppPubsController = tester.PayTester.GetController<UIAppsPublicController>();
-            var publicApps = user.GetController<UIAppsPublicController>();
+            var publicApps = user.GetController<UICrowdfundController>();
 
             var model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                 .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, String.Empty).Result).Model);

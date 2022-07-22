@@ -651,7 +651,7 @@ donation:
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.Equal("hello", vmpos.Title);
 
-                var publicApps = user.GetController<UIAppsPublicController>();
+                var publicApps = user.GetController<UIPointOfSaleController>();
                 var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
                 Assert.Equal("hello", vmview.Title);
                 Assert.Equal(3, vmview.Items.Length);
@@ -720,7 +720,7 @@ donation:
   custom: true
 ";
                     Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-                    publicApps = user.GetController<UIAppsPublicController>();
+                    publicApps = user.GetController<UIPointOfSaleController>();
                     vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
                     Assert.Equal(test.Code, vmview.CurrencyCode);
                     Assert.Equal(test.ExpectedSymbol,

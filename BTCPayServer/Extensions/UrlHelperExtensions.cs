@@ -40,8 +40,8 @@ namespace Microsoft.AspNetCore.Mvc
         public static string AppLink(this LinkGenerator urlHelper, string appId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
-                action: nameof(UIAppsPublicController.RedirectToApp),
-                controller: "UIAppsPublic",
+                action: nameof(UIAppsController.RedirectToApp),
+                controller: "UIApps",
                 values: new { appId },
                 scheme, host, pathbase);
         }

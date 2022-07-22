@@ -1,9 +1,8 @@
-@using BTCPayServer.Models.AppViewModels
 @using BTCPayServer.Plugins.PointOfSale.Models
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "_LayoutPos";
-    int[] customTipPercentages = Model.CustomTipPercentages;
+    Layout = "PointOfSale/Public/_LayoutPos";
+    var customTipPercentages = Model.CustomTipPercentages;
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
@@ -162,7 +161,6 @@
                 <form
                     id="js-cart-pay-form"
                     method="post"
-                    asp-controller="UIAppsPublic"
                     asp-action="ViewPointOfSale"
                     asp-route-appId="@Model.AppId"
                     asp-antiforgery="false"

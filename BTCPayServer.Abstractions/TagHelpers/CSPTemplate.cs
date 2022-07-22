@@ -1,7 +1,8 @@
 using System.Threading.Tasks;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-namespace BTCPayServer.TagHelpers;
+
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 /// <summary>
 /// Add sha256- to allow inline event handlers in CSP

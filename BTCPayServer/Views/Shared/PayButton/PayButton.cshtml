@@ -1,7 +1,5 @@
 @inject Security.ContentSecurityPolicies csp 
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.TagHelpers
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);

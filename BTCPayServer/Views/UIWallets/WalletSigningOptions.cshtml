@@ -1,8 +1,6 @@
 @using BTCPayServer.Controllers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSigningOptionsModel
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     var walletId = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });

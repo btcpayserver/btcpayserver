@@ -1,11 +1,10 @@
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-namespace BTCPayServer.TagHelpers;
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 // Make sure that <svg><use href=/ are correctly working if rootpath is present
 [HtmlTargetElement("use", Attributes = "href")]

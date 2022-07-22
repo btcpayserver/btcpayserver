@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-namespace BTCPayServer.TagHelpers;
 
+namespace BTCPayServer.Abstractions.TagHelpers;
 
 /// <summary>
 /// Add 'unsafe-hashes' and sha256- to allow inline event handlers in CSP

@@ -924,7 +924,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
             Assert.Equal("true",
                 s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
-            var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
+            s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
             s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
             var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
             Assert.Single(inputSelectionSelect.FindElements(By.CssSelector("[selected]")));

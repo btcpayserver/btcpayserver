@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
             InvoiceEntity invoice = null;
             try
             {
-                invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                invoice = await _InvoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Price,
                     Type = model.Price is null? InvoiceType.TopUp: InvoiceType.Standard,

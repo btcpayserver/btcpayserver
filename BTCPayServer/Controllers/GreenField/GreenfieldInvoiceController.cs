@@ -216,7 +216,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(request, store,
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,
                     Request.GetAbsoluteRoot());
                 return Ok(ToModel(invoice));
             }

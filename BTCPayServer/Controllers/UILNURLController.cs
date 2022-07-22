@@ -405,7 +405,7 @@ namespace BTCPayServer
                     }.ToJObject();
             }
             
-            var i = await _invoiceController.CreateInvoiceCore(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
+            var i = await _invoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);

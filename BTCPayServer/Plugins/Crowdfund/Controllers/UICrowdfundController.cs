@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -13,6 +14,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -121,7 +123,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             var store = await _appService.GetStore(app);
             var title = settings.Title;
             decimal? price = request.Amount;
-            Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
+            string[] paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
@@ -150,8 +152,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 }
                 if (choice?.PaymentMethods?.Any() is true)
                 {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
+                    paymentMethods = choice.PaymentMethods.ToArray();
                 }
             }
             else
@@ -172,33 +173,36 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                     {
-                        OrderId = AppService.GetAppOrderId(app),
+
                         Currency = settings.TargetCurrency,
-                        ItemCode = request.ChoiceKey ?? string.Empty,
-                        ItemDesc = title,
-                        BuyerEmail = request.Email,
-                        Price = price,
-                        NotificationURL = settings.NotificationUrl,
-                        FullNotifications = true,
-                        ExtendedNotifications = true,
-                        SupportedTransactionCurrencies = paymentMethods,
-                        RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
+                        Amount = price,
+                        Type = price is null? InvoiceType.TopUp: InvoiceType.Standard,
+                        Checkout = new InvoiceDataBase.CheckoutOptions()
+                        {
+                            PaymentMethods = paymentMethods,
+                            RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl()
+                        },
+                        Metadata = new InvoiceMetadata()
+                        {
+                            OrderId = AppService.GetAppOrderId(app),
+                            OrderUrl = Request.GetDisplayUrl(),
+                            ItemCode = request.ChoiceKey ?? string.Empty,
+                            ItemDesc = title,
+                            BuyerEmail = request.Email
+                        }.ToJObject()
                     }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() {AppService.GetAppInternalTag(appId)},
-                    cancellationToken, (entity) =>
-                    {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-                    });
+                    new List<string> { AppService.GetAppInternalTag(appId) },
+                    cancellationToken);
 
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice",
-                        new {invoiceId = invoice.Data.Id});
+                        new {invoiceId = invoice.Id});
                 }
 
-                return Ok(invoice.Data.Id);
+                return Ok(invoice.Id);
             }
             catch (BitpayHttpException e)
             {
@@ -233,7 +237,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
                 CustomCSSLink = settings.CustomCSSLink,
-                NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 PerksTemplate = settings.PerksTemplate,
                 DisqusEnabled = settings.DisqusEnabled,
@@ -344,7 +347,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 CustomCSSLink = vm.CustomCSSLink,
                 MainImageUrl = vm.MainImageUrl,
                 EmbeddedCSS = vm.EmbeddedCSS,
-                NotificationUrl = vm.NotificationUrl,
                 Tagline = vm.Tagline,
                 PerksTemplate = vm.PerksTemplate,
                 DisqusEnabled = vm.DisqusEnabled,

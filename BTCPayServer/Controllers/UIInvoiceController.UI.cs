@@ -1075,7 +1075,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var result = await CreateInvoiceCore(new CreateInvoiceRequest()
+                var result = await CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Amount,
                     Type = model.Amount is null? InvoiceType.TopUp: InvoiceType.Standard,

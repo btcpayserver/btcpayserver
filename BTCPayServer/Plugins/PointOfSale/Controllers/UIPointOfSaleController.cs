@@ -11,6 +11,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -18,6 +19,7 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -26,6 +28,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using NicolasDorier.RateLimits;
+using PosViewType = BTCPayServer.Services.Apps.PosViewType;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
@@ -135,7 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             string title = null;
             decimal? price = null;
-            Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
+            string[] paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
@@ -165,8 +168,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
                 if (choice?.PaymentMethods?.Any() is true)
                 {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
+                    paymentMethods = choice.PaymentMethods;
                 }
             }
             else
@@ -205,34 +207,34 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
-                {
-                    ItemCode = choice?.Id,
-                    ItemDesc = title,
-                    Currency = settings.Currency,
-                    Price = price,
-                    BuyerEmail = email,
-                    OrderId = orderId ?? AppService.GetAppOrderId(app),
-                    NotificationURL =
-                            string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                    RedirectURL =  !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
-                        : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                        : Request.GetDisplayUrl(),
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
-                    RedirectAutomatically = settings.RedirectAutomatically,
-                    SupportedTransactionCurrencies = paymentMethods,
-                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? store.GetStoreBlob().RequiresRefundEmail
-                        : requiresRefundEmail == RequiresRefundEmail.On,
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                     {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-                    } );
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
+                        Currency = settings.Currency,
+                        Amount = price,
+                        Type = price is null ? InvoiceType.TopUp : InvoiceType.Standard,
+                        Checkout = new InvoiceDataBase.CheckoutOptions()
+                        {
+                            RedirectAutomatically = settings.RedirectAutomatically,
+                            PaymentMethods = paymentMethods,
+                            RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
+                                : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
+                                : Request.GetDisplayUrl(),
+                            RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
+                                ? null
+                                : requiresRefundEmail == RequiresRefundEmail.On,
+                        },
+                        Metadata = new InvoiceMetadata()
+                        {
+                            BuyerEmail = email,
+                            ItemCode = choice?.Id,
+                            ItemDesc = title,
+                            OrderId = orderId ?? AppService.GetAppOrderId(app),
+                            OrderUrl = Request.GetDisplayUrl(),
+                            PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                        }.ToJObject()
+                    }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string>() { AppService.GetAppInternalTag(appId) }, cancellationToken);
+                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Id });
             }
             catch (BitpayHttpException e)
             {
@@ -279,7 +281,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 EmbeddedCSS = settings.EmbeddedCSS,
                 Description = settings.Description,
-                NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
@@ -319,7 +320,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 vm.InvoiceUrl = appUrl + "invoices/SkdsDghkdP3D3qkj7bLq3";
             }
 
-            vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
             return View("PointOfSale/UpdatePointOfSale", vm);
         }
 
@@ -365,7 +365,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipText = vm.CustomTipText,
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 CustomCSSLink = vm.CustomCSSLink,
-                NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,

@@ -14,8 +14,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
@@ -48,14 +46,6 @@ namespace BTCPayServer.HostedServices
                 {
                     UpdateTransactionLabel.InvoiceLabelTemplate(invoiceEvent.Invoice.Id)
                 };
-
-                if (invoiceEvent.Invoice.GetPayments(invoiceEvent.Payment.GetCryptoCode(), false).Any(entity =>
-                    entity.GetCryptoPaymentData() is BitcoinLikePaymentData pData &&
-                    pData.PayjoinInformation?.CoinjoinTransactionHash == transactionId))
-                {
-                    labels.Add(UpdateTransactionLabel.PayjoinLabelTemplate());
-                }
-
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
                     labels.Add(UpdateTransactionLabel.PaymentRequestLabelTemplate(paymentId));

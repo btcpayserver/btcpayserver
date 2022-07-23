@@ -56,6 +56,7 @@ namespace BTCPayServer.Services.Labels
             {
                 Text = uncoloredLabel.Text,
                 Color = color,
+                Tooltip = "",
                 TextColor = TextColor(color)
             };
 
@@ -108,7 +109,10 @@ namespace BTCPayServer.Services.Labels
                     ? null
                     : _linkGenerator.PayoutLink(payoutLabel.WalletId, null, PayoutState.Completed, request.Scheme, request.Host,
                         request.PathBase);
-
+            }
+            else if (uncoloredLabel.Text == "payjoin")
+            {
+                coloredLabel.Tooltip = $"This UTXO was part of a PayJoin transaction.";
             }
             return coloredLabel;
         }

@@ -65,11 +65,7 @@ namespace BTCPayServer.Controllers
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelFactory _labelFactory;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
-        private readonly ApplicationDbContextFactory _dbContextFactory;
-        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
-        private readonly PullPaymentHostedService _pullPaymentService;
-        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
-        private readonly NBXplorerConnectionFactory _connectionFactory;
+        private readonly UTXOLocker _utxoLocker;
         private readonly WalletHistogramService _walletHistogramService;
 
         readonly CurrencyNameTable _currencyTable;
@@ -79,10 +75,8 @@ namespace BTCPayServer.Controllers
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
-                                 MvcNewtonsoftJsonOptions mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
                                  WalletHistogramService walletHistogramService,
-                                 NBXplorerConnectionFactory connectionFactory,
                                  RateFetcher rateProvider,
                                  IAuthorizationService authorizationService,
                                  ExplorerClientProvider explorerProvider,
@@ -94,12 +88,9 @@ namespace BTCPayServer.Controllers
                                  DelayedTransactionBroadcaster broadcaster,
                                  PayjoinClient payjoinClient,
                                  LabelFactory labelFactory,
-                                 ApplicationDbContextFactory dbContextFactory,
-                                 BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
-                                 PullPaymentHostedService pullPaymentService,
-                                 IEnumerable<IPayoutHandler> payoutHandlers,
                                  IServiceProvider serviceProvider,
-                                 PullPaymentHostedService pullPaymentHostedService)
+                                 PullPaymentHostedService pullPaymentHostedService,
+                                 UTXOLocker utxoLocker)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -119,12 +110,8 @@ namespace BTCPayServer.Controllers
             _payjoinClient = payjoinClient;
             _labelFactory = labelFactory;
             _pullPaymentHostedService = pullPaymentHostedService;
-            _dbContextFactory = dbContextFactory;
-            _jsonSerializerSettings = jsonSerializerSettings;
-            _pullPaymentService = pullPaymentService;
-            _payoutHandlers = payoutHandlers;
+            _utxoLocker = utxoLocker;
             ServiceProvider = serviceProvider;
-            _connectionFactory = connectionFactory;
             _walletHistogramService = walletHistogramService;
         }
 
@@ -625,15 +612,15 @@ namespace BTCPayServer.Controllers
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
+                    var labels = info?.Labels == null
+                        ? new List<ColoredLabel>()
+                        : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request).ToList();
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels =
-                            info == null
-                                ? null
-                                : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request),
+                        Labels = labels,
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Confirmations = coin.Confirmations

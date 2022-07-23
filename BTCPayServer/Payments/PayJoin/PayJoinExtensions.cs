@@ -13,7 +13,8 @@ namespace BTCPayServer.Payments.PayJoin
         {
             services.AddSingleton<DelayedTransactionBroadcaster>();
             services.AddSingleton<IHostedService, HostedServices.DelayedTransactionBroadcasterHostedService>();
-            services.AddSingleton<PayJoinRepository>();
+            services.AddSingleton<UTXOLocker>();
+            services.AddSingleton<IUTXOLocker>(provider => provider.GetRequiredService<UTXOLocker>());
             services.AddSingleton<IPayjoinServerCommunicator, PayjoinServerCommunicator>();
             services.AddSingleton<PayjoinClient>();
             services.AddTransient<Socks5HttpClientHandler>();

@@ -1,4 +1,24 @@
 # Changelog
+## 1.6.3
+
+### New feature:
+
+* Point of Sale: Add discount option for Keypad view (#3991) @bolatovumar
+
+### Bug fixes:
+
+* When a payjoin label was applied, coin selection filter would not work (#3986) @Kukks
+* When a payjoin happened with a receive address wallet, the payjoin label was not applied (#3986) @Kukks
+* Crowdfund: Show free when invoice is fixed and 0 amount in apps (#3994) @Kukks
+* Crowdfund: Animations on crowdfund not enabled broke JS (#3994) @Kukks
+* Crowdfund: Perk expansion in crowdfund was broken (#3994) @Kukks
+* Redirect instead of show 404 on 0 amount invoices (#3904) @Kukks
+
+### Improvements:
+
+* A few design brush up @dennisreimann @dstrukt
+* Coin Selection: Fix responsive display (#3992, #3985) @dennisreimann
+* Point of Sale: In the receipt, the Order Id is now a link pointing to the point of sale (#3995) @Kukks
 
 ## 1.6.2
 

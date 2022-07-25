@@ -637,18 +637,33 @@
                     },
                     "tradableAssetPairs": {
                         "type": "array",
-                        "description": "A list of tradable asset pairs, or NULL if the custodian cannot trades/convert assets.",
-                        "nullable": true
+                        "description": "A list of tradable asset pair objects, or NULL if the custodian cannot trades/convert assets.",
+                        "nullable": true,
+                        "items": {
+                            "$ref": "#/components/schemas/AssetPairData"
+                        }
                     }
                 },
                 "example": {
                     "code": "kraken",
                     "name": "Kraken",
                     "tradableAssetPairs": [
-                        "BTC/USD",
-                        "BTC/EUR",
-                        "LTC/USD",
-                        "LTC/EUR"
+                        {
+                            "pair": "BTC/USD",
+                            "minimumTradeQty": 0.001
+                        },
+                        {
+                            "pair": "BTC/EUR",
+                            "minimumTradeQty": 0.001
+                        },
+                        {
+                            "pair": "LTC/USD",
+                            "minimumTradeQty": 0.05
+                        },
+                        {
+                            "pair": "LTC/EUR",
+                            "minimumTradeQty": 0.05
+                        }
                     ],
                     "withdrawablePaymentMethods": [
                         "BTC-OnChain",
@@ -1021,6 +1036,26 @@
                 "example": {
                     "asset": "BTC",
                     "qty": 1.23456
+                }
+            },
+            "AssetPairData": {
+                "type": "object",
+                "description": "An asset pair we can trade.",
+                "properties": {
+                    "pair": {
+                        "type": "string",
+                        "description": "The name of the asset pair.",
+                        "nullable": false
+                    },
+                    "minimumTradeQty": {
+                        "type": "number",
+                        "description": "The smallest amount we can buy or sell.",
+                        "nullable": false
+                    }
+                },
+                "example": {
+                    "pair": "BTC/USD",
+                    "minimumTradeQty": 0.0001
                 }
             },
             "LedgerEntryType": {

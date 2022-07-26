@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers.Greenfield
             TradeRequestData request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<MarketTradeResponseData>(
-                await _greenfieldCustodianAccountController.MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
+                await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
         }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,

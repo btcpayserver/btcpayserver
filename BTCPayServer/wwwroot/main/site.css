@@ -546,3 +546,5 @@ svg.icon-note {
 #tradeModal .trade-qty .col-side {
     flex: 1;
 }
+
+.modal-footer .modal-footer-left{ margin-right: auto; }

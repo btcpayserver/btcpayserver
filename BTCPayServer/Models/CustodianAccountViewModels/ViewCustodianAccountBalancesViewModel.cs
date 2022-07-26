@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
         public string AssetBalanceExceptionMessage { get; set; }
         
         public string StoreDefaultFiat { get; set; }
+        public decimal DustThresholdInFiat { get; set; }
         public bool CanDeposit { get; set; }
     }
 }

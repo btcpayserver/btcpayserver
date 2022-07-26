@@ -16,17 +16,11 @@ public class AssetPairData
         MinimumTradeQty = minimumTradeQty;
     }
 
-    public string getPairCode()
-    {
-        return ToString();
-    }
-    
+    [JsonProperty]
     public string AssetBought { set; get; }
 
-    public string AssetSold { set; get; }
-    
     [JsonProperty]
-    public string Pair => ToString();
+    public string AssetSold { set; get; }
 
     [JsonProperty]
     public decimal MinimumTradeQty { set; get; }

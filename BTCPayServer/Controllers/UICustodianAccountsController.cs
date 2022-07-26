@@ -91,8 +91,9 @@ namespace BTCPayServer.Controllers
             }
 
             var store = GetCurrentStore();
-            var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
+            var storeBlob = StoreDataExtensions.GetStoreBlob(store);
             var defaultCurrency = storeBlob.DefaultCurrency;
+            vm.DustThresholdInFiat = 1;
             vm.StoreDefaultFiat = defaultCurrency;
             try
             {
@@ -114,7 +115,6 @@ namespace BTCPayServer.Controllers
                     );
                 }
 
-
                 if (custodian is ICanTrade tradingCustodian)
                 {
                     var config = custodianAccount.GetBlob();
@@ -124,8 +124,14 @@ namespace BTCPayServer.Controllers
                     {
                         var asset = pair.Key;
                         var assetBalance = assetBalances[asset];
-                        assetBalance.TradableAssetPairs =
-                            tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset);
+                        var tradableAssetPairsList =
+                            tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset).ToList();
+                        var tradableAssetPairsDict = new Dictionary<string, AssetPairData>(tradableAssetPairsList.Count);
+                        foreach (var assetPair in tradableAssetPairsList)
+                        {
+                            tradableAssetPairsDict.Add(assetPair.ToString(), assetPair);
+                        }
+                        assetBalance.TradableAssetPairs = tradableAssetPairsDict;
 
                         if (asset.Equals(defaultCurrency))
                         {

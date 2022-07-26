@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 
@@ -14,7 +13,7 @@ public class AssetBalanceInfo
     public string FormattedQty { get; set; }
     public string FormattedFiatValue { get; set; }
     public decimal FiatValue { get; set; }
-    public IEnumerable<AssetPairData> TradableAssetPairs { get; set; }
+    public Dictionary<string, AssetPairData> TradableAssetPairs { get; set; }
     public bool CanWithdraw { get; set; }
     public bool CanDeposit { get; set; }
     public string FormattedBid { get; set; }

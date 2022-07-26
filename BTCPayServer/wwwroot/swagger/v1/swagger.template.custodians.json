@@ -647,24 +647,28 @@
                 "example": {
                     "code": "kraken",
                     "name": "Kraken",
-                    "tradableAssetPairs": [
-                        {
-                            "pair": "BTC/USD",
+                    "tradableAssetPairs": {
+                        "BTC/USD": {
+                            "assetBought": "BTC",
+                            "assetSold": "USD",
                             "minimumTradeQty": 0.001
                         },
-                        {
-                            "pair": "BTC/EUR",
+                        "BTC/EUR": {
+                            "assetBought": "BTC",
+                            "assetSold": "EUR",
                             "minimumTradeQty": 0.001
                         },
-                        {
-                            "pair": "LTC/USD",
+                        "LTC/USD": {
+                            "assetBought": "LTC",
+                            "assetSold": "USD",
                             "minimumTradeQty": 0.05
                         },
-                        {
-                            "pair": "LTC/EUR",
+                        "LTC/EUR": {
+                            "assetBought": "LTC",
+                            "assetSold": "EUR",
                             "minimumTradeQty": 0.05
                         }
-                    ],
+                    },
                     "withdrawablePaymentMethods": [
                         "BTC-OnChain",
                         "LTC-OnChain"
@@ -1054,7 +1058,8 @@
                     }
                 },
                 "example": {
-                    "pair": "BTC/USD",
+                    "assetBought": "BTC",
+                    "assetSold": "USD",
                     "minimumTradeQty": 0.0001
                 }
             },

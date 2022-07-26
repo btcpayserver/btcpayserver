@@ -2,6 +2,7 @@ new Vue({
     el: '#custodianAccountView',
     data: {
         account: null,
+        hideDustAmounts: true,
         modals: {
             trade: null,
             withdraw: null,
@@ -27,7 +28,27 @@ new Vue({
             return this.trade.qty / this.trade.price;
         },
         canExecuteTrade: function () {
-            return this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
+            return this.trade.qty >= this.minQtyToTrade && this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
+        },
+        minQtyToTrade: function() {
+            if (this.account?.assetBalances) {
+                for (let asset in this.account.assetBalances) {
+                    let row = this.account.assetBalances[asset];
+                    
+                    let pairCode = this.trade.assetToTrade + "/" + this.trade.assetToTradeInto;
+                    let pairCodeReverse = this.trade.assetToTradeInto + "/" + this.trade.assetToTrade;
+                    
+                    let pair = row.tradableAssetPairs?.[pairCode];
+                    let pairReverse = row.tradableAssetPairs?.[pairCodeReverse];
+
+                    if (pair) {
+                        return pair.minimumTradeQty;
+                    }else if(pairReverse){
+                        return this.trade.price * pairReverse.minimumTradeQty;
+                    }
+                }
+            }
+            return 0;
         },
         availableAssetsToTrade: function () {
             let r = [];
@@ -40,7 +61,7 @@ new Vue({
             let r = [];
             let pairs = this.account?.assetBalances?.[this.trade.assetToTrade]?.tradableAssetPairs;
             if (pairs) {
-                for (let i = 0; i < pairs.length; i++) {
+                for (let i in pairs) {
                     let pair = pairs[i];
                     if (pair.assetBought === this.trade.assetToTrade) {
                         r.push(pair.assetSold);
@@ -54,9 +75,18 @@ new Vue({
         sortedAssetRows: function () {
             if (this.account?.assetBalances) {
                 let rows = Object.values(this.account.assetBalances);
+                let t = this;
+
+                if(this.hideDustAmounts) {
+                    rows = rows.filter(function (row) {
+                        return row.fiatValue > t.account.dustThresholdInFiat;
+                    });
+                }
+                
                 rows = rows.sort(function (a, b) {
                     return b.fiatValue - a.fiatValue;
                 });
+                
                 return rows;
             }
         }

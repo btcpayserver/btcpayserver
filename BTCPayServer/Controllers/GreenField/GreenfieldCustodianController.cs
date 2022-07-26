@@ -40,7 +40,12 @@ namespace BTCPayServer.Controllers.Greenfield
             if (custodian is ICanTrade tradableCustodian)
             {
                 var tradableAssetPairs = tradableCustodian.GetTradableAssetPairs();
-                result.TradableAssetPairs = tradableAssetPairs;
+                var tradableAssetPairsDict = new Dictionary<string, AssetPairData>(tradableAssetPairs.Count);
+                foreach (var tradableAssetPair in tradableAssetPairs)
+                {
+                    tradableAssetPairsDict.Add(tradableAssetPair.ToString(), tradableAssetPair);
+                }
+                result.TradableAssetPairs = tradableAssetPairsDict;
             }
 
             if (custodian is ICanDeposit depositableCustodian)

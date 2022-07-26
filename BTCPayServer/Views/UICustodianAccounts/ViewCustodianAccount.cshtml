@@ -50,6 +50,15 @@
                 </p>
 
                 <h2>Balances</h2>
+                
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" v-model="hideDustAmounts" id="flexCheckDefault">
+                  <label class="form-check-label" for="flexCheckDefault" >
+                      Hide holdings worth less than {{ account.dustThresholdInFiat }} {{ account.storeDefaultFiat }}.
+                  </label>
+                </div>
+                
+                
                 <div class="table-responsive">
                     <table class="table table-hover table-responsive-md">
                         <thead>
@@ -173,11 +182,11 @@
                         <p v-if="trade.errorMsg" class="alert alert-danger">{{ trade.errorMsg }}</p>
 
                         <div class="row mb-2 trade-qty">
-                            <div class="col-side">
+                            <div class="col-side">  
                                 <label class="form-label">
                                     Convert
-                                    <div class="input-group">
-                                        <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" class="form-control qty" v-model="trade.qty"/>
+                                    <div class="input-group has-validation">
+                                        <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" :min="minQtyToTrade" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < minQtyToTrade || trade.qty > trade.maxQtyToTrade }" v-model="trade.qty"/>
                                         <select name="FromAsset" v-model="trade.assetToTrade" class="form-control">
                                             <option v-for="option in availableAssetsToTrade" v-bind:value="option">
                                                 {{ option }}
@@ -224,18 +233,11 @@
                             <br/>
                             1 {{ trade.assetToTrade }} = {{ 1 / trade.price }} {{ trade.assetToTradeInto }}
                         </p>
-                        <p>
+                        <p v-if="canExecuteTrade">
                             After the trade
                             {{ trade.maxQtyToTrade - trade.qty }} {{ trade.assetToTrade }} will remain in your account.
                         </p>
                         <small class="form-text text-muted">Final results may vary due to trading fees and slippage.</small>
-
-                        <p>
-                            <span v-if="trade.isUpdating">
-                                Updating quote...
-                            </span>
-                            &nbsp;
-                        </p>
                     </div>
                     <div v-if="trade.results !== null">
                         <p class="alert alert-success">Successfully traded {{ trade.results.fromAsset}} into {{ trade.results.toAsset}}.</p>
@@ -260,6 +262,13 @@
                     </div>
                 </div>
                 <div class="modal-footer" v-if="!trade.isExecuting">
+                    
+                    <div class="modal-footer-left">
+                        <span v-if="trade.isUpdating">
+                            Updating quote...
+                        </span>
+                    </div>
+                    
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <span v-if="trade.results">Close</span>
                         <span v-if="!trade.results">Cancel</span>

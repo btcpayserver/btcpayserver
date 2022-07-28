@@ -198,7 +198,7 @@
                             <div class="col-center text-center">
                                 &nbsp;
                                 <br/>
-                                <button type="button" class="btn btn-secondary btn-square" v-on:click="swapTradeAssets()" aria-label="Swap assets">
+                                <button v-if="canSwapTradeAssets()" type="button" class="btn btn-secondary btn-square" v-on:click="swapTradeAssets()" aria-label="Swap assets">
                                     <i class="fa fa-arrows-h" aria-hidden="true"></i>
                                 </button>
                             </div>

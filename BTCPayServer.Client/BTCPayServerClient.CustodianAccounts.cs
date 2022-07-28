@@ -78,7 +78,6 @@ namespace BTCPayServer.Client
             var queryPayload = new Dictionary<string, object>();
             queryPayload.Add("fromAsset", fromAsset);
             queryPayload.Add("toAsset", toAsset);
-
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote", queryPayload), token);
             return await HandleResponse<TradeQuoteResponseData>(response);
         }

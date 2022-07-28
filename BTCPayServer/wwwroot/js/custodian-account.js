@@ -14,7 +14,7 @@ new Vue({
             errorMsg: null,
             isExecuting: false,
             isUpdating: false,
-            updateTradePriceXhr: null,
+            updateTradePriceAbortController: new AbortController(),
             priceRefresherInterval: null,
             assetToTrade: null,
             assetToTradeInto: null,
@@ -30,30 +30,26 @@ new Vue({
         canExecuteTrade: function () {
             return this.trade.qty >= this.minQtyToTrade && this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
         },
-        minQtyToTrade: function() {
-            if (this.account?.assetBalances) {
-                for (let asset in this.account.assetBalances) {
-                    let row = this.account.assetBalances[asset];
-                    
-                    let pairCode = this.trade.assetToTrade + "/" + this.trade.assetToTradeInto;
-                    let pairCodeReverse = this.trade.assetToTradeInto + "/" + this.trade.assetToTrade;
-                    
-                    let pair = row.tradableAssetPairs?.[pairCode];
-                    let pairReverse = row.tradableAssetPairs?.[pairCodeReverse];
-
-                    if (pair) {
-                        return pair.minimumTradeQty;
-                    }else if(pairReverse){
-                        return this.trade.price * pairReverse.minimumTradeQty;
-                    }
-                }
-            }
-            return 0;
+        minQtyToTrade: function () {
+            return this.getMinQtyToTrade(this.trade.assetToTrade, this.trade.assetToTradeInto, false);
         },
         availableAssetsToTrade: function () {
             let r = [];
-            if (this.account?.assetBalances) {
-                r = Object.keys(this.account?.assetBalances);
+            let balances = this?.account?.assetBalances;
+            if (balances) {
+                let t = this;
+                let rows = Object.values(balances);
+                rows = rows.filter(function (row) {
+                    return row.fiatValue > t.account.dustThresholdInFiat;
+                });
+
+                rows = rows.sort(function (a, b) {
+                    return b.fiatValue - a.fiatValue;
+                });
+
+                for (let i in rows) {
+                    r.push(rows[i].asset);
+                }
             }
             return r;
         },
@@ -77,21 +73,46 @@ new Vue({
                 let rows = Object.values(this.account.assetBalances);
                 let t = this;
 
-                if(this.hideDustAmounts) {
+                if (this.hideDustAmounts) {
                     rows = rows.filter(function (row) {
                         return row.fiatValue > t.account.dustThresholdInFiat;
                     });
                 }
-                
+
                 rows = rows.sort(function (a, b) {
                     return b.fiatValue - a.fiatValue;
                 });
-                
+
                 return rows;
             }
         }
     },
     methods: {
+        getMinQtyToTrade: function (assetToTrade, assetToTradeInto, reverse) {
+            if (this.account?.assetBalances) {
+                for (let asset in this.account.assetBalances) {
+                    let row = this.account.assetBalances[asset];
+
+                    let pairCode = assetToTrade + "/" + assetToTradeInto;
+                    let pairCodeReverse = assetToTradeInto + "/" + assetToTrade;
+
+                    let pair = row.tradableAssetPairs?.[pairCode];
+                    let pairReverse = row.tradableAssetPairs?.[pairCodeReverse];
+
+                    if ((pair && !pairReverse) || (pair && reverse)) {
+                        return pair.minimumTradeQty;
+                    } else if ((!pair && pairReverse) || (pairReverse && reverse)) {
+                        // TODO price here could not be what we expect it to be...
+                        let price = this.trade.price;
+                        if (reverse) {
+                            price = 1 / price;
+                        }
+                        return price * pairReverse.minimumTradeQty;
+                    }
+                }
+            }
+            return 0;
+        },
         setTradeQtyPercent: function (percent) {
             this.trade.qty = percent / 100 * this.trade.maxQtyToTrade;
         },
@@ -106,6 +127,9 @@ new Vue({
             } else {
                 this.trade.assetToTradeInto = this.account.storeDefaultFiat;
             }
+            
+            // TODO watch "this.trade.assetToTrade" for changes and if so, set "qty" to max + fill "maxQtyToTrade" and "price"
+            
             this.trade.qty = row.qty;
             this.trade.maxQtyToTrade = row.qty;
             this.trade.price = row.bid;
@@ -150,11 +174,11 @@ new Vue({
 
             const _this = this;
             const token = document.querySelector("input[name='__RequestVerificationToken']").value;
-                
+
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type' : 'application/json',
+                    'Content-Type': 'application/json',
                     'RequestVerificationToken': token
                 },
                 body: JSON.stringify({
@@ -163,9 +187,12 @@ new Vue({
                     qty: _this.trade.qty
                 })
             });
-            
+
             let data = null;
-            try { data = await response.json(); } catch (e) {}
+            try {
+                data = await response.json();
+            } catch (e) {
+            }
 
             if (response.ok) {
                 _this.trade.results = data;
@@ -203,47 +230,70 @@ new Vue({
                 return;
             }
 
-            this.trade.isUpdating = true;
-
-            if (this.isAjaxRunning(this.trade.updateTradePriceXhr)) {
+            if (this.trade.isUpdating) {
                 console.log("Previous request is still running. No need to hammer the server.");
                 return;
             }
 
+            this.trade.isUpdating = true;
+
             let _this = this;
-            this.trade.updateTradePriceXhr = window.jQuery.ajax({
-                method: "get",
-                url: window.ajaxTradePrepareUrl,
-                data: {
-                    assetToTrade: _this.trade.assetToTrade,
-                    assetToTradeInto: _this.trade.assetToTradeInto
-                },
-                success: function (data) {
-                    _this.trade.maxQtyToTrade = data.maxQtyToTrade;
+            var searchParams = new URLSearchParams(window.location.search);
+            if (this.trade.assetToTrade) {
+                searchParams.set("assetToTrade", this.trade.assetToTrade);
+            }
+            if (this.trade.assetToTradeInto) {
+                searchParams.set("assetToTradeInto", this.trade.assetToTradeInto);
+            }
+            let url = window.ajaxTradePrepareUrl + "?" + searchParams.toString();
 
-                    // By default trade everything
-                    if (_this.trade.qty === null) {
-                        _this.trade.qty = _this.trade.maxQtyToTrade;
+            this.trade.updateTradePriceAbortController = new AbortController();
+
+            fetch(url, {
+                    signal: this.trade.updateTradePriceAbortController.signal,
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
-
-                    // Cannot trade more than what we have
-                    if (data.maxQtyToTrade < _this.trade.qty) {
-                        _this.trade.qty = _this.trade.maxQtyToTrade;
-                    }
-
-                    _this.trade.price = data.price;
-                    // _this.trade.results = data;
-                    // _this.trade.errorMsg = null;
-                },
-                complete: function () {
+                }
+            ).then(function (response) {
                     _this.trade.isUpdating = false;
-                },
-                error: function (xhr, textStatus, errorThrown) {
-                    // Do nothing
+
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    // _this.trade.results = data;
+                    // _this.trade.errorMsg = null; }
+                    // Do nothing on error
+                }
+            ).then(function (data) {
+                _this.trade.maxQtyToTrade = data.maxQtyToTrade;
+
+                // By default trade everything
+                if (_this.trade.qty === null) {
+                    _this.trade.qty = _this.trade.maxQtyToTrade;
+                }
+
+                // Cannot trade more than what we have
+                if (data.maxQtyToTrade < _this.trade.qty) {
+                    _this.trade.qty = _this.trade.maxQtyToTrade;
+                }
+                _this.trade.price = data.price;
+            }).catch(function (e) {
+                _this.trade.isUpdating = false;
+                if (e instanceof DOMException && e.code === DOMException.ABORT_ERR) {
+                    console.log("User aborted fetch request");
+                } else {
+                    throw e;
                 }
             });
         },
-
+        canSwapTradeAssets: function () {
+            let minQtyToTrade = this.getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade, true);
+            let assetToTradeIntoHoldings = this.account?.assetBalances?.[this.trade.assetToTradeInto];
+            if (assetToTradeIntoHoldings) {
+                return assetToTradeIntoHoldings.qty >= minQtyToTrade;
+            }
+        },
         swapTradeAssets: function () {
             let tmp = this.trade.assetToTrade;
             this.trade.assetToTrade = this.trade.assetToTradeInto;
@@ -251,20 +301,18 @@ new Vue({
             this.trade.qty = null;
             this.trade.price = 1 / this.trade.price;
 
-            this.killAjaxIfRunning(this.trade.updateTradePriceXhr);
+            this.killAjaxIfRunning(this.trade.updateTradePriceAbortController);
 
             // Update the price asap, so we can continue
-            this.updateTradePrice();
+            let _this = this;
+            setTimeout(function () {
+                _this.updateTradePrice();
+            }, 100);
         },
-        isAjaxRunning: function (xhr) {
-            return xhr && xhr.readyState > 0 && xhr.readyState < 4;
+        killAjaxIfRunning: function (abortController) {
+            abortController.abort();
         },
-        killAjaxIfRunning: function (xhr) {
-            if (this.isAjaxRunning(xhr)) {
-                xhr.abort();
-            }
-        },
-        refreshAccountBalances: function(){
+        refreshAccountBalances: function () {
             let _this = this;
             fetch(window.ajaxBalanceUrl).then(function (response) {
                 return response.json();
@@ -276,9 +324,7 @@ new Vue({
     created: function () {
         this.refreshAccountBalances();
     },
-
     mounted: function () {
         // Runs when the app is ready
-
     }
 });

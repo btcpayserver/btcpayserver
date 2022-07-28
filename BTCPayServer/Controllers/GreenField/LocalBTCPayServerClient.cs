@@ -990,11 +990,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(string storeId,
             string cryptoCode, string transactionId,
-            PatchOnChainTransactionRequest request, CancellationToken token = default)
+            PatchOnChainTransactionRequest request, bool force = false,CancellationToken token = default)
         {
             return GetFromActionResult<OnChainWalletTransactionData>(
                 await GetController<GreenfieldStoreOnChainWalletsController>().PatchOnChainWalletTransaction(storeId, cryptoCode, transactionId,
-                    request));
+                    request, force));
         }
 
         public override async Task<LightningPaymentData> GetLightningPayment(string cryptoCode, string paymentHash,

@@ -254,7 +254,8 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId, 
             string cryptoCode,
             string transactionId,
-            [FromBody] PatchOnChainTransactionRequest request
+            [FromBody] PatchOnChainTransactionRequest request,
+            bool force = false
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
@@ -263,7 +264,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
-            if (tx is null)
+            if (!force && tx is null)
             {
                 return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
             }

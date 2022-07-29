@@ -1,4 +1,4 @@
-@using BTCPayServer.Views.Apps
+﻿@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Custodians
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
@@ -186,7 +186,12 @@
                                 <label class="form-label">
                                     Convert
                                     <div class="input-group has-validation">
-                                        <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" :min="minQtyToTrade" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < minQtyToTrade || trade.qty > trade.maxQtyToTrade }" v-model="trade.qty"/>
+                                    <!--
+                                    getMinQtyToTrade() = {{ getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade) }}
+                                    <br/>
+                                    Max Qty to Trade = {{ trade.maxQtyToTrade }}
+                                    -->
+                                        <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" :min="getMinQtyToTrade()" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < getMinQtyToTrade() || trade.qty > trade.maxQtyToTrade }" v-model="trade.qty"/>
                                         <select name="FromAsset" v-model="trade.assetToTrade" class="form-control">
                                             <option v-for="option in availableAssetsToTrade" v-bind:value="option">
                                                 {{ option }}
@@ -237,6 +242,60 @@
                             After the trade
                             {{ trade.maxQtyToTrade - trade.qty }} {{ trade.assetToTrade }} will remain in your account.
                         </p>
+                        
+                        <!--
+                        <p>
+                            trade.priceForPair = {{ trade.priceForPair }}
+                        </p>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Min Qty to Trade</th>
+                                <th>Price</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>EUR</td>
+                                <td>BTC</td>
+                                <td>{{getMinQtyToTrade('EUR', 'BTC')}}</td>
+                                <td>{{trade.priceForPair['EUR/BTC']}}</td>
+                            </tr>
+                            <tr>
+                                <td>BTC</td>
+                                <td>EUR</td>
+                                <td>{{getMinQtyToTrade('BTC', 'EUR')}}</td>
+                                <td>{{trade.priceForPair['BTC/EUR']}}</td>
+                            </tr>
+                            <tr>
+                                <td>EUR</td>
+                                <td>LTC</td>
+                                <td>{{getMinQtyToTrade('EUR', 'LTC')}}</td>
+                                <td>{{trade.priceForPair['EUR/LTC']}}</td>
+                            </tr>
+                            <tr>
+                                <td>LTC</td>
+                                <td>EUR</td>
+                                <td>{{getMinQtyToTrade('LTC', 'EUR')}}</td>
+                                <td>{{trade.priceForPair['LTC/EUR']}}</td>
+                            </tr>
+                            <tr>
+                                <td>BTC</td>
+                                <td>LTC</td>
+                                <td>{{getMinQtyToTrade('BTC', 'LTC')}}</td>
+                                <td>{{trade.priceForPair['BTC/LTC']}}</td>
+                            </tr>
+                            <tr>
+                                <td>LTC</td>
+                                <td>BTC</td>
+                                <td>{{getMinQtyToTrade('LTC', 'BTC')}}</td>
+                                <td>{{trade.priceForPair['LTC/BTC']}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        -->
                         <small class="form-text text-muted">Final results may vary due to trading fees and slippage.</small>
                     </div>
                     <div v-if="trade.results !== null">

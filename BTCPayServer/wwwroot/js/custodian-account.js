@@ -20,7 +20,8 @@ new Vue({
             assetToTradeInto: null,
             qty: null,
             maxQtyToTrade: null,
-            price: null
+            price: null,
+            priceForPair: {}
         }
     },
     computed: {
@@ -28,10 +29,7 @@ new Vue({
             return this.trade.qty / this.trade.price;
         },
         canExecuteTrade: function () {
-            return this.trade.qty >= this.minQtyToTrade && this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
-        },
-        minQtyToTrade: function () {
-            return this.getMinQtyToTrade(this.trade.assetToTrade, this.trade.assetToTradeInto, false);
+            return this.trade.qty >= this.getMinQtyToTrade() && this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
         },
         availableAssetsToTrade: function () {
             let r = [];
@@ -43,15 +41,11 @@ new Vue({
                     return row.fiatValue > t.account.dustThresholdInFiat;
                 });
 
-                rows = rows.sort(function (a, b) {
-                    return b.fiatValue - a.fiatValue;
-                });
-
                 for (let i in rows) {
                     r.push(rows[i].asset);
                 }
             }
-            return r;
+            return r.sort();
         },
         availableAssetsToTradeInto: function () {
             let r = [];
@@ -66,7 +60,7 @@ new Vue({
                     }
                 }
             }
-            return r;
+            return r.sort();
         },
         sortedAssetRows: function () {
             if (this.account?.assetBalances) {
@@ -88,8 +82,15 @@ new Vue({
         }
     },
     methods: {
-        getMinQtyToTrade: function (assetToTrade, assetToTradeInto, reverse) {
-            if (this.account?.assetBalances) {
+        getMaxQtyToTrade: function (assetToTrade) {
+            let row = this.account?.assetBalances?.[assetToTrade];
+            if (row) {
+                return row.qty;
+            }
+            return null;
+        },
+        getMinQtyToTrade: function (assetToTrade, assetToTradeInto) {
+            if (assetToTrade && assetToTradeInto && this.account?.assetBalances) {
                 for (let asset in this.account.assetBalances) {
                     let row = this.account.assetBalances[asset];
 
@@ -99,15 +100,21 @@ new Vue({
                     let pair = row.tradableAssetPairs?.[pairCode];
                     let pairReverse = row.tradableAssetPairs?.[pairCodeReverse];
 
-                    if ((pair && !pairReverse) || (pair && reverse)) {
-                        return pair.minimumTradeQty;
-                    } else if ((!pair && pairReverse) || (pairReverse && reverse)) {
-                        // TODO price here could not be what we expect it to be...
-                        let price = this.trade.price;
-                        if (reverse) {
-                            price = 1 / price;
+                    if(pair !== null || pairReverse !== null){
+                        if (pair && !pairReverse) {
+                            return pair.minimumTradeQty;
+                        } else if (!pair && pairReverse) {
+                            // TODO price here could not be what we expect it to be...
+                            let price = this.trade.priceForPair?.[pairCode];
+                            if(!price){
+                                return null;
+                            }
+                            // if (reverse) {
+                            //     return price / pairReverse.minimumTradeQty;
+                            // }else {
+                                return price * pairReverse.minimumTradeQty;
+                            // }
                         }
-                        return price * pairReverse.minimumTradeQty;
                     }
                 }
             }
@@ -127,9 +134,9 @@ new Vue({
             } else {
                 this.trade.assetToTradeInto = this.account.storeDefaultFiat;
             }
-            
+
             // TODO watch "this.trade.assetToTrade" for changes and if so, set "qty" to max + fill "maxQtyToTrade" and "price"
-            
+
             this.trade.qty = row.qty;
             this.trade.maxQtyToTrade = row.qty;
             this.trade.price = row.bid;
@@ -230,6 +237,12 @@ new Vue({
                 return;
             }
 
+            if (this.trade.assetToTrade === this.trade.assetToTradeInto) {
+                // The 2 assets must be different
+                this.trade.price = null;
+                return;
+            }
+
             if (this.trade.isUpdating) {
                 console.log("Previous request is still running. No need to hammer the server.");
                 return;
@@ -277,7 +290,14 @@ new Vue({
                 if (data.maxQtyToTrade < _this.trade.qty) {
                     _this.trade.qty = _this.trade.maxQtyToTrade;
                 }
-                _this.trade.price = data.price;
+                let pair = data.fromAsset+"/"+data.toAsset;
+                let pairReverse = data.toAsset+"/"+data.fromAsset;
+                
+                // TODO Should we use "bid" in some cases? The spread can be huge with some shitcoins.
+                _this.trade.price = data.ask;
+                _this.trade.priceForPair[pair] = data.ask;
+                _this.trade.priceForPair[pairReverse] = 1 / data.ask;
+                
             }).catch(function (e) {
                 _this.trade.isUpdating = false;
                 if (e instanceof DOMException && e.code === DOMException.ABORT_ERR) {
@@ -288,18 +308,25 @@ new Vue({
             });
         },
         canSwapTradeAssets: function () {
-            let minQtyToTrade = this.getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade, true);
+            let minQtyToTrade = this.getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade);
             let assetToTradeIntoHoldings = this.account?.assetBalances?.[this.trade.assetToTradeInto];
             if (assetToTradeIntoHoldings) {
                 return assetToTradeIntoHoldings.qty >= minQtyToTrade;
             }
         },
         swapTradeAssets: function () {
+            // Swap the 2 assets
             let tmp = this.trade.assetToTrade;
             this.trade.assetToTrade = this.trade.assetToTradeInto;
             this.trade.assetToTradeInto = tmp;
-            this.trade.qty = null;
             this.trade.price = 1 / this.trade.price;
+            
+            this._refreshTradeDataAfterAssetChange();
+        },
+        _refreshTradeDataAfterAssetChange: function(){
+            let maxQtyToTrade = this.getMaxQtyToTrade(this.trade.assetToTrade);
+            this.trade.qty = maxQtyToTrade
+            this.trade.maxQtyToTrade = maxQtyToTrade;
 
             this.killAjaxIfRunning(this.trade.updateTradePriceAbortController);
 
@@ -319,6 +346,21 @@ new Vue({
             }).then(function (result) {
                 _this.account = result;
             });
+        }
+    },
+    watch: {
+        'trade.assetToTrade': function(newValue, oldValue){
+            if(newValue === this.trade.assetToTradeInto){
+                // This is the same as swapping the 2 assets
+                this.trade.assetToTradeInto = oldValue;
+                this.trade.price = 1 / this.trade.price;
+                
+                this._refreshTradeDataAfterAssetChange();
+            }
+            if(newValue !== oldValue){
+                // The qty is going to be wrong, so set to 100%
+                this.trade.qty = this.getMaxQtyToTrade(this.trade.assetToTrade);
+            }
         }
     },
     created: function () {

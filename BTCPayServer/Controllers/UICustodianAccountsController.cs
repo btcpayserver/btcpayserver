@@ -437,17 +437,12 @@ namespace BTCPayServer.Controllers
                             {
                                 var quote = await tradingCustodian.GetQuoteForAssetAsync(assetToTrade, assetToTradeInto,
                                     config, default);
-
-                                // Should we use "bid" or "ask"? Depends on the pair... are we buying or selling?
+                                
                                 // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
-                                vm.Price = quote.Ask;
-
-                                // vm.FormattedPrice =
-                                //     _currencyNameTable.DisplayFormatCurrency(vm.Price, assetToTrade);
-                                // vm.FormattedFiatValue =
-                                //     _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid,
-                                //         pair.Value.FiatAsset);
-                                // vm.FiatValue = vm.Qty * vm.Price;
+                                vm.Ask = quote.Ask;
+                                vm.Bid = quote.Bid;
+                                vm.FromAsset = quote.FromAsset;
+                                vm.ToAsset = quote.ToAsset;
                             }
                             catch (WrongTradingPairException)
                             {

@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Views.Apps
+@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Custodians
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
@@ -227,7 +227,7 @@
                             </div>
                         </div>
 
-                        <p>
+                        <p v-if="trade.price">
                             <br/>
                             1 {{ trade.assetToTradeInto }} = {{ trade.price }} {{ trade.assetToTrade }}
                             <br/>

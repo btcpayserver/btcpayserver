@@ -1,4 +1,4 @@
-namespace BTCPayServer.Abstractions.Custodians;
+namespace BTCPayServer.Abstractions.Custodians.Client;
 
 public class AssetQuoteResult
 {

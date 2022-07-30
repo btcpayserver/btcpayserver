@@ -89,7 +89,7 @@ new Vue({
             }
             return null;
         },
-        getMinQtyToTrade: function (assetToTrade, assetToTradeInto) {
+        getMinQtyToTrade: function (assetToTrade = this.trade.assetToTrade, assetToTradeInto = this.trade.assetToTradeInto) {
             if (assetToTrade && assetToTradeInto && this.account?.assetBalances) {
                 for (let asset in this.account.assetBalances) {
                     let row = this.account.assetBalances[asset];

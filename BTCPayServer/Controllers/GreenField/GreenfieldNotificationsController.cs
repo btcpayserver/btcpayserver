@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 CreatedTime = entity.Created,
                 Body = entity.Body,
                 Seen = entity.Seen,
-                Link = string.IsNullOrEmpty(entity.ActionLink) ? null : new Uri(entity.ActionLink)
+                Link = string.IsNullOrEmpty(entity.ActionLink) ? null : new Uri($"{Request.GetAbsoluteRoot()}{entity.ActionLink}")
             };
         }
         private IActionResult NotificationNotFound()

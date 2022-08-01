@@ -12,7 +12,7 @@
     var network = BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
 }
 
-@if (network.SupportLightning) {
+@if (network?.SupportLightning is true) {
 <li class="list-group-item bg-tile" id="lightning-address-option">
     <div class="d-flex align-items-center">
         <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">

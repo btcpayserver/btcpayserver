@@ -15,12 +15,16 @@ namespace BTCPayServer.Services.Invoices
     {
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
 
-        public PaymentService(EventAggregator eventAggregator, ApplicationDbContextFactory applicationDbContextFactory, BTCPayNetworkProvider btcPayNetworkProvider)
+        public PaymentService(EventAggregator eventAggregator, 
+            ApplicationDbContextFactory applicationDbContextFactory, 
+            BTCPayNetworkProvider btcPayNetworkProvider, InvoiceRepository invoiceRepository)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
+            _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
         }
         /// <summary>
@@ -109,7 +113,7 @@ namespace BTCPayServer.Services.Invoices
             foreach (KeyValuePair<string, (PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
             {
                 var dbPayment = dbPayments[payment.Key];
-                var invBlob = dbPayment.InvoiceData.GetBlob(_btcPayNetworkProvider);
+                var invBlob = _invoiceRepository.ToEntity(dbPayment.InvoiceData);
                 var dbPaymentEntity = dbPayment.GetBlob(_btcPayNetworkProvider);
                 var wasConfirmed = dbPayment.GetBlob(_btcPayNetworkProvider).GetCryptoPaymentData()
                     .PaymentConfirmed(dbPaymentEntity, invBlob.SpeedPolicy);

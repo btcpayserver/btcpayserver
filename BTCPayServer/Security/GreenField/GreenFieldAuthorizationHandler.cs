@@ -1,17 +1,13 @@
-using System.Buffers;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Security.Greenfield
@@ -21,14 +17,17 @@ namespace BTCPayServer.Security.Greenfield
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
+        private readonly IPluginHookService _pluginHookService;
 
         public LocalGreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            IPluginHookService pluginHookService)
         {
             _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _storeRepository = storeRepository;
+            _pluginHookService = pluginHookService;
         }
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
@@ -38,7 +37,8 @@ namespace BTCPayServer.Security.Greenfield
                 var newUser = new ClaimsPrincipal(new ClaimsIdentity(context.User.Claims,
                     $"{GreenfieldConstants.AuthenticationType}"));
                 var newContext = new AuthorizationHandlerContext(context.Requirements, newUser, null);
-                return new GreenfieldAuthorizationHandler(_httpContextAccessor, _userManager, _storeRepository).HandleAsync(newContext);
+                return new GreenfieldAuthorizationHandler(
+                    _httpContextAccessor, _userManager, _storeRepository, _pluginHookService).HandleAsync(newContext);
             }
             
             var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
@@ -50,21 +50,23 @@ namespace BTCPayServer.Security.Greenfield
             return Task.CompletedTask;
         }
     }
-
+    
     public class GreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
-
     {
-        private readonly HttpContext _HttpContext;
+        private readonly HttpContext _httpContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
+        private readonly IPluginHookService _pluginHookService;
 
         public GreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            IPluginHookService pluginHookService)
         {
-            _HttpContext = httpContextAccessor.HttpContext;
+            _httpContext = httpContextAccessor.HttpContext;
             _userManager = userManager;
             _storeRepository = storeRepository;
+            _pluginHookService = pluginHookService;
         }
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
@@ -85,7 +87,7 @@ namespace BTCPayServer.Security.Greenfield
             switch (policy)
             {
                 case { } when Policies.IsStorePolicy(policy):
-                    var storeId = _HttpContext.GetImplicitStoreId();
+                    var storeId = _httpContext.GetImplicitStoreId();
                     // Specific store action
                     if (storeId != null)
                     {
@@ -102,7 +104,7 @@ namespace BTCPayServer.Security.Greenfield
                                     break;
                             }
                             success = true;
-                            _HttpContext.SetStoreData(store);
+                            _httpContext.SetStoreData(store);
                         }
                     }
                     else
@@ -118,7 +120,7 @@ namespace BTCPayServer.Security.Greenfield
                         }
                         if (!requiredUnscoped && permissionedStores.Count is 0)
                             break;
-                        _HttpContext.SetStoresData(permissionedStores.ToArray());
+                        _httpContext.SetStoresData(permissionedStores.ToArray());
                         success = true;
                     }
                     break;
@@ -132,6 +134,11 @@ namespace BTCPayServer.Security.Greenfield
                             break;
                         success = true;
                     }
+                    break;
+                case { } when Policies.IsPluginPolicy(requirement.Policy):
+                    var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
+                        new AuthorizationFilterHandle(context, requirement, _httpContext));
+                    success = handle.Success;
                     break;
                 case Policies.CanManageNotificationsForUser:
                 case Policies.CanViewNotificationsForUser:
@@ -147,7 +154,7 @@ namespace BTCPayServer.Security.Greenfield
             {
                 context.Succeed(requirement);
             }
-            _HttpContext.Items[RequestedPermissionKey] = policy;
+            _httpContext.Items[RequestedPermissionKey] = policy;
         }
         public const string RequestedPermissionKey = nameof(RequestedPermissionKey);
     }

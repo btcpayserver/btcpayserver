@@ -8,7 +8,7 @@ public class AuthorizationFilterHandle
     public AuthorizationHandlerContext Context { get; }
     public PolicyRequirement Requirement { get; }
     public HttpContext HttpContext { get; }
-    public bool Success { get; }
+    public bool Success { get; private set;  }
 
     public AuthorizationFilterHandle(
         AuthorizationHandlerContext context,
@@ -18,5 +18,10 @@ public class AuthorizationFilterHandle
         Context = context;
         Requirement = requirement;
         HttpContext = httpContext;
+    }
+
+    public void MarkSuccessful()
+    {
+        Success = true;
     }
 }

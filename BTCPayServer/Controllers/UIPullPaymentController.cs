@@ -200,14 +200,14 @@ namespace BTCPayServer.Controllers
                 return await ViewPullPayment(pullPaymentId);
             }
 
-            if (vm.ClaimedAmount == 0)
+            if (vm.ClaimedAmount == 0 && destination.destination.Amount is null)
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount), "Amount is required");
             }
             else
             {
                 var amount = ppBlob.Currency == "SATS" ? new Money(vm.ClaimedAmount, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) : vm.ClaimedAmount;
-                if (destination.destination.Amount != null && amount != destination.destination.Amount)
+                if (destination.destination.Amount != null && amount != destination.destination.Amount && (!destination.destination.IsExplicitAmountMinimum ||  destination.destination.Amount > amount ))
                 {
                     var implied = _displayFormatter.Currency(destination.destination.Amount.Value, paymentMethodId.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol);
                     var provided = _displayFormatter.Currency(vm.ClaimedAmount, ppBlob.Currency, DisplayFormatter.CurrencyFormat.Symbol);

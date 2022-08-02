@@ -326,7 +326,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 request.Amount = destination.destination.Amount;
             }
-            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount)
+            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount && (!destination.destination.IsExplicitAmountMinimum ||  destination.destination.Amount > request.Amount ))
             {
                 ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {request.Amount})");
                 return this.CreateValidationError(ModelState);

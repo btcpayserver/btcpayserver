@@ -1124,12 +1124,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override Task<List<RateSource>> GetRateSources(CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult(_greenfieldStoreRateConfigurationController.GetRateSources()));
+            return Task.FromResult(GetFromActionResult(GetController<GreenfieldStoreRateConfigurationController>().GetRateSources()));
         }
 
         public override Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(_greenfieldStoreRateConfigurationController.GetStoreRateConfiguration()));
+            return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(GetController<GreenfieldStoreRateConfigurationController>().GetStoreRateConfiguration()));
         }
 
         public override async Task<List<StoreRatePreviewResult>> PreviewUpdateStoreRateConfiguration(string storeId,
@@ -1138,13 +1138,13 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<List<StoreRatePreviewResult>>(
-                await _greenfieldStoreRateConfigurationController.PreviewUpdateStoreRateConfiguration(request,
+                await GetController<GreenfieldStoreRateConfigurationController>().PreviewUpdateStoreRateConfiguration(request,
                     currencyPair));
         }
 
         public override async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, CancellationToken token = default)
         {
-            return GetFromActionResult<StoreRateConfiguration>(await _greenfieldStoreRateConfigurationController.UpdateStoreRateConfiguration(request));
+            return GetFromActionResult<StoreRateConfiguration>(await GetController<GreenfieldStoreRateConfigurationController>().UpdateStoreRateConfiguration(request));
         }
         
     }

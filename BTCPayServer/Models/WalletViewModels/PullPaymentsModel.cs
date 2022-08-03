@@ -92,6 +92,8 @@ namespace BTCPayServer.Models.WalletViewModels
             var blob = data.GetBlob();
             Name = blob.Name;
             Description = blob.Description;
+            CustomCSSLink = blob.View.CustomCSSLink;
+            EmbeddedCSS = blob.View.EmbeddedCSS;
         }
 
         [MaxLength(30)]

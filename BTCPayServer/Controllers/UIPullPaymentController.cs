@@ -92,6 +92,20 @@ namespace BTCPayServer.Controllers
             return View(nameof(ViewPullPayment), vm);
         }
 
+        [HttpGet("pull-payments/{pullPaymentId?}/edit")]
+        public async Task<IActionResult> EditPullPaymentRequest(string pullPaymentId)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            Data.PullPaymentData pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+            if (pp == null && !string.IsNullOrEmpty(pullPaymentId))
+            {
+                return NotFound();
+            }
+
+            var vm = new UpdatePullPaymentModel(pp);
+            return View(nameof(EditPullPayment), vm);
+        }
+
         [HttpPost("pull-payments/{pullPaymentId?}/edit")]
         public async Task<IActionResult> EditPullPayment(string pullPaymentId, UpdatePullPaymentModel viewModel)
         {

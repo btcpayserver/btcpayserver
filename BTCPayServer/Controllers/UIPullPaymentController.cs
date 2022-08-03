@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -9,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
@@ -90,6 +90,52 @@ namespace BTCPayServer.Controllers
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
             return View(nameof(ViewPullPayment), vm);
+        }
+
+        [HttpPost("pull-payments/{pullPaymentId?}/edit")]
+        public async Task<IActionResult> EditPullPayment(string pullPaymentId, UpdatePullPaymentModel viewModel)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+
+            var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+            if (pp == null && !string.IsNullOrEmpty(pullPaymentId))
+            {
+                return NotFound();
+            }
+
+            if (pp?.Archived is true)
+            {
+                ModelState.AddModelError(string.Empty, "You cannot edit an archived pull payment request.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditPullPayment), viewModel);
+            }
+
+            var blob = pp.GetBlob();
+            blob.Description = viewModel.Description ?? string.Empty;
+            blob.Name = viewModel.Name ?? string.Empty;
+            blob.View = new PullPaymentBlob.PullPaymentView()
+            {
+                Title = viewModel.Name ?? string.Empty,
+                Description = viewModel.Description ?? string.Empty,
+                CustomCSSLink = viewModel.CustomCSSLink,
+                Email = null,
+                EmbeddedCSS = viewModel.EmbeddedCSS,
+            };
+            
+            pp.SetBlob(blob);
+            ctx.PullPayments.Update(pp);
+            await ctx.SaveChangesAsync();
+          
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Message = $"Pull payment updated successfully",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
         }
 
         [HttpPost("pull-payments/{pullPaymentId}/claim")]

@@ -133,6 +133,12 @@
                     </div>
                 </td>
                 <td class="text-end">
+                    <a asp-action="EditPullPayment"
+                       asp-controller="UIPullPayment"
+                       asp-route-pullPaymentId="@pp.Id">
+                        Edit
+                    </a>
+                    <span> - </span>
                     <a asp-action="ViewPullPayment"
                        asp-controller="UIPullPayment"
                        asp-route-pullPaymentId="@pp.Id">

@@ -309,11 +309,10 @@ namespace BTCPayServer.Services.Stores
                 .FirstOrDefaultAsync();
             if (hook is null)
                 return;
-            var currentBlob = hook.GetBlob();
             
             if (string.IsNullOrEmpty(webhookBlob.Secret))
             {
-                webhookBlob.Secret = currentBlob.Secret;
+                webhookBlob.Secret = hook.GetBlob().Secret;
             }
             hook.SetBlob(webhookBlob);
             await ctx.SaveChangesAsync();

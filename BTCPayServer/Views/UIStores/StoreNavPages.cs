@@ -22,6 +22,7 @@ namespace BTCPayServer.Views.Stores
         PayoutProcessors,
         [Obsolete("Use StoreNavPages.Plugins instead")]
         Integrations,
-        Emails
+        Emails,
+        Forms
     }
 }

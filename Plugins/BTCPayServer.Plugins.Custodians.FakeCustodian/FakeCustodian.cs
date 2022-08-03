@@ -51,7 +51,7 @@ public class FakeCustodian : ICustodian
         fieldset.Fields.Add(fakeLTCBalance);
         fieldset.Fields.Add(fakeEURBalance);
         fieldset.Fields.Add(fakeUSDBalance);
-        form.Fieldsets.Add(fieldset);
+        form.Fields.Add(fieldset);
 
         return Task.FromResult(form);
     }

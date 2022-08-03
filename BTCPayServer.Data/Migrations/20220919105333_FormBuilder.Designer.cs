@@ -3,6 +3,7 @@ using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,12 +12,13 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220919105333_FormBuilder")]
+    partial class FormBuilder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.9");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.7");
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
@@ -868,54 +870,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Wallets");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.WalletObjectData", b =>
-                {
-                    b.Property<string>("WalletId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Data")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("WalletId", "Type", "Id");
-
-                    b.HasIndex("Type", "Id");
-
-                    b.ToTable("WalletObjects");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.WalletObjectLinkData", b =>
-                {
-                    b.Property<string>("WalletId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ParentType")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ParentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ChildType")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ChildId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Data")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("WalletId", "ParentType", "ParentId", "ChildType", "ChildId");
-
-                    b.HasIndex("WalletId", "ChildType", "ChildId");
-
-                    b.ToTable("WalletObjectLinks");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.WalletTransactionData", b =>
                 {
                     b.Property<string>("WalletDataId")
@@ -1414,25 +1368,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.WalletObjectLinkData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.WalletObjectData", "Child")
-                        .WithMany("ParentLinks")
-                        .HasForeignKey("WalletId", "ChildType", "ChildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BTCPayServer.Data.WalletObjectData", "Parent")
-                        .WithMany("ChildLinks")
-                        .HasForeignKey("WalletId", "ParentType", "ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Child");
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.WalletTransactionData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.WalletData", "WalletData")
@@ -1575,13 +1510,6 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.WalletData", b =>
                 {
                     b.Navigation("WalletTransactions");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.WalletObjectData", b =>
-                {
-                    b.Navigation("ChildLinks");
-
-                    b.Navigation("ParentLinks");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.WebhookData", b =>

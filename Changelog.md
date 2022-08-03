@@ -1,4 +1,23 @@
 # Changelog
+
+## 1.6.4
+
+### Improvement:
+
+* If a webhook is the loopback address, skip SSL verification @Kukks
+
+### Bug fixes:
+
+* Minor checkout UI fix (#4015) @dennisreimann
+* Greenfield: Update webhook would reset the secret (#4010) @Kukks
+* Fix crash when BTC network isn't available (#4007) @Kukks
+* Make InvoicePaymentSettled return correct afterExpiration value (#3966) @Kukks
+* Greenfield: Allow tagging a transaction even if it hasn't been yet broadcasted @Kukks
+
+### Improvements:
+
+* The invoice filter dropdown list labels should be "Settled invoice" rather than "Paid invoice" (#4000 #3573) @BitcoinABee
+
 ## 1.6.3
 
 ### New feature:

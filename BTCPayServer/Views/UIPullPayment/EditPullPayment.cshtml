@@ -15,7 +15,7 @@
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
-<form method="post" action="@Url.Action("EditPullPayment", "UIPullPayment", new { pullPaymentId = Model.Id }, Context.Request.Scheme)">
+<form method="post" asp-action="EditPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-pullPaymentId="@Model.Id">
     <div class="sticky-header-setup"></div>
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>

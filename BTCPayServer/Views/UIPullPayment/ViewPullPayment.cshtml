@@ -215,8 +215,11 @@
         </main>
         <footer class="pt-2 pb-4 d-print-none">
             <p class="container text-center" permission="@Policies.CanViewStoreSettings">
-                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.StoreId">
-                    Back to payouts
+                <a asp-action="EditPullPayment"
+                   asp-controller="UIPullPayment"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-pullPaymentId="@Model.Id">
+                    Edit pull payment
                 </a>
             </p>
             <div class="container d-flex flex-wrap align-items-center justify-content-center">

@@ -115,6 +115,7 @@
                 <td>
                     <a asp-action="EditPullPayment"
                        asp-controller="UIPullPayment"
+                       asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-pullPaymentId="@pp.Id">
                         @pp.Name
                     </a>

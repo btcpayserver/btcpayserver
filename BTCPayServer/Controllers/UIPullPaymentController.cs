@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -19,7 +21,6 @@ using NBitcoin;
 
 namespace BTCPayServer.Controllers
 {
-    [AllowAnonymous]
     public class UIPullPaymentController : Controller
     {
         private readonly ApplicationDbContextFactory _dbContextFactory;
@@ -41,7 +42,8 @@ namespace BTCPayServer.Controllers
             _payoutHandlers = payoutHandlers;
         }
 
-        [Route("pull-payments/{pullPaymentId}")]
+        [AllowAnonymous]
+        [HttpGet("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -92,8 +94,9 @@ namespace BTCPayServer.Controllers
             return View(nameof(ViewPullPayment), vm);
         }
 
-        [HttpGet("pull-payments/{pullPaymentId?}/edit")]
-        public async Task<IActionResult> EditPullPaymentRequest(string pullPaymentId)
+        [HttpGet("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId)
         {
             using var ctx = _dbContextFactory.CreateContext();
             Data.PullPaymentData pp = await ctx.PullPayments.FindAsync(pullPaymentId);
@@ -103,11 +106,12 @@ namespace BTCPayServer.Controllers
             }
 
             var vm = new UpdatePullPaymentModel(pp);
-            return View(nameof(EditPullPayment), vm);
+            return View(vm);
         }
 
-        [HttpPost("pull-payments/{pullPaymentId?}/edit")]
-        public async Task<IActionResult> EditPullPayment(string pullPaymentId, UpdatePullPaymentModel viewModel)
+        [HttpPost("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId, UpdatePullPaymentModel viewModel)
         {
             using var ctx = _dbContextFactory.CreateContext();
 
@@ -119,7 +123,7 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(nameof(EditPullPayment), viewModel);
+                return View(viewModel);
             }
 
             var blob = pp.GetBlob();
@@ -147,6 +151,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { pullPaymentId });
         }
 
+        [AllowAnonymous]
         [HttpPost("pull-payments/{pullPaymentId}/claim")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm)
         {

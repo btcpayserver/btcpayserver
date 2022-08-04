@@ -2859,13 +2859,13 @@ namespace BTCPayServer.Tests
             
             // Test: Trade, unauth
             var tradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
-            await AssertHttpError(401, async () => await unauthClient.TradeMarket(storeId, accountId, tradeRequest));
+            await AssertHttpError(401, async () => await unauthClient.MarketTradeCustodianAccountAsset(storeId, accountId, tradeRequest));
             
             // Test: Trade, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.TradeMarket(storeId, accountId, tradeRequest));
+            await AssertHttpError(403, async () => await managerClient.MarketTradeCustodianAccountAsset(storeId, accountId, tradeRequest));
             
             // Test: Trade, correct permission, correct assets, correct amount
-            var newTradeResult = await tradeClient.TradeMarket(storeId, accountId, tradeRequest);
+            var newTradeResult = await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, tradeRequest);
             Assert.NotNull(newTradeResult);
             Assert.Equal(accountId, newTradeResult.AccountId);
             Assert.Equal(mockCustodian.Code, newTradeResult.CustodianCode);
@@ -2886,23 +2886,27 @@ namespace BTCPayServer.Tests
             
             // Test: GetTradeQuote, SATS
             var satsTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = "SATS", Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
-            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.TradeMarket(storeId, accountId, satsTradeRequest));
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, satsTradeRequest));
             
             // TODO Test: Trade with percentage qty
             
+            // Test: Trade with wrong decimal format (example: JavaScript scientific format)
+            var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "6.1e-7"};
+            await AssertApiError(400,"bad-qty-format", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongQtyTradeRequest));
+            
             // Test: Trade, wrong assets method
             var wrongAssetsTradeRequest = new TradeRequestData {FromAsset = "WRONG", ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture)};
-            await AssertHttpError(WrongTradingPairException.HttpCode, async () => await tradeClient.TradeMarket(storeId, accountId, wrongAssetsTradeRequest));
+            await AssertHttpError(WrongTradingPairException.HttpCode, async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongAssetsTradeRequest));
 
             // Test: wrong account ID
-            await AssertHttpError(404, async () => await tradeClient.TradeMarket(storeId, "WRONG-ACCOUNT-ID", tradeRequest));
+            await AssertHttpError(404, async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, "WRONG-ACCOUNT-ID", tradeRequest));
             
             // Test: wrong store ID
-            await AssertHttpError(403, async () => await tradeClient.TradeMarket("WRONG-STORE-ID", accountId, tradeRequest));
+            await AssertHttpError(403, async () => await tradeClient.MarketTradeCustodianAccountAsset("WRONG-STORE-ID", accountId, tradeRequest));
             
             // Test: Trade, correct assets, wrong amount
-            var wrongQtyTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
-            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.TradeMarket(storeId, accountId, wrongQtyTradeRequest));
+            var insufficientFundsTradeRequest = new TradeRequestData {FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01"};
+            await AssertApiError(400, "insufficient-funds", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, insufficientFundsTradeRequest));
 
 
             // Test: GetTradeQuote, unauth

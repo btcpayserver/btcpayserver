@@ -1,18 +1,19 @@
-namespace BTCPayServer.Abstractions.Custodians;
+namespace BTCPayServer.Abstractions.Custodians.Client;
 
 public class AssetQuoteResult
 {
-    public string FromAsset { get; }
-    
-    public string ToAsset { get; }
-    public decimal Bid { get; }
-    public decimal Ask { get; }
+    public string FromAsset { get; set; }
+    public string ToAsset { get; set; }
+    public decimal Bid { get; set; }
+    public decimal Ask { get; set; }
+
+    public AssetQuoteResult() { }
 
     public AssetQuoteResult(string fromAsset, string toAsset,decimal bid, decimal ask)
     {
-        this.FromAsset = fromAsset;
-        this.ToAsset = toAsset;
-        this.Bid = bid;
-        this.Ask = ask;
+        FromAsset = fromAsset;
+        ToAsset = toAsset;
+        Bid = bid;
+        Ask = ask;
     }
 }

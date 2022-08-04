@@ -3,7 +3,7 @@
 @foreach (var fieldset in Model.Fieldsets)
 {
     <fieldset>
-        <legend>@fieldset.Label</legend>
+        <legend class="h3 mt-4 mb-3">@fieldset.Label</legend>
         @foreach (var field in fieldset.Fields)
         {
 @if ("text".Equals(field.Type))
@@ -22,7 +22,7 @@
             </label>
         }
 
-        <input class="form-control @(@field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
+        <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
         <small id="HelpText@field.Name" class="form-text text-muted">
             @field.HelpText
         </small>

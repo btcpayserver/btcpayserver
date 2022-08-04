@@ -1,5 +1,6 @@
 ﻿@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Models
 @model BTCPayServer.Models.CustodianAccountViewModels.EditCustodianAccountViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Edit custodian account");
@@ -15,9 +16,11 @@
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <form asp-action="EditCustodianAccount">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
+        <form asp-action="EditCustodianAccount" class="mb-5">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
             <partial name="_FormTopMessages" model="Model.ConfigForm"/>
 
             <div class="form-group">
@@ -32,5 +35,10 @@
                 <input type="submit" value="Continue" class="btn btn-primary" id="Save"/>
             </div>
         </form>
+        <a asp-action="DeleteCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-outline-danger" role="button" id="DeleteCustodianAccountConfig" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The custodian account <strong>@Model.CustodianAccount.Name</strong> will be permanently deleted." data-confirm-input="DELETE">
+            <span class="fa fa-trash"></span> Delete this custodian account
+        </a>
     </div>
 </div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete custodian account", "The custodian account will be permanently deleted.", "Delete"))" />

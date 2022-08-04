@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 
-namespace BTCPayServer.Abstractions.Custodians;
+namespace BTCPayServer.Abstractions.Custodians.Client;
 
 public class WithdrawResult
 {

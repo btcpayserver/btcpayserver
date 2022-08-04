@@ -117,11 +117,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            if (pp?.Archived is true)
-            {
-                ModelState.AddModelError(string.Empty, "You cannot edit an archived pull payment request.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return View(nameof(EditPullPayment), viewModel);

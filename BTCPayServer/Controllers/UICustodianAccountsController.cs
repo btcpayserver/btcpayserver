@@ -177,21 +177,10 @@ namespace BTCPayServer.Controllers
                         }
                     }
                 }
-
-                vm.CanDeposit = false;
+                
                 if (custodian is ICanDeposit depositableCustodian)
                 {
-                    vm.CanDeposit = true;
-                    var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
-                    foreach (var depositablePaymentMethod in depositablePaymentMethods)
-                    {
-                        var depositableAsset = depositablePaymentMethod.Split("-")[0];
-                        if (assetBalances.ContainsKey(depositableAsset))
-                        {
-                            var assetBalance = assetBalances[depositableAsset];
-                            assetBalance.CanDeposit = true;
-                        }
-                    }
+                    vm.DepositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
                 }
 
                 vm.AssetBalances = assetBalances;

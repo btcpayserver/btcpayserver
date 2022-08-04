@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace BTCPayServer.Models.CustodianAccountViewModels
@@ -10,6 +9,6 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
         
         public string StoreDefaultFiat { get; set; }
         public decimal DustThresholdInFiat { get; set; }
-        public bool CanDeposit { get; set; }
+        public string[] DepositablePaymentMethods { get; set; }
     }
 }

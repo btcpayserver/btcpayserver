@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.5
+
+### Bug fixes:
+
+* Fix crash when running BTCPay without BTC (#4017) @NicolasDorier
+
 ## 1.6.4
 
 ### Improvement:

@@ -140,11 +140,11 @@ namespace BTCPayServer.Controllers
           
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = $"Pull payment updated successfully",
+                Message = "Pull payment updated successfully",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
+            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { pullPaymentId });
         }
 
         [HttpPost("pull-payments/{pullPaymentId}/claim")]

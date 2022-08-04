@@ -452,7 +452,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return BadRequest();
             }

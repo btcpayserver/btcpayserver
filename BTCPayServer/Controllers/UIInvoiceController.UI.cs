@@ -551,8 +551,7 @@ namespace BTCPayServer.Controllers
                         if (this.GetCurrentStore().Role != StoreRoles.Owner)
                             return Forbid();
                         
-                        var settings = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode));
-                        var derivationScheme = settings.AccountDerivation;
+                        var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode))?.AccountDerivation;
                         if (derivationScheme is null)
                             return NotSupported("This feature is only available to BTC wallets");
                         var bumpableAddresses = (await GetAddresses(selectedItems))

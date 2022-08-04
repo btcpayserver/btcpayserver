@@ -578,7 +578,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default,
-            string bip21 = "")
+            string? bip21 = "")
         {
             if (walletId?.StoreId == null)
                 return NotFound();

@@ -415,24 +415,22 @@ namespace BTCPayServer.Services.Invoices
             await context.SaveChangesAsync();
         }
 
-        public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string storeId = null)
+        public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string[] storeIds = null)
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-            if (invoiceData == null || invoiceData.Archived == archived ||
-                (storeId != null &&
-                 !invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
+            if (invoiceData == null || invoiceData.Archived == archived ||  (storeIds != null &&
+                                                                             !storeIds.Contains(invoiceData.StoreDataId)))
                 return;
             invoiceData.Archived = archived;
             await context.SaveChangesAsync().ConfigureAwait(false);
         }
-        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
+        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string[] storeIds, JObject metadata)
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var invoiceData = await GetInvoiceRaw(invoiceId, context);
-            if (invoiceData == null || (storeId != null &&
-                                        !invoiceData.StoreDataId.Equals(storeId,
-                                            StringComparison.InvariantCultureIgnoreCase)))
+            if (invoiceData == null || (storeIds != null &&
+                                        !storeIds.Contains(invoiceData.StoreDataId)))
                 return null;
             var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
             

@@ -1,0 +1,633 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/invoices": {
+            "get": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Get invoices",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "orderId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of OrderIds to fetch the invoices for",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": "1000&orderId=1001&orderId=1002"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of statuses of invoices to be fetched",
+                        "$ref": "#/components/schemas/InvoiceStatus"
+                    },
+                    {
+                        "name": "textSearch",
+                        "in": "query",
+                        "required": false,
+                        "description": "A term that can help locating specific invoices.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "Start date of the period to retrieve invoices",
+                        "$ref": "#/components/schemas/UnixTimestamp"
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "End date of the period to retrieve invoices",
+                        "$ref": "#/components/schemas/UnixTimestamp"
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records to skip",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "take",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records returned in response",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "description": "View information about the existing invoices",
+                "operationId": "Invoices_GetInvoices",
+                "responses": {
+                    "200": {
+                        "description": "list of invoices",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Create a new invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Create a new invoice",
+                "operationId": "Invoices_CreateInvoice",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new invoices"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreateinvoice"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}": {
+            "get": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Get invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified invoice",
+                "operationId": "Invoices_GetInvoice",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Archive invoice",
+                "description": "Archives the specified invoice.",
+                "operationId": "Invoices_ArchiveInvoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store the invoice belongs to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice has been archived"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when archiving the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to archive the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Update invoice",
+                "description": "Updates the specified invoice.",
+                "operationId": "Invoices_UpdateInvoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store the invoice belongs to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice that has been updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods": {
+            "get": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Get invoice payment methods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "onlyAccountedPayments",
+                        "in": "query",
+                        "required": false,
+                        "description": "If default or true, only returns payments which are accounted (in Bitcoin, this mean not returning RBF'd or double spent payments)",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                ],
+                "description": "View information about the specified invoice's payment methods",
+                "operationId": "Invoices_GetInvoicePaymentMethods",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice payment methods data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "nullable": false,
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/status": {
+            "post": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Mark invoice status",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Mark an invoice as invalid or settled.",
+                "operationId": "Invoices_MarkInvoiceStatus",
+                "responses": {
+                    "200": {
+                        "description": "The updated invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarkInvoiceStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive": {
+            "post": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Unarchive invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Unarchive an invoice",
+                "operationId": "Invoices_UnarchiveInvoice",
+                "responses": {
+                    "200": {
+                        "description": "The unarchived invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
+            "post": {
+                "tags": [
+                    "Invoices  (Store)"
+                ],
+                "summary": "Activate Payment Method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethod",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment method to activate",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Activate an invoice payment method (if lazy payments mode is enabled)",
+                "operationId": "Invoices_ActivatePaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to activate the invoice payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Invoices  (Store)"
+        }
+    ]
+}

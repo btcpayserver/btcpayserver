@@ -1,21 +1,12 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/invoices": {
+        "/api/v1/invoices": {
             "get": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Get invoices",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "orderId",
                         "in": "query",
@@ -108,86 +99,15 @@
                         "Basic": []
                     }
                 ]
-            },
-            "post": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Create a new invoice",
-                "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "description": "Create a new invoice",
-                "operationId": "Invoices_CreateInvoice",
-                "responses": {
-                    "200": {
-                        "description": "Information about the new invoice",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/InvoiceData"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "A list of errors that occurred when creating the invoice",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden to add new invoices"
-                    }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateInvoiceRequest"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "API_Key": [
-                            "btcpay.store.cancreateinvoice"
-                        ],
-                        "Basic": []
-                    }
-                ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}": {
+        "/api/v1/invoices/{invoiceId}": {
             "get": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Get invoice",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",
@@ -236,15 +156,6 @@
                 "operationId": "Invoices_ArchiveInvoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "invoiceId",
                         "in": "path",
                         "required": true,
@@ -292,15 +203,6 @@
                 "description": "Updates the specified invoice.",
                 "operationId": "Invoices_UpdateInvoice",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",
@@ -359,22 +261,13 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods": {
+        "/api/v1/invoices/{invoiceId}/payment-methods": {
             "get": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Get invoice payment methods",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",
@@ -429,22 +322,13 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}/status": {
+        "/api/v1/invoices/{invoiceId}/status": {
             "post": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Mark invoice status",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",
@@ -502,22 +386,13 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive": {
+        "/api/v1/invoices/{invoiceId}/unarchive": {
             "post": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Unarchive invoice",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",
@@ -565,22 +440,13 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
+        "/api/v1/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
             "post": {
                 "tags": [
                     "Invoices"
                 ],
                 "summary": "Activate Payment Method",
                 "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "name": "invoiceId",
                         "in": "path",

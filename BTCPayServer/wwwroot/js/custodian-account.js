@@ -10,7 +10,14 @@ new Vue({
         },
         deposit: {
             asset: null,
-            paymentMethod: null
+            paymentMethod: null,
+            address: null,
+            addressQRHtml: null,
+            link: null,
+            linkQRHtml: null,
+            errorMsg: null,
+            cryptoImageUrl: null,
+            tab: null
         },
         trade: {
             row: null,
@@ -92,6 +99,13 @@ new Vue({
                 }
             }
             return r.sort();
+        },
+        createDepositTransactionUrl: function () {
+            if (this.deposit.address && this.deposit.paymentMethod) {
+                // TODO support LN
+                return '/wallets/S-' + this.account.storeId + '-' + this.deposit.asset + '/send?defaultDestination=' + encodeURI(this.deposit.address)+"&returnUrl="+encodeURI(window.location.href);
+            }
+            return null;
         },
         sortedAssetRows: function () {
             if (this.account?.assetBalances) {
@@ -195,8 +209,10 @@ new Vue({
             }
             if (row) {
                 this.deposit.asset = row.asset;
-                this.deposit.paymentMethod = null;
+            }else if(!this.deposit.asset && this.availableAssetsToDeposit.length > 0){
+                this.deposit.asset = this.availableAssetsToDeposit[0];
             }
+            
             this.modals.deposit.show();
         },
         onTradeSubmit: async function (e) {
@@ -213,7 +229,7 @@ new Vue({
             this.modals.trade._config.keyboard = false;
 
             const _this = this;
-            const token = document.querySelector("input[name='__RequestVerificationToken']").value;
+            const token = this.getRequestVerificationToken();
 
             const response = await fetch(url, {
                 method,
@@ -391,6 +407,9 @@ new Vue({
             }).then(function (result) {
                 _this.account = result;
             });
+        },
+        getRequestVerificationToken: function () {
+            return document.querySelector("input[name='__RequestVerificationToken']").value;
         }
     },
     watch: {
@@ -408,6 +427,7 @@ new Vue({
             }
         },
         'deposit.asset': function (newValue, oldValue) {
+            console.log('deposit.asset changed');
             if (this.availablePaymentMethodsToDeposit.length > 0) {
                 this.deposit.paymentMethod = this.availablePaymentMethodsToDeposit[0];
             } else {
@@ -415,7 +435,35 @@ new Vue({
             }
         },
         'deposit.paymentMethod': function (newValue, oldValue) {
-            // TODO fetch the deposit address using Fetch API
+            let _this = this;
+            const token = this.getRequestVerificationToken();
+            fetch(window.ajaxDepositUrl + "?paymentMethod=" + encodeURI(this.deposit.paymentMethod), {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            }).then(function (response) {
+                return response.json();
+            }).then(function (data) {
+                _this.deposit.address = data.address;
+                _this.deposit.addressQRHtml = data.addressQRHtml;
+                _this.deposit.link = data.link;
+                _this.deposit.linkQRHtml = data.linkQRHtml;
+                _this.deposit.cryptoImageUrl = data.cryptoImageUrl;
+
+                if(!_this.deposit.tab){
+                    _this.deposit.tab = 'address';
+                }
+                if(_this.deposit.tab === 'address' && !_this.deposit.address && _this.deposit.link){
+                    // Tab "address" is not available, but tab "link" is.
+                    _this.deposit.tab = 'link';
+                }
+                
+                _this.deposit.errorMsg = data.errorMessage;
+            });
+
+
         }
     },
     created: function () {

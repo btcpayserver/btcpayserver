@@ -131,9 +131,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<UserService>();
             services.AddSingleton<CustodianAccountRepository>();
             services.AddSingleton<QRCodeImgTagGenerator>();
-
             services.TryAddSingleton<WalletHistogramService>();
-            services.TryAddSingleton<CustodianAccountRepository>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>

@@ -351,7 +351,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
                 var withdrawResult =
-                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                        await withdrawableCustodian.WithdrawToStoreWalletAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                     withdrawResult.WithdrawalId, accountId, custodian.Code, withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                 return Ok(result);

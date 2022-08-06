@@ -136,7 +136,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return r;
     }
 
-    public Task<WithdrawResult> WithdrawAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
+    public Task<WithdrawResult> WithdrawToStoreWalletAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
     {
         if (paymentMethod == WithdrawalPaymentMethod)
         {

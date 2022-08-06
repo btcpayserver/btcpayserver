@@ -161,7 +161,7 @@
                 <p v-if="deposit.errorMsg" class="alert alert-danger">{{ deposit.errorMsg }}</p>
                 <div class="form-group">
                     <label class="form-label" for="DepositAsset">Asset to Deposit</label>
-                    <select class="form-control" v-model="deposit.asset" name="AssetToDepositDepositAsset">
+                    <select class="form-control" v-model="deposit.asset" name="DepositAsset">
                         <option v-for="option in availableAssetsToDeposit" v-bind:value="option">
                             {{ option }}
                         </option>

@@ -13,6 +13,7 @@ using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -146,7 +147,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var txHash = workingTx.GetHash();
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        context.Attach(payoutData);
+                        context.Attach(payoutData).State = EntityState.Modified;
                         payoutData.State = PayoutState.InProgress;
                         _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
                             new PayoutTransactionOnChainBlob()

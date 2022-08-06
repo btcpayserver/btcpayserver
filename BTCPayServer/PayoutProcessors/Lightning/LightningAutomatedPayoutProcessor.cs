@@ -14,6 +14,7 @@ using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using LNURL;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PayoutData = BTCPayServer.Data.PayoutData;
@@ -90,7 +91,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                         if (await TrypayBolt(client, blob, payoutData,
                                 lnurlResult.Item1))
                         {
-                            ctx.Attach(payoutData);
+                            ctx.Attach(payoutData).State = EntityState.Modified;
                             payoutData.State = PayoutState.Completed;
                         }
 
@@ -99,7 +100,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                     case BoltInvoiceClaimDestination item1:
                         if (await TrypayBolt(client, blob, payoutData, item1.PaymentRequest))
                         {
-                            ctx.Attach(payoutData);
+                            ctx.Attach(payoutData).State = EntityState.Modified;
                             payoutData.State = PayoutState.Completed;
                         }
 

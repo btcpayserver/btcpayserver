@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.6
+
+### Bug fixes:
+
+* Ensure payout processors update state @Kukks
+
 ## 1.6.5
 
 ### Bug fixes:

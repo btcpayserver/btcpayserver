@@ -591,7 +591,8 @@
     #StoreSelector {
         order: 2;
         margin-top: var(--btcpay-space-m);
-        width: 100%;
+        /* Make sure we are actually taking up all of the space or else you end up with this: https://github.com/btcpayserver/btcpayserver/issues/3972 */
+        min-width: 100%;
     }
     
     #mainMenuToggle,

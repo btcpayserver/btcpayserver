@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
@@ -174,14 +175,14 @@ namespace BTCPayServer.Controllers
 
                 if (custodian is ICanWithdraw withdrawableCustodian)
                 {
-                    var withdrawableePaymentMethods = withdrawableCustodian.GetWithdrawablePaymentMethods();
-                    foreach (var withdrawableePaymentMethod in withdrawableePaymentMethods)
+                    var withdrawablePaymentMethods = withdrawableCustodian.GetWithdrawablePaymentMethods();
+                    foreach (var withdrawablePaymentMethod in withdrawablePaymentMethods)
                     {
-                        var withdrawableAsset = withdrawableePaymentMethod.Split("-")[0];
+                        var withdrawableAsset = withdrawablePaymentMethod.Split("-")[0];
                         if (assetBalances.ContainsKey(withdrawableAsset))
                         {
                             var assetBalance = assetBalances[withdrawableAsset];
-                            assetBalance.CanWithdraw = true;
+                            assetBalance.WithdrawablePaymentMethods.Add(withdrawablePaymentMethod);
                         }
                     }
                 }
@@ -571,6 +572,66 @@ namespace BTCPayServer.Controllers
                 : Url.Content(network.LightningImagePath);
             return Request.GetRelativePathOrAbsolute(res);
         }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/withdraw/prepare")]
+        public async Task<IActionResult> GetWithdrawPrepareJson(string storeId, string accountId,
+            [FromQuery] string paymentMethod, [FromQuery] decimal qty)
+        {
+            if (string.IsNullOrEmpty(paymentMethod))
+            {
+                return BadRequest();
+            }
+            
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+                return NotFound();
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
+            
+            var vm = new WithdrawalPrepareViewModel();
+
+            try
+            {
+                if (custodian is ICanWithdraw withdrawableCustodian)
+                {
+                    var config = custodianAccount.GetBlob();
+                    var request = new WithdrawRequestData(paymentMethod, qty);
+
+                    try
+                    {
+                        var simulateWithdrawal = await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, request, default);
+                        vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
+
+                    }
+                    catch (Exception e)
+                    {
+                        vm.ErrorMessage = e.Message;
+                        return new ObjectResult(vm) { StatusCode = 500 };
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+
+            return Ok(vm);
+        }
+
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]
+        public async Task<IActionResult> Withdraw(string storeId, string accountId,
+            [FromQuery] string paymentMethod, [FromQuery] decimal qty)
+        {
+            // TODO implement, same as prepare, but no simulation...
+            throw new NotImplementedException();
+        }
+        
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

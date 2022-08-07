@@ -3142,6 +3142,34 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // Test: wrong store ID
             await AssertHttpError(403, async () => await tradeClient.GetTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
 
+            
+             // Test: SimulateWithdrawal, unauth
+            var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
+            await AssertHttpError(401, async () => await unauthClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
+            
+            // Test: SimulateWithdrawal, auth, but wrong permission
+            await AssertHttpError(403, async () => await managerClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
+            
+            // Test: SimulateWithdrawal, correct payment method, correct amount
+            var simulateWithdrawResponse = await withdrawalClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest);
+            AssertMockWithdrawal(simulateWithdrawResponse, custodianAccountData);
+            
+            // Test: SimulateWithdrawal, wrong payment method
+            var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", MockCustodian.WithdrawalAmount );
+            await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
+            
+            // Test: SimulateWithdrawal, wrong account ID
+            await AssertHttpError(404, async () => await withdrawalClient.SimulateWithdrawal(storeId, "WRONG-ACCOUNT-ID", simulateWithdrawalRequest));
+            
+            // Test: SimulateWithdrawal, wrong store ID
+            // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
+            await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal( "WRONG-STORE-ID",accountId, simulateWithdrawalRequest));
+            
+            // Test: SimulateWithdrawal, correct payment method, wrong amount
+            var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, new decimal(0.666));
+            await AssertHttpError(400, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
+
+            
 
             // Test: CreateWithdrawal, unauth
             var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
@@ -3153,8 +3181,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // Test: CreateWithdrawal, correct payment method, correct amount
             var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest);
             AssertMockWithdrawal(withdrawResponse, custodianAccountData);
-
-
+            
             // Test: CreateWithdrawal, wrong payment method
             var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", MockCustodian.WithdrawalAmount );
             await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
@@ -3201,12 +3228,11 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // TODO create a mock custodian with only ICustodian + ICanDeposit
         }
 
-        private void AssertMockWithdrawal(WithdrawalResponseData withdrawResponse, CustodianAccountData account)
+        private void AssertMockWithdrawal(WithdrawalBaseResponseData withdrawResponse, CustodianAccountData account)
         {
             Assert.NotNull(withdrawResponse);
             Assert.Equal(MockCustodian.WithdrawalAsset, withdrawResponse.Asset);
             Assert.Equal(MockCustodian.WithdrawalPaymentMethod, withdrawResponse.PaymentMethod);
-            Assert.Equal(MockCustodian.WithdrawalStatus, withdrawResponse.Status);
             Assert.Equal(account.Id, withdrawResponse.AccountId);
             Assert.Equal(account.CustodianCode, withdrawResponse.CustodianCode);
             
@@ -3220,10 +3246,14 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             Assert.Equal(MockCustodian.WithdrawalFee, withdrawResponse.LedgerEntries[1].Qty);
             Assert.Equal(LedgerEntryData.LedgerEntryType.Fee, withdrawResponse.LedgerEntries[1].Type);
 
-            Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawResponse.TargetAddress);
-            Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawResponse.TransactionId);
-            Assert.Equal(MockCustodian.WithdrawalId, withdrawResponse.WithdrawalId);
-            Assert.NotEqual(default, withdrawResponse.CreatedTime);
+            if (withdrawResponse is WithdrawalResponseData withdrawalResponseData)
+            {
+                Assert.Equal(MockCustodian.WithdrawalStatus, withdrawalResponseData.Status);
+                Assert.Equal(MockCustodian.WithdrawalTargetAddress, withdrawalResponseData.TargetAddress);
+                Assert.Equal(MockCustodian.WithdrawalTransactionId, withdrawalResponseData.TransactionId);
+                Assert.Equal(MockCustodian.WithdrawalId, withdrawalResponseData.WithdrawalId);
+                Assert.NotEqual(default, withdrawalResponseData.CreatedTime);
+            }
         }
     }
 }

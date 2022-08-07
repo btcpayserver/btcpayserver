@@ -12,6 +12,8 @@ public interface ICanWithdraw
 {
     public Task<WithdrawResult> WithdrawToStoreWalletAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken);
 
+    public Task<SimulateWithdrawalResult> SimulateWithdrawalAsync(string paymentMethod, decimal qty, JObject config, CancellationToken cancellationToken);
+
     public Task<WithdrawResult> GetWithdrawalInfoAsync(string paymentMethod, string withdrawalId, JObject config, CancellationToken cancellationToken);
 
     public string[] GetWithdrawablePaymentMethods();

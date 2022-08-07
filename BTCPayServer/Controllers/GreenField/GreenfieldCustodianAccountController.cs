@@ -338,6 +338,27 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Fetching past trade info on \"{custodian.Name}\" is not supported.");
         }
 
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
+        [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> SimulateWithdrawal(string storeId, string accountId,
+            WithdrawRequestData request, CancellationToken cancellationToken = default)
+        {
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+
+            if (custodian is ICanWithdraw withdrawableCustodian)
+            {
+                var simulateWithdrawResult =
+                    await withdrawableCustodian.SimulateWithdrawalAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                var result = new WithdrawalSimulationResponseData(simulateWithdrawResult.PaymentMethod, simulateWithdrawResult.Asset, 
+                     accountId, custodian.Code, simulateWithdrawResult.LedgerEntries, simulateWithdrawResult.MinQty, simulateWithdrawResult.MaxQty);
+                return Ok(result);
+            }
+
+            return this.CreateAPIError(400, "withdrawals-not-supported",
+                $"Withdrawals are not supported for \"{custodian.Name}\".");
+        }
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,

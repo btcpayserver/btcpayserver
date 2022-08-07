@@ -24,7 +24,7 @@
 
         <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
         <small id="HelpText@field.Name" class="form-text text-muted">
-            @field.HelpText
+            @Safe.Raw(field.HelpText)
         </small>
 
     </div>

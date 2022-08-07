@@ -35,7 +35,16 @@ new Vue({
             maxQtyToTrade: null,
             price: null,
             priceForPair: {}
-        }
+        },
+        withdraw: {
+            asset: null,
+            paymentMethod: null,
+            errorMsg: null,
+            minQty: null,
+            maxQty: null,
+            results: null,
+            isExecuting: false
+        },
     },
     computed: {
         tradeQtyToReceive: function () {
@@ -119,6 +128,35 @@ new Vue({
 
                 return rows;
             }
+        },
+        canExecuteWithdrawal: function(){
+            return (this.withdraw.minQty != null && this.withdraw.qty >= this.withdraw.minQty)
+                && (this.withdraw.maxQty != null && this.withdraw.qty <= this.withdraw.maxQty)
+                && this.withdraw.paymentMethod
+                && !this.withdraw.isExecuting
+                && this.withdraw.results === null;
+        },
+        availableAssetsToWithdraw: function () {
+            let r = [];
+            const balances = this?.account?.assetBalances;
+            if (balances) {
+                for(let asset in balances){
+                    const balance = balances[asset];
+                    if(balance?.withdrawablePaymentMethods?.length){
+                        r.push(asset);
+                    }
+                }
+            };
+            return r.sort();
+        },
+        availablePaymentMethodsToWithdraw: function () {
+            if(this.withdraw.asset) {
+                let paymentMethods = this?.account?.assetBalances?.[this.withdraw.asset]?.withdrawablePaymentMethods;
+                if (paymentMethods) {
+                    return paymentMethods.sort();
+                }
+            }
+            return [];
         }
     },
     methods: {
@@ -163,6 +201,9 @@ new Vue({
         setTradeQtyPercent: function (percent) {
             this.trade.qty = percent / 100 * this.trade.maxQtyToTrade;
         },
+        setWithdrawQtyPercent: function(percent){
+            this.withdraw.qty = percent / 100 * this.account.assetBalances[this.withdraw.asset].qty;
+        },
         openTradeModal: function (row) {
             let _this = this;
             this.trade.row = row;
@@ -195,6 +236,11 @@ new Vue({
         openWithdrawModal: function (row) {
             if (this.modals.withdraw === null) {
                 this.modals.withdraw = new window.bootstrap.Modal('#withdrawModal');
+            }
+            if (row) {
+                this.withdraw.asset = row.asset;
+            }else if(!this.withdraw.asset && this.availableAssetsToWithdraw.length > 0){
+                this.withdraw.asset = this.availableAssetsToWithdraw[0];
             }
             this.modals.withdraw.show();
         },
@@ -257,6 +303,53 @@ new Vue({
             _this.modals.trade._config.backdrop = true;
             _this.modals.trade._config.keyboard = true;
             _this.trade.isExecuting = false;
+        },
+
+        onWithdrawSubmit: async function (e) {
+            e.preventDefault();
+
+            const form = e.currentTarget;
+            const url = form.getAttribute('action');
+            const method = form.getAttribute('method');
+
+            this.withdraw.isExecuting = true;
+
+            // Prevent the modal from closing by clicking outside or via the keyboard
+            this.modals.withdraw._config.backdrop = 'static';
+            this.modals.withdraw._config.keyboard = false;
+
+            const _this = this;
+            const token = this.getRequestVerificationToken();
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    paymentMethod: _this.withdraw.paymentMethod,
+                    qty: _this.withdraw.qty
+                })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (e) {
+            }
+
+            if (response.ok) {
+                _this.withdraw.results = data;
+                _this.withdraw.errorMsg = null;
+                
+                _this.refreshAccountBalances();
+            } else {
+                _this.withdraw.errorMsg = data && data.message || "Error";
+            }
+            _this.modals.withdraw._config.backdrop = true;
+            _this.modals.withdraw._config.keyboard = true;
+            _this.withdraw.isExecuting = false;
         },
 
         setTradePriceRefresher: function (enabled) {
@@ -454,8 +547,31 @@ new Vue({
                 
                 _this.deposit.errorMsg = data.errorMessage;
             });
-
-
+        },
+        'withdraw.asset': function (newValue, oldValue) {
+            if (this.availablePaymentMethodsToWithdraw.length > 0) {
+                this.withdraw.paymentMethod = this.availablePaymentMethodsToWithdraw[0];
+            } else {
+                this.withdraw.paymentMethod = null;
+            }
+        },
+        'withdraw.paymentMethod': function (newValue, oldValue) {
+            let _this = this;
+            const token = this.getRequestVerificationToken();
+            fetch(window.ajaxWithdrawPrepareUrl + "?paymentMethod=" + encodeURI(this.withdraw.paymentMethod)+"&qty="+encodeURI(this.withdraw.qty), {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            }).then(function (response) {
+                return response.json();
+            }).then(function (data) {
+                debugger;
+                _this.withdraw.minQty = data.minQty;
+                _this.withdraw.maxQty = data.maxQty;
+                _this.withdraw.errorMsg = data.errorMessage;
+            });
         }
     },
     created: function () {

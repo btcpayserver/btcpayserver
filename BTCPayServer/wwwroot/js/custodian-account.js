@@ -18,7 +18,8 @@ new Vue({
             link: null,
             errorMsg: null,
             cryptoImageUrl: null,
-            tab: null
+            tab: null,
+            isLoading: false
         },
         trade: {
             row: null,
@@ -434,6 +435,7 @@ new Vue({
         'deposit.paymentMethod': function (newValue, oldValue) {
             let _this = this;
             const token = this.getRequestVerificationToken();
+            this.deposit.isLoading = true;
             fetch(window.ajaxDepositUrl + "?paymentMethod=" + encodeURI(this.deposit.paymentMethod), {
                 method: "GET",
                 headers: {
@@ -441,6 +443,7 @@ new Vue({
                     'RequestVerificationToken': token
                 }
             }).then(function (response) {
+                _this.deposit.isLoading = false;
                 return response.json();
             }).then(function (data) {
                 _this.deposit.address = data.address;

@@ -175,7 +175,14 @@
                         </option>
                     </select>
                 </div>
-                <div v-if="deposit.link || deposit.address">
+                
+                <div class="loading d-flex justify-content-center p-3" v-if="deposit.isLoading">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                
+                <div v-if="!deposit.isLoading && (deposit.link || deposit.address)">
                     <div class="tab-content text-center">
                         <div v-if="deposit.link" class="tab-pane" id="link-tab" role="tabpanel">
                             <div class="qr-container mb-3">

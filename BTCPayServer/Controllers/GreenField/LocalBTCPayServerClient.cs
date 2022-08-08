@@ -90,7 +90,8 @@ namespace BTCPayServer.Controllers.Greenfield
             else
             {
                 context.User =
-                    new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>()
+                    new ClaimsPrincipal(new ClaimsIdentity(
+                        new List<Claim>()
                         {
                             new(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, Roles.ServerAdmin)
                         },
@@ -204,7 +205,7 @@ namespace BTCPayServer.Controllers.Greenfield
             public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object resource, string policyName)
             {
                 return AuthorizeAsync(user, resource,
-                    new List<IAuthorizationRequirement>(new[] {new PolicyRequirement(policyName)}));
+                    new List<IAuthorizationRequirement>(new[] { new PolicyRequirement(policyName) }));
             }
         }
 
@@ -212,6 +213,14 @@ namespace BTCPayServer.Controllers.Greenfield
             Dictionary<string, object> queryPayload = null, HttpMethod method = null)
         {
             throw new NotSupportedException("This method is not supported by the LocalBTCPayServerClient.");
+        }
+
+
+        public override async Task<MarketTradeResponseData> MarketTradeCustodianAccountAsset(string storeId, string accountId,
+            TradeRequestData request, CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<MarketTradeResponseData>(
+                await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
         }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,
@@ -460,8 +469,8 @@ namespace BTCPayServer.Controllers.Greenfield
             return result switch
             {
                 JsonResult jsonResult => (T)jsonResult.Value,
-                OkObjectResult {Value: T res} => res,
-                OkObjectResult {Value: JValue res} => res.Value<T>(),
+                OkObjectResult { Value: T res } => res,
+                OkObjectResult { Value: JValue res } => res.Value<T>(),
                 _ => default
             };
         }
@@ -470,9 +479,11 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             switch (result)
             {
-                case UnprocessableEntityObjectResult {Value: List<GreenfieldValidationError> validationErrors}:
+                case UnprocessableEntityObjectResult { Value: List<GreenfieldValidationError> validationErrors }:
                     throw new GreenfieldValidationException(validationErrors.ToArray());
-                case BadRequestObjectResult {Value: GreenfieldAPIError error}:
+                case BadRequestObjectResult { Value: GreenfieldAPIError error }:
+                    throw new GreenfieldAPIException(400, error);
+                case ObjectResult { Value: GreenfieldAPIError error }:
                     throw new GreenfieldAPIException(400, error);
                 case NotFoundResult _:
                     throw new GreenfieldAPIException(404, new GreenfieldAPIError("not-found", ""));
@@ -1085,7 +1096,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<PointOfSaleAppData> CreatePointOfSaleApp(
-           string storeId,
+            string storeId,
             CreatePointOfSaleAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PointOfSaleAppData>(

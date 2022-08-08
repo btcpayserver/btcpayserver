@@ -1,4 +1,4 @@
-﻿@model EnableAuthenticatorViewModel
+@model EnableAuthenticatorViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Enable authenticator app");
 }
@@ -11,14 +11,19 @@
             <div class="mb-2">Download a two-factor authenticator app like …</div>
             <ul>
                 <li>
+                    Authy for
+                    <a href="https://play.google.com/store/apps/details?id=com.authy.authy" rel="noreferrer noopener">Android</a> or
+					<a href="https://apps.apple.com/us/app/authy/id494168017" rel="noreferrer noopener">iOS</a>
+                </li>
+                <li>
                     Microsoft Authenticator for
                     <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" rel="noreferrer noopener">Android</a> or
-                    <a href="https://itunes.apple.com/us/app/microsoft-authenticator/id983156458" rel="noreferrer noopener">iOS</a>
+					<a href="https://apps.apple.com/us/app/microsoft-authenticator/id983156458" rel="noreferrer noopener">iOS</a>
                 </li>
                 <li>
                     Google Authenticator for
                     <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en" rel="noreferrer noopener">Android</a> or
-                    <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8" rel="noreferrer noopener">iOS</a>
+                    <a href="https://apps.apple.com/us/app/google-authenticator/id388497605" rel="noreferrer noopener">iOS</a>
                 </li>
             </ul>
         </li>

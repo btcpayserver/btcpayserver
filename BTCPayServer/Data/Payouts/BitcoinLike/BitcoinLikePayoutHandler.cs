@@ -392,7 +392,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 return;
 
             var derivationSchemeSettings = payout.StoreData
-                .GetDerivationSchemeSettings(_btcPayNetworkProvider, newTransaction.CryptoCode).AccountDerivation;
+                .GetDerivationSchemeSettings(_btcPayNetworkProvider, newTransaction.CryptoCode)?.AccountDerivation;
+            if (derivationSchemeSettings is null)
+                return;
 
             var storeWalletMatched = (await _explorerClientProvider.GetExplorerClient(newTransaction.CryptoCode)
                 .GetTransactionAsync(derivationSchemeSettings,

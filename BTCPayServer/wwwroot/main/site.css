@@ -528,3 +528,23 @@ svg.icon-note {
         margin-right: 0;
     }
 }
+
+#tradeModal .qty{ width: 53%; }
+#tradeModal .btn-square{ padding: 0; width: 2.5rem; height: 2.5rem; }
+
+#tradeModal .trade-qty {
+    display: flex;
+    justify-content: space-between;
+}
+
+#tradeModal .trade-qty .col-center {
+    flex: 0 0 2rem;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#tradeModal .trade-qty .col-side {
+    flex: 1;
+}
+
+.modal-footer .modal-footer-left{ margin-right: auto; }

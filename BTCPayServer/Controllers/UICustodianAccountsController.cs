@@ -38,7 +38,6 @@ namespace BTCPayServer.Controllers
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly QRCodeImgTagGenerator _qrCodeImgTagGenerator;
 
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
@@ -46,8 +45,7 @@ namespace BTCPayServer.Controllers
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
-            BTCPayNetworkProvider networkProvider,
-            QRCodeImgTagGenerator qrCodeImgTagGenerator
+            BTCPayNetworkProvider networkProvider
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -56,7 +54,6 @@ namespace BTCPayServer.Controllers
             _custodianRegistry = custodianRegistry;
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
-            _qrCodeImgTagGenerator = qrCodeImgTagGenerator;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -518,14 +515,12 @@ namespace BTCPayServer.Controllers
                         var depositAddressResult =
                             await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, default);
                         vm.Address = depositAddressResult.Address;
-                        vm.AddressQRHtml = _qrCodeImgTagGenerator.generateImgTag(vm.Address);
-                        
+
                         if (paymentMethod.Equals("BTC-OnChain"))
                         {
                             var network = _networkProvider.GetNetwork<BTCPayNetwork>("BTC");
                             var bip21 = network.GenerateBIP21(depositAddressResult.Address, null);
                             vm.Link = bip21.ToString();
-                            vm.LinkQRHtml = _qrCodeImgTagGenerator.generateImgTag(vm.Link);
                             var paymentMethodId = PaymentMethodId.TryParse(paymentMethod);
                             if (paymentMethodId != null)
                             {

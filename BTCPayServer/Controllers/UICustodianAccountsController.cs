@@ -516,7 +516,8 @@ namespace BTCPayServer.Controllers
                             await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, default);
                         vm.Address = depositAddressResult.Address;
 
-                        if (paymentMethod.Equals("BTC-OnChain"))
+                        var paymentMethodObj = PaymentMethodId.Parse(paymentMethod);
+                        if (paymentMethodObj.IsBTCOnChain)
                         {
                             var network = _networkProvider.GetNetwork<BTCPayNetwork>("BTC");
                             var bip21 = network.GenerateBIP21(depositAddressResult.Address, null);

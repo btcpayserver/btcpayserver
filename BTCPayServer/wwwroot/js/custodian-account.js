@@ -15,9 +15,7 @@ new Vue({
             asset: null,
             paymentMethod: null,
             address: null,
-            addressQRHtml: null,
             link: null,
-            linkQRHtml: null,
             errorMsg: null,
             cryptoImageUrl: null,
             tab: null

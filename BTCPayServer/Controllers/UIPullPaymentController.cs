@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { pullPaymentId });
+            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { storeId, pullPaymentId });
         }
 
         [AllowAnonymous]

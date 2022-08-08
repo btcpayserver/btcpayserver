@@ -389,16 +389,13 @@ new Vue({
             this.trade.qty = maxQtyToTrade
             this.trade.maxQtyToTrade = maxQtyToTrade;
 
-            this.killAjaxIfRunning(this.trade.updateTradePriceAbortController);
+            this.trade.updateTradePriceAbortController.abort();
 
             // Update the price asap, so we can continue
             let _this = this;
             setTimeout(function () {
                 _this.updateTradePrice();
             }, 100);
-        },
-        killAjaxIfRunning: function (abortController) {
-            abortController.abort();
         },
         refreshAccountBalances: function () {
             let _this = this;

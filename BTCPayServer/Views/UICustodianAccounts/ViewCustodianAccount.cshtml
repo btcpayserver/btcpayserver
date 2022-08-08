@@ -402,8 +402,8 @@
 
 <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
 <script type="text/javascript">
-var ajaxBalanceUrl = "@Url.Action("ViewCustodianAccountAjax", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
-var ajaxTradePrepareUrl = "@Url.Action("GetTradePrepareAjax", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
-var ajaxDepositUrl = "@Url.Action("GetDepositPrepareAjax", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxBalanceUrl = "@Url.Action("ViewCustodianAccountJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxTradePrepareUrl = "@Url.Action("GetTradePrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxDepositUrl = "@Url.Action("GetDepositPrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 </script>
 <script src="~/js/custodian-account.js" asp-append-version="true"></script>

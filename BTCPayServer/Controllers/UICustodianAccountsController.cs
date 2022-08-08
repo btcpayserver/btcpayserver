@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}.json")]
-        public async Task<IActionResult> ViewCustodianAccountAjax(string storeId, string accountId)
+        public async Task<IActionResult> ViewCustodianAccountJson(string storeId, string accountId)
         {
             var vm = new ViewCustodianAccountBalancesViewModel();
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
@@ -383,7 +383,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
-        public async Task<IActionResult> GetTradePrepareAjax(string storeId, string accountId,
+        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
             [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
         {
             if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
@@ -475,7 +475,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/deposit/prepare")]
-        public async Task<IActionResult> GetDepositPrepareAjax(string storeId, string accountId,
+        public async Task<IActionResult> GetDepositPrepareJson(string storeId, string accountId,
             [FromQuery] string paymentMethod)
         {
             if (string.IsNullOrEmpty(paymentMethod))

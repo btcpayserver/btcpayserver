@@ -300,3 +300,7 @@ BTCPayServer/testpwd
 .DS_Store
 Packed Plugins
 Plugins/packed
+
+# Vim Files
+*.sw[op]
+

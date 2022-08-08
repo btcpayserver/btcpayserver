@@ -26,7 +26,7 @@
         @ViewData["Title"]
     </h2>
     <div class="d-flex flex-wrap gap-3">
-        <a class="btn btn-primary" role="button" v-if="account && account.depositablePaymentMethods.length > 0" v-on:click="openDepositModal()" href="#">
+        <a class="btn btn-primary" role="button" v-if="account?.depositablePaymentMethods?.length > 0" v-on:click="openDepositModal()" href="#">
             <span class="fa fa-download"></span> Deposit
         </a>
         <a asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id" class="btn btn-primary" role="button" id="EditCustodianAccountConfig">

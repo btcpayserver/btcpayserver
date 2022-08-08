@@ -296,7 +296,7 @@ new Vue({
             }
 
             if (this.trade.isUpdating) {
-                console.log("Previous request is still running. No need to hammer the server.");
+                // Previous request is still running. No need to hammer the server
                 return;
             }
 
@@ -353,7 +353,7 @@ new Vue({
             }).catch(function (e) {
                 _this.trade.isUpdating = false;
                 if (e instanceof DOMException && e.code === DOMException.ABORT_ERR) {
-                    console.log("User aborted fetch request");
+                    // User aborted fetch request
                 } else {
                     throw e;
                 }
@@ -427,7 +427,6 @@ new Vue({
             }
         },
         'deposit.asset': function (newValue, oldValue) {
-            console.log('deposit.asset changed');
             if (this.availablePaymentMethodsToDeposit.length > 0) {
                 this.deposit.paymentMethod = this.availablePaymentMethodsToDeposit[0];
             } else {

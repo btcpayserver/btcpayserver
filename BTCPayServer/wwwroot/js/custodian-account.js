@@ -1,5 +1,8 @@
 new Vue({
     el: '#custodianAccountView',
+    components: {
+        qrcode: VueQrcode
+    },
     data: {
         account: null,
         hideDustAmounts: true,

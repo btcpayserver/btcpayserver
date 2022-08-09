@@ -9,15 +9,16 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -30,24 +31,28 @@ namespace BTCPayServer.Controllers
     public class UICustodianAccountsController : Controller
     {
         private readonly IEnumerable<ICustodian> _custodianRegistry;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayServerClient _btcPayServerClient;
+        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly LinkGenerator _linkGenerator;
 
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
-            BTCPayServerClient btcPayServerClient
+            BTCPayServerClient btcPayServerClient,
+            BTCPayNetworkProvider networkProvider,
+            LinkGenerator linkGenerator
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
-            _userManager = userManager;
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
             _btcPayServerClient = btcPayServerClient;
+            _networkProvider = networkProvider;
+            _linkGenerator = linkGenerator;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -75,7 +80,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}.json")]
-        public async Task<IActionResult> ViewCustodianAccountAjax(string storeId, string accountId)
+        public async Task<IActionResult> ViewCustodianAccountJson(string storeId, string accountId)
         {
             var vm = new ViewCustodianAccountBalancesViewModel();
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
@@ -93,6 +98,7 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             var storeBlob = StoreDataExtensions.GetStoreBlob(store);
             var defaultCurrency = storeBlob.DefaultCurrency;
+            vm.StoreId = store.Id;
             vm.DustThresholdInFiat = 1;
             vm.StoreDefaultFiat = defaultCurrency;
             try
@@ -126,11 +132,13 @@ namespace BTCPayServer.Controllers
                         var assetBalance = assetBalances[asset];
                         var tradableAssetPairsList =
                             tradableAssetPairs.Where(o => o.AssetBought == asset || o.AssetSold == asset).ToList();
-                        var tradableAssetPairsDict = new Dictionary<string, AssetPairData>(tradableAssetPairsList.Count);
+                        var tradableAssetPairsDict =
+                            new Dictionary<string, AssetPairData>(tradableAssetPairsList.Count);
                         foreach (var assetPair in tradableAssetPairsList)
                         {
                             tradableAssetPairsDict.Add(assetPair.ToString(), assetPair);
                         }
+
                         assetBalance.TradableAssetPairs = tradableAssetPairsDict;
 
                         if (asset.Equals(defaultCurrency))
@@ -178,20 +186,9 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                vm.CanDeposit = false;
                 if (custodian is ICanDeposit depositableCustodian)
                 {
-                    vm.CanDeposit = true;
-                    var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
-                    foreach (var depositablePaymentMethod in depositablePaymentMethods)
-                    {
-                        var depositableAsset = depositablePaymentMethod.Split("-")[0];
-                        if (assetBalances.ContainsKey(depositableAsset))
-                        {
-                            var assetBalance = assetBalances[depositableAsset];
-                            assetBalance.CanDeposit = true;
-                        }
-                    }
+                    vm.DepositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
                 }
 
                 vm.AssetBalances = assetBalances;
@@ -385,7 +382,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
-        public async Task<IActionResult> GetTradePrepareAjax(string storeId, string accountId,
+        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
             [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
         {
             if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
@@ -437,7 +434,7 @@ namespace BTCPayServer.Controllers
                             {
                                 var quote = await tradingCustodian.GetQuoteForAssetAsync(assetToTrade, assetToTradeInto,
                                     config, default);
-                                
+
                                 // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
                                 vm.Ask = quote.Ask;
                                 vm.Bid = quote.Bid;
@@ -474,6 +471,105 @@ namespace BTCPayServer.Controllers
                 var result = new ObjectResult(e.APIError) { StatusCode = e.HttpCode };
                 return result;
             }
+        }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/deposit/prepare")]
+        public async Task<IActionResult> GetDepositPrepareJson(string storeId, string accountId,
+            [FromQuery] string paymentMethod)
+        {
+            if (string.IsNullOrEmpty(paymentMethod))
+            {
+                return BadRequest();
+            }
+
+            DepositPrepareViewModel vm = new();
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+                return NotFound();
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
+
+            try
+            {
+                if (custodian is ICanDeposit depositableCustodian)
+                {
+                    var config = custodianAccount.GetBlob();
+
+                    vm.PaymentMethod = paymentMethod;
+                    var depositablePaymentMethods = depositableCustodian.GetDepositablePaymentMethods();
+                    if (!depositablePaymentMethods.Contains(paymentMethod))
+                    {
+                        vm.ErrorMessage = $"Payment method \"{paymentMethod}\" is not supported by {custodian.Name}";
+                        return BadRequest(vm);
+                    }
+
+                    try
+                    {
+                        var depositAddressResult =
+                            await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, default);
+                        vm.Address = depositAddressResult.Address;
+
+                        var paymentMethodObj = PaymentMethodId.Parse(paymentMethod);
+                        if (paymentMethodObj.IsBTCOnChain)
+                        {
+                            var network = _networkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                            var bip21 = network.GenerateBIP21(depositAddressResult.Address, null);
+                            vm.Link = bip21.ToString();
+                            var paymentMethodId = PaymentMethodId.TryParse(paymentMethod);
+                            if (paymentMethodId != null)
+                            {
+                                var walletId = new WalletId(storeId, paymentMethodId.CryptoCode);
+                                var returnUrl = _linkGenerator.GetUriByAction(
+                                    nameof(ViewCustodianAccount),
+                                    "UICustodianAccounts",
+                                    new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id },
+                                    Request.Scheme,
+                                    Request.Host,
+                                    Request.PathBase);
+
+                                vm.CryptoImageUrl = GetImage(paymentMethodId, network);
+                                vm.CreateTransactionUrl = _linkGenerator.GetUriByAction(
+                                    nameof(UIWalletsController.WalletSend),
+                                    "UIWallets",
+                                    new { walletId, defaultDestination = vm.Address, returnUrl },
+                                    Request.Scheme,
+                                    Request.Host,
+                                    Request.PathBase);
+                            }
+                        }
+                        else
+                        {
+                            // TODO support LN + shitcoins
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        vm.ErrorMessage = e.Message;
+                        return new ObjectResult(vm) { StatusCode = 500 };
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+
+            return Ok(vm);
+        }
+
+        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        {
+            // TODO this method was copy-pasted from BTCPayServer.Controllers.UIWalletsController.GetImage(). Maybe refactor this?
+            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
+                ? Url.Content(network.CryptoImagePath)
+                : Url.Content(network.LightningImagePath);
+            return Request.GetRelativePathOrAbsolute(res);
         }
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

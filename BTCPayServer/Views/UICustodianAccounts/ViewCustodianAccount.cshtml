@@ -260,7 +260,7 @@
                                     Max Qty to Trade = {{ trade.maxQtyToTrade }}
                                     -->
                                     <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" :min="getMinQtyToTrade()" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < getMinQtyToTrade() || trade.qty > trade.maxQtyToTrade }" v-model="trade.qty"/>
-                                    <select name="FromAsset" v-model="trade.assetToTrade" class="form-control">
+                                    <select name="FromAsset" v-model="trade.assetToTrade" class="form-select">
                                         <option v-for="option in availableAssetsToTrade" v-bind:value="option">
                                             {{ option }}
                                         </option>

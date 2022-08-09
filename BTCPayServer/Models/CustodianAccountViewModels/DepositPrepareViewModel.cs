@@ -7,4 +7,5 @@ public class DepositPrepareViewModel
     public string Link { get; set; }
     public string CryptoImageUrl { get; set; }
     public string ErrorMessage { get; set; }
+    public string CreateTransactionUrl { get; set; }
 }

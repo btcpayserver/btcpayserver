@@ -102,13 +102,6 @@ new Vue({
             }
             return r.sort();
         },
-        createDepositTransactionUrl: function () {
-            if (this.deposit.address && this.deposit.paymentMethod) {
-                // TODO support LN
-                return '/wallets/S-' + this.account.storeId + '-' + this.deposit.asset + '/send?defaultDestination=' + encodeURI(this.deposit.address)+"&returnUrl="+encodeURI(window.location.href);
-            }
-            return null;
-        },
         sortedAssetRows: function () {
             if (this.account?.assetBalances) {
                 let rows = Object.values(this.account.assetBalances);
@@ -447,9 +440,8 @@ new Vue({
                 return response.json();
             }).then(function (data) {
                 _this.deposit.address = data.address;
-                _this.deposit.addressQRHtml = data.addressQRHtml;
                 _this.deposit.link = data.link;
-                _this.deposit.linkQRHtml = data.linkQRHtml;
+                _this.deposit.createTransactionUrl = data.createTransactionUrl;
                 _this.deposit.cryptoImageUrl = data.cryptoImageUrl;
 
                 if(!_this.deposit.tab){

@@ -18,6 +18,7 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -30,11 +31,11 @@ namespace BTCPayServer.Controllers
     public class UICustodianAccountsController : Controller
     {
         private readonly IEnumerable<ICustodian> _custodianRegistry;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly LinkGenerator _linkGenerator;
 
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
@@ -42,15 +43,16 @@ namespace BTCPayServer.Controllers
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
-            BTCPayNetworkProvider networkProvider
+            BTCPayNetworkProvider networkProvider,
+            LinkGenerator linkGenerator
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
-            _userManager = userManager;
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
+            _linkGenerator = linkGenerator;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -522,7 +524,23 @@ namespace BTCPayServer.Controllers
                             var paymentMethodId = PaymentMethodId.TryParse(paymentMethod);
                             if (paymentMethodId != null)
                             {
+                                var walletId = new WalletId(storeId, paymentMethodId.CryptoCode);
+                                var returnUrl = _linkGenerator.GetUriByAction(
+                                    nameof(ViewCustodianAccount),
+                                    "UICustodianAccounts",
+                                    new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id },
+                                    Request.Scheme,
+                                    Request.Host,
+                                    Request.PathBase);
+
                                 vm.CryptoImageUrl = GetImage(paymentMethodId, network);
+                                vm.CreateTransactionUrl = _linkGenerator.GetUriByAction(
+                                    nameof(UIWalletsController.WalletSend),
+                                    "UIWallets",
+                                    new { walletId, defaultDestination = vm.Address, returnUrl },
+                                    Request.Scheme,
+                                    Request.Host,
+                                    Request.PathBase);
                             }
                         }
                         else
@@ -544,7 +562,7 @@ namespace BTCPayServer.Controllers
 
             return Ok(vm);
         }
-        
+
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             // TODO this method was copy-pasted from BTCPayServer.Controllers.UIWalletsController.GetImage(). Maybe refactor this?

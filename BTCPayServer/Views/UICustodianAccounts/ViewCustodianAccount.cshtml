@@ -280,7 +280,7 @@
                                 Into
                                 <div class="input-group">
                                     <input disabled="disabled" type="number" class="form-control qty" v-model="tradeQtyToReceive"/>
-                                    <select name="ToAsset" v-model="trade.assetToTradeInto" class="form-control">
+                                    <select name="ToAsset" v-model="trade.assetToTradeInto" class="form-select">
                                         <option v-for="option in availableAssetsToTradeInto" v-bind:value="option">
                                             {{ option }}
                                         </option>

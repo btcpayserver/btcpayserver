@@ -75,8 +75,8 @@
                     }
                 }
             ],
-            "patch": {
-                "operationId": "Apps_PatchPointOfSaleApp",
+            "put": {
+                "operationId": "Apps_PutPointOfSaleApp",
                 "summary": "Update a Point of Sale app",
                 "description": "Use this endpoint for updating the properties of a POS app",
                 "requestBody": {

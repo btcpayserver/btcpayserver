@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-=======
-using System.Collections.Generic;
->>>>>>> 8532ad69 (add ecash)
 using NBitcoin;
 using NBXplorer;
 

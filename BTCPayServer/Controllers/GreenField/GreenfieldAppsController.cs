@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpPut("~/api/v1/apps/pos/{appId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> PutPointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
+        public async Task<IActionResult> UpdatePointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)

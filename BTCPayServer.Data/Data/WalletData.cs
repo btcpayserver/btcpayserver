@@ -10,6 +10,8 @@ namespace BTCPayServer.Data
         public List<WalletTransactionData> WalletTransactions { get; set; }
 
         public byte[] Blob { get; set; }
+        public List<WalletScriptData> WalletScripts { get; set; }
+        public IEnumerable<WalletLabelData>? WalletLabels { get; set; }
     }
 
 

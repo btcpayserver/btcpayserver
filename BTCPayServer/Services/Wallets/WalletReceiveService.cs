@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
@@ -22,19 +24,20 @@ namespace BTCPayServer.Services.Wallets
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly StoreRepository _storeRepository;
+        private readonly WalletRepository _walletRepository;
 
-        private readonly ConcurrentDictionary<WalletId, KeyPathInformation> _walletReceiveState =
-            new ConcurrentDictionary<WalletId, KeyPathInformation>();
+        private readonly ConcurrentDictionary<WalletId, KeyPathInformation> _walletReceiveState = new();
 
         public WalletReceiveService(EventAggregator eventAggregator, ExplorerClientProvider explorerClientProvider,
             BTCPayWalletProvider btcPayWalletProvider, BTCPayNetworkProvider btcPayNetworkProvider,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository, WalletRepository walletRepository)
         {
             _eventAggregator = eventAggregator;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _storeRepository = storeRepository;
+            _walletRepository = walletRepository;
         }
 
         public async Task<string> UnReserveAddress(WalletId walletId)
@@ -73,6 +76,8 @@ namespace BTCPayServer.Services.Wallets
             }
 
             var reserve = (await wallet.ReserveAddressAsync(derivationScheme.AccountDerivation));
+            await _walletRepository.AddLabels(walletId, new[] {new RawLabel("receive")},
+                new[] {reserve.ScriptPubKey.ToString()}, null);
             Set(walletId, reserve);
             return reserve;
         }

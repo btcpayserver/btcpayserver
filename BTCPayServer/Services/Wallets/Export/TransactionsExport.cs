@@ -18,9 +18,9 @@ namespace BTCPayServer.Services.Wallets.Export
     public class TransactionsExport
     {
         private readonly BTCPayWallet _wallet;
-        private readonly Dictionary<string, WalletTransactionInfo> _walletTransactionsInfo;
+        private readonly WalletRepository.WalletTransactionListDataResult _walletTransactionsInfo;
 
-        public TransactionsExport(BTCPayWallet wallet, Dictionary<string, WalletTransactionInfo> walletTransactionsInfo)
+        public TransactionsExport(BTCPayWallet wallet, WalletRepository.WalletTransactionListDataResult walletTransactionsInfo)
         {
             _wallet = wallet;
             _walletTransactionsInfo = walletTransactionsInfo;
@@ -39,10 +39,13 @@ namespace BTCPayServer.Services.Wallets.Export
                     IsConfirmed = tx.Confirmations != 0
                 };
                 
-                if (_walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
+                if (_walletTransactionsInfo.TransactionLabels.TryGetValue(tx.TransactionId.ToString(), out var labels))
                 {
-                    model.Labels = transactionInfo.Labels?.Select(l => l.Value.Text).ToList();
-                    model.Comment = transactionInfo.Comment;
+                    model.Labels = labels.Select(data => data.GetLabel().Text).ToList();
+                }
+                if (_walletTransactionsInfo.TransactionComments.TryGetValue(tx.TransactionId.ToString(), out var comment))
+                {
+                    model.Comment = comment;
                 }
 
                 return model;

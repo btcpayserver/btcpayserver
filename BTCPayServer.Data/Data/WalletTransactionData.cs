@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
@@ -7,9 +9,11 @@ namespace BTCPayServer.Data
         public string WalletDataId { get; set; }
         public WalletData WalletData { get; set; }
         public string TransactionId { get; set; }
+        [Obsolete]
         public string Labels { get; set; }
         public byte[] Blob { get; set; }
 
+        public List<WalletLabelData> WalletLabels { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

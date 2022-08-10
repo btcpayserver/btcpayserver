@@ -12,7 +12,6 @@ namespace BTCPayServer.Data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
             builder.UseSqlite("Data Source=temp.db");
@@ -61,9 +60,11 @@ namespace BTCPayServer.Data
         public DbSet<UserStore> UserStore { get; set; }
         public DbSet<WalletData> Wallets { get; set; }
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
+        public DbSet<WalletScriptData> WalletScripts { get; set; }
+        public DbSet<WalletLabelData> WalletLabels { get; set; }
         public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
         public DbSet<WebhookData> Webhooks { get; set; }
-        public DbSet<LightningAddressData> LightningAddresses{ get; set; }
+        public DbSet<LightningAddressData> LightningAddresses { get; set; }
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -110,6 +111,8 @@ namespace BTCPayServer.Data
             BTCPayServer.Data.UserStore.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
             WalletTransactionData.OnModelCreating(builder);
+            WalletScriptData.OnModelCreating(builder, Database);
+            WalletLabelData.OnModelCreating(builder, Database);
             WebhookDeliveryData.OnModelCreating(builder);
             LightningAddressData.OnModelCreating(builder);
             PayoutProcessorData.OnModelCreating(builder);
@@ -126,17 +129,19 @@ namespace BTCPayServer.Data
                 // This only supports millisecond precision, but should be sufficient for most use cases.
                 foreach (var entityType in builder.Model.GetEntityTypes())
                 {
-                    var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset));
+                    var properties = entityType.ClrType.GetProperties()
+                        .Where(p => p.PropertyType == typeof(DateTimeOffset));
                     foreach (var property in properties)
                     {
                         builder
                             .Entity(entityType.Name)
                             .Property(property.Name)
-                            .HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.DateTimeOffsetToBinaryConverter());
+                            .HasConversion(
+                                new Microsoft.EntityFrameworkCore.Storage.ValueConversion.
+                                    DateTimeOffsetToBinaryConverter());
                     }
                 }
             }
         }
     }
-
 }

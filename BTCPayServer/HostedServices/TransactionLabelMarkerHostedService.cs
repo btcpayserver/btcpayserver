@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -32,6 +33,7 @@ namespace BTCPayServer.HostedServices
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
+            // Subscribe<NewOnChainTransactionEvent>();
             Subscribe<UpdateTransactionLabel>();
         }
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -42,7 +44,7 @@ namespace BTCPayServer.HostedServices
             {
                 var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
                 var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
-                var labels = new List<(string color, Label label)>
+                var labels = new List<Label>
                 {
                     UpdateTransactionLabel.InvoiceLabelTemplate(invoiceEvent.Invoice.Id)
                 };
@@ -61,51 +63,30 @@ namespace BTCPayServer.HostedServices
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
             {
-                var walletTransactionsInfo =
-                    await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
+                if (updateTransactionLabel.LabelColors?.Any() is true)
+                {
+                    var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
+                    updateTransactionLabel.LabelColors.ToList()
+                        .ForEach(x =>
+                        {
+                            if (WalletRepository.DefaultLabelColors.TryGetValue(x.Key, out var defaultColor))
+                            {
+                                if (defaultColor == x.Value)
+                                {
+                                    return;
+                                }
+                            }
+                            walletBlobInfo.LabelColors.AddOrReplace(x.Key, x.Value);
+                        });
+                    await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
+                }
+
+
                 await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
                 {
                     var txId = pair.Key.ToString();
-                    var coloredLabels = pair.Value;
-                    if (!walletTransactionsInfo.TryGetValue(txId, out var walletTransactionInfo))
-                    {
-                        walletTransactionInfo = new WalletTransactionInfo();
-                    }
-
-                    bool walletNeedUpdate = false;
-                    foreach (var cl in coloredLabels)
-                    {
-                        if (walletBlobInfo.LabelColors.TryGetValue(cl.label.Text, out var currentColor))
-                        {
-                            if (currentColor != cl.color)
-                            {
-                                walletNeedUpdate = true;
-                                walletBlobInfo.LabelColors[cl.label.Text] = currentColor;
-                            }
-                        }
-                        else
-                        {
-                            walletNeedUpdate = true;
-                            walletBlobInfo.LabelColors.AddOrReplace(cl.label.Text, cl.color);
-                        }
-                    }
-
-                    if (walletNeedUpdate)
-                        await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    foreach (var cl in coloredLabels)
-                    {
-                        var label = cl.label;
-                        if (walletTransactionInfo.Labels.TryGetValue(label.Text, out var existingLabel))
-                        {
-                            label = label.Merge(existingLabel);
-                        }
-
-                        walletTransactionInfo.Labels.AddOrReplace(label.Text, label);
-                    }
-
-                    await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                        txId, walletTransactionInfo);
+                    await _walletRepository.AddLabels(updateTransactionLabel.WalletId, pair.Value.ToArray(), Array.Empty<string>(),
+                        new[] {txId});
                 }));
             }
         }
@@ -117,51 +98,60 @@ namespace BTCPayServer.HostedServices
         {
 
         }
-        public UpdateTransactionLabel(WalletId walletId, uint256 txId, (string color, Label label) colorLabel)
+        public UpdateTransactionLabel(WalletId walletId, uint256 txId, Label label, string color = null)
         {
             WalletId = walletId;
-            TransactionLabels = new Dictionary<uint256, List<(string color, Label label)>>();
-            TransactionLabels.Add(txId, new List<(string color, Label label)>() { colorLabel });
+            TransactionLabels = new Dictionary<uint256, List<Label>> {{txId, new List<Label>() { label }}};
+            if (color is not null)
+            {
+                LabelColors = new Dictionary<string, string>() {{label.Id, color}};
+            }
         }
         public UpdateTransactionLabel(WalletId walletId, uint256 txId, List<(string color, Label label)> colorLabels)
         {
             WalletId = walletId;
-            TransactionLabels = new Dictionary<uint256, List<(string color, Label label)>>();
-            TransactionLabels.Add(txId, colorLabels);
-        }
-        public static (string color, Label label) PayjoinLabelTemplate()
+            TransactionLabels = new Dictionary<uint256, List<Label>> {{txId, colorLabels.Select(tuple => tuple.label).ToList()}};
+            LabelColors = colorLabels.Where(tuple => tuple.color is not null)
+                .ToDictionary(tuple => tuple.label.Id, tuple => tuple.color);
+        }  public UpdateTransactionLabel(WalletId walletId, uint256 txId, List<Label> labels)
         {
-            return ("#51b13e", new RawLabel("payjoin"));
+            WalletId = walletId;
+            TransactionLabels = new Dictionary<uint256, List<Label>> {{txId, labels}};
         }
-
-        public static (string color, Label label) InvoiceLabelTemplate(string invoice)
+        public static Label PayjoinLabelTemplate()
         {
-            return ("#cedc21", new ReferenceLabel("invoice", invoice));
-        }
-        public static (string color, Label label) PaymentRequestLabelTemplate(string paymentRequestId)
-        {
-            return ("#489D77", new ReferenceLabel("payment-request", paymentRequestId));
-        }
-        public static (string color, Label label) AppLabelTemplate(string appId)
-        {
-            return ("#5093B6", new ReferenceLabel("app", appId));
+            return new RawLabel("payjoin");
         }
 
-        public static (string color, Label label) PayjoinExposedLabelTemplate(string invoice)
+        public static Label InvoiceLabelTemplate(string invoice)
         {
-            return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
+            return new ReferenceLabel("invoice", invoice);
+        }
+        public static  Label  PaymentRequestLabelTemplate(string paymentRequestId)
+        {
+            return new ReferenceLabel("payment-request", paymentRequestId);
+        }
+        public static  Label  AppLabelTemplate(string appId)
+        {
+            return new ReferenceLabel("app", appId);
         }
 
-        public static (string color, Label label) PayoutTemplate(Dictionary<string, List<string>> pullPaymentToPayouts, string walletId)
+        public static Label PayjoinExposedLabelTemplate(string invoice)
         {
-            return ("#3F88AF", new PayoutLabel()
+            return new ReferenceLabel("pj-exposed", invoice);
+        }
+
+        public static Label PayoutTemplate(Dictionary<string, List<string>> pullPaymentToPayouts, string walletId)
+        {
+            return new PayoutLabel()
             {
                 PullPaymentPayouts = pullPaymentToPayouts,
                 WalletId = walletId
-            });
+            };
         }
         public WalletId WalletId { get; set; }
-        public Dictionary<uint256, List<(string color, Label label)>> TransactionLabels { get; set; }
+        public Dictionary<uint256, List<Label>> TransactionLabels { get; set; }
+        public Dictionary<string, string> LabelColors { get; set; }
         public override string ToString()
         {
             var result = new StringBuilder();

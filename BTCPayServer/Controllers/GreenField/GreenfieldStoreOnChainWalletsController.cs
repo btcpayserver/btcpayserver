@@ -126,6 +126,67 @@ namespace BTCPayServer.Controllers.Greenfield
             });
         }
 
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address/{address}")]
+        public async Task<IActionResult> GetOnChainWalletExistingAddress(string storeId, string cryptoCode, string address)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out var network,
+                    out var derivationScheme, out var actionResult))
+                return actionResult;
+            var bitcoinAddress =  BitcoinAddress.Create(address, network.NBitcoinNetwork);
+            var explorerClient = _explorerClientProvider.GetExplorerClient(network);
+           var kpi = await explorerClient.GetKeyInformationAsync(derivationScheme.AccountDerivation, bitcoinAddress.ScriptPubKey);
+           var bip21 = network.GenerateBIP21(kpi.Address?.ToString(), null);
+           var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
+           if (allowedPayjoin)
+           {
+               bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new { cryptoCode })));
+               
+           }
+
+           var walletId = new WalletId(storeId, cryptoCode);
+           var script = bitcoinAddress.ScriptPubKey.ToString();
+           if (!(await _walletRepository.GetLabelsForScripts(walletId, new[] {script})).ScriptLabels.TryGetValue(script,
+                   out var labels))
+           {
+               labels = new();
+           }
+           
+           return Ok(new OnChainWalletAddressData()
+           {
+               Labels = labels.Select(data => data.GetLabel()).ToList(),
+               Address = kpi.Address?.ToString(),
+               PaymentLink = bip21.ToString(),
+               KeyPath = kpi.KeyPath
+           });
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPatch("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address/{address}/labels")]
+        public async Task<IActionResult> PatchOnChainWalletExistingAddress(string storeId, string cryptoCode,
+            string address, PatchLabelsRequest request)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out var network,
+                    out var derivationScheme, out var actionResult))
+                return actionResult;
+            var walletId = new WalletId(storeId, cryptoCode);
+            var script = BitcoinAddress.Create(address, network.NBitcoinNetwork).ScriptPubKey.ToString();
+            if (request.Labels != null)
+            {
+                await _walletRepository.AddLabels(walletId, request.Labels.Select(Label.Parse).ToArray(),
+                    new[] {script}, null);
+            }
+
+            if (request.RemoveLabels != null)
+            {
+                await _walletRepository.RemoveLabel(walletId, request.RemoveLabels.ToArray(), new[] {script}, null);
+            }
+
+            return await GetOnChainWalletExistingAddress(storeId, cryptoCode, address);
+        }
+
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address")]
         public async Task<IActionResult> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false)
@@ -188,39 +249,17 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
-
-            var preFiltering = true;
-            if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))
-                preFiltering = false;
+            
+            bool preFiltering = !(statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter));
             var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0, preFiltering ? limit : int.MaxValue);
-            if (!preFiltering)
-            {
-                var filteredList = new List<TransactionHistoryLine>(txs.Count);
-                foreach (var t in txs)
-                {
-                    if (!string.IsNullOrWhiteSpace(labelFilter))
-                    {
-                        walletTransactionsInfoAsync.TryGetValue(t.TransactionId.ToString(), out var transactionInfo);
-                        if (transactionInfo?.Labels.ContainsKey(labelFilter) is true)
-                            filteredList.Add(t);
-                    }
-                    if (statusFilter?.Any() is true)
-                    {
-                        if (statusFilter.Contains(TransactionStatus.Confirmed) && t.Confirmations != 0)
-                            filteredList.Add(t);
-                        else if (statusFilter.Contains(TransactionStatus.Unconfirmed) && t.Confirmations == 0)
-                            filteredList.Add(t);
-                    }
-                }
-                txs = filteredList;
-            }
 
-            var result = txs.Skip(skip).Take(limit).Select(information =>
-            {
-                walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
-                return ToModel(transactionInfo, information, wallet);
-            }).ToList();
+            
+            var walletTransactionsInfoAsync = await _walletRepository.GetLabelsForTransactions(walletId,WalletRepository.GetLabelFilter(txs));
+if(!preFiltering)
+            txs = WalletRepository.Filter(txs, walletTransactionsInfoAsync.TransactionLabels, statusFilter, labelFilter);
+           
+
+            var result = txs.Skip(skip).Take(limit).Select(information => ToModel(walletTransactionsInfoAsync, information, wallet)).ToList();
             return Ok(result);
         }
 
@@ -239,11 +278,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
             }
-
             var walletId = new WalletId(storeId, cryptoCode);
+
             var walletTransactionsInfoAsync =
-                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId })).Values
-                .FirstOrDefault();
+                await _walletRepository.GetLabelsForTransactions(walletId, WalletRepository.GetLabelFilter(new[]{tx}));
 
             return Ok(ToModel(walletTransactionsInfoAsync, tx, wallet));
         }
@@ -270,42 +308,22 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = _walletRepository.GetWalletTransactionsInfo(walletId);
-            if (!(await walletTransactionsInfoAsync).TryGetValue(transactionId, out var walletTransactionInfo))
-            {
-                walletTransactionInfo = new WalletTransactionInfo();
-            }
-
+          
             if (request.Comment != null)
             {
-                walletTransactionInfo.Comment = request.Comment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
+                await _walletRepository.UpdateTransactionComment(walletId, transactionId, request.Comment);
             }
 
             if (request.Labels != null)
             {
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(walletId);
-                
-                foreach (string label in request.Labels)
-                {
-                    var rawLabel = await _labelFactory.BuildLabel(
-                        walletBlobInfo,
-                        Request,
-                        walletTransactionInfo,
-                        walletId,
-                        transactionId,
-                        label
-                    );
-                    walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel);
-                }
+                await _walletRepository.AddLabels(walletId, request.Labels.Select(Label.Parse).ToArray(), null, new[] {transactionId});
+            }
+            if (request.RemoveLabels != null)
+            {
+                await _walletRepository.RemoveLabel(walletId, request.RemoveLabels.ToArray(), null, new[] {transactionId});
             }
 
-            await _walletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
-            var walletTransactionsInfo =
-                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId }))
-                .Values
-                .FirstOrDefault();
-
-            return Ok(ToModel(walletTransactionsInfo, tx, wallet));
+            return await GetOnChainWalletTransaction(storeId, cryptoCode, transactionId);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -319,25 +337,30 @@ namespace BTCPayServer.Controllers.Greenfield
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
-            var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            
+            var utxos =
+                (await wallet.GetUnspentCoins(derivationScheme.AccountDerivation));
+            var labels = await _walletRepository.GetLabelsForUTXOs(walletId, utxos);
             return Ok(utxos.Select(coin =>
                 {
-                    walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = info?.Labels ?? new Dictionary<string, LabelData>();
+                    if (!labels.UTXOLabels.TryGetValue(coin, out var utxoLabels))
+                    {
+                        utxoLabels = new List<WalletLabelData>();
+                    }
+
+                    labels.TransactionComments!.TryGetValue(coin.OutPoint.Hash.ToString(), out var comment);
                     return new OnChainWalletUTXOData()
                     {
                         Outpoint = coin.OutPoint,
                         Amount = coin.Value.GetValue(network),
-                        Comment = info?.Comment,
-                        Labels = info?.Labels,
+                        Comment = comment,
+                        Labels = utxoLabels?.Select(data => data.GetLabel()).ToDictionary(data => data.Text),
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
-                        Address = network.NBXplorerNetwork.CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath, coin.ScriptPubKey).ToString()
+                        Address = network.NBXplorerNetwork.CreateAddress(derivationScheme.AccountDerivation,
+                            coin.KeyPath, coin.ScriptPubKey).ToString()
                     };
                 }).ToList()
             );
@@ -668,15 +691,18 @@ namespace BTCPayServer.Controllers.Greenfield
             return paymentMethod;
         }
 
-        private OnChainWalletTransactionData ToModel(WalletTransactionInfo? walletTransactionsInfoAsync,
+        private OnChainWalletTransactionData ToModel(WalletRepository.WalletTransactionListDataResult walletTransactionsInfoAsync,
             TransactionHistoryLine tx,
             BTCPayWallet wallet)
         {
+            var txid = tx.TransactionId.ToString();
+            walletTransactionsInfoAsync.TransactionComments.TryGetValue(txid, out var comment);
+            walletTransactionsInfoAsync.TransactionLabels.TryGetValue(txid, out var labels);
             return new OnChainWalletTransactionData()
             {
                 TransactionHash = tx.TransactionId,
-                Comment = walletTransactionsInfoAsync?.Comment ?? string.Empty,
-                Labels = walletTransactionsInfoAsync?.Labels ?? new Dictionary<string, LabelData>(),
+                Comment = comment ?? string.Empty,
+                Labels = labels?.Select(data => data.GetLabel()).ToDictionary(data => data.Text) ?? new Dictionary<string, LabelData>(),
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

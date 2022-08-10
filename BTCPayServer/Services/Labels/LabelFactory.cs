@@ -28,13 +28,20 @@ namespace BTCPayServer.Services.Labels
             _walletRepository = walletRepository;
         }
 
-        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletBlobInfo walletBlobInfo, WalletTransactionInfo transactionInfo,
+        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletBlobInfo walletBlobInfo, List<WalletLabelData> labels,
             HttpRequest request)
         {
-            foreach (var label in transactionInfo.Labels)
+            foreach (var label in labels)
             {
-                walletBlobInfo.LabelColors.TryGetValue(label.Value.Text, out var color);
-                yield return CreateLabel(label.Value, color, request);
+                var parsedLabel = label.GetLabel();
+                if (!walletBlobInfo.LabelColors.TryGetValue(label.Label, out var color))
+                {
+                    if(!walletBlobInfo.LabelColors.TryGetValue(parsedLabel.Text, out color))
+                    {
+                        walletBlobInfo.LabelColors.TryGetValue(parsedLabel.Type, out color);
+                    }
+                }
+                yield return CreateLabel(parsedLabel, color, request);
             }
         }
 
@@ -140,9 +147,7 @@ namespace BTCPayServer.Services.Labels
         async public Task<RawLabel> BuildLabel(
             WalletBlobInfo walletBlobInfo,
             HttpRequest request,
-            WalletTransactionInfo walletTransactionInfo,
             WalletId walletId,
-            string transactionId,
             string label
         )
         {

@@ -504,14 +504,14 @@ namespace BTCPayServer.Payments.PayJoin
 
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
             var labels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
-                    new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
-                        new List<(string color, Label label)>()
+                    new KeyValuePair<uint256, List<Label>>(utxo.Key,
+                        new List<Label>()
                         {
                             UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice?.Id)
                         }))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
             
-            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<(string color, Label label)>()
+            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<Label>()
             {
                 UpdateTransactionLabel.PayjoinLabelTemplate()
             });

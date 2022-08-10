@@ -397,6 +397,8 @@ namespace BTCPayServer.Payments.Bitcoin
                     }
                 }
             }
+            
+            
             return totalPayment;
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
@@ -11,5 +12,6 @@ namespace BTCPayServer.Client.Models
         public KeyPath KeyPath { get; set; }
 
         public string PaymentLink { get; set; }
+        public List<LabelData> Labels { get; set; }
     }
 }

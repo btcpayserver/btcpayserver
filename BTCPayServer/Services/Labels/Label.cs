@@ -11,6 +11,10 @@ namespace BTCPayServer.Services.Labels
 
     public abstract class Label : LabelData
     {
+        
+        [JsonIgnore]
+        public abstract string Id { get;}
+        
         public virtual Label Merge(LabelData other)
         {
             return this;
@@ -43,6 +47,8 @@ namespace BTCPayServer.Services.Labels
             rawLabel.Type = "raw";
             FixLegacy(jObj, (Label)rawLabel);
         }
+        
+        
         public static Label Parse(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
@@ -51,13 +57,13 @@ namespace BTCPayServer.Services.Labels
                 var jObj = JObject.Parse(str);
                 string type = null;
                 // Legacy label
-                if (!jObj.ContainsKey("type"))
+                if (!jObj.ContainsKey("type") && !jObj.ContainsKey("Type"))
                 {
                     type = jObj["value"].Value<string>();
                 }
                 else
                 {
-                    type = jObj["type"].Value<string>();
+                    type = (jObj["type"] ?? jObj["Type"]).Value<string>();
                 }
 
                 switch (type)
@@ -99,6 +105,8 @@ namespace BTCPayServer.Services.Labels
         {
             Text = text;
         }
+
+        public override string Id { get { return Text; } } 
     }
     public class ReferenceLabel : Label
     {
@@ -114,6 +122,9 @@ namespace BTCPayServer.Services.Labels
         }
         [JsonProperty("ref")]
         public string Reference { get; set; }
+        
+        
+        public override string Id { get { return $"{Type}_{Reference}"; }  } 
     }
     public class PayoutLabel : Label
     {
@@ -125,6 +136,15 @@ namespace BTCPayServer.Services.Labels
 
         public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
         public string WalletId { get; set; }
+        public string TransactionId { get; set; }
+
+        public override string Id
+        {
+            get
+            {
+                return $"{Type}_{TransactionId}";
+            }
+        }
 
         public override Label Merge(LabelData other)
         {

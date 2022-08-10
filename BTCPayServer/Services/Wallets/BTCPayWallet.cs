@@ -203,7 +203,7 @@ namespace BTCPayServer.Services.Wallets
         }
         bool? get_wallets_recentBugFixed = null;
         List<TransactionInformation> dummy = new List<TransactionInformation>();
-        public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
+        public async Task<List<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
         {
             // This is two paths:
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
@@ -282,7 +282,8 @@ namespace BTCPayServer.Services.Wallets
                 Confirmations = t.Confirmations,
                 Height = t.Height,
                 SeenAt = t.Timestamp,
-                TransactionId = t.TransactionId
+                TransactionId = t.TransactionId,
+                Transaction = t.Transaction
             };
         }
 
@@ -371,5 +372,6 @@ namespace BTCPayServer.Services.Wallets
         public uint256 TransactionId { get; set; }
         public uint256 BlockHash { get; set; }
         public IMoney BalanceChange { get; set; }
+        public Transaction Transaction { get; set; }
     }
 }

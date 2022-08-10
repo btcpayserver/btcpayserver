@@ -17,4 +17,9 @@ namespace BTCPayServer.Client.Models
     {
         // We can add POS specific things here later
     }
+
+    public class CrowdfundAppData : AppDataBase
+    {
+        // We can add Crowdfund specific things here later
+    }
 }

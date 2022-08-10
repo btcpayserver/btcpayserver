@@ -20,7 +20,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<PointOfSaleAppData>(response);
         }
 
-        public virtual async Task<PointOfSaleAppData> PutPointOfSaleApp(string appId,
+        public virtual async Task<PointOfSaleAppData> UpdatePointOfSaleApp(string appId,
             CreatePointOfSaleAppRequest request, CancellationToken token = default)
         {
             if (request == null)

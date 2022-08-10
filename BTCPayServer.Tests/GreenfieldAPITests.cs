@@ -271,7 +271,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.AppType, retrievedApp.AppType);
 
             // Test that we can update the app data
-            await client.PutPointOfSaleApp(app.Id, new CreatePointOfSaleAppRequest() { AppName = "new app name" });
+            await client.UpdatePointOfSaleApp(app.Id, new CreatePointOfSaleAppRequest() { AppName = "new app name" });
             retrievedApp = await client.GetApp(app.Id);
             Assert.Equal("new app name", retrievedApp.Name);
 

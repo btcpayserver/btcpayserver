@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.7
+
+### Improvement:
+
+* Improve LNDHub support @dennisreimann
+
+### Bug fixes:
+
+* Fix Kraken rate source (#4027) @Kukks
+
 ## 1.6.6
 
 ### Bug fixes:

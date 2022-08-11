@@ -122,9 +122,17 @@
                     </h2>
                     <div id="CustomNodeEclairContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeEclairHeader" data-bs-parent="#CustomNodeSupport">
                         <div class="accordion-body">
-                            <ul class="mb-0">
+                            <ul class="pb-3">
                                 <li>
                                     <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2">
+                                Note that <code>bitcoin-host</code> and <code>bitcoin-auth</code> are optional, only useful if you want to use <code>GetDepositAddress</code> on Eclair:
+                            </p>
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword;<b>bitcoin-host=</b>bitcoin.host;<b>bitcoin-auth=</b>btcpass</code>
                                 </li>
                             </ul>
                         </div>
@@ -139,7 +147,7 @@
                     </h2>
                     <div id="CustomNodeLNDContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDHeader" data-bs-parent="#CustomNodeSupport">
                         <div class="accordion-body">
-                            <ul class="pb-3">
+                            <ul class="pb-2">
                                 <li>
                                     <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
                                 </li>
@@ -147,7 +155,7 @@
                                     <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
                                 </li>
                             </ul>
-                            <p class="mt-2">
+                            <p>
                                 For the macaroon options you need to provide the <code>admin.macaroon</code>.<br/>
                                 The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
                             </p>

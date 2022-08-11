@@ -138,6 +138,52 @@ namespace BTCPayServer.HostedServices
             return o.Id;
         }
 
+        public class PayoutQuery
+        {
+            public PayoutState[] States { get; set; }
+            public string[] PullPayments { get; set; }
+            public string[] PayoutIds { get; set; }
+            public string[] PaymentMethods { get; set; }
+            public string[] Stores { get; set; }
+        }
+
+        public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery)
+        {
+            await using var ctx = _dbContextFactory.CreateContext();
+            return await GetPayouts(payoutQuery, ctx);
+        }
+
+        public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery, ApplicationDbContext ctx)
+        {
+            var query = ctx.Payouts.AsQueryable();
+            if (payoutQuery.States is not null)
+            {
+                query = query.Where(data => payoutQuery.States.Contains(data.State));
+            }
+
+            if (payoutQuery.PullPayments is not null)
+            {
+                query = query.Where(data => payoutQuery.PullPayments.Contains(data.PullPaymentDataId));
+            }
+
+            if (payoutQuery.PayoutIds is not null)
+            {
+                query = query.Where(data => payoutQuery.PayoutIds.Contains(data.Id));
+            }
+
+            if (payoutQuery.PaymentMethods is not null)
+            {
+                query = query.Where(data => payoutQuery.PaymentMethods.Contains(data.PaymentMethodId));
+            }
+
+            if (payoutQuery.Stores is not null)
+            {
+                query = query.Where(data => payoutQuery.Stores.Contains(data.StoreDataId));
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId, bool includePayouts)
         {
             await using var ctx = _dbContextFactory.CreateContext();
@@ -205,7 +251,7 @@ namespace BTCPayServer.HostedServices
                 payoutHandler.StartBackgroundCheck(Subscribe);
             }
 
-            return new[] { Loop() };
+            return new[] {Loop()};
         }
 
         private void Subscribe(params Type[] events)
@@ -326,7 +372,8 @@ namespace BTCPayServer.HostedServices
 
                 payout.State = PayoutState.AwaitingPayment;
 
-                if (payout.PullPaymentData is null || paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
+                if (payout.PullPaymentData is null ||
+                    paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
                 var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
@@ -375,7 +422,7 @@ namespace BTCPayServer.HostedServices
 
                 if (req.Request.Proof != null)
                 {
-                    payout.SetProofBlob(req.Request.Proof);
+                    payout.SetProofBlob(req.Request.Proof, null);
                 }
 
                 payout.State = PayoutState.Completed;
@@ -465,7 +512,7 @@ namespace BTCPayServer.HostedServices
                     : await ctx.Payouts.GetPayoutInPeriod(pp, now)
                         .Where(p => p.State != PayoutState.Cancelled).ToListAsync();
 
-                var payouts = payoutsRaw?.Select(o => new { Entity = o, Blob = o.GetBlob(_jsonSerializerSettings) });
+                var payouts = payoutsRaw?.Select(o => new {Entity = o, Blob = o.GetBlob(_jsonSerializerSettings)});
                 var limit = ppBlob?.Limit ?? 0;
                 var totalPayout = payouts?.Select(p => p.Blob.Amount)?.Sum();
                 var claimed = req.ClaimRequest.Value is decimal v ? v : limit - (totalPayout ?? 0);
@@ -617,10 +664,11 @@ namespace BTCPayServer.HostedServices
         }
 
 
-        public PullPaymentsModel.PullPaymentModel.ProgressModel CalculatePullPaymentProgress(PullPaymentData pp, DateTimeOffset now)
+        public PullPaymentsModel.PullPaymentModel.ProgressModel CalculatePullPaymentProgress(PullPaymentData pp,
+            DateTimeOffset now)
         {
             var ppBlob = pp.GetBlob();
-            
+
             var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
             var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);
             var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||
@@ -647,16 +695,15 @@ namespace BTCPayServer.HostedServices
                 EndIn = pp.EndDate is { } end ? ZeroIfNegative(end - now).TimeString() : null,
             };
         }
-        
-        
+
+
         public TimeSpan ZeroIfNegative(TimeSpan time)
         {
             if (time < TimeSpan.Zero)
                 time = TimeSpan.Zero;
             return time;
         }
-        
-        
+
 
         class InternalPayoutPaidRequest
         {

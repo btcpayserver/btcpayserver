@@ -103,9 +103,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         {
             return null;
         }
-        var raw = JObject.Parse(Encoding.UTF8.GetString(payout.Proof));
-        if (raw.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType) &&
-            proofType.Value<string>() == ManualPayoutProof.Type)
+
+        ParseProofType(payout.Proof, out var raw, out var proofType);
+        if (proofType == ManualPayoutProof.Type)
         {
             return raw.ToObject<ManualPayoutProof>();
         }
@@ -116,6 +116,22 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             return null;
         res.LinkTemplate = network.BlockExplorerLink;
         return res;
+    }
+
+    public static void ParseProofType(byte[] proof, out JObject obj, out string type)
+    {
+        type = null;
+        if (proof is null)
+        {
+            obj = null;
+            return;
+        }
+
+        obj = JObject.Parse(Encoding.UTF8.GetString(proof));
+        if (obj.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType))
+        {
+            type = proofType.Value<string>();
+        }
     }
 
     public void StartBackgroundCheck(Action<Type[]> subscribe)
@@ -443,11 +459,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
     public void SetProofBlob(PayoutData data, PayoutTransactionOnChainBlob blob)
     {
-        var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, _jsonSerializerSettings.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
-        // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-        if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
-        {
-            data.Proof = bytes;
-        }
+        data.SetProofBlob(blob, _jsonSerializerSettings.GetSerializer(data.GetPaymentMethodId().CryptoCode));
+
     }
 }

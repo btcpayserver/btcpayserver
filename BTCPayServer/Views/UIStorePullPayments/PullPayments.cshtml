@@ -113,8 +113,8 @@
         {
             <tr>
                 <td>
-                    <a class="pp-payout"
-                       asp-action="Payouts"
+                    <a asp-action="EditPullPayment"
+                       asp-controller="UIPullPayment"
                        asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-pullPaymentId="@pp.Id">
                         @pp.Name
@@ -133,10 +133,11 @@
                     </div>
                 </td>
                 <td class="text-end">
-                    <a asp-action="ViewPullPayment"
-                       asp-controller="UIPullPayment"
+                    <a class="pp-payout"
+                       asp-action="Payouts"
+                       asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-pullPaymentId="@pp.Id">
-                        View
+                        Payouts
                     </a>
                     @if (!pp.Archived)
                     {
@@ -151,6 +152,12 @@
                             Archive
                         </a>
                     }
+                    <span> - </span>
+                    <a asp-action="ViewPullPayment"
+                       asp-controller="UIPullPayment"
+                       asp-route-pullPaymentId="@pp.Id">
+                        View
+                    </a>
                 </td>
             </tr>
         }

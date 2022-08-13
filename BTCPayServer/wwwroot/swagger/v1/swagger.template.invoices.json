@@ -1089,22 +1089,6 @@
                     }
                 }
             },
-            "SpeedPolicy": {
-                "type": "string",
-                "description": "`\"HighSpeed\"`: 0 confirmations (1 confirmation if RBF enabled in transaction)   \n`\"MediumSpeed\"`: 1 confirmation   \n`\"LowMediumSpeed\"`: 2 confirmations   \n`\"LowSpeed\"`: 6 confirmations\n",
-                "x-enumNames": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ],
-                "enum": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ]
-            },
             "InvoicePaymentMethodDataModel": {
                 "type": "object",
                 "additionalProperties": false,

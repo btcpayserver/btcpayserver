@@ -2496,7 +2496,7 @@ namespace BTCPayServer.Tests
             {
                 var payoutC =
                     (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
-                Assert.Equal(payoutC.State, PayoutState.Completed );
+                Assert.Equal(PayoutState.Completed, payoutC.State);
             });
         }
 

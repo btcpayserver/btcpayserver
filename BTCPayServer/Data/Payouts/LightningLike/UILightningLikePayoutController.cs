@@ -178,7 +178,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 }
                                 else
                                 {
-                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, pmi );
+                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, pmi);
                                 }
 
                                 break;
@@ -318,7 +318,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
             {
                 // Timeout, potentially caused by hold invoices
-                // Payment will be saved as pending, the LightningInvoiceWatcher will handle settling/cancelling
+                // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
                 payoutData.State = PayoutState.InProgress;
                 
                 payoutData.SetProofBlob(proofBlob, null);

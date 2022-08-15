@@ -16,7 +16,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Payments.Lightning;
 
-public class LightningPendingPayoutListener:BaseAsyncService
+public class LightningPendingPayoutListener : BaseAsyncService
 {
     private readonly LightningClientFactoryService _lightningClientFactoryService;
     private readonly ApplicationDbContextFactory _applicationDbContextFactory;
@@ -26,7 +26,7 @@ public class LightningPendingPayoutListener:BaseAsyncService
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly BTCPayNetworkProvider _networkProvider;
     public static int SecondsDelay = 60 * 10;
-    
+
     public LightningPendingPayoutListener(
         LightningClientFactoryService lightningClientFactoryService,
         ApplicationDbContextFactory applicationDbContextFactory,
@@ -49,7 +49,7 @@ public class LightningPendingPayoutListener:BaseAsyncService
 
     private async Task Act()
     {
-            
+        var cancellationToken = Cancellation;
         await using var context = _applicationDbContextFactory.CreateContext();
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()
@@ -102,7 +102,7 @@ public class LightningPendingPayoutListener:BaseAsyncService
                             break;
                         case PayoutLightningBlob payoutLightningBlob:
                         {
-                            var payment = await client.GetPayment(payoutLightningBlob.Id);
+                            var payment = await client.GetPayment(payoutLightningBlob.Id, Cancellation);
                             if (payment is null)
                             {
                                 continue;
@@ -118,9 +118,6 @@ public class LightningPendingPayoutListener:BaseAsyncService
                                 case LightningPaymentStatus.Failed:
                                     payoutData.State = PayoutState.Cancelled;
                                     break;
-                                default:
-                                    payoutData.State = payoutData.State;
-                                    break;
                             }
 
                             break;
@@ -130,8 +127,8 @@ public class LightningPendingPayoutListener:BaseAsyncService
             }
         }
 
-        await context.SaveChangesAsync();
-        await Task.Delay(TimeSpan.FromSeconds(SecondsDelay));
+        await context.SaveChangesAsync(Cancellation);
+        await Task.Delay(TimeSpan.FromSeconds(SecondsDelay), Cancellation);
     }
 
     internal override Task[] InitializeTasks()

@@ -2456,7 +2456,7 @@ namespace BTCPayServer.Tests
             await newUserBasicClient.GetCurrentUser();
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNPayoutProcessor()
@@ -2496,7 +2496,7 @@ namespace BTCPayServer.Tests
             {
                 var payoutC =
                     (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
-                Assert.Equal(PayoutState.Completed, payoutC.State);
+                Assert.Equal(PayoutState.Completed , payoutC.State);
             });
         }
 

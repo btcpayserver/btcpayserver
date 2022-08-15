@@ -338,7 +338,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Fetching past trade info on \"{custodian.Name}\" is not supported.");
         }
 
-        [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> SimulateWithdrawal(string storeId, string accountId,

@@ -3254,6 +3254,12 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
                 Assert.Equal(MockCustodian.WithdrawalId, withdrawalResponseData.WithdrawalId);
                 Assert.NotEqual(default, withdrawalResponseData.CreatedTime);
             }
+
+            if (withdrawResponse is WithdrawalSimulationResponseData withdrawalSimulationResponseData)
+            {
+                Assert.Equal(MockCustodian.WithdrawalMinAmount, withdrawalSimulationResponseData.MinQty);
+                Assert.Equal(MockCustodian.WithdrawalMaxAmount, withdrawalSimulationResponseData.MaxQty);
+            }
         }
     }
 }

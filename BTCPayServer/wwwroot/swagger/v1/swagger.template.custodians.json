@@ -499,7 +499,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulate": {
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation": {
             "post": {
                 "tags": [
                     "Custodians"

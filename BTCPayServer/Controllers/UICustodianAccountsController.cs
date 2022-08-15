@@ -247,23 +247,26 @@ namespace BTCPayServer.Controllers
             var newData = new JObject();
             foreach (var pair in Request.Form)
             {
-                if ("CustodianAccount.Name".Equals(pair.Key))
+                if ("__RequestVerificationToken".Equals(pair.Key))
+                {
+                    // Skip this one
+                }
+                else if ("CustodianAccount.Name".Equals(pair.Key))
                 {
                     custodianAccount.Name = pair.Value;
                 }
                 else
                 {
-                    // TODO support posted array notation, like a field called "WithdrawToAddressNamePerPaymentMethod[BTC-OnChain]". The data should be nested in the JSON.
-                    newData.Add(pair.Key, pair.Value.ToString());
+                    newData.SetValueByPath(pair.Key, pair.Value.ToString());
                 }
             }
 
-            var newConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
-            var newConfigForm = await custodian.GetConfigForm(newConfigData, locale);
+            // TODO Maybe cast to KrakenConfig (or whatever type the custodian plugin uses) and back into JObject so superfluous data is removed from the JSON?
+            var newConfigForm = await custodian.GetConfigForm(newData, locale);
 
             if (newConfigForm.IsValid())
             {
-                custodianAccount.SetBlob(newConfigData);
+                custodianAccount.SetBlob(newData);
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
 
                 return RedirectToAction(nameof(ViewCustodianAccount),
@@ -354,32 +357,6 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.ErrorMessage] = "Could not delete custodian account";
             return RedirectToAction(nameof(ViewCustodianAccount),
                 new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
-        }
-
-        // The JObject may contain too much data because we used ALL post values and this may be more than we needed.
-        // Because we don't know the form fields beforehand, we will filter out the superfluous data afterwards.
-        // We will keep all the old keys + merge the new keys as per the current form.
-        // Since the form can differ by circumstances, we will never remove any keys that were previously stored. We just limit what we add.
-        private JObject RemoveUnusedFieldsFromConfig(JObject storedData, JObject newData, Form form)
-        {
-            JObject filteredData = new JObject();
-            var storedKeys = new List<string>();
-            foreach (var item in storedData)
-            {
-                storedKeys.Add(item.Key);
-            }
-
-            var formKeys = form.GetAllNames();
-
-            foreach (var item in newData)
-            {
-                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key))
-                {
-                    filteredData[item.Key] = item.Value;
-                }
-            }
-
-            return filteredData;
         }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
@@ -581,7 +558,7 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest();
             }
-            
+
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
 
             if (custodianAccount == null)
@@ -593,7 +570,7 @@ namespace BTCPayServer.Controllers
                 // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
                 return NotFound();
             }
-            
+
             var vm = new WithdrawalPrepareViewModel();
 
             try
@@ -605,9 +582,9 @@ namespace BTCPayServer.Controllers
 
                     try
                     {
-                        var simulateWithdrawal = await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, request, default);
+                        var simulateWithdrawal =
+                            await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, request, default);
                         vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
-
                     }
                     catch (Exception e)
                     {
@@ -631,7 +608,7 @@ namespace BTCPayServer.Controllers
             // TODO implement, same as prepare, but no simulation...
             throw new NotImplementedException();
         }
-        
+
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

@@ -90,7 +90,7 @@ namespace BTCPayServer.Client
         
         public virtual async Task<WithdrawalSimulationResponseData> SimulateWithdrawal(string storeId, string accountId, WithdrawRequestData request, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawal/simulation", bodyPayload: request, method: HttpMethod.Post), token);
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation", bodyPayload: request, method: HttpMethod.Post), token);
             return await HandleResponse<WithdrawalSimulationResponseData>(response);
         }
 

@@ -524,8 +524,21 @@ namespace BTCPayServer
                             Url = _linkGenerator.GetUriByAction(HttpContext, "InvoiceReceipt", "UIInvoice", new { invoiceId})
                         };
                 }
-                if (amount.HasValue && string.IsNullOrEmpty(paymentMethodDetails.BOLT11) ||
-                    paymentMethodDetails.GeneratedBoltAmount != amount)
+
+                if (amount is null)
+                {
+                    return Ok(new LNURLPayRequest
+                    {
+                        Tag = "payRequest",
+                        MinSendable = min,
+                        MaxSendable = max,
+                        CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
+                        Metadata = metadata,
+                        Callback = new Uri(Request.GetCurrentUrl())
+                    });
+                }
+                
+                if (string.IsNullOrEmpty(paymentMethodDetails.BOLT11) || paymentMethodDetails.GeneratedBoltAmount != amount)
                 {
                     var client =
                         _lightningLikePaymentHandler.CreateLightningClient(
@@ -589,7 +602,7 @@ namespace BTCPayServer
                     });
                 }
 
-                if (amount.HasValue && paymentMethodDetails.GeneratedBoltAmount == amount)
+                if (paymentMethodDetails.GeneratedBoltAmount == amount)
                 {
                     if (lnurlSupportedPaymentMethod.LUD12Enabled && paymentMethodDetails.ProvidedComment != comment)
                     {
@@ -602,19 +615,6 @@ namespace BTCPayServer
                     {
                         Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11,
                         SuccessAction = successAction
-                    });
-                }
-
-                if (amount is null)
-                {
-                    return Ok(new LNURLPayRequest
-                    {
-                        Tag = "payRequest",
-                        MinSendable = min,
-                        MaxSendable = max,
-                        CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
-                        Metadata = metadata,
-                        Callback = new Uri(Request.GetCurrentUrl())
                     });
                 }
             }

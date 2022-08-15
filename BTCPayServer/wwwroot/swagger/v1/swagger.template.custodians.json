@@ -1,5 +1,4 @@
 {
-    "x_experimental": true,
     "paths": {
         "/api/v1/custodians": {
             "get": {
@@ -34,6 +33,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccounts",
                 "tags": [
                     "Custodians"
                 ],
@@ -79,6 +79,7 @@
                 }
             },
             "post": {
+                "operationId": "Custodians_AddStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -123,6 +124,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -174,6 +176,7 @@
                 }
             },
             "put": {
+                "operationId": "Custodians_UpdateStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -216,6 +219,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Custodians_DeleteStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -233,6 +237,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccountTradeQuote",
                 "tags": [
                     "Custodians"
                 ],
@@ -306,6 +311,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market": {
             "post": {
+                "operationId": "Custodians_StoreCustodianAccountTradeMarket",
                 "tags": [
                     "Custodians"
                 ],
@@ -371,6 +377,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccountDepositAddress",
                 "tags": [
                     "Custodians"
                 ],
@@ -445,6 +452,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals": {
             "post": {
+                "operationId": "Custodians_WithdrawFromStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -531,6 +539,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
             "post": {
+                "operationId": "Custodians_GetStoreCustodianAccountWithdrawalInfo",
                 "tags": [
                     "Custodians"
                 ],
@@ -1062,14 +1071,6 @@
                     "assetSold": "USD",
                     "minimumTradeQty": 0.0001
                 }
-            },
-            "LedgerEntryType": {
-                "type": "string",
-                "enum": [
-                    "Trade",
-                    "Fee",
-                    "Withdrawal"
-                ]
             }
         }
     },

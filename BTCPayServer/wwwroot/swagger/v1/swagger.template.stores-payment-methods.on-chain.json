@@ -184,6 +184,7 @@
                 ]
             },
             "delete": {
+                "operationId": "StoreOnChainPaymentMethods_DeleteOnChainPaymentMethod",
                 "tags": [
                     "Store Payment Methods (On Chain)"
                 ],

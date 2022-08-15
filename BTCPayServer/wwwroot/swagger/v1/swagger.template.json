@@ -2,14 +2,22 @@
     "openapi": "3.0.0",
     "info": {
         "title": "BTCPay Greenfield API",
+        "version": "v1",
         "description": "A full API to use your BTCPay Server",
         "contact": {
             "name": "BTCPay Server",
             "url": "https://btcpayserver.org"
         },
-        "version": "v1"
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/btcpayserver/btcpayserver/blob/master/LICENSE"
+        }
     },
     "servers": [
+        {
+            "url": "https://btcpay.example.com/api/v1",
+            "description": "BTCPay Server Greenfield API"
+        }
     ],
     "components": {
         "schemas": {
@@ -51,7 +59,7 @@
             },
             "UnixTimestamp": {
                 "type": "number",
-                "format": "Unix timestamp in seconds",
+                "format": "int32",
                 "example": 1592312018,
                 "description": "A unix timestamp in seconds"
             },

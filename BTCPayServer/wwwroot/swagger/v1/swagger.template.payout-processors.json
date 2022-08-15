@@ -114,17 +114,6 @@
                     "Payout Processors"
                 ],
                 "summary": "Get payout processors",
-                "parameters": [
-                    {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
                 "description": "Get payout processors available in this instance",
                 "operationId": "PayoutProcessors_GetPayoutProcessors",
                 "responses": {
@@ -177,7 +166,7 @@
                     }
                 ],
                 "description": "Get configured store onchain automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedPayoutProcessors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedPayoutProcessorsForPaymentMethod",
                 "responses": {
                     "200": {
                         "description": "configured processors",
@@ -234,7 +223,7 @@
                     }
                 ],
                 "description": "Update configured store onchain automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedPayoutProcessor",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedPayoutProcessorForPaymentMethod",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -302,7 +291,7 @@
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutProcessors",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutProcessorsForPaymentMethod",
                 "responses": {
                     "200": {
                         "description": "configured processors",
@@ -418,7 +407,7 @@
                     }
                 ],
                 "description": "Get configured store onchain automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedPayoutProcessors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedTransferSenderFactory",
                 "responses": {
                     "200": {
                         "description": "configured processors",
@@ -463,19 +452,10 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "A specific payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
                     }
                 ],
                 "description": "Update configured store onchain automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedPayoutProcessor",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedTransferSenderFactory",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -534,7 +514,7 @@
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutProcessors",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedTransferSenderFactory",
                 "responses": {
                     "200": {
                         "description": "configured processors",

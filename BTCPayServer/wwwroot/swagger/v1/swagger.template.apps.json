@@ -179,6 +179,17 @@
                 "operationId": "Apps_GetPointOfSaleApp",
                 "summary": "Get basic app data",
                 "description": "Returns basic app data shared between all types of apps",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Basic app data",
@@ -210,6 +221,17 @@
                 "operationId": "Apps_DeletePointOfSaleApp",
                 "summary": "Delete app",
                 "description": "Deletes apps with specified ID",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "App was deleted"

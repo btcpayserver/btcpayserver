@@ -2,6 +2,7 @@
     "paths": {
         "/api/v1/api-keys/{apikey}": {
             "delete": {
+                "operationId": "ApiKeys_DeleteApiKey",
                 "tags": [
                     "API Keys"
                 ],
@@ -34,6 +35,7 @@
         },
         "/api/v1/api-keys/current": {
             "get": {
+                "operationId": "ApiKeys_GetCurrentApiKey",
                 "tags": [
                     "API Keys"
                 ],
@@ -58,6 +60,7 @@
                 ]
             },
             "delete": {
+                "operationId": "ApiKeys_DeleteCurrentApiKey",
                 "tags": [
                     "API Keys"
                 ],
@@ -84,6 +87,7 @@
         },
         "/api/v1/api-keys": {
             "post": {
+                "operationId": "ApiKeys_CreateApiKey",
                 "tags": [
                     "API Keys"
                 ],

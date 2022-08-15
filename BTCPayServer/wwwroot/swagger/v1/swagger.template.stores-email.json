@@ -51,6 +51,17 @@
                     "Stores (Email)"
                 ],
                 "summary": "Update store email settings",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "description": "Update a store's email settings",
                 "operationId": "Stores_UpdateStoreEmailSettings",
                 "requestBody": {
@@ -102,11 +113,23 @@
         },
         "/api/v1/stores/{storeId}/email/send": {
             "post": {
+                "operationId": "Stores_SendStoreEmail",
                 "tags": [
                     "Stores (Email)"
                 ],
                 "summary": "Send an email for a store",
                 "description": "Send an email using the store's SMTP server",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to send the email from",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -135,7 +158,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []

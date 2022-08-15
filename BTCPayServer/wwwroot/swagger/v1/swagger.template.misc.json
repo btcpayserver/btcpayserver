@@ -104,6 +104,7 @@
                 "tags": [
                     "Miscelleneous"
                 ],
+                "operationId": "Invoice_Checkout",
                 "summary": "Invoice checkout",
                 "description": "View the checkout page of an invoice",
                 "responses": {

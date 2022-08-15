@@ -18,7 +18,7 @@
                 ],
                 "summary": "Get webhooks of a store",
                 "description": "View webhooks of a store",
-                "operationId": "Webhokks_GetWebhooks",
+                "operationId": "Webhooks_GetWebhooks",
                 "responses": {
                     "200": {
                         "description": "List of webhooks",
@@ -29,6 +29,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "The key is not found for this list of webhooks"
                     }
                 },
                 "security": [
@@ -41,6 +44,7 @@
                 ]
             },
             "post": {
+                "operationId": "Webhooks_CreateWebhook",
                 "tags": [
                     "Webhooks"
                 ],
@@ -117,7 +121,7 @@
                 ],
                 "summary": "Get a webhook of a store",
                 "description": "View webhook of a store",
-                "operationId": "Webhokks_GetWebhook",
+                "operationId": "Webhooks_GetWebhook",
                 "responses": {
                     "200": {
                         "description": "A webhook",
@@ -143,6 +147,7 @@
                 ]
             },
             "put": {
+                "operationId": "Webhooks_UpdateWebhook",
                 "tags": [
                     "Webhooks"
                 ],
@@ -191,6 +196,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Webhooks_DeleteWebhook",
                 "tags": [
                     "Webhooks"
                 ],
@@ -236,6 +242,7 @@
                 }
             ],
             "get": {
+                "operationId": "Webhooks_GetWebhookDeliveries",
                 "tags": [
                     "Webhooks"
                 ],
@@ -262,6 +269,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "The key is not found for this list of deliveries"
                     }
                 },
                 "security": [
@@ -305,6 +315,7 @@
                 }
             ],
             "get": {
+                "operationId": "Webhooks_GetWebhookDelivery",
                 "tags": [
                     "Webhooks"
                 ],
@@ -366,6 +377,7 @@
                 }
             ],
             "get": {
+                "operationId": "Webhooks_GetWebhookDeliveryRequests",
                 "tags": [
                     "Webhooks"
                 ],
@@ -428,6 +440,7 @@
                 }
             ],
             "post": {
+                "operationId": "Webhooks_RedeliverWebhookDelivery",
                 "tags": [
                     "Webhooks"
                 ],
@@ -787,6 +800,7 @@
     "x-webhooks": {
         "InvoiceCreated": {
             "post": {
+                "operationId": "Webhook_InvoiceCreated",
                 "summary": "InvoiceCreated",
                 "description": "A new invoice has been created",
                 "parameters": [
@@ -812,11 +826,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoiceExpired": {
             "post": {
+                "operationId": "Webhook_InvoiceExpired",
                 "summary": "InvoiceExpired",
                 "description": "An invoice expired",
                 "parameters": [
@@ -842,11 +858,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoiceReceivedPayment": {
             "post": {
+                "operationId": "Webhook_InvoiceReceivedPayment",
                 "summary": "InvoiceReceivedPayment",
                 "description": "An invoice received a payment",
                 "parameters": [
@@ -872,11 +890,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoicePaymentSettled": {
             "post": {
+                "operationId": "Webhook_InvoicePaymentSettled",
                 "summary": "InvoicePaymentSettled",
                 "description": "An payment relating to an invoice has settled",
                 "parameters": [
@@ -902,11 +922,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoiceProcessing": {
             "post": {
+                "operationId": "Webhook_InvoiceProcessing",
                 "summary": "InvoiceProcessing",
                 "description": "Triggers when an invoice is fully paid, but doesn't have the required amount of confirmations on the blockchain yet according to your store's settings.",
                 "parameters": [
@@ -932,11 +954,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoiceInvalid": {
             "post": {
+                "operationId": "Webhook_InvoiceInvalid",
                 "summary": "InvoiceInvalid",
                 "description": "An invoice became invalid",
                 "parameters": [
@@ -962,11 +986,13 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         },
         "InvoiceSettled": {
             "post": {
+                "operationId": "Webhook_InvoiceSettled",
                 "summary": "InvoiceSettled",
                 "description": "Triggers when an invoice is considered settled and the merchant can proceed with the order's delivery. The invoice now has enough confirmations on the blockchain (if paid on-chain) according to your store's configuration.",
                 "parameters": [
@@ -992,7 +1018,8 @@
                             }
                         }
                     }
-                }
+                },
+                "responses": {}
             }
         }
     },

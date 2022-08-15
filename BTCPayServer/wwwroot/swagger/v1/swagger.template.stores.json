@@ -30,6 +30,7 @@
                 ]
             },
             "post": {
+                "operationId": "Stores_CreateStore",
                 "tags": [
                     "Stores"
                 ],
@@ -196,6 +197,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Stores_DeleteStore",
                 "tags": [
                     "Stores"
                 ],
@@ -403,22 +405,6 @@
                         "description": "The default payment method to load when displaying an invoice. It can be in the format of `BTC_LightningNetwork` to specify Lightning to be the default or `BTC_OnChain`/ `BTC` for on-chain to be the default. "
                     }
                 }
-            },
-            "SpeedPolicy": {
-                "type": "string",
-                "description": "",
-                "x-enumNames": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ],
-                "enum": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ]
             },
             "NetworkFeeMode": {
                 "type": "string",

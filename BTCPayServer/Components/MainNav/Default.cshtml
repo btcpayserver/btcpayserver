@@ -93,7 +93,7 @@
                                         
                                     </li>
                                 }
-                                
+                                 <vc:ui-extension-point location="store-wallets-nav" model="@Model"/>
                                 @if (PoliciesSettings.Experimental)
                                 {
                                     @foreach (var custodianAccount in Model.CustodianAccounts)

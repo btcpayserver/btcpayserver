@@ -30,6 +30,7 @@
                 ]
             },
             "post": {
+                "operationId": "Stores_CreateStore",
                 "tags": [
                     "Stores"
                 ],
@@ -196,6 +197,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Stores_DeleteStore",
                 "tags": [
                     "Stores"
                 ],

@@ -34,7 +34,9 @@
                         "in": "query",
                         "required": false,
                         "description": "Array of statuses of invoices to be fetched",
-                        "$ref": "#/components/schemas/InvoiceStatus"
+                        "schema": {
+                            "$ref": "#/components/schemas/InvoiceStatus"
+                        }
                     },
                     {
                         "name": "textSearch",
@@ -50,14 +52,18 @@
                         "in": "query",
                         "required": false,
                         "description": "Start date of the period to retrieve invoices",
-                        "$ref": "#/components/schemas/UnixTimestamp"
+                        "schema": {
+                            "$ref": "#/components/schemas/UnixTimestamp"
+                        }
                     },
                     {
                         "name": "endDate",
                         "in": "query",
                         "required": false,
                         "description": "End date of the period to retrieve invoices",
-                        "$ref": "#/components/schemas/UnixTimestamp"
+                        "schema": {
+                            "$ref": "#/components/schemas/UnixTimestamp"
+                        }
                     },
                     {
                         "name": "skip",
@@ -641,17 +647,6 @@
                         "nullable": false,
                         "description": "Mark an invoice as completed or invalid.",
                         "$ref": "#/components/schemas/InvoiceStatusMark"
-                    }
-                }
-            },
-            "AddCustomerEmailRequest": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "nullable": false,
-                        "description": "Sets the customer email, if it was not set before."
                     }
                 }
             },

@@ -2,6 +2,7 @@
     "paths": {
         "/api-keys/authorize": {
             "get": {
+                "operationId": "ApiKeys_Authorize",
                 "tags": [
                     "Authorization"
                 ],

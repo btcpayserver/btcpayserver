@@ -184,6 +184,7 @@
                 ]
             },
             "delete": {
+                "operationId": "StoreLNURLPayPaymentMethods_DeleteLNURLPayPaymentMethod",
                 "tags": [
                     "Store Payment Methods (LNURL Pay)"
                 ],

@@ -15,7 +15,9 @@ namespace BTCPayServer.JsonConverters
                 throw new JsonObjectException("A payment method id should be a string", reader);
             if (PaymentMethodId.TryParse((string)reader.Value, out var result))
                 return result;
-            throw new JsonObjectException("Invalid payment method id", reader);
+            return null;
+            // We need to do this gracefully as we have removed support for a payment type in the past which will throw here on your store each time it is loaded.
+            // throw new JsonObjectException($"Invalid payment method id ({(string)reader.Value})", reader);
         }
         public override void WriteJson(JsonWriter writer, PaymentMethodId value, JsonSerializer serializer)
         {

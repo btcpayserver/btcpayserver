@@ -33,12 +33,14 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Scripting.Parser;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {
@@ -1807,6 +1809,33 @@ namespace BTCPayServer.Tests
                    Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
                }
             }
+        }
+        [Fact]
+        public void PaymentMethodIdConverterIsGraceful()
+        {
+            var pmi = "\"BTC_hasjdfhasjkfjlajn\"";
+            JsonTextReader reader = new(new StringReader(pmi));
+            reader.Read();
+            Assert.Null(new PaymentMethodIdJsonConverter().ReadJson(reader, typeof(PaymentMethodId), null,
+                JsonSerializer.CreateDefault()));
+        }
+
+        [Fact]
+        public void CanBeBracefulAfterObsoleteShitcoin()
+        {
+            var blob = new StoreBlob();
+            blob.PaymentMethodCriteria = new List<PaymentMethodCriteria>()
+            {
+                new()
+                {
+                    Above = true,
+                    Value = new CurrencyValue() {Currency = "BTC", Value = 0.1m},
+                    PaymentMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike)
+                }
+            };
+            var newBlob = Encoding.UTF8.GetBytes(
+                new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\""));
+            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() {StoreBlob = newBlob}).PaymentMethodCriteria);
         }
     }
 }

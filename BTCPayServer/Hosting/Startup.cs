@@ -170,12 +170,13 @@ namespace BTCPayServer.Hosting
                 kestrel.Limits.MaxRequestLineSize =
                     8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
 
-                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
-                int bindPort =
-                    Configuration.GetOrDefault<int>("port", hasCertPath || useDefaultCertificate ? 443 : 14142);
-
+                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", null);
+                int? bindPort = Configuration.GetOrDefault("port", -1);
+                bindPort = bindPort == -1 ? null : bindPort;
                 if (hasCertPath || useDefaultCertificate)
                 {
+                    bindAddress ??= IPAddress.Any;
+                    bindPort ??= 443;
                     if (hasCertPath && !File.Exists(httpsCertificateFilePath))
                     {
                         // Note that by design this is a fatal error condition that will cause the process to exit.
@@ -190,24 +191,28 @@ namespace BTCPayServer.Hosting
                     }
                 }
 
-                kestrel.Listen(bindAddress, bindPort, l =>
+                if (bindAddress is not null && bindPort is not null)
                 {
-                    if (hasCertPath || useDefaultCertificate)
+
+                    kestrel.Listen(bindAddress, bindPort.Value, l =>
                     {
-                        if (hasCertPath)
+                        if (hasCertPath || useDefaultCertificate)
                         {
-                            Logs.Configuration.LogInformation(
-                                $"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
-                            l.UseHttps(httpsCertificateFilePath,
-                                Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                            if (hasCertPath)
+                            {
+                                Logs.Configuration.LogInformation(
+                                    $"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
+                                l.UseHttps(httpsCertificateFilePath,
+                                    Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                            }
+                            else
+                            {
+                                Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
+                                l.UseHttps();
+                            }
                         }
-                        else
-                        {
-                            Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
-                            l.UseHttps();
-                        }
-                    }
-                });
+                    });
+                }
             });
         }
         public void Configure(

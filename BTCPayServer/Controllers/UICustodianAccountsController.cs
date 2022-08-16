@@ -586,6 +586,18 @@ namespace BTCPayServer.Controllers
                             await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, request, default);
                         vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
                     }
+                    catch (BadConfigException e)
+                    {
+                        // TODO localize string at some point in the future
+                        string locale = "en-us";
+                        vm.ErrorMessage = null;
+                        Form configForm = await custodian.GetConfigForm(config, locale);
+                        // Include a minimal form in the response so the user can fix the bad values
+                        configForm.RemoveAllFieldsExcept(e.BadConfigKeys);
+                        vm.Form = configForm;
+                        vm.FormHtml = RenderFormToHtml(configForm);
+                        return BadRequest(vm);
+                    }
                     catch (Exception e)
                     {
                         vm.ErrorMessage = e.Message;
@@ -599,6 +611,12 @@ namespace BTCPayServer.Controllers
             }
 
             return Ok(vm);
+        }
+
+        private string RenderFormToHtml(Form form)
+        {
+            // TODO implement
+            
         }
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]

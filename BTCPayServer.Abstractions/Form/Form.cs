@@ -57,4 +57,42 @@ public class Form
 
         return names;
     }
+
+    public void RemoveAllFieldsExcept(string[] fieldNames)
+    {
+        var allNames = GetAllNames();
+        foreach (string name in allNames)
+        {
+            if (!fieldNames.Contains(name))
+            {
+                foreach (var fieldset in Fieldsets)
+                {
+                    var newFields = new List<Field>();
+                    foreach (var field in fieldset.Fields)
+                    {
+                        if (!name.Equals(field.Name))
+                        {
+                            newFields.Add(field);
+                        }
+                    }
+
+                    fieldset.Fields = newFields;
+                }
+            }
+        }
+        RemoveEmptyFieldsets();
+    }
+
+    public void RemoveEmptyFieldsets()
+    {
+        var newFieldsets = new List<Fieldset>();
+        foreach (var fieldset in Fieldsets)
+        {
+            if (fieldset.Fields.Count > 0)
+            {
+                newFieldsets.Add(fieldset);
+            }
+        }
+        Fieldsets = newFieldsets;
+    }
 }

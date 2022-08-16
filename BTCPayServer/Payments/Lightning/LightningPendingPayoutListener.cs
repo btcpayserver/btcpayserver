@@ -49,7 +49,6 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
     private async Task Act()
     {
-        var cancellationToken = Cancellation;
         await using var context = _applicationDbContextFactory.CreateContext();
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()

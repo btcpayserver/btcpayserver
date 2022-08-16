@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreOnChainAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
-            paymentMethod = paymentMethod is not null ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
+            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()

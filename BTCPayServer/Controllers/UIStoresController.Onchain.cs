@@ -68,6 +68,7 @@ namespace BTCPayServer.Controllers
             return View(vm.ViewName, vm);
         }
 
+        [DisableRequestSizeLimit]
         [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
         [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
         public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)

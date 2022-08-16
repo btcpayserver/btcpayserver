@@ -42,7 +42,10 @@ new Vue({
             errorMsg: null,
             minQty: null,
             maxQty: null,
+            formHtml: null,
+            saveConfigForm: false,
             results: null,
+            isLoading: null,
             isExecuting: false
         },
     },
@@ -557,6 +560,13 @@ new Vue({
         },
         'withdraw.paymentMethod': function (newValue, oldValue) {
             let _this = this;
+            
+            this.withdraw.formHtml = null;
+            this.withdraw.minQty = null;
+            this.withdraw.maxQty = null;
+            this.withdraw.errorMsg = null;
+            this.withdraw.isLoading = true;
+            
             const token = this.getRequestVerificationToken();
             fetch(window.ajaxWithdrawPrepareUrl + "?paymentMethod=" + encodeURI(this.withdraw.paymentMethod)+"&qty="+encodeURI(this.withdraw.qty), {
                 method: "GET",
@@ -566,11 +576,16 @@ new Vue({
                 }
             }).then(function (response) {
                 return response.json();
+                _this.withdraw.isLoading = false;
             }).then(function (data) {
                 debugger;
                 _this.withdraw.minQty = data.minQty;
                 _this.withdraw.maxQty = data.maxQty;
                 _this.withdraw.errorMsg = data.errorMessage;
+                _this.withdraw.formHtml = data.formHtml;
+                if(_this.withdraw.formHtml){
+                    _this.withdraw.saveConfigForm = true;
+                }
             });
         }
     },

@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace BTCPayServer.Abstractions.Form;
@@ -63,7 +65,7 @@ public class Form
         var allNames = GetAllNames();
         foreach (string name in allNames)
         {
-            if (!fieldNames.Contains(name))
+            if (!Array.Exists(fieldNames, element => element.Equals(name)))
             {
                 foreach (var fieldset in Fieldsets)
                 {

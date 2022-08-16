@@ -9,11 +9,11 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +37,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
+        private readonly IRazorPartialToStringRenderer _razorPartialToStringRenderer;
 
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
@@ -45,7 +46,8 @@ namespace BTCPayServer.Controllers
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
-            LinkGenerator linkGenerator
+            LinkGenerator linkGenerator,
+            IRazorPartialToStringRenderer razorPartialToStringRenderer
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -54,6 +56,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
+            _razorPartialToStringRenderer = razorPartialToStringRenderer;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -594,8 +597,15 @@ namespace BTCPayServer.Controllers
                         Form configForm = await custodian.GetConfigForm(config, locale);
                         // Include a minimal form in the response so the user can fix the bad values
                         configForm.RemoveAllFieldsExcept(e.BadConfigKeys);
+                        
+                        if (configForm.Fieldsets.Count == 1)
+                        {
+                            // If there is only 1 fieldset, there's no point in using a fieldset label. It just looks ugly. These labels are only useful in large forms.
+                            configForm.Fieldsets[0].Label = null;
+                        }
+                        
                         vm.Form = configForm;
-                        vm.FormHtml = RenderFormToHtml(configForm);
+                        vm.FormHtml = await _razorPartialToStringRenderer.RenderPartialToStringAsync("_Form", configForm);
                         return BadRequest(vm);
                     }
                     catch (Exception e)
@@ -611,12 +621,6 @@ namespace BTCPayServer.Controllers
             }
 
             return Ok(vm);
-        }
-
-        private string RenderFormToHtml(Form form)
-        {
-            // TODO implement
-            
         }
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]

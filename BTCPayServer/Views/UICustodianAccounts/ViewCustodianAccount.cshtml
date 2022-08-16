@@ -98,6 +98,9 @@
                         <tr v-if="account.assetBalances.length === 0">
                             <td colspan="999" class="text-center">No assets are stored with this custodian (yet).</td>
                         </tr>
+                        <tr v-if="account.assetBalances.length > 0 && sortedAssetRows.length === 0">
+                            <td colspan="999" class="text-center">No holdings are worth more than {{ account.dustThresholdInFiat }} {{ account.storeDefaultFiat }}.</td>
+                        </tr>
                         <tr v-if="account.assetBalanceExceptionMessage !== null">
                             <td colspan="999" class="text-center">An error occured while loading assets and balances.</td>
                         </tr>
@@ -158,14 +161,6 @@
                             <label class="form-label" for="WithdrawQty">Quantity</label>
                             <input type="number" :min="withdraw.minQty" :max="withdraw.maxQty" step="any" class="form-control" v-model="withdraw.qty" name="WithdrawQty" />
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="WithdrawQty">Fee</label>
-                            <ul>
-                                <li v-for="entry in withdraw.ledgerEntries" v-if="entry.type === 'Fee'">
-                                    {{ entry.qty}} {{ entry.asset}}
-                                </li>
-                            </ul>
-                        </div>
                         
                         <div>
                             <div class="btn-group" role="group" aria-label="Set qty to a percentage of holdings">
@@ -176,6 +171,29 @@
                                 <button v-on:click="setWithdrawQtyPercent(90)" class="btn btn-secondary" type="button">90%</button>
                                 <button v-on:click="setWithdrawQtyPercent(100)" class="btn btn-secondary" type="button">100%</button>
                             </div>
+                        </div>
+                        
+                        <div class="loading d-flex justify-content-center p-3" v-if="withdraw.isLoading">
+                            <div class="spinner-border text-light" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <div v-if="withdraw.formHtml">
+                            <div v-html="withdraw.formHtml"></div>
+                            <label>
+                                <input type="checkbox" v-model="withdraw.saveConfigForm" />
+                                Remember these settings for next time
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="WithdrawQty">Fee</label>
+                            <ul>
+                                <li v-for="entry in withdraw.ledgerEntries" v-if="entry.type === 'Fee'">
+                                    {{ entry.qty}} {{ entry.asset}}
+                                </li>
+                            </ul>
                         </div>
 
                         <p v-if="canExecuteWithdrawal">

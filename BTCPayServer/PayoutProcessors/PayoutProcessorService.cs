@@ -9,6 +9,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.PayoutProcessors;
 
@@ -18,6 +19,10 @@ public class PayoutProcessorUpdated
     public PayoutProcessorData Data { get; set; }
 
     public TaskCompletionSource Processed { get; set; }
+    public override string ToString()
+    {
+        return $"{Data}";
+    }
 }
 
 public class PayoutProcessorService : EventHostedServiceBase

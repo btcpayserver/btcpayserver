@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.PayoutProcessors.Settings;
@@ -36,6 +37,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreLightningAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
+            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
@@ -68,6 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
         {
+            paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()

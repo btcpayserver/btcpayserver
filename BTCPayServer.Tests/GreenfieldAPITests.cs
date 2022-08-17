@@ -14,6 +14,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
@@ -2453,6 +2454,50 @@ namespace BTCPayServer.Tests
             Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
             await newUserClient.GetCurrentUser();
             await newUserBasicClient.GetCurrentUser();
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLNPayoutProcessor()
+        {
+            LightningPendingPayoutListener.SecondsDelay = 0;
+            using var tester = CreateServerTester();
+            
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            
+            var admin = tester.NewAccount();
+            
+            await admin.GrantAccessAsync(true);
+            
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            admin.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
+            var payoutAmount = LightMoney.Satoshis(1000);
+            var inv = await tester.MerchantLnd.Client.CreateInvoice(payoutAmount, "Donation to merchant", TimeSpan.FromHours(1), default);
+            var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);
+            Assert.Equal(PayResult.Ok, resp.Result);
+         
+         
+
+            var customerInvoice = await tester.CustomerLightningD.CreateInvoice(LightMoney.FromUnit(10, LightMoneyUnit.Satoshi),
+                Guid.NewGuid().ToString(), TimeSpan.FromDays(40));
+            var payout = await adminClient.CreatePayout(admin.StoreId,
+                new CreatePayoutThroughStoreRequest()
+                {
+                    Approved = true, PaymentMethod = "BTC_LightningNetwork", Destination = customerInvoice.BOLT11
+                });
+            Assert.Empty(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork"));
+            await adminClient.UpdateStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork",
+                new LightningAutomatedPayoutSettings() {IntervalSeconds = TimeSpan.FromSeconds(2)});
+            Assert.Equal(2, Assert.Single( await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork")).IntervalSeconds.TotalSeconds);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var payoutC =
+                    (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
+                Assert.Equal(PayoutState.Completed , payoutC.State);
+            });
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

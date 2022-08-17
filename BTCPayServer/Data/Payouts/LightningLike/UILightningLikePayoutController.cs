@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -258,11 +259,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         }
         
         
-        public static async Task<ResultVM> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, PaymentMethodId pmi)
+        public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(20);
+        public static async Task<ResultVM> TrypayBolt(
+            ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, 
+            PaymentMethodId pmi)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
             if (boltAmount != payoutBlob.CryptoAmount)
             {
+                
+                payoutData.State = PayoutState.Cancelled;
                 return new ResultVM
                 {
                     PayoutId = payoutData.Id,
@@ -271,13 +277,36 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     Destination = payoutBlob.Destination
                 };
             }
-            var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(), new PayInvoiceParams());
-            if (result.Result == PayResult.Ok)
+
+            var proofBlob = new PayoutLightningBlob() {PaymentHash = bolt11PaymentRequest.PaymentHash.ToString()};
+            try
             {
-                var message = result.Details?.TotalAmount != null
-                    ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
-                    : null;
-                payoutData.State = PayoutState.Completed;
+                using var cts = new CancellationTokenSource(SendTimeout);
+                var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
+                    new PayInvoiceParams()
+                    {
+                        Amount = bolt11PaymentRequest.MinimumAmount == LightMoney.Zero
+                            ? new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
+                            : null
+                    }, cts.Token);
+                string message = null;
+                if (result.Result == PayResult.Ok)
+                {
+                    message = result.Details?.TotalAmount != null
+                        ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
+                        : null;
+                    payoutData.State = PayoutState.Completed;
+                    try
+                    {
+                       var payment = await  lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString());
+                       proofBlob.Preimage = payment.Preimage;
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+                
+                payoutData.SetProofBlob(proofBlob, null);
                 return new ResultVM
                 {
                     PayoutId = payoutData.Id,
@@ -286,14 +315,21 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     Message = message
                 };
             }
-
-            return new ResultVM
+            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
             {
-                PayoutId = payoutData.Id,
-                Result = result.Result,
-                Destination = payoutBlob.Destination,
-                Message = result.ErrorDetail
-            };
+                // Timeout, potentially caused by hold invoices
+                // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
+                payoutData.State = PayoutState.InProgress;
+                
+                payoutData.SetProofBlob(proofBlob, null);
+                return new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = PayResult.Ok,
+                    Destination = payoutBlob.Destination,
+                    Message = "The payment timed out. We will verify if it completed later."
+                };
+            }
         }
 
 

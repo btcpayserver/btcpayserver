@@ -167,40 +167,53 @@ namespace BTCPayServer.Hosting
             bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
             services.Configure<KestrelServerOptions>(kestrel =>
             {
-                kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
-            });
-            if (hasCertPath || useDefaultCertificate)
-            {
-                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
-                int bindPort = Configuration.GetOrDefault<int>("port", 443);
+                kestrel.Limits.MaxRequestLineSize =
+                    8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
 
-                services.Configure<KestrelServerOptions>(kestrel =>
+                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", null);
+                int? bindPort = Configuration.GetOrDefault("port", -1);
+                bindPort = bindPort == -1 ? null : bindPort;
+                if (hasCertPath || useDefaultCertificate)
                 {
+                    bindAddress ??= IPAddress.Any;
+                    bindPort ??= 443;
                     if (hasCertPath && !File.Exists(httpsCertificateFilePath))
                     {
                         // Note that by design this is a fatal error condition that will cause the process to exit.
-                        throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
-                    }
-                    if (hasCertPath && useDefaultCertificate)
-                    {
-                        throw new ConfigException($"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
+                        throw new ConfigException(
+                            $"The https certificate file could not be found at {httpsCertificateFilePath}.");
                     }
 
-                    kestrel.Listen(bindAddress, bindPort, l =>
+                    if (hasCertPath && useDefaultCertificate)
                     {
-                        if (hasCertPath)
+                        throw new ConfigException(
+                            $"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
+                    }
+                }
+
+                if (bindAddress is not null && bindPort is not null)
+                {
+
+                    kestrel.Listen(bindAddress, bindPort.Value, l =>
+                    {
+                        if (hasCertPath || useDefaultCertificate)
                         {
-                            Logs.Configuration.LogInformation($"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
-                            l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
-                        }
-                        else
-                        {
-                            Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
-                            l.UseHttps();
+                            if (hasCertPath)
+                            {
+                                Logs.Configuration.LogInformation(
+                                    $"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
+                                l.UseHttps(httpsCertificateFilePath,
+                                    Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                            }
+                            else
+                            {
+                                Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
+                                l.UseHttps();
+                            }
                         }
                     });
-                });
-            }
+                }
+            });
         }
         public void Configure(
             IApplicationBuilder app,

@@ -229,7 +229,6 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [DisableRequestSizeLimit]
         [HttpPost("{walletId}/psbt")]
         public async Task<IActionResult> WalletPSBT(
             [ModelBinder(typeof(WalletIdModelBinder))]

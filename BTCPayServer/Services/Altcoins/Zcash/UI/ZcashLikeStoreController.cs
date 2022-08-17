@@ -128,6 +128,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
             return View(nameof(GetStoreZcashLikePaymentMethod), vm);
         }
 
+        [DisableRequestSizeLimit]
         [HttpPost("{cryptoCode}")]
         public async Task<IActionResult> GetStoreZcashLikePaymentMethod(ZcashLikePaymentMethodViewModel viewModel, string command, string cryptoCode)
         {

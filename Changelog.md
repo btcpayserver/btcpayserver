@@ -1,4 +1,9 @@
 # Changelog
+## 1.6.9
+
+### Bug fixes:
+
+* Revert #4031 @Kukks
 
 ## 1.6.8
 

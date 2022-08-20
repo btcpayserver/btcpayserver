@@ -22,7 +22,8 @@ public class OnChainAutomatedPayoutSenderFactory : EventHostedServiceBase, IPayo
     public string FriendlyName { get; } = "Automated Bitcoin Sender";
     public OnChainAutomatedPayoutSenderFactory(EventAggregator eventAggregator,
         ILogger<OnChainAutomatedPayoutSenderFactory> logger,
-        BTCPayNetworkProvider btcPayNetworkProvider, IServiceProvider serviceProvider, LinkGenerator linkGenerator) : base(eventAggregator, logger)
+        BTCPayNetworkProvider btcPayNetworkProvider, 
+        IServiceProvider serviceProvider, LinkGenerator linkGenerator) : base(eventAggregator, logger)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         _serviceProvider = serviceProvider;

@@ -607,6 +607,11 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "feeTargetBlock": {
+                        "type": "number",
+                        "description": "How many blocks should the fee rate calculation target to confirm in. Set to 1 if not provided",
+                        "nullable": true
+                    },
                     "intervalSeconds": {
                         "description": "How often should the processor run",
                         "allOf": [
@@ -624,6 +629,10 @@
                     "paymentMethod": {
                         "description": "payment method of the payout processor",
                         "type": "string"
+                    },
+                    "feeTargetBlock": {
+                        "type": "number",
+                        "description": "How many blocks should the fee rate calculation target to confirm in."
                     },
                     "intervalSeconds": {
                         "description": "How often should the processor run",

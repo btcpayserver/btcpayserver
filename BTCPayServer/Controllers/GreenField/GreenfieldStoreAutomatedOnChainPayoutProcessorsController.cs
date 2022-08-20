@@ -52,16 +52,22 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private static OnChainAutomatedPayoutSettings ToModel(PayoutProcessorData data)
         {
+            var blob = BaseAutomatedPayoutProcessor<OnChainAutomatedPayoutBlob>.GetBlob(data);
             return new OnChainAutomatedPayoutSettings()
             {
+                FeeBlockTarget = blob.FeeTargetBlock,
                 PaymentMethod = data.PaymentMethod,
-                IntervalSeconds = InvoiceRepository.FromBytes<AutomatedPayoutBlob>(data.Blob).Interval
+                IntervalSeconds = blob.Interval
             };
         }
 
-        private static AutomatedPayoutBlob FromModel(OnChainAutomatedPayoutSettings data)
+        private static OnChainAutomatedPayoutBlob FromModel(OnChainAutomatedPayoutSettings data)
         {
-            return new AutomatedPayoutBlob() {Interval = data.IntervalSeconds};
+            return new OnChainAutomatedPayoutBlob()
+            {
+                FeeTargetBlock = data.FeeBlockTarget ?? 1, 
+                Interval = data.IntervalSeconds
+            };
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

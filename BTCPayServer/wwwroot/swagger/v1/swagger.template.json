@@ -15,7 +15,7 @@
     },
     "servers": [
         {
-            "url": "https://btcpay.example.com/api/v1",
+            "url": "/",
             "description": "BTCPay Server Greenfield API"
         }
     ],

@@ -129,6 +129,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         }
 
         [HttpPost("{cryptoCode}")]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> GetStoreMoneroLikePaymentMethod(MoneroLikePaymentMethodViewModel viewModel, string command, string cryptoCode)
         {
             cryptoCode = cryptoCode.ToUpperInvariant();

@@ -63,9 +63,9 @@ namespace BTCPayServer.Services.Labels
             string PayoutLabelText(KeyValuePair<string, List<string>> pair)
             {
                 if (pair.Value.Count == 1)
-                    return $"Paid a payout of a pull payment ({pair.Key})";
+                    return $"Paid a payout {(string.IsNullOrEmpty(pair.Key)? string.Empty: $"of a pull payment ({pair.Key})")}";
                 else
-                    return $"Paid payouts of a pull payment ({pair.Key})";
+                    return $"Paid {pair.Value.Count} payouts {(string.IsNullOrEmpty(pair.Key)? string.Empty: $"of a pull payment ({pair.Key})")}";
             }
 
             if (uncoloredLabel is ReferenceLabel refLabel)
@@ -103,7 +103,7 @@ namespace BTCPayServer.Services.Labels
             {
                 coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
                         ? $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
-                        : payoutLabel.PullPaymentPayouts.Select(PayoutLabelText).ToString();
+                        : PayoutLabelText(payoutLabel.PullPaymentPayouts.First());
 
                 coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
                     ? null

@@ -169,7 +169,6 @@ namespace BTCPayServer.Controllers
             public bool IsDownload { get; set; }
         }
 
-
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFiles(List<IFormFile> files)
         {

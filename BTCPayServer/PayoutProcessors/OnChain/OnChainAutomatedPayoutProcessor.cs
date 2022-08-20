@@ -41,8 +41,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             EventAggregator eventAggregator,
             StoreRepository storeRepository,
             PayoutProcessorData payoutProcesserSettings,
+            PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider btcPayNetworkProvider) :
-            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,
+            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,pullPaymentHostedService,
                 btcPayNetworkProvider)
         {
             _explorerClientProvider = explorerClientProvider;
@@ -52,7 +53,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _eventAggregator = eventAggregator;
         }
 
-        protected override async Task Process(ISupportedPaymentMethod paymentMethod, PayoutData[] payouts)
+        protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
         {
             var storePaymentMethod = paymentMethod as DerivationSchemeSettings;
             if (storePaymentMethod?.IsHotWallet is not true)
@@ -143,11 +144,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             {
                 try
                 {
-                    await using var context = _applicationDbContextFactory.CreateContext();
                     var txHash = workingTx.GetHash();
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        context.Attach(payoutData).State = EntityState.Modified;
                         payoutData.State = PayoutState.InProgress;
                         _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
                             new PayoutTransactionOnChainBlob()
@@ -156,7 +155,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                                 TransactionId = txHash,
                                 Candidates = new HashSet<uint256>() { txHash }
                             });
-                        await context.SaveChangesAsync();
                     }
                     TaskCompletionSource<bool> tcs = new();
                     var cts = new CancellationTokenSource();

@@ -39,12 +39,13 @@ namespace BTCPayServer.Data
         {
             data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
         }
+        
 
-        public static void SetProofBlob(this PayoutData data, ManualPayoutProof blob)
+        public static void SetProofBlob(this PayoutData data, IPayoutProof blob, JsonSerializerSettings settings)
         {
             if (blob is null)
                 return;
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob));
+            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, settings));
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
             if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
             {

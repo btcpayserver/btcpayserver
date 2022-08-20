@@ -1,4 +1,33 @@
 # Changelog
+## 1.6.9
+
+### Bug fixes:
+
+* Revert #4031 @Kukks
+
+## 1.6.8
+
+### New feature:
+
+* Edit Pull Payment UI (#4016) @daviogg
+* Custodian Account Deposit UI (#4024) @woutersamaey
+* Add Yadio rate provider (#4048) @bolatovumar
+
+### Improvement:
+
+* Add no rate found error message in Invoices (#4039) @HamroRamro
+* Greenfield API docs improvements (#4041 #4035) @dennisreimann
+* Allow binding ip and port for non ssl scenarios too (#4031) @Kukks 
+
+### Bug fixes:
+
+* Fix crash when running BTCPay without BTC (#4038) @Kukks
+* Fix edge cases around LNURL not providing invoice (#4034) @dennisreimann
+* Fix store creation button distortion  (#4025) @bolatovumar
+* Fix payout labels (#4032) @Kukks
+* Handle hold invoices in ln payouts (#4032) @Kukks
+* Save preimage of ln payouts when possible (#4032) @Kukks
+* Fix crash on stores that had configured a payment method that is no longer supported (#4042) @Kukks
 
 ## 1.6.7
 

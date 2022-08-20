@@ -114,7 +114,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("ListPlugins");
         }
 
-
         [HttpPost("server/plugins/upload")]
         public async Task<IActionResult> UploadPlugin([FromServices] PluginService pluginService,
             List<IFormFile> files)

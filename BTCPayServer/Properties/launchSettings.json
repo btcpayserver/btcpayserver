@@ -31,7 +31,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
-      "applicationUrl": "http://0.0.0.0:14142/"
+      "applicationUrl": "http://localhost:14142/"
     },
     "Bitcoin-HTTPS": {
       "commandName": "Project",
@@ -68,7 +68,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
-      "applicationUrl": "https://0.0.0.0:14142/"
+      "applicationUrl": "https://localhost:14142/"
     },
     "Altcoins-HTTPS": {
       "commandName": "Project",
@@ -107,7 +107,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
-      "applicationUrl": "https://0.0.0.0:14142/"
+      "applicationUrl": "https://localhost:14142/"
     }
   }
 }

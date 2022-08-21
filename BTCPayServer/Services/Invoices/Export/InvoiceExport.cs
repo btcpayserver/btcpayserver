@@ -58,31 +58,61 @@ namespace BTCPayServer.Services.Invoices.Export
             var exportList = new List<ExportInvoiceHolder>();
             var currency = Currencies.GetNumberFormatInfo(invoice.Currency, true);
             var invoiceDue = invoice.Price;
-            // in this first version we are only exporting invoices that were paid
-            foreach (var payment in invoice.GetPayments(true))
+            var payments = invoice.GetPayments(false);
+            // Get invoices with payments
+            if (payments.Count > 0)
             {
-                var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
-                var pdata = payment.GetCryptoPaymentData();
+                foreach (var payment in payments)
+                {
+                    var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
+                    var pdata = payment.GetCryptoPaymentData();
 
-                var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId());
-                var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
-                invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
+                    var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId());
+                    var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
+                    invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
 
+                    var target = new ExportInvoiceHolder
+                    {
+                        ReceivedDate = payment.ReceivedTime.UtcDateTime,
+                        PaymentId = pdata.GetPaymentId(),
+                        CryptoCode = cryptoCode,
+                        ConversionRate = pmethod.Rate,
+                        PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
+                        Destination = pdata.GetDestination(),
+                        Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
+                        PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
+                        // Adding NetworkFee because Paid doesn't take into account network fees
+                        // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
+                        // and merchant effectivelly would receive 0 BTC, invoice won't be paid
+                        // while looking just at export you could sum Paid and assume merchant "received payments"
+                        NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
+                        InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
+                        OrderId = invoice.Metadata.OrderId ?? string.Empty,
+                        StoreId = invoice.StoreId,
+                        InvoiceId = invoice.Id,
+                        InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
+                        InvoiceExpirationDate = invoice.ExpirationTime.UtcDateTime,
+                        InvoiceMonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
+#pragma warning disable CS0618 // Type or member is obsolete
+                        InvoiceFullStatus = invoice.GetInvoiceState().ToString(),
+                        InvoiceStatus = invoice.StatusString,
+                        InvoiceExceptionStatus = invoice.ExceptionStatusString,
+#pragma warning restore CS0618 // Type or member is obsolete
+                        InvoiceItemCode = invoice.Metadata.ItemCode,
+                        InvoiceItemDesc = invoice.Metadata.ItemDesc,
+                        InvoicePrice = invoice.Price,
+                        InvoiceCurrency = invoice.Currency,
+                        BuyerEmail = invoice.Metadata.BuyerEmail,
+                        Accounted = payment.Accounted                        
+                    };
+
+                    exportList.Add(target);
+                }
+            }
+            else
+            {
                 var target = new ExportInvoiceHolder
                 {
-                    ReceivedDate = payment.ReceivedTime.UtcDateTime,
-                    PaymentId = pdata.GetPaymentId(),
-                    CryptoCode = cryptoCode,
-                    ConversionRate = pmethod.Rate,
-                    PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
-                    Destination = pdata.GetDestination(),
-                    Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
-                    PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
-                    // Adding NetworkFee because Paid doesn't take into account network fees
-                    // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
-                    // and merchant effectivelly would receive 0 BTC, invoice won't be paid
-                    // while looking just at export you could sum Paid and assume merchant "received payments"
-                    NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
                     InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
                     OrderId = invoice.Metadata.OrderId ?? string.Empty,
                     StoreId = invoice.StoreId,
@@ -113,7 +143,7 @@ namespace BTCPayServer.Services.Invoices.Export
 
     public class ExportInvoiceHolder
     {
-        public DateTime ReceivedDate { get; set; }
+        public DateTime? ReceivedDate { get; set; }
         public string StoreId { get; set; }
         public string OrderId { get; set; }
         public string InvoiceId { get; set; }
@@ -138,5 +168,6 @@ namespace BTCPayServer.Services.Invoices.Export
         public string InvoiceStatus { get; set; }
         public string InvoiceExceptionStatus { get; set; }
         public string BuyerEmail { get; set; }
+        public bool Accounted { get; set; }
     }
 }

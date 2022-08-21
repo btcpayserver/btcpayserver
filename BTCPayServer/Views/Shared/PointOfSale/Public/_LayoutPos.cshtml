@@ -1,12 +1,33 @@
 @inject BTCPayServer.Services.ThemeSettings Theme
-
+@inject IWebHostEnvironment WebHostEnvironment
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BundlerMinifier.TagHelpers
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.IO
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    
+    async Task<string> GetDynamicManifest(string title)
+    {
+        var manifest = WebHostEnvironment.WebRootFileProvider.GetFileInfo("manifest.json");
+        if (!manifest.Exists)
+        {
+            return null;
+        }
+        using var reader = new StreamReader(manifest.CreateReadStream());
+        var jObject = JObject.Parse(await reader.ReadToEndAsync());
+        jObject["short_name"] = title;
+        jObject["name"] = $"BTCPay Server: {title}";
+        return $"data:application/manifest+json, {jObject.ToString(Formatting.None)}";
+    }
 }
 
 <!DOCTYPE html>
@@ -18,7 +39,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
-    <link rel="manifest" href="~/manifest.json">
+    <link rel="manifest" href="@(await GetDynamicManifest(Model.Title))">
     <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)

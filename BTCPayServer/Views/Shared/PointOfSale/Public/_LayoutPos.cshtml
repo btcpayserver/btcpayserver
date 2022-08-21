@@ -40,7 +40,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
-    <link rel="manifest" href="@GetDynamicManifest( Model.Title)">
+    <link rel="manifest" href="@(await GetDynamicManifest(Model.Title))">
     <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)

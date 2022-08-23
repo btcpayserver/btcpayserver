@@ -4,5 +4,5 @@ namespace BTCPayServer.PayoutProcessors.OnChain;
 
 public class OnChainAutomatedPayoutBlob : AutomatedPayoutBlob
 {
-    public int FeeTargetBlock { get; set; }
+    public int FeeTargetBlock { get; set; } = 1;
 }

@@ -1,13 +1,17 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Components.AppSales;
 using BTCPayServer.Components.AppTopItems;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
     public partial class UIAppsController
     {
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-top-items")]
         public IActionResult AppTopItems(string appId)
         {
@@ -21,6 +25,7 @@ namespace BTCPayServer.Controllers
             return ViewComponent("AppTopItems", new { vm });
         }
         
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-sales")]
         public IActionResult AppSales(string appId)
         {
@@ -34,6 +39,7 @@ namespace BTCPayServer.Controllers
             return ViewComponent("AppSales", new { vm });
         }
         
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-sales/{period}")]
         public async Task<IActionResult> AppSales(string appId, AppSalesPeriod period)
         {

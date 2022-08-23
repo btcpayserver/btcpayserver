@@ -72,7 +72,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
 
-        return View (new OnChainTransferViewModel(activeProcessor is null? new AutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
+        return View (new OnChainTransferViewModel(activeProcessor is null? new OnChainAutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
     }
     
     [HttpPost("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]
@@ -130,15 +130,23 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
             
         }
 
-        public OnChainTransferViewModel(AutomatedPayoutBlob blob)
+        public OnChainTransferViewModel(OnChainAutomatedPayoutBlob blob)
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
+            FeeTargetBlock = blob.FeeTargetBlock;
         }
+
+        public int FeeTargetBlock { get; set; }
+
         public double IntervalMinutes { get; set; }
 
-        public AutomatedPayoutBlob ToBlob()
+        public OnChainAutomatedPayoutBlob ToBlob()
         {
-            return new AutomatedPayoutBlob { Interval = TimeSpan.FromMinutes(IntervalMinutes) };
+            return new OnChainAutomatedPayoutBlob
+            {
+                FeeTargetBlock = FeeTargetBlock,
+                Interval = TimeSpan.FromMinutes(IntervalMinutes)
+            };
         }
     }
 }

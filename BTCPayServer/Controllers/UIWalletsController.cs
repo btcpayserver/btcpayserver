@@ -260,7 +260,7 @@ namespace BTCPayServer.Controllers
             string? labelFilter = null,
             int skip = 0,
             int count = 50,
-            TimeSpan? interval = null
+            int days = 30
         )
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
@@ -268,14 +268,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             //Set default value of interval to last 30 days            
-            interval = interval is TimeSpan t ? t : TimeSpan.FromDays(30);
+            var interval = TimeSpan.FromDays(days);
 
             //Only cap out count if it is present in the query string
-            var hasCount = Request.Query["count"].ToString().HasValue();
-            if (!hasCount)
-            {
-                count = int.MaxValue;
-            }
+            if (string.IsNullOrEmpty(Request.Query["count"]))
+                count = int.MaxValue;            
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
@@ -337,7 +334,7 @@ namespace BTCPayServer.Controllers
             }
 
             model.CryptoCode = walletId.CryptoCode;
-            model.Interval = interval;
+            model.Days = days;
             return View(model);
         }
         

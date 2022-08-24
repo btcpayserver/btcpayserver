@@ -8,9 +8,7 @@ namespace BTCPayServer.Models.StoreViewModels
         Xpub,
         Scan,
         Seed,
-        GenerateOptions,
-        HotWallet,
-        WatchOnly
+        HotWallet
     }
 
     public class WalletSetupViewModel : DerivationSchemeViewModel
@@ -29,9 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
                 WalletSetupMethod.File => "ImportWallet/File",
                 WalletSetupMethod.Scan => "ImportWallet/Scan",
                 WalletSetupMethod.Seed => "ImportWallet/Seed",
-                WalletSetupMethod.GenerateOptions => "GenerateWalletOptions",
                 WalletSetupMethod.HotWallet => "GenerateWallet",
-                WalletSetupMethod.WatchOnly => "GenerateWallet",
                 _ => "SetupWallet"
             };
     }

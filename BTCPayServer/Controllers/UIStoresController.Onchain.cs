@@ -25,14 +25,20 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
+        internal GenerateWalletResponse GenerateWalletResponse;
+        
         [HttpGet("{storeId}/onchain/{cryptoCode}")]
-        public ActionResult SetupWallet(WalletSetupViewModel vm)
+        public async Task<IActionResult> SetupWallet(WalletSetupViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
             }
+            
+            (bool hotWallet, bool _) = await CanUseHotWallet();
+            vm.Network = network;
+            vm.CanUseHotWallet = hotWallet;
 
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
             vm.DerivationScheme = derivation?.AccountDerivation.ToString();
@@ -49,20 +55,21 @@ namespace BTCPayServer.Controllers
                 return checkResult;
             }
 
-            var (hotWallet, rpcImport) = await CanUseHotWallet();
+            (bool hotWallet, bool rpcImport) = await CanUseHotWallet();
             vm.Network = network;
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
             vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
 
-            if (vm.Method == null)
+            switch (vm.Method)
             {
-                vm.Method = WalletSetupMethod.ImportOptions;
-            }
-            else if (vm.Method == WalletSetupMethod.Seed)
-            {
-                vm.SetupRequest = new WalletSetupRequest();
+                case null:
+                    vm.Method = WalletSetupMethod.ImportOptions;
+                    break;
+                case WalletSetupMethod.Seed:
+                    vm.SetupRequest = new WalletSetupRequest();
+                    break;
             }
 
             return View(vm.ViewName, vm);
@@ -188,7 +195,7 @@ namespace BTCPayServer.Controllers
             return Encoding.UTF8.GetString(DataProtector.Unprotect(Convert.FromBase64String(str)));
         }
 
-        [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/generate")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
@@ -197,37 +204,28 @@ namespace BTCPayServer.Controllers
                 return checkResult;
             }
 
-            var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
-            var (hotWallet, rpcImport) = await CanUseHotWallet();
-            if (isHotWallet && !hotWallet)
+            (bool hotWallet, bool rpcImport) = await CanUseHotWallet();
+            if (!hotWallet)
             {
                 return NotFound();
             }
-
+            
+            vm.Method = WalletSetupMethod.HotWallet;
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
             vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
             vm.Network = network;
-
-            if (vm.Method == null)
+            vm.SetupRequest = new WalletSetupRequest
             {
-                vm.Method = WalletSetupMethod.GenerateOptions;
-            }
-            else
-            {
-                var canUsePayJoin = hotWallet && isHotWallet && network.SupportPayJoin;
-                vm.SetupRequest = new WalletSetupRequest
-                {
-                    SavePrivateKeys = isHotWallet,
-                    CanUsePayJoin = canUsePayJoin,
-                    PayJoinEnabled = canUsePayJoin
-                };
-            }
+                SavePrivateKeys = true,
+                CanUsePayJoin = network.SupportPayJoin,
+                PayJoinEnabled = network.SupportPayJoin
+            };
 
             return View(vm.ViewName, vm);
         }
-        internal GenerateWalletResponse GenerateWalletResponse;
+        
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
         {

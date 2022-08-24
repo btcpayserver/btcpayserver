@@ -1088,7 +1088,7 @@ namespace BTCPayServer.Tests
 
             // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0',
             // then try to use the seed to sign the transaction
-            s.GenerateWallet(cryptoCode, "", true);
+            s.GenerateWallet(cryptoCode, "", true, true);
 
             //let's test quickly the wallet send page
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
@@ -1132,28 +1132,23 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-            s.GenerateWallet(cryptoCode, "", true);
+            s.GenerateWallet(cryptoCode, "", true, true);
             s.GoToWallet(null, WalletsNavPages.Receive);
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
             var invoiceId = s.CreateInvoice(storeId);
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            var address = invoice.EntityToDTO().Addresses["BTC"];
-
-            //wallet should have been imported to bitcoin core wallet in watch only mode.
-            var result =
-                await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
-            Assert.True(result.IsWatchOnly);
             s.GoToStore(storeId);
+            
             var mnemonic = s.GenerateWallet(cryptoCode, "", true, true);
 
             //lets import and save private keys
             var root = mnemonic.DeriveExtKey();
             invoiceId = s.CreateInvoice(storeId);
             invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            address = invoice.EntityToDTO().Addresses["BTC"];
-            result = await s.Server.ExplorerNode.GetAddressInfoAsync(
+            var address = invoice.EntityToDTO().Addresses["BTC"];
+            var result = await s.Server.ExplorerNode.GetAddressInfoAsync(
                 BitcoinAddress.Create(address, Network.RegTest));
             //spendable from bitcoin core wallet!
             Assert.False(result.IsWatchOnly);

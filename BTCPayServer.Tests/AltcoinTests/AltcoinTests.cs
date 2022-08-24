@@ -81,7 +81,7 @@ namespace BTCPayServer.Tests
                 // Setup wallet
                 WalletSetupViewModel setupVm;
                 var storeId = user.StoreId;
-                response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new WalletSetupRequest());
+                response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.HotWallet, new WalletSetupRequest());
                 Assert.IsType<ViewResult>(response);
 
                 // Get enabled state from settings

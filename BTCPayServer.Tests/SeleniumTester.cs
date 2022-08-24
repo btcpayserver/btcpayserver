@@ -209,10 +209,9 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                var option = isHotWallet ? "Hotwallet" : "Watchonly";
-                TestLogs.LogInformation($"Generating new seed ({option})");
-                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
-                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
+                Assert.True(isHotWallet, "When generating a new wallet, it needs to be a hot wallet — set `isHotWallet = true`.");
+                TestLogs.LogInformation("Generating new hot wallet");
+                Driver.FindElement(By.Id("GenerateHotwalletLink")).Click();
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();

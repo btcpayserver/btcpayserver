@@ -26,15 +26,34 @@
 <div class="mt-5">
     <h3 class="my-4">I don't have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
-            <div class="image">
-                <vc:icon symbol="new-wallet"/>
+        @if (Model.CanUseHotWallet)
+        {
+            <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateHotwalletLink" class="list-group-item list-group-item-action">
+                <div class="image">
+                    <vc:icon symbol="new-wallet"/>
+                </div>
+                <div class="content">
+                    <h4>Create a new hot wallet</h4>
+                    <p class="mb-0 text-secondary">
+                        Wallet's private key is stored on the server.
+                        Spending the funds you received is convenient.
+                        To minimize the risk of theft, regularly withdraw funds to a different wallet.
+                    </p>
+                </div>
+                <vc:icon symbol="caret-right"/>
+            </a>
+        }
+        else
+        {
+            <div class="list-group-item text-muted">
+                <div class="image">
+                    <vc:icon symbol="new-wallet"/>
+                </div>
+                <div class="content">
+                    <h4>Create a new hot wallet</h4>
+                    <p class="mb-0">Please note that creating a hot wallet is not supported by this instance for non administrators.</p>
+                </div>
             </div>
-            <div class="content">
-                <h4>Create a new wallet</h4>
-                <p class="mb-0 text-secondary">Generate a brand-new wallet to use</p>
-            </div>
-            <vc:icon symbol="caret-right"/>
-        </a>
+        }
     </div>
 </div>

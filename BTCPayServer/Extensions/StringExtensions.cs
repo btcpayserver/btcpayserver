@@ -15,5 +15,16 @@ namespace BTCPayServer
             else
                 return input;
         }
+
+        public static bool HasValue(this string input)
+        {
+            return !string.IsNullOrEmpty(input);
+        }
+
+        public static bool IsNullOrEmpty(this string input)
+        {
+            return string.IsNullOrEmpty(input);
+        }
+
     }
 }

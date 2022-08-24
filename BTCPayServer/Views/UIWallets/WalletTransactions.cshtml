@@ -1,7 +1,20 @@
+@using BTCPayServer.Controllers
 @model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
+
+    var nextInterval = (Model.Interval ?? TimeSpan.FromDays(30)) + TimeSpan.FromDays(30);
+    var loadMoreButtonText = "Load More";
+    var displayLoadMoreButton = nextInterval < TimeSpan.FromDays(365000);
+    var scrollToBottom = nextInterval > TimeSpan.FromDays(60);
+
+    if(nextInterval > TimeSpan.FromDays(90))
+    {
+        loadMoreButtonText = "Show All";
+        nextInterval = TimeSpan.FromDays(365000);
+    }
+
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
 }
@@ -280,7 +293,19 @@
             </table>
         </div>
     </div>
-    <vc:pager view-model="Model"/>
+
+    @if (displayLoadMoreButton)
+    {
+        <div align="center">
+            <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId = walletId , interval = nextInterval})'">@loadMoreButtonText</button>
+        </div>
+    }
+    else
+    {
+         <div align="center">
+            <button type="button" class="btn btn-primary" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">Go to top</button>
+        </div>
+    }
 }
 else
 {
@@ -294,3 +319,9 @@ else
     <br/>
     If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
 </p>
+
+@if(scrollToBottom){
+   <script  type="text/javascript">
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+   </script>
+}

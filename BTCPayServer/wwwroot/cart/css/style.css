@@ -17,7 +17,7 @@
 .card-img-top {
     width: 100%;
     max-height: 180px;
-    object-fit: cover;
+    object-fit: scale-down;
 }
 
 .js-cart-added {

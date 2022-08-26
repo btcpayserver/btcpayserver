@@ -1,14 +1,7 @@
 @model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    var labelFilter = Context.Request.Query["labelFilter"].ToString();
-
-    var nextInterval = Model.Days + 30;
-    var scrollToBottom = nextInterval > 60;
-    var displayLoadMoreButton = nextInterval < 365000;
-
-    var loadMoreButtonText = nextInterval > 90 ? "Show All" : "Load More";
-    nextInterval = nextInterval > 90 ? 365000 : nextInterval;
+    var labelFilter = Context.Request.Query["labelFilter"].ToString();   
 
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
@@ -88,12 +81,15 @@
     @* Custom Range Modal *@
     <script>
         delegate('click', '#switchTimeFormat', switchTimeFormat);
-		delegate('click', '#selectAllCheckbox', e => {
+        delegate('click', '#selectAllCheckbox', e => {
             document.querySelectorAll(".selector").forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });
-    </script>
+
+        if ('@Model.Days' >= 60)
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    </script>l
 }
 
 @if (Model.Transactions.Any())
@@ -290,13 +286,13 @@
     </div>
 
     <div class="text-center mb-5">
-        @if (displayLoadMoreButton)
+        @if (Model.Days < 365000)
         {
-            <a role="button" class="btn btn-primary" asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-days="@nextInterval">@loadMoreButtonText</a>
+            <a role="button" class="btn btn-secondary" asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-days="@(Model.Days > 30 ? 365000 : Model.Days + 30)">@(Model.Days > 30 ? "Show All" : "Load More")</a>
         }
         else
         {
-            <button type="button" class="btn btn-primary" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">Go to top</button>
+            <button type="button" class="btn btn-secondary" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">Go to top</button>
         }
     </div>
 }
@@ -312,10 +308,3 @@ else
     <br/>
     If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
 </p>
-
-@if (scrollToBottom)
-{
-    <script type="text/javascript">
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-    </script>
-}

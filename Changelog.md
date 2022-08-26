@@ -1,4 +1,13 @@
 # Changelog
+## 1.6.10
+
+### Bug fixes:
+
+* Fix Wallet Transactions screen not loading in case of older payout labels (#4078) @Kukks
+* Fix missing route hints for LNURL (#4077) @dennisreimann
+* Fix API Docs url (#4061) @dennisreimann
+* Fix Pay button logo and url (#4054) @dennisreimann
+
 ## 1.6.9
 
 ### Bug fixes:

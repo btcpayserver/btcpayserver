@@ -102,8 +102,9 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count switch
+                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts?.Count switch
                 {
+                    null => PayoutLabelText(),
                     0 => PayoutLabelText(),
                     1 => PayoutLabelText(payoutLabel.PullPaymentPayouts.First()),
                     _ =>

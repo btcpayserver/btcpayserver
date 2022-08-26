@@ -9,30 +9,46 @@
         }
         @foreach (var field in fieldset.Fields)
         {
-@if ("text".Equals(field.Type))
-{
-    <div class="form-group">
-        @if (field.Required)
-        {
-            <label class="form-label" for="@field.Name" data-required>
-                @field.Label
-            </label>
-        }
-        else
-        {
-            <label class="form-label" for="@field.Name">
-                @field.Label
-            </label>
-        }
 
-        <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
-        <small id="HelpText@field.Name" class="form-text text-muted">
-            @* TODO Sanitize HTML output + Make sure all <a href=""> links have 'rel="noreferrer noopener"' so we keep our privacy! *@
-            @Safe.Raw(field.HelpText)
-        </small>
+            <div class="form-group">
+                @if (field.Required)
+                {
+                    <label class="form-label" for="@field.Name" data-required>
+                        @field.Label
+                    </label>
+                }
+                else
+                {
+                    <label class="form-label" for="@field.Name">
+                        @field.Label
+                    </label>
+                }
 
-    </div>
-}
+                @if ("text".Equals(field.Type))
+                {
+                    <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
+                    <small id="HelpText@field.Name" class="form-text text-muted">
+                        @* TODO Sanitize HTML output + Make sure all <a href=""> links have 'rel="noreferrer noopener"' so we keep our privacy! *@
+                        @Safe.Raw(field.HelpText)
+                    </small>
+                }
+                else if ("password".Equals(field.Type))
+                {
+                    <div class="input-group mb-3">
+                        <input type="password" name="@field.Name" value="@field.Value" id="@field.Name" class="form-control @(field.IsValid() ? "" : "is-invalid")" required="@field.Required" aria-describedby="HelpText@field.Name"
+                               spellcheck="false" autocorrect="off" autocapitalize="off">
+                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                            <i class="fa fa-eye-slash shown-as-password" aria-label="Show value"></i>
+                            <i class="fa fa-eye shown-as-text" aria-label="Hide value" style="display: none"></i>
+                        </button>
+                    </div>
+                    <small id="HelpText@field.Name" class="form-text text-muted">
+                        @* TODO Sanitize HTML output + Make sure all <a href=""> links have 'rel="noreferrer noopener"' so we keep our privacy! *@
+                        @Safe.Raw(field.HelpText)
+                    </small>
+                }
+            </div>
         }
     </fieldset>
 }
+<script src="~/js/toggle-password.js" asp-append-version="true"></script>

@@ -364,9 +364,9 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/trade/simulate")]
         public async Task<IActionResult> SimulateTradeJson(string storeId, string accountId,
-            [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
+            [FromBody] TradeRequestData request)
         {
-            if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
+            if (string.IsNullOrEmpty(request.FromAsset) || string.IsNullOrEmpty(request.ToAsset))
             {
                 return BadRequest();
             }
@@ -400,12 +400,12 @@ namespace BTCPayServer.Controllers
                     foreach (var pair in assetBalancesData)
                     {
                         var oneAsset = pair.Key;
-                        if (assetToTrade.Equals(oneAsset))
+                        if (request.FromAsset.Equals(oneAsset))
                         {
-                            vm.MaxQtyToTrade = pair.Value;
+                            vm.MaxQty = pair.Value;
                             //vm.FormattedMaxQtyToTrade = pair.Value;
 
-                            if (assetToTrade.Equals(assetToTradeInto))
+                            if (request.FromAsset.Equals(request.ToAsset))
                             {
                                 // We cannot trade the asset for itself
                                 return BadRequest();
@@ -413,7 +413,7 @@ namespace BTCPayServer.Controllers
 
                             try
                             {
-                                var quote = await tradingCustodian.GetQuoteForAssetAsync(assetToTrade, assetToTradeInto,
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(request.FromAsset, request.ToAsset,
                                     config, default);
 
                                 // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
@@ -593,20 +593,28 @@ namespace BTCPayServer.Controllers
                     {
                         // TODO localize string at some point in the future
                         string locale = "en-us";
-                        vm.ErrorMessage = "Some withdrawal configuration is missing, please fill out below.";
+                        vm.ErrorMessage = "Some configuration is missing, please fill out below.";
+                        
                         Form configForm = await custodian.GetConfigForm(config, locale);
                         // Include a minimal form in the response so the user can fix the bad values
                         configForm.RemoveAllFieldsExcept(e.BadConfigKeys);
-                        
-                        if (configForm.Fieldsets.Count == 1)
+
+                        string[] badConfigFields = new string[e.BadConfigKeys.Length];
+                        int i = 0;
+                        foreach (var fieldName in configForm.GetAllNames())
                         {
-                            // If there is only 1 fieldset, there's no point in using a fieldset label. It just looks ugly. These labels are only useful in large forms.
-                            configForm.Fieldsets[0].Label = null;
+                            foreach (var badConfigKey in e.BadConfigKeys)
+                            {
+                                if (fieldName.Equals(badConfigKey))
+                                {
+                                    var field = configForm.GetFieldByName(fieldName);
+                                    badConfigFields[i] = field.Label;
+                                    i++;
+                                }
+                            }
                         }
+                        vm.BadConfigFields = badConfigFields;
                         
-                        vm.MinQty = 0;
-                        vm.Form = configForm;
-                        vm.FormHtml = await _razorPartialToStringRenderer.RenderPartialToStringAsync("_Form", configForm);
                         return Ok(vm);
                     }
                 }

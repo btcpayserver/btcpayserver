@@ -7,8 +7,7 @@ namespace BTCPayServer.Models.CustodianAccountViewModels;
 public class WithdrawalPrepareViewModel : WithdrawalSimulationResponseData
 {
     public string ErrorMessage { get; set; }
-    public Form Form { get; set; }
-    public string FormHtml { get; set; }
+    public string[] BadConfigFields { get; set; }
 
     public WithdrawalPrepareViewModel(string paymentMethod, string asset, string accountId, string custodianCode,
         List<LedgerEntryData> ledgerEntries, decimal minQty, decimal maxQty) : base(paymentMethod, asset, accountId,

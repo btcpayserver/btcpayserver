@@ -480,7 +480,8 @@ namespace BTCPayServer.Tests
                 Assert.Contains("invoice-processing", s.Driver.PageSource);
             }); 
             s.GoToUrl(checkouturi);
-            s.MineBlockOnInvoiceCheckout();
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
             
             TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
             TestUtils.Eventually(() =>

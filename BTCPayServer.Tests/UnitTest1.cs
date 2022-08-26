@@ -1765,11 +1765,10 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
             var networkFee = new FeeRate(invoice.MinerFees["BTC"].SatoshiPerBytes).GetFee(100);
-            // ensure 0 invoices exported because there are no payments yet
             var jsonResult = user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
             var result = Assert.IsType<ContentResult>(jsonResult);
             Assert.Equal("application/json", result.ContentType);
-            Assert.Equal("[]", result.Content);
+            Assert.Equal(1, JArray.Parse(result.Content).Count);
 
             var cashCow = tester.ExplorerNode;
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);

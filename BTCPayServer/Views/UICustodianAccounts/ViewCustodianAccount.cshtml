@@ -131,7 +131,7 @@
     
     <div class="modal" tabindex="-1" role="dialog" id="withdrawModal">
         <div class="modal-dialog" role="document">
-            <form class="modal-content">
+            <form class="modal-content" id="withdrawForm" v-on:submit="onWithdrawSubmit" method="post" asp-action="Withdraw" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
                 <div class="modal-header">
                     <h5 class="modal-title">Withdraw {{ withdraw.qty}} {{ withdraw.asset }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
@@ -159,7 +159,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="WithdrawQty">Quantity</label>
-                            <input type="number" :min="withdraw.minQty" :max="withdraw.maxQty" step="any" class="form-control" v-model="withdraw.qty" name="WithdrawQty" />
+                            <input type="number" :min="withdraw.minQty" :max="withdraw.maxQty" step="any" class="form-control" v-model="withdraw.qty" name="WithdrawQty"/>
                         </div>
                         
                         <div>
@@ -173,14 +173,14 @@
                             </div>
                         </div>
                         
-                        <div class="loading d-flex justify-content-center p-3" v-if="withdraw.isLoading">
+                        <div class="loading d-flex justify-content-center p-3" v-if="withdraw.isUpdating">
                             <div class="spinner-border text-light" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
                         
                         <div v-if="withdraw.formHtml">
-                            <div v-html="withdraw.formHtml"></div>
+                            <div class="extra-form" v-html="withdraw.formHtml"></div>
                             <label>
                                 <input type="checkbox" v-model="withdraw.saveConfigForm" />
                                 Remember these settings for next time
@@ -316,7 +316,7 @@
 
     <div class="modal" tabindex="-1" role="dialog" id="tradeModal" :data-bs-keyboard="!trade.isExecuting">
         <div class="modal-dialog" role="document">
-            <form class="modal-content" v-on:submit="onTradeSubmit" method="post" asp-action="Trade" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
+            <form class="modal-content" id="tradeForm" v-on:submit="onTradeSubmit" method="post" asp-action="Trade" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
                 <div class="modal-header">
                     <h5 class="modal-title">Trade {{ trade.qty }} {{ trade.assetToTrade }} into {{ trade.assetToTradeInto }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" v-if="!trade.isExecuting">
@@ -495,9 +495,9 @@
 <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
 <script type="text/javascript">
 var ajaxBalanceUrl = "@Url.Action("ViewCustodianAccountJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
-var ajaxTradePrepareUrl = "@Url.Action("GetTradePrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxTradeSimulateUrl = "@Url.Action("SimulateTradeJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 var ajaxDepositUrl = "@Url.Action("GetDepositPrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
-var ajaxWithdrawPrepareUrl = "@Url.Action("GetWithdrawPrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxWithdrawSimulateUrl = "@Url.Action("SimulateWithdrawJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 var ajaxWithdrawUrl = "@Url.Action("Withdraw", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 </script>
 <script src="~/js/custodian-account.js" asp-append-version="true"></script>

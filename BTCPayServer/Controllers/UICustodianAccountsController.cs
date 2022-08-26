@@ -362,8 +362,8 @@ namespace BTCPayServer.Controllers
                 new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
         }
 
-        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
-        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/trade/simulate")]
+        public async Task<IActionResult> SimulateTradeJson(string storeId, string accountId,
             [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
         {
             if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
@@ -553,9 +553,9 @@ namespace BTCPayServer.Controllers
             return Request.GetRelativePathOrAbsolute(res);
         }
 
-        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/withdraw/prepare")]
-        public async Task<IActionResult> GetWithdrawPrepareJson(string storeId, string accountId,
-            [FromQuery] string paymentMethod, [FromQuery] decimal qty)
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw/simulate")]
+        public async Task<IActionResult> SimulateWithdrawJson(string storeId, string accountId,
+            string paymentMethod, decimal qty)
         {
             if (string.IsNullOrEmpty(paymentMethod))
             {
@@ -593,7 +593,7 @@ namespace BTCPayServer.Controllers
                     {
                         // TODO localize string at some point in the future
                         string locale = "en-us";
-                        vm.ErrorMessage = null;
+                        vm.ErrorMessage = "Some withdrawal configuration is missing, please fill out below.";
                         Form configForm = await custodian.GetConfigForm(config, locale);
                         // Include a minimal form in the response so the user can fix the bad values
                         configForm.RemoveAllFieldsExcept(e.BadConfigKeys);
@@ -604,29 +604,27 @@ namespace BTCPayServer.Controllers
                             configForm.Fieldsets[0].Label = null;
                         }
                         
+                        vm.MinQty = 0;
                         vm.Form = configForm;
                         vm.FormHtml = await _razorPartialToStringRenderer.RenderPartialToStringAsync("_Form", configForm);
-                        return BadRequest(vm);
-                    }
-                    catch (Exception e)
-                    {
-                        vm.ErrorMessage = e.Message;
-                        return new ObjectResult(vm) { StatusCode = 500 };
+                        return Ok(vm);
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return BadRequest();
+                vm.ErrorMessage = e.Message;
             }
-
             return Ok(vm);
         }
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]
         public async Task<IActionResult> Withdraw(string storeId, string accountId,
-            [FromQuery] string paymentMethod, [FromQuery] decimal qty)
+            string paymentMethod, decimal qty, Dictionary<string,string> extraConfig, bool saveConfigForm)
         {
+            
+            
+            
             // TODO implement, same as prepare, but no simulation...
             throw new NotImplementedException();
         }

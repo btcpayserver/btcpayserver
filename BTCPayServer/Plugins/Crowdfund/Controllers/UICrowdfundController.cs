@@ -287,12 +287,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
             {
-                ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time.");
+                ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time");
             }
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
             {
-                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1 ");
+                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+            }
+
+            if (vm.StartDate != null && vm.EndDate != null && DateTime.Compare((DateTime)vm.StartDate, (DateTime)vm.EndDate) > 0)
+            {
+                ModelState.AddModelError(nameof(vm.EndDate), "End date cannot be before start date");
             }
 
             if (vm.DisplayPerksRanking)

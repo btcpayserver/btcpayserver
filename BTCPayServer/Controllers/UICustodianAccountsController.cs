@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
-            LinkGenerator linkGenerator, 
+            LinkGenerator linkGenerator
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));

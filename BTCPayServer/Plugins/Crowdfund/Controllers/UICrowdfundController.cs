@@ -126,7 +126,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
                 var choices = _appService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
-                choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
+                choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
@@ -379,7 +379,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         {
             if (string.IsNullOrWhiteSpace(currency))
             {
-                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+                var store = await _storeRepository.FindStore(storeId);
+                if (store == null)
+                {
+                    throw new Exception($"Could not find store with id {storeId}");
+                }
+
+                currency = store.GetStoreBlob().DefaultCurrency;
             }
             return currency.Trim().ToUpperInvariant();
         }

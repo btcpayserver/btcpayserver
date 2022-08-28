@@ -335,6 +335,13 @@ namespace BTCPayServer.Controllers
 
             model.CryptoCode = walletId.CryptoCode;
             model.Days = days;
+            
+            //If ajax call then load the partial view
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_WalletTransactions", model);
+            }
+
             return View(model);
         }
         

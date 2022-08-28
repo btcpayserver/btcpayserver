@@ -37,17 +37,14 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
-        private readonly IRazorPartialToStringRenderer _razorPartialToStringRenderer;
 
         public UICustodianAccountsController(
             CurrencyNameTable currencyNameTable,
-            UserManager<ApplicationUser> userManager,
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
-            LinkGenerator linkGenerator,
-            IRazorPartialToStringRenderer razorPartialToStringRenderer
+            LinkGenerator linkGenerator, 
         )
         {
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -56,7 +53,6 @@ namespace BTCPayServer.Controllers
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
-            _razorPartialToStringRenderer = razorPartialToStringRenderer;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -413,7 +409,8 @@ namespace BTCPayServer.Controllers
 
                             try
                             {
-                                var quote = await tradingCustodian.GetQuoteForAssetAsync(request.FromAsset, request.ToAsset,
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(request.FromAsset,
+                                    request.ToAsset,
                                     config, default);
 
                                 // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
@@ -555,9 +552,9 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw/simulate")]
         public async Task<IActionResult> SimulateWithdrawJson(string storeId, string accountId,
-            string paymentMethod, decimal qty)
+            [FromBody] WithdrawRequestData withdrawRequestData)
         {
-            if (string.IsNullOrEmpty(paymentMethod))
+            if (string.IsNullOrEmpty(withdrawRequestData.PaymentMethod))
             {
                 return BadRequest();
             }
@@ -581,24 +578,23 @@ namespace BTCPayServer.Controllers
                 if (custodian is ICanWithdraw withdrawableCustodian)
                 {
                     var config = custodianAccount.GetBlob();
-                    var request = new WithdrawRequestData(paymentMethod, qty);
 
                     try
                     {
                         var simulateWithdrawal =
-                            await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, request, default);
+                            await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, withdrawRequestData,
+                                default);
                         vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
+
+                        // There are no bad config fields, so we need an empty array
+                        vm.BadConfigFields = Array.Empty<string>();
                     }
                     catch (BadConfigException e)
                     {
                         // TODO localize string at some point in the future
                         string locale = "en-us";
-                        vm.ErrorMessage = "Some configuration is missing, please fill out below.";
-                        
-                        Form configForm = await custodian.GetConfigForm(config, locale);
-                        // Include a minimal form in the response so the user can fix the bad values
-                        configForm.RemoveAllFieldsExcept(e.BadConfigKeys);
 
+                        Form configForm = await custodian.GetConfigForm(config, locale);
                         string[] badConfigFields = new string[e.BadConfigKeys.Length];
                         int i = 0;
                         foreach (var fieldName in configForm.GetAllNames())
@@ -613,8 +609,8 @@ namespace BTCPayServer.Controllers
                                 }
                             }
                         }
+
                         vm.BadConfigFields = badConfigFields;
-                        
                         return Ok(vm);
                     }
                 }
@@ -623,20 +619,25 @@ namespace BTCPayServer.Controllers
             {
                 vm.ErrorMessage = e.Message;
             }
+
             return Ok(vm);
         }
 
         [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]
         public async Task<IActionResult> Withdraw(string storeId, string accountId,
-            string paymentMethod, decimal qty, Dictionary<string,string> extraConfig, bool saveConfigForm)
+            [FromBody] WithdrawRequestData request)
         {
-            
-            
-            
-            // TODO implement, same as prepare, but no simulation...
-            throw new NotImplementedException();
+            try
+            {
+                var result = await _btcPayServerClient.CreateWithdrawal(storeId, accountId, request);
+                return Ok(result);
+            }
+            catch (GreenfieldAPIException e)
+            {
+                var result = new ObjectResult(e.APIError) { StatusCode = e.HttpCode };
+                return result;
+            }
         }
-
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

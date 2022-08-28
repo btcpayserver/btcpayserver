@@ -27,7 +27,7 @@ new Vue({
             errorMsg: null,
             isExecuting: false,
             isUpdating: false,
-            simulationAbortController: new AbortController(),
+            simulationAbortController: null,
             priceRefresherInterval: null,
             fromAsset: null,
             toAsset: null,
@@ -47,7 +47,8 @@ new Vue({
             results: null,
             isUpdating: null,
             isExecuting: false,
-            simulationAbortController: new AbortController(),
+            simulationAbortController: null,
+            ledgerEntries: null
         },
     },
     computed: {
@@ -136,9 +137,10 @@ new Vue({
         canExecuteWithdrawal: function () {
             return (this.withdraw.minQty != null && this.withdraw.qty >= this.withdraw.minQty)
                 && (this.withdraw.maxQty != null && this.withdraw.qty <= this.withdraw.maxQty)
-                && this.withdraw.badConfigFields !== null && this.withdraw.badConfigFields.length === 0
+                && this.withdraw.badConfigFields?.length === 0
                 && this.withdraw.paymentMethod
                 && !this.withdraw.isExecuting
+                && !this.withdraw.isUpdating
                 && this.withdraw.results === null;
         },
         availableAssetsToWithdraw: function () {
@@ -163,6 +165,18 @@ new Vue({
                 }
             }
             return [];
+        },
+        withdrawFees: function(){
+            let r = [];
+            if(this.withdraw.ledgerEntries){
+                for (let i = 0; i< this.withdraw.ledgerEntries.length; i++){
+                    let entry = this.withdraw.ledgerEntries[i];
+                    if(entry.type === 'Fee'){
+                        r.push(entry);
+                    }
+                }
+            }
+            return r;
         }
     },
     methods: {
@@ -188,7 +202,6 @@ new Vue({
                         if (pair && !pairReverse) {
                             return pair.minimumTradeQty;
                         } else if (!pair && pairReverse) {
-                            // TODO price here could not be what we expect it to be...
                             let price = this.trade.priceForPair?.[pairCode];
                             if (!price) {
                                 return null;
@@ -240,11 +253,11 @@ new Vue({
             this.modals.trade.show();
         },
         openWithdrawModal: function (row) {
-            this.withdraw.paymentMethod = null;
             this.withdraw.asset = row.asset;
             this.withdraw.qty = row.qty;
+            this.withdraw.paymentMethod = null;
             this.withdraw.minQty = 0;
-            this.withdraw.maxQty = null;
+            this.withdraw.maxQty = row.qty;
             this.withdraw.results = null;
             this.withdraw.errorMsg = null;
             this.withdraw.isUpdating = null;
@@ -322,31 +335,18 @@ new Vue({
 
             this.withdraw.isExecuting = true;
             this.setModalCanBeClosed(this.modals.withdraw, false);
-
-            const _this = this;
-            const token = this.getRequestVerificationToken();
-
-            //const formEl = document.getElementById('withdrawForm');
-            //let formData = new FormData(formEl);
-
-            let extraConfig = [];
-            let extraFields = document.querySelectorAll('#withdrawForm .extra-form input', '#withdrawForm .extra-form select', '#withdrawForm .extra-form textarea');
-            extraFields.forEach((el) => {
-                if (!el.disabled) {
-                    extraConfig[el.name] = el.value;
-                }
-            });
-
+            
             let dataToSubmit = {
-                paymentMethod: _this.withdraw.paymentMethod,
-                qty: _this.withdraw.qty
+                paymentMethod: this.withdraw.paymentMethod,
+                qty: this.withdraw.qty
             };
 
+            const _this = this;
             const response = await fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
+                    'RequestVerificationToken': this.getRequestVerificationToken()
                 },
                 body: JSON.stringify(dataToSubmit)
             });
@@ -445,8 +445,8 @@ new Vue({
                 if (data.maxQty < _this.trade.qty) {
                     _this.trade.qty = _this.trade.maxQty;
                 }
-                let pair = data.fromAsset + "/" + data.toAsset;
-                let pairReverse = data.toAsset + "/" + data.fromAsset;
+                let pair = data.toAsset + "/" + data.fromAsset;
+                let pairReverse = data.fromAsset + "/" + data.toAsset;
 
                 // TODO Should we use "bid" in some cases? The spread can be huge with some shitcoins.
                 _this.trade.price = data.ask;
@@ -488,14 +488,16 @@ new Vue({
             this.trade.toAsset = tmp;
             this.trade.price = 1 / this.trade.price;
 
-            this._refreshTradeSimulation();
+            this.refreshTradeSimulation();
         },
-        _refreshTradeSimulation: function () {
+        refreshTradeSimulation: function () {
             let maxQty = this.getMaxQty(this.trade.fromAsset);
             this.trade.qty = maxQty
             this.trade.maxQty = maxQty;
 
-            this.trade.simulationAbortController.abort();
+            if(this.trade.simulationAbortController) {
+                this.trade.simulationAbortController.abort();
+            }
 
             // Update the price asap, so we can continue
             let _this = this;
@@ -509,6 +511,19 @@ new Vue({
                 return response.json();
             }).then(function (result) {
                 _this.account = result;
+                
+                for(let asset in _this.account.assetBalances){
+                    let assetInfo = _this.account.assetBalances[asset];
+                    
+                    if(asset !== _this.account.storeDefaultFiat) {
+                        let pair1 = asset + '/' + _this.account.storeDefaultFiat;
+                        _this.trade.priceForPair[pair1] = assetInfo.bid;
+
+                        let pair2 = _this.account.storeDefaultFiat + '/' + asset;
+                        _this.trade.priceForPair[pair2] = 1 / assetInfo.bid;
+                    }
+                }
+                
             });
         },
         getRequestVerificationToken: function () {
@@ -522,8 +537,15 @@ new Vue({
                 modal._config.backdrop = 'static';
             }
         },
-        _refreshWithdrawalSimulation: function () {
-            this.withdraw.simulationAbortController.abort();
+        refreshWithdrawalSimulation: function () {
+            if(!this.withdraw.paymentMethod || !this.withdraw.qty){
+                // We are missing required data, stop now.
+                return;
+            }
+            
+            if(this.withdraw.simulationAbortController) {
+                this.withdraw.simulationAbortController.abort();
+            }
 
             let data = {
                 paymentMethod: this.withdraw.paymentMethod,
@@ -531,6 +553,9 @@ new Vue({
             };
             const _this = this;
             const token = this.getRequestVerificationToken();
+
+            this.withdraw.isUpdating = true;
+            this.withdraw.simulationAbortController = new AbortController();
             fetch(window.ajaxWithdrawSimulateUrl, {
                 method: "POST",
                 body: JSON.stringify(data),
@@ -559,7 +584,11 @@ new Vue({
                 }
                 _this.withdraw.badConfigFields = data.badConfigFields;
                 _this.withdraw.errorMsg = data.errorMessage;
+                _this.withdraw.ledgerEntries = data.ledgerEntries;
             });
+        },
+        getStoreDefaultFiatValueForAsset: function(asset){
+            // TODO 
         }
     },
     watch: {
@@ -569,7 +598,7 @@ new Vue({
                 this.trade.toAsset = oldValue;
                 this.trade.price = 1 / this.trade.price;
 
-                this._refreshTradeSimulation();
+                this.refreshTradeSimulation();
             }
             if (newValue !== oldValue) {
                 // The qty is going to be wrong, so set to 100%
@@ -625,16 +654,16 @@ new Vue({
                 this.withdraw.minQty = 0;
                 this.withdraw.maxQty = null;
                 this.withdraw.errorMsg = null;
-                this.withdraw.isUpdating = true;
+                this.withdraw.badConfigFields = null;
 
-                this._refreshWithdrawalSimulation();
+                this.refreshWithdrawalSimulation();
             }
         },
         'withdraw.qty': function (newValue, oldValue) {
             if (newValue > this.withdraw.maxQty) {
                 this.withdraw.qty = this.withdraw.maxQty;
             }
-            this._refreshWithdrawalSimulation();
+            this.refreshWithdrawalSimulation();
         }
     },
     created: function () {

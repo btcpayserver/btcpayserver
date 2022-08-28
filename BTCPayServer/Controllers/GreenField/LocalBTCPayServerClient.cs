@@ -229,6 +229,13 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<WithdrawalSimulationResponseData>(
                 await GetController<GreenfieldCustodianAccountController>().SimulateWithdrawal(storeId, accountId, request, cancellationToken));
         }
+        
+        public override async Task<WithdrawalResponseData> CreateWithdrawal(string storeId, string accountId,
+            WithdrawRequestData request, CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<WithdrawalResponseData>(
+                await GetController<GreenfieldCustodianAccountController>().CreateWithdrawal(storeId, accountId, request, cancellationToken));
+        }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,
             CancellationToken token = default)

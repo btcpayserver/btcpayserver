@@ -410,7 +410,6 @@ namespace BTCPayServer.Hosting
             });
             services.TryAddSingleton<RateProviderFactory>();
             services.TryAddSingleton<RateFetcher>();
-            services.AddTransient<IRazorPartialToStringRenderer, RazorPartialToStringRenderer>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<BitpayAccessTokenController>();

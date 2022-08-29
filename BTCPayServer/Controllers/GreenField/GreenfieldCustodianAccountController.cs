@@ -222,6 +222,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanDeposit depositableCustodian)
             {
+                var pm = PaymentMethodId.TryParse(paymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
                 var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
                 return Ok(result);
             }
@@ -351,6 +357,11 @@ namespace BTCPayServer.Controllers.Greenfield
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
                 var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
                 var asset = pm.CryptoCode;
                 decimal qty;
                 try
@@ -386,6 +397,11 @@ namespace BTCPayServer.Controllers.Greenfield
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
                 var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
                 var asset = pm.CryptoCode;
                 decimal qty;
                 try

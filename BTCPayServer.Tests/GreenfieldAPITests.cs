@@ -3010,7 +3010,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await managerClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
             
             // Test: GetDepositAddress, wrong payment method
-            await AssertHttpError(400, async () => await depositClient.GetDepositAddress(storeId, accountId, "WRONG-PaymentMethod"));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await depositClient.GetDepositAddress(storeId, accountId, "WRONG-PaymentMethod"));
             
             // Test: GetDepositAddress, wrong store ID
             await AssertHttpError(403, async () => await depositClient.GetDepositAddress("WRONG-STORE", accountId, MockCustodian.DepositPaymentMethod));
@@ -3156,7 +3156,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             
             // Test: SimulateWithdrawal, wrong payment method
             var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
-            await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, wrong account ID
             await AssertHttpError(404, async () => await withdrawalClient.SimulateWithdrawal(storeId, "WRONG-ACCOUNT-ID", simulateWithdrawalRequest));
@@ -3189,7 +3189,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             
             // Test: CreateWithdrawal, wrong payment method
             var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
-            await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
             
             // Test: CreateWithdrawal, wrong account ID
             await AssertHttpError(404, async () => await withdrawalClient.CreateWithdrawal(storeId, "WRONG-ACCOUNT-ID", createWithdrawalRequest));

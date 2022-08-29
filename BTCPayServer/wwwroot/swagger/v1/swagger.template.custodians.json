@@ -553,8 +553,7 @@
                             }
                         }
                     },
-                    "required": true,
-                    "x-position": 1
+                    "required": true
                 },
                 "responses": {
                     "200": {

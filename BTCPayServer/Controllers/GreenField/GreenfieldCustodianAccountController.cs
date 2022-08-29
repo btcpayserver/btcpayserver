@@ -13,6 +13,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
@@ -349,8 +350,21 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
+                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                var asset = pm.CryptoCode;
+                decimal qty;
+                try
+                {
+                    qty = ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                }
+                catch
+                {
+                    return this.CreateAPIError(400, "bad-qty-format",
+                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                }
+                
                 var simulateWithdrawResult =
-                    await withdrawableCustodian.SimulateWithdrawalAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                    await withdrawableCustodian.SimulateWithdrawalAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalSimulationResponseData(simulateWithdrawResult.PaymentMethod, simulateWithdrawResult.Asset, 
                      accountId, custodian.Code, simulateWithdrawResult.LedgerEntries, simulateWithdrawResult.MinQty, simulateWithdrawResult.MaxQty);
                 return Ok(result);
@@ -371,26 +385,19 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                bool isPercentage = request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
-                string qtyString = isPercentage ? request.Qty.Substring(0, request.Qty.Length - 1) : request.Qty;
-                bool canParseQty = Decimal.TryParse(qtyString, out decimal qty);
-                if (!canParseQty)
+                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                var asset = pm.CryptoCode;
+                decimal qty;
+                try
+                {
+                    qty = ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                }
+                catch
                 {
                     return this.CreateAPIError(400, "bad-qty-format",
                         $"Quantity should be a number or a number ending with '%' for percentages.");
                 }
 
-                if (isPercentage)
-                {
-                    // Percentage of current holdings => calculate the amount
-                    var config = custodianAccount.GetBlob();
-                    var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
-                    var pm = PaymentMethodId.TryParse(request.PaymentMethod);
-                    var asset = pm.CryptoCode;
-                    var assetBalance = balances[asset];
-                    qty = assetBalance * qty / 100;
-                }
-                
                 var withdrawResult =
                         await withdrawableCustodian.WithdrawToStoreWalletAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
@@ -402,6 +409,27 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Withdrawals are not supported for \"{custodian.Name}\".");
         }
 
+        private decimal ParseQty(string qty, string asset, CustodianAccountData custodianAccount, ICustodian custodian, CancellationToken cancellationToken = default)
+        {
+            bool isPercentage = qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
+            qty = isPercentage ? qty.Substring(0, qty.Length - 1) : qty;
+            bool canParseQty = Decimal.TryParse(qty, out decimal qtyDecimal);
+            if (!canParseQty)
+            {
+                throw new Exception($"Quantity should be a number or a number ending with '%' for percentages.");
+            }
+
+            if (isPercentage)
+            {
+                // Percentage of current holdings => calculate the amount
+                var config = custodianAccount.GetBlob();
+                var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
+                var assetBalance = balances[asset];
+                qtyDecimal = assetBalance * qtyDecimal / 100;
+            }
+
+            return qtyDecimal;
+        }
 
         async Task<CustodianAccountData> GetCustodianAccount(string storeId, string accountId)
         {

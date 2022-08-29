@@ -3173,6 +3173,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
 
             // Test: CreateWithdrawal, unauth
             var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
+            var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
             await AssertHttpError(401, async () => await unauthClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, auth, but wrong permission
@@ -3180,6 +3181,10 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             
             // Test: CreateWithdrawal, correct payment method, correct amount
             var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest);
+            AssertMockWithdrawal(withdrawResponse, custodianAccountData);
+            
+            // Test: CreateWithdrawal, correct payment method, correct amount, but as a percentage
+            var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequestPercentage);
             AssertMockWithdrawal(withdrawResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, wrong payment method

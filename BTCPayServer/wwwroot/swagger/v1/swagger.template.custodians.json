@@ -1076,9 +1076,16 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
-                        "description": "The qty to withdraw.",
-                        "nullable": false
+                        "oneOf": [
+                            {
+                                "type": "number",
+                                "description": "The quantity to withdraw."
+                            },
+                            {
+                                "type": "string",
+                                "description": "The percent of your holdings to withdraw. The value must end with \"%\" to be considered a percentage."
+                            }
+                        ]
                     }
                 },
                 "example": {

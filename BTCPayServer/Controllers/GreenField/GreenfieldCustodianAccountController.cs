@@ -371,8 +371,28 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
+                bool isPercentage = request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
+                string qtyString = isPercentage ? request.Qty.Substring(0, request.Qty.Length - 1) : request.Qty;
+                bool canParseQty = Decimal.TryParse(qtyString, out decimal qty);
+                if (!canParseQty)
+                {
+                    return this.CreateAPIError(400, "bad-qty-format",
+                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                }
+
+                if (isPercentage)
+                {
+                    // Percentage of current holdings => calculate the amount
+                    var config = custodianAccount.GetBlob();
+                    var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
+                    var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                    var asset = pm.CryptoCode;
+                    var assetBalance = balances[asset];
+                    qty = assetBalance * qty / 100;
+                }
+                
                 var withdrawResult =
-                        await withdrawableCustodian.WithdrawToStoreWalletAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                        await withdrawableCustodian.WithdrawToStoreWalletAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                     withdrawResult.WithdrawalId, accountId, custodian.Code, withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                 return Ok(result);

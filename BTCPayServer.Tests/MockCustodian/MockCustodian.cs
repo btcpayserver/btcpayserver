@@ -24,6 +24,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public const string WithdrawalAsset = "BTC";
     public const string WithdrawalId = "WITHDRAWAL-ID-001";
     public static readonly decimal WithdrawalAmount = new decimal(0.5);
+    public static readonly decimal WithdrawalAmountPercentage = "12.5%";
     public static readonly decimal WithdrawalMinAmount = new decimal(0.001);
     public static readonly decimal WithdrawalMaxAmount = new decimal(0.6);
     public static readonly decimal WithdrawalFee = new decimal(0.0005);
@@ -147,16 +148,16 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return r;
     }
 
-    public Task<WithdrawResult> WithdrawToStoreWalletAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
+    public Task<WithdrawResult> WithdrawToStoreWalletAsync(string paymentMethod, string amount, JObject config, CancellationToken cancellationToken)
     {
         if (paymentMethod == WithdrawalPaymentMethod)
         {
-            if (amount == WithdrawalAmount)
+            if ((""+amount).equals(""+WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.equals(amount))
             {
                 return Task.FromResult(CreateWithdrawResult());
             }
 
-            throw new InsufficientFundsException($"{Name} only supports withdrawals of {WithdrawalAmount}");
+            throw new InsufficientFundsException($"{Name} only supports withdrawals of {WithdrawalAmount} or {WithdrawalAmountPercentage}");
         }
 
         throw new CannotWithdrawException(this, paymentMethod, $"Only {WithdrawalPaymentMethod} can be withdrawn from {Name}");

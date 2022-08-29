@@ -3144,7 +3144,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
 
             
              // Test: SimulateWithdrawal, unauth
-            var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
+            var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
             await AssertHttpError(401, async () => await unauthClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, auth, but wrong permission
@@ -3155,7 +3155,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             AssertMockWithdrawal(simulateWithdrawResponse, custodianAccountData);
             
             // Test: SimulateWithdrawal, wrong payment method
-            var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", MockCustodian.WithdrawalAmount );
+            var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
             await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, wrong account ID
@@ -3166,14 +3166,14 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal( "WRONG-STORE-ID",accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, correct payment method, wrong amount
-            var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, new decimal(0.666));
+            var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
             await AssertHttpError(400, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
 
             
 
             // Test: CreateWithdrawal, unauth
-            var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
-            var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalAmount );
+            var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
+            var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
             await AssertHttpError(401, async () => await unauthClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, auth, but wrong permission
@@ -3184,11 +3184,11 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             AssertMockWithdrawal(withdrawResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, correct payment method, correct amount, but as a percentage
-            var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequestPercentage);
-            AssertMockWithdrawal(withdrawResponse, custodianAccountData);
+            var withdrawWithPercentageResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequestPercentage);
+            AssertMockWithdrawal(withdrawWithPercentageResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, wrong payment method
-            var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", MockCustodian.WithdrawalAmount );
+            var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
             await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
             
             // Test: CreateWithdrawal, wrong account ID
@@ -3199,7 +3199,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal( "WRONG-STORE-ID",accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, correct payment method, wrong amount
-            var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, new decimal(0.666));
+            var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
             await AssertHttpError(400, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
 
 
